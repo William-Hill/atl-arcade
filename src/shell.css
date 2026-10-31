@@ -1,0 +1,37 @@
+:root {
+  --atl-ink: #0b0b12;
+  --atl-paper: #f3f3f7;
+  --atl-pink: #ff5fb2;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--atl-ink);
+  color: var(--atl-paper);
+  font-family: system-ui, sans-serif;
+  overflow: hidden;
+}
+
+#stage {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+#shell-info {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+#shell-info strong { color: var(--atl-pink); }

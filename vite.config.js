@@ -6,8 +6,11 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, "index.html"),
-        beatLock: resolve(import.meta.dirname, "prototypes/beat-lock-concept/index.html"),
       },
     },
+  },
+  test: {
+    include: ["src/**/*.test.js"],
+    environment: "node",
   },
 });

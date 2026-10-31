@@ -72,16 +72,20 @@ export const GREYBOX = {
 
     // Quarter pipe at the east end. Flat at x = 26, vertical at x = 29, deck behind it.
     { id: "quarter-pipe", kind: "ramp", position: [26, 0, 0], radius: 3, width: 12, direction: 1, color: COLORS.ramp },
-    { id: "deck", kind: "ground", position: [30.5, 1.5, 0], size: [3, 3, 12], color: COLORS.ramp },
+    { id: "deck", kind: "ground", position: [30, 1.5, 0], size: [2, 3, 12], color: COLORS.ramp },
 
     // Buildings close the block on the north and south.
     { id: "building-north", kind: "building", position: [0, 4, -14], size: [64, 8, 8], color: COLORS.building },
     { id: "building-south", kind: "building", position: [0, 4, 18], size: [64, 8, 8], color: COLORS.building },
 
-    // Construction barriers close the street ends.
-    { id: "barrier-west", kind: "barrier", position: [-31.5, 0.5, 0], size: [1, 1, 12], color: COLORS.barrier },
-    { id: "barrier-east-north", kind: "barrier", position: [31, 0.5, -8], size: [2, 1, 4], color: COLORS.barrier },
-    { id: "barrier-east-south", kind: "barrier", position: [31, 0.5, 8], size: [2, 1, 4], color: COLORS.barrier },
+    // Construction barriers close the open band between the buildings
+    // (z -10 to 14) at both ends. Each one stands at least 0.4 m above the
+    // floor next to it, so the skater cannot step over it. The tall one
+    // closes the back of the quarter-pipe deck.
+    { id: "barrier-west", kind: "barrier", position: [-31.5, 0.75, 2], size: [1, 1.5, 24], color: COLORS.barrier },
+    { id: "barrier-east-north", kind: "barrier", position: [31.5, 0.75, -8], size: [1, 1.5, 4], color: COLORS.barrier },
+    { id: "barrier-east-deck", kind: "barrier", position: [31.5, 2, 0], size: [1, 4, 12], color: COLORS.barrier },
+    { id: "barrier-east-south", kind: "barrier", position: [31.5, 0.75, 10], size: [1, 1.5, 8], color: COLORS.barrier },
   ],
 };
 

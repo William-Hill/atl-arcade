@@ -15,29 +15,47 @@ function roll(speed, yaw = 0, position = [0, 0, 0]) {
 }
 
 describe("push", () => {
-  it("adds a burst per push and caps at maxSpeed", () => {
-    const first = stepSkate(createSkateState(), { push: true }, DT);
-    expect(first.speed).toBeCloseTo(SKATE.pushImpulse - (SKATE.coastDecel + SKATE.coastDrag * SKATE.pushImpulse ** 2) * DT, 3);
-
+  it("speeds up while the button is held and caps at maxSpeed", () => {
+    const one = runScript(createSkateState(), [{ frames: 60, input: { push: true } }]).state;
+    expect(one.speed).toBeGreaterThan(5);
+    expect(one.speed).toBeLessThan(8);
+    const two = runScript(createSkateState(), [{ frames: 120, input: { push: true } }]).state;
+    expect(two.speed).toBeGreaterThan(10);
     const { state } = runScript(createSkateState(), [{ frames: 600, input: { push: true } }]);
     expect(state.speed).toBeLessThanOrEqual(SKATE.maxSpeed);
-    expect(state.speed).toBeGreaterThan(SKATE.maxSpeed - SKATE.pushImpulse);
+    expect(state.speed).toBeGreaterThan(SKATE.maxSpeed - 0.5);
   });
 
-  it("waits for the cooldown between pushes", () => {
-    const { states } = runScript(createSkateState(), [{ frames: 30, input: { push: true } }], { trace: true });
-    const bursts = states.filter((s, i) => s.speed > (i > 0 ? states[i - 1].speed : 0) + 1).length;
-    expect(bursts).toBe(Math.ceil(0.5 / SKATE.pushCooldown));
+  it("gives the thrust in strokes: strong in the middle of a stroke, weak at its ends", () => {
+    const { states } = runScript(createSkateState(), [{ frames: 24, input: { push: true } }], { trace: true });
+    const gain = states.map((s, i) => s.speed - (i > 0 ? states[i - 1].speed : 0));
+    const mid = Math.round(SKATE.pushCooldown / 2 / DT);
+    expect(gain[mid]).toBeGreaterThan(gain[1] * 3);
+    expect(gain[mid]).toBeGreaterThan(gain[22] * 3);
+  });
+
+  it("stops the thrust when the button is released", () => {
+    const s = runScript(createSkateState(), [{ frames: 60, input: { push: true } }]).state;
+    const after = stepSkate(s, {}, DT);
+    expect(after.speed).toBeLessThan(s.speed);
   });
 });
 
 describe("coast", () => {
   it("decays speed and moves forward along the heading", () => {
     const { state } = runScript(roll(8), [{ frames: 120 }]);
-    expect(state.speed).toBeLessThan(8);
-    expect(state.speed).toBeGreaterThan(5);
-    expect(state.position[0]).toBeGreaterThan(10);
+    expect(state.speed).toBeLessThan(5);
+    expect(state.speed).toBeGreaterThan(2);
+    expect(state.position[0]).toBeGreaterThan(8);
     expect(Math.abs(state.position[2])).toBeLessThan(1e-9);
+  });
+
+  it("loses half its speed from full speed in about 2 s and stops in about 6 s", () => {
+    const half = runScript(roll(12), [{ frames: 120 }]).state;
+    expect(half.speed).toBeLessThan(6.5);
+    expect(half.speed).toBeGreaterThan(5);
+    const stop = runScript(roll(12), [{ frames: 60 * 7 }]).state;
+    expect(stop.speed).toBe(0);
   });
 
   it("comes to a full stop eventually", () => {
@@ -152,7 +170,8 @@ describe("on the greybox", () => {
 
   it("launches off the quarter pipe and lands back on it", () => {
     // Climbing the 3 m pipe needs v^2 / (2 g) > 3, so about 11 m/s at g = 20.
-    const { states } = runScript(roll(12, 0, [24.5, 0, 0]), [{ frames: 240 }], { env: greybox, trace: true });
+    // The skater pushes on the run-in, as a player does.
+    const { states } = runScript(roll(12, 0, [24.5, 0, 0]), [{ frames: 10, input: { push: true } }, { frames: 230 }], { env: greybox, trace: true });
     const launch = states.find((s) => s.state === "air");
     expect(launch).toBeTruthy();
     expect(launch.velocity[1]).toBeGreaterThan(3);
@@ -170,7 +189,9 @@ describe("on the greybox", () => {
 
   it("rolls off the deck edge into the air", () => {
     const yawWest = Math.PI; // heading (-1, 0, 0)... deck is x 29..32, pipe below
-    const { states } = runScript(roll(3, yawWest, [31, 3, 5.5]), [{ frames: 120 }], { env: greybox, trace: true });
+    // At 6 m/s she leaves the edge. At a slow speed she can drop in on the
+    // ramp face instead; the result depends on the frame at the lip.
+    const { states } = runScript(roll(6, yawWest, [31, 3, 5.5]), [{ frames: 120 }], { env: greybox, trace: true });
     // Steer slightly so we leave the pipe width: start near the edge z = 5.5 and head off.
     expect(states.some((s) => s.state === "air")).toBe(true);
   });

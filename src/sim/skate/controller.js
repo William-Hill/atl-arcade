@@ -128,10 +128,15 @@ function stepRolling(s, input, dt, env, k) {
     s.yaw = wrapYaw(s.yaw + input.steer * k.carveRate * k.carveMinFactor * dt);
   }
 
-  // Push: a burst, then a cooldown.
-  if (input.push && s.pushCooldown <= 0) {
-    s.speed = Math.min(s.speed + k.pushImpulse, k.maxSpeed);
-    s.pushCooldown = k.pushCooldown;
+  // Push: a held button gives strokes of pushCooldown s. The thrust of a
+  // stroke rises and falls (a half sine wave), and its mean is pushAccel.
+  // A release stops the thrust at once; the roll friction then slows her.
+  if (input.push && s.pushCooldown <= 0) s.pushCooldown = k.pushCooldown;
+  if (input.push && s.pushCooldown > 0 && Math.abs(s.speed) < k.maxSpeed) {
+    const phase = 1 - s.pushCooldown / k.pushCooldown;
+    const thrust = k.pushAccel * (Math.PI / 2) * Math.sin(Math.PI * phase);
+    const dir = s.speed < 0 ? -1 : 1;
+    s.speed = dir * Math.min(Math.abs(s.speed) + thrust * dt, k.maxSpeed);
   }
 
   // Brake: toward zero, never past it.
@@ -140,8 +145,9 @@ function stepRolling(s, input, dt, env, k) {
     s.speed = sign * Math.max(0, Math.abs(s.speed) - k.brakeDecel * dt);
   }
 
-  // Roll friction and drag.
-  const drag = k.coastDecel + k.coastDrag * s.speed * s.speed;
+  // Roll friction and drag. On a ramp the skater pumps, so the friction is less.
+  const onRamp = s.groundNormal && s.groundNormal[1] < k.rampNormalY;
+  const drag = (k.coastDecel + k.coastDrag * s.speed * s.speed) * (onRamp ? k.rampFriction : 1);
   const sign = Math.sign(s.speed);
   s.speed = sign * Math.max(0, Math.abs(s.speed) - drag * dt);
   if (Math.abs(s.speed) < k.stopSpeed) s.speed = 0;

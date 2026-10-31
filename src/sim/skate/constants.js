@@ -5,10 +5,12 @@
 export const SKATE = {
   // Speed
   maxSpeed: 12, // m/s. min 8 / typical 12 / max 16. Cap after pushes.
-  pushImpulse: 2.4, // m/s added per push. min 1.5 / typical 2.4 / max 4.
-  pushCooldown: 0.4, // s between pushes while the button is held. min 0.25 / typical 0.4 / max 0.7.
-  coastDecel: 0.5, // m/s^2 linear roll friction. min 0.2 / typical 0.5 / max 1.2.
-  coastDrag: 0.012, // 1/m quadratic drag, times speed^2. min 0.005 / typical 0.012 / max 0.03.
+  pushAccel: 8, // m/s^2 mean thrust while the push button is held. 0 to 10 m/s in about 1.8 s. min 5 / typical 8 / max 12.
+  pushCooldown: 0.4, // s for one stroke. The thrust rises and falls over each stroke. min 0.25 / typical 0.4 / max 0.7.
+  coastDecel: 1.2, // m/s^2 linear roll friction. From full speed, half speed in about 1.9 s and a stop in about 6 s. min 0.5 / typical 1.2 / max 2.
+  coastDrag: 0.025, // 1/m quadratic drag, times speed^2. min 0.01 / typical 0.025 / max 0.04.
+  rampFriction: 0.2, // fraction of the roll friction and drag on a ramp (ground normal y under rampNormalY). Skaters pump transitions. min 0 / typical 0.2 / max 1.
+  rampNormalY: 0.97, // ground normal y under which the ground counts as a ramp. min 0.9 / typical 0.97 / max 0.995.
   brakeDecel: 8, // m/s^2 toe-stop brake. min 4 / typical 8 / max 14.
   stopSpeed: 0.05, // m/s under which the skater counts as stopped. Keep small.
 

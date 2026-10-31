@@ -7,6 +7,7 @@ import { createGroundSampler } from "../../level/ground.js";
 import { pointAtDistance } from "../../level/splines.js";
 
 const DT = 1 / 60;
+const BAL_STEER = GRIND.balanceDrift / GRIND.balanceCorrect;
 const env = { sampleGround: createGroundSampler(GREYBOX) };
 const skaterEnv = createSkaterEnv(GREYBOX);
 const grindables = skaterEnv.grindables;
@@ -191,5 +192,30 @@ describe("skater orchestration", () => {
     const a = runSkaterScript(createSkater(GREYBOX, { position: [-24, 0, -2] }), script, { env, skaterEnv }).state;
     const b = runSkaterScript(createSkater(GREYBOX, { position: [-24, 0, -2] }), script, { env, skaterEnv }).state;
     expect(a).toEqual(b);
+  });
+});
+
+describe("one-tick flags on the rail", () => {
+  it("clears justJumped and justLanded after the snap tick", () => {
+    // Jump and grind on the same tick beside the straight rail.
+    let s = skaterAt([-15, 0, -2], 0, 6);
+    s = stepSkater(s, { grind: true, jump: true }, DT, env, skaterEnv);
+    expect(s.state).toBe("grind");
+    const after = [];
+    for (let i = 0; i < 20; i += 1) {
+      s = stepSkater(s, { grind: true, steer: BAL_STEER }, DT, env, skaterEnv);
+      after.push(s);
+    }
+    expect(after.every((x) => x.state === "grind")).toBe(true);
+    expect(after.some((x) => x.justJumped || x.justLanded || x.bonked)).toBe(false);
+  });
+});
+
+describe("respawn stats", () => {
+  it("counts a respawn", () => {
+    const lost = skaterAt([10, -5, 0], 0, 3, "air");
+    const s = stepSkater(lost, {}, DT, { ...env, bounds: GREYBOX.bounds, spawn: GREYBOX.spawn }, skaterEnv);
+    expect(s.respawned).toBe(true);
+    expect(s.stats.respawns).toBe(1);
   });
 });

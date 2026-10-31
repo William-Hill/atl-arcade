@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CAMERA, SKATE } from "./skate/constants.js";
-import { cameraGoal, clipCamera, createCameraState, stepCamera } from "./camera.js";
+import { cameraGoal, createCameraState, stepCamera } from "./camera.js";
 import { createSkateState } from "./skate/controller.js";
 
 function skaterAt(position, yaw, speed) {
@@ -75,27 +75,6 @@ describe("stepCamera", () => {
   });
 });
 
-describe("clipCamera", () => {
-  const cam = { yaw: 0, position: [-6, 3, 0], lookAt: [0, 1, 0] };
-
-  it("leaves the camera alone when the blocker is behind it", () => {
-    expect(clipCamera(cam, 100)).toBe(cam);
-    expect(clipCamera(cam, Infinity)).toBe(cam);
-  });
-
-  it("pulls the camera in front of a blocker with a margin", () => {
-    const c = clipCamera(cam, 3);
-    const d = Math.hypot(c.position[0] - cam.lookAt[0], c.position[1] - cam.lookAt[1], c.position[2] - cam.lookAt[2]);
-    expect(d).toBeCloseTo(3 - CAMERA.clipMargin);
-    expect(c.position[1]).toBeGreaterThan(1);
-  });
-
-  it("never comes closer than minDistance", () => {
-    const c = clipCamera(cam, 0.2);
-    const d = Math.hypot(c.position[0] - cam.lookAt[0], c.position[1] - cam.lookAt[1], c.position[2] - cam.lookAt[2]);
-    expect(d).toBeCloseTo(CAMERA.minDistance);
-  });
-});
 
 // Quarter-pipe regressions. On the transition the ground normal tilts toward
 // the street; past vertNormalY the camera holds its yaw so it stays on the
@@ -164,7 +143,15 @@ describe("clip pivot and release", () => {
 
   it("snaps in to a blocker at once", () => {
     expect(resolveClip(Infinity, 9, 3, 1 / 60)).toBeCloseTo(3 - CAMERA.clipMargin);
-    expect(resolveClip(8, 9, 0, 1 / 60)).toBeCloseTo(CAMERA.minDistance);
+    expect(resolveClip(8, 9, 1.3, 1 / 60)).toBeCloseTo(CAMERA.minDistance);
+  });
+
+  it("never places the camera past a wall closer than minDistance", () => {
+    // Skater against the north building, turned south: the wall is 0.31 m from the pivot.
+    const allowed = resolveClip(Infinity, 9, 0.31, 1 / 60);
+    expect(allowed).toBeLessThan(0.31);
+    expect(allowed).toBeGreaterThanOrEqual(0);
+    expect(resolveClip(5, 9, 0, 1 / 60)).toBe(0);
   });
 
   it("eases back out when the blocker clears instead of popping", () => {

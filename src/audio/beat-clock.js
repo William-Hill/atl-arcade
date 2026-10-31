@@ -27,21 +27,25 @@ export class BeatClock {
     return beatLength(this.bpm);
   }
 
+  // Running means the audio clock moves. A context made before a user
+  // gesture stays "suspended", and its currentTime does not advance.
   get running() {
-    return Boolean(this.ctx);
+    return Boolean(this.ctx) && this.ctx.state === "running";
   }
 
+  // Safe to call on every gesture: the first call makes the context and the
+  // scheduler, every call asks the browser to resume it.
   async start() {
-    if (this.ctx) return this.ctx.resume();
-    this.ctx = this.factory();
+    if (!this.ctx) {
+      this.ctx = this.factory();
+      this.noise = this.makeNoise();
+      this.startTime = this.ctx.currentTime + this.k.startDelaySec;
+      this.nextBeatTime = this.startTime;
+      this.nextBeatIndex = 0;
+      this.schedule();
+      this.timer = setInterval(() => this.schedule(), this.k.schedulerMs);
+    }
     await this.ctx.resume();
-    this.noise = this.makeNoise();
-    this.startTime = this.ctx.currentTime + this.k.startDelaySec;
-    this.nextBeatTime = this.startTime;
-    this.nextBeatIndex = 0;
-    this.schedule();
-    this.timer = setInterval(() => this.schedule(), this.k.schedulerMs);
-    return undefined;
   }
 
   stop() {
@@ -92,7 +96,7 @@ export class BeatClock {
   }
 
   judgeNow() {
-    if (!this.ctx || this.now() < 0) return null;
+    if (!this.running || this.now() < 0) return null;
     return this.judge(this.now());
   }
 

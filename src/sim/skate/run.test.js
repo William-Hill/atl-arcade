@@ -99,3 +99,40 @@ describe("a scripted grind, jump, style run", () => {
     expect(run.combo.score).toBe(COMBO.vertAirPoints);
   });
 });
+
+describe("run signals for the loop and the HUD", () => {
+  const hop = [{ frames: 1, input: { jump: true } }, { frames: 100, input: {} }];
+
+  it("reports a bank once per banked combo", () => {
+    let r = createRun(GREYBOX, { position: [0, 0, 0], yaw: 0 });
+    r.skater.speed = 4;
+    const { states } = runScriptOnRun(r, [...hop, ...hop], { env, skaterEnv, trace: true });
+    const banks = states.filter((x) => x.banked > 0);
+    expect(banks).toHaveLength(2);
+    expect(banks.every((x) => x.banked === COMBO.hopPoints)).toBe(true);
+  });
+
+  it("keeps the last move and a sequence number across ticks with no move", () => {
+    let r = createRun(GREYBOX, { position: [0, 0, 0], yaw: 0 });
+    r.skater.speed = 4;
+    const { states } = runScriptOnRun(r, hop, { env, skaterEnv, trace: true });
+    const scored = states.findIndex((x) => x.moves.length > 0);
+    expect(scored).toBeGreaterThan(0);
+    const later = states[scored + 5];
+    expect(later.moves).toEqual([]);
+    expect(later.lastMove).toMatchObject({ name: "Hop" });
+    expect(later.moveSeq).toBe(1);
+  });
+
+  it("bails the combo when the skater respawns", () => {
+    let r = createRun(GREYBOX, { position: [0, 0, 0], yaw: 0 });
+    r.skater.speed = 4;
+    r = runScriptOnRun(r, [{ frames: 1, input: { jump: true } }, { frames: 30, input: {} }], { env, skaterEnv }).run;
+    expect(r.combo.active).toBe(true);
+    r.skater = { ...r.skater, position: [10, -5, 0], state: "air" };
+    r = stepRun(r, {}, 1 / 60, { ...env, bounds: GREYBOX.bounds, spawn: GREYBOX.spawn }, skaterEnv);
+    expect(r.skater.respawned).toBe(true);
+    expect(r.combo.active).toBe(false);
+    expect(r.combo.bails).toBe(1);
+  });
+});

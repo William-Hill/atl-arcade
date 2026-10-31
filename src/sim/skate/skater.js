@@ -9,7 +9,7 @@ import { findSnap, prepareGrindables, startGrind, stepGrind } from "./grind.js";
 export function createSkater(level, { position, yaw } = {}) {
   const spawn = level?.spawn ?? { position: [0, 0, 0], yaw: 0 };
   const state = createSkateState({ position: position ?? spawn.position, yaw: yaw ?? spawn.yaw });
-  return { ...state, grind: null, grindCooldown: 0, grindHeld: false, justSnapped: false, justFell: false, justExited: false, exitReason: null, stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0 } };
+  return { ...state, grind: null, grindCooldown: 0, grindHeld: false, justSnapped: false, justFell: false, justExited: false, exitReason: null, stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0, respawns: 0 } };
 }
 
 export function createSkaterEnv(level) {
@@ -33,6 +33,7 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     if (s.justExited) stats.exits += 1;
   } else {
     s = stepSkate(prev, input, dt, env, k.skate);
+    if (s.respawned) stats.respawns += 1;
     s.grindCooldown = Math.max(0, (prev.grindCooldown ?? 0) - dt);
     s.justSnapped = false;
     s.justFell = false;

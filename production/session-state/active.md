@@ -30,5 +30,5 @@ npm run dev     # shell at http://localhost:5173
 npm test        # Vitest
 npm run e2e     # Playwright, headless, starts Vite on port 5180
 # http://localhost:5173/ is the follow camera; ?view=orbit to inspect; ?view=fixed&debug=1 is the reference pose with the collider overlay
-# Keys: A/D or arrows steer, W/Up/Shift push, S/Down brake, Space jump, hold Ctrl grind, H colliders
+# Keys: A/D or arrows steer, W/Up/Shift push, S/Down brake, Space jump, hold F grind, H colliders
 ```

@@ -27,9 +27,14 @@ export function createSkaterView() {
     body,
     sync(state) {
       group.position.set(state.position[0], state.position[1], state.position[2]);
-      // While grinding the capsule leans with the balance meter.
-      const lean = state.state === "grind" && state.grind ? -state.grind.balance * 0.6 : 0;
-      group.rotation.set(lean, state.yaw, 0, "YXZ");
+      group.rotation.set(grindLean(state), state.yaw, 0, "YXZ");
     },
   };
+}
+
+// On a rail the capsule leans with the balance meter, toward the side the
+// skater falls off: a positive balance falls to the right (+z at yaw 0), and
+// a positive rotation about the forward axis tilts the top toward +z.
+export function grindLean(state) {
+  return state.state === "grind" && state.grind ? state.grind.balance * 0.6 : 0;
 }

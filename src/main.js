@@ -11,14 +11,14 @@ import { createRun, stepRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
 import { BeatClock } from "./audio/beat-clock.js";
 import { GREYBOX } from "./level/greybox.js";
-import { createGroundSampler } from "./level/ground.js";
+import { createLevelEnv } from "./level/ground.js";
 import { createPhysicsWorld, initPhysics } from "./physics/world.js";
 import { createKeyboard } from "./input/keyboard.js";
 import { createScriptPlayer } from "./input/scripted.js";
 
 const params = new URLSearchParams(window.location.search);
 const level = GREYBOX;
-const env = { sampleGround: createGroundSampler(level) };
+const env = createLevelEnv(level);
 const skaterEnv = createSkaterEnv(level);
 
 const canvas = document.getElementById("stage");
@@ -97,10 +97,9 @@ function simulate(dt) {
   run = stepRun(run, sampleInput(), dt, env, skaterEnv, beat.running ? beat : null);
   skater = run.skater;
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
-  if (!run.combo.active && run.combo.lastBanked && events.length && events[events.length - 1].type !== "bank" && events[events.length - 1].type !== "bail") {
-    events.push({ tick: run.tick, type: "bank", points: run.combo.lastBanked, score: run.combo.score });
-  }
-  if (skater.justFell) events.push({ tick: run.tick, type: "bail" });
+  if (run.banked) events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+  if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
+  if (skater.respawned) events.push({ tick: run.tick, type: "respawn" });
   if (skater.justSnapped) events.push({ tick: skater.tick, type: "snap", id: skater.grind.id, s: skater.grind.s });
   if (skater.justExited) events.push({ tick: skater.tick, type: "exit", reason: skater.exitReason, position: [...skater.position] });
   if (skater.justFell) events.push({ tick: skater.tick, type: "fall", position: [...skater.position] });

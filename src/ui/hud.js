@@ -38,6 +38,7 @@ export function createHud(root) {
   balanceDot.id = "hud-balance-dot";
 
   let tagUntil = 0;
+  let seenSeq = 0;
 
   return {
     update(run, nowMs = performance.now(), beatPhase = null) {
@@ -63,8 +64,11 @@ export function createHud(root) {
         balanceWrap.style.display = "none";
       }
 
-      // Flash the last on-beat tag (M0-07) or the last move name for a moment.
-      const last = run.moves && run.moves[run.moves.length - 1];
+      // Flash the last move name (and its on-beat tag, M0-07) for a moment.
+      // moveSeq counts every scored move, so a move on any tick of a
+      // multi-tick frame still shows.
+      const last = run.moveSeq !== seenSeq ? run.lastMove : null;
+      seenSeq = run.moveSeq;
       if (last) {
         tag.textContent = last.beatTag ? `${last.beatTag} ${last.name}` : last.name;
         tag.dataset.beat = last.beatTag ?? "";

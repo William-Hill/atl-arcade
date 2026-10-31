@@ -21,7 +21,7 @@ export function createSkater(level, { position, yaw } = {}) {
     style: null, // { id, name, time, duration, points, anim }
     styleHeld: [false, false],
     justStyled: null, // the move that just completed
-    stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0, styles: 0 },
+    stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0, styles: 0, respawns: 0 },
   };
 }
 
@@ -46,6 +46,7 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     if (s.justExited) stats.exits += 1;
   } else {
     s = stepSkate(prev, input, dt, env, k.skate);
+    if (s.respawned) stats.respawns += 1;
     s.grindCooldown = Math.max(0, (prev.grindCooldown ?? 0) - dt);
     s.justSnapped = false;
     s.justFell = false;

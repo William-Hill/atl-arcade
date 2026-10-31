@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { createSkateState, runScript } from "../src/sim/skate/controller.js";
-import { createGroundSampler } from "../src/level/ground.js";
+import { createLevelEnv } from "../src/level/ground.js";
 import { GREYBOX } from "../src/level/greybox.js";
 
 // The same script runs in node through the pure controller and in the
@@ -21,7 +21,7 @@ test("the capsule follows the controller and a scripted run lands within toleran
     if (msg.type() === "error") errors.push(msg.text());
   });
 
-  const env = { sampleGround: createGroundSampler(GREYBOX) };
+  const env = createLevelEnv(GREYBOX);
   const expected = runScript(createSkateState({ position: GREYBOX.spawn.position, yaw: GREYBOX.spawn.yaw }), SCRIPT, { env }).state;
 
   await page.goto("/?view=orbit");
@@ -46,8 +46,10 @@ test("keyboard input drives the skater", async ({ page }) => {
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
   const start = await page.evaluate(() => window.__atl.skater.position[0]);
   await page.keyboard.down("KeyW");
-  await page.waitForTimeout(700);
-  await page.keyboard.up("KeyW");
-  const end = await page.evaluate(() => window.__atl.skater.position[0]);
-  expect(end - start).toBeGreaterThan(1);
+  try {
+    // Poll: a slow frame loop advances fewer ticks per wall-clock second.
+    await expect.poll(() => page.evaluate(() => window.__atl.skater.position[0]), { timeout: 10000 }).toBeGreaterThan(start + 1);
+  } finally {
+    await page.keyboard.up("KeyW");
+  }
 });

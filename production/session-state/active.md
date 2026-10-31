@@ -4,7 +4,7 @@
 - Prior prototype: beat-lock (Phaser) — PIVOT, see prototypes/beat-lock-concept/PIVOT-NOTE.md
 - Hypothesis: free movement + grind + jump + style chain feels good; new player chains a 3-move combo within 3 minutes; accidental rail falls under 1 per minute.
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
-- Phase: M0 Greybox movement prototype. M0-01 to M0-09 are in pull requests. M0-10 (the human playtest) is next and is William's.
+- Phase: M0 done. M0-01 to M0-09 merged to main on 2026-10-31. M0-10 verdict: PROCEED (`prototypes/greybox-skate/REPORT.md`). M1 may start.
 
 ## M0 status, 2026-10-30
 
@@ -21,7 +21,7 @@ Every PR targets `main`. Each one branches from the previous one, so the diffs i
 | M0-07 On-beat bonus | `m0-07-beat-clock` | #32 | Vitest, 32-tap alignment mean -0.08 ms sd 1.65 ms (`reports/m0-07-beat-alignment.json`) |
 | M0-08 Input mapping | `m0-08-input-mapping` | #33 | Vitest, keyboard, fake gamepad |
 | M0-09 Playtest harness | `m0-09-playtest-harness` | #34 | `npm run playtest`: median 59.9 FPS, gate 55 PASS, `reports/playtest-2026-10-31-02-51-50.json` |
-| M0-10 Human playtest | — | — | For William, not an agent task |
+| M0-10 Human playtest | `m0-10-human-playtest` | PR open | William played it; verdict PROCEED; hypothesis not tested |
 
 PR #27 (`m0-02-greybox-block`) was a duplicate M0-02 from a parallel session. It is closed.
 

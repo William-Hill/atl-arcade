@@ -85,3 +85,28 @@ describe("ramp mesh", () => {
     for (const i of m.indices) expect(i).toBeLessThan(m.positions.length / 3);
   });
 });
+
+describe("level perimeter", () => {
+  // The skater steps up at most 0.25 m, so every column in the outer 1 m band
+  // must stand at least 0.4 m above the floor just inside it. Otherwise a
+  // skater rolls off the block and falls forever.
+  const STEP = 0.4;
+  for (const [edge, x, inside] of [["west", -31.5, -30.5], ["east", 31.5, 30.5]]) {
+    it(`closes the ${edge} edge from z -10 to 14`, () => {
+      const gaps = [];
+      for (let z = -9.9; z < 14; z += 0.2) {
+        const wall = ground(x, z);
+        const floor = ground(inside, z);
+        if (!wall || !floor || wall.height < floor.height + STEP) gaps.push(Number(z.toFixed(1)));
+      }
+      expect(gaps).toEqual([]);
+    });
+  }
+
+  it("closes the north and south edges with buildings", () => {
+    for (let x = -31.9; x < 32; x += 0.5) {
+      expect(ground(x, -10.5).height).toBeGreaterThan(5);
+      expect(ground(x, 14.5).height).toBeGreaterThan(5);
+    }
+  });
+});

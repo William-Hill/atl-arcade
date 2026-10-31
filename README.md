@@ -12,6 +12,7 @@ Atlanta games on real open data, in one Three.js shell. The first game is Skate 
 
 ```sh
 npm install
+npx playwright install chromium   # only for `npm run e2e`; the agent container already has it
 npm run dev
 ```
 
@@ -20,6 +21,7 @@ Open http://localhost:5173 for the shell.
 ## Checks
 
 ```sh
+npx playwright install chromium   # once per machine, before the first e2e run
 npm test     # Vitest, pure simulation modules
 npm run e2e  # Playwright, headless browser, screenshots to e2e/__screenshots__
 npm run build

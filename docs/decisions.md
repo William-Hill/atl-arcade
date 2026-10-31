@@ -54,3 +54,14 @@ The camera math is pure (`src/sim/camera.js`) and its knobs live in `CAMERA` in 
 Wall clipping: each frame the renderer casts one Rapier ray from the look-at point toward the smoothed camera position, filtered to the `wall`, `ground`, and `ledge` groups (rails are ignored). On a hit the camera moves to the hit point minus a margin, never closer than `minDistance`. Rapier ray casts return nothing until the query pipeline is built, so the physics world runs `updateSceneQueries()` (or one `step()`) right after creation.
 
 The default view is the follow camera. `?view=orbit` keeps the orbit camera for inspection, and `?view=fixed` is the screenshot reference pose.
+
+## 2026-10-31 — Follow camera on the quarter pipe (M0-04 fix)
+
+William's first play found camera faults on the quarter pipe. A node probe of the run showed four causes:
+
+1. The look-at point led 2 m along the heading, which put it inside the ramp and deck while the skater climbed. The wall ray started there, hit at distance 0, and pulled the camera 12 m forward onto the ramp face in one frame.
+2. When the ray cleared, the camera jumped 8 m back in one frame. The clip had no smoothing.
+3. At the top the landing flips the skater yaw by 180 degrees, and the camera orbited through the side of the deck to follow it.
+4. Back on flat ground the camera swung 180 degrees in about half a second, up to 0.93 m per frame.
+
+Fixes: the look-ahead now leads only by the horizontal velocity along the camera heading, so it never points into a wall or back at the camera. The wall ray starts from a pivot one `lookHeight` off the surface along the ground normal. A new blocker snaps the camera in at once, and a cleared blocker lets it ease back out at `clipRelease`. While the ground normal y is under `vertNormalY` (0.9), on the transition or in the air above it, the camera holds its yaw and stays on the street side. The swing is capped at `maxYawRate` (3 rad/s). On the scripted quarter-pipe run the worst camera move is now 0.35 m per frame and the camera never comes closer than 7 m. The Playwright test fails on the old code with 218 off-screen samples.

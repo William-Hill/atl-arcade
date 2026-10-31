@@ -13,14 +13,10 @@ const skaterEnv = createSkaterEnv(GREYBOX);
 function play(session) {
   const { run, states } = runScriptOnRun(createRun(GREYBOX, session.start), session.script, { env, skaterEnv, trace: true });
   const events = [];
-  let lastBanked = 0;
   for (const r of states) {
     for (const m of r.moves) events.push({ tick: r.tick, type: "move", name: m.name });
-    if (r.skater.justFell) events.push({ tick: r.tick, type: "bail" });
-    if (!r.combo.active && r.combo.lastBanked && r.combo.score !== lastBanked) {
-      events.push({ tick: r.tick, type: "bank" });
-      lastBanked = r.combo.score;
-    }
+    if (r.banked) events.push({ tick: r.tick, type: "bank" });
+    if (r.skater.justFell || r.skater.respawned) events.push({ tick: r.tick, type: "bail" });
   }
   return { run, events };
 }

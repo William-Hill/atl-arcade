@@ -7,7 +7,7 @@ npm run playtest
 npm run playtest -- --gate 55 --port 5182
 ```
 
-The run fails (exit code 1) when the median FPS over all sessions is under the gate (55) or any session logs a console error.
+The run fails (exit code 1) when the median FPS over all sessions is under the gate (55) or any session logs a console error. A page error or a session that runs past four times its simulated length plus 30 s stops the run at once, writes `reports/playtest-<date>-failed.json`, and closes the browser and the server.
 
 ## Sessions
 
@@ -35,6 +35,7 @@ All times come from the simulation tick count (60 ticks per second), not the wal
 | `timeToFirstThreeLinkSec` | Seconds from the session start to the move that made a combo 3 links long. `null` when it never happened. | Tick of that `move` event divided by 60. |
 | `vertAirs` | Landed launches off the quarter pipe. | `move` events named `Vert Air`. |
 | `snaps`, `exits`, `falls` | Rail snaps, clean exits (end or jump), falls off a rail. | `skater.stats`. |
+| `respawns` | Times the skater left the level and went back to the spawn point. Should be 0. | `skater.stats.respawns`. |
 | `fallsPerMinute` | `falls` divided by simulated minutes. The M0 hypothesis asks for under 1 per minute for a human; the scripted `rails` session falls on purpose. | Derived. |
 | `grindSeconds` | Seconds spent on rails. | `skater.stats.grindTime`. |
 | `styleMoves` | Completed dance moves. | `skater.stats.styles`. |

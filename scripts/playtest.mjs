@@ -37,95 +37,125 @@ const browser = await chromium.launch({
 
 const results = [];
 const allFrameMs = [];
+let fatal = null;
 
-for (const session of SESSIONS) {
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 720 },
-    recordVideo: { dir: REPORTS, size: { width: 1280, height: 720 } },
-  });
-  const page = await context.newPage();
-  const errors = [];
-  page.on("pageerror", (err) => errors.push(String(err)));
-  page.on("console", (msg) => {
-    if (msg.type() === "error") errors.push(msg.text());
-  });
+try {
+  for (const session of SESSIONS) {
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 720 },
+      recordVideo: { dir: REPORTS, size: { width: 1280, height: 720 } },
+    });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (err) => errors.push(String(err)));
+    page.on("console", (msg) => {
+      if (msg.type() === "error") errors.push(msg.text());
+    });
 
-  await page.goto(`http://localhost:${PORT}/?mute=1`);
-  await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 10, null, { timeout: 30000 });
-  await page.evaluate(() => window.__atl.beat.start());
-  await page.waitForTimeout(300);
+    await page.goto(`http://localhost:${PORT}/?mute=1`);
+    await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 10, null, { timeout: 30000 });
+    await page.evaluate(() => window.__atl.beat.start());
+    await page.waitForTimeout(300);
 
-  const screenshotStart = resolve(REPORTS, `${base}-${session.id}-start.png`);
-  const screenshotEnd = resolve(REPORTS, `${base}-${session.id}-end.png`);
+    const screenshotStart = resolve(REPORTS, `${base}-${session.id}-start.png`);
+    const screenshotEnd = resolve(REPORTS, `${base}-${session.id}-end.png`);
 
-  const data = await page.evaluate(
-    async ({ script, start }) => {
-      window.__atl.fps.start();
-      const t0 = performance.now();
-      const end = await window.__atl.runScript(script, start);
-      const wallMs = performance.now() - t0;
-      const frameMs = window.__atl.fps.stop();
-      return { end, wallMs, frameMs, events: window.__atl.events.slice(), combo: window.__atl.combo };
-    },
-    { script: session.script, start: session.start },
-  ).then(async (d) => {
+    // A page error stops the frame loop, so runScript would never resolve.
+    // Race each session against the first page error and a timeout of four
+    // times its simulated length plus 30 s.
+    const simSeconds = session.script.reduce((n, e) => n + e.frames, 0) / 60;
+    const timeoutMs = simSeconds * 4000 + 30000;
+    let timer = null;
+    const failure = new Promise((_, reject) => {
+      page.on("pageerror", (err) => reject(new Error(`page error in session ${session.id}: ${err}`)));
+      timer = setTimeout(() => reject(new Error(`session ${session.id} did not finish in ${Math.round(timeoutMs / 1000)} s`)), timeoutMs);
+    });
+    failure.catch(() => {});
+
+    const run = page.evaluate(
+      async ({ script, start }) => {
+        window.__atl.fps.start();
+        const t0 = performance.now();
+        const end = await window.__atl.runScript(script, start);
+        const wallMs = performance.now() - t0;
+        const frameMs = window.__atl.fps.stop();
+        return { end, wallMs, frameMs, events: window.__atl.events.slice(), combo: window.__atl.combo };
+      },
+      { script: session.script, start: session.start },
+    );
+    let data;
+    try {
+      data = await Promise.race([run, failure]);
+    } finally {
+      clearTimeout(timer);
+    }
     await page.screenshot({ path: screenshotEnd });
-    return d;
-  });
-  // Take the start shot after the run (same page) by resetting to the start pose.
-  await page.evaluate((start) => window.__atl.resetSkater(start.position, start.yaw), session.start);
-  await page.waitForTimeout(100);
-  await page.screenshot({ path: screenshotStart });
+    // Take the start shot after the run (same page) by resetting to the start pose.
+    await page.evaluate((start) => window.__atl.resetSkater(start.position, start.yaw), session.start);
+    await page.waitForTimeout(100);
+    await page.screenshot({ path: screenshotStart });
 
-  const video = page.video();
-  await context.close();
-  let videoPath = null;
-  if (video) {
-    const tmp = await video.path();
-    videoPath = resolve(REPORTS, `${base}-${session.id}.webm`);
-    renameSync(tmp, videoPath);
+    const video = page.video();
+    await context.close();
+    let videoPath = null;
+    if (video) {
+      const tmp = await video.path();
+      videoPath = resolve(REPORTS, `${base}-${session.id}.webm`);
+      renameSync(tmp, videoPath);
+    }
+
+    const ticks = data.end.tick;
+    const seconds = ticks / 60;
+    const stats = data.end.stats;
+    const fps = fpsMetrics(data.frameMs);
+    allFrameMs.push(...data.frameMs);
+    const combo = comboMetrics(data.events);
+
+    const result = {
+      id: session.id,
+      title: session.title,
+      description: session.description,
+      ticks,
+      simulatedSeconds: Number(seconds.toFixed(2)),
+      wallSeconds: Number((data.wallMs / 1000).toFixed(2)),
+      fps,
+      score: data.combo.score,
+      bestCombo: data.combo.best,
+      comboCount: combo.comboCount,
+      maxCombo: combo.maxCombo,
+      timeToFirstThreeLinkSec: combo.timeToFirstThreeLinkSec,
+      vertAirs: combo.vertAirs,
+      snaps: stats.snaps,
+      exits: stats.exits,
+      falls: stats.falls,
+    respawns: stats.respawns,
+      fallsPerMinute: Number(((stats.falls / seconds) * 60).toFixed(2)),
+      grindSeconds: Number(stats.grindTime.toFixed(2)),
+      styleMoves: stats.styles,
+      moves: data.events.filter((e) => e.type === "move").map((e) => ({ tick: e.tick, name: e.name, points: e.points, onBeat: e.onBeat, beatTag: e.beatTag })),
+      screenshots: [screenshotStart, screenshotEnd].map((p) => p.replace(`${ROOT}/`, "")),
+      video: videoPath ? videoPath.replace(`${ROOT}/`, "") : null,
+      consoleErrors: errors,
+    };
+    results.push(result);
+    console.log(
+      `${session.id.padEnd(6)} ${result.simulatedSeconds}s sim, median ${fps.medianFps} fps (avg ${fps.averageFps}, p5 ${fps.p5Fps}), score ${result.score}, max combo ${result.maxCombo}, combos ${result.comboCount}, falls/min ${result.fallsPerMinute}, first 3-link ${result.timeToFirstThreeLinkSec === null ? "none" : `${result.timeToFirstThreeLinkSec}s`}`,
+    );
   }
-
-  const ticks = data.end.tick;
-  const seconds = ticks / 60;
-  const stats = data.end.stats;
-  const fps = fpsMetrics(data.frameMs);
-  allFrameMs.push(...data.frameMs);
-  const combo = comboMetrics(data.events);
-
-  const result = {
-    id: session.id,
-    title: session.title,
-    description: session.description,
-    ticks,
-    simulatedSeconds: Number(seconds.toFixed(2)),
-    wallSeconds: Number((data.wallMs / 1000).toFixed(2)),
-    fps,
-    score: data.combo.score,
-    bestCombo: data.combo.best,
-    comboCount: combo.comboCount,
-    maxCombo: combo.maxCombo,
-    timeToFirstThreeLinkSec: combo.timeToFirstThreeLinkSec,
-    vertAirs: combo.vertAirs,
-    snaps: stats.snaps,
-    exits: stats.exits,
-    falls: stats.falls,
-    fallsPerMinute: Number(((stats.falls / seconds) * 60).toFixed(2)),
-    grindSeconds: Number(stats.grindTime.toFixed(2)),
-    styleMoves: stats.styles,
-    moves: data.events.filter((e) => e.type === "move").map((e) => ({ tick: e.tick, name: e.name, points: e.points, onBeat: e.onBeat, beatTag: e.beatTag })),
-    screenshots: [screenshotStart, screenshotEnd].map((p) => p.replace(`${ROOT}/`, "")),
-    video: videoPath ? videoPath.replace(`${ROOT}/`, "") : null,
-    consoleErrors: errors,
-  };
-  results.push(result);
-  console.log(
-    `${session.id.padEnd(6)} ${result.simulatedSeconds}s sim, median ${fps.medianFps} fps (avg ${fps.averageFps}, p5 ${fps.p5Fps}), score ${result.score}, max combo ${result.maxCombo}, combos ${result.comboCount}, falls/min ${result.fallsPerMinute}, first 3-link ${result.timeToFirstThreeLinkSec === null ? "none" : `${result.timeToFirstThreeLinkSec}s`}`,
-  );
+} catch (err) {
+  fatal = err;
+} finally {
+  await browser.close().catch(() => {});
+  await server.close().catch(() => {});
 }
 
-await browser.close();
-await server.close();
+if (fatal) {
+  const failPath = resolve(REPORTS, `${base}-failed.json`);
+  writeFileSync(failPath, `${JSON.stringify({ date: date.toISOString(), error: String(fatal), completedSessions: results.map((r) => r.id) }, null, 2)}\n`);
+  console.error(`playtest FAILED: ${fatal.message}`);
+  console.error(`report: ${failPath.replace(`${ROOT}/`, "")}`);
+  process.exit(1);
+}
 
 const overall = fpsMetrics(allFrameMs);
 const totals = {

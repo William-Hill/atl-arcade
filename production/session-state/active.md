@@ -23,14 +23,28 @@ Every PR targets `main`. Each one branches from the previous one, so the diffs i
 | M0-09 Playtest harness | `m0-09-playtest-harness` | #34 | `npm run playtest`: median 59.9 FPS, gate 55 PASS, `reports/playtest-2026-10-31-02-51-50.json` |
 | M0-10 Human playtest | — | — | For William, not an agent task |
 
-Duplicate: PR #27 (`m0-02-greybox-block`) is a second M0-02 from a parallel automated session. The stack above builds on #26, not #27. Close #27 or keep it as a reference; do not merge both.
+PR #27 (`m0-02-greybox-block`) was a duplicate M0-02 from a parallel session. It is closed.
+
+### Review fixes, 2026-10-31
+
+William's first play found camera faults on the quarter pipe; the fix is on M0-04. The ship-it review then answered 39 bot review threads (CodeRabbit, Codex) and a local code review. Each fix sits on the branch that introduced the code, and every branch merged the one below it:
+
+- M0-01: README names the Chromium install step.
+- M0-02: barriers close every exit from the block, with a 4 m wall behind the deck.
+- M0-03: a jump into a building no longer lands on its roof; a lost skater respawns.
+- M0-04: the camera never goes past a close wall; the hint names the follow camera.
+- M0-05: grind moves from Ctrl to F (Ctrl+W closed the tab); the grind lean tilts the right way; flags no longer repeat on the rail.
+- M0-06: bank events record once; the HUD shows moves from every tick; a respawn bails the combo.
+- M0-07: the beat clock resumes a suspended context; a hint asks for a key or a click to start the beat.
+- M0-08: the input map binds grind to F and blocks browser defaults for bound keys.
+- M0-09: the harness stops on a page error or a stuck session and always closes the browser and the server.
 
 ### Final numbers on the `m0-09-playtest-harness` branch
 
-- `npm test`: 14 files, 123 tests, all pass.
-- `npm run e2e`: 16 Playwright tests, all pass, about 2 minutes (the beat alignment test runs 64 beats).
+- `npm test`: 18 files, 151 tests, all pass.
+- `npm run e2e`: 18 Playwright tests, all pass, about 2 minutes.
 - `npm run build`: passes. The bundle is 4.9 MB raw because the Rapier WASM is inlined; split it before M1.
-- `npm run playtest`: 3 sessions, 44.8 simulated seconds, median 59.9 FPS, score 1467, max combo 3, first 3-link combo at 3.47 s in the combo session, 1 scripted fall.
+- `npm run playtest`: median 59.9 FPS over 2579 frames, gate 55 PASS, `reports/playtest-2026-10-31-13-59-39.json`. The score changes between runs because moves that land on the beat earn a bonus, and the beat runs on wall-clock time.
 
 ### Not verified
 
@@ -39,6 +53,8 @@ Duplicate: PR #27 (`m0-02-greybox-block`) is a second M0-02 from a parallel auto
 - Audio through speakers. The beat clock ran in headless Chromium; the alignment numbers are from the mapping chain, not from a listening test.
 - Performance on a GPU-less or low-end machine. The 59.9 FPS is this Mac's headless SwiftShader, capped at 60.
 - Rails are not solid to a rolling skater that is not grinding: the capsule can roll through a rail. Known, deferred.
+- There is no GitHub Actions CI. The only PR check is the CodeRabbit review. Every test result above is from local runs on this Mac.
+- A gamepad cannot start the beat on its own. Browsers need one key press or click first; the HUD asks for it.
 
 ## Run the greybox prototype (M0-10)
 
@@ -51,7 +67,7 @@ Duplicate: PR #27 (`m0-02-greybox-block`) is a second M0-02 from a parallel auto
    npx playwright install chromium
    ```
 
-2. Start the game and open http://localhost:5173 in Chrome. Press any key to start the click track.
+2. Start the game and open http://localhost:5173 in Chrome. Press any key or click once to start the click track.
 
    ```sh
    npm run dev

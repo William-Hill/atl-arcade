@@ -23,6 +23,9 @@ export function createHud(root) {
   tag.id = "hud-tag";
   const pulse = el("div", "hud-pulse", root);
   pulse.id = "hud-pulse";
+  const hint = el("div", "hud-hint", root);
+  hint.id = "hud-hint";
+  hint.textContent = "Press any key or click to start the beat";
 
   const styleWrap = el("div", "hud-meter hud-style", root);
   el("span", "hud-label", styleWrap).textContent = "STYLE";
@@ -38,6 +41,7 @@ export function createHud(root) {
   balanceDot.id = "hud-balance-dot";
 
   let tagUntil = 0;
+  let seenSeq = 0;
 
   return {
     update(run, nowMs = performance.now(), beatPhase = null) {
@@ -63,8 +67,11 @@ export function createHud(root) {
         balanceWrap.style.display = "none";
       }
 
-      // Flash the last on-beat tag (M0-07) or the last move name for a moment.
-      const last = run.moves && run.moves[run.moves.length - 1];
+      // Flash the last move name (and its on-beat tag, M0-07) for a moment.
+      // moveSeq counts every scored move, so a move on any tick of a
+      // multi-tick frame still shows.
+      const last = run.moveSeq !== seenSeq ? run.lastMove : null;
+      seenSeq = run.moveSeq;
       if (last) {
         tag.textContent = last.beatTag ? `${last.beatTag} ${last.name}` : last.name;
         tag.dataset.beat = last.beatTag ?? "";
@@ -73,6 +80,9 @@ export function createHud(root) {
       tag.style.opacity = nowMs < tagUntil ? "1" : "0";
 
       // Beat pulse: a ring that flashes on each beat and fades through the beat.
+      // Browsers start audio only after a key or a click, and a gamepad
+      // press does not count, so the hint stays until the beat runs.
+      hint.style.display = beatPhase === null ? "" : "none";
       if (beatPhase === null) {
         pulse.style.display = "none";
       } else {

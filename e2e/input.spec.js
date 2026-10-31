@@ -10,10 +10,12 @@ test("the keyboard works with no gamepad and the source says keyboard", async ({
   expect(await page.evaluate(() => window.__atl.input.source)).toBe("keyboard");
   const start = await page.evaluate(() => window.__atl.skater.position[0]);
   await page.keyboard.down("ShiftLeft");
-  await page.waitForTimeout(700);
-  await page.keyboard.up("ShiftLeft");
-  const end = await page.evaluate(() => window.__atl.skater.position[0]);
-  expect(end - start).toBeGreaterThan(1);
+  try {
+    // Poll: a slow frame loop advances fewer ticks per wall-clock second.
+    await expect.poll(() => page.evaluate(() => window.__atl.skater.position[0]), { timeout: 10000 }).toBeGreaterThan(start + 1);
+  } finally {
+    await page.keyboard.up("ShiftLeft");
+  }
   expect(await page.evaluate(() => window.__atl.input.gamepadId)).toBeNull();
 });
 
@@ -41,7 +43,8 @@ test("a connected gamepad is detected and drives the skater", async ({ page }) =
     window.__fakePad.buttons[2] = { pressed: true, touched: true, value: 1 };
     window.__fakePad.axes[0] = -0.6;
   });
-  await page.waitForTimeout(700);
+  await expect.poll(() => page.evaluate(() => window.__atl.skater.position[0]), { timeout: 10000 }).toBeGreaterThan(start.x + 1);
+  await expect.poll(() => page.evaluate(() => window.__atl.skater.yaw), { timeout: 10000 }).toBeGreaterThan(0.1);
   const mid = await page.evaluate(() => ({ x: window.__atl.skater.position[0], z: window.__atl.skater.position[2], yaw: window.__atl.skater.yaw, source: window.__atl.input.source }));
   await page.evaluate(() => {
     window.__fakePad.buttons[2] = { pressed: false, touched: false, value: 0 };

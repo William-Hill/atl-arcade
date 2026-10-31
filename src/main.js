@@ -180,7 +180,7 @@ function frame(now) {
   renderer.render(scene, camera);
   frames += 1;
   if (recorder.active && frames % recorder.every === 0) {
-    recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null });
+    recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
   }
   requestAnimationFrame(frame);
 }

@@ -50,3 +50,21 @@ export const CAMERA = {
   clipMargin: 0.3, // m kept between the camera and a wall it would clip. min 0.1 / typical 0.3 / max 0.6.
   minDistance: 1.2, // m closest the camera comes to the look-at point when a wall pushes it in. min 0.5 / typical 1.2 / max 3.
 };
+
+// Grind: rail snap, balance, exit.
+export const GRIND = {
+  snapRadius: 1.2, // m horizontal distance to the spline that allows a snap. min 0.6 / typical 1.2 / max 2.
+  snapBelow: 0.35, // m the rail may sit below the feet (airborne approach). min 0.1 / typical 0.35 / max 1.
+  snapAbove: 0.9, // m the rail may sit above the feet (rolling approach). min 0.4 / typical 0.9 / max 1.5.
+  minAlongDot: 0.5, // |cos| between heading and tangent needed to snap. min 0.3 / typical 0.5 / max 0.8.
+  minSpeed: 2.5, // m/s floor for the grind speed at snap. min 1 / typical 2.5 / max 4.
+  friction: 0.6, // m/s^2 speed lost while grinding. min 0 / typical 0.6 / max 2.
+  balanceDrift: 0.55, // 1/s constant lean push. min 0.2 / typical 0.55 / max 1.2.
+  balanceGravity: 1.4, // 1/s lean growth proportional to the lean. min 0.5 / typical 1.4 / max 3.
+  balanceCorrect: 2.2, // 1/s correction per unit of steer. min 1 / typical 2.2 / max 4.
+  balanceLimit: 1.0, // lean magnitude that counts as a fall. Keep 1.
+  fallSideSpeed: 1.5, // m/s sideways push on a fall. min 0.5 / typical 1.5 / max 3.
+  fallSpeedKeep: 0.5, // fraction of speed kept after a fall. min 0 / typical 0.5 / max 1.
+  resnapCooldown: 0.4, // s after an exit or fall before another snap. min 0.1 / typical 0.4 / max 1.
+  endPop: 0.8, // m/s upward pop when the spline ends. min 0 / typical 0.8 / max 2.
+};

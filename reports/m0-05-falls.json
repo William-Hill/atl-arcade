@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-31T02:29:18.114Z",
+  "script": "e2e/grind.spec.js FREE_SKATE",
+  "ticks": 1450,
+  "seconds": 24.17,
+  "snaps": 2,
+  "exits": 1,
+  "falls": 1,
+  "fallsPerMinute": 2.48,
+  "grindSeconds": 1.27,
+  "events": [
+    {
+      "tick": 91,
+      "type": "snap",
+      "id": "rail-straight"
+    },
+    {
+      "tick": 146,
+      "type": "fall"
+    },
+    {
+      "tick": 171,
+      "type": "snap",
+      "id": "rail-straight"
+    },
+    {
+      "tick": 192,
+      "type": "exit",
+      "reason": "end"
+    }
+  ]
+}

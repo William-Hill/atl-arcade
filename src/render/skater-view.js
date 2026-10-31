@@ -27,7 +27,9 @@ export function createSkaterView() {
     body,
     sync(state) {
       group.position.set(state.position[0], state.position[1], state.position[2]);
-      group.rotation.set(0, state.yaw, 0);
+      // While grinding the capsule leans with the balance meter.
+      const lean = state.state === "grind" && state.grind ? -state.grind.balance * 0.6 : 0;
+      group.rotation.set(lean, state.yaw, 0, "YXZ");
     },
   };
 }

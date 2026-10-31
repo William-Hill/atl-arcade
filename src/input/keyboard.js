@@ -2,6 +2,7 @@
 // full rebindable map and the gamepad. Returns the controller input shape.
 //
 // A/D or Left/Right: steer. W/Up or Shift: push. S/Down: brake. Space: jump.
+// Hold Control: grind.
 
 export function createKeyboard(target = window) {
   const down = new Set();
@@ -23,6 +24,7 @@ export function createKeyboard(target = window) {
         push: down.has("KeyW") || down.has("ArrowUp") || down.has("ShiftLeft") || down.has("ShiftRight"),
         brake: down.has("KeyS") || down.has("ArrowDown"),
         jump: down.has("Space"),
+        grind: down.has("ControlLeft") || down.has("ControlRight"),
       };
     },
     dispose() {

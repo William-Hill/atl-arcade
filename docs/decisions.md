@@ -56,6 +56,8 @@ Decisions inside it:
 - **A jump is a fixed arc.** No charge, no variable height. The spec asked for a fixed arc and it keeps the air state simple for the grind work in M0-05.
 - **Nothing in the controller ends a run** (pillar 1). Roll off the block and you are put back at the spawn with a counter incremented. There is no death, no reset of score, and no fail state.
 
+The push impulse is 2.2 m/s, not the 3.4 it started at: against an 11 m/s cap, 3.4 meant three pushes maxed the skater out and speed stopped being a decision. At 2.2 it takes five or six.
+
 Top speed is 11 m/s, not the 14 it started at. At 14 the skater crossed the whole greybox block in under three seconds and a four-second scripted line ran out of block. 11 m/s is about 40 km/h, which is quick for roller skates and leaves the block readable. The greybox ground grew from 64 x 40 m to 90 x 56 m at the same time, so a full-lock carve (radius about 10.5 m at top speed) fits on it with room to spare.
 
 Determinism is checked two ways: Vitest runs a script and compares two runs, and the Playwright spec runs the same script in Node and in the browser and compares end positions to the millimetre. The browser result is also compared frame-driven against batch-run, which is what proves the fixed-step accumulator is doing its job.

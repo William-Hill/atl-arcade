@@ -9,8 +9,10 @@ export const SKATE = {
   // slow enough that a 64 m greybox block takes a few seconds to cross. At 14
   // the skater ran out of block before a scripted line finished.
   maxSpeed: 11, // m/s        min 8 | typical 11 | max 18
-  // One push adds this much. Big enough that pushing feels like a decision.
-  pushImpulse: 3.4, // m/s    min 1.5 | typical 3.4 | max 5
+  // One push adds this much. Five or six pushes reach top speed, so holding a
+  // line is a skill rather than a formality. At 3.4 against the 11 m/s cap,
+  // three pushes maxed the skater out and speed stopped being a decision.
+  pushImpulse: 2.2, // m/s    min 1.2 | typical 2.2 | max 4
   // Time before the next push lands. The cooldown is what makes speed a skill.
   pushCooldown: 0.4, // s     min 0.2 | typical 0.4 | max 0.8
   // Rolling resistance while coasting. Momentum is king, so keep it low.

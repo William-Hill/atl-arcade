@@ -21,6 +21,8 @@ export function createHud(root) {
   pending.id = "hud-pending";
   const tag = el("div", "hud-tag", root);
   tag.id = "hud-tag";
+  const pulse = el("div", "hud-pulse", root);
+  pulse.id = "hud-pulse";
 
   const styleWrap = el("div", "hud-meter hud-style", root);
   el("span", "hud-label", styleWrap).textContent = "STYLE";
@@ -38,7 +40,7 @@ export function createHud(root) {
   let tagUntil = 0;
 
   return {
-    update(run, nowMs = performance.now()) {
+    update(run, nowMs = performance.now(), beatPhase = null) {
       const c = run.combo;
       score.textContent = c.score.toLocaleString("en-US");
       if (c.active) {
@@ -69,7 +71,17 @@ export function createHud(root) {
         tagUntil = nowMs + 900;
       }
       tag.style.opacity = nowMs < tagUntil ? "1" : "0";
+
+      // Beat pulse: a ring that flashes on each beat and fades through the beat.
+      if (beatPhase === null) {
+        pulse.style.display = "none";
+      } else {
+        pulse.style.display = "";
+        const fade = 1 - beatPhase;
+        pulse.style.opacity = String(0.25 + 0.75 * fade * fade);
+        pulse.style.transform = `scale(${1 + 0.6 * fade * fade})`;
+      }
     },
-    elements: { score, combo, pending, tag, styleFill, balanceWrap, balanceDot },
+    elements: { score, combo, pending, tag, pulse, styleFill, balanceWrap, balanceDot },
   };
 }

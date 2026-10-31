@@ -15,7 +15,7 @@ export default defineConfig({
     // Headless Chromium here renders WebGL through SwiftShader, so the GPU
     // sandbox is off and the software path is opted into explicitly.
     launchOptions: {
-      args: ["--no-sandbox", "--enable-unsafe-swiftshader", "--disable-dev-shm-usage"],
+      args: ["--no-sandbox", "--enable-unsafe-swiftshader", "--disable-dev-shm-usage", "--autoplay-policy=no-user-gesture-required"],
     },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],

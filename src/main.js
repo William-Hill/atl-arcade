@@ -9,6 +9,7 @@ import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkaterEnv } from "./sim/skate/skater.js";
 import { createRun, stepRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
+import { BeatClock } from "./audio/beat-clock.js";
 import { GREYBOX } from "./level/greybox.js";
 import { createGroundSampler } from "./level/ground.js";
 import { createPhysicsWorld, initPhysics } from "./physics/world.js";
@@ -66,6 +67,17 @@ let skater = run.skater;
 const hud = createHud(document.getElementById("hud"));
 // Simulation events for the tests and the playtest harness.
 const events = [];
+
+// Beat clock: starts on the first key or pointer press (browser audio
+// policy). The beat never gates input; moves that land near a beat earn
+// the on-beat bonus and a PERFECT / GOOD tag.
+const beat = new BeatClock();
+beat.muted = params.get("mute") === "1";
+function startBeat() {
+  if (!beat.running) beat.start().catch(() => {});
+}
+window.addEventListener("keydown", startBeat, { once: false });
+window.addEventListener("pointerdown", startBeat);
 let script = null;
 let scriptResolve = null;
 
@@ -82,7 +94,7 @@ function sampleInput() {
 }
 
 function simulate(dt) {
-  run = stepRun(run, sampleInput(), dt, env, skaterEnv);
+  run = stepRun(run, sampleInput(), dt, env, skaterEnv, beat.running ? beat : null);
   skater = run.skater;
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
   if (!run.combo.active && run.combo.lastBanked && events.length && events[events.length - 1].type !== "bank" && events[events.length - 1].type !== "bail") {
@@ -137,9 +149,17 @@ function projectSkater() {
   return { x: projected.x, y: projected.y, z: projected.z };
 }
 
+// The beat alignment test pauses rendering: the software renderer in
+// headless Chromium takes a frame's worth of time and delays timers.
+let renderPaused = false;
+
 function frame(now) {
   const elapsed = (now - last) / 1000;
   last = now;
+  if (renderPaused) {
+    requestAnimationFrame(frame);
+    return;
+  }
 
   const stepped = advance(stepper, elapsed);
   stepper = stepped.stepper;
@@ -152,7 +172,7 @@ function frame(now) {
     controls.update();
   }
   if (follow) follow.update(skater, Math.min(elapsed, 0.1));
-  hud.update(run, now);
+  hud.update(run, now, beat.running ? beat.phase() : null);
   renderer.render(scene, camera);
   frames += 1;
   if (recorder.active && frames % recorder.every === 0) {
@@ -191,6 +211,14 @@ window.__atl = {
   },
   get combo() {
     return run.combo;
+  },
+  beat,
+  get renderPaused() {
+    return renderPaused;
+  },
+  set renderPaused(v) {
+    renderPaused = Boolean(v);
+    last = performance.now();
   },
   get skaterRotation() {
     const r = skaterView.group.rotation;

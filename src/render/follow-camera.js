@@ -1,19 +1,20 @@
 import * as THREE from "three";
-import { clipCamera, createCameraState, stepCamera } from "../sim/camera.js";
+import { cameraPivot, createCameraState, placeCamera, resolveClip, stepCamera } from "../sim/camera.js";
 import { ALL_GROUPS, GROUP, collisionGroups } from "../physics/world.js";
 
 // Applies the pure camera state to a Three.js camera and keeps it out of
-// walls with a Rapier ray from the look-at point toward the camera.
+// walls with a Rapier ray from the skater pivot toward the camera.
 export function createFollowCamera(camera, { RAPIER, world, skater }) {
   let state = createCameraState(skater);
   const rayGroups = collisionGroups(ALL_GROUPS, GROUP.wall | GROUP.ground | GROUP.ledge);
   const origin = new THREE.Vector3();
   const dir = new THREE.Vector3();
   let lastHit = null;
+  let allowed = Infinity;
 
-  function wallDistance(cam) {
-    origin.set(cam.lookAt[0], cam.lookAt[1], cam.lookAt[2]);
-    dir.set(cam.position[0] - cam.lookAt[0], cam.position[1] - cam.lookAt[1], cam.position[2] - cam.lookAt[2]);
+  function wallDistance(cam, pivot) {
+    origin.set(pivot[0], pivot[1], pivot[2]);
+    dir.set(cam.position[0] - pivot[0], cam.position[1] - pivot[1], cam.position[2] - pivot[2]);
     const len = dir.length();
     if (len < 1e-6) return Infinity;
     dir.divideScalar(len);
@@ -26,14 +27,18 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
   return {
     update(current, dt) {
       state = stepCamera(state, current, dt);
-      const distance = wallDistance(state);
+      const pivot = cameraPivot(current);
+      const distance = wallDistance(state, pivot);
       lastHit = Number.isFinite(distance) ? distance : null;
-      const placed = clipCamera(state, distance);
+      const full = Math.hypot(state.position[0] - pivot[0], state.position[1] - pivot[1], state.position[2] - pivot[2]);
+      allowed = resolveClip(allowed, full, distance, dt);
+      const placed = placeCamera(state, pivot, allowed);
       camera.position.set(placed.position[0], placed.position[1], placed.position[2]);
       camera.lookAt(placed.lookAt[0], placed.lookAt[1], placed.lookAt[2]);
     },
     reset(current) {
       state = createCameraState(current);
+      allowed = Infinity;
     },
     get state() {
       return state;

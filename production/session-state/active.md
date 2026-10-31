@@ -17,7 +17,7 @@
 | M0-05 Grind system | `m0-05-grind-system` | PR open, branched from `m0-04-follow-camera` |
 | M0-06 Combo and style | `m0-06-combo-style` | PR open, branched from `m0-05-grind-system` |
 | M0-07 On-beat bonus | `m0-07-beat-clock` | PR open, branched from `m0-06-combo-style` |
-| M0-08 Input mapping | — | not started |
+| M0-08 Input mapping | `m0-08-input-mapping` | PR open, branched from `m0-07-beat-clock` |
 | M0-09 Playtest harness | — | not started |
 | M0-10 Human playtest | — | for William, not an agent task |
 
@@ -31,4 +31,5 @@ npm test        # Vitest
 npm run e2e     # Playwright, headless, starts Vite on port 5180
 # http://localhost:5173/ is the follow camera; ?view=orbit to inspect; ?view=fixed&debug=1 is the reference pose with the collider overlay
 # Keys: A/D or arrows steer, W/Up/Shift push, S/Down brake, Space jump, hold F grind, Q/E style moves, H colliders
+# Gamepad (standard): left stick steer, A jump, X push, Y/B style, RT grind, LT brake
 ```

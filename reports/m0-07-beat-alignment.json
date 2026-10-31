@@ -1,178 +1,178 @@
 {
-  "date": "2026-10-31T13:53:56.329Z",
+  "date": "2026-10-31T13:56:55.493Z",
   "taps": 32,
   "bpm": 100,
   "outputLatencyMs": 197.8,
   "renderPaused": {
-    "meanMs": -2.05,
-    "sdMs": 1.82,
+    "meanMs": -2.41,
+    "sdMs": 1.7,
     "within60ms": 32,
     "samples": [
       {
         "index": 1,
-        "offsetMs": -4.42,
+        "offsetMs": -5.11,
         "tag": "PERFECT"
       },
       {
         "index": 2,
-        "offsetMs": -0.7,
+        "offsetMs": -1.49,
         "tag": "PERFECT"
       },
       {
         "index": 3,
-        "offsetMs": -3.09,
+        "offsetMs": -3.48,
         "tag": "PERFECT"
       },
       {
         "index": 4,
-        "offsetMs": 0.23,
+        "offsetMs": 0.04,
         "tag": "PERFECT"
       },
       {
         "index": 5,
-        "offsetMs": -1.76,
+        "offsetMs": -1.55,
         "tag": "PERFECT"
       },
       {
         "index": 6,
-        "offsetMs": -3.04,
+        "offsetMs": -3.83,
         "tag": "PERFECT"
       },
       {
         "index": 7,
-        "offsetMs": -5.03,
+        "offsetMs": 0.49,
         "tag": "PERFECT"
       },
       {
         "index": 8,
-        "offsetMs": -1.21,
+        "offsetMs": -2.2,
         "tag": "PERFECT"
       },
       {
         "index": 9,
-        "offsetMs": -3.8,
+        "offsetMs": -4.29,
         "tag": "PERFECT"
       },
       {
         "index": 10,
-        "offsetMs": 0.32,
+        "offsetMs": -0.87,
         "tag": "PERFECT"
       },
       {
         "index": 11,
-        "offsetMs": -2.56,
+        "offsetMs": -2.25,
         "tag": "PERFECT"
       },
       {
         "index": 12,
-        "offsetMs": -4.55,
+        "offsetMs": -4.34,
         "tag": "PERFECT"
       },
       {
         "index": 13,
-        "offsetMs": -0.03,
+        "offsetMs": -0.92,
         "tag": "PERFECT"
       },
       {
         "index": 14,
-        "offsetMs": -2.52,
+        "offsetMs": -2.71,
         "tag": "PERFECT"
       },
       {
         "index": 15,
-        "offsetMs": 0.7,
+        "offsetMs": -4.99,
         "tag": "PERFECT"
       },
       {
         "index": 16,
-        "offsetMs": -1.38,
+        "offsetMs": -1.27,
         "tag": "PERFECT"
       },
       {
         "index": 17,
-        "offsetMs": -3.37,
+        "offsetMs": -3.36,
         "tag": "PERFECT"
       },
       {
         "index": 18,
-        "offsetMs": -4.96,
+        "offsetMs": 0.16,
         "tag": "PERFECT"
       },
       {
         "index": 19,
-        "offsetMs": -1.44,
+        "offsetMs": -1.73,
         "tag": "PERFECT"
       },
       {
         "index": 20,
-        "offsetMs": -3.52,
+        "offsetMs": -4.11,
         "tag": "PERFECT"
       },
       {
         "index": 21,
-        "offsetMs": -0.11,
+        "offsetMs": 0,
         "tag": "PERFECT"
       },
       {
         "index": 22,
-        "offsetMs": -1.89,
+        "offsetMs": -2.08,
         "tag": "PERFECT"
       },
       {
         "index": 23,
-        "offsetMs": -4.08,
+        "offsetMs": -3.77,
         "tag": "PERFECT"
       },
       {
         "index": 24,
-        "offsetMs": -0.36,
+        "offsetMs": -0.35,
         "tag": "PERFECT"
       },
       {
         "index": 25,
-        "offsetMs": -1.95,
+        "offsetMs": -2.24,
         "tag": "PERFECT"
       },
       {
         "index": 26,
-        "offsetMs": -4.63,
+        "offsetMs": -4.12,
         "tag": "PERFECT"
       },
       {
         "index": 27,
-        "offsetMs": -0.71,
+        "offsetMs": -0.6,
         "tag": "PERFECT"
       },
       {
         "index": 28,
-        "offsetMs": -2.9,
+        "offsetMs": -3.39,
         "tag": "PERFECT"
       },
       {
         "index": 29,
-        "offsetMs": 0.82,
+        "offsetMs": -4.07,
         "tag": "PERFECT"
       },
       {
         "index": 30,
-        "offsetMs": -0.77,
+        "offsetMs": -0.66,
         "tag": "PERFECT"
       },
       {
         "index": 31,
-        "offsetMs": -3.45,
+        "offsetMs": -2.94,
         "tag": "PERFECT"
       },
       {
         "index": 32,
-        "offsetMs": 0.47,
+        "offsetMs": -5.03,
         "tag": "PERFECT"
       }
     ]
   },
   "renderOn": {
-    "meanMs": 21.54,
-    "sdMs": 17.55,
-    "within60ms": 31
+    "meanMs": 19.79,
+    "sdMs": 7.14,
+    "within60ms": 32
   }
 }

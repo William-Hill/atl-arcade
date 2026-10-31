@@ -13,7 +13,7 @@ import { BeatClock } from "./audio/beat-clock.js";
 import { GREYBOX } from "./level/greybox.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createPhysicsWorld, initPhysics } from "./physics/world.js";
-import { createKeyboard } from "./input/keyboard.js";
+import { createInput } from "./input/input.js";
 import { createScriptPlayer } from "./input/scripted.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -61,7 +61,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 // Simulation.
-const keyboard = createKeyboard(window);
+const input = createInput({ target: window });
 let run = createRun(level);
 let skater = run.skater;
 const hud = createHud(document.getElementById("hud"));
@@ -92,7 +92,7 @@ function sampleInput() {
     scriptResolve = null;
     if (done) done({ ...skater, combo: run.combo });
   }
-  return keyboard.sample();
+  return input.sample();
 }
 
 function simulate(dt) {
@@ -214,6 +214,17 @@ window.__atl = {
     return run.combo;
   },
   beat,
+  input: {
+    get source() {
+      return input.source;
+    },
+    get gamepadId() {
+      return input.gamepadId;
+    },
+    get bindings() {
+      return input.bindings;
+    },
+  },
   get renderPaused() {
     return renderPaused;
   },

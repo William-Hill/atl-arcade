@@ -97,3 +97,13 @@ export const COMBO = {
   bailStyleLoss: 0.5, // style meter lost on a bail. min 0 / typical 0.5 / max 1.
   beatBonus: 1.5, // multiplier for a move landed on the beat (M0-07). min 1 / typical 1.5 / max 2.
 };
+
+// Beat clock and the on-beat bonus. The beat never gates input.
+export const BEAT = {
+  bpm: 100, // beats per minute of the synthesized click. min 80 / typical 100 / max 140.
+  perfectMs: 20, // |offset| for a PERFECT tag. min 10 / typical 20 / max 40.
+  goodMs: 60, // |offset| for a GOOD tag and the bonus. min 40 / typical 60 / max 90.
+  scheduleAheadSec: 0.15, // s of clicks scheduled ahead of the audio clock. min 0.1 / typical 0.15 / max 0.3.
+  schedulerMs: 25, // ms between scheduler ticks. min 10 / typical 25 / max 50.
+  startDelaySec: 0.25, // s between start() and beat 0. min 0.1 / typical 0.25 / max 0.5.
+};

@@ -27,10 +27,12 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
   let combo = run.combo;
   const moves = [];
   const judge = (points, move, name) => {
-    const b = beat ? beat.judge(time) : null;
+    // `beat.judgeNow()` judges the audio clock at this tick; `beat.judge(t)`
+    // judges a sim time (tests). Either may return null when no clock runs.
+    const b = beat ? (beat.judgeNow ? beat.judgeNow() : beat.judge(time)) : null;
     const onBeat = Boolean(b && b.onBeat);
     combo = comboMove(combo, { move, name, points, onBeat, beat: b });
-    moves.push({ tick: run.tick + 1, move, name, points, onBeat });
+    moves.push({ tick: run.tick + 1, move, name, points, onBeat, beatTag: b ? b.tag : null, offsetMs: b ? b.offsetMs : null });
   };
 
   if (skater.justExited && prev.grind) {

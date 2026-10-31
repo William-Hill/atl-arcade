@@ -16,7 +16,7 @@
 | M0-04 Follow camera | `m0-04-follow-camera` | PR open, branched from `m0-03-skate-controller` |
 | M0-05 Grind system | `m0-05-grind-system` | PR open, branched from `m0-04-follow-camera` |
 | M0-06 Combo and style | `m0-06-combo-style` | PR open, branched from `m0-05-grind-system` |
-| M0-07 On-beat bonus | — | not started |
+| M0-07 On-beat bonus | `m0-07-beat-clock` | PR open, branched from `m0-06-combo-style` |
 | M0-08 Input mapping | — | not started |
 | M0-09 Playtest harness | — | not started |
 | M0-10 Human playtest | — | for William, not an agent task |

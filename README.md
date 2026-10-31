@@ -21,6 +21,7 @@ Open http://localhost:5173 for the shell.
 ## Checks
 
 ```sh
+npx playwright install chromium   # once per machine, before the first e2e run
 npm test     # Vitest, pure simulation modules
 npm run e2e  # Playwright, headless browser, screenshots to e2e/__screenshots__
 npm run build

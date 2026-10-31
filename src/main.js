@@ -143,6 +143,9 @@ let frames = 0;
 // Screen-space recorder for the camera test: samples the skater's
 // normalized device coordinates every `every` frames.
 const recorder = { active: false, every: 10, samples: [] };
+
+// Frame-time sampler for the playtest harness: milliseconds per frame.
+const fps = { active: false, frameMs: [] };
 const projected = new THREE.Vector3();
 
 function projectSkater() {
@@ -157,6 +160,7 @@ let renderPaused = false;
 function frame(now) {
   const elapsed = (now - last) / 1000;
   last = now;
+  if (fps.active) fps.frameMs.push(elapsed * 1000);
   if (renderPaused) {
     requestAnimationFrame(frame);
     return;
@@ -248,6 +252,16 @@ window.__atl = {
   },
   get cameraPosition() {
     return [camera.position.x, camera.position.y, camera.position.z];
+  },
+  fps: {
+    start() {
+      fps.active = true;
+      fps.frameMs = [];
+    },
+    stop() {
+      fps.active = false;
+      return fps.frameMs;
+    },
   },
   recorder: {
     start(every = 10) {

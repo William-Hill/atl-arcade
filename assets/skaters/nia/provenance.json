@@ -1,0 +1,37 @@
+{
+  "asset": "Nia \"Sway\" Ellis, the first skater (M1-01, #11)",
+  "date": "2026-10-31",
+  "status": "Raw Tripo export. The cleaned skater.glb is not made yet.",
+  "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
+  "source_image": "docs/characters/concept/nia/nia-tpose-front.png (see docs/characters/concept/nia/provenance.json)",
+  "steps": [
+    {
+      "tool": "Tripo Studio web UI (studio.tripo3d.ai), Image to 3D",
+      "task_id": "24cf4b94-0f1b-41f7-9ee0-82d441c9067b",
+      "settings": "HD Model, AI model H3.1 - Best Quality, Generate in Parts off, 8K Texture off",
+      "result": "1,942,004 triangles, 988,848 vertices, textured",
+      "credits_spent": 55
+    },
+    {
+      "tool": "Tripo Studio Retopology",
+      "settings": "Quad topology, Smart Mesh on, polygon count 9000",
+      "result": "9,558 quad faces, 8,960 vertices (17,896 triangles in the GLB)",
+      "credits_spent": 40
+    },
+    {
+      "tool": "Tripo Studio 3D Rigging",
+      "settings": "Rigging type Humanoid, skeleton preset Mixamo",
+      "result": "65 joints with the mixamorig: prefix, one skin, no animations",
+      "credits_spent": 20
+    },
+    {
+      "tool": "Tripo Studio Export",
+      "settings": "Format GLB, texture resolution 4k, Export Skeleton on",
+      "result": "assets/skaters/nia/raw/nia-tripo.glb, 12,934,292 bytes (not in git)",
+      "credits_spent": 0
+    }
+  ],
+  "credits_spent_total": 115,
+  "tripo_credits_before": 3000,
+  "tripo_credits_after": 2885
+}

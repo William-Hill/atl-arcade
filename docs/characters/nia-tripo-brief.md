@@ -1,6 +1,6 @@
 # Tripo brief: the Nia model (M1-01, #11)
 
-The user makes the model in the Tripo web UI, because that account has more credits. Then an agent does the cleanup with the Blender MCP.
+An agent makes the model in the Tripo web UI through Claude in Chrome, because that account has more credits. Then an agent does the cleanup with the Blender MCP. The first run (2026-10-31) is recorded in `assets/skaters/nia/provenance.json`.
 
 ## Steps in the Tripo UI
 

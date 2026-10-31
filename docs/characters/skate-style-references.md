@@ -29,6 +29,7 @@ The sources do not describe the posture or a tempo in numbers. The values below 
 1. The skater glides. Each push goes diagonally out and back, at about 45 degrees to the line of travel, on the inside edge of a turned-out skate. The push leg ends straight, behind the hip. Then the skate lifts and comes forward under the hips. A push that goes only straight back is a skateboard kick. A push that goes only to the side gives no drive. Do not use either one.
 2. The pushes alternate left and right. The arms swing in opposition to the legs: the arm on the glide side swings forward and across the body with a bent elbow, and the other arm swings back almost straight. The shoulders turn with the arms, and the head stays on the line of travel.
 3. The body bounces on every beat. The knees go down on the beat.
+   The glide (coast) is the ATL ride: a low, staggered stance with the knees bent and the chest up. The front skate switches every two beats (a scissor). The shoulders roll forward and down, the left on beat 1 and the right on beat 2. The arms hang loose with soft elbows, and the head nods on the dip.
 4. The weight shifts from skate to skate every beat. The shoulders turn against the hips.
 5. The turns use the Cross Step: the outside skate crosses over the inside skate on the beat.
 6. The switch button (R, or LB on a gamepad) turns the skater to ride backward. She swizzles the skates and looks over each shoulder in turn. The travel direction does not change.

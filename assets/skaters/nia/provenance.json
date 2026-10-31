@@ -90,6 +90,11 @@
       "date": "2026-10-31",
       "tool": "Blender 5.2.2 (background mode), scripts/blender/nia_clips.py",
       "step": "Fourth pass: a new idle (hand on the hip, toe tap), and four new dances (Bankhead Bounce, Walk It Out, Swag Surf, Snap Lean). The Prep, crisscross, and the spins are retimed to whole beats. 24 animations."
+    },
+    {
+      "date": "2026-10-31",
+      "tool": "Blender 5.2.2 (background mode), scripts/blender/nia_clips.py",
+      "step": "Fifth pass: the coast is now the ATL ride glide, one bar, with a scissor stance, a dip on each beat, and shoulder rolls."
     }
   ],
   "credits_spent_total": 115,
@@ -97,7 +102,7 @@
   "tripo_credits_after": 2885,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2573628,
+  "file_size_bytes": 2639720,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
   "animations": 24

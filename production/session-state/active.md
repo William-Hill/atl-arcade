@@ -11,7 +11,7 @@
 | Issue | Branch | State |
 |---|---|---|
 | M0-01 Three.js + Vite shell | `m0-01-threejs-shell` | PR #25 open, verified locally on macOS (Vitest 7 pass, e2e 1 pass, build ok) |
-| M0-02 Greybox block + Rapier | — | not started |
+| M0-02 Greybox block + Rapier | `m0-02-greybox-level` | PR open, branched from `m0-01-threejs-shell` |
 | M0-03 Skate controller | — | not started |
 | M0-04 Follow camera | — | not started |
 | M0-05 Grind system | — | not started |
@@ -28,5 +28,6 @@ npm install
 npx playwright install chromium   # only for `npm run e2e`
 npm run dev     # shell at http://localhost:5173
 npm test        # Vitest
-npm run e2e     # Playwright, headless
+npm run e2e     # Playwright, headless, starts Vite on port 5180
+# http://localhost:5173/?view=fixed&debug=1 shows the fixed camera and the collider overlay
 ```

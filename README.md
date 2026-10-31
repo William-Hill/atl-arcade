@@ -12,6 +12,7 @@ Atlanta games on real open data, in one Three.js shell. The first game is Skate 
 
 ```sh
 npm install
+npx playwright install chromium   # only for `npm run e2e`; the agent container already has it
 npm run dev
 ```
 

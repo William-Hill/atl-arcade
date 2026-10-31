@@ -89,7 +89,9 @@ function exitWith(skater, velocity, reason) {
 export function stepGrind(prev, input, dt, grindables, k = GRIND, skate = SKATE) {
   const g = grindables.find((x) => x.id === prev.grind.id);
   if (!g) throw new Error(`grind: unknown grindable ${prev.grind.id}`);
-  const s = { ...prev, grind: { ...prev.grind }, justSnapped: false, justFell: false, justExited: false };
+  // Reset every one-tick flag: stepSkate does not run on a rail, so a jump or
+  // a landing on the snap tick would otherwise repeat on every grind tick.
+  const s = { ...prev, grind: { ...prev.grind }, justSnapped: false, justFell: false, justExited: false, justJumped: false, justLanded: false, bonked: false, respawned: false };
   const steer = Math.max(-1, Math.min(1, input.steer ?? 0));
 
   // Balance: a constant lean push plus growth with the lean, minus the correction.
@@ -109,7 +111,7 @@ export function stepGrind(prev, input, dt, grindables, k = GRIND, skate = SKATE)
   if (Math.abs(s.grind.balance) > k.balanceLimit) {
     // Fall: off the side the skater leans toward, slower.
     const side = Math.sign(s.grind.balance) || 1;
-    const right = [-dirT[2], 0, dirT[0]]; // perpendicular, to the skater's left when side > 0
+    const right = [-dirT[2], 0, dirT[0]]; // the skater's right (+z at yaw 0)
     const keep = s.speed * k.fallSpeedKeep;
     const velocity = [dirT[0] * keep + right[0] * side * k.fallSideSpeed, 0, dirT[2] * keep + right[2] * side * k.fallSideSpeed];
     return exitWith(s, velocity, "fall");

@@ -27,6 +27,8 @@ export const SKATE = {
   maxStep: 0.25, // m rise the skater rolls over (curbs, stairs). min 0.15 / typical 0.25 / max 0.4.
   launchNormalY: 0.15, // ramp surface normal y under which the skater leaves the lip. min 0.05 / typical 0.15 / max 0.3.
   bonkSpeedKeep: 0, // fraction of speed kept after a wall hit. min 0 / typical 0 / max 0.3.
+  fallFloor: -3, // m height under which a falling skater respawns. min -10 / typical -3 / max -1.
+  boundsMargin: 1, // m past the level bounds at which a skater respawns. min 0.5 / typical 1 / max 5.
   sideSlope: 0.0, // reserved.
 };
 

@@ -31,6 +31,9 @@ function lerp(a, b, f) {
 }
 
 // Exponential smoothing factor for rate `rate` over `dt`.
+// m the camera always keeps in front of a ray hit.
+const CLIP_EPSILON = 0.05;
+
 export function smoothFactor(rate, dt) {
   return 1 - Math.exp(-rate * dt);
 }
@@ -85,8 +88,11 @@ export function stepCamera(cam, skater, dt, k = CAMERA) {
 // to camera distance, `hitDistance` the ray hit (Infinity for none). A new
 // blocker snaps the camera in at once so it never shows through a wall; a
 // cleared blocker lets it ease back out at `clipRelease`.
+// The wall always wins over the preferred `minDistance`: the camera never
+// goes past the hit point.
 export function resolveClip(prevAllowed, fullLength, hitDistance, dt, k = CAMERA) {
-  const target = hitDistance < fullLength ? Math.max(k.minDistance, hitDistance - k.clipMargin) : fullLength;
+  const inFront = Math.max(0, hitDistance - CLIP_EPSILON);
+  const target = hitDistance < fullLength ? Math.min(inFront, Math.max(k.minDistance, hitDistance - k.clipMargin)) : fullLength;
   if (!Number.isFinite(prevAllowed) || target <= prevAllowed) return target;
   return prevAllowed + (target - prevAllowed) * smoothFactor(k.clipRelease, dt);
 }
@@ -99,16 +105,4 @@ export function placeCamera(cam, pivot, allowed) {
   if (!(allowed < len) || len < 1e-9) return cam;
   const f = allowed / len;
   return { ...cam, position: [0, 1, 2].map((i) => pivot[i] + d[i] * f) };
-}
-
-// Shorten the camera toward the look-at point when a blocker sits at
-// `hitDistance` along the ray from lookAt to position. Kept for callers that
-// clip without smoothing.
-export function clipCamera(cam, hitDistance, k = CAMERA) {
-  const d = [0, 1, 2].map((i) => cam.position[i] - cam.lookAt[i]);
-  const len = Math.hypot(d[0], d[1], d[2]);
-  if (!(hitDistance < len)) return cam;
-  const allowed = Math.max(k.minDistance, hitDistance - k.clipMargin);
-  const f = allowed / len;
-  return { ...cam, position: [0, 1, 2].map((i) => cam.lookAt[i] + d[i] * f) };
 }

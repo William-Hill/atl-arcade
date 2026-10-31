@@ -2,10 +2,10 @@
 // full rebindable map and the gamepad. Returns the controller input shape.
 //
 // A/D or Left/Right: steer. W/Up or Shift: push. S/Down: brake. Space: jump.
-// Hold F: grind. Grind is not on Control, because Control plus W closes
-// the tab and Control plus S or D opens browser dialogs.
+// Hold F: grind. Q and E: style moves. Grind is not on Control, because
+// Control plus W closes the tab and Control plus S or D opens browser dialogs.
 
-const BOUND = new Set(["KeyA", "KeyD", "KeyW", "KeyS", "KeyF", "Space", "ShiftLeft", "ShiftRight", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const BOUND = new Set(["KeyA", "KeyD", "KeyW", "KeyS", "KeyF", "KeyQ", "KeyE", "Space", "ShiftLeft", "ShiftRight", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
 export function createKeyboard(target = window) {
   const down = new Set();
@@ -28,6 +28,8 @@ export function createKeyboard(target = window) {
         brake: down.has("KeyS") || down.has("ArrowDown"),
         jump: down.has("Space"),
         grind: down.has("KeyF"),
+        style1: down.has("KeyQ"),
+        style2: down.has("KeyE"),
       };
     },
     dispose() {

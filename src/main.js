@@ -6,7 +6,9 @@ import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
-import { createSkater, createSkaterEnv, stepSkater } from "./sim/skate/skater.js";
+import { createSkaterEnv } from "./sim/skate/skater.js";
+import { createRun, stepRun } from "./sim/skate/run.js";
+import { createHud } from "./ui/hud.js";
 import { GREYBOX } from "./level/greybox.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createPhysicsWorld, initPhysics } from "./physics/world.js";
@@ -59,7 +61,9 @@ window.addEventListener("keydown", (e) => {
 
 // Simulation.
 const keyboard = createKeyboard(window);
-let skater = createSkater(level);
+let run = createRun(level);
+let skater = run.skater;
+const hud = createHud(document.getElementById("hud"));
 // Simulation events for the tests and the playtest harness.
 const events = [];
 let script = null;
@@ -72,13 +76,18 @@ function sampleInput() {
     const done = scriptResolve;
     script = null;
     scriptResolve = null;
-    if (done) done(skater);
+    if (done) done({ ...skater, combo: run.combo });
   }
   return keyboard.sample();
 }
 
 function simulate(dt) {
-  skater = stepSkater(skater, sampleInput(), dt, env, skaterEnv);
+  run = stepRun(run, sampleInput(), dt, env, skaterEnv);
+  skater = run.skater;
+  for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
+  if (run.banked) events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+  if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
+  if (skater.respawned) events.push({ tick: run.tick, type: "respawn" });
   if (skater.justSnapped) events.push({ tick: skater.tick, type: "snap", id: skater.grind.id, s: skater.grind.s });
   if (skater.justExited) events.push({ tick: skater.tick, type: "exit", reason: skater.exitReason, position: [...skater.position] });
   if (skater.justFell) events.push({ tick: skater.tick, type: "fall", position: [...skater.position] });
@@ -89,7 +98,8 @@ function simulate(dt) {
 let follow = null;
 
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
-  skater = createSkater(level, { position, yaw });
+  run = createRun(level, { position, yaw });
+  skater = run.skater;
   events.length = 0;
   if (follow) follow.reset(skater);
 }
@@ -104,7 +114,7 @@ function runScript(entries, { position, yaw } = {}) {
     if (script.done) {
       script = null;
       scriptResolve = null;
-      resolve(skater);
+      resolve({ ...skater, combo: run.combo });
     }
   });
 }
@@ -141,6 +151,7 @@ function frame(now) {
     controls.update();
   }
   if (follow) follow.update(skater, Math.min(elapsed, 0.1));
+  hud.update(run, now);
   renderer.render(scene, camera);
   frames += 1;
   if (recorder.active && frames % recorder.every === 0) {
@@ -176,6 +187,16 @@ window.__atl = {
   },
   get events() {
     return events;
+  },
+  get combo() {
+    return run.combo;
+  },
+  get skaterRotation() {
+    const r = skaterView.group.rotation;
+    return { x: r.x, y: r.y, z: r.z };
+  },
+  get run() {
+    return run;
   },
   resetSkater,
   runScript,

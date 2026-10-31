@@ -73,3 +73,27 @@ export const GRIND = {
   resnapCooldown: 0.4, // s after an exit or fall before another snap. min 0.1 / typical 0.4 / max 1.
   endPop: 0.8, // m/s upward pop when the spline ends. min 0 / typical 0.8 / max 2.
 };
+
+// Style (dance) moves on the roll-out. Each has a duration and a score.
+// `anim` names the placeholder capsule animation in the renderer.
+export const STYLE = {
+  minSpeed: 1.5, // m/s needed to start a style move. min 0.5 / typical 1.5 / max 3.
+  moves: [
+    { id: "shuffle", name: "Shuffle", duration: 0.5, points: 120, anim: "tilt" },
+    { id: "spin", name: "Spin", duration: 0.7, points: 160, anim: "spin" },
+  ],
+};
+
+// Combo scoring.
+export const COMBO = {
+  linkWindow: 0.8, // s after a move ends, rolling on flat, before the combo banks. min 0.3 / typical 0.8 / max 1.5.
+  grindBase: 100, // points per grind. min 50 / typical 100 / max 200.
+  grindPerSecond: 60, // extra points per second on the rail. min 20 / typical 60 / max 120.
+  hopPoints: 50, // points for a jump that lands. min 20 / typical 50 / max 100.
+  vertAirPoints: 200, // points for air off the quarter pipe. min 100 / typical 200 / max 400.
+  manualPoints: 80, // points per manual (no input bound in M0). min 40 / typical 80 / max 150.
+  minAirTime: 0.2, // s airborne needed for a hop to count. min 0.1 / typical 0.2 / max 0.4.
+  styleGain: 0.25, // style meter fill per dance move (meter is 0..1). min 0.1 / typical 0.25 / max 0.5.
+  bailStyleLoss: 0.5, // style meter lost on a bail. min 0 / typical 0.5 / max 1.
+  beatBonus: 1.5, // multiplier for a move landed on the beat (M0-07). min 1 / typical 1.5 / max 2.
+};

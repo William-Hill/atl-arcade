@@ -73,6 +73,7 @@ function exitWith(skater, velocity, reason) {
     velocity,
     speed: Math.hypot(velocity[0], velocity[1], velocity[2]),
     airTime: 0,
+    airFrom: reason === "fall" ? "fall" : "grind",
     groundId: null,
     grind: null,
     grindCooldown: GRIND.resnapCooldown,

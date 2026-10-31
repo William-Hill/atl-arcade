@@ -25,6 +25,7 @@
 
 ```sh
 npm install
+npx playwright install chromium   # only for `npm run e2e`
 npm run dev     # greybox block at http://localhost:5173
 npm test        # Vitest
 npm run e2e     # Playwright, headless

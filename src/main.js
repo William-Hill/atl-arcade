@@ -7,14 +7,14 @@ import { createSkaterView } from "./render/skater-view.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkateState, stepSkate } from "./sim/skate/controller.js";
 import { GREYBOX } from "./level/greybox.js";
-import { createGroundSampler } from "./level/ground.js";
+import { createLevelEnv } from "./level/ground.js";
 import { createPhysicsWorld, initPhysics } from "./physics/world.js";
 import { createKeyboard } from "./input/keyboard.js";
 import { createScriptPlayer } from "./input/scripted.js";
 
 const params = new URLSearchParams(window.location.search);
 const level = GREYBOX;
-const env = { sampleGround: createGroundSampler(level) };
+const env = createLevelEnv(level);
 
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);

@@ -72,3 +72,37 @@ test("the follow camera does not clip through a building wall", async ({ page })
   expect(Math.abs(last.y)).toBeLessThanOrEqual(1);
   await page.screenshot({ path: "e2e/__screenshots__/camera-wall-clip.png" });
 });
+
+test("the follow camera rides the quarter pipe without snapping or flipping", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
+
+  // Push east into the 3 m quarter pipe, launch off the lip, roll back down.
+  const samples = await page.evaluate(async () => {
+    window.__atl.recorder.start(2);
+    await window.__atl.runScript([{ frames: 150, input: { push: true } }, { frames: 300, input: {} }], { position: [8, 0, 0], yaw: 0 });
+    return window.__atl.recorder.stop();
+  });
+
+  const onRamp = samples.filter((s) => s.skater[0] > 25);
+  expect(onRamp.length).toBeGreaterThan(20);
+  const offscreen = samples.filter((s) => Math.abs(s.x) > 1 || Math.abs(s.y) > 1 || s.z > 1);
+  expect(offscreen, `off-screen samples: ${JSON.stringify(offscreen.slice(0, 3))}`).toEqual([]);
+
+  let maxJump = 0;
+  let minDistance = Infinity;
+  for (let i = 1; i < samples.length; i += 1) {
+    const a = samples[i - 1].camera;
+    const b = samples[i].camera;
+    const frames = Math.max(1, samples[i].frame - samples[i - 1].frame);
+    maxJump = Math.max(maxJump, Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) / frames);
+    const s = samples[i].skater;
+    minDistance = Math.min(minDistance, Math.hypot(b[0] - s[0], b[1] - s[1], b[2] - s[2]));
+  }
+  // Before the fix the camera jumped 12 m in one frame and came within 1.2 m.
+  expect(maxJump).toBeLessThan(1);
+  expect(minDistance).toBeGreaterThan(4);
+  // While the skater is on the ramp the camera stays on the street side.
+  for (const s of onRamp) expect(s.camera[0]).toBeLessThan(s.skater[0]);
+  await page.screenshot({ path: "e2e/__screenshots__/camera-quarter-pipe.png" });
+});

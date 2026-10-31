@@ -4,6 +4,7 @@ import { createRenderer, fitToWindow } from "./render/renderer.js";
 import { createLevelLights, createLevelView } from "./render/level-view.js";
 import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
+import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkateState, stepSkate } from "./sim/skate/controller.js";
 import { GREYBOX } from "./level/greybox.js";
@@ -30,12 +31,13 @@ const skaterView = createSkaterView();
 scene.add(skaterView.group);
 
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 500);
-const fixedView = params.get("view") === "fixed";
+// view=follow (default), view=orbit (drag to look), view=fixed (screenshot reference).
+const view = params.get("view") ?? "follow";
 camera.position.set(-6, 38, 44);
 camera.lookAt(0, 0, 2);
 
 let controls = null;
-if (!fixedView) {
+if (view === "orbit") {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI / 2 - 0.05;
@@ -76,8 +78,11 @@ function simulate(dt) {
   skater = stepSkate(skater, sampleInput(), dt, env);
 }
 
+let follow = null;
+
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   skater = createSkateState({ position, yaw });
+  if (follow) follow.reset(skater);
 }
 
 // Plays a scripted input list from a reset skater and resolves with the end
@@ -95,10 +100,22 @@ function runScript(entries, { position, yaw } = {}) {
   });
 }
 
+if (view === "follow") follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+
 let stepper = createStepper();
 let ticks = 0;
 let last = performance.now();
 let frames = 0;
+
+// Screen-space recorder for the camera test: samples the skater's
+// normalized device coordinates every `every` frames.
+const recorder = { active: false, every: 10, samples: [] };
+const projected = new THREE.Vector3();
+
+function projectSkater() {
+  projected.set(skater.position[0], skater.position[1] + 0.8, skater.position[2]).project(camera);
+  return { x: projected.x, y: projected.y, z: projected.z };
+}
 
 function frame(now) {
   const elapsed = (now - last) / 1000;
@@ -114,8 +131,12 @@ function frame(now) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
+  if (follow) follow.update(skater, Math.min(elapsed, 0.1));
   renderer.render(scene, camera);
   frames += 1;
+  if (recorder.active && frames % recorder.every === 0) {
+    recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null });
+  }
   requestAnimationFrame(frame);
 }
 
@@ -146,6 +167,25 @@ window.__atl = {
   },
   resetSkater,
   runScript,
+  view,
+  projectSkater,
+  get cameraState() {
+    return follow ? follow.state : null;
+  },
+  get cameraPosition() {
+    return [camera.position.x, camera.position.y, camera.position.z];
+  },
+  recorder: {
+    start(every = 10) {
+      recorder.active = true;
+      recorder.every = every;
+      recorder.samples = [];
+    },
+    stop() {
+      recorder.active = false;
+      return recorder.samples;
+    },
+  },
   get ticks() {
     return ticks;
   },

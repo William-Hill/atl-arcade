@@ -79,7 +79,7 @@ export const GREYBOX = {
     { id: "building-south", kind: "building", position: [0, 4, 18], size: [64, 8, 8], color: COLORS.building },
 
     // Construction barriers close the street ends.
-    { id: "barrier-west", kind: "barrier", position: [-31.5, 0.5, 0], size: [1, 1, 12], color: COLORS.barrier },
+    { id: "barrier-west", kind: "barrier", position: [-31.5, 0.5, 0], size: [1, 1, 20], color: COLORS.barrier },
     { id: "barrier-east-north", kind: "barrier", position: [31, 0.5, -8], size: [2, 1, 4], color: COLORS.barrier },
     { id: "barrier-east-south", kind: "barrier", position: [31, 0.5, 8], size: [2, 1, 4], color: COLORS.barrier },
   ],

@@ -6,13 +6,15 @@
 // Free skate uses Atlanta rink style, and rails and air use X Games style.
 // The sources are in docs/characters/skate-style-references.md.
 
-import { BEAT, SKATE } from "../sim/skate/constants.js";
+import { BEAT, SKATE, STYLE } from "../sim/skate/constants.js";
 
 // Clip names in assets/skaters/nia/skater.glb.
 //   once: the clip plays one time and holds the last frame.
 //   lock: the time (s) that the clip holds before a ground clip can replace it.
 //   beat: a groove clip. It is a whole number of clip beats (ANIM.clipBeat),
 //         and the renderer plays it in phase with the game beat clock.
+//   tempo: a dance clip. The renderer plays it from its start at the game
+//          tempo, so one clip beat lasts one game beat.
 export const CLIPS = {
   idle: { beat: true },
   push: {},
@@ -30,10 +32,14 @@ export const CLIPS = {
   grind_unity: {},
   manual: {}, // No manual input in M0. The table binds it to state.manual.
   bail: { once: true, lock: 0.9 },
-  dance_prep: {},
-  dance_crisscross: {},
-  dance_spin: {},
-  dance_sitspin: {},
+  dance_bankhead: { tempo: true },
+  dance_walkitout: { tempo: true },
+  dance_prep: { tempo: true },
+  dance_swagsurf: { tempo: true },
+  dance_snaplean: { tempo: true },
+  dance_crisscross: { tempo: true },
+  dance_spin: { tempo: true },
+  dance_sitspin: { tempo: true },
 };
 
 // The game cycles through these in order: one air trick per ramp air and
@@ -41,11 +47,8 @@ export const CLIPS = {
 export const AIR_TRICKS = ["air_mute", "air_japan", "air_liukang"];
 export const GRINDS = ["grind_frontside", "grind_soul", "grind_unity"];
 
-// Each style move has two dances. The skater alternates between them.
-export const STYLE_CLIPS = {
-  shuffle: ["dance_prep", "dance_crisscross"],
-  spin: ["dance_spin", "dance_sitspin"],
-};
+// The dance clips of all style moves (src/sim/skate/constants.js STYLE).
+export const DANCE_CLIPS = STYLE.moves.flatMap((m) => m.dances.map((d) => d.clip));
 
 export const ANIM = {
   clipBeat: 0.8, // s. The clips are keyed at 24 frames (30 fps) per beat. The renderer scales them to the game beat.
@@ -57,7 +60,7 @@ export const ANIM = {
   turnTime: 0.35, // s for the half turn into and out of the backward ride.
 };
 
-const FAST = new Set(["bail", "push", "jump", "land", ...GRINDS, ...Object.values(STYLE_CLIPS).flat()]);
+const FAST = new Set(["bail", "push", "jump", "land", ...GRINDS, ...DANCE_CLIPS]);
 const AIR = new Set(["jump", ...AIR_TRICKS]);
 const GROUND = new Set(["idle", "push", "coast", "ride_back", "carve_left", "carve_right", "manual"]);
 
@@ -81,10 +84,8 @@ export function createAnimState() {
     lock: 0,
     airVariant: 0,
     grindVariant: 0,
-    styleVariant: 0,
     wasAirTrick: false,
     wasGrind: false,
-    styleId: null,
     prevYaw: null,
     facing: 0,
   };
@@ -100,11 +101,9 @@ function wrapAngle(a) {
 // Picks the clip for one controller state. `ctx` holds the values that the
 // state does not carry: the yaw rate and the variant counters.
 export function clipFor(state, ctx = {}) {
-  const { yawRate = 0, airVariant = 0, grindVariant = 0, styleVariant = 0 } = ctx;
-  if (state.style) {
-    const pair = STYLE_CLIPS[state.style.id] ?? STYLE_CLIPS.shuffle;
-    return pair[styleVariant % 2];
-  }
+  const { yawRate = 0, airVariant = 0, grindVariant = 0 } = ctx;
+  // The sim picks the dance (state.style.clip). The fallback is the first dance.
+  if (state.style) return CLIPS[state.style.clip] ? state.style.clip : DANCE_CLIPS[0];
   if (state.state === "grind") return GRINDS[grindVariant % GRINDS.length];
   if (state.state === "air") {
     if (state.airFrom === "fall") return "bail";
@@ -130,15 +129,12 @@ export function stepAnim(prev, state, dt) {
   const yawRate = prev.prevYaw === null || dt <= 0 ? 0 : wrapAngle(state.yaw - prev.prevYaw) / dt;
   const next = { ...prev, prevYaw: state.yaw, time: prev.time + dt, lock: Math.max(0, prev.lock - dt) };
 
-  // The variant counters change once per style move, air trick, and rail.
-  const styleId = state.style ? state.style.id : null;
-  if (!styleId && prev.styleId) next.styleVariant = prev.styleVariant + 1;
-  next.styleId = styleId;
+  // The variant counters change once per air trick and per rail.
   const onRail = state.state === "grind";
   if (!onRail && prev.wasGrind) next.grindVariant = prev.grindVariant + 1;
   next.wasGrind = onRail;
 
-  const ctx = { yawRate, airVariant: next.airVariant, grindVariant: next.grindVariant, styleVariant: next.styleVariant };
+  const ctx = { yawRate, airVariant: next.airVariant, grindVariant: next.grindVariant };
   let wanted = clipFor(state, ctx);
   const airTrick = AIR_TRICKS.includes(wanted);
   if (!airTrick && prev.wasAirTrick) next.airVariant = prev.airVariant + 1;

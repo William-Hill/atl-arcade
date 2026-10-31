@@ -3,14 +3,14 @@ import { GRIND } from "../src/sim/skate/constants.js";
 
 const BAL = GRIND.balanceDrift / GRIND.balanceCorrect;
 
-// Grind the straight rail, jump off, land, shuffle: a 3-link combo.
+// Grind the straight rail, jump off, land, dance: a 3-link combo.
 const THREE_LINK = [
   { frames: 90, input: { push: true } },
   { frames: 40, input: { grind: true, steer: BAL } },
   { frames: 1, input: { grind: true, steer: BAL, jump: true } },
   { frames: 45, input: {} },
   { frames: 1, input: { style1: true } },
-  { frames: 36, input: {} },
+  { frames: 80, input: {} },
 ];
 
 async function ready(page, query = "") {
@@ -41,11 +41,11 @@ test("a scripted grind, jump, style move yields a 3-link combo on the HUD", asyn
   }));
 
   const moves = result.events.filter((e) => e.type === "move").map((e) => e.name);
-  expect(moves).toEqual(["Rail Grind", "Hop", "Shuffle"]);
+  expect(moves).toEqual(["Rail Grind", "Hop", "Bankhead Bounce"]);
   expect(result.end.combo.links).toHaveLength(3);
   expect(result.end.combo.multiplier).toBe(3);
   expect(result.end.combo.active).toBe(true);
-  expect(hud.combo).toBe("Rail Grind + Hop + Shuffle");
+  expect(hud.combo).toBe("Rail Grind + Hop + Bankhead Bounce");
   expect(hud.pending).toMatch(/^\d[\d,]* x 3$/);
   expect(hud.style).toBe("25%");
   await page.screenshot({ path: "e2e/__screenshots__/combo-three-link.png" });

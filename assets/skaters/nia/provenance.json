@@ -85,6 +85,11 @@
       "date": "2026-10-31",
       "tool": "Blender 5.2.2 (background mode), scripts/blender/nia_clips.py",
       "step": "Third pass: the push stroke goes diagonally out and back, and the arms swing in a sine wave with shoulder turn. The other 19 clips are rebaked with no change."
+    },
+    {
+      "date": "2026-10-31",
+      "tool": "Blender 5.2.2 (background mode), scripts/blender/nia_clips.py",
+      "step": "Fourth pass: a new idle (hand on the hip, toe tap), and four new dances (Bankhead Bounce, Walk It Out, Swag Surf, Snap Lean). The Prep, crisscross, and the spins are retimed to whole beats. 24 animations."
     }
   ],
   "credits_spent_total": 115,
@@ -92,8 +97,8 @@
   "tripo_credits_after": 2885,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2427424,
+  "file_size_bytes": 2573628,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
-  "animations": 20
+  "animations": 24
 }

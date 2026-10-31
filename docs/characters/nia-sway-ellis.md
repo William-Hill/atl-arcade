@@ -79,9 +79,12 @@ These rules make the Tripo or Meshy output easy to rig and animate.
 | Air (X Games) | jump, land, mute grab, japan, Liu Kang |
 | Rails (X Games) | frontside, soul, unity, manual |
 | Fail | bail |
-| Style (Atlanta rink style) | the Prep, crisscross, toe-stop spin, sit spin |
+| Style, Q (Atlanta dances, 2 beats each, in this order) | Bankhead Bounce, Walk It Out, the Prep, Swag Surf, Snap Lean, crisscross |
+| Style, E (spins, 1 beat each) | toe-stop spin, sit spin |
 
-The sources for each move are in `skate-style-references.md`.
+The sources for each move are in `skate-style-references.md` and `atl-dance-references.md`.
+
+The idle is a relaxed lean: the weight on the right skate, the right hand on the hip, the left skate forward with a toe tap on beat 4, and a head nod on each beat.
 
 The dance clips must come from rink culture: backward skating, footwork, spins, and rhythm moves. If a move looks like skateboarding, replace it with a rink move (pillar 5).
 

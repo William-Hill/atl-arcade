@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { ANIM, AIR_TRICKS, CLIPS, GRINDS, STYLE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, stepAnim, stepFacing } from "./skater-anim.js";
+import { ANIM, AIR_TRICKS, CLIPS, GRINDS, DANCE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, stepAnim, stepFacing } from "./skater-anim.js";
 import { STYLE } from "../sim/skate/constants.js";
 
 const rolling = (extra = {}) => ({ state: "rolling", speed: 5, yaw: 0, pushCooldown: 0, style: null, ...extra });
@@ -25,8 +25,10 @@ describe("the state -> clip table", () => {
     expect(names).toEqual(Object.keys(CLIPS).sort());
   });
 
-  it("has two dances for every style move", () => {
-    for (const m of STYLE.moves) expect(STYLE_CLIPS[m.id]).toHaveLength(2);
+  it("has a clip for every dance of every style move", () => {
+    for (const m of STYLE.moves) for (const d of m.dances) expect(CLIPS[d.clip]?.tempo).toBe(true);
+    expect(DANCE_CLIPS).toContain("dance_bankhead");
+    expect(DANCE_CLIPS).toContain("dance_walkitout");
   });
 
   it("maps the rolling states", () => {
@@ -51,8 +53,9 @@ describe("the state -> clip table", () => {
     expect(clipFor(air({ airFrom: "fall" }))).toBe("bail");
     expect(clipFor({ ...rolling(), state: "grind" })).toBe("grind_frontside");
     expect(clipFor({ ...rolling(), state: "grind" }, { grindVariant: 2 })).toBe("grind_unity");
-    expect(clipFor(rolling({ style: { id: "shuffle" } }))).toBe("dance_prep");
-    expect(clipFor(rolling({ style: { id: "spin" } }), { styleVariant: 1 })).toBe("dance_sitspin");
+    expect(clipFor(rolling({ style: { id: "groove", clip: "dance_walkitout" } }))).toBe("dance_walkitout");
+    expect(clipFor(rolling({ style: { id: "spin", clip: "dance_sitspin" } }))).toBe("dance_sitspin");
+    expect(clipFor(rolling({ style: { id: "groove", clip: "no_such_clip" } }))).toBe(DANCE_CLIPS[0]);
   });
 });
 
@@ -89,9 +92,9 @@ describe("transitions", () => {
     const grinds = run([...rail, ...off, ...rail, ...off, ...rail]).changes.map((c) => c.to).filter((n) => n.startsWith("grind"));
     expect(grinds).toEqual(GRINDS);
 
-    const dance = Array.from({ length: 10 }, () => rolling({ style: { id: "shuffle" } }));
-    const dances = run([...dance, ...land, ...dance]).changes.map((c) => c.to).filter((n) => n.startsWith("dance"));
-    expect(dances).toEqual(["dance_prep", "dance_crisscross"]);
+    const dance = (clip) => Array.from({ length: 10 }, () => rolling({ style: { id: "groove", clip } }));
+    const dances = run([...dance("dance_bankhead"), ...land, ...dance("dance_walkitout")]).changes.map((c) => c.to).filter((n) => n.startsWith("dance"));
+    expect(dances).toEqual(["dance_bankhead", "dance_walkitout"]);
   });
 
   it("uses a short fade into a bail and a jump", () => {

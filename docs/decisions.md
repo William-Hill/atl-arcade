@@ -204,3 +204,13 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - On a ramp (ground normal y < 0.97), the friction is 20 % of the flat value (`rampFriction`), so the quarter pipe still gives vert air.
 - Why: the player wants her to speed up while the button is held and lose momentum after a release.
 - Tests: two ramp tests changed their input. The quarter pipe test now pushes on the run-in. The deck edge test starts at 6 m/s.
+
+## 2026-10-31: ATL dances on the style buttons, and a new idle (M1-02)
+
+- Decision: each style button has a list of dances. A press starts the next dance in the list. A held button repeats the dance.
+  - Q: Bankhead Bounce, Walk It Out, the Prep, Swag Surf, Snap Lean, crisscross. Each dance lasts 2 beats (1.2 s at 100 BPM).
+  - E: toe-stop spin, sit spin. Each spin lasts 1 beat.
+- The sim picks the dance (`state.style.clip`), and the dance name goes into the combo string. The renderer plays a dance from its first frame at the game tempo.
+- The idle is a relaxed lean with a hand on the hip, a toe tap on beat 4, and a head nod. The old idle raised the hands to clap, which read as a shoulder shrug.
+- Not in the game: Whoop Rico (no source describes the moves), and moves with a content flag (see `docs/characters/atl-dance-references.md`). "Snap Lean" is the name for the lean-and-snap move, because the song "Lean wit It, Rock wit It" has no lyric check.
+- Why: the player asked for classic Atlanta dances and a cooler idle. The old style moves lasted 0.5 s, which is too short to show a dance.

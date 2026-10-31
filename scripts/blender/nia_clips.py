@@ -151,20 +151,39 @@ def stance(**extra):
 # Clips: name -> (loop, [(frame, pose), ...]) --------------------------------
 
 def idle():
-    # Standing groove, one bar: a bounce on every beat, a clap on beats 2 and 4,
-    # and the weight shifts every two beats.
+    # Rink idle, one bar (4 beats). A relaxed lean: the weight sits on the
+    # right skate, the hip goes out, and the left skate rests forward and out.
+    # The knees give a small bounce and the head nods down on each beat. The
+    # left skate taps its toe stop on beat 4. The arms hang loose and sway a
+    # small amount. No clap and no shrug.
     B = BEAT
+
+    def pose(beat, down, tap=False):
+        sway = 1 if beat % 2 == 0 else -1
+        left = at(0.20, -0.16, 0.05 if tap else 0, "L", [rot(UP, 24), rot(LEFT, 18 if tap else 0)])
+        return {
+            "hips": (-0.06, 0.02, -0.07 - down),
+            "hipsRot": [rot(FWD, 7), rot(UP, -8)],
+            "Spine": [rot(LEFT, -2), rot(FWD, -5)],
+            "Spine1": [rot(UP, 10), rot(FWD, -2)],
+            "Neck": [rot(LEFT, -3)],
+            "Head": [rot(LEFT, 220 * down), rot(UP, -6), rot(FWD, -4)],
+            "L": left,
+            "R": at(-0.12, 0.05, 0, "R", [rot(UP, -10)]),
+            "LeftArm": [rot(FWD, -80), rot(LEFT, -6 + 3 * sway)],
+            # The right hand rests on the hip, with the elbow out to the side.
+            # The twist turns the elbow bend toward the hip.
+            "RightArm": [rot(LEFT, 90), rot(FWD, 46), rot(UP, -14 + 2 * sway)],
+            "LeftForeArm": [rot(UP, -18)],
+            "RightForeArm": [rot(UP, 104)],
+            "LeftHand": [rot(FWD, -8)],
+            "RightHand": [rot(UP, 20)],
+        }
+
     keys = []
     for beat in range(4):
         f = beat * B
-        side = 1 if beat in (0, 1) else -1
-        down = merge(ride(side * 0.6, 0.05, lean=2), {"L": at(0.13, 0.0), "R": at(-0.13, 0.0, side="R")})
-        up = merge(ride(side * 0.6, 0.0, lean=2), {"L": at(0.13, 0.0), "R": at(-0.13, 0.0, side="R")})
-        if beat in (1, 3):
-            down = merge(down, CLAP)
-        if beat in (0, 2):
-            up = merge(up, CLAP_UP)
-        keys += [(f, down), (f + B // 2, up)]
+        keys += [(f, pose(beat, 0.025)), (f + B // 2, pose(beat, 0.0, tap=(beat == 3)))]
     return True, keys + [(4 * B, keys[0][1])]
 
 
@@ -456,26 +475,184 @@ def bail():
     return False, [(0, trip), (8, flail), (18, down), (30, down)]
 
 
+# Dances -------------------------------------------------------------------
+#
+# The sources and the specs are in docs/characters/atl-dance-references.md.
+# A groove dance is 2 beats (48 frames), and a spin is 1 beat (24 frames).
+# The renderer plays each dance at the game tempo from its first frame.
+# The skates stay in a glide under the hips unless the spec moves them.
+
+def glide(down=0.0, side=0.0, lean=4.0):
+    # The base for a dance: the ride stance with the feet under the hips.
+    return merge(ride(side, down, lean), {
+        "L": at(0.12, -0.01, 0, "L", [rot(UP, 6)]),
+        "R": at(-0.12, 0.03, 0, "R", [rot(UP, -6)]),
+    })
+
+
+def _fist(side, curl=85):
+    # Closes the fingers of one hand. A finger curls toward the palm about
+    # the forward axis (the rest pose has the palms down).
+    out = {}
+    sign = -1 if side == "Left" else 1
+    for finger in ("Index", "Middle", "Ring", "Pinky"):
+        out[f"{side}Hand{finger}1"] = [rot(FWD, sign * curl * 0.8)]
+        out[f"{side}Hand{finger}2"] = [rot(FWD, sign * curl)]
+        out[f"{side}Hand{finger}3"] = [rot(FWD, sign * curl * 0.7)]
+    out[f"{side}HandThumb1"] = [rot(FWD, sign * 20)]
+    out[f"{side}HandThumb2"] = [rot(UP, -sign * 30)]
+    return out
+
+
+FISTS = merge(_fist("Left"), _fist("Right"))
+
+
+def fists_up(cross):
+    # Bankhead Bounce arms: the forearms point up, the fists are at shoulder
+    # height. cross = 1: the forearms cross in front of the face. cross = 0:
+    # the forearms open to the sides.
+    fwd = -30 - 42 * cross
+    down = -64 + 14 * cross
+    return merge(FISTS, {
+        "LeftArm": [rot(LEFT, -90), rot(FWD, down), rot(UP, fwd)],
+        "RightArm": [rot(LEFT, -90), rot(FWD, -down), rot(UP, -fwd)],
+        "LeftForeArm": [rot(UP, -124 - 6 * cross)],
+        "RightForeArm": [rot(UP, 124 + 6 * cross)],
+        "LeftHand": [rot(FWD, -10)],
+        "RightHand": [rot(FWD, 10)],
+    })
+
+
+def shrug(up):
+    # Both shoulders go up (up = 1) or down (up = 0).
+    return {"LeftShoulder": [rot(FWD, 14 * up)], "RightShoulder": [rot(FWD, -14 * up)]}
+
+
+def dance_bankhead():
+    # Bankhead Bounce (Bankhead, west Atlanta, 1995). Two shoulder shrugs per
+    # beat, a knee bounce on each beat. Beat 1: the forearms cross in front of
+    # the face. Beat 2: the forearms open to the sides.
+    keys = []
+    for i in range(8):
+        f = i * 6
+        beat = f // BEAT
+        on = f % BEAT == 0
+        up = 1 if i % 2 == 1 else 0
+        cross = 1 if beat == 0 else 0
+        down = 0.06 if on else (0.02 if up else 0.04)
+        pose = merge(glide(down, 0, lean=6), fists_up(cross), shrug(up),
+                     {"Head": [rot(LEFT, 6 + 6 * (1 - up))], "Spine1": [rot(LEFT, 3 * (1 - up))]})
+        keys.append((f, pose))
+    return True, keys + [(48, keys[0][1])]
+
+
+def _walk_it_out_right(down):
+    # The twist to the right: the skates, the knees, and the hips point right.
+    # The right arm shoots out to the side at shoulder height. The left
+    # forearm folds near the chest. The head looks along the right arm.
+    return merge(glide(down, -0.6, lean=6), {
+        "hipsRot": [rot(UP, -18)],
+        "Spine1": [rot(UP, -10)],
+        "L": at(0.10, 0.0, 0, "L", [rot(UP, -16)]),
+        "R": at(-0.14, 0.02, 0, "R", [rot(UP, -22)]),
+        "RightArm": [rot(FWD, 6), rot(UP, -8)],
+        "RightForeArm": [rot(UP, 6)],
+        "RightHand": [rot(FWD, 10)],
+        "LeftArm": [rot(FWD, -62), rot(UP, -44)],
+        "LeftForeArm": [rot(UP, -112)],
+        "Neck": [rot(UP, -14)],
+        "Head": [rot(UP, -22), rot(LEFT, 4)],
+    })
+
+
+def dance_walkitout():
+    # Walk It Out (DJ Unk, 2006). A double bounce: the knees dip on each beat
+    # and each half beat. Beat 1: twist to the right. Beat 2: twist to the left.
+    R = lambda d: _walk_it_out_right(d)
+    L = lambda d: mirror_pose(_walk_it_out_right(d))
+    return True, [
+        (0, R(0.07)), (6, R(0.02)), (12, R(0.07)), (18, R(0.02)),
+        (24, L(0.07)), (30, L(0.02)), (36, L(0.07)), (42, L(0.02)),
+        (48, R(0.07)),
+    ]
+
+
 def dance_prep():
-    # The Prep (shuffle, 0.5 s): a stutter step forward, the left skate crosses
-    # behind the right skate, and a clap keeps the step going.
-    base = ride(0, 0.02)
-    behind = merge(ride(-0.6, 0.08), {"L": at(-0.10, 0.18, 0.02, "L", [rot(UP, -10)]), "R": at(-0.08, 0.0, side="R")}, CLAP_UP)
-    clap = merge(ride(-0.3, 0.1), {"L": at(-0.06, 0.14), "R": at(-0.08, 0.0, side="R")}, CLAP)
-    return True, [(0, base), (5, behind), (8, clap), (12, base), (15, base)]
+    # The Prep (USA Roller Sports): a stutter step forward. The left skate
+    # crosses behind the right skate, and a clap on each beat keeps it going.
+    keys = []
+    for beat in range(2):
+        f = beat * BEAT
+        base = merge(glide(0.02, 0), CLAP_UP)
+        behind = merge(ride(-0.6, 0.08), {"L": at(-0.10, 0.18, 0.02, "L", [rot(UP, -10)]), "R": at(-0.08, 0.0, side="R")}, CLAP_UP)
+        clap = merge(ride(-0.3, 0.1), {"L": at(-0.06, 0.14), "R": at(-0.08, 0.0, side="R")}, CLAP, {"Head": [rot(LEFT, 10)]})
+        keys += [(f, clap), (f + 8, behind), (f + 16, base)]
+    return True, keys + [(48, keys[0][1])]
+
+
+def _swag_left(down):
+    # Swag Surf (F.L.Y., Stone Mountain, 2009). The arms go up and out as if
+    # over the shoulders of friends. The body bends to the left like a surfboard.
+    return merge(glide(down, 1, lean=2), {
+        "hips": (0.07, 0.02, -0.11 - down),
+        "Spine": [rot(FWD, -9)],
+        "Spine1": [rot(FWD, -4)],
+        "LeftArm": [rot(FWD, 34), rot(UP, -12)],
+        "RightArm": [rot(FWD, -34), rot(UP, 12)],
+        "LeftForeArm": [rot(UP, -22)],
+        "RightForeArm": [rot(UP, 22)],
+        "Head": [rot(FWD, -8), rot(LEFT, -4)],
+    })
+
+
+def dance_swagsurf():
+    # The sway goes left on beat 1 and right on beat 2, with a dip at the end
+    # of each sway.
+    L = _swag_left
+    R = lambda d: mirror_pose(_swag_left(d))
+    return True, [(0, L(0.02)), (16, L(0.08)), (24, R(0.02)), (40, R(0.08)), (48, L(0.02))]
+
+
+def _snap_left(snap):
+    # Snap Lean (snap music, Bankhead, early 2000s). The body leans back and
+    # to the left, no more than 15 degrees, with the weight on the left skate.
+    # At the peak the fingers snap at hip height and the shoulders drop.
+    return merge(glide(0.06 if snap else 0.03, 1, lean=-9), {
+        "hips": (0.06, 0.0, -0.13 if snap else -0.10),
+        "Spine": [rot(LEFT, -9), rot(FWD, -7)],
+        "Spine1": [rot(LEFT, -4), rot(UP, 8)],
+        "LeftArm": [rot(FWD, -66), rot(UP, -18)],
+        "RightArm": [rot(FWD, 66), rot(UP, 18)],
+        "LeftForeArm": [rot(UP, -70 - (14 if snap else 0))],
+        "RightForeArm": [rot(UP, 70 + (14 if snap else 0))],
+        "LeftHand": [rot(FWD, -24 if snap else -6)],
+        "RightHand": [rot(FWD, 24 if snap else 6)],
+        "Head": [rot(LEFT, -10), rot(FWD, -6)],
+        "LeftShoulder": [rot(FWD, -6 if snap else 0)],
+        "RightShoulder": [rot(FWD, 6 if snap else 0)],
+    })
+
+
+def dance_snaplean():
+    # Beat 1: lean back to the left, snap at the peak. Beat 2: the same to the
+    # right. The hips rock forward between the leans.
+    L = _snap_left
+    R = lambda snap: mirror_pose(_snap_left(snap))
+    rock = merge(glide(0.02, 0, lean=8), {"hips": (0, -0.02, -0.08)})
+    return True, [(0, L(False)), (8, L(True)), (18, rock), (24, R(False)), (32, R(True)), (42, rock), (48, L(False))]
 
 
 def dance_crisscross():
-    # Crisscross (shuffle, 0.5 s): the skates cross on the beat, the left skate
-    # in front, then open again. The hands clap at the cross.
+    # Crisscross: the skates cross on each beat, the left skate in front, then
+    # open again. The hands clap at the cross.
     open_ = merge(ride(0, 0.02), {"L": at(0.2, 0.0), "R": at(-0.2, 0.0, side="R")}, CLAP_UP)
     cross = merge(ride(0, 0.09), {"L": at(-0.07, -0.07, 0, "L", [rot(UP, -8)]), "R": at(0.07, 0.08, 0, "R", [rot(UP, 8)])}, CLAP)
-    return True, [(0, open_), (7, cross), (15, open_)]
+    return True, [(0, cross), (12, open_), (24, cross), (36, open_), (48, cross)]
 
 
 def dance_spin():
-    # Toe-stop spin (0.7 s): the skates come together on the toe stops, the left
-    # arm goes up, the right arm wraps the chest. The renderer turns the body.
+    # Toe-stop spin (1 beat): the skates come together on the toe stops, the
+    # left arm goes up, the right arm wraps the chest. The renderer turns the body.
     a = merge(ride(0, -0.02, lean=-2), {
         "L": at(0.07, 0.0, 0.05, "L", [rot(LEFT, 25)]), "R": at(-0.07, 0.0, 0.05, "R", [rot(LEFT, 25)]),
         "LeftArm": [rot(FWD, 75), rot(UP, -10)], "LeftForeArm": [rot(UP, -20)],
@@ -483,11 +660,11 @@ def dance_spin():
         "Head": [rot(LEFT, -12)],
     })
     b = merge(a, {"LeftArm": [rot(FWD, 85), rot(UP, -5)], "hips": (0, 0.02, -0.06)})
-    return True, [(0, a), (10, b), (21, a)]
+    return True, [(0, a), (12, b), (24, a)]
 
 
 def dance_sitspin():
-    # Sit spin (0.7 s): the skater drops low on the right skate, the left leg
+    # Sit spin (1 beat): the skater drops low on the right skate, the left leg
     # goes out in front, the arms reach forward. The renderer turns the body.
     a = merge(ride(0, 0.36, lean=26), {
         "hips": (0, 0.06, -0.43),
@@ -497,7 +674,7 @@ def dance_sitspin():
         "Head": [rot(LEFT, -14)],
     })
     b = merge(a, {"hips": (0, 0.06, -0.47)})
-    return True, [(0, a), (10, b), (21, a)]
+    return True, [(0, a), (12, b), (24, a)]
 
 
 CLIPS = {
@@ -506,7 +683,9 @@ CLIPS = {
     "jump": jump, "land": land, "air_mute": air_mute, "air_japan": air_japan, "air_liukang": air_liukang,
     "grind_frontside": grind_frontside, "grind_soul": grind_soul, "grind_unity": grind_unity,
     "manual": manual, "bail": bail,
-    "dance_prep": dance_prep, "dance_crisscross": dance_crisscross, "dance_spin": dance_spin, "dance_sitspin": dance_sitspin,
+    "dance_bankhead": dance_bankhead, "dance_walkitout": dance_walkitout, "dance_prep": dance_prep,
+    "dance_swagsurf": dance_swagsurf, "dance_snaplean": dance_snaplean, "dance_crisscross": dance_crisscross,
+    "dance_spin": dance_spin, "dance_sitspin": dance_sitspin,
 }
 
 

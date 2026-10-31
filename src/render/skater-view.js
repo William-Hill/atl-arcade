@@ -46,6 +46,8 @@ export function createSkaterView() {
     if (CLIPS[name]?.beat) {
       next.timeScale = grooveRate(bpm);
       next.time = beatPhase(clock, next.getClip().duration, bpm);
+    } else if (CLIPS[name]?.tempo) {
+      next.timeScale = grooveRate(bpm);
     }
     next.play();
     if (current) current.crossFadeTo(next, fade, false);

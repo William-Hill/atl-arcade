@@ -85,15 +85,43 @@ export const GRIND = {
   endPop: 0.8, // m/s upward pop when the spline ends. min 0 / typical 0.8 / max 2.
 };
 
-// Style (dance) moves on the roll-out. Each has a duration and a score.
-// `anim` names the placeholder capsule animation in the renderer.
+// Style (dance) moves on the roll-out. Each button has a list of dances.
+// A press starts the next dance in the list; a held button repeats the dance.
+// `beats` sets the length on the game beat clock (BEAT.bpm). `clip` names
+// the skater clip, and `anim` names the placeholder capsule animation.
+// The sources for the dances are in docs/characters/atl-dance-references.md.
 export const STYLE = {
   minSpeed: 1.5, // m/s needed to start a style move. min 0.5 / typical 1.5 / max 3.
   moves: [
-    { id: "shuffle", name: "Shuffle", duration: 0.5, points: 120, anim: "tilt" },
-    { id: "spin", name: "Spin", duration: 0.7, points: 160, anim: "spin" },
+    {
+      id: "groove",
+      beats: 2,
+      points: 150,
+      anim: "tilt",
+      dances: [
+        { clip: "dance_bankhead", name: "Bankhead Bounce" },
+        { clip: "dance_walkitout", name: "Walk It Out" },
+        { clip: "dance_prep", name: "The Prep" },
+        { clip: "dance_swagsurf", name: "Swag Surf" },
+        { clip: "dance_snaplean", name: "Snap Lean" },
+        { clip: "dance_crisscross", name: "Crisscross" },
+      ],
+    },
+    {
+      id: "spin",
+      beats: 1,
+      points: 160,
+      anim: "spin",
+      dances: [
+        { clip: "dance_spin", name: "Toe Spin" },
+        { clip: "dance_sitspin", name: "Sit Spin" },
+      ],
+    },
   ],
 };
+
+// The length of a style move in seconds at `bpm`.
+export const styleDuration = (move, bpm = BEAT.bpm) => (move.beats * 60) / bpm;
 
 // Combo scoring.
 export const COMBO = {

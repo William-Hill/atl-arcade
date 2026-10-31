@@ -31,7 +31,7 @@ export const GREYBOX_BLOCK = {
   // Fixed camera poses for the Playwright screenshot tests, so a reference
   // image only moves when the level moves.
   fixedCameras: {
-    wide: { position: { x: -30, y: 20, z: 30 }, target: { x: 0, y: 0.5, z: 0 } },
+    wide: { position: { x: -36, y: 24, z: 36 }, target: { x: 0, y: 0.5, z: 0 } },
     ramp: { position: { x: 10, y: 3.2, z: 9 }, target: { x: 25, y: 1.6, z: 0 } },
   },
   objects: [
@@ -39,7 +39,7 @@ export const GREYBOX_BLOCK = {
       id: "street",
       kind: "ground",
       color: 0x44444f,
-      shape: { type: "box", position: { x: 0, y: -0.5, z: 0 }, size: { x: 64, y: 1, z: 40 } },
+      shape: { type: "box", position: { x: 0, y: -0.5, z: 0 }, size: { x: 90, y: 1, z: 56 } },
     },
 
     {
@@ -49,7 +49,7 @@ export const GREYBOX_BLOCK = {
       shape: {
         type: "box",
         position: { x: 0, y: SIDEWALK_HEIGHT / 2, z: SIDEWALK_CENTRE_Z },
-        size: { x: 48, y: SIDEWALK_HEIGHT, z: 5 },
+        size: { x: 72, y: SIDEWALK_HEIGHT, z: 5 },
       },
     },
     {
@@ -59,7 +59,7 @@ export const GREYBOX_BLOCK = {
       shape: {
         type: "box",
         position: { x: 0, y: SIDEWALK_HEIGHT / 2, z: -SIDEWALK_CENTRE_Z },
-        size: { x: 48, y: SIDEWALK_HEIGHT, z: 5 },
+        size: { x: 72, y: SIDEWALK_HEIGHT, z: 5 },
       },
     },
     {
@@ -69,7 +69,7 @@ export const GREYBOX_BLOCK = {
       shape: {
         type: "box",
         position: { x: 0, y: CURB_HEIGHT / 2, z: STREET_HALF_WIDTH + 0.18 },
-        size: { x: 48, y: CURB_HEIGHT, z: 0.36 },
+        size: { x: 72, y: CURB_HEIGHT, z: 0.36 },
       },
     },
     {
@@ -79,7 +79,7 @@ export const GREYBOX_BLOCK = {
       shape: {
         type: "box",
         position: { x: 0, y: CURB_HEIGHT / 2, z: -STREET_HALF_WIDTH - 0.18 },
-        size: { x: 48, y: CURB_HEIGHT, z: 0.36 },
+        size: { x: 72, y: CURB_HEIGHT, z: 0.36 },
       },
     },
 

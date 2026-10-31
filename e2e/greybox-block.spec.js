@@ -31,7 +31,7 @@ test.describe("the greybox block", () => {
     await page.waitForFunction(() => window.__atl.frames > 10, null, { timeout: 20000 });
 
     await expect(page.locator("#stage")).toHaveScreenshot("greybox-block.png", {
-      maxDiffPixelRatio: 0.01,
+      maxDiffPixelRatio: 0.002,
       animations: "disabled",
     });
   });
@@ -65,7 +65,7 @@ test("the quarter-pipe reads as a transition from the roll-in", async ({ page })
   await page.waitForFunction(() => window.__atl.frames > 10, null, { timeout: 20000 });
 
   await expect(page.locator("#stage")).toHaveScreenshot("greybox-ramp.png", {
-    maxDiffPixelRatio: 0.01,
+    maxDiffPixelRatio: 0.002,
     animations: "disabled",
   });
 });

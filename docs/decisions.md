@@ -43,3 +43,19 @@ The risk is two sources of truth drifting apart. The guard is that both read the
 Level data is plain JavaScript in `src/levels/`, validated by `validateLevel` at import time, so a bad level fails loudly on load rather than silently rendering half a block.
 
 Curbs are not grindable yet. They are 22 cm tall and run the length of the block, so they would swamp the rail snap test before it has been tuned.
+
+## 2026-10-31 — Skate controller shape and first tuning (M0-03)
+
+The controller is a pure module: `step(state, input, dt, world)` in, next state out. No Three.js, no Rapier, no DOM, no clock. `world` is just `{ probe, spawn, tuning }`, so Vitest can run it on an endless flat floor and the browser can run it on the greybox block, with the same code.
+
+Decisions inside it:
+
+- **Roller skates grip.** The skater travels where they face. There is no drift model. Carving turns the facing and the velocity follows. If a slide is wanted later it becomes a separate state, not a change to this rule.
+- **Speed only comes from a push**, and a push has a cooldown. Coasting decays slowly. This is the "momentum is king" pillar in numbers.
+- **Carving tightens as you slow.** `carveRateAt` eases from 3.2 rad/s at a standstill to 1.05 rad/s at top speed, so a fast line is a committed line.
+- **A jump is a fixed arc.** No charge, no variable height. The spec asked for a fixed arc and it keeps the air state simple for the grind work in M0-05.
+- **Nothing in the controller ends a run** (pillar 1). Roll off the block and you are put back at the spawn with a counter incremented. There is no death, no reset of score, and no fail state.
+
+Top speed is 11 m/s, not the 14 it started at. At 14 the skater crossed the whole greybox block in under three seconds and a four-second scripted line ran out of block. 11 m/s is about 40 km/h, which is quick for roller skates and leaves the block readable. The greybox ground grew from 64 x 40 m to 90 x 56 m at the same time, so a full-lock carve (radius about 10.5 m at top speed) fits on it with room to spare.
+
+Determinism is checked two ways: Vitest runs a script and compares two runs, and the Playwright spec runs the same script in Node and in the browser and compares end positions to the millimetre. The browser result is also compared frame-driven against batch-run, which is what proves the fixed-step accumulator is doing its job.

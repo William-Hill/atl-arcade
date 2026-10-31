@@ -1,178 +1,178 @@
 {
-  "date": "2026-10-31T13:21:56.871Z",
+  "date": "2026-10-31T13:26:16.809Z",
   "taps": 32,
   "bpm": 100,
   "outputLatencyMs": 197.8,
   "renderPaused": {
-    "meanMs": 0.52,
-    "sdMs": 1.99,
+    "meanMs": -2.23,
+    "sdMs": 2.01,
     "within60ms": 32,
     "samples": [
       {
         "index": 1,
-        "offsetMs": -2.81,
+        "offsetMs": 0.58,
         "tag": "PERFECT"
       },
       {
         "index": 2,
-        "offsetMs": 0.91,
+        "offsetMs": -1.6,
         "tag": "PERFECT"
       },
       {
         "index": 3,
-        "offsetMs": -1.17,
+        "offsetMs": -4.19,
         "tag": "PERFECT"
       },
       {
         "index": 4,
-        "offsetMs": -3.26,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 5,
-        "offsetMs": 0.36,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 6,
-        "offsetMs": -1.63,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 7,
-        "offsetMs": 1.99,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 8,
-        "offsetMs": -0.1,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 9,
-        "offsetMs": 3.62,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 10,
-        "offsetMs": 1.64,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 11,
-        "offsetMs": -0.55,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 12,
-        "offsetMs": -2.63,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 13,
-        "offsetMs": 1.08,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 14,
-        "offsetMs": -1,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 15,
-        "offsetMs": 2.72,
-        "tag": "PERFECT"
-      },
-      {
-        "index": 16,
         "offsetMs": 0.63,
         "tag": "PERFECT"
       },
       {
+        "index": 5,
+        "offsetMs": -2.76,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 6,
+        "offsetMs": -4.84,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 7,
+        "offsetMs": -5.13,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 8,
+        "offsetMs": -3.21,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 9,
+        "offsetMs": 0.61,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 10,
+        "offsetMs": -1.48,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 11,
+        "offsetMs": -2.76,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 12,
+        "offsetMs": 0.36,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 13,
+        "offsetMs": -1.13,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 14,
+        "offsetMs": -4.22,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 15,
+        "offsetMs": 0.7,
+        "tag": "PERFECT"
+      },
+      {
+        "index": 16,
+        "offsetMs": -2.38,
+        "tag": "PERFECT"
+      },
+      {
         "index": 17,
-        "offsetMs": 4.35,
+        "offsetMs": -4.57,
         "tag": "PERFECT"
       },
       {
         "index": 18,
-        "offsetMs": 2.36,
+        "offsetMs": -5.16,
         "tag": "PERFECT"
       },
       {
         "index": 19,
-        "offsetMs": 0.18,
+        "offsetMs": -1.74,
         "tag": "PERFECT"
       },
       {
         "index": 20,
-        "offsetMs": -1.91,
+        "offsetMs": -5.02,
         "tag": "PERFECT"
       },
       {
         "index": 21,
-        "offsetMs": 1.81,
+        "offsetMs": -1.21,
         "tag": "PERFECT"
       },
       {
         "index": 22,
-        "offsetMs": -0.28,
+        "offsetMs": -3.29,
         "tag": "PERFECT"
       },
       {
         "index": 23,
-        "offsetMs": 3.54,
+        "offsetMs": 0.63,
         "tag": "PERFECT"
       },
       {
         "index": 24,
-        "offsetMs": 1.36,
+        "offsetMs": -1.76,
         "tag": "PERFECT"
       },
       {
         "index": 25,
-        "offsetMs": -0.73,
+        "offsetMs": -3.75,
         "tag": "PERFECT"
       },
       {
         "index": 26,
-        "offsetMs": 2.99,
+        "offsetMs": -5.23,
         "tag": "PERFECT"
       },
       {
         "index": 27,
-        "offsetMs": 0.9,
+        "offsetMs": -1.61,
         "tag": "PERFECT"
       },
       {
         "index": 28,
-        "offsetMs": -1.18,
+        "offsetMs": -2.4,
         "tag": "PERFECT"
       },
       {
         "index": 29,
-        "offsetMs": 2.54,
+        "offsetMs": 0.12,
         "tag": "PERFECT"
       },
       {
         "index": 30,
-        "offsetMs": 0.45,
+        "offsetMs": -1.47,
         "tag": "PERFECT"
       },
       {
         "index": 31,
-        "offsetMs": -1.64,
+        "offsetMs": -4.15,
         "tag": "PERFECT"
       },
       {
         "index": 32,
-        "offsetMs": 2.08,
+        "offsetMs": 0.07,
         "tag": "PERFECT"
       }
     ]
   },
   "renderOn": {
-    "meanMs": 22.51,
-    "sdMs": 10.54,
+    "meanMs": 18.6,
+    "sdMs": 6.57,
     "within60ms": 32
   }
 }

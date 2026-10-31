@@ -11,7 +11,7 @@
 | Issue | Branch | State |
 |---|---|---|
 | M0-01 Three.js + Vite shell | `m0-01-threejs-shell` | PR open |
-| M0-02 Greybox block + Rapier | — | not started |
+| M0-02 Greybox block + Rapier | `m0-02-greybox-block` | PR open |
 | M0-03 Skate controller | — | not started |
 | M0-04 Follow camera | — | not started |
 | M0-05 Grind system | — | not started |
@@ -25,7 +25,12 @@
 
 ```sh
 npm install
-npm run dev     # shell at http://localhost:5173
+npm run dev     # greybox block at http://localhost:5173
 npm test        # Vitest
 npm run e2e     # Playwright, headless
+
+# useful URLs
+# /?debug=colliders   start with the Rapier collider overlay up (P toggles it)
+# /?view=fixed        the screenshot camera
+# /?view=fixed&cam=ramp
 ```

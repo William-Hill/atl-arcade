@@ -28,3 +28,18 @@ The Phaser scaffold is replaced by a Three.js + Vite shell at the repo root. Ver
 Phaser is removed from `package.json`. The beat-lock prototype files stay on disk untouched as history, but they are no longer a Vite build input, because they import Phaser and nothing may depend on Phaser now. The prototype is not runnable from this repo any more; its findings live in `prototypes/beat-lock-concept/PIVOT-NOTE.md`.
 
 Layout: pure simulation under `src/sim/` with no Three.js imports, rendering under `src/render/`. Vitest covers `src/**/*.test.js`. Playwright tests live in `e2e/` and write evidence to `e2e/__screenshots__/`.
+
+## 2026-10-31 — Rapier 0.21.0, and what owns collision (M0-02)
+
+`@dimforge/rapier3d-compat` 0.21.0, published 2026-09-25. The `-compat` build inlines its WASM, so Vite needs no extra plugin and the same module runs in Node for tests.
+
+Two things touch the level surface, and they have separate jobs:
+
+- **Rapier owns the world.** Every level object becomes one or more fixed colliders: a cuboid per box, a cuboid per stair tread, a capsule per rail segment, and a trimesh for the quarter-pipe. Rapier draws the debug overlay and will serve the camera occlusion raycast in M0-04.
+- **A pure analytic probe will own the surface under the skater** (M0-03). The skate controller is a pure module with no Rapier import, so it stays deterministic and runnable in Vitest.
+
+The risk is two sources of truth drifting apart. The guard is that both read the same level data, and composite shapes are decomposed once in `src/sim/level/parts.js` and `src/sim/level/extrude.js` — so the ramp you see, the ramp Rapier owns, and the ramp the probe samples are built from the same numbers.
+
+Level data is plain JavaScript in `src/levels/`, validated by `validateLevel` at import time, so a bad level fails loudly on load rather than silently rendering half a block.
+
+Curbs are not grindable yet. They are 22 cm tall and run the length of the block, so they would swamp the rail snap test before it has been tuned.

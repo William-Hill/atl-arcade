@@ -26,9 +26,9 @@ lost, but it has no pull request. William picks which line to keep.
 
 | Issue | Branch | State |
 |---|---|---|
-| M0-01 Three.js + Vite shell | `m0-01-threejs-shell` | PR open |
-| M0-02 Greybox block + Rapier | `m0-02-greybox-block` | PR open |
-| M0-03 Skate controller | `m0-03-skate-controller` | PR open |
+| M0-01 Three.js + Vite shell | `m0-01-threejs-shell` | PR #25 open, verified on macOS and in the agent container |
+| M0-02 Greybox block + Rapier | `m0-02-greybox-block` | PR #27 open |
+| M0-03 Skate controller | `m0-03-skate-controller-alt` | pushed, no PR (see the note above) |
 | M0-04 Follow camera | — | not started |
 | M0-05 Grind system | — | not started |
 | M0-06 Combo and style | — | not started |

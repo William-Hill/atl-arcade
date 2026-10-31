@@ -12,7 +12,7 @@ One repo, one Phaser shell, many game modes: Skate ATL first, Atlanta Tycoon sec
 
 The beat-lock prototype answered the wrong question. The vision is free skating in 3D (Tony Hawk's Pro Skater meets Jet Set Radio) with dance and style on the move. Phaser cannot do this. Three.js chosen over Godot 4 because: the game must live in the browser on the site; the neighborhood pipeline (geodata to geometry) is JavaScript end to end; the Rush `codex/196-3d-spike` already proves AutoSprite/Meshy GLB to Three.js with animation; and agents, not humans, build the levels, so the Godot editor advantage does not apply. The Phaser scaffold at the repo root stays until the Three.js shell replaces it.
 
-## 2026-10-31 — Three.js shell versions (M0-01)
+## 2026-10-30 — Three.js shell versions (M0-01)
 
 The Phaser scaffold is replaced by a Three.js + Vite shell at the repo root. Versions, all published at least 7 days before today:
 

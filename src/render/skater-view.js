@@ -28,8 +28,16 @@ export function createSkaterView() {
     sync(state) {
       group.position.set(state.position[0], state.position[1], state.position[2]);
       // While grinding the capsule leans with the balance meter.
-      const lean = state.state === "grind" && state.grind ? -state.grind.balance * 0.6 : 0;
-      group.rotation.set(lean, state.yaw, 0, "YXZ");
+      let lean = state.state === "grind" && state.grind ? -state.grind.balance * 0.6 : 0;
+      let spin = 0;
+      let rock = 0;
+      // Placeholder style animations: "tilt" rocks side to side, "spin" turns once.
+      if (state.style) {
+        const p = Math.min(state.style.time / state.style.duration, 1);
+        if (state.style.anim === "tilt") rock = Math.sin(p * Math.PI * 4) * 0.45;
+        else if (state.style.anim === "spin") spin = p * Math.PI * 2;
+      }
+      group.rotation.set(lean, state.yaw + spin, rock, "YXZ");
     },
   };
 }

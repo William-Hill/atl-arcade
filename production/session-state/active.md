@@ -15,7 +15,7 @@
 | M0-03 Skate controller | `m0-03-skate-controller` | PR open, branched from `m0-02-greybox-level` |
 | M0-04 Follow camera | `m0-04-follow-camera` | PR open, branched from `m0-03-skate-controller` |
 | M0-05 Grind system | `m0-05-grind-system` | PR open, branched from `m0-04-follow-camera` |
-| M0-06 Combo and style | — | not started |
+| M0-06 Combo and style | `m0-06-combo-style` | PR open, branched from `m0-05-grind-system` |
 | M0-07 On-beat bonus | — | not started |
 | M0-08 Input mapping | — | not started |
 | M0-09 Playtest harness | — | not started |
@@ -29,5 +29,5 @@ npm run dev     # shell at http://localhost:5173
 npm test        # Vitest
 npm run e2e     # Playwright, headless, starts Vite on port 5180
 # http://localhost:5173/ is the follow camera; ?view=orbit to inspect; ?view=fixed&debug=1 is the reference pose with the collider overlay
-# Keys: A/D or arrows steer, W/Up/Shift push, S/Down brake, Space jump, hold Ctrl grind, H colliders
+# Keys: A/D or arrows steer, W/Up/Shift push, S/Down brake, Space jump, hold Ctrl grind, Q/E style moves, H colliders
 ```

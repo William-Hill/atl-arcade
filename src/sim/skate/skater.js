@@ -2,14 +2,27 @@
 // the grind system. Pure. `stepSkater` is what the game loop and the tests
 // call. Stats count snaps, exits, and falls for the playtest metrics.
 
-import { GRIND, SKATE } from "./constants.js";
+import { GRIND, SKATE, STYLE } from "./constants.js";
 import { FLAT_GROUND, createSkateState, stepSkate } from "./controller.js";
 import { findSnap, prepareGrindables, startGrind, stepGrind } from "./grind.js";
 
 export function createSkater(level, { position, yaw } = {}) {
   const spawn = level?.spawn ?? { position: [0, 0, 0], yaw: 0 };
   const state = createSkateState({ position: position ?? spawn.position, yaw: yaw ?? spawn.yaw });
-  return { ...state, grind: null, grindCooldown: 0, grindHeld: false, justSnapped: false, justFell: false, justExited: false, exitReason: null, stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0 } };
+  return {
+    ...state,
+    grind: null,
+    grindCooldown: 0,
+    grindHeld: false,
+    justSnapped: false,
+    justFell: false,
+    justExited: false,
+    exitReason: null,
+    style: null, // { id, name, time, duration, points, anim }
+    styleHeld: [false, false],
+    justStyled: null, // the move that just completed
+    stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0, styles: 0 },
+  };
 }
 
 export function createSkaterEnv(level) {
@@ -49,6 +62,30 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     }
   }
   s.grindHeld = wantsGrind;
+
+  // Style moves: start on a button edge while rolling at speed, run for
+  // their duration, and cancel when the skater leaves the ground.
+  const held = [Boolean(input.style1), Boolean(input.style2)];
+  s.justStyled = null;
+  let style = prev.style ? { ...prev.style } : null;
+  if (style && s.state !== "rolling") style = null;
+  if (style) {
+    style.time += dt;
+    if (style.time >= style.duration) {
+      s.justStyled = { id: style.id, name: style.name, points: style.points };
+      stats.styles += 1;
+      style = null;
+    }
+  }
+  if (!style && s.state === "rolling" && s.speed >= STYLE.minSpeed) {
+    const index = held.findIndex((h, i) => h && !prev.styleHeld[i]);
+    if (index >= 0 && STYLE.moves[index]) {
+      const m = STYLE.moves[index];
+      style = { id: m.id, name: m.name, time: 0, duration: m.duration, points: m.points, anim: m.anim };
+    }
+  }
+  s.style = style;
+  s.styleHeld = held;
   s.stats = stats;
   return s;
 }

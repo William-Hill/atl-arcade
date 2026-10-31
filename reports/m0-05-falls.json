@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-31T02:29:18.114Z",
+  "date": "2026-10-31T02:35:26.544Z",
   "script": "e2e/grind.spec.js FREE_SKATE",
   "ticks": 1450,
   "seconds": 24.17,
@@ -16,6 +16,10 @@
     },
     {
       "tick": 146,
+      "type": "bail"
+    },
+    {
+      "tick": 146,
       "type": "fall"
     },
     {
@@ -25,8 +29,20 @@
     },
     {
       "tick": 192,
+      "type": "move"
+    },
+    {
+      "tick": 192,
       "type": "exit",
       "reason": "end"
+    },
+    {
+      "tick": 209,
+      "type": "move"
+    },
+    {
+      "tick": 256,
+      "type": "bank"
     }
   ]
 }

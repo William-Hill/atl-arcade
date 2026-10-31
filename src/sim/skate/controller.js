@@ -35,6 +35,7 @@ export function createSkateState({ position = [0, 0, 0], yaw = 0 } = {}) {
     justLanded: false,
     justJumped: false,
     bonked: false,
+    airFrom: null, // "jump" | "ramp" | "edge" | "grind" | "fall"
     tick: 0,
   };
 }
@@ -140,6 +141,7 @@ function stepRolling(s, input, dt, env, k) {
     s.state = "air";
     s.airTime = 0;
     s.justJumped = true;
+    s.airFrom = "jump";
     s.groundId = null;
     s.position[1] += 1e-3;
     return;
@@ -155,6 +157,7 @@ function stepRolling(s, input, dt, env, k) {
     s.velocity = [v[0] - along * nh[0], v[1], v[2] - along * nh[2]];
     s.state = "air";
     s.airTime = 0;
+    s.airFrom = "ramp";
     s.groundId = null;
     return;
   }
@@ -172,6 +175,7 @@ function stepRolling(s, input, dt, env, k) {
     s.velocity = [t[0] * s.speed, Math.min(t[1] * s.speed, 0), t[2] * s.speed];
     s.state = "air";
     s.airTime = 0;
+    s.airFrom = "edge";
     s.groundId = null;
     s.position = [nx, ny, nz];
     return;
@@ -191,6 +195,7 @@ function stepRolling(s, input, dt, env, k) {
     s.velocity = [t[0] * s.speed, Math.min(t[1] * s.speed, 0), t[2] * s.speed];
     s.state = "air";
     s.airTime = 0;
+    s.airFrom = "edge";
     s.groundId = null;
     s.position = [nx, ny, nz];
     return;

@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- PROTOTYPE - NOT FOR PRODUCTION
+     Question: Does pushing on the beat in the browser feel locked to the music?
+     Date: 2026-10-30 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Skate ATL — beat-lock prototype</title>
+  <style>
+    html, body { margin: 0; background: #0b0b12; color: #f3f3f7; font-family: system-ui, sans-serif; height: 100%; }
+    #game { width: 100vw; height: calc(100vh - 56px); }
+    #bar { height: 56px; display: flex; gap: 12px; align-items: center; padding: 0 12px; background: #141420; font-size: 13px; }
+    #bar label { display: flex; gap: 6px; align-items: center; }
+    #bar input[type=range] { width: 160px; }
+    #touch { position: fixed; left: 0; right: 0; bottom: 56px; display: none; gap: 8px; padding: 8px; justify-content: center; }
+    #touch button { flex: 1; max-width: 160px; height: 64px; font-size: 16px; background: #1e1e30; color: #fff; border: 1px solid #44446a; border-radius: 10px; }
+    @media (pointer: coarse) { #touch { display: flex; } }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <div id="touch">
+    <button data-action="danceL">Dance L</button>
+    <button data-action="push">Push</button>
+    <button data-action="grind">Grind</button>
+    <button data-action="danceR">Dance R</button>
+  </div>
+  <div id="bar">
+    <label>Calibration <input id="offset" type="range" min="-200" max="200" value="0" step="5" /> <span id="offsetVal">0 ms</span></label>
+    <label>BPM <input id="bpm" type="number" min="60" max="160" value="100" style="width:56px" /></label>
+    <button id="reset">Reset stats</button>
+    <span id="latency"></span>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

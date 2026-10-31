@@ -207,31 +207,81 @@ def ride_back():
     return True, keys + [(4 * B, keys[0][1])]
 
 
+def stride_arms(s):
+    # The arm swing for the stride. s = +1: the left arm is at the front of
+    # its swing and the right arm is at the back. The front arm crosses
+    # toward the midline with a bent elbow. The back arm is almost straight.
+    # The shoulders turn with the arms, and the head turns against the
+    # shoulders, so that the eyes stay on the line of travel.
+    fl, fr = max(s, 0.0), max(-s, 0.0)
+    swing_l = -62 * fl + 42 * fr
+    swing_r = -62 * fr + 42 * fl
+    return {
+        "LeftArm": [rot(FWD, -74), rot(LEFT, swing_l), rot(UP, -22 * fl)],
+        "RightArm": [rot(FWD, 74), rot(LEFT, swing_r), rot(UP, 22 * fr)],
+        "LeftForeArm": [rot(UP, -22 - 58 * fl)],
+        "RightForeArm": [rot(UP, 22 + 58 * fr)],
+        "LeftHand": [rot(FWD, -12), rot(LEFT, -10 * fl)],
+        "RightHand": [rot(FWD, 12), rot(LEFT, -10 * fr)],
+        "Spine1": [rot(UP, -18 * s), rot(LEFT, 4)],
+        "Neck": [rot(UP, 9 * s), rot(LEFT, -6)],
+        "Head": [rot(UP, 8 * s), rot(LEFT, -4)],
+    }
+
+
+def _arm_phase(f):
+    # The arm swing is a sine wave over the two strokes (24 frames). The
+    # left arm is at the front at frame 7, when the right push is longest.
+    return math.sin(2 * math.pi * (f - 1) / 24)
+
+
 def _stride_right():
-    # One stride: the weight is on the left skate, the right skate pushes out
-    # to the side on its inside edge and comes back under the hips.
-    glide = ride(1, 0.06, lean=16)
-    out = merge(glide, {
-        "hips": (0.07, 0.02, -0.21),
-        "R": at(-0.42, 0.07, 0, "R", [rot(UP, -40), rot(FWD, 12)]),
-        "L": at(0.10, -0.04, 0, "L", [rot(UP, 4)]),
-        "LeftArm": [rot(FWD, -74), rot(LEFT, -40)],
-        "RightArm": [rot(FWD, 72), rot(LEFT, 36)],
-        "Spine1": [rot(UP, -16)],
-    })
-    back = merge(ride(0.3, 0.0, lean=12), {"R": at(-0.12, 0.06, 0.05, "R", [rot(UP, -10)])})
-    return glide, out, back
+    # One right stroke, 12 frames. The weight is on the left skate. The right
+    # skate turns out and pushes on its inside edge, diagonally out and back.
+    # Real skaters push at an angle of about 45 degrees to the line of travel:
+    # the push goes to the side and to the rear, and the leg ends straight
+    # behind the hip. Then the skate lifts and comes forward under the hips.
+    # +y is to the rear in armature space.
+    def body(f, hips, lean, L, R):
+        return merge(stride_arms(_arm_phase(f)), {
+            "hips": hips,
+            "hipsRot": [rot(UP, 5 * _arm_phase(f)), rot(FWD, -4)],
+            "Spine": [rot(LEFT, lean), rot(FWD, -5)],
+            "L": L,
+            "R": R,
+        })
+    keys = [
+        # Set: the right skate is under the hips and turns out. The weight goes onto the left skate.
+        (0, body(0, (0.04, 0.02, -0.15), 16,
+                 at(0.09, -0.02, 0, "L", [rot(UP, 6)]),
+                 at(-0.13, 0.02, 0, "R", [rot(UP, -28), rot(FWD, 6)]))),
+        # Drive: the left knee bends, and the right skate goes out and back.
+        (3, body(3, (0.07, 0.02, -0.20), 19,
+                 at(0.10, -0.04, 0, "L", [rot(UP, 4)]),
+                 at(-0.26, 0.15, 0, "R", [rot(UP, -34), rot(FWD, 12)]))),
+        # Extension: the right leg is straight, diagonally out and behind the hip.
+        (7, body(7, (0.09, 0.03, -0.23), 21,
+                 at(0.10, -0.06, 0, "L", [rot(UP, 2)]),
+                 at(-0.38, 0.36, 0, "R", [rot(UP, -38), rot(FWD, 14)]))),
+        # Lift: the right skate leaves the ground at the end of the push.
+        (9, body(9, (0.07, 0.03, -0.19), 19,
+                 at(0.10, -0.05, 0, "L", [rot(UP, 2)]),
+                 at(-0.32, 0.32, 0.07, "R", [rot(UP, -30), rot(LEFT, -14)]))),
+        # Recovery: the right skate swings forward under the hips.
+        (11, body(11, (0.04, 0.02, -0.15), 17,
+                  at(0.09, -0.03, 0, "L", [rot(UP, 4)]),
+                  at(-0.16, 0.10, 0.06, "R", [rot(UP, -18)]))),
+    ]
+    return keys
 
 
 def push():
     # ATL stride, two strokes (0.8 s, one beat): right, then left. Each stroke
-    # is 0.4 s, the same as SKATE.pushCooldown. The arms swing across the body.
-    glide, out, back = _stride_right()
-    return True, [
-        (0, glide), (6, out), (10, back),
-        (12, mirror_pose(glide)), (18, mirror_pose(out)), (22, mirror_pose(back)),
-        (24, glide),
-    ]
+    # is 0.4 s, the same as SKATE.pushCooldown. The arms swing in a sine wave
+    # against the legs.
+    right = _stride_right()
+    left = [(f + 12, mirror_pose(p)) for f, p in right]
+    return True, right + left + [(24, right[0][1])]
 
 
 def carve_left():
@@ -543,6 +593,10 @@ def apply_pose(arm, ik, pose, frame):
 # The operators need a window and a 3D view. The MCP runs code in a timer,
 # which has neither.
 def view3d_context():
+    # In background mode (blender -b) there is no window. The bake then runs
+    # without a context override.
+    if not bpy.context.window_manager.windows:
+        return {}
     win = bpy.context.window_manager.windows[0]
     area = next(a for a in win.screen.areas if a.type == "VIEW_3D")
     region = next(r for r in area.regions if r.type == "WINDOW")

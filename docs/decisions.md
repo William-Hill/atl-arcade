@@ -190,3 +190,9 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - The look input is separate from the skate input. The camera does not change the simulation, so the scripted tests stay deterministic.
 - The wall ray still keeps the camera in front of walls when the player turns it.
 - Why: the player asked for camera control in play. `?view=orbit` is a debug view and does not follow the skater.
+
+## 2026-10-31: Diagonal push stroke and arm swing for the stride (M1-02)
+
+- Decision: the push stroke goes diagonally out and back (the foot ends 0.38 m to the side and 0.36 m behind its rest point). The second pass pushed almost only to the side (0.07 m back).
+- The arms swing in a sine wave against the legs: the front arm 62 degrees forward with a bent elbow, the back arm 42 degrees back. The shoulders turn 18 degrees with the arms, and the torso leans forward 16 to 21 degrees through the stroke.
+- Why: the player saw that the feet went out to the side with no drive, and that the upper body was stiff. Real skaters push at about 45 degrees to the line of travel and swing the arms in opposition to the legs.

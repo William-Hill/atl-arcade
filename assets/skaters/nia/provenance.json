@@ -80,6 +80,11 @@
       ],
       "result": "assets/skaters/nia/skater.glb, 2,427,940 bytes, 17,896 triangles, 65 joints, 20 animations (18 to 24 channels each)",
       "credits_spent": 0
+    },
+    {
+      "date": "2026-10-31",
+      "tool": "Blender 5.2.2 (background mode), scripts/blender/nia_clips.py",
+      "step": "Third pass: the push stroke goes diagonally out and back, and the arms swing in a sine wave with shoulder turn. The other 19 clips are rebaked with no change."
     }
   ],
   "credits_spent_total": 115,
@@ -87,7 +92,7 @@
   "tripo_credits_after": 2885,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2427940,
+  "file_size_bytes": 2427424,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
   "animations": 20

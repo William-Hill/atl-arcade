@@ -26,8 +26,8 @@ The sources do not describe the posture or a tempo in numbers. The values below 
 
 ### Rules for the free-skate clips
 
-1. The skater glides. Each push goes out to the side on the inside edge, and the skater then glides on the other skate. A push that goes straight back is a skateboard kick, so do not use it.
-2. The pushes alternate left and right. The arms swing across the body against the legs.
+1. The skater glides. Each push goes diagonally out and back, at about 45 degrees to the line of travel, on the inside edge of a turned-out skate. The push leg ends straight, behind the hip. Then the skate lifts and comes forward under the hips. A push that goes only straight back is a skateboard kick. A push that goes only to the side gives no drive. Do not use either one.
+2. The pushes alternate left and right. The arms swing in opposition to the legs: the arm on the glide side swings forward and across the body with a bent elbow, and the other arm swings back almost straight. The shoulders turn with the arms, and the head stays on the line of travel.
 3. The body bounces on every beat. The knees go down on the beat.
 4. The weight shifts from skate to skate every beat. The shoulders turn against the hips.
 5. The turns use the Cross Step: the outside skate crosses over the inside skate on the beat.

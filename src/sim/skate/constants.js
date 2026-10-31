@@ -55,6 +55,14 @@ export const CAMERA = {
   minDistance: 1.2, // m closest the camera comes to the pivot when a wall pushes it in. min 0.5 / typical 1.2 / max 3.
   clipRelease: 4.0, // 1/s rate the camera eases back out after a wall clears. min 2 / typical 4 / max 10.
   vertNormalY: 0.9, // ground normal y under which the skater is on vert and the camera holds its yaw. min 0.7 / typical 0.9 / max 0.97.
+  // Player look control (mouse drag, right stick). The look offset turns the camera about the skater.
+  mouseLookRate: 0.006, // rad of look per pixel of mouse drag. min 0.002 / typical 0.006 / max 0.012.
+  stickLookRate: 2.8, // rad/s of look at full right stick. min 1.5 / typical 2.8 / max 5.
+  stickDeadzone: 0.15, // right stick deadzone. min 0.05 / typical 0.15 / max 0.3.
+  minPitch: -0.3, // rad the player can lower the camera from its rest angle. min -0.4 / typical -0.3 / max 0.
+  maxPitch: 0.75, // rad the player can raise the camera above its rest angle. min 0.3 / typical 0.75 / max 1.0.
+  lookHold: 1.0, // s with no look input before the camera goes back behind the skater. min 0.3 / typical 1 / max 3.
+  lookReturn: 2.5, // 1/s rate the look offset goes back to zero after the hold. min 1 / typical 2.5 / max 6.
 };
 
 // Grind: rail snap, balance, exit.

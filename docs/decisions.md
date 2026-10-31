@@ -182,3 +182,11 @@ Changes in the state to clip table (`src/render/skater-anim.js`):
 The skater went half into walls, because the wall test used only the center point. The controller now probes one body radius (`SKATE.bodyRadius`, 0.3 m) ahead and 35 degrees to each side. A probe point on a flat surface higher than `maxStep` is a wall, and the skater stops. On a ramp (a steep ground normal) the probe is off, so the quarter pipe still launches. A test shows the stop point at the building: 0.05 m from the wall before, 0.34 m now.
 
 Not verified: no person played the new clips; real skaters did not review the moves; the stop 0.3 m short of a wall can also stop a skater who rides along a wall at less than 0.17 m.
+
+## 2026-10-31: Player camera control in the follow camera (M1-02)
+
+- Decision: a mouse drag on the canvas (left or right button) and the gamepad right stick turn the follow camera about the skater. The control turns the camera in yaw and in pitch (−0.3 to +0.75 rad from the rest angle).
+- After 1.0 s with no look input, the camera goes back behind the skater (`CAMERA.lookHold`, `CAMERA.lookReturn`).
+- The look input is separate from the skate input. The camera does not change the simulation, so the scripted tests stay deterministic.
+- The wall ray still keeps the camera in front of walls when the player turns it.
+- Why: the player asked for camera control in play. `?view=orbit` is a debug view and does not follow the skater.

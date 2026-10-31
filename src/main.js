@@ -16,6 +16,8 @@ import { GREYBOX } from "./level/greybox.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createPhysicsWorld, initPhysics } from "./physics/world.js";
 import { createInput } from "./input/input.js";
+import { createLookInput } from "./input/look.js";
+import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -153,7 +155,12 @@ function runScript(entries, { position, yaw } = {}) {
   });
 }
 
-if (view === "follow") follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+// Mouse drag on the canvas and the right stick turn the follow camera.
+let lookInput = null;
+if (view === "follow") {
+  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+  lookInput = createLookInput({ element: renderer.domElement });
+}
 
 let stepper = createStepper();
 let ticks = 0;
@@ -196,7 +203,10 @@ function frame(now) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
-  if (follow) follow.update(skater, Math.min(elapsed, 0.1));
+  if (follow) {
+    const dt = Math.min(elapsed, 0.1);
+    follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
+  }
   hud.update(run, now, beat.running ? beat.phase() : null);
   renderer.render(scene, camera);
   frames += 1;
@@ -304,6 +314,9 @@ window.__atl = {
   projectSkater,
   get cameraState() {
     return follow ? follow.state : null;
+  },
+  get cameraLook() {
+    return follow ? { ...follow.look } : null;
   },
   get cameraPosition() {
     return [camera.position.x, camera.position.y, camera.position.z];

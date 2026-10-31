@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CAMERA, SKATE } from "./skate/constants.js";
-import { cameraGoal, createCameraState, stepCamera } from "./camera.js";
+import { NO_LOOK, cameraGoal, createCameraState, createLook, mapLook, stepCamera, stepLook } from "./camera.js";
 import { createSkateState } from "./skate/controller.js";
 
 function skaterAt(position, yaw, speed) {
@@ -180,5 +180,68 @@ describe("swing speed", () => {
     expect(Math.abs(next.yaw - cam.yaw)).toBeLessThanOrEqual(CAMERA.maxYawRate / 60 + 1e-9);
     for (let i = 0; i < 120; i += 1) cam = stepCamera(cam, back, 1 / 60);
     expect(Math.abs(cam.yaw)).toBeGreaterThan(3); // still arrives within 2 s
+  });
+});
+
+describe("player look", () => {
+  const k = CAMERA;
+  const near = (a, b, eps = 1e-9) => a.every((v, i) => Math.abs(v - b[i]) < eps);
+
+  it("gives the same goal with a zero look as with no look", () => {
+    const s = skaterAt([3, 0, -2], 0.7, 5);
+    expect(near(cameraGoal(s, 0.7, k, NO_LOOK).position, cameraGoal(s, 0.7).position)).toBe(true);
+  });
+
+  it("turns the camera about the skater at the same range", () => {
+    const s = skaterAt([0, 0, 0], 0, 0);
+    const rest = cameraGoal(s, 0).position;
+    const side = cameraGoal(s, 0, k, { yaw: Math.PI / 2, pitch: 0 }).position;
+    expect(Math.hypot(...side)).toBeCloseTo(Math.hypot(...rest), 9);
+    expect(side[1]).toBeCloseTo(k.height, 9);
+    // The skater faces +x. A quarter look to the left puts the camera on the +z side.
+    expect(side[2]).toBeCloseTo(k.distance, 9);
+    expect(side[0]).toBeCloseTo(0, 9);
+  });
+
+  it("raises the camera with a positive pitch", () => {
+    const s = skaterAt([0, 0, 0], 0, 0);
+    const up = cameraGoal(s, 0, k, { yaw: 0, pitch: 0.4 }).position;
+    expect(up[1]).toBeGreaterThan(k.height);
+    expect(Math.hypot(...up)).toBeCloseTo(Math.hypot(k.distance, k.height), 9);
+  });
+
+  it("maps a drag right and a stick right to a look right (negative yaw)", () => {
+    expect(mapLook({ dx: 100 }, 1 / 60).yaw).toBeCloseTo(-100 * k.mouseLookRate, 9);
+    expect(mapLook({ stick: [1, 0] }, 0.5).yaw).toBeCloseTo(-k.stickLookRate * 0.5, 9);
+    expect(mapLook({ dy: 50 }, 1 / 60).pitch).toBeCloseTo(50 * k.mouseLookRate, 9);
+  });
+
+  it("ignores the right stick inside the deadzone", () => {
+    expect(mapLook({ stick: [0.1, -0.1] }, 1)).toEqual({ yaw: 0, pitch: 0 });
+  });
+
+  it("clamps the pitch", () => {
+    let look = createLook();
+    look = stepLook(look, { yaw: 0, pitch: 5 }, 1 / 60);
+    expect(look.pitch).toBe(k.maxPitch);
+    look = stepLook(look, { yaw: 0, pitch: -9 }, 1 / 60);
+    expect(look.pitch).toBe(k.minPitch);
+  });
+
+  it("holds the look for lookHold, then goes back behind the skater", () => {
+    let look = stepLook(createLook(), { yaw: 1.2, pitch: 0.3 }, 1 / 60);
+    const dt = 1 / 60;
+    for (let t = 0; t < k.lookHold - 0.05; t += dt) look = stepLook(look, NO_LOOK, dt);
+    expect(look.yaw).toBe(1.2);
+    for (let t = 0; t < 4; t += dt) look = stepLook(look, NO_LOOK, dt);
+    expect(look.yaw).toBe(0);
+    expect(look.pitch).toBe(0);
+  });
+
+  it("moves the smoothed camera to the look side", () => {
+    const s = skaterAt([0, 0, 0], 0, 0);
+    let cam = createCameraState(s);
+    for (let i = 0; i < 120; i += 1) cam = stepCamera(cam, s, 1 / 60, k, { yaw: Math.PI / 2, pitch: 0 });
+    expect(cam.position[2]).toBeCloseTo(k.distance, 2);
   });
 });

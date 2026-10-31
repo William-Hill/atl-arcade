@@ -20,6 +20,8 @@ export function createSkater(level, { position, yaw } = {}) {
     exitReason: null,
     style: null, // { id, name, time, duration, points, anim }
     styleHeld: [false, false],
+    backward: false, // the skater rides backward (ATL style). The travel does not change.
+    switchHeld: false,
     justStyled: null, // the move that just completed
     stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0, styles: 0, respawns: 0 },
   };
@@ -87,6 +89,14 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
   }
   s.style = style;
   s.styleHeld = held;
+
+  // Switch: a press on the ground turns the skater to ride backward or
+  // forward again. A fall or a respawn resets the skater to forward.
+  const wantsSwitch = Boolean(input.switch);
+  s.backward = Boolean(prev.backward);
+  if (wantsSwitch && !prev.switchHeld && s.state === "rolling") s.backward = !s.backward;
+  if (s.justFell || s.respawned) s.backward = false;
+  s.switchHeld = wantsSwitch;
   s.stats = stats;
   return s;
 }

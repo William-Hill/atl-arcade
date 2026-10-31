@@ -2,48 +2,92 @@
 //
 // stepAnim() reads one controller state per frame and returns the clip to
 // play and the crossfade time. The renderer applies it to an AnimationMixer.
+//
+// Free skate uses Atlanta rink style, and rails and air use X Games style.
+// The sources are in docs/characters/skate-style-references.md.
 
-import { SKATE } from "../sim/skate/constants.js";
+import { BEAT, SKATE } from "../sim/skate/constants.js";
 
-// Clip names in assets/skaters/nia/skater.glb. `once` clips play one time
-// and hold the last frame. `lock` is the time a clip holds before the
-// state can change it.
+// Clip names in assets/skaters/nia/skater.glb.
+//   once: the clip plays one time and holds the last frame.
+//   lock: the time (s) that the clip holds before a ground clip can replace it.
+//   beat: a groove clip. It is a whole number of clip beats (ANIM.clipBeat),
+//         and the renderer plays it in phase with the game beat clock.
 export const CLIPS = {
-  idle: { once: false },
-  push: { once: false },
-  coast: { once: false },
-  carve_left: { once: false },
-  carve_right: { once: false },
+  idle: { beat: true },
+  push: {},
+  coast: { beat: true },
+  ride_back: { beat: true },
+  carve_left: { beat: true },
+  carve_right: { beat: true },
   jump: { once: true },
-  air_trick_1: { once: false },
-  air_trick_2: { once: false },
-  grind: { once: false },
-  manual: { once: false }, // No manual input in M0. The table binds it to state.manual.
+  land: { once: true, lock: 0.3 },
+  air_mute: {},
+  air_japan: {},
+  air_liukang: {},
+  grind_frontside: {},
+  grind_soul: {},
+  grind_unity: {},
+  manual: {}, // No manual input in M0. The table binds it to state.manual.
   bail: { once: true, lock: 0.9 },
-  dance_1: { once: false },
-  dance_2: { once: false },
-  dance_3: { once: false },
-  dance_4: { once: false },
+  dance_prep: {},
+  dance_crisscross: {},
+  dance_spin: {},
+  dance_sitspin: {},
 };
+
+// The game cycles through these in order: one air trick per ramp air and
+// one grind stance per rail.
+export const AIR_TRICKS = ["air_mute", "air_japan", "air_liukang"];
+export const GRINDS = ["grind_frontside", "grind_soul", "grind_unity"];
 
 // Each style move has two dances. The skater alternates between them.
 export const STYLE_CLIPS = {
-  shuffle: ["dance_1", "dance_3"],
-  spin: ["dance_2", "dance_4"],
+  shuffle: ["dance_prep", "dance_crisscross"],
+  spin: ["dance_spin", "dance_sitspin"],
 };
 
 export const ANIM = {
+  clipBeat: 0.8, // s. The clips are keyed at 24 frames (30 fps) per beat. The renderer scales them to the game beat.
   idleSpeed: 0.3, // m/s. Under this speed the skater stands.
   carveRate: 0.6, // rad/s of yaw change that counts as a carve.
   trickAirTime: 0.25, // s in the air off a ramp before the air trick starts.
   fade: 0.15, // s default crossfade.
-  fastFade: 0.06, // s crossfade into a bail, a push, a jump, or a dance.
+  fastFade: 0.06, // s crossfade into a bail, a push, a jump, a landing, a grind, or a dance.
+  turnTime: 0.35, // s for the half turn into and out of the backward ride.
 };
 
-const FAST = new Set(["bail", "push", "jump", "dance_1", "dance_2", "dance_3", "dance_4"]);
+const FAST = new Set(["bail", "push", "jump", "land", ...GRINDS, ...Object.values(STYLE_CLIPS).flat()]);
+const AIR = new Set(["jump", ...AIR_TRICKS]);
+const GROUND = new Set(["idle", "push", "coast", "ride_back", "carve_left", "carve_right", "manual"]);
+
+export const beatLength = (bpm = BEAT.bpm) => 60 / bpm;
+
+// The playback rate that makes one clip beat last one game beat.
+export const grooveRate = (bpm = BEAT.bpm) => ANIM.clipBeat / beatLength(bpm);
+
+// The clip time that is in phase with the game beat clock. `clock` is the
+// time in seconds since beat 0.
+export function beatPhase(clock, clipDuration, bpm = BEAT.bpm) {
+  if (!(clipDuration > 0)) return 0;
+  const t = clock * grooveRate(bpm);
+  return ((t % clipDuration) + clipDuration) % clipDuration;
+}
 
 export function createAnimState() {
-  return { clip: "idle", time: 0, lock: 0, airVariant: 0, styleVariant: 0, wasAirTrick: false, styleId: null, prevYaw: null };
+  return {
+    clip: "idle",
+    time: 0,
+    lock: 0,
+    airVariant: 0,
+    grindVariant: 0,
+    styleVariant: 0,
+    wasAirTrick: false,
+    wasGrind: false,
+    styleId: null,
+    prevYaw: null,
+    facing: 0,
+  };
 }
 
 function wrapAngle(a) {
@@ -54,23 +98,26 @@ function wrapAngle(a) {
 }
 
 // Picks the clip for one controller state. `ctx` holds the values that the
-// state does not carry: the yaw rate and the two variant counters.
+// state does not carry: the yaw rate and the variant counters.
 export function clipFor(state, ctx = {}) {
-  const { yawRate = 0, airVariant = 0, styleVariant = 0 } = ctx;
+  const { yawRate = 0, airVariant = 0, grindVariant = 0, styleVariant = 0 } = ctx;
   if (state.style) {
     const pair = STYLE_CLIPS[state.style.id] ?? STYLE_CLIPS.shuffle;
     return pair[styleVariant % 2];
   }
-  if (state.state === "grind") return "grind";
+  if (state.state === "grind") return GRINDS[grindVariant % GRINDS.length];
   if (state.state === "air") {
     if (state.airFrom === "fall") return "bail";
-    if (state.airFrom === "ramp" && state.airTime >= ANIM.trickAirTime) return airVariant % 2 === 0 ? "air_trick_1" : "air_trick_2";
+    if (state.airFrom === "ramp" && state.airTime >= ANIM.trickAirTime) return AIR_TRICKS[airVariant % AIR_TRICKS.length];
     return "jump";
   }
   if (state.manual) return "manual";
   if (Math.abs(state.speed) < ANIM.idleSpeed) return "idle";
-  // pushCooldown counts down from SKATE.pushCooldown after each push, and the
-  // push clip is as long as the cooldown.
+  // Backward (the switch button): the backward ride swizzles the skates, so
+  // it is the clip for the push, the coast, and the carves.
+  if (state.backward) return "ride_back";
+  // pushCooldown counts down from SKATE.pushCooldown after each push. One
+  // stroke of the push clip is as long as the cooldown.
   if (state.pushCooldown > 0 && state.pushCooldown <= SKATE.pushCooldown) return "push";
   if (yawRate > ANIM.carveRate) return "carve_left";
   if (yawRate < -ANIM.carveRate) return "carve_right";
@@ -83,18 +130,25 @@ export function stepAnim(prev, state, dt) {
   const yawRate = prev.prevYaw === null || dt <= 0 ? 0 : wrapAngle(state.yaw - prev.prevYaw) / dt;
   const next = { ...prev, prevYaw: state.yaw, time: prev.time + dt, lock: Math.max(0, prev.lock - dt) };
 
-  // The variant counters change once per air trick and once per style move.
+  // The variant counters change once per style move, air trick, and rail.
   const styleId = state.style ? state.style.id : null;
   if (!styleId && prev.styleId) next.styleVariant = prev.styleVariant + 1;
   next.styleId = styleId;
+  const onRail = state.state === "grind";
+  if (!onRail && prev.wasGrind) next.grindVariant = prev.grindVariant + 1;
+  next.wasGrind = onRail;
 
-  let wanted = clipFor(state, { yawRate, airVariant: next.airVariant, styleVariant: next.styleVariant });
-  const airTrick = wanted === "air_trick_1" || wanted === "air_trick_2";
+  const ctx = { yawRate, airVariant: next.airVariant, grindVariant: next.grindVariant, styleVariant: next.styleVariant };
+  let wanted = clipFor(state, ctx);
+  const airTrick = AIR_TRICKS.includes(wanted);
   if (!airTrick && prev.wasAirTrick) next.airVariant = prev.airVariant + 1;
   next.wasAirTrick = airTrick;
 
-  // A bail holds for its lock time, also after the skater lands.
-  if (prev.lock > 0 && wanted !== "bail") wanted = prev.clip;
+  // The skater lands from a jump or an air trick with the land clip.
+  if (AIR.has(prev.clip) && GROUND.has(wanted)) wanted = "land";
+  // A bail or a landing holds for its lock time before a ground clip.
+  if (prev.lock > 0 && GROUND.has(wanted)) wanted = prev.clip;
+  next.facing = facingFor(wanted, state);
   if (wanted === prev.clip) return { anim: next, change: null };
 
   next.clip = wanted;
@@ -102,4 +156,16 @@ export function stepAnim(prev, state, dt) {
   next.lock = CLIPS[wanted].lock ?? 0;
   const fade = FAST.has(wanted) ? ANIM.fastFade : ANIM.fade;
   return { anim: next, change: { from: prev.clip, to: wanted, fade } };
+}
+
+// The model yaw offset: PI faces backward. The skater faces backward on the
+// ground when the switch is on. Air, rails, and dances face forward.
+export const facingFor = (clip, state = {}) => (state.backward && GROUND.has(clip) && clip !== "manual" ? Math.PI : 0);
+
+// Moves the facing offset toward its target at a fixed turn rate.
+export function stepFacing(current, target, dt, turnTime = ANIM.turnTime) {
+  const d = target - current;
+  const max = (Math.PI / turnTime) * dt;
+  if (Math.abs(d) <= max) return target;
+  return current + Math.sign(d) * max;
 }

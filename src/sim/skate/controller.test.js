@@ -135,6 +135,14 @@ describe("on the greybox", () => {
     expect(state.speed).toBe(0);
   });
 
+  it("stops one body radius short of a wall, so the body stays out of it", () => {
+    const yawNorth = Math.PI / 2;
+    const { state } = runScript(roll(6, yawNorth, [0, 0.15, -8]), [{ frames: 60 }], { env: greybox });
+    // The building face is at z = -10. One frame of travel at 6 m/s is 0.1 m.
+    expect(state.position[2]).toBeGreaterThan(-10 + SKATE.bodyRadius - 0.11);
+    expect(state.bonked || state.speed === 0).toBe(true);
+  });
+
   it("stops at a ledge side instead of rolling through it", () => {
     const yawNorth = Math.PI / 2;
     const { state } = runScript(roll(4, yawNorth, [-12, 0.15, -6]), [{ frames: 60 }], { env: greybox });

@@ -204,7 +204,7 @@ function stepRolling(s, input, dt, env, k) {
   }
 
   const rise = g.height - ny;
-  if (rise > k.maxStep) {
+  if (rise > k.maxStep || wallAhead(s, env, t, nx, ny, nz, k)) {
     // A wall. Stop where we are.
     s.speed *= k.bonkSpeedKeep;
     s.bonked = true;
@@ -229,6 +229,38 @@ function stepRolling(s, input, dt, env, k) {
   s.velocity = [t[0] * s.speed, t[1] * s.speed, t[2] * s.speed];
 }
 
+// The skater is a point for the ground, but the body has a radius. These
+// probes look one body radius ahead of the next position (and 35 degrees to
+// each side of it) for the side of a wall, so the skater stops before the
+// body goes into it. On a ramp (a steep ground normal) the probe is off,
+// because the ramp ahead rises fast but it is not a wall.
+const PROBE_ANGLES = [0, 0.61, -0.61];
+
+function probeHits(env, x, z, dirX, dirZ, radius, isWall) {
+  const len = Math.hypot(dirX, dirZ);
+  if (len < 1e-6 || !(radius > 0)) return false;
+  const hx = dirX / len;
+  const hz = dirZ / len;
+  for (const a of PROBE_ANGLES) {
+    const c = Math.cos(a);
+    const sn = Math.sin(a);
+    const px = x + (hx * c - hz * sn) * radius;
+    const pz = z + (hx * sn + hz * c) * radius;
+    const p = env.sampleGround(px, pz);
+    if (p && isWall(p)) return true;
+  }
+  return false;
+}
+
+function wallAhead(s, env, t, nx, ny, nz, k) {
+  if (!s.groundNormal || s.groundNormal[1] < 0.9) return false;
+  return probeHits(env, nx, nz, t[0], t[2], k.bodyRadius, (p) => p.height - ny > k.maxStep && p.normal[1] > 0.9);
+}
+
+function wallAheadInAir(s, env, nx, ny, nz, prevY, k) {
+  return probeHits(env, nx, nz, s.velocity[0], s.velocity[2], k.bodyRadius, (p) => p.height > prevY + k.maxStep && ny < p.height && p.normal[1] > 0.9);
+}
+
 function stepAir(s, input, dt, env, k) {
   if (steerActive(input.steer)) s.yaw = wrapYaw(s.yaw + input.steer * k.airTurnRate * dt);
 
@@ -240,8 +272,9 @@ function stepAir(s, input, dt, env, k) {
   let g = env.sampleGround(nx, nz);
 
   // The side of anything taller than a step is a wall in the air too: the
-  // skater keeps its column, loses its horizontal speed, and falls.
-  if (g && g.height > prevY + k.maxStep && ny < g.height) {
+  // skater keeps its column, loses its horizontal speed, and falls. The probe
+  // one body radius ahead keeps the body out of the wall.
+  if ((g && g.height > prevY + k.maxStep && ny < g.height) || wallAheadInAir(s, env, nx, ny, nz, prevY, k)) {
     nx = s.position[0];
     nz = s.position[2];
     s.velocity[0] = 0;

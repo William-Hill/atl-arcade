@@ -94,6 +94,40 @@ test("the scripted sessions show no T-pose frame", async ({ page }) => {
     expect(r.pixels, `empty mask at ${r.session} #${r.i}`).toBeGreaterThan(100);
     expect(r.iou, `T-pose-like frame at ${r.session} #${r.i} (${r.clip})`).toBeLessThan(0.8);
   }
-  expect(clipsSeen).toEqual(expect.arrayContaining(["push", "coast", "carve_left", "grind", "jump", "bail", "air_trick_1"]));
+  expect(clipsSeen).toEqual(expect.arrayContaining(["push", "coast", "carve_left", "grind_frontside", "jump", "land", "bail", "air_mute"]));
+  expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+});
+
+test("the switch button turns the skater to ride backward", async ({ page }) => {
+  test.setTimeout(60000);
+  const errors = collectErrors(page);
+  await page.goto("/?mute=1");
+  await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
+  const samples = await page.evaluate(async () => {
+    const atl = window.__atl;
+    const P = (frames, extra = {}) => ({ frames, input: { push: true, ...extra } });
+    const script = [P(90), { frames: 2, input: { switch: true } }, { frames: 60, input: {} }, P(60), { frames: 30, input: {} }];
+    const out = [];
+    let finished = false;
+    atl.runScript(script, { position: [-24, 0, 0], yaw: 0 }).then(() => {
+      finished = true;
+    });
+    let shot = false;
+    while (!finished) {
+      await new Promise((r) => setTimeout(r, 100));
+      out.push({ clip: atl.skaterModel.clip, facing: atl.skaterModel.facing, backward: atl.skater.backward });
+      if (!shot && atl.skaterModel.clip === "ride_back" && atl.skaterModel.facing > 3.1) {
+        shot = true;
+        out.push({ shot: true });
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    }
+    return out;
+  });
+  const back = samples.filter((s) => s.clip === "ride_back");
+  expect(back.length).toBeGreaterThan(3);
+  expect(Math.max(...back.map((s) => s.facing))).toBeCloseTo(Math.PI, 2);
+  expect(samples.filter((s) => s.clip === "push" || s.clip === "coast").every((s) => !s.backward)).toBe(true);
+  await page.screenshot({ path: "e2e/__screenshots__/skater-anim-backward.png" });
   expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
 });

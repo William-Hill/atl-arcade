@@ -24,6 +24,7 @@ export const SKATE = {
   dropThreshold: 0.3, // m drop under the feet that turns a roll into a fall. min 0.15 / typical 0.3 / max 0.6.
 
   // Ground contact
+  bodyRadius: 0.3, // m. The skater stops this far from a wall, so the body does not go into it. min 0.2 / typical 0.3 / max 0.4.
   maxStep: 0.25, // m rise the skater rolls over (curbs, stairs). min 0.15 / typical 0.25 / max 0.4.
   launchNormalY: 0.15, // ramp surface normal y under which the skater leaves the lip. min 0.05 / typical 0.15 / max 0.3.
   bonkSpeedKeep: 0, // fraction of speed kept after a wall hit. min 0 / typical 0 / max 0.3.

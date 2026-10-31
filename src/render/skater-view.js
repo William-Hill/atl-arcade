@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { SKATER_BODY } from "../sim/skate/constants.js";
-import { CLIPS, createAnimState, stepAnim } from "./skater-anim.js";
+import { CLIPS, beatPhase, createAnimState, grooveRate, stepAnim, stepFacing } from "./skater-anim.js";
 
 // The skater bound to the controller output. It starts as a capsule (the
 // nose cone shows the facing). attachModel() swaps in a GLB skater and plays
@@ -27,6 +27,14 @@ export function createSkaterView() {
 
   let model = null;
   let mixer = null;
+  // The model turns inside this pivot to ride backward.
+  const pivot = new THREE.Group();
+  pivot.name = "skater-facing";
+  group.add(pivot);
+  let facing = 0;
+  // The beat clock (s since beat 0). Groove clips play in phase with it.
+  let clock = 0;
+  let bpm;
   const actions = new Map();
   let anim = createAnimState();
   let current = null;
@@ -35,6 +43,10 @@ export function createSkaterView() {
     const next = actions.get(name);
     if (!next || next === current) return;
     next.reset();
+    if (CLIPS[name]?.beat) {
+      next.timeScale = grooveRate(bpm);
+      next.time = beatPhase(clock, next.getClip().duration, bpm);
+    }
     next.play();
     if (current) current.crossFadeTo(next, fade, false);
     current = next;
@@ -49,6 +61,9 @@ export function createSkaterView() {
     get clip() {
       return model ? anim.clip : null;
     },
+    get facing() {
+      return facing;
+    },
     // The effective weight of each running clip, for the tests.
     get weights() {
       const out = {};
@@ -60,7 +75,7 @@ export function createSkaterView() {
       model = loaded;
       body.visible = false;
       nose.visible = false;
-      group.add(loaded.root);
+      pivot.add(loaded.root);
       mixer = new THREE.AnimationMixer(loaded.root);
       for (const clip of loaded.animations) {
         const action = mixer.clipAction(clip);
@@ -72,9 +87,13 @@ export function createSkaterView() {
       }
       anim = createAnimState();
       current = null;
+      facing = 0;
+      pivot.rotation.y = 0;
       play(anim.clip, 0);
     },
-    sync(state, dt = 1 / 60) {
+    // beat: optional { time, bpm } from the game beat clock. Without it the
+    // view counts its own time at the default BPM.
+    sync(state, dt = 1 / 60, beat = null) {
       group.position.set(state.position[0], state.position[1], state.position[2]);
       let spin = 0;
       let rock = 0;
@@ -87,9 +106,15 @@ export function createSkaterView() {
       }
       group.rotation.set(grindLean(state), state.yaw + spin, rock, "YXZ");
       if (mixer) {
+        if (beat && Number.isFinite(beat.time)) {
+          clock = beat.time;
+          bpm = beat.bpm;
+        } else clock += dt;
         const r = stepAnim(anim, state, dt);
         anim = r.anim;
         if (r.change) play(r.change.to, r.change.fade);
+        facing = stepFacing(facing, anim.facing, dt);
+        pivot.rotation.y = facing;
         mixer.update(dt);
       }
     },

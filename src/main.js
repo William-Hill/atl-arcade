@@ -191,7 +191,7 @@ function frame(now) {
   for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
   ticks += stepped.steps;
 
-  skaterView.sync(skater, Math.min(elapsed, 0.1));
+  skaterView.sync(skater, Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
   if (controls) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
@@ -271,6 +271,10 @@ window.__atl = {
     },
     get weights() {
       return skaterView.weights;
+    },
+    // The model yaw offset: PI when the skater rides backward.
+    get facing() {
+      return skaterView.facing;
     },
     // The skater mask from a camera in front of it (for the T-pose check).
     silhouette() {

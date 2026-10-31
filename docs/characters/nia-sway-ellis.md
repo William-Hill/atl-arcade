@@ -75,11 +75,13 @@ These rules make the Tripo or Meshy output easy to rig and animate.
 
 | Group | Clips |
 |---|---|
-| Base | idle, push, coast, carve left, carve right |
-| Air | jump, air trick 1, air trick 2 |
-| Rails | grind, manual |
+| Base (Atlanta rink style) | idle, push (ATL stride), coast, ride back, carve left, carve right (Cross Step) |
+| Air (X Games) | jump, land, mute grab, japan, Liu Kang |
+| Rails (X Games) | frontside, soul, unity, manual |
 | Fail | bail |
-| Style | dance 1 to dance 4 |
+| Style (Atlanta rink style) | the Prep, crisscross, toe-stop spin, sit spin |
+
+The sources for each move are in `skate-style-references.md`.
 
 The dance clips must come from rink culture: backward skating, footwork, spins, and rhythm moves. If a move looks like skateboarding, replace it with a rink move (pillar 5).
 

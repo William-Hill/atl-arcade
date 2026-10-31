@@ -10,7 +10,7 @@
 
 | Issue | Branch | State |
 |---|---|---|
-| M0-01 Three.js + Vite shell | `m0-01-threejs-shell` | PR open |
+| M0-01 Three.js + Vite shell | `m0-01-threejs-shell` | PR #25 open, verified locally on macOS (Vitest 7 pass, e2e 1 pass, build ok) |
 | M0-02 Greybox block + Rapier | — | not started |
 | M0-03 Skate controller | — | not started |
 | M0-04 Follow camera | — | not started |

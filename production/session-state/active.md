@@ -11,8 +11,9 @@
 | Issue | Branch | PR | Verified |
 |---|---|---|---|
 | M1-01 First skater (Nia) | `claude/m1-01-skater-cleanup-70c838` | PR open | Vitest on the GLB (size, Draco, triangles, joints, height); Playwright loads it skinned with no console errors and no off-host requests; five views in `assets/skaters/nia/views/` |
+| M1-02 Animation set and binding | `claude/m1-02-skater-animations` (from M1-01) | PR open | Vitest state -> clip table; Playwright contact sheet per clip in `assets/skaters/nia/clips/`; no T-pose frame over 289 samples of the three scripted sessions (worst IoU 0.587) |
 
-M1-01 not verified: no human looked at the model in the game, and the model has no animations yet. Cascadeur reads the GLB only without Draco (see `docs/decisions.md`). Next: M1-02 (#12) binds the animations.
+M1-01 not verified: no human looked at the model in the game, and the model has no animations yet. Cascadeur reads the GLB only without Draco (see `docs/decisions.md`). M1-02 not verified: no human played with the model; real skaters did not review the clips; the manual clip has no input yet; the air_trick_2, carve_right, dance_2 to dance_4, and manual clips did not show in the scripted sessions (the contact sheets cover them). Next: M1-03.
 
 ## M0 status, 2026-10-30
 

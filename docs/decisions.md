@@ -131,3 +131,29 @@ The first skater is Nia "Sway" Ellis, an original adult character from the West 
 The Cascadeur MCP (`csc.glb.process_import`) cannot read the Draco GLB. It logs `GLB/GLTF: vector` and imports nothing. The same export without Draco (`assets/skaters/nia/raw/nia-nodraco.glb`, not in git) imports with success: 67 objects, the 65 `mixamorig:` joints, the `NiaRig` transform, and the `Nia` mesh. The check did not test the Cascadeur Quick Rigging Tool or an animation export.
 
 Decision for M1-02: animate in Cascadeur from the GLB without Draco. Export the clips from Cascadeur without Draco, then compress the final GLB with Draco in Blender. To make the input again, import `skater.glb` into Blender and export it without Draco. If the Cascadeur rig setup fails, animate with the Blender MCP.
+
+## 2026-10-31 — Nia animation set and state binding (M1-02)
+
+The user chose to key every clip in Blender (0 credits) over Meshy dances or Meshy text-to-motion. The Meshy library has dances, but no clip for a push, a coast, a carve, a grind, or a manual. `scripts/blender/nia_clips.py` keys 15 clips on the Mixamo rig through the Blender MCP: idle, push, coast, carve_left, carve_right, jump, air_trick_1, air_trick_2, grind, manual, bail, and dance_1 to dance_4. Leg IK holds the wheels on the ground, and each clip is baked to plain bone keys. The clips are greybox quality. Real skaters must review them before release (AGENTS.md).
+
+All clips are in `assets/skaters/nia/skater.glb` (2,290,112 bytes). The export removes the curves that stay at the rest pose. Without this step every clip wrote all 195 channels, and the glTF JSON was 659 KB. Now it is 75 KB. Three.js blends a bone with no track back to the rest pose.
+
+`src/render/skater-anim.js` is the state to clip table. It is pure and has Vitest tests for the transitions:
+
+| Controller state | Clip |
+|---|---|
+| style move "shuffle" | dance_1, then dance_3 on the next shuffle |
+| style move "spin" | dance_2, then dance_4 (the renderer also turns the body) |
+| grind | grind |
+| air from a grind fall | bail (it holds for 0.9 s, also after the landing) |
+| air off a ramp for 0.25 s or more | air_trick_1, then air_trick_2 on the next trick |
+| other air | jump |
+| `state.manual` | manual (M0 has no manual input, so this clip is not reachable yet) |
+| speed under 0.3 m/s | idle |
+| up to 0.4 s after a push | push |
+| yaw rate over 0.6 rad/s | carve_left or carve_right |
+| other rolling | coast |
+
+The crossfade is 0.15 s, and 0.06 s into a bail, a push, a jump, or a dance. The game now shows Nia by default; `?skater=capsule` keeps the capsule.
+
+The T-pose check renders the skater alone, from a camera in front of it, into a 96 x 96 mask. Then it compares the mask with the bind-pose mask (IoU). The gate is IoU under 0.8. Over the three scripted sessions the worst sample was 0.587. A second bind-pose mask gives over 0.95, so a T-pose frame fails the gate. The first run found a fault in the check itself: Three.js updates a skeleton once per frame, so a silhouette drawn after the main render used the bones of the previous render. The silhouette now calls `skeleton.update()` first.

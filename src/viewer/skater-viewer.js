@@ -46,12 +46,60 @@ function setView(name) {
 fitToWindow(renderer, camera);
 window.addEventListener("resize", () => fitToWindow(renderer, camera));
 
-const state = { ready: false, error: null, views: Object.keys(VIEWS), setView };
+let paused = false;
+let mixer = null;
+let clips = [];
+
+// Draws one clip as a row of frames from the three-quarter view: a contact
+// sheet. The first frame is t = 0 and the last frame is the clip end.
+function sheet(name, cols = 6) {
+  const clip = clips.find((c) => c.name === name);
+  if (!clip) throw new Error(`Unknown clip: ${name}`);
+  paused = true;
+  mixer.stopAllAction();
+  const action = mixer.clipAction(clip);
+  action.reset().play();
+  const dir = VIEWS["three-quarter"];
+  camera.position.set(TARGET.x + dir[0] * 4.2, TARGET.y + 0.3, TARGET.z + dir[1] * 4.2);
+  camera.lookAt(TARGET);
+  const size = renderer.getSize(new THREE.Vector2());
+  const w = Math.floor(size.x / cols);
+  camera.aspect = w / size.y;
+  camera.updateProjectionMatrix();
+  renderer.autoClear = false;
+  renderer.setScissorTest(true);
+  renderer.setViewport(0, 0, size.x, size.y);
+  renderer.setScissor(0, 0, size.x, size.y);
+  renderer.clear();
+  for (let i = 0; i < cols; i += 1) {
+    action.time = (clip.duration * i) / (cols - 1);
+    mixer.update(0);
+    renderer.setViewport(i * w, 0, w, size.y);
+    renderer.setScissor(i * w, 0, w, size.y);
+    renderer.render(scene, camera);
+  }
+  renderer.setScissorTest(false);
+  renderer.autoClear = true;
+  return { name, duration: clip.duration, tracks: clip.tracks.length };
+}
+
+const state = {
+  ready: false,
+  error: null,
+  views: Object.keys(VIEWS),
+  setView,
+  sheet,
+  get clips() {
+    return clips.map((c) => c.name);
+  },
+};
 window.__skater = state;
 
 try {
   const model = await loadSkaterModel(params.get("skater") ?? "nia");
   scene.add(model.root);
+  clips = model.animations;
+  mixer = new THREE.AnimationMixer(model.root);
   const box = new THREE.Box3().setFromObject(model.root, true);
   state.info = {
     triangles: model.skinnedMesh.geometry.index.count / 3,
@@ -69,6 +117,7 @@ try {
 }
 
 renderer.setAnimationLoop(() => {
+  if (paused) return;
   controls.update();
   renderer.render(scene, camera);
 });

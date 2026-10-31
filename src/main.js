@@ -6,7 +6,7 @@ import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
-import { createSkateState, stepSkate } from "./sim/skate/controller.js";
+import { createSkater, createSkaterEnv, stepSkater } from "./sim/skate/skater.js";
 import { GREYBOX } from "./level/greybox.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createPhysicsWorld, initPhysics } from "./physics/world.js";
@@ -16,6 +16,7 @@ import { createScriptPlayer } from "./input/scripted.js";
 const params = new URLSearchParams(window.location.search);
 const level = GREYBOX;
 const env = createLevelEnv(level);
+const skaterEnv = createSkaterEnv(level);
 
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
@@ -58,7 +59,9 @@ window.addEventListener("keydown", (e) => {
 
 // Simulation.
 const keyboard = createKeyboard(window);
-let skater = createSkateState({ position: level.spawn.position, yaw: level.spawn.yaw });
+let skater = createSkater(level);
+// Simulation events for the tests and the playtest harness.
+const events = [];
 let script = null;
 let scriptResolve = null;
 
@@ -75,13 +78,19 @@ function sampleInput() {
 }
 
 function simulate(dt) {
-  skater = stepSkate(skater, sampleInput(), dt, env);
+  skater = stepSkater(skater, sampleInput(), dt, env, skaterEnv);
+  if (skater.justSnapped) events.push({ tick: skater.tick, type: "snap", id: skater.grind.id, s: skater.grind.s });
+  if (skater.justExited) events.push({ tick: skater.tick, type: "exit", reason: skater.exitReason, position: [...skater.position] });
+  if (skater.justFell) events.push({ tick: skater.tick, type: "fall", position: [...skater.position] });
+  if (skater.justLanded) events.push({ tick: skater.tick, type: "land", groundId: skater.groundId, speed: skater.speed });
+  if (skater.justJumped) events.push({ tick: skater.tick, type: "jump" });
 }
 
 let follow = null;
 
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
-  skater = createSkateState({ position, yaw });
+  skater = createSkater(level, { position, yaw });
+  events.length = 0;
   if (follow) follow.reset(skater);
 }
 
@@ -164,6 +173,9 @@ window.__atl = {
   },
   get skater() {
     return skater;
+  },
+  get events() {
+    return events;
   },
   resetSkater,
   runScript,

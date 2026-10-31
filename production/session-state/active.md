@@ -14,7 +14,7 @@
 | M0-02 Greybox block + Rapier | `m0-02-greybox-level` | PR open, branched from `m0-01-threejs-shell` |
 | M0-03 Skate controller | `m0-03-skate-controller` | PR open, branched from `m0-02-greybox-level` |
 | M0-04 Follow camera | `m0-04-follow-camera` | PR open, branched from `m0-03-skate-controller` |
-| M0-05 Grind system | — | not started |
+| M0-05 Grind system | `m0-05-grind-system` | PR open, branched from `m0-04-follow-camera` |
 | M0-06 Combo and style | — | not started |
 | M0-07 On-beat bonus | — | not started |
 | M0-08 Input mapping | — | not started |
@@ -30,5 +30,5 @@ npm run dev     # shell at http://localhost:5173
 npm test        # Vitest
 npm run e2e     # Playwright, headless, starts Vite on port 5180
 # http://localhost:5173/ is the follow camera; ?view=orbit to inspect; ?view=fixed&debug=1 is the reference pose with the collider overlay
-# Keys: A/D or arrows steer, W/Up/Shift push, S/Down brake, Space jump, H colliders
+# Keys: A/D or arrows steer, W/Up/Shift push, S/Down brake, Space jump, hold F grind, H colliders
 ```

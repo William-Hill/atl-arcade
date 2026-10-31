@@ -4,6 +4,7 @@
 **Player:** William
 **Build:** the M0 greybox in `src/` (this folder holds only the report). William played the build from `m0-09-playtest-harness` before the review fixes; the camera fix and the review fixes merged after the session (PRs #29 to #34).
 **Verdict:** PROCEED
+**Waiver:** issue #10 asks for a 15-minute session with sound. This session did not meet that requirement, or did not record it. William waived it on 2026-10-31 and kept the verdict. The sound session moves to the first M1 playtest.
 
 ## Hypothesis
 
@@ -45,3 +46,4 @@ No session respawned the skater. The score changes between runs because moves th
 - Recheck the quarter-pipe camera with a human. The fix passed scripted tests only.
 - The movement feel is untuned. Every knob is in `src/sim/skate/constants.js`.
 - A real gamepad and audio through speakers are still unverified.
+- Play the waived 15-minute session with sound, and judge the click track and the on-beat bonus by ear.

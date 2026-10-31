@@ -194,3 +194,48 @@ describe("quarter pipe, too slow", () => {
     expect(last.position[0]).toBeLessThan(26);
   });
 });
+
+describe("air collisions", () => {
+  it("does not land on a roof the jump never reached", () => {
+    // Jump north off the sidewalk toward building-north (face at z = -10, roof at y = 8).
+    const yawNorth = Math.PI / 2;
+    const { states } = runScript(roll(8, yawNorth, [0, 0.15, -9]), [{ frames: 1, input: { jump: true } }, { frames: 60 }], { env: greybox, trace: true });
+    expect(Math.max(...states.map((s) => s.position[1]))).toBeLessThan(1.5);
+    expect(Math.min(...states.map((s) => s.position[2]))).toBeGreaterThan(-10.01);
+    const last = states[states.length - 1];
+    expect(last.state).toBe("rolling");
+    expect(last.position[1]).toBeCloseTo(0.15);
+  });
+
+  it("still lands on a curb it hops onto", () => {
+    const yawSouth = -Math.PI / 2;
+    const { state } = runScript(roll(4, yawSouth, [0, 0, 4]), [{ frames: 1, input: { jump: true } }, { frames: 60 }], { env: greybox });
+    expect(state.state).toBe("rolling");
+    expect(state.position[1]).toBeCloseTo(0.15);
+    expect(state.position[2]).toBeGreaterThan(6);
+  });
+});
+
+describe("out-of-bounds recovery", () => {
+  const level = { sampleGround: greybox.sampleGround, bounds: GREYBOX.bounds, spawn: GREYBOX.spawn };
+
+  it("respawns a skater that falls below the level", () => {
+    const s = roll(5, 0, [10, -4, 0]);
+    s.state = "air";
+    const next = stepSkate(s, {}, DT, level);
+    expect(next.respawned).toBe(true);
+    expect(next.position).toEqual(GREYBOX.spawn.position);
+    expect(next.speed).toBe(0);
+    expect(next.state).toBe("rolling");
+  });
+
+  it("respawns a skater past the level bounds", () => {
+    const next = stepSkate(roll(5, 0, [GREYBOX.bounds.maxX + 2, 0, 0]), {}, DT, level);
+    expect(next.respawned).toBe(true);
+  });
+
+  it("leaves a skater inside the level alone", () => {
+    const next = stepSkate(roll(5, 0, [0, 0, 0]), {}, DT, level);
+    expect(next.respawned).toBe(false);
+  });
+});

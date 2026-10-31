@@ -8,14 +8,14 @@ import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkater, createSkaterEnv, stepSkater } from "./sim/skate/skater.js";
 import { GREYBOX } from "./level/greybox.js";
-import { createGroundSampler } from "./level/ground.js";
+import { createLevelEnv } from "./level/ground.js";
 import { createPhysicsWorld, initPhysics } from "./physics/world.js";
 import { createKeyboard } from "./input/keyboard.js";
 import { createScriptPlayer } from "./input/scripted.js";
 
 const params = new URLSearchParams(window.location.search);
 const level = GREYBOX;
-const env = { sampleGround: createGroundSampler(level) };
+const env = createLevelEnv(level);
 const skaterEnv = createSkaterEnv(level);
 
 const canvas = document.getElementById("stage");

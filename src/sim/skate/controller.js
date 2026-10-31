@@ -81,6 +81,7 @@ export function stepSkate(prev, input = {}, dt, env = FLAT_GROUND, k = SKATE) {
     justLanded: false,
     justJumped: false,
     bonked: false,
+    respawned: false,
     tick: prev.tick + 1,
   };
   const steer = Math.max(-1, Math.min(1, input.steer ?? 0));
@@ -93,7 +94,28 @@ export function stepSkate(prev, input = {}, dt, env = FLAT_GROUND, k = SKATE) {
   } else {
     stepAir(s, { steer }, dt, env, k);
   }
+  if (env.bounds && env.spawn && isLost(s, env.bounds, k)) respawn(s, env.spawn);
   return s;
+}
+
+// A skater below the level or past its bounds can never get back, so it
+// goes back to the spawn point. The level barriers make this a backstop.
+export function isLost(s, bounds, k = SKATE) {
+  const [x, y, z] = s.position;
+  const m = k.boundsMargin;
+  return y < k.fallFloor || x < bounds.minX - m || x > bounds.maxX + m || z < bounds.minZ - m || z > bounds.maxZ + m;
+}
+
+function respawn(s, spawn) {
+  s.position = [...spawn.position];
+  s.velocity = [0, 0, 0];
+  s.yaw = spawn.yaw;
+  s.speed = 0;
+  s.state = "rolling";
+  s.airTime = 0;
+  s.groundNormal = [0, 1, 0];
+  s.groundId = null;
+  s.respawned = true;
 }
 
 function stepRolling(s, input, dt, env, k) {
@@ -205,14 +227,30 @@ function stepRolling(s, input, dt, env, k) {
 function stepAir(s, input, dt, env, k) {
   if (steerActive(input.steer)) s.yaw = wrapYaw(s.yaw + input.steer * k.airTurnRate * dt);
 
+  const prevY = s.position[1];
   s.velocity[1] -= k.gravity * dt;
-  s.position[0] += s.velocity[0] * dt;
-  s.position[1] += s.velocity[1] * dt;
-  s.position[2] += s.velocity[2] * dt;
+  let nx = s.position[0] + s.velocity[0] * dt;
+  const ny = prevY + s.velocity[1] * dt;
+  let nz = s.position[2] + s.velocity[2] * dt;
+  let g = env.sampleGround(nx, nz);
+
+  // The side of anything taller than a step is a wall in the air too: the
+  // skater keeps its column, loses its horizontal speed, and falls.
+  if (g && g.height > prevY + k.maxStep && ny < g.height) {
+    nx = s.position[0];
+    nz = s.position[2];
+    s.velocity[0] = 0;
+    s.velocity[2] = 0;
+    s.bonked = true;
+    g = env.sampleGround(nx, nz);
+  }
+
+  s.position = [nx, ny, nz];
   s.airTime += dt;
 
-  const g = env.sampleGround(s.position[0], s.position[2]);
-  if (g && s.position[1] <= g.height && s.velocity[1] <= 0) {
+  // Land only on a surface the skater came down onto from above (or onto a
+  // step it could roll up), never on a roof it never reached.
+  if (g && ny <= g.height && s.velocity[1] <= 0 && prevY >= g.height - k.maxStep) {
     // Land: project the velocity onto the surface.
     const n = g.normal;
     const v = s.velocity;

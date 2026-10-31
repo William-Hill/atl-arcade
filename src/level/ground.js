@@ -26,3 +26,9 @@ export function createGroundSampler(level) {
     return best;
   };
 }
+
+// Everything the skate controller needs from a level: the ground sampler,
+// the bounds, and the spawn point for an out-of-bounds respawn.
+export function createLevelEnv(level) {
+  return { sampleGround: createGroundSampler(level), bounds: level.bounds, spawn: level.spawn };
+}

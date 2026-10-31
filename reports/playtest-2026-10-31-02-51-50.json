@@ -1,0 +1,171 @@
+{
+  "date": "2026-10-31T02:51:50.506Z",
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v26.5.0",
+    "renderer": "headless Chromium, SwiftShader"
+  },
+  "gate": {
+    "medianFpsAtLeast": 55,
+    "passed": true
+  },
+  "totals": {
+    "medianFps": 59.9,
+    "averageFps": 58.8,
+    "p5Fps": 59.5,
+    "frames": 2637,
+    "score": 1467,
+    "comboCount": 3,
+    "maxCombo": 3,
+    "falls": 1,
+    "simulatedSeconds": 44.79,
+    "fallsPerMinute": 1.34,
+    "timeToFirstThreeLinkSec": 3.47
+  },
+  "sessions": [
+    {
+      "id": "lap",
+      "title": "Free-skate lap",
+      "description": "East along the street, a U-turn onto the north sidewalk, west, a U-turn, east. No tricks. The FPS baseline.",
+      "ticks": 580,
+      "simulatedSeconds": 9.67,
+      "wallSeconds": 9.68,
+      "fps": {
+        "frames": 581,
+        "medianFps": 59.9,
+        "averageFps": 59.9,
+        "p5Fps": 59.9
+      },
+      "score": 0,
+      "bestCombo": 0,
+      "comboCount": 0,
+      "maxCombo": 0,
+      "timeToFirstThreeLinkSec": null,
+      "vertAirs": 0,
+      "snaps": 0,
+      "exits": 0,
+      "falls": 0,
+      "fallsPerMinute": 0,
+      "grindSeconds": 0,
+      "styleMoves": 0,
+      "moves": [],
+      "screenshots": [
+        "reports/playtest-2026-10-31-02-51-50-lap-start.png",
+        "reports/playtest-2026-10-31-02-51-50-lap-end.png"
+      ],
+      "video": "reports/playtest-2026-10-31-02-51-50-lap.webm",
+      "consoleErrors": []
+    },
+    {
+      "id": "rails",
+      "title": "Rail approaches",
+      "description": "Three approaches to the straight rail: one with no balance input (a fall), one balanced, one more. Measures falls per minute.",
+      "ticks": 1450,
+      "simulatedSeconds": 24.17,
+      "wallSeconds": 24.17,
+      "fps": {
+        "frames": 1404,
+        "medianFps": 59.9,
+        "averageFps": 58.1,
+        "p5Fps": 59.5
+      },
+      "score": 340,
+      "bestCombo": 340,
+      "comboCount": 1,
+      "maxCombo": 2,
+      "timeToFirstThreeLinkSec": null,
+      "vertAirs": 0,
+      "snaps": 2,
+      "exits": 1,
+      "falls": 1,
+      "fallsPerMinute": 2.48,
+      "grindSeconds": 1.27,
+      "styleMoves": 0,
+      "moves": [
+        {
+          "tick": 192,
+          "name": "Rail Grind",
+          "points": 120,
+          "onBeat": false,
+          "beatTag": null
+        },
+        {
+          "tick": 209,
+          "name": "Hop",
+          "points": 50,
+          "onBeat": false,
+          "beatTag": null
+        }
+      ],
+      "screenshots": [
+        "reports/playtest-2026-10-31-02-51-50-rails-start.png",
+        "reports/playtest-2026-10-31-02-51-50-rails-end.png"
+      ],
+      "video": "reports/playtest-2026-10-31-02-51-50-rails.webm",
+      "consoleErrors": []
+    },
+    {
+      "id": "combo",
+      "title": "Combo line",
+      "description": "Grind the straight rail, hop off, shuffle on the roll-out (a 3-link combo), then push east and launch off the quarter pipe for a Vert Air.",
+      "ticks": 657,
+      "simulatedSeconds": 10.95,
+      "wallSeconds": 10.94,
+      "fps": {
+        "frames": 652,
+        "medianFps": 59.9,
+        "averageFps": 59.5,
+        "p5Fps": 59.5
+      },
+      "score": 1127,
+      "bestCombo": 927,
+      "comboCount": 2,
+      "maxCombo": 3,
+      "timeToFirstThreeLinkSec": 3.47,
+      "vertAirs": 1,
+      "snaps": 1,
+      "exits": 1,
+      "falls": 0,
+      "fallsPerMinute": 0,
+      "grindSeconds": 0.67,
+      "styleMoves": 1,
+      "moves": [
+        {
+          "tick": 131,
+          "name": "Rail Grind",
+          "points": 139.00000000000003,
+          "onBeat": false,
+          "beatTag": null
+        },
+        {
+          "tick": 167,
+          "name": "Hop",
+          "points": 50,
+          "onBeat": false,
+          "beatTag": null
+        },
+        {
+          "tick": 208,
+          "name": "Shuffle",
+          "points": 120,
+          "onBeat": false,
+          "beatTag": null
+        },
+        {
+          "tick": 443,
+          "name": "Vert Air",
+          "points": 200,
+          "onBeat": false,
+          "beatTag": null
+        }
+      ],
+      "screenshots": [
+        "reports/playtest-2026-10-31-02-51-50-combo-start.png",
+        "reports/playtest-2026-10-31-02-51-50-combo-end.png"
+      ],
+      "video": "reports/playtest-2026-10-31-02-51-50-combo.webm",
+      "consoleErrors": []
+    }
+  ]
+}

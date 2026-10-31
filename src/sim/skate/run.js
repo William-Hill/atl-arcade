@@ -9,7 +9,10 @@ import { createSkater, stepSkater } from "./skater.js";
 import { FLAT_GROUND } from "./controller.js";
 
 export function createRun(level, opts = {}) {
-  return { skater: createSkater(level, opts), combo: createCombo(), tick: 0, time: 0, moves: [] };
+  // `moves` holds this tick's scored moves only. `lastMove` and `moveSeq`
+  // persist, so a HUD that reads once per frame sees a move even when the
+  // frame ran several ticks. `banked` is the points banked this tick (0 if none).
+  return { skater: createSkater(level, opts), combo: createCombo(), tick: 0, time: 0, moves: [], lastMove: null, moveSeq: 0, banked: 0 };
 }
 
 function grindName(id, seconds) {
@@ -38,11 +41,22 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
     else if (prev.airFrom === "jump" || prev.airFrom === "grind") judge(COMBO.hopPoints, "air", "Hop");
   }
   if (skater.justStyled) judge(skater.justStyled.points, "style", skater.justStyled.name);
-  if (skater.justFell) combo = comboBail(combo);
+  if (skater.justFell || skater.respawned) combo = comboBail(combo);
 
   const open = skater.state === "grind" || skater.state === "air" || Boolean(skater.style);
+  const before = combo;
   combo = comboTick(combo, dt, open);
-  return { skater, combo, tick: run.tick + 1, time, moves };
+  const banked = before.active && !combo.active ? combo.lastBanked : 0;
+  return {
+    skater,
+    combo,
+    tick: run.tick + 1,
+    time,
+    moves,
+    lastMove: moves.length ? moves[moves.length - 1] : run.lastMove,
+    moveSeq: run.moveSeq + moves.length,
+    banked,
+  };
 }
 
 export function runScriptOnRun(run, script, { dt = 1 / 60, env = FLAT_GROUND, skaterEnv, beat = null, trace = false } = {}) {

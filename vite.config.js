@@ -6,6 +6,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(import.meta.dirname, "index.html"),
+        skater: resolve(import.meta.dirname, "skater.html"),
       },
     },
   },

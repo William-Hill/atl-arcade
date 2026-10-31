@@ -74,3 +74,4 @@ html, body {
   transform-origin: center;
 }
 .hud-tag[data-beat="PERFECT"] { color: #7ef0c2; }
+.hud-hint { font-size: 13px; color: #ffd166; margin-top: 4px; }

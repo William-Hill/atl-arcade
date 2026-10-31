@@ -23,6 +23,9 @@ export function createHud(root) {
   tag.id = "hud-tag";
   const pulse = el("div", "hud-pulse", root);
   pulse.id = "hud-pulse";
+  const hint = el("div", "hud-hint", root);
+  hint.id = "hud-hint";
+  hint.textContent = "Press any key or click to start the beat";
 
   const styleWrap = el("div", "hud-meter hud-style", root);
   el("span", "hud-label", styleWrap).textContent = "STYLE";
@@ -77,6 +80,9 @@ export function createHud(root) {
       tag.style.opacity = nowMs < tagUntil ? "1" : "0";
 
       // Beat pulse: a ring that flashes on each beat and fades through the beat.
+      // Browsers start audio only after a key or a click, and a gamepad
+      // press does not count, so the hint stays until the beat runs.
+      hint.style.display = beatPhase === null ? "" : "none";
       if (beatPhase === null) {
         pulse.style.display = "none";
       } else {

@@ -125,3 +125,13 @@ test("a move landed on the beat earns the bonus and a PERFECT or GOOD tag on the
   if (onBeat.length) expect(result.tag.startsWith("PERFECT") || result.tag.startsWith("GOOD") || true).toBe(true);
   await page.screenshot({ path: "e2e/__screenshots__/beat-hud.png" });
 });
+
+test("a start hint shows until a key starts the beat", async ({ page }) => {
+  await ready(page);
+  const before = await page.evaluate(() => ({ running: window.__atl.beat.running, hint: getComputedStyle(document.getElementById("hud-hint")).display }));
+  expect(before.running).toBe(false);
+  expect(before.hint).not.toBe("none");
+  await page.keyboard.press("KeyL");
+  await expect.poll(() => page.evaluate(() => window.__atl.beat.running), { timeout: 5000 }).toBe(true);
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.getElementById("hud-hint")).display), { timeout: 5000 }).toBe("none");
+});

@@ -73,6 +73,8 @@ const events = [];
 // the on-beat bonus and a PERFECT / GOOD tag.
 const beat = new BeatClock();
 beat.muted = params.get("mute") === "1";
+// Call start() on every gesture: a context made too early stays suspended
+// until a gesture resumes it.
 function startBeat() {
   if (!beat.running) beat.start().catch(() => {});
 }

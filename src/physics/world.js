@@ -86,5 +86,10 @@ export function createPhysicsWorld(R, level) {
   let colliderCount = 0;
   for (const list of colliders.values()) colliderCount += list.length;
 
+  // Ray casts see nothing until the query pipeline is built. The world is
+  // static, so one update is enough.
+  if (typeof world.updateSceneQueries === "function") world.updateSceneQueries();
+  else world.step();
+
   return { world, colliders, colliderCount };
 }

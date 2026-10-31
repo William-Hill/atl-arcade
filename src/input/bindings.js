@@ -2,8 +2,9 @@
 // gamepad. Actions are the controller's input fields; `left` and `right`
 // fold into `steer`.
 //
-// Keyboard: WASD or arrows, Space jump, Shift push, Q and E style, hold
-// Control to grind, S or Down to brake.
+// Keyboard: WASD or arrows, Space jump, Shift push, Q and E style, hold F
+// to grind, S or Down to brake. Grind is not on Control: Control plus W
+// closes the tab, and Control plus S or D opens browser dialogs.
 // Gamepad (standard mapping): left stick steer, A jump, X push, Y and B
 // style, RT grind, LT brake.
 
@@ -15,7 +16,7 @@ export const DEFAULT_KEYBOARD = {
   push: ["ShiftLeft", "ShiftRight", "KeyW", "ArrowUp"],
   brake: ["KeyS", "ArrowDown"],
   jump: ["Space"],
-  grind: ["ControlLeft", "ControlRight"],
+  grind: ["KeyF"],
   style1: ["KeyQ"],
   style2: ["KeyE"],
 };

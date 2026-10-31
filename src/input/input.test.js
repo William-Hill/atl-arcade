@@ -55,3 +55,33 @@ describe("createInput", () => {
     expect(input.sample().jump).toBe(false);
   });
 });
+
+describe("browser shortcuts", () => {
+  function keyEvent(code) {
+    return { code, prevented: false, preventDefault() { this.prevented = true; } };
+  }
+
+  it("grinds on F by default, not on Control", () => {
+    const t = fakeTarget();
+    const input = createInput({ target: t, getGamepads: () => [] });
+    t.fire("keydown", keyEvent("ControlLeft"));
+    expect(input.sample().grind).toBe(false);
+    t.fire("keydown", keyEvent("KeyF"));
+    expect(input.sample().grind).toBe(true);
+  });
+
+  it("prevents the browser default for every bound key and only those", () => {
+    const t = fakeTarget();
+    const input = createInput({ target: t, getGamepads: () => [] });
+    const bound = Object.values(input.bindings.keyboard).flat();
+    expect(bound).toContain("KeyW");
+    for (const code of bound) {
+      const e = keyEvent(code);
+      t.fire("keydown", e);
+      expect(e.prevented, code).toBe(true);
+    }
+    const free = keyEvent("KeyL");
+    t.fire("keydown", free);
+    expect(free.prevented).toBe(false);
+  });
+});

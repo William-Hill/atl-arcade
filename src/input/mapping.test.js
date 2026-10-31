@@ -19,8 +19,8 @@ describe("keyboard mapping", () => {
     expect(mapKeyboard(keys("ArrowDown"), bindings).brake).toBe(true);
   });
 
-  it("maps Space, Control, Q, and E", () => {
-    const i = mapKeyboard(keys("Space", "ControlLeft", "KeyQ", "KeyE"), bindings);
+  it("maps Space, F, Q, and E", () => {
+    const i = mapKeyboard(keys("Space", "KeyF", "KeyQ", "KeyE"), bindings);
     expect(i).toMatchObject({ jump: true, grind: true, style1: true, style2: true, push: false });
   });
 

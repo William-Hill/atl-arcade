@@ -6,17 +6,18 @@
 import { createBindings } from "./bindings.js";
 import { EMPTY_INPUT, isActive, mapGamepad, mapKeyboard, mergeInputs } from "./mapping.js";
 
-const PREVENT = new Set(["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
-
 export function createInput({ target = window, bindings = createBindings(), getGamepads = () => (navigator.getGamepads ? navigator.getGamepads() : []) } = {}) {
   const down = new Set();
   let current = bindings;
   let source = "keyboard";
   let padId = null;
 
+  // Every bound key prevents its browser default (page scroll, Space, and
+  // the like), so play never triggers a browser action.
+  let bound = new Set(Object.values(bindings.keyboard).flat());
   const onDown = (e) => {
     down.add(e.code);
-    if (PREVENT.has(e.code)) e.preventDefault();
+    if (bound.has(e.code)) e.preventDefault();
   };
   const onUp = (e) => down.delete(e.code);
   const onBlur = () => down.clear();
@@ -60,6 +61,7 @@ export function createInput({ target = window, bindings = createBindings(), getG
     },
     set bindings(b) {
       current = b;
+      bound = new Set(Object.values(b.keyboard).flat());
     },
     dispose() {
       target.removeEventListener("keydown", onDown);

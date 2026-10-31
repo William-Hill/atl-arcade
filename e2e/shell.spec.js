@@ -22,7 +22,7 @@ test("the shell renders a Three.js scene with no console errors", async ({ page 
     canvasWidth: document.getElementById("stage").width,
   }));
 
-  expect(info.shell).toBe("m0-01");
+  expect(info.shell).toBe("skate-atl");
   expect(info.frames).toBeGreaterThan(0);
   expect(info.draws).toBeGreaterThan(0);
   expect(info.triangles).toBeGreaterThan(0);

@@ -44,6 +44,18 @@ Level data is plain JavaScript in `src/levels/`, validated by `validateLevel` at
 
 Curbs are not grindable yet. They are 22 cm tall and run the length of the block, so they would swamp the rail snap test before it has been tuned.
 
+## 2026-10-31 — The quarter-pipe cap is fanned from the outline's last point (M0-02 fix)
+
+Found by the Codex review on PR #27, and it was a real bug.
+
+`extrudeOutline` normalised the winding of an outline by reversing the array when its signed area was negative, and then fanned the caps from whatever point ended up last. The quarter-pipe outline is clockwise, so it always got reversed, which moved the fan hub from the bottom-back corner to the roll-in origin. The region under a convex transition is not star-shaped about its origin: the first triangle covered the whole diagonal wedge and the remaining fifteen subtracted it again, back-facing. Measured on the 2.6 m ramp, the cap's absolute area was 5.30 m² against a true 1.45 m², and all sixteen cap-triangle centroids sat above the transition, the worst by 0.99 m.
+
+Both the rendered mesh and the Rapier trimesh are built from this, so the ramp was a solid triangular prism rather than a transition, in the picture and in the collision. The screenshot showed it and the first reading of it was wrong.
+
+The fix keeps the hub on the outline's last point whichever way the array had to be turned, and `extrudeOutline` now throws if the fan it is about to emit has mixed winding, which is what a hub the outline cannot see produces. The contract is explicit: an outline must be star-shaped about its last point, and `quarterPipeOutline` ends at the bottom-back corner for that reason.
+
+Four tests now pin it: the cap's absolute area must equal its signed area (no overlap), the area must match the analytic `r² - πr²/4`, no cap triangle's centroid may sit above the transition, and every cap triangle must wind the same way. The old code passed the previous tests because they only checked triangle counts and a convex square.
+
 ## 2026-10-31 — Skate controller shape and first tuning (M0-03)
 
 The controller is a pure module: `step(state, input, dt, world)` in, next state out. No Three.js, no Rapier, no DOM, no clock. `world` is just `{ probe, spawn, tuning }`, so Vitest can run it on an endless flat floor and the browser can run it on the greybox block, with the same code.

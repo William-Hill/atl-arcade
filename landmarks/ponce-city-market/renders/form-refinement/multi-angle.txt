@@ -1,0 +1,5 @@
+reference area fraction: 1.0000
+collapse ratio threshold: 0.15
+  [ok] renders/form-refinement/top/az110.png area=1.0000 ratio=1.0000
+  [ok] renders/form-refinement/top/az200.png area=1.0000 ratio=1.0000
+verdict: no degenerate view

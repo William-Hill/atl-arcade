@@ -1,0 +1,7 @@
+{"referenceId": "pcm-aerial-se", "regions": [
+ {"componentId": "tower-shaft", "regionId": "brick", "sourceImage": "ref/reference-4000.jpg", "bbox": {"x": 1900, "y": 1100, "width": 300, "height": 220}, "family": "stone", "subtype": "natural", "finish": "rough-or-polished", "materialSpecId": "brick"},
+ {"componentId": "tower-cornice", "regionId": "trim", "sourceImage": "ref/reference-4000.jpg", "bbox": {"x": 2350, "y": 623, "width": 120, "height": 10}, "family": "stone", "subtype": "natural", "finish": "rough-or-polished", "materialSpecId": "trim"},
+ {"componentId": "hip-roof", "regionId": "copper", "sourceImage": "ref/reference-4000.jpg", "bbox": {"x": 2360, "y": 585, "width": 110, "height": 25}, "family": "metal", "subtype": "copper", "finish": "polished-or-aged", "materialSpecId": "copper-patina"},
+ {"componentId": "sign-letters", "regionId": "sign", "sourceImage": "ref/reference-4000.jpg", "bbox": {"x": 1906, "y": 725, "width": 265, "height": 44}, "family": "coating", "subtype": "paint-over-metal", "finish": "gloss-or-satin", "materialSpecId": "sign-yellow"},
+ {"componentId": "sign-frame", "regionId": "steel", "sourceImage": "ref/reference-4000.jpg", "bbox": {"x": 1906, "y": 725, "width": 265, "height": 44}, "family": "coating", "subtype": "paint-over-metal", "finish": "gloss-or-satin", "materialSpecId": "steel"}
+]}

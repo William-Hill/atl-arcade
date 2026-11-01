@@ -1,0 +1,7 @@
+[
+ {"id": "tower-top-silhouette", "score": 0.8, "notes": "Square brick belvedere under a truncated 4-sided copper hip with a raised flat cap and trim, as in the reference. The eave is now about 0.8 m (reference about 0.4 m); the roof pitch is close."},
+ {"id": "copper-roof-color", "score": 0.72, "notes": "Teal grey-green against maroon brick and white bands. The toon ramp lifts the value above the dusk photo, which is intended for the day scene."},
+ {"id": "arched-windows", "score": 0.72, "notes": "3 round-headed dark windows per face in white surrounds. The arch head is an 8-sided disc, so the round reads faceted at this size."},
+ {"id": "rooftop-sign-read", "score": 0.7, "notes": "Blockout goal met: a yellow card on a dark frame, 36 m by 5.5 m. The letters are a canvas texture in the material pass; they are not built yet."},
+ {"id": "finial", "score": 0.7, "notes": "Gold pole on the cap; length 1.8 m, close to the reference."}
+]

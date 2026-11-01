@@ -35,6 +35,10 @@ function insidePoint(b) {
 async function open(page, query) {
   await page.goto(`/?level=beltline-eastside&mute=1&${query}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 60000 });
+  // The landmark towers load after the level; wait for them unless ?landmarks=0.
+  if (!query.includes("landmarks=0")) {
+    await page.waitForFunction(() => window.__atl.level.landmarks && window.__atl.level.landmarks.towers > 0, null, { timeout: 60000 });
+  }
   // The street kit loads after the level; wait for it unless ?props=0.
   if (!query.includes("props=0")) {
     await page.waitForFunction(() => window.__atl.level.props && (window.__atl.level.props.loaded || window.__atl.level.props.error), null, { timeout: 60000 });
@@ -61,6 +65,10 @@ test("the BeltLine block loads with Rapier colliders on every merged mesh", asyn
   expect(props.error).toBeNull();
   expect(props.count).toBeGreaterThan(1000);
   expect(props.tiles).toBeGreaterThan(10);
+  // M2-01: the Ponce City Market tower (img2threejs) and its rooftop sign.
+  const landmarks = await page.evaluate(() => window.__atl.level.landmarks);
+  expect(landmarks).toMatchObject({ towers: 1, signs: 1 });
+  expect(landmarks.triangles).toBeGreaterThan(1000);
   // Merged meshes: the draw calls stay far under one per building.
   expect(info.renderer.calls).toBeLessThan(120);
   await page.screenshot({ path: "e2e/__screenshots__/beltline-fixed.png" });
@@ -133,6 +141,7 @@ test("Nia skates north on the Eastside Trail and the run matches the pure contro
 // places along the trail.
 const VIEWS = [
   { name: "ponce-city-market", cam: [-60, 14, -700, -218, 18, -874] },
+  { name: "ponce-city-market-tower", cam: [-120, 70, -760, -219, 48, -915] },
   { name: "fourth-ward-park", cam: [380, 40, 120, 200, 0, -150], query: "fog=0" },
   { name: "krog-street-market", cam: [-20, 18, 760, -72, 4, 850] },
   { name: "overview", cam: [900, 900, 1100, 0, 0, 0], query: "fog=0" },

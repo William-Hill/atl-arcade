@@ -1,0 +1,7 @@
+[
+ {"id": "tower-top-silhouette", "score": 0.8, "notes": "Structural goal met: shaft, lower band, belvedere, cornice, truncated hip, and raised cap are in place and in proportion to the masked reference."},
+ {"id": "copper-roof-color", "score": 0.72, "notes": "Teal grey-green roof and cap against maroon brick."},
+ {"id": "arched-windows", "score": 0.6, "notes": "Micro parts are not in the structural pass by design; they return in the form pass."},
+ {"id": "rooftop-sign-read", "score": 0.7, "notes": "Sign board (meso) present; letters come in the material pass."},
+ {"id": "finial", "score": 0.6, "notes": "Micro part, not in the structural pass by design."}
+]

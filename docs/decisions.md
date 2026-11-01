@@ -246,3 +246,9 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Walk It Out: a wide, low stance. Both knees turn to one side, then to the other, on a double bounce. The fists stay at the chest. The source is the Howcast lesson by Randy Connor.
 - Swag Surf: one side per beat. She stands up with the arms up, sweeps to the side, then drops and bends forward with the hands near the knees. The source is the HAS Dance University lesson.
 - Why: the player said that the first versions were completely wrong. They came from text only.
+
+## 2026-11-01: The coast is the ATL Ryde from a skate lesson (M1-02)
+
+- Decision: the coast clip is the ATL Ryde step from the Dun Beezy lesson. The skates press out on the downbeat and drag in on the half beat, and one skate ends behind the other. The arms throw down on the downbeat and come up to the chest on the half beat.
+- Why: the player asked for better references for the skate moves. The first ATL ride clip came from text only.
+- Not done: the corner step (out with the right skate, two drags of the left skate). It needs a carve clip that plays on the corners.

@@ -29,7 +29,7 @@ The sources do not describe the posture or a tempo in numbers. The values below 
 1. The skater glides. Each push goes diagonally out and back, at about 45 degrees to the line of travel, on the inside edge of a turned-out skate. The push leg ends straight, behind the hip. Then the skate lifts and comes forward under the hips. A push that goes only straight back is a skateboard kick. A push that goes only to the side gives no drive. Do not use either one.
 2. The pushes alternate left and right. The arms swing in opposition to the legs: the arm on the glide side swings forward and across the body with a bent elbow, and the other arm swings back almost straight. The shoulders turn with the arms, and the head stays on the line of travel.
 3. The body bounces on every beat. The knees go down on the beat.
-   The glide (coast) is the ATL ride: a low, staggered stance with the knees bent and the chest up. The front skate switches every two beats (a scissor). The shoulders roll forward and down, the left on beat 1 and the right on beat 2. The arms hang loose with soft elbows, and the head nods on the dip.
+   The glide (coast) is the ATL Ryde, from the Dun Beezy lesson "How to ATL Ryde on Roller Skates" (https://www.youtube.com/watch?v=oUeLJ5qbyoc). On each downbeat both skates press out on the outside edges, and the arms throw forward and down. On the half beat the skates drag in on the inside edges, on the toes, past parallel, so one skate ends behind the other. The fists come up near the chest ("dice roll"). The skate that goes behind changes on each step. The chest leans forward, as in the Cascade footage in the lesson. On the corners the lesson steps out with the right skate and drags the left skate twice; the game does not use this yet.
 4. The weight shifts from skate to skate every beat. The shoulders turn against the hips.
 5. The turns use the Cross Step: the outside skate crosses over the inside skate on the beat.
 6. The switch button (R, or LB on a gamepad) turns the skater to ride backward. She swizzles the skates and looks over each shoulder in turn. The travel direction does not change.
@@ -73,6 +73,7 @@ The controller already turns the skater in the air (`SKATE.airTurnRate`). Thus a
 - "That's Not How They Roll", NextDraft (on the New York Times report): https://nextdraft.com/archives/n20240502/thats-not-how-they-roll/
 - WABE, Atlanta skating culture: https://www.wabe.org/atlanta-has-many-places-to-roll-indoors-or-out-in-its-popular-multi-genre-skating-culture/
 - Atlanta Magazine, Cascade Skating Rink: https://www.atlantamagazine.com/50bestthingstodo/roll-soul-cascade-skating-rink/
+- "How to ATL Ryde on Roller Skates", Dun Beezy: https://www.youtube.com/watch?v=oUeLJ5qbyoc
 - Aggressive inline skating, Wikipedia: https://en.wikipedia.org/wiki/Aggressive_inline_skating
 - Dictionary of aggressive inline skating terms (1997): https://toxboe.net/all/1997-aggressive-inline-skating-dictionary
 - Fabiola da Silva, Wikipedia: https://en.wikipedia.org/wiki/Fabiola_da_Silva

@@ -192,48 +192,63 @@ def idle():
     return True, keys + [(4 * B, keys[0][1])]
 
 
-def _cruise(beat, down):
-    # One key of the ATL ride glide with the left skate in front.
-    # The stance is low and staggered: the knees bend, the hips sit back,
-    # and the chest stays up. On beat 0 the left shoulder rolls forward and
-    # down, and on beat 1 the right shoulder does. The head nods on the dip.
-    # The arms hang loose with soft elbows and relaxed fingers, and they
-    # follow the shoulder roll.
-    side = 1 if beat == 0 else -1
-    roll = 1.0 if down > 0.04 else 0.4
-    return merge(_relaxed_hands(), {
-        "hips": (0.03 * side, -0.01, -0.12 - down),
-        "hipsRot": [rot(UP, 6 * side), rot(FWD, -3 * side)],
-        "Spine": [rot(LEFT, 15), rot(FWD, -4 * side * roll)],
-        "Spine1": [rot(LEFT, -2), rot(UP, -12 * side * roll), rot(FWD, -5 * side * roll)],
-        "Neck": [rot(LEFT, -6), rot(UP, 5 * side)],
-        "Head": [rot(LEFT, 150 * down - 6), rot(UP, 6 * side), rot(FWD, 6 * side * roll)],
-        "LeftShoulder": [rot(FWD, (-6 if side > 0 else 5) * roll), rot(UP, (-8 if side > 0 else 4) * roll)],
-        "RightShoulder": [rot(FWD, (-5 if side > 0 else 6) * roll), rot(UP, (-4 if side > 0 else 8) * roll)],
-        "L": at(0.11, -0.13, 0, "L", [rot(UP, 4)]),
-        "R": at(-0.11, 0.13, 0, "R", [rot(UP, -14), rot(FWD, 4)]),
-        "LeftArm": [rot(FWD, -76), rot(LEFT, -14 * side * roll + 4), rot(UP, -6)],
-        "RightArm": [rot(FWD, 76), rot(LEFT, 14 * side * roll + 4), rot(UP, 6)],
-        "LeftForeArm": [rot(UP, -34 - 16 * max(side, 0) * roll)],
-        "RightForeArm": [rot(UP, 34 + 16 * max(-side, 0) * roll)],
-        "LeftHand": [rot(FWD, -14), rot(LEFT, 10)],
-        "RightHand": [rot(FWD, 14), rot(LEFT, 10)],
-    })
-
-
 def _relaxed_hands():
     # The fingers curl a small amount, as in a relaxed hand.
     return merge(_fist("Left", 28), _fist("Right", 28))
 
 
+def _ryde(phase):
+    # The ATL Ryde. Reference: "How to ATL Ryde on Roller Skates" by Dun
+    # Beezy (youtube.com/watch?v=oUeLJ5qbyoc), with Cascade rink footage.
+    #   out (on the downbeat): both skates press out wide on the outside
+    #     edges, the left skate a little in front. The knees bend low, the
+    #     chest leans forward, and the arms throw forward and down.
+    #   in (on the half beat): the skates drag in on the inside edges, on the
+    #     toes, past parallel, so the left skate ends behind the right. The
+    #     fists come up near the chest and the shoulders build ("dice roll").
+    # The next step mirrors this, so the right skate goes behind.
+    if phase == "out":
+        return merge(_relaxed_hands(), {
+            "hips": (0.02, 0.0, -0.19),
+            "hipsRot": [rot(UP, 6)],
+            "Spine": [rot(LEFT, 26), rot(FWD, -3)],
+            "Spine1": [rot(LEFT, 6), rot(UP, -10)],
+            "Neck": [rot(LEFT, -12)],
+            "Head": [rot(LEFT, 4), rot(UP, 8)],
+            "L": at(0.22, -0.10, 0, "L", [rot(UP, 18), rot(FWD, 6)]),
+            "R": at(-0.22, 0.08, 0, "R", [rot(UP, -18), rot(FWD, -6)]),
+            "LeftArm": [rot(FWD, -64), rot(UP, -40)],
+            "RightArm": [rot(FWD, 70), rot(UP, 26)],
+            "LeftForeArm": [rot(UP, -20)],
+            "RightForeArm": [rot(UP, 26)],
+            "LeftHand": [rot(FWD, -16)],
+            "RightHand": [rot(FWD, 16)],
+        })
+    return merge(FISTS, {
+        "hips": (-0.01, 0.0, -0.12),
+        "hipsRot": [rot(UP, -4)],
+        "Spine": [rot(LEFT, 22), rot(FWD, 2)],
+        "Spine1": [rot(LEFT, 8), rot(UP, 8)],
+        "Neck": [rot(LEFT, -10)],
+        "Head": [rot(LEFT, 10), rot(UP, -4)],
+        "LeftShoulder": [rot(FWD, 6), rot(UP, -6)],
+        "RightShoulder": [rot(FWD, -6), rot(UP, 6)],
+        "L": at(-0.02, 0.16, 0.03, "L", [rot(UP, -10), rot(LEFT, 14)]),
+        "R": at(-0.04, -0.04, 0, "R", [rot(UP, 8)]),
+        "LeftArm": [rot(LEFT, -35), rot(FWD, -58), rot(UP, -40)],
+        "RightArm": [rot(LEFT, -35), rot(FWD, 58), rot(UP, 40)],
+        "LeftForeArm": [rot(UP, -118)],
+        "RightForeArm": [rot(UP, 118)],
+    })
+
+
 def coast():
-    # ATL ride glide, one bar (4 beats). The body dips on each beat and rises
-    # on each half beat. The shoulders roll left on beat 1 and right on beat 2.
-    # On beats 3 and 4 the skates scissor: the right skate slides to the front
-    # and the moves mirror.
+    # The ATL Ryde glide, one bar (4 beats): out on each downbeat, in on each
+    # half beat. Each beat mirrors the beat before it, so the skate that goes
+    # behind changes on each step.
     B = BEAT
-    half = [(0, _cruise(0, 0.06)), (B // 2, _cruise(0, 0.0)), (B, _cruise(1, 0.06)), (B + B // 2, _cruise(1, 0.0))]
-    keys = half + [(f + 2 * B, mirror_pose(p)) for f, p in half]
+    half = [(0, _ryde("out")), (B // 2, _ryde("in")), (B, mirror_pose(_ryde("out"))), (B + B // 2, mirror_pose(_ryde("in")))]
+    keys = half + [(f + 2 * B, p) for f, p in half]
     return True, keys + [(4 * B, half[0][1])]
 
 

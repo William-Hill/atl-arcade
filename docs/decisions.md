@@ -240,3 +240,9 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Snap Lean: the arms hang low and the snap is beside the hips, with a shoulder dip. No video was found, so the clip follows the text sources only.
 - The Prep and crisscross: the clap is now low, in front of the chest, with the elbows near the ribs. The old clap raised the arms to shoulder height, which read as a shrug.
 - Bankhead Bounce: no change. The player likes it.
+
+## 2026-11-01: Walk It Out and Swag Surf rekeyed from video lessons (M1-02)
+
+- Walk It Out: a wide, low stance. Both knees turn to one side, then to the other, on a double bounce. The fists stay at the chest. The source is the Howcast lesson by Randy Connor.
+- Swag Surf: one side per beat. She stands up with the arms up, sweeps to the side, then drops and bends forward with the hands near the knees. The source is the HAS Dance University lesson.
+- Why: the player said that the first versions were completely wrong. They came from text only.

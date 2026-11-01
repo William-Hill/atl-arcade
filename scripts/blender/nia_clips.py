@@ -583,37 +583,40 @@ def dance_bankhead():
     return True, keys + [(48, keys[0][1])]
 
 
-def _walk_it_out_right(down):
-    # The twist to the right: the skates, the knees, and the hips point right.
-    # The right arm shoots out to the side at shoulder height. The left
-    # forearm folds near the chest. The head looks along the right arm.
-    # On quads the skates swivel on the toe stops, so the twist is about 25 degrees.
-    return merge(glide(down, -0.7, lean=10), {
-        "hips": (-0.05, 0.02, -0.14 - down),
-        "hipsRot": [rot(UP, -26), rot(FWD, 4)],
-        "Spine1": [rot(UP, -8), rot(FWD, 4)],
-        "L": at(0.08, -0.02, 0, "L", [rot(UP, -24)]),
-        "R": at(-0.16, 0.04, 0, "R", [rot(UP, -28)]),
-        "RightArm": [rot(FWD, 10), rot(UP, 10)],
-        "RightForeArm": [rot(UP, 8)],
-        "RightHand": [rot(FWD, 14)],
-        "LeftArm": [rot(LEFT, 50), rot(FWD, -50), rot(UP, -40)],
-        "LeftForeArm": [rot(UP, -116)],
-        "LeftShoulder": [rot(UP, -6)],
-        "Neck": [rot(UP, -16)],
-        "Head": [rot(UP, -24), rot(LEFT, 6)],
+def _walk_it_out_right(down, push):
+    # Walk It Out (DJ Unk, 2006). References: the Howcast lesson by Randy
+    # Connor (youtube.com/watch?v=K60wXXSJOsg) and the STEEZY steps. The
+    # stance is wide and low. Both knees turn to the right (one knee in, one
+    # knee out), on a double bounce. Both forearms stay level in front of the
+    # chest with closed fists. The right fist pushes out a small amount to the
+    # right, and the left forearm stays close to the chest.
+    # On quads the skates swivel on the wheels, as in a swizzle in place.
+    return merge(glide(down, -0.5, lean=10), FISTS, {
+        "hips": (-0.04, 0.02, -0.15 - down),
+        "hipsRot": [rot(UP, -16)],
+        "Spine": [rot(LEFT, 10)],
+        "Spine1": [rot(UP, -6), rot(LEFT, 4)],
+        "pole": -28,
+        "L": at(0.20, -0.02, 0, "L", [rot(UP, -26)]),
+        "R": at(-0.22, 0.04, 0, "R", [rot(UP, -30)]),
+        # The forearms bend forward and stay level, so the fists are at the chest.
+        "RightArm": [rot(LEFT, -35), rot(FWD, 54), rot(UP, 30 - 18 * push)],
+        "RightForeArm": [rot(UP, 112 - 26 * push)],
+        "LeftArm": [rot(LEFT, -35), rot(FWD, -56), rot(UP, -38)],
+        "LeftForeArm": [rot(UP, -122)],
+        "Neck": [rot(UP, -8)],
+        "Head": [rot(UP, -12), rot(LEFT, 6)],
     })
 
 
 def dance_walkitout():
-    # Walk It Out (DJ Unk, 2006). A double bounce: the knees dip on each beat
-    # and each half beat. Beat 1: twist to the right. Beat 2: twist to the left.
-    R = lambda d: _walk_it_out_right(d)
-    L = lambda d: mirror_pose(_walk_it_out_right(d))
+    # Beat 1: the turn to the right with a double bounce. Beat 2: to the left.
+    R = _walk_it_out_right
+    L = lambda d, p: mirror_pose(_walk_it_out_right(d, p))
     return True, [
-        (0, R(0.07)), (6, R(0.02)), (12, R(0.07)), (18, R(0.02)),
-        (24, L(0.07)), (30, L(0.02)), (36, L(0.07)), (42, L(0.02)),
-        (48, R(0.07)),
+        (0, R(0.07, 1)), (6, R(0.02, 0.6)), (12, R(0.07, 1)), (18, R(0.02, 0.4)),
+        (24, L(0.07, 1)), (30, L(0.02, 0.6)), (36, L(0.07, 1)), (42, L(0.02, 0.4)),
+        (48, R(0.07, 1)),
     ]
 
 
@@ -630,35 +633,60 @@ def dance_prep():
     return True, keys + [(48, keys[0][1])]
 
 
-def _swag_left(down):
-    # Swag Surf (F.L.Y., Stone Mountain, 2009). In a crowd, each dancer puts
-    # the arms over the shoulders of the dancers to each side. Solo, the arms
-    # stay out near shoulder height with the elbows bent and the forearms and
-    # hands hanging down, as if on two shoulders. The knees bend deep, the
-    # chest leans forward, and the whole body tips to the left like a wave.
-    return merge(glide(down, 1, lean=16), {
-        "hips": (0.09, 0.02, -0.17 - down),
-        "hipsRot": [rot(FWD, -6)],
-        "Spine": [rot(LEFT, 16), rot(FWD, -12)],
-        "Spine1": [rot(FWD, -6), rot(LEFT, 4)],
-        "L": at(0.20, 0.0, 0, "L", [rot(UP, 10)]),
-        "R": at(-0.20, 0.02, 0, "R", [rot(UP, -10)]),
-        "LeftArm": [rot(FWD, -14), rot(UP, -22)],
-        "RightArm": [rot(FWD, 14), rot(UP, 22)],
-        "LeftForeArm": [rot(FWD, -50), rot(UP, -14)],
-        "RightForeArm": [rot(FWD, 50), rot(UP, 14)],
-        "LeftHand": [rot(FWD, -30)],
-        "RightHand": [rot(FWD, 30)],
-        "Neck": [rot(FWD, -6)],
-        "Head": [rot(FWD, -8), rot(LEFT, -6)],
+def _swag(phase):
+    # Swag Surf (F.L.Y., Stone Mountain, 2009). Reference: the HAS Dance
+    # University lesson "Beginner Dance Moves: The Swag Surf"
+    # (youtube.com/watch?v=tUE5PJgSmiI). One side per beat, here the left:
+    #   up: stand tall, both arms up above the shoulders, elbows bent.
+    #   sweep: turn 30 to 45 degrees to the left, the arms sweep out to the left.
+    #   down: drop low and bend forward to the left, the hands sweep down near the knees.
+    # The left hand leads to the left. The hands trace an infinity sign, and
+    # the upper body and the head follow the hands.
+    base = glide(0.0, 0.6, lean=4)
+    feet = {"L": at(0.18, -0.02, 0, "L", [rot(UP, 22)]), "R": at(-0.16, 0.04, 0, "R", [rot(UP, 16)]), "pole": 14}
+    if phase == "up":
+        return merge(base, feet, {
+            "hips": (0.02, 0.02, -0.05),
+            "hipsRot": [rot(UP, 6)],
+            "Spine": [rot(LEFT, -2)],
+            "LeftArm": [rot(FWD, 52), rot(UP, -24)],
+            "RightArm": [rot(FWD, -46), rot(UP, 30)],
+            "LeftForeArm": [rot(UP, -60)],
+            "RightForeArm": [rot(UP, 60)],
+            "Head": [rot(LEFT, -6), rot(UP, 6)],
+        })
+    if phase == "sweep":
+        return merge(base, feet, {
+            "hips": (0.06, 0.02, -0.15),
+            "hipsRot": [rot(UP, 26), rot(FWD, -6)],
+            "Spine": [rot(LEFT, 18), rot(FWD, -10)],
+            "Spine1": [rot(UP, 10), rot(LEFT, 6)],
+            "LeftArm": [rot(FWD, 4), rot(UP, -6)],
+            "RightArm": [rot(FWD, 14), rot(UP, 84)],
+            "LeftForeArm": [rot(UP, -16)],
+            "RightForeArm": [rot(UP, 30)],
+            "Head": [rot(UP, 14), rot(FWD, -6)],
+        })
+    # down
+    return merge(base, feet, {
+        "hips": (0.08, 0.06, -0.27),
+        "hipsRot": [rot(UP, 32), rot(FWD, -4)],
+        "Spine": [rot(LEFT, 34), rot(FWD, -8)],
+        "Spine1": [rot(LEFT, 16), rot(UP, 8)],
+        "Neck": [rot(LEFT, -14)],
+        "LeftArm": [rot(FWD, -76), rot(UP, -30)],
+        "RightArm": [rot(FWD, 70), rot(UP, 46)],
+        "LeftForeArm": [rot(UP, -14)],
+        "RightForeArm": [rot(UP, 20)],
+        "Head": [rot(LEFT, -16), rot(UP, 10)],
     })
 
 
 def dance_swagsurf():
-    # Beat 1: the wave goes to the left, with a dip at its end. Beat 2: to the right.
-    L = _swag_left
-    R = lambda d: mirror_pose(_swag_left(d))
-    return True, [(0, L(0.0)), (14, L(0.07)), (24, R(0.0)), (38, R(0.07)), (48, L(0.0))]
+    # The wave goes left on beat 1 and right on beat 2: up, sweep, down, up.
+    left = [(0, _swag("up")), (8, _swag("sweep")), (15, _swag("down"))]
+    right = [(f + 24, mirror_pose(p)) for f, p in left]
+    return True, left + right + [(48, left[0][1])]
 
 
 def _snap_left(snap):

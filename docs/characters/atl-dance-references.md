@@ -115,7 +115,7 @@ Other sources describe ATL style as "swaggy, ryding" with leg crosses, claps, an
 
 **Origin.** "Walk It Out" by DJ Unk, 2006, a snap-era hit. The song took inspiration from the "Poole Palace" dance. DJ Montay produced it. Sources: https://www.kaxe.org/news/2025-01-29/unks-walk-it-out-defined-a-fun-hyperlocal-moment-in-atlanta-rap-history and https://www.ajc.com/life/arts-culture/hip-hop-50/evolution-of-atlantas-hip-hop-dance-crazes/BOICXZM72JD5PF4TQI4D4SWL24/
 
-**Checked again (2026-11-01).** The clip uses a stronger twist (about 25 degrees on the toe stops) and a deeper double bounce.
+**Video check (2026-11-01, second pass).** The Howcast lesson by Randy Connor (https://www.youtube.com/watch?v=K60wXXSJOsg) and the STEEZY photo show the real form. The stance is wide and low, like a walk in a lunge position. Both knees turn to one side ("legs inward and outwards"), then to the other side. Both forearms stay level in front of the chest with closed fists, and the arm on the side of the turn pushes out a small amount. The first clip had one straight arm out to the side, which was wrong.
 
 **Verified (STEEZY).** A knee bounce on each beat, then a double-time bounce. Step right: right toes, right knee, and hips point right; the left toes and knee follow. Then twist the same way to the left. On the right step, the right arm shoots out to the side and the left arm stays near the chest. Switch on the left step. Source: https://steezy.co/posts/how-to-walk-it-out
 
@@ -139,7 +139,9 @@ Other sources describe ATL style as "swaggy, ryding" with leg crosses, claps, an
 
 **Verified.** People link arms and sway from side to side in a wave-like sway and dip. A crowd does it together.
 
-**Video check (2026-11-01).** Frames of "Hip-Hop Social Dances | Swag Surfin'" (https://www.youtube.com/watch?v=GsCgfAfk_hg) show the dancers with their arms over the shoulders of the dancers beside them. The arms are near shoulder height, the elbows bend, and the forearms hang down. The knees bend deep, and the group leans to one side, then to the other. The clip uses this form, not raised arms.
+**Video check (2026-11-01, second pass).** The HAS Dance University lesson "Beginner Dance Moves: The Swag Surf" (https://www.youtube.com/watch?v=tUE5PJgSmiI) gives the steps. Each side takes one count: stand up with the arms up, turn 30 to 45 degrees to the side, then drop down and bend forward. Pivot on the balls of the feet on each rise. The hand on the side of the turn leads a "wave over", and the hands trace an infinity sign. The upper body and the head follow the hands.
+
+**Video check (2026-11-01, first pass).** Frames of "Hip-Hop Social Dances | Swag Surfin'" (https://www.youtube.com/watch?v=GsCgfAfk_hg) show the dancers with their arms over the shoulders of the dancers beside them. The arms are near shoulder height, the elbows bend, and the forearms hang down. The knees bend deep, and the group leans to one side, then to the other. The clip uses this form, not raised arms.
 
 **BPM.** Estimate 70 to 80. Not verified.
 

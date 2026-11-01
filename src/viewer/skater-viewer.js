@@ -14,6 +14,8 @@ const VIEWS = {
 };
 const DISTANCE = 3.2;
 const TARGET = new THREE.Vector3(0, 0.85, 0);
+// The face close-up: ?view=face. The face center is about 1.44 m up.
+const FACE_TARGET = new THREE.Vector3(0, 1.44, 0);
 
 const params = new URLSearchParams(window.location.search);
 const canvas = document.getElementById("stage");
@@ -36,6 +38,14 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(TARGET);
 
 function setView(name) {
+  if (name === "face") {
+    camera.position.set(0.55, FACE_TARGET.y + 0.02, 0);
+    controls.target.copy(FACE_TARGET);
+    controls.update();
+    renderer.render(scene, camera);
+    return;
+  }
+  controls.target.copy(TARGET);
   const dir = VIEWS[name];
   if (!dir) throw new Error(`Unknown view: ${name}`);
   camera.position.set(TARGET.x + dir[0] * DISTANCE, TARGET.y + 0.2, TARGET.z + dir[1] * DISTANCE);
@@ -49,6 +59,15 @@ window.addEventListener("resize", () => fitToWindow(renderer, camera));
 let paused = false;
 let mixer = null;
 let clips = [];
+let face = null;
+
+// Sets the face decal: ?face=happy,open or __skater.setFace("closed", "smile").
+function setFace(eyes, mouth) {
+  if (!face) throw new Error("This skater has no face decals");
+  face.set(eyes, mouth);
+  renderer.render(scene, camera);
+  return { eyes: face.eyes, mouth: face.mouth };
+}
 
 // Draws one clip as a row of frames from the three-quarter view: a contact
 // sheet. The first frame is t = 0 and the last frame is the clip end.
@@ -86,8 +105,9 @@ function sheet(name, cols = 6) {
 const state = {
   ready: false,
   error: null,
-  views: Object.keys(VIEWS),
+  views: [...Object.keys(VIEWS), "face"],
   setView,
+  setFace,
   sheet,
   get clips() {
     return clips.map((c) => c.name);
@@ -99,6 +119,11 @@ try {
   const model = await loadSkaterModel(params.get("skater") ?? "nia");
   scene.add(model.root);
   clips = model.animations;
+  face = model.face;
+  if (face && params.get("face")) {
+    const [eyes, mouth] = params.get("face").split(",");
+    face.set(eyes ?? "open", mouth ?? "neutral");
+  }
   mixer = new THREE.AnimationMixer(model.root);
   const box = new THREE.Box3().setFromObject(model.root, true);
   state.info = {
@@ -106,6 +131,9 @@ try {
     bones: model.skinnedMesh.skeleton.bones.length,
     skinned: model.skinnedMesh.isSkinnedMesh,
     animations: model.animations.length,
+    face: Boolean(face),
+    meshMin: model.skinnedMesh.geometry.boundingBox?.min.toArray() ?? null,
+    meshMax: model.skinnedMesh.geometry.boundingBox?.max.toArray() ?? null,
     min: box.min.toArray(),
     max: box.max.toArray(),
   };

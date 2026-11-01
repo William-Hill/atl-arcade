@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import dracoWrapperUrl from "three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js?url";
 import dracoWasmUrl from "three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?url";
+import { attachFace } from "./skater-face.js";
 
 // The shipped skater models. Vite bundles each GLB as an asset.
 export const SKATER_MODELS = {
@@ -33,7 +34,8 @@ export function wrapModel(model) {
   return root;
 }
 
-// Loads a skater GLB. Returns the wrapper, the skinned mesh, and the clips.
+// Loads a skater GLB. Returns the wrapper, the skinned mesh, the clips, and
+// the face (null when the skater has no face decals).
 export async function loadSkaterModel(name = "nia") {
   const url = SKATER_MODELS[name];
   if (!url) throw new Error(`Unknown skater model: ${name}`);
@@ -46,5 +48,6 @@ export async function loadSkaterModel(name = "nia") {
     if (o.isMesh) o.castShadow = true;
   });
   if (!skinnedMesh) throw new Error(`Skater model ${name} has no skinned mesh`);
-  return { root: wrapModel(gltf.scene), skinnedMesh, animations: gltf.animations };
+  const face = await attachFace(skinnedMesh, name);
+  return { root: wrapModel(gltf.scene), skinnedMesh, animations: gltf.animations, face };
 }

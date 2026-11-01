@@ -64,7 +64,9 @@ if (attribution && level.attribution) {
   attribution.hidden = false;
 }
 
-const levelView = geo ? createGeoView(level, geoMeshes) : createLevelView(level);
+// ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
+const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist") }) : createLevelView(level);
 scene.add(levelView.root);
 
 // The street kit (trees, lamps, benches, roof units) loads after the level

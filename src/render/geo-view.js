@@ -5,19 +5,24 @@ import { STYLES } from "../level/geo/styles.js";
 import { createMuralAtlas } from "./murals.js";
 
 const KIT_URL = new URL("../../assets/kit/street-kit.glb", import.meta.url).href;
-// Prop tiles farther than this from the camera are hidden (m).
-export const PROP_DRAW_DISTANCE = 170;
+// Prop tile distances from the camera to the tile center (m). Under
+// PROP_LOD0_DISTANCE a tile shows its detailed props, under
+// PROP_DRAW_DISTANCE its simple props, and past that nothing.
+export const PROP_LOD0_DISTANCE = 60;
+export const PROP_DRAW_DISTANCE = 200;
 
 // Three.js view of a geodata level: one merged mesh per material per tile,
 // with a toon (cel) material and vertex colors. The simulation never sees
 // any of this.
 
-// A 3-step ramp gives the cel look.
-function toonRamp() {
+// A 3-step ramp gives the cel look. `soft` blends the steps, for round
+// props (tree canopies), where hard steps show each face.
+function toonRamp({ soft = false } = {}) {
   const data = new Uint8Array([110, 110, 110, 255, 180, 180, 180, 255, 255, 255, 255, 255]);
   const tex = new THREE.DataTexture(data, 3, 1, THREE.RGBAFormat);
-  tex.minFilter = THREE.NearestFilter;
-  tex.magFilter = THREE.NearestFilter;
+  const filter = soft ? THREE.LinearFilter : THREE.NearestFilter;
+  tex.minFilter = filter;
+  tex.magFilter = filter;
   tex.generateMipmaps = false;
   tex.needsUpdate = true;
   return tex;
@@ -29,8 +34,9 @@ export function geoGeometry(mesh) {
   if (mesh.colors) geom.setAttribute("color", new THREE.BufferAttribute(mesh.colors, 3));
   if (mesh.facade) geom.setAttribute("facade", new THREE.BufferAttribute(mesh.facade, 4));
   if (mesh.uvs) geom.setAttribute("uv", new THREE.BufferAttribute(mesh.uvs, 2));
+  if (mesh.normals) geom.setAttribute("normal", new THREE.BufferAttribute(mesh.normals, 3));
   geom.setIndex(new THREE.BufferAttribute(mesh.indices, 1));
-  geom.computeVertexNormals();
+  if (!mesh.normals) geom.computeVertexNormals();
   geom.computeBoundingSphere();
   return geom;
 }
@@ -73,16 +79,31 @@ uniform vec3 uTrim[${n}];`,
     bool shop = level < 0.5 && a.z > 0.5;
     vec2 win = shop ? vec2(0.84, 0.74) : a.xy;
     vec2 d = abs(cell - vec2(0.5, shop ? 0.42 : 0.55)) * 2.0;
-    float inWin = step(d.x, win.x) * step(d.y, win.y);
-    float frame = step(d.x, win.x + 0.07) * step(d.y, win.y + 0.07) - inWin;
-    vec3 glass = uGlass[st] + vec3(0.18 * cell.y);
-    diffuseColor.rgb = mix(diffuseColor.rgb, uTrim[st], frame * 0.85);
-    diffuseColor.rgb = mix(diffuseColor.rgb, glass, inWin);
+    // Anti-aliased edges: blend over one screen pixel, not a hard step.
+    vec2 aa = max(fwidth(vFacade.yz) * 2.0, vec2(1e-4));
+    float inWin = (1.0 - smoothstep(win.x - aa.x, win.x + aa.x, d.x)) * (1.0 - smoothstep(win.y - aa.y, win.y + aa.y, d.y));
+    vec2 fw = win + vec2(0.07, 0.07);
+    float inFrame = (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(fw.y - aa.y, fw.y + aa.y, d.y));
+    float frame = clamp(inFrame - inWin, 0.0, 1.0);
+    // A sill under each window, and a center mullion on wide windows.
+    float sillY = (shop ? 0.42 : 0.55) - win.y * 0.5 - 0.05;
+    float sill = (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(0.03 - aa.y, 0.03 + aa.y, abs(cell.y - sillY)));
+    float mull = win.x > 0.5 ? (1.0 - smoothstep(0.025 - aa.x, 0.025 + aa.x, abs(cell.x - 0.5))) * inWin : 0.0;
+    vec3 glass = uGlass[st] + vec3(0.18 * cell.y) + vec3(0.12) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
+    vec3 wallCol = diffuseColor.rgb;
+    vec3 col = mix(wallCol, uTrim[st], max(frame, sill) * 0.85);
+    col = mix(col, glass, inWin);
+    col = mix(col, uTrim[st], mull * 0.9);
+    // Far away a window cell is under a few pixels: fade to the mean color,
+    // so the grid does not shimmer.
+    float far = smoothstep(0.25, 0.6, max(aa.x, aa.y));
+    vec3 mean = mix(wallCol, uGlass[st] + vec3(0.09), win.x * win.y * 0.9);
+    diffuseColor.rgb = mix(col, mean, far);
   }
 }`,
       );
   };
-  mat.customProgramCacheKey = () => "facade-v1";
+  mat.customProgramCacheKey = () => "facade-v2";
   return mat;
 }
 
@@ -107,6 +128,8 @@ export async function loadKitTemplates(url = KIT_URL) {
     const g = o.geometry.clone().applyMatrix4(o.matrixWorld);
     const pos = g.attributes.position;
     const col = g.attributes.color;
+    const nor = g.attributes.normal;
+    const normals = nor ? new Float32Array(pos.count * 3) : null;
     const positions = new Float32Array(pos.count * 3);
     const colors = new Float32Array(pos.count * 3);
     for (let i = 0; i < pos.count; i += 1) {
@@ -116,14 +139,19 @@ export async function loadKitTemplates(url = KIT_URL) {
       colors[i * 3] = col ? col.getX(i) : 1;
       colors[i * 3 + 1] = col ? col.getY(i) : 1;
       colors[i * 3 + 2] = col ? col.getZ(i) : 1;
+      if (normals) {
+        normals[i * 3] = nor.getX(i);
+        normals[i * 3 + 1] = nor.getY(i);
+        normals[i * 3 + 2] = nor.getZ(i);
+      }
     }
     const indices = g.index ? Uint32Array.from(g.index.array) : Uint32Array.from({ length: pos.count }, (_, i) => i);
-    templates[o.name] = { positions, indices, colors };
+    templates[o.name] = normals ? { positions, indices, colors, normals } : { positions, indices, colors };
   });
   return templates;
 }
 
-export function createGeoView(level, meshes = buildGeoMeshes(level)) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -131,7 +159,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level)) {
   const materials = {
     surface: new THREE.MeshToonMaterial({ vertexColors: true, gradientMap }),
     building: createFacadeMaterial(gradientMap),
-    props: new THREE.MeshToonMaterial({ vertexColors: true, gradientMap }),
+    props: new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp({ soft: true }) }),
     get mural() {
       if (!muralMap) muralMap = new THREE.MeshToonMaterial({ map: createMuralAtlas(), gradientMap });
       return muralMap;
@@ -148,12 +176,14 @@ export function createGeoView(level, meshes = buildGeoMeshes(level)) {
   const props = { count: 0, tiles: 0, loaded: false, error: null };
   function addProps(placements, templates) {
     for (const t of buildPropMeshes(placements, templates)) {
-      const obj = addMesh(root, byId, `props-${t.tile}`, geoGeometry(t.mesh), materials.props, { castShadow: true });
+      const obj = addMesh(root, byId, `props-${t.tile}-lod${t.lod}`, geoGeometry(t.mesh), materials.props, { castShadow: true });
       obj.userData.center = t.center;
+      obj.userData.lod = t.lod;
+      obj.visible = false;
       propTiles.push(obj);
     }
     props.count = placements.length;
-    props.tiles = propTiles.length;
+    props.tiles = propTiles.length / 2;
     props.loaded = true;
   }
 
@@ -165,12 +195,17 @@ export function createGeoView(level, meshes = buildGeoMeshes(level)) {
     },
     props,
     addProps,
-    // Hides the prop tiles that are far from the camera.
+    // Shows each prop tile at one level of detail by its distance from the
+    // camera, and hides the far tiles.
     update(cameraPosition) {
+      let lod0 = 0;
       for (const obj of propTiles) {
         const [cx, cz] = obj.userData.center;
-        obj.visible = Math.hypot(cx - cameraPosition.x, cz - cameraPosition.z) < PROP_DRAW_DISTANCE + 90;
+        const d = Math.hypot(cx - cameraPosition.x, cz - cameraPosition.z);
+        obj.visible = obj.userData.lod === 0 ? d < lod0Distance : d >= lod0Distance && d < drawDistance;
+        if (obj.visible && obj.userData.lod === 0) lod0 += 1;
       }
+      props.lod0Tiles = lod0;
     },
   };
 }

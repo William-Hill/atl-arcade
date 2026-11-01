@@ -292,3 +292,13 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Street props are solid: the ground sampler treats each one as a circle with a height over `SKATE.maxStep`. Roof props are not solid.
 - Shadows: the shadow map is off on the geodata level. With it on, the trail playtest ran at a median of 20 to 30 FPS in headless SwiftShader with video capture. With it off, the ride ran at 59.9 FPS. The trees carry a dark disc and the skater a blob, so the look keeps a stylized shadow. The greybox keeps its shadow map.
 - Not done: the image paint-over step (a Blender render painted over with image generation as the target look), pitched roofs on houses, and an outline pass (M1-06).
+
+## 2026-11-01: More detail on the props and the windows (M1-08, #40)
+
+- Why: William said the props looked "way too blocky and pixelated".
+- Props: the Blender kit now has two levels of detail per prop. LOD0 is smooth shaded: a round tree with a trunk, 3 branches, and 6 canopy blobs (932 triangles); a 4-tier pine; a bench with slats and armrests; a lamp with a curved arm and a lantern; U-shaped bike racks; a bin with a lid; a water tower with braces. LOD1 is the first, simple kit.
+- Trees get a seeded scale from 0.85 to 1.2.
+- The props use a soft toon ramp, so the round canopies do not show each face.
+- LOD: props merge into 50 m tiles, at two levels. A tile within 60 m of the camera shows LOD0, a tile within 200 m shows LOD1, and a tile past 200 m is hidden. `?lod0=<m>` and `?propdist=<m>` change the distances, and `npm run playtest -- --query "..."` passes a query to the page.
+- Why the tiles are small: with 125 m tiles and LOD0 within 75 m or 110 m, the trail playtest ran at a median of 30 FPS, because one near tile put up to 60 detailed trees on screen. With 50 m tiles it ran at 59.5 and 59.9 FPS in two runs.
+- Windows: the facade shader blends each window edge over one pixel (anti-aliasing with `fwidth`). Far windows fade to the mean wall color, so the grid does not shimmer. Each window has a sill, and a wide window has a center mullion.

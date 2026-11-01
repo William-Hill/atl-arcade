@@ -89,13 +89,15 @@ export function streetProps(level, sample) {
     }
     return true;
   }
-  function put(kind, x, z, yaw = 0) {
+  function put(kind, x, z, yaw = 0, scale = 1) {
     const solid = PROP_SOLID[kind];
     if (!free(x, z) || !isOpen(sample, x, z, solid ? solid.r + 0.3 : 0.5, areaIds)) return false;
     const k = key(x, z);
     if (!taken.has(k)) taken.set(k, []);
     taken.get(k).push([x, z]);
-    out.push({ kind, x: Math.round(x * 100) / 100, y: 0, z: Math.round(z * 100) / 100, yaw: Math.round(yaw * 1000) / 1000 });
+    const p = { kind, x: Math.round(x * 100) / 100, y: 0, z: Math.round(z * 100) / 100, yaw: Math.round(yaw * 1000) / 1000 };
+    if (scale !== 1) p.scale = Math.round(scale * 100) / 100;
+    out.push(p);
     return true;
   }
 
@@ -109,7 +111,7 @@ export function streetProps(level, sample) {
           const nx = -dz * side;
           const nz = dx * side;
           const d = half + 2.5 + rand() * 1.5;
-          put(rand() < 0.6 ? "tree_round" : "tree_tall", x + nx * d, z + nz * d, rand() * Math.PI * 2);
+          put(rand() < 0.6 ? "tree_round" : "tree_tall", x + nx * d, z + nz * d, rand() * Math.PI * 2, 0.85 + rand() * 0.35);
         }
       });
       along(s.points, 24, 3, (x, z, dx, dz, i) => {
@@ -135,7 +137,7 @@ export function streetProps(level, sample) {
       along(s.points, 16, 8, (x, z, dx, dz) => {
         for (const side of [1, -1]) {
           const d = half + 1.8;
-          if (put(rand() < 0.7 ? "tree_round" : "tree_tall", x - dz * side * d, z + dx * side * d, rand() * Math.PI * 2)) break;
+          if (put(rand() < 0.7 ? "tree_round" : "tree_tall", x - dz * side * d, z + dx * side * d, rand() * Math.PI * 2, 0.85 + rand() * 0.35)) break;
         }
       });
       along(s.points, 36, 18, (x, z, dx, dz) => {

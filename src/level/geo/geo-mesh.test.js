@@ -75,7 +75,7 @@ describe("level detail", () => {
     expect(plain.find((m) => m.material === "building").mesh.facade).toBeUndefined();
   });
 
-  it("merges placed kit props into one mesh per prop tile", () => {
+  it("merges placed kit props into one mesh per prop tile and level of detail", () => {
     const template = { positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], indices: [0, 1, 2], colors: [1, 0, 0, 1, 0, 0, 1, 0, 0] };
     const props = [
       { kind: "bench", x: 1, y: 0, z: 1, yaw: 0 },
@@ -83,11 +83,15 @@ describe("level detail", () => {
       { kind: "bench", x: PROP_TILE + 1, y: 0, z: 1, yaw: 0 },
       { kind: "unknown", x: 0, y: 0, z: 0, yaw: 0 },
     ];
-    const out = buildPropMeshes(props, { bench: template });
-    expect(out.length).toBe(2);
-    expect(out[0].mesh.indices.length + out[1].mesh.indices.length).toBe(9);
+    const lod1 = { positions: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1], indices: [0, 1, 2, 0, 2, 3], colors: new Array(12).fill(0.5) };
+    const out = buildPropMeshes(props, { bench: template, bench_lod1: lod1 });
+    // Two tiles, each at LOD0 and LOD1.
+    expect(out.length).toBe(4);
+    const lod0 = out.filter((t) => t.lod === 0);
+    expect(lod0.reduce((n, t) => n + t.mesh.indices.length, 0)).toBe(9);
+    expect(out.filter((t) => t.lod === 1).reduce((n, t) => n + t.mesh.indices.length, 0)).toBe(18);
     // Yaw PI/2 turns the template +x toward -z.
-    const second = out.find((t) => t.tile === "0,0").mesh.positions;
+    const second = lod0.find((t) => t.tile === "0,0").mesh.positions;
     expect(second[9 + 3]).toBeCloseTo(2, 6);
     expect(second[9 + 5]).toBeCloseTo(1, 6);
   });

@@ -1,12 +1,31 @@
 {
-  "asset": "Street kit for the BeltLine Eastside block (M1-08, #40): tree_round, tree_tall, bench, lamp, bike_rack, bin, planter, roof_unit, water_tower",
+  "asset": "Street kit for the BeltLine Eastside block (M1-08, #40): tree_round, tree_tall, bench, lamp, bike_rack, bin, planter, roof_unit, water_tower, each at LOD0 (detailed) and LOD1 (<name>_lod1)",
   "date": "2026-11-01",
   "tool": "Blender 5.2.2 LTS through the Blender MCP (execute_blender_code), glTF 2.0 exporter",
-  "source": "scripts/blender/street_kit.py. Every prop is built from Blender primitives (cube, cylinder, cone, icosphere) by the script. No library, scan, or generated model is in it.",
+  "source": "scripts/blender/street_kit.py. Every prop is built from Blender primitives (cube, cylinder, cone, icosphere, UV sphere) and swept tubes by the script. No library, scan, or generated model is in it.",
   "prompt": "None. The script is the full recipe; run it again to rebuild the file.",
   "credits": "Original work for this project. No third-party art. No paid generation credits.",
-  "format": "GLB, one mesh per prop, vertex colors (COLOR_0), no textures, no Draco",
-  "size_bytes": 48632,
-  "faces": { "tree_round": 60, "tree_tall": 28, "bench": 24, "lamp": 20, "bike_rack": 54, "bin": 20, "planter": 26, "roof_unit": 16, "water_tower": 47 },
-  "murals": "The 16 mural designs are drawn at run time by src/render/murals.js from a fixed seed: original shapes and lettering, no third-party art."
+  "format": "GLB, one mesh per prop and level of detail, vertex colors (COLOR_0), smooth and flat normals, no textures, no Draco",
+  "size_bytes": 175416,
+  "murals": "The 16 mural designs are drawn at run time by src/render/murals.js from a fixed seed: original shapes and lettering, no third-party art.",
+  "triangles": {
+    "tree_round": 932,
+    "tree_tall": 200,
+    "bench": 244,
+    "lamp": 302,
+    "bike_rack": 516,
+    "bin": 416,
+    "planter": 536,
+    "roof_unit": 180,
+    "water_tower": 566,
+    "tree_round_lod1": 120,
+    "tree_tall_lod1": 94,
+    "bench_lod1": 48,
+    "lamp_lod1": 44,
+    "bike_rack_lod1": 108,
+    "bin_lod1": 56,
+    "planter_lod1": 32,
+    "roof_unit_lod1": 40,
+    "water_tower_lod1": 102
+  }
 }

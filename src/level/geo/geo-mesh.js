@@ -10,7 +10,7 @@ import { createGeoGroundSampler, surfaceTop } from "./geo-ground.js";
 import { STYLES, STYLE_INDEX, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
 
 export const GEO_TILE = 250; // m.
-export const PROP_TILE = 125; // m. Smaller, so far props can be hidden.
+export const PROP_TILE = 50; // m. Small, so only near props get full detail.
 
 // Material groups. Each group is one material in the render. All flat
 // surfaces share one material and get their color from vertex colors.
@@ -220,27 +220,30 @@ export function muralMesh(m) {
   return mesh;
 }
 
-// Merges kit props into one mesh per PROP_TILE. `templates` maps a prop
-// kind to { positions, indices, colors }.
+// Merges kit props into one mesh per PROP_TILE and level of detail.
+// `templates` maps a prop kind to { positions, indices, colors, normals? };
+// the LOD1 template of a kind is `<kind>_lod1`. A kind with no LOD1
+// template uses its LOD0 template at both levels. Returns
+// [{ material: "props", tile, lod, center, mesh }].
 export function buildPropMeshes(props, templates) {
   const tiles = new Map();
   for (const p of props) {
-    const t = templates[p.kind];
-    if (!t) continue;
+    if (!templates[p.kind]) continue;
     const key = `${Math.floor(p.x / PROP_TILE)},${Math.floor(p.z / PROP_TILE)}`;
-    let mesh = tiles.get(key);
-    if (!mesh) tiles.set(key, (mesh = { positions: [], indices: [], colors: [] }));
-    placeTemplate(mesh, t, p);
+    let entry = tiles.get(key);
+    if (!entry) tiles.set(key, (entry = [0, 1].map(() => ({ positions: [], indices: [], colors: [], normals: [] }))));
+    placeTemplate(entry[0], templates[p.kind], p);
+    placeTemplate(entry[1], templates[`${p.kind}_lod1`] ?? templates[p.kind], p);
   }
   const out = [];
-  for (const [tile, mesh] of [...tiles].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+  for (const [tile, entry] of [...tiles].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
     const [ix, iz] = tile.split(",").map(Number);
-    out.push({
-      material: "props",
-      tile,
-      center: [(ix + 0.5) * PROP_TILE, (iz + 0.5) * PROP_TILE],
-      mesh: { positions: Float32Array.from(mesh.positions), indices: Uint32Array.from(mesh.indices), colors: Float32Array.from(mesh.colors) },
-    });
+    for (const lod of [0, 1]) {
+      const m = entry[lod];
+      const mesh = { positions: Float32Array.from(m.positions), indices: Uint32Array.from(m.indices), colors: Float32Array.from(m.colors) };
+      if (m.normals.length === m.positions.length) mesh.normals = Float32Array.from(m.normals);
+      out.push({ material: "props", tile, lod, center: [(ix + 0.5) * PROP_TILE, (iz + 0.5) * PROP_TILE], mesh });
+    }
   }
   return out;
 }

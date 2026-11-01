@@ -238,7 +238,8 @@ export function mergeMeshes(meshes) {
 
 // Adds a template mesh (for example a kit prop) moved to (x, y, z), turned
 // by `yaw` about +y, and scaled by `scale`. Pure. The template is
-// { positions, indices, colors } with typed or plain arrays.
+// { positions, indices, colors, normals? } with typed or plain arrays. When
+// both the mesh and the template have normals, the normals turn too.
 export function placeTemplate(mesh, template, { x = 0, y = 0, z = 0, yaw = 0, scale = 1 } = {}) {
   const c = Math.cos(yaw);
   const s = Math.sin(yaw);
@@ -249,6 +250,10 @@ export function placeTemplate(mesh, template, { x = 0, y = 0, z = 0, yaw = 0, sc
     const pz = p[i + 2] * scale;
     // Positive yaw turns +x toward -z, the same as the skater yaw.
     mesh.positions.push(x + px * c + pz * s, y + p[i + 1] * scale, z - px * s + pz * c);
+    if (mesh.normals && template.normals) {
+      const n = template.normals;
+      mesh.normals.push(n[i] * c + n[i + 2] * s, n[i + 1], -n[i] * s + n[i + 2] * c);
+    }
     if (mesh.colors) {
       const k = i;
       mesh.colors.push(template.colors ? template.colors[k] : 1, template.colors ? template.colors[k + 1] : 1, template.colors ? template.colors[k + 2] : 1);

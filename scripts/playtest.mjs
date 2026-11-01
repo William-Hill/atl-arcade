@@ -5,12 +5,15 @@
 //
 //   npm run playtest
 //   npm run playtest -- --gate 55 --port 5182
+//   npm run playtest -- --level beltline-eastside   (one 40 s ride on the trail)
 
-import { mkdirSync, renameSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { chromium } from "@playwright/test";
 import { createServer } from "vite";
 import { SESSIONS, comboMetrics, fpsMetrics } from "../src/playtest/sessions.js";
+import { chainStrips, followLineScript } from "../src/playtest/trail-script.js";
+import { createLevelEnv } from "../src/level/ground.js";
 
 const args = process.argv.slice(2);
 const argValue = (name, fallback) => {
@@ -19,11 +22,30 @@ const argValue = (name, fallback) => {
 };
 const GATE_FPS = Number(argValue("--gate", 55));
 const PORT = Number(argValue("--port", 5182));
+const LEVEL = String(argValue("--level", "greybox"));
 const ROOT = resolve(import.meta.dirname, "..");
+
+// A geodata level gets one session: a ride along the trail, planned with
+// the pure controller (src/playtest/trail-script.js).
+function geoSessions(name) {
+  const level = JSON.parse(readFileSync(resolve(ROOT, "levels", name, "level.json"), "utf8"));
+  const [trail] = chainStrips(level.strips, "trail");
+  const planned = followLineScript(trail, level.spawn, createLevelEnv(level), { frames: 2400 });
+  return [
+    {
+      id: "trail",
+      title: "Trail ride",
+      description: `40 s north on the trail from the spawn, in ${level.title}. No tricks. The FPS check for a real block.`,
+      start: { position: level.spawn.position, yaw: level.spawn.yaw },
+      script: planned.script,
+    },
+  ];
+}
+const sessions = LEVEL === "greybox" ? SESSIONS : geoSessions(LEVEL);
 const REPORTS = resolve(ROOT, "reports");
 const date = new Date();
 const stamp = date.toISOString().slice(0, 19).replace(/[:T]/g, "-");
-const base = `playtest-${stamp}`;
+const base = LEVEL === "greybox" ? `playtest-${stamp}` : `playtest-${LEVEL}-${stamp}`;
 
 mkdirSync(REPORTS, { recursive: true });
 
@@ -40,7 +62,7 @@ const allFrameMs = [];
 let fatal = null;
 
 try {
-  for (const session of SESSIONS) {
+  for (const session of sessions) {
     const context = await browser.newContext({
       viewport: { width: 1280, height: 720 },
       recordVideo: { dir: REPORTS, size: { width: 1280, height: 720 } },
@@ -52,7 +74,7 @@ try {
       if (msg.type() === "error") errors.push(msg.text());
     });
 
-    await page.goto(`http://localhost:${PORT}/?mute=1`);
+    await page.goto(`http://localhost:${PORT}/?mute=1${LEVEL === "greybox" ? "" : `&level=${LEVEL}`}`);
     await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 10, null, { timeout: 30000 });
     await page.evaluate(() => window.__atl.beat.start());
     await page.waitForTimeout(300);
@@ -177,6 +199,7 @@ const passed = totals.medianFps >= GATE_FPS && results.every((r) => r.consoleErr
 const report = {
   date: date.toISOString(),
   machine: { platform: process.platform, arch: process.arch, node: process.version, renderer: "headless Chromium, SwiftShader" },
+  level: LEVEL,
   gate: { medianFpsAtLeast: GATE_FPS, passed },
   totals,
   sessions: results,

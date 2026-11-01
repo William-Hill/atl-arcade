@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-01T21:22:45.239Z",
+  "machine": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v26.5.0",
+    "renderer": "headless Chromium, SwiftShader"
+  },
+  "level": "beltline-eastside",
+  "gate": {
+    "medianFpsAtLeast": 55,
+    "passed": false
+  },
+  "totals": {
+    "medianFps": 30,
+    "averageFps": 38.1,
+    "p5Fps": 29.9,
+    "frames": 1524,
+    "score": 0,
+    "comboCount": 0,
+    "maxCombo": 0,
+    "falls": 0,
+    "simulatedSeconds": 40,
+    "fallsPerMinute": 0,
+    "timeToFirstThreeLinkSec": null
+  },
+  "sessions": [
+    {
+      "id": "trail",
+      "title": "Trail ride",
+      "description": "40 s north on the trail from the spawn, in BeltLine Eastside Trail: Ponce City Market to Krog Street Market. No tricks. The FPS check for a real block.",
+      "ticks": 2400,
+      "simulatedSeconds": 40,
+      "wallSeconds": 40.01,
+      "fps": {
+        "frames": 1524,
+        "medianFps": 30,
+        "averageFps": 38.1,
+        "p5Fps": 29.9
+      },
+      "score": 0,
+      "bestCombo": 0,
+      "comboCount": 0,
+      "maxCombo": 0,
+      "timeToFirstThreeLinkSec": null,
+      "vertAirs": 0,
+      "snaps": 0,
+      "exits": 0,
+      "falls": 0,
+      "respawns": 0,
+      "fallsPerMinute": 0,
+      "grindSeconds": 0,
+      "styleMoves": 0,
+      "moves": [],
+      "screenshots": [
+        "reports/playtest-beltline-eastside-2026-11-01-21-22-45-trail-start.png",
+        "reports/playtest-beltline-eastside-2026-11-01-21-22-45-trail-end.png"
+      ],
+      "video": "reports/playtest-beltline-eastside-2026-11-01-21-22-45-trail.webm",
+      "consoleErrors": []
+    }
+  ]
+}

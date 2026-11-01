@@ -232,3 +232,11 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - A grind tap stays live for 0.15 s (`GRIND.buffer`). A tap just before a rail comes in range still snaps. A held grind button works as before.
 - A snap onto a rail clears both buffers, so an old press does not fire after the grind.
 - Why: the gamedev cheat sheet audit found that an early press was lost.
+
+## 2026-11-01: Dance cleanup from references (M1-02)
+
+- Swag Surf: the arms are now near shoulder height with the forearms hanging down, as over the shoulders of friends. The knees bend deep, and the body leans side to side. The first version raised the arms in a V, which a video check showed to be wrong.
+- Walk It Out: a stronger twist (about 25 degrees) and a deeper double bounce, from the STEEZY steps.
+- Snap Lean: the arms hang low and the snap is beside the hips, with a shoulder dip. No video was found, so the clip follows the text sources only.
+- The Prep and crisscross: the clap is now low, in front of the chest, with the elbows near the ribs. The old clap raised the arms to shoulder height, which read as a shrug.
+- Bankhead Bounce: no change. The player likes it.

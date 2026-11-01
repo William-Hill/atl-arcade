@@ -128,19 +128,24 @@ def ride(side=0.0, down=0.0, lean=4.0):
 
 
 CLAP = {
-    # The hands rise from the shoulders and meet in front of the chest.
-    "LeftArm": [rot(FWD, -25), rot(UP, -62)],
-    "RightArm": [rot(FWD, 25), rot(UP, 62)],
-    "LeftForeArm": [rot(UP, -62)],
-    "RightForeArm": [rot(UP, 62)],
+    # A low clap: the elbows stay near the ribs, and the hands meet in front
+    # of the chest. The shoulders stay down.
+    "LeftArm": [rot(LEFT, 50), rot(FWD, -46), rot(UP, -46)],
+    "RightArm": [rot(LEFT, 50), rot(FWD, 46), rot(UP, 46)],
+    "LeftForeArm": [rot(UP, -118)],
+    "RightForeArm": [rot(UP, 118)],
+    "LeftHand": [rot(LEFT, -60)],
+    "RightHand": [rot(LEFT, -60)],
 }
 
-# The arms when the hands rise to clap, one half beat before the clap.
+# The arms open, a half beat before the clap: the hands are apart at waist height.
 CLAP_UP = {
-    "LeftArm": [rot(FWD, -5), rot(UP, -40)],
-    "RightArm": [rot(FWD, 5), rot(UP, 40)],
-    "LeftForeArm": [rot(UP, -80)],
-    "RightForeArm": [rot(UP, 80)],
+    "LeftArm": [rot(LEFT, 50), rot(FWD, -54), rot(UP, -30)],
+    "RightArm": [rot(LEFT, 50), rot(FWD, 54), rot(UP, 30)],
+    "LeftForeArm": [rot(UP, -86)],
+    "RightForeArm": [rot(UP, 86)],
+    "LeftHand": [rot(LEFT, -40)],
+    "RightHand": [rot(LEFT, -40)],
 }
 
 
@@ -582,18 +587,21 @@ def _walk_it_out_right(down):
     # The twist to the right: the skates, the knees, and the hips point right.
     # The right arm shoots out to the side at shoulder height. The left
     # forearm folds near the chest. The head looks along the right arm.
-    return merge(glide(down, -0.6, lean=6), {
-        "hipsRot": [rot(UP, -18)],
-        "Spine1": [rot(UP, -10)],
-        "L": at(0.10, 0.0, 0, "L", [rot(UP, -16)]),
-        "R": at(-0.14, 0.02, 0, "R", [rot(UP, -22)]),
-        "RightArm": [rot(FWD, 6), rot(UP, -8)],
-        "RightForeArm": [rot(UP, 6)],
-        "RightHand": [rot(FWD, 10)],
-        "LeftArm": [rot(FWD, -62), rot(UP, -44)],
-        "LeftForeArm": [rot(UP, -112)],
-        "Neck": [rot(UP, -14)],
-        "Head": [rot(UP, -22), rot(LEFT, 4)],
+    # On quads the skates swivel on the toe stops, so the twist is about 25 degrees.
+    return merge(glide(down, -0.7, lean=10), {
+        "hips": (-0.05, 0.02, -0.14 - down),
+        "hipsRot": [rot(UP, -26), rot(FWD, 4)],
+        "Spine1": [rot(UP, -8), rot(FWD, 4)],
+        "L": at(0.08, -0.02, 0, "L", [rot(UP, -24)]),
+        "R": at(-0.16, 0.04, 0, "R", [rot(UP, -28)]),
+        "RightArm": [rot(FWD, 10), rot(UP, 10)],
+        "RightForeArm": [rot(UP, 8)],
+        "RightHand": [rot(FWD, 14)],
+        "LeftArm": [rot(LEFT, 50), rot(FWD, -50), rot(UP, -40)],
+        "LeftForeArm": [rot(UP, -116)],
+        "LeftShoulder": [rot(UP, -6)],
+        "Neck": [rot(UP, -16)],
+        "Head": [rot(UP, -24), rot(LEFT, 6)],
     })
 
 
@@ -623,45 +631,57 @@ def dance_prep():
 
 
 def _swag_left(down):
-    # Swag Surf (F.L.Y., Stone Mountain, 2009). The arms go up and out as if
-    # over the shoulders of friends. The body bends to the left like a surfboard.
-    return merge(glide(down, 1, lean=2), {
-        "hips": (0.07, 0.02, -0.11 - down),
-        "Spine": [rot(FWD, -9)],
-        "Spine1": [rot(FWD, -4)],
-        "LeftArm": [rot(FWD, 34), rot(UP, -12)],
-        "RightArm": [rot(FWD, -34), rot(UP, 12)],
-        "LeftForeArm": [rot(UP, -22)],
-        "RightForeArm": [rot(UP, 22)],
-        "Head": [rot(FWD, -8), rot(LEFT, -4)],
+    # Swag Surf (F.L.Y., Stone Mountain, 2009). In a crowd, each dancer puts
+    # the arms over the shoulders of the dancers to each side. Solo, the arms
+    # stay out near shoulder height with the elbows bent and the forearms and
+    # hands hanging down, as if on two shoulders. The knees bend deep, the
+    # chest leans forward, and the whole body tips to the left like a wave.
+    return merge(glide(down, 1, lean=16), {
+        "hips": (0.09, 0.02, -0.17 - down),
+        "hipsRot": [rot(FWD, -6)],
+        "Spine": [rot(LEFT, 16), rot(FWD, -12)],
+        "Spine1": [rot(FWD, -6), rot(LEFT, 4)],
+        "L": at(0.20, 0.0, 0, "L", [rot(UP, 10)]),
+        "R": at(-0.20, 0.02, 0, "R", [rot(UP, -10)]),
+        "LeftArm": [rot(FWD, -14), rot(UP, -22)],
+        "RightArm": [rot(FWD, 14), rot(UP, 22)],
+        "LeftForeArm": [rot(FWD, -50), rot(UP, -14)],
+        "RightForeArm": [rot(FWD, 50), rot(UP, 14)],
+        "LeftHand": [rot(FWD, -30)],
+        "RightHand": [rot(FWD, 30)],
+        "Neck": [rot(FWD, -6)],
+        "Head": [rot(FWD, -8), rot(LEFT, -6)],
     })
 
 
 def dance_swagsurf():
-    # The sway goes left on beat 1 and right on beat 2, with a dip at the end
-    # of each sway.
+    # Beat 1: the wave goes to the left, with a dip at its end. Beat 2: to the right.
     L = _swag_left
     R = lambda d: mirror_pose(_swag_left(d))
-    return True, [(0, L(0.02)), (16, L(0.08)), (24, R(0.02)), (40, R(0.08)), (48, L(0.02))]
+    return True, [(0, L(0.0)), (14, L(0.07)), (24, R(0.0)), (38, R(0.07)), (48, L(0.0))]
 
 
 def _snap_left(snap):
     # Snap Lean (snap music, Bankhead, early 2000s). The body leans back and
-    # to the left, no more than 15 degrees, with the weight on the left skate.
-    # At the peak the fingers snap at hip height and the shoulders drop.
-    return merge(glide(0.06 if snap else 0.03, 1, lean=-9), {
-        "hips": (0.06, 0.0, -0.13 if snap else -0.10),
-        "Spine": [rot(LEFT, -9), rot(FWD, -7)],
-        "Spine1": [rot(LEFT, -4), rot(UP, 8)],
-        "LeftArm": [rot(FWD, -66), rot(UP, -18)],
-        "RightArm": [rot(FWD, 66), rot(UP, 18)],
-        "LeftForeArm": [rot(UP, -70 - (14 if snap else 0))],
-        "RightForeArm": [rot(UP, 70 + (14 if snap else 0))],
-        "LeftHand": [rot(FWD, -24 if snap else -6)],
-        "RightHand": [rot(FWD, 24 if snap else 6)],
-        "Head": [rot(LEFT, -10), rot(FWD, -6)],
-        "LeftShoulder": [rot(FWD, -6 if snap else 0)],
-        "RightShoulder": [rot(FWD, 6 if snap else 0)],
+    # to the left with the weight on the left skate, no more than about 15
+    # degrees in total, so a quad skater stays on the wheels. The arms hang low
+    # with bent elbows. At the peak the fingers snap beside the hips, the left
+    # shoulder dips, and the head tilts back with a cool look.
+    return merge(glide(0.07 if snap else 0.03, 1, lean=-6), {
+        "hips": (0.08, -0.02, -0.15 if snap else -0.11),
+        "hipsRot": [rot(FWD, -6), rot(UP, 8)],
+        "Spine": [rot(LEFT, -8), rot(FWD, -9)],
+        "Spine1": [rot(LEFT, -4), rot(UP, 10), rot(FWD, -4)],
+        "LeftShoulder": [rot(FWD, -10 if snap else -4)],
+        "RightShoulder": [rot(FWD, -4 if snap else 0)],
+        "LeftArm": [rot(FWD, -70), rot(LEFT, 14)],
+        "RightArm": [rot(FWD, 70), rot(LEFT, 14)],
+        "LeftForeArm": [rot(UP, -40 - (22 if snap else 0))],
+        "RightForeArm": [rot(UP, 40 + (22 if snap else 0))],
+        "LeftHand": [rot(FWD, -28 if snap else -8)],
+        "RightHand": [rot(FWD, 28 if snap else 8)],
+        "Neck": [rot(LEFT, -6)],
+        "Head": [rot(LEFT, -10), rot(FWD, -8), rot(UP, 10)],
     })
 
 

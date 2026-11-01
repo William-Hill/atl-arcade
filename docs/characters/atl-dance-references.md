@@ -115,6 +115,8 @@ Other sources describe ATL style as "swaggy, ryding" with leg crosses, claps, an
 
 **Origin.** "Walk It Out" by DJ Unk, 2006, a snap-era hit. The song took inspiration from the "Poole Palace" dance. DJ Montay produced it. Sources: https://www.kaxe.org/news/2025-01-29/unks-walk-it-out-defined-a-fun-hyperlocal-moment-in-atlanta-rap-history and https://www.ajc.com/life/arts-culture/hip-hop-50/evolution-of-atlantas-hip-hop-dance-crazes/BOICXZM72JD5PF4TQI4D4SWL24/
 
+**Checked again (2026-11-01).** The clip uses a stronger twist (about 25 degrees on the toe stops) and a deeper double bounce.
+
 **Verified (STEEZY).** A knee bounce on each beat, then a double-time bounce. Step right: right toes, right knee, and hips point right; the left toes and knee follow. Then twist the same way to the left. On the right step, the right arm shoots out to the side and the left arm stays near the chest. Switch on the left step. Source: https://steezy.co/posts/how-to-walk-it-out
 
 **BPM.** Estimate 75 to 80, felt at double time. Not verified.
@@ -137,6 +139,8 @@ Other sources describe ATL style as "swaggy, ryding" with leg crosses, claps, an
 
 **Verified.** People link arms and sway from side to side in a wave-like sway and dip. A crowd does it together.
 
+**Video check (2026-11-01).** Frames of "Hip-Hop Social Dances | Swag Surfin'" (https://www.youtube.com/watch?v=GsCgfAfk_hg) show the dancers with their arms over the shoulders of the dancers beside them. The arms are near shoulder height, the elbows bend, and the forearms hang down. The knees bend deep, and the group leans to one side, then to the other. The clip uses this form, not raised arms.
+
 **BPM.** Estimate 70 to 80. Not verified.
 
 **Animator spec (2 bars, solo version).**
@@ -158,6 +162,8 @@ Other sources describe ATL style as "swaggy, ryding" with leg crosses, claps, an
 **Verified.** AJC: the snap dance sways left to right and snaps the fingers at the peak of each lean. Wikipedia (snap music): a lean-back with a finger snap. Source: https://www.ajc.com/life/arts-culture/hip-hop-50/evolution-of-atlantas-hip-hop-dance-crazes/BOICXZM72JD5PF4TQI4D4SWL24/
 
 **BPM.** Estimate 75 to 80. Not verified.
+
+**Not found (2026-11-01).** No tutorial or video in a search gave counts for this dance. The clip follows the AJC and Wikipedia text only: a lean back to the side, a finger snap at the peak beside the hips, and a rock of the knees.
 
 **Animator spec (1 bar loop).**
 - Beat 1: lean the Spine back about 15 degrees and to the left. Weight on the LeftFoot. Knees bend.

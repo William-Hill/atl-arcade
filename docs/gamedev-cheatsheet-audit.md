@@ -50,5 +50,5 @@ This file compares each concept with the code. "Done" means the code has it now.
 
 ## Suggested next steps
 
-2. Render interpolation with the fixed-step `alpha`.
-3. Instancing and LOD when the first real neighborhood loads (M1).
+1. Render interpolation with the fixed-step `alpha`.
+2. Instancing and LOD when the first real neighborhood loads (M1).

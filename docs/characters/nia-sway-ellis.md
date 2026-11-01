@@ -75,7 +75,7 @@ These rules make the Tripo or Meshy output easy to rig and animate.
 
 | Group | Clips |
 |---|---|
-| Base (Atlanta rink style) | idle, push (ATL stride), coast, ride back, carve left, carve right (Cross Step) |
+| Base (Atlanta rink style) | idle, push (ATL stride), coast, ride back, carve left, carve right (the ATL Ryde corner step) |
 | Air (X Games) | jump, land, mute grab, japan, Liu Kang |
 | Rails (X Games) | frontside, soul, unity, manual |
 | Fail | bail |

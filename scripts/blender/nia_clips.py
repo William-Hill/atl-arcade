@@ -355,16 +355,43 @@ def push():
     return True, right + left + [(24, right[0][1])]
 
 
+def _corner(right_x, right_y, right_z, left_y, left_z, down, toe=18, right_rot=None):
+    # One key of the ATL Ryde corner step, in a turn to the left. The body
+    # leans into the turn and the shoulders turn with it. The right skate is
+    # the outside skate. The left skate drags behind on its toe.
+    return merge(_relaxed_hands(), {
+        "hips": (0.06, 0.02, -0.15 - down),
+        "hipsRot": [rot(UP, 12), rot(FWD, -6)],
+        "Spine": [rot(LEFT, 20), rot(FWD, -8)],
+        "Spine1": [rot(UP, 14), rot(LEFT, 4)],
+        "Neck": [rot(LEFT, -10), rot(UP, 8)],
+        "Head": [rot(UP, 14), rot(LEFT, 4)],
+        "pole": 10,
+        "R": at(right_x, right_y, right_z, "R", right_rot or [rot(UP, -14), rot(FWD, -6)]),
+        "L": at(0.12, left_y, left_z, "L", [rot(UP, 8), rot(LEFT, toe)]),
+        "LeftArm": [rot(FWD, -70), rot(LEFT, 26), rot(UP, -8)],
+        "RightArm": [rot(FWD, 64), rot(LEFT, -30), rot(UP, 30)],
+        "LeftForeArm": [rot(UP, -22)],
+        "RightForeArm": [rot(UP, 46)],
+        "LeftHand": [rot(FWD, -14)],
+        "RightHand": [rot(FWD, 14)],
+    })
+
+
 def carve_left():
-    # Cross Step to the left, one beat: the right skate crosses over the left
-    # skate, lands, and then the left skate steps out from under it.
-    lean = {"hipsRot": [rot(FWD, -9), rot(UP, 10)], "Spine": [rot(LEFT, 9), rot(FWD, -7)], "Head": [rot(UP, 16)],
-            "LeftArm": [rot(FWD, -68), rot(LEFT, 30)], "RightArm": [rot(FWD, 62), rot(LEFT, -38)], "Spine1": [rot(UP, 8)]}
-    open_ = merge(ride(0.3, 0.03, lean=8), lean, {"hips": (0.06, 0.02, -0.11), "L": at(0.16, 0.0), "R": at(-0.10, 0.04, side="R")})
-    cross = merge(open_, {"R": at(0.15, -0.10, 0.13, "R", [rot(UP, 14)]), "hips": (0.07, 0.02, -0.08)})
-    land = merge(open_, {"R": at(0.11, -0.08, 0, "R", [rot(UP, 12)]), "L": at(0.20, 0.06), "hips": (0.09, 0.02, -0.18)})
-    step = merge(land, {"L": at(0.30, 0.06, 0.06, "L", [rot(UP, 12)]), "R": at(0.0, -0.04, 0, "R"), "hips": (0.08, 0.02, -0.12)})
-    return True, [(0, open_), (7, cross), (12, land), (18, step), (24, open_)]
+    # The ATL Ryde corner step, 2 beats. Reference: "How to ATL Ryde on
+    # Roller Skates" by Dun Beezy (youtube.com/watch?v=oUeLJ5qbyoc): "on the
+    # corners I step out with my right foot and I drag my left foot twice
+    # before throwing my right foot back in."
+    #   beat 1: the right skate steps out wide. The left skate drags behind.
+    #   beat 1 &: the left skate drags a second time.
+    #   beat 2: the right skate lifts and goes back in, in front of the left.
+    step = _corner(-0.34, 0.0, 0, 0.18, 0.03, 0.04)
+    drag = _corner(-0.34, 0.0, 0, 0.32, 0.0, 0.09, toe=28)
+    reset = _corner(-0.34, 0.0, 0, 0.10, 0.06, 0.02)
+    lift = _corner(-0.16, -0.06, 0.09, 0.16, 0.02, 0.02, right_rot=[rot(UP, 6)])
+    back_in = _corner(-0.02, -0.10, 0, 0.12, 0.02, 0.06, toe=10, right_rot=[rot(UP, 10)])
+    return True, [(0, step), (6, drag), (12, reset), (18, drag), (28, lift), (36, back_in), (44, step), (48, step)]
 
 
 def carve_right():

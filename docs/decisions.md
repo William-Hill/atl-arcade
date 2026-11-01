@@ -252,3 +252,8 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Decision: the coast clip is the ATL Ryde step from the Dun Beezy lesson. The skates press out on the downbeat and drag in on the half beat, and one skate ends behind the other. The arms throw down on the downbeat and come up to the chest on the half beat.
 - Why: the player asked for better references for the skate moves. The first ATL ride clip came from text only.
 - Not done: the corner step (out with the right skate, two drags of the left skate). It needs a carve clip that plays on the corners.
+
+## 2026-11-01: The ATL Ryde corner step for the carves (M1-02)
+
+- Decision: the carve clips are the ATL Ryde corner step from the Dun Beezy lesson, 2 beats. In a left turn, the right skate steps out wide, the left skate drags twice behind on its toe, and the right skate comes back in. The body leans into the turn. `carve_right` is the mirror.
+- This replaces the Cross Step clip, which came from a name only, with no source for the mechanics.

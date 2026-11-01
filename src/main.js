@@ -15,7 +15,7 @@ import { BeatClock } from "./audio/beat-clock.js";
 import { loadLevel } from "./level/levels.js";
 import { createLevelEnv } from "./level/ground.js";
 import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
-import { createGeoLights, createGeoView } from "./render/geo-view.js";
+import { createGeoLights, createGeoView, loadKitTemplates } from "./render/geo-view.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
 import { createLookInput } from "./input/look.js";
@@ -26,7 +26,7 @@ const params = new URLSearchParams(window.location.search);
 // ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
 const level = await loadLevel(params.get("level"));
 const geo = isGeoLevel(level);
-const env = createLevelEnv(level);
+const env = createLevelEnv(level, { props: params.get("props") !== "0" });
 const skaterEnv = createSkaterEnv(level);
 
 const canvas = document.getElementById("stage");
@@ -43,6 +43,9 @@ const GEO_FOG_NEAR = 150;
 const geoMeshes = geo ? buildGeoMeshes(level) : null;
 let geoLights = null;
 if (geo) {
+  // No shadow map on a geodata level: in headless SwiftShader it halved the
+  // frame rate. The kit trees carry a shadow disc and the skater a blob.
+  renderer.shadowMap.enabled = false;
   scene.background = new THREE.Color(0x9fd4ff);
   // ?fog=0 removes the fog (for an overview screenshot).
   scene.fog = params.get("fog") === "0" ? null : new THREE.Fog(0x9fd4ff, GEO_FOG_NEAR, GEO_FAR);
@@ -64,8 +67,30 @@ if (attribution && level.attribution) {
 const levelView = geo ? createGeoView(level, geoMeshes) : createLevelView(level);
 scene.add(levelView.root);
 
+// The street kit (trees, lamps, benches, roof units) loads after the level
+// shows. ?props=0 leaves it out.
+if (geo && params.get("props") !== "0") {
+  loadKitTemplates()
+    .then((templates) => levelView.addProps(env.props, templates))
+    .catch((err) => {
+      levelView.props.error = String(err);
+      console.error(err);
+    });
+}
+
 const skaterView = createSkaterView();
 scene.add(skaterView.group);
+
+// A blob shadow under the skater for a level with no shadow map.
+let blob = null;
+if (geo) {
+  blob = new THREE.Mesh(
+    new THREE.CircleGeometry(0.55, 16).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }),
+  );
+  blob.renderOrder = 1;
+  scene.add(blob);
+}
 
 // The GLB skater replaces the capsule when it loads. ?skater=capsule keeps
 // the capsule.
@@ -250,6 +275,11 @@ function frame(now) {
   }
   hud.update(run, now, beat.running ? beat.phase() : null);
   if (geoLights) geoLights.follow(skater.position[0], skater.position[2]);
+  if (blob) {
+    const g = env.sampleGround(skater.position[0], skater.position[2]);
+    blob.position.set(skater.position[0], (g ? g.height : 0) + 0.02, skater.position[2]);
+  }
+  if (levelView.update) levelView.update(camera.position);
   renderer.render(scene, camera);
   frames += 1;
   if (recorder.active && frames % recorder.every === 0) {
@@ -270,11 +300,16 @@ window.__atl = {
     objectCount: level.objects.length,
     // Every id that has colliders: the level objects, and for a geodata
     // level, the merged meshes.
-    ids: [...level.objects.map((o) => o.id), ...(geoMeshes ? geoMeshes.map((m) => `${m.material}-${m.tile}`) : [])],
+    ids: [...level.objects.map((o) => o.id), ...(geoMeshes ? geoMeshes.filter((m) => m.material !== "mural").map((m) => `${m.material}-${m.tile}`) : [])],
     stats: level.stats ?? null,
     bounds: level.bounds,
     spawn: level.spawn,
-    meshCount: geoMeshes ? geoMeshes.length : level.objects.length,
+    get meshCount() {
+      return geo ? levelView.meshCount : level.objects.length;
+    },
+    get props() {
+      return geo ? { ...levelView.props } : null;
+    },
     // The ground under (x, z), from the pure sampler.
     sample: (x, z) => env.sampleGround(x, z),
   },

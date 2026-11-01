@@ -35,6 +35,10 @@ function insidePoint(b) {
 async function open(page, query) {
   await page.goto(`/?level=beltline-eastside&mute=1&${query}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 60000 });
+  // The street kit loads after the level; wait for it unless ?props=0.
+  if (!query.includes("props=0")) {
+    await page.waitForFunction(() => window.__atl.level.props && (window.__atl.level.props.loaded || window.__atl.level.props.error), null, { timeout: 60000 });
+  }
 }
 
 test("the BeltLine block loads with Rapier colliders on every merged mesh", async ({ page }) => {
@@ -52,6 +56,11 @@ test("the BeltLine block loads with Rapier colliders on every merged mesh", asyn
   expect(info.level.stats.strips.trail).toBeGreaterThan(0);
   for (const id of info.level.ids) expect(info.collidersById[id], `collider for ${id}`).toBeGreaterThan(0);
   expect(info.colliderCount).toBe(info.level.ids.length);
+  // M1-08: the street kit props loaded, merged into prop tiles.
+  const props = await page.evaluate(() => window.__atl.level.props);
+  expect(props.error).toBeNull();
+  expect(props.count).toBeGreaterThan(1000);
+  expect(props.tiles).toBeGreaterThan(10);
   // Merged meshes: the draw calls stay far under one per building.
   expect(info.renderer.calls).toBeLessThan(120);
   await page.screenshot({ path: "e2e/__screenshots__/beltline-fixed.png" });

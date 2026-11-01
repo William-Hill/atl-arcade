@@ -1,0 +1,12 @@
+{
+  "asset": "Street kit for the BeltLine Eastside block (M1-08, #40): tree_round, tree_tall, bench, lamp, bike_rack, bin, planter, roof_unit, water_tower",
+  "date": "2026-11-01",
+  "tool": "Blender 5.2.2 LTS through the Blender MCP (execute_blender_code), glTF 2.0 exporter",
+  "source": "scripts/blender/street_kit.py. Every prop is built from Blender primitives (cube, cylinder, cone, icosphere) by the script. No library, scan, or generated model is in it.",
+  "prompt": "None. The script is the full recipe; run it again to rebuild the file.",
+  "credits": "Original work for this project. No third-party art. No paid generation credits.",
+  "format": "GLB, one mesh per prop, vertex colors (COLOR_0), no textures, no Draco",
+  "size_bytes": 48632,
+  "faces": { "tree_round": 60, "tree_tall": 28, "bench": 24, "lamp": 20, "bike_rack": 54, "bin": 20, "planter": 26, "roof_unit": 16, "water_tower": 47 },
+  "murals": "The 16 mural designs are drawn at run time by src/render/murals.js from a fixed seed: original shapes and lettering, no third-party art."
+}

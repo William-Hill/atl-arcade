@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extrudeFootprint, flatPolygon, mergeMeshes, signedArea, stripMesh } from "./extrude.js";
+import { extrudeFootprint, flatPolygon, mergeMeshes, placeTemplate, signedArea, stripMesh } from "./extrude.js";
 
 const SQUARE = [
   [0, 0],
@@ -153,5 +153,35 @@ describe("flatPolygon and stripMesh", () => {
     expect(m.colors.length).toBe(m.positions.length);
     expect(Math.max(...m.indices)).toBe(m.positions.length / 3 - 1);
     expect(m.indices.slice(a.indices.length).every((i) => i >= a.positions.length / 3)).toBe(true);
+  });
+});
+
+describe("facade attribute and parapet", () => {
+  it("counts whole bays along each wall and floors up it, and adds a parapet ring", () => {
+    const m = extrudeFootprint({ outer: SQUARE, top: 9 }, { color: [1, 1, 1], facade: { style: 2, bay: 3, floorHeight: 3, parapet: 0.6, corniceColor: [0.5, 0.5, 0.5] } });
+    expect(m.facade.length / 4).toBe(m.positions.length / 3);
+    const walls = [];
+    const cornice = [];
+    for (let i = 0; i < m.facade.length / 4; i += 1) {
+      const f = m.facade.slice(i * 4, i * 4 + 4);
+      expect(f[0]).toBe(2);
+      if (f[3] === 1) walls.push(f);
+      if (f[3] === 2) cornice.push(m.positions[i * 3 + 1]);
+    }
+    // 10 m walls at a 3 m bay: 3 bays. 9 m at 3 m floors: 3 floors.
+    expect(Math.max(...walls.map((f) => f[1]))).toBe(3);
+    expect(Math.max(...walls.map((f) => f[2]))).toBe(3);
+    expect(Math.max(...cornice)).toBeCloseTo(9.6, 9);
+    // Outer and inner parapet faces: 2 rings of 4 walls, 4 vertices each.
+    expect(cornice.length).toBe(2 * 4 * 4);
+  });
+
+  it("places a template turned and moved", () => {
+    const mesh = { positions: [], indices: [], colors: [] };
+    placeTemplate(mesh, { positions: [1, 0, 0], indices: [0], colors: [0.2, 0.4, 0.6] }, { x: 10, y: 2, z: 5, yaw: Math.PI, scale: 2 });
+    expect(mesh.positions[0]).toBeCloseTo(8, 9);
+    expect(mesh.positions[1]).toBeCloseTo(2, 9);
+    expect(mesh.positions[2]).toBeCloseTo(5, 9);
+    expect(mesh.colors).toEqual([0.2, 0.4, 0.6]);
   });
 });

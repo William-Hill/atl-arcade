@@ -23,6 +23,7 @@ export const SKATE = {
   // Jump and air
   jumpSpeed: 5, // m/s vertical. min 3.5 / typical 5 / max 7. Arc height = v^2 / (2 g).
   gravity: 20, // m/s^2 arcade gravity. min 12 / typical 20 / max 30.
+  coyoteTime: 0.12, // s after a roll off an edge in which a jump press still jumps. min 0.06 / typical 0.12 / max 0.2.
   dropThreshold: 0.3, // m drop under the feet that turns a roll into a fall. min 0.15 / typical 0.3 / max 0.6.
 
   // Ground contact

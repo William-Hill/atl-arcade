@@ -93,7 +93,7 @@ export function stepSkate(prev, input = {}, dt, env = FLAT_GROUND, k = SKATE) {
   if (s.state === "rolling") {
     stepRolling(s, { steer, push: Boolean(input.push), brake: Boolean(input.brake), jump: jumpEdge }, dt, env, k);
   } else {
-    stepAir(s, { steer }, dt, env, k);
+    stepAir(s, { steer, jump: jumpEdge }, dt, env, k);
   }
   if (env.bounds && env.spawn && isLost(s, env.bounds, k)) respawn(s, env.spawn);
   return s;
@@ -269,6 +269,15 @@ function wallAheadInAir(s, env, nx, ny, nz, prevY, k) {
 
 function stepAir(s, input, dt, env, k) {
   if (steerActive(input.steer)) s.yaw = wrapYaw(s.yaw + input.steer * k.airTurnRate * dt);
+
+  // Coyote time: a jump press just after the skater rolls off an edge still
+  // jumps. The window is only for a roll-off, so it never gives a second jump.
+  if (input.jump && s.airFrom === "edge" && s.airTime < k.coyoteTime) {
+    s.velocity[1] = Math.max(s.velocity[1], 0) + k.jumpSpeed;
+    s.airTime = 0;
+    s.justJumped = true;
+    s.airFrom = "jump";
+  }
 
   const prevY = s.position[1];
   s.velocity[1] -= k.gravity * dt;

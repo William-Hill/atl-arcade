@@ -268,3 +268,43 @@ describe("out-of-bounds recovery", () => {
     expect(next.respawned).toBe(false);
   });
 });
+
+describe("coyote time", () => {
+  // Roll west off the deck edge, then press jump `late` frames after the skater leaves the ground.
+  function offEdge(late) {
+    let s = roll(6, Math.PI, [31, 3, 5.5]);
+    for (let i = 0; i < 120 && s.state !== "air"; i += 1) s = stepSkate(s, {}, DT, greybox);
+    expect(s.airFrom).toBe("edge");
+    for (let i = 0; i < late; i += 1) s = stepSkate(s, {}, DT, greybox);
+    return stepSkate(s, { jump: true }, DT, greybox);
+  }
+
+  it("jumps on a press just after a roll off an edge", () => {
+    const s = offEdge(3);
+    expect(s.justJumped).toBe(true);
+    expect(s.airFrom).toBe("jump");
+    expect(s.velocity[1]).toBeGreaterThan(SKATE.jumpSpeed - 1);
+  });
+
+  it("does not jump after the window", () => {
+    const s = offEdge(Math.ceil(SKATE.coyoteTime / DT) + 1);
+    expect(s.justJumped).toBe(false);
+    expect(s.velocity[1]).toBeLessThan(0);
+  });
+
+  it("gives one jump only", () => {
+    let s = offEdge(2);
+    s = stepSkate(s, {}, DT, greybox);
+    const vy = s.velocity[1];
+    s = stepSkate(s, { jump: true }, DT, greybox);
+    expect(s.justJumped).toBe(false);
+    expect(s.velocity[1]).toBeLessThan(vy);
+  });
+
+  it("does not give a second jump after a normal jump", () => {
+    let s = stepSkate(roll(6), { jump: true }, DT);
+    s = stepSkate(s, {}, DT);
+    s = stepSkate(s, { jump: true }, DT);
+    expect(s.justJumped).toBe(false);
+  });
+});

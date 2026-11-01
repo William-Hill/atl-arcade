@@ -219,3 +219,9 @@ Not verified: no person played the new clips; real skaters did not review the mo
 
 - Decision: the coast clip is one bar (4 beats). The stance is low and staggered, and the front skate switches every two beats. The body dips on each beat, the shoulders roll forward and down, and the arms hang loose.
 - Why: the player saw that the glide after a push was upright and stiff. The ATL references describe a low, bouncy ride with swag and shoulder rolls (`docs/characters/atl-dance-references.md`, ATL Rydin).
+
+## 2026-11-01: Coyote time for a roll off an edge (M1-02)
+
+- Decision: a jump press up to 0.12 s (`SKATE.coyoteTime`) after the skater rolls off an edge still jumps. The jump sets the vertical speed to `jumpSpeed` (plus any upward speed).
+- The window applies only when `airFrom` is "edge". A ramp launch, a grind exit, a fall, and a normal jump do not get it, so the player cannot jump twice.
+- Why: the gamedev cheat sheet audit (`docs/gamedev-cheatsheet-audit.md`) found that a late jump press at a ledge was lost.

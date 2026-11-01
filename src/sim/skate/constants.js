@@ -23,6 +23,7 @@ export const SKATE = {
   // Jump and air
   jumpSpeed: 5, // m/s vertical. min 3.5 / typical 5 / max 7. Arc height = v^2 / (2 g).
   gravity: 20, // m/s^2 arcade gravity. min 12 / typical 20 / max 30.
+  jumpBuffer: 0.1, // s a jump press waits for the skater to reach the ground. min 0.05 / typical 0.1 / max 0.2.
   coyoteTime: 0.12, // s after a roll off an edge in which a jump press still jumps. min 0.06 / typical 0.12 / max 0.2.
   dropThreshold: 0.3, // m drop under the feet that turns a roll into a fall. min 0.15 / typical 0.3 / max 0.6.
 
@@ -70,6 +71,7 @@ export const CAMERA = {
 
 // Grind: rail snap, balance, exit.
 export const GRIND = {
+  buffer: 0.15, // s a grind press (a tap) still snaps to a rail that comes in range. min 0.05 / typical 0.15 / max 0.3.
   snapRadius: 1.2, // m horizontal distance to the spline that allows a snap. min 0.6 / typical 1.2 / max 2.
   snapBelow: 0.35, // m the rail may sit below the feet (airborne approach). min 0.1 / typical 0.35 / max 1.
   snapAbove: 0.9, // m the rail may sit above the feet (rolling approach). min 0.4 / typical 0.9 / max 1.5.

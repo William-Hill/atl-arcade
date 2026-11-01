@@ -14,6 +14,7 @@ export function createSkater(level, { position, yaw } = {}) {
     grind: null,
     grindCooldown: 0,
     grindHeld: false,
+    grindBuffer: 0, // s left on a buffered grind press
     justSnapped: false,
     justFell: false,
     justExited: false,
@@ -43,6 +44,8 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     const jumpEdge = Boolean(input.jump) && !prev.jumpHeld;
     s = stepGrind(prev, { steer: input.steer, jump: jumpEdge }, dt, grindables, k.grind, k.skate);
     s.jumpHeld = Boolean(input.jump);
+    s.jumpBuffer = 0;
+    s.grindBuffer = 0;
     s.tick = prev.tick + 1;
     stats.grindTime += dt;
     if (s.justFell) stats.falls += 1;
@@ -56,10 +59,15 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     s.justExited = false;
     s.exitReason = null;
     const lean = input.steer ? Math.sign(input.steer) : stats.snaps % 2 === 0 ? 1 : -1;
-    if ((wantsGrind || grindEdge) && s.grindCooldown <= 0 && grindables.length) {
+    // Input buffer: a grind tap stays live for GRIND.buffer s, so a tap just
+    // before the rail comes in range still snaps.
+    s.grindBuffer = grindEdge ? k.grind.buffer : Math.max(0, (prev.grindBuffer ?? 0) - dt);
+    if ((wantsGrind || s.grindBuffer > 0) && s.grindCooldown <= 0 && grindables.length) {
       const snap = findSnap(grindables, s, k.grind);
       if (snap) {
         s = startGrind(s, snap, lean, k.grind);
+        s.grindBuffer = 0;
+        s.jumpBuffer = 0;
         s.tick = prev.tick + 1;
         stats.snaps += 1;
       }

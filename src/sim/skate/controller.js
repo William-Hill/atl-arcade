@@ -32,6 +32,7 @@ export function createSkateState({ position = [0, 0, 0], yaw = 0 } = {}) {
     pushCooldown: 0,
     airTime: 0,
     jumpHeld: false,
+    jumpBuffer: 0, // s left on a buffered jump press
     justLanded: false,
     justJumped: false,
     bonked: false,
@@ -86,15 +87,20 @@ export function stepSkate(prev, input = {}, dt, env = FLAT_GROUND, k = SKATE) {
     tick: prev.tick + 1,
   };
   const steer = Math.max(-1, Math.min(1, input.steer ?? 0));
+  // Input buffer: a jump press stays live for jumpBuffer s, so a press just
+  // before a landing jumps on the first frame on the ground.
   const jumpEdge = Boolean(input.jump) && !prev.jumpHeld;
   s.jumpHeld = Boolean(input.jump);
+  s.jumpBuffer = jumpEdge ? k.jumpBuffer : Math.max(0, (prev.jumpBuffer ?? 0) - dt);
+  const wantsJump = s.jumpBuffer > 0;
   s.pushCooldown = Math.max(0, prev.pushCooldown - dt);
 
   if (s.state === "rolling") {
-    stepRolling(s, { steer, push: Boolean(input.push), brake: Boolean(input.brake), jump: jumpEdge }, dt, env, k);
+    stepRolling(s, { steer, push: Boolean(input.push), brake: Boolean(input.brake), jump: wantsJump }, dt, env, k);
   } else {
-    stepAir(s, { steer, jump: jumpEdge }, dt, env, k);
+    stepAir(s, { steer, jump: wantsJump }, dt, env, k);
   }
+  if (s.justJumped) s.jumpBuffer = 0;
   if (env.bounds && env.spawn && isLost(s, env.bounds, k)) respawn(s, env.spawn);
   return s;
 }

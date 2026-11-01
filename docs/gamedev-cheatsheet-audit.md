@@ -14,7 +14,7 @@ This file compares each concept with the code. "Done" means the code has it now.
 | Fixed timestep | Partial | The sim runs at 60 Hz (`src/sim/fixed-step.js`). The render does not interpolate between the last two states, so a 144 Hz screen can show judder. Use the `alpha` fraction that `fixed-step.js` already gives. | M1 |
 | Acceleration and friction | Done (2026-10-31) | Stroke thrust and roll friction (`SKATE.pushAccel`, `coastDecel`, `coastDrag`). | — |
 | Coyote time | Done (2026-11-01) | A jump press up to 0.12 s after a roll off an edge still jumps (`SKATE.coyoteTime`). It gives one jump only, and only after a roll-off. | — |
-| Input buffering | Gap | A jump press just before a landing is lost. Keep the jump press for 0.1 s and fire it on the first grounded frame. Also buffer the grind button before a rail. | M1 |
+| Input buffering | Done (2026-11-01) | A jump press waits 0.1 s for the ground (`SKATE.jumpBuffer`). A grind tap stays live for 0.15 s (`GRIND.buffer`). | — |
 | Easing | Partial | The camera uses exponential smoothing. The HUD and the menus do not exist yet. Use easeOutCubic for UI moves. | M2 |
 | Screen shake | Gap | Add trauma-based shake (trauma squared times smooth noise) on a hard landing and on a bail. Keep it small and add an option to turn it off (accessibility). | M2 |
 | Squash and stretch | Not for this game | The skater is a rigged human. The land clip has a knee bend that does this job. | — |
@@ -50,6 +50,5 @@ This file compares each concept with the code. "Done" means the code has it now.
 
 ## Suggested next steps
 
-1. A jump and grind input buffer. This is a small change in `src/sim/skate/controller.js` with unit tests.
 2. Render interpolation with the fixed-step `alpha`.
 3. Instancing and LOD when the first real neighborhood loads (M1).

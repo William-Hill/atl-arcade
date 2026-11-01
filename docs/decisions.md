@@ -225,3 +225,10 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Decision: a jump press up to 0.12 s (`SKATE.coyoteTime`) after the skater rolls off an edge still jumps. The jump sets the vertical speed to `jumpSpeed` (plus any upward speed).
 - The window applies only when `airFrom` is "edge". A ramp launch, a grind exit, a fall, and a normal jump do not get it, so the player cannot jump twice.
 - Why: the gamedev cheat sheet audit (`docs/gamedev-cheatsheet-audit.md`) found that a late jump press at a ledge was lost.
+
+## 2026-11-01: Jump and grind input buffers (M1-02)
+
+- Decision: a jump press stays live for 0.1 s (`SKATE.jumpBuffer`). A press just before a landing jumps on the first frame on the ground. One press gives one jump.
+- A grind tap stays live for 0.15 s (`GRIND.buffer`). A tap just before a rail comes in range still snaps. A held grind button works as before.
+- A snap onto a rail clears both buffers, so an old press does not fire after the grind.
+- Why: the gamedev cheat sheet audit found that an early press was lost.

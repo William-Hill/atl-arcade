@@ -308,3 +308,48 @@ describe("coyote time", () => {
     expect(s.justJumped).toBe(false);
   });
 });
+
+describe("jump buffer", () => {
+  // A hop on flat ground. Returns the hop state and the frame count to the landing.
+  function hop() {
+    let s = stepSkate(roll(5), { jump: true }, DT);
+    let frames = 0;
+    while (s.state === "air" && frames < 200) {
+      s = stepSkate(s, {}, DT);
+      frames += 1;
+    }
+    return frames;
+  }
+
+  // Hop, then press jump `early` frames before the landing frame.
+  function pressBeforeLanding(early) {
+    const land = hop();
+    let s = stepSkate(roll(5), { jump: true }, DT);
+    const out = [];
+    for (let i = 1; i <= land + 3; i += 1) {
+      s = stepSkate(s, { jump: i === land - early }, DT);
+      out.push(s);
+    }
+    return out;
+  }
+
+  it("jumps on the first ground frame for a press just before the landing", () => {
+    const states = pressBeforeLanding(3);
+    expect(states.some((s) => s.justLanded)).toBe(true);
+    const landed = states.findIndex((s) => s.justLanded);
+    expect(states.slice(landed).some((s) => s.justJumped)).toBe(true);
+  });
+
+  it("drops a press made too long before the landing", () => {
+    const states = pressBeforeLanding(Math.ceil(SKATE.jumpBuffer / DT) + 3);
+    const landed = states.findIndex((s) => s.justLanded);
+    expect(landed).toBeGreaterThan(0);
+    expect(states.slice(landed).some((s) => s.justJumped)).toBe(false);
+  });
+
+  it("gives one jump for one press", () => {
+    let s = stepSkate(roll(5), { jump: true }, DT);
+    expect(s.justJumped).toBe(true);
+    expect(s.jumpBuffer).toBe(0);
+  });
+});

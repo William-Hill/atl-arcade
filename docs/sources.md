@@ -7,6 +7,7 @@ Every dataset that the game uses is listed here, with its license and the attrib
 | Dataset | Used for | License | Attribution | Where |
 |---|---|---|---|---|
 | OpenStreetMap, through the Overpass API (`https://overpass-api.de/api/interpreter`) | Building footprints and the height and level tags, street center lines, sidewalks, paths, the Atlanta BeltLine Eastside Trail, and parks in the `beltline-eastside` level | Open Database License (ODbL) 1.0, https://opendatacommons.org/licenses/odbl/1-0/ | "Map data (c) OpenStreetMap contributors", with a link to https://www.openstreetmap.org/copyright | Raw fetch: `levels/beltline-eastside/raw/overpass.json` and `raw/fetch.json` (query, endpoint, time, OSM base time). Derived level: `levels/beltline-eastside/level.json`. |
+| Overture Maps Foundation buildings, release `2026-10-21.0` (`s3://overturemaps-us-west-2/release/2026-10-21.0/theme=buildings/`) | The height (or floor count) of 912 OSM buildings in the `beltline-eastside` level that have no OSM height or levels tag. Only rows with an OpenStreetMap source are used; the 63 Microsoft ML rows are not. | ODbL 1.0 (the OSM-sourced part) | "Heights: Overture Maps Foundation" in the level attribution, next to the OSM attribution | `scripts/overture-heights.py` writes `levels/beltline-eastside/raw/overture.json`. `scripts/build-block.mjs` reads it. |
 
 ### OpenStreetMap: what the ODbL asks of us
 
@@ -24,7 +25,6 @@ Every dataset that the game uses is listed here, with its license and the attrib
 
 | Dataset | License | Why not now |
 |---|---|---|
-| Overture Maps buildings (`theme=buildings`) | ODbL 1.0 for the OSM part, CDLA Permissive 2.0 for other parts | Overture has many more building heights than OSM. A fetch needs GeoParquet from cloud storage (DuckDB or the `overturemaps` CLI), and neither is on this machine. A follow-up can add it as a second source for heights. |
 | City of Atlanta open data, building footprints | Check the license on the dataset page before use | The issue asks for a cross-check "when available". This task did not do the cross-check. |
 
 ## Art made for this project (not datasets)
@@ -34,6 +34,7 @@ Every dataset that the game uses is listed here, with its license and the attrib
 | Street kit (`assets/kit/street-kit.glb`) | Built from Blender primitives by `scripts/blender/street_kit.py`. See `assets/kit/provenance.json`. | Original work for this project |
 | Mural designs | Drawn in code from a fixed seed (`src/render/murals.js`) | Original work for this project |
 | Landmark scan textures (`assets/landmarks/textures/`) | Poly Haven `red_brick` (Rob Tuytel), `beige_wall_001` and `corrugated_iron` (Dimitrios Savva, Rico Cilliers, Jenelle van Heerden), resized and tinted by `scripts/landmark-textures.py`. See `assets/landmarks/textures/provenance.json`. | CC0 1.0 |
+| Ground scan textures (`assets/ground/`) | Poly Haven `asphalt_track`, `brushed_concrete_03`, `concrete_floor_03`, and `leafy_grass`, with the AO map multiplied in, by `scripts/ground-textures.py`. See `assets/ground/provenance.json`. | CC0 1.0 |
 
 ## Reference photos (not in the game)
 

@@ -20,6 +20,14 @@ describe("build-block tags", () => {
     expect(buildingHeight({ building: "yes", height: "50" })).toEqual({ height: 50, source: "height" });
     expect(buildingHeight({ building: "apartments", "building:levels": "5" })).toEqual({ height: 17, source: "levels" });
     expect(buildingHeight({ building: "house" })).toEqual({ height: 7, source: "default" });
+  });
+
+  it("uses the Overture height after the OSM tags and before the default", () => {
+    expect(buildingHeight({ building: "yes", height: "50" }, { height: 20 })).toEqual({ height: 50, source: "height" });
+    expect(buildingHeight({ building: "house" }, { height: 9.4 })).toEqual({ height: 9.4, source: "overture" });
+    expect(buildingHeight({ building: "shed" }, { height: 1.8 })).toEqual({ height: 2.5, source: "overture" });
+    expect(buildingHeight({ building: "yes" }, { height: null, floors: 3 })).toEqual({ height: 3 * 3.2 + 1, source: "overture" });
+    expect(buildingHeight({ building: "house" }, { height: null, floors: null })).toEqual({ height: 7, source: "default" });
     expect(buildingHeight({ building: "yes" }).source).toBe("default");
   });
 

@@ -139,11 +139,20 @@ export function parseHeight(text) {
   return unit === "ft" || unit === "'" || unit === "feet" ? n * 0.3048 : n;
 }
 
-export function buildingHeight(tags) {
+// The lowest Overture height to use. Lower values are sheds and carports;
+// 2.5 m keeps them from a flat, slab look.
+const MIN_OVERTURE_HEIGHT = 2.5;
+
+// The order: the OSM height tag, the OSM levels tag, the Overture height
+// (raw/overture.json, from scripts/overture-heights.py), the Overture floor
+// count, and last a default for the building type.
+export function buildingHeight(tags, overture = null) {
   const h = parseHeight(tags.height);
   if (h && h > 0) return { height: h, source: "height" };
   const levels = Number(tags["building:levels"]);
   if (Number.isFinite(levels) && levels > 0) return { height: levels * LEVEL_HEIGHT + 1, source: "levels" };
+  if (overture?.height > 0) return { height: Math.max(overture.height, MIN_OVERTURE_HEIGHT), source: "overture" };
+  if (overture?.floors > 0) return { height: overture.floors * LEVEL_HEIGHT + 1, source: "overture" };
   const t = tags.building;
   return { height: DEFAULT_HEIGHT[t] ?? FALLBACK_HEIGHT, source: "default" };
 }
@@ -265,7 +274,8 @@ function inBox([x, z], box) {
 
 // Turns the raw Overpass answer into the level data. Pure, so a test can
 // call it on a small fixture.
-export function buildLevel(raw, { bbox, name, title }) {
+// `overture` maps an OSM id ("w123") to { height, floors } (raw/overture.json).
+export function buildLevel(raw, { bbox, name, title, overture = null }) {
   const origin = bboxCenter(bbox);
   const proj = createProjection(origin);
   const project = (g) => g.map(({ lat, lon }) => proj.toLocal(lat, lon).map(round));
@@ -276,7 +286,7 @@ export function buildLevel(raw, { bbox, name, title }) {
   const buildings = [];
   const strips = [];
   const areas = [];
-  const counts = { height: 0, levels: 0, default: 0 };
+  const counts = { height: 0, levels: 0, overture: 0, default: 0 };
 
   function addPolygon(target, id, outerRings, innerRings, extra) {
     for (const [i, outerRaw] of outerRings.entries()) {
@@ -305,7 +315,7 @@ export function buildLevel(raw, { bbox, name, title }) {
         inners = joinRings(ways("inner"));
       }
       if (isBuilding) {
-        const { height, source } = buildingHeight(tags);
+        const { height, source } = buildingHeight(tags, overture?.[id]);
         const before = buildings.length;
         const extra = { height: round(height), heightSource: source };
         if (tags.name) extra.name = tags.name;
@@ -343,7 +353,9 @@ export function buildLevel(raw, { bbox, name, title }) {
     name,
     title,
     format: "geo-level/1",
-    attribution: "Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright",
+    attribution: overture
+      ? "Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright. Heights: Overture Maps Foundation"
+      : "Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright",
     bbox,
     origin,
     axes: "+x east, +y up, +z south; meters from the origin",
@@ -442,7 +454,11 @@ async function main() {
     writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
   }
 
-  const level = buildLevel(raw, { bbox, name, title });
+  // Building heights from Overture (scripts/overture-heights.py), when present.
+  const overtureFile = resolve(rawDir, "overture.json");
+  const overture = existsSync(overtureFile) ? JSON.parse(readFileSync(overtureFile, "utf8")).heights : null;
+  if (overture) console.log(`build-block: ${Object.keys(overture).length} Overture heights from ${overtureFile}`);
+  const level = buildLevel(raw, { bbox, name, title, overture });
   const outFile = resolve(outDir, "level.json");
   writeFileSync(outFile, `${JSON.stringify(level)}\n`);
   console.log(`build-block: wrote ${outFile}`);

@@ -51,9 +51,12 @@ describe("prop placement", () => {
   });
 
   it("puts no prop on a paved surface or in a building, and keeps 2.5 m between props", () => {
+    // A street sign may stand on a sidewalk, as a real sign does.
+    const sidewalkIds = new Set(LEVEL.strips.filter((s) => s.kind === "sidewalk").map((s) => s.id));
     for (const p of props) {
       const g = sample(p.x, p.z);
-      expect(g.id === "ground" || areaIds.has(g.id), `${p.kind} at ${p.x},${p.z} is on ${g.id}`).toBe(true);
+      const open = g.id === "ground" || areaIds.has(g.id) || (p.kind === "street_sign" && sidewalkIds.has(g.id));
+      expect(open, `${p.kind} at ${p.x},${p.z} is on ${g.id}`).toBe(true);
     }
     const sorted = props.slice().sort((a, b) => a.x - b.x);
     for (let i = 0; i < sorted.length; i += 1) {

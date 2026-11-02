@@ -17,6 +17,10 @@ import { createLevelEnv } from "./level/ground.js";
 import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { createGeoLights, createGeoView, loadKitTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
+import { QUALITY, qualityFor, rendererName } from "./render/quality.js";
+import { createSky } from "./render/sky.js";
+import { createPost } from "./render/post.js";
+import { createStreetSigns } from "./render/street-signs.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
 import { createLookInput } from "./input/look.js";
@@ -33,25 +37,39 @@ const skaterEnv = createSkaterEnv(level);
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
 const scene = new THREE.Scene();
+// The render tier (src/render/quality.js): low for a software GPU, high
+// for a real GPU. ?quality=low|high sets it.
+const gpuName = rendererName(renderer);
+const quality = geo ? qualityFor(params.get("quality"), gpuName) : "low";
+const tier = QUALITY[quality];
 // Draw distance on a geodata level. The fog ends at the far plane, so the
-// cut is not visible. 320 m keeps the playtest at 60 FPS in headless
-// SwiftShader with video capture on (see docs/decisions.md).
-const GEO_FAR = 320;
-const GEO_FOG_NEAR = 150;
+// cut is not visible. On the low tier, 320 m keeps the playtest at 60 FPS
+// in headless SwiftShader with video capture on (see docs/decisions.md).
+const GEO_FAR = tier.far;
+const GEO_FOG_NEAR = tier.fogNear;
 
 // A geodata level gets a day sky, a far fog, and a sun that follows the
 // skater. Its meshes are built once and shared with the physics.
 const geoMeshes = geo ? buildGeoMeshes(level) : null;
 let geoLights = null;
+let sky = null;
 if (geo) {
-  // No shadow map on a geodata level: in headless SwiftShader it halved the
+  // The low tier has no shadow map: in headless SwiftShader it halved the
   // frame rate. The kit trees carry a shadow disc and the skater a blob.
-  renderer.shadowMap.enabled = false;
-  scene.background = new THREE.Color(0x9fd4ff);
-  // ?fog=0 removes the fog (for an overview screenshot).
-  scene.fog = params.get("fog") === "0" ? null : new THREE.Fog(0x9fd4ff, GEO_FOG_NEAR, GEO_FAR);
-  geoLights = createGeoLights();
+  renderer.shadowMap.enabled = tier.shadows;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  if (tier.post) {
+    // Neutral tone mapping keeps the art colors and rolls off the bright sun.
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    renderer.toneMappingExposure = 1.05;
+  }
+  geoLights = createGeoLights({ shadowRadius: tier.shadows ? 70 : 45, shadowMapSize: tier.shadows ? 4096 : 2048 });
   scene.add(geoLights.group);
+  sky = createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
+  scene.add(sky.mesh);
+  scene.background = sky.fogColor.clone();
+  // ?fog=0 removes the fog (for an overview screenshot).
+  scene.fog = params.get("fog") === "0" ? null : new THREE.Fog(sky.fogColor, GEO_FOG_NEAR, GEO_FAR);
 } else {
   scene.background = new THREE.Color(0x10101c);
   scene.fog = new THREE.Fog(0x10101c, 60, 160);
@@ -69,6 +87,10 @@ if (attribution && level.attribution) {
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
 const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist") }) : createLevelView(level);
 scene.add(levelView.root);
+
+// Street name signs at the real intersections (src/level/geo/signs.js).
+const streetSigns = geo ? createStreetSigns(env.props.filter((p) => p.kind === "street_sign")) : null;
+if (streetSigns) scene.add(streetSigns.group);
 
 // Landmark models on the real roofs (img2threejs towers, rooftop signs).
 // ?landmarks=0 leaves them out.
@@ -94,7 +116,7 @@ scene.add(skaterView.group);
 
 // A blob shadow under the skater for a level with no shadow map.
 let blob = null;
-if (geo) {
+if (geo && !tier.shadows) {
   blob = new THREE.Mesh(
     new THREE.CircleGeometry(0.55, 16).rotateX(-Math.PI / 2),
     new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }),
@@ -145,8 +167,14 @@ if (view === "orbit") {
   camera.position.set(level.spawn.position[0] - 8, 6, level.spawn.position[2] + 10);
 }
 
-fitToWindow(renderer, camera);
-window.addEventListener("resize", () => fitToWindow(renderer, camera));
+// The high tier post chain (src/render/post.js).
+const post = tier.post ? createPost(renderer, scene, camera, { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8 }) : null;
+function resize() {
+  fitToWindow(renderer, camera);
+  if (post) post.setSize();
+}
+resize();
+window.addEventListener("resize", resize);
 
 const silhouette = createSilhouette(renderer);
 
@@ -291,7 +319,9 @@ function frame(now) {
     blob.position.set(skater.position[0], (g ? g.height : 0) + 0.02, skater.position[2]);
   }
   if (levelView.update) levelView.update(camera.position);
-  renderer.render(scene, camera);
+  if (sky) sky.update(camera, now / 1000);
+  if (post) post.render();
+  else renderer.render(scene, camera);
   frames += 1;
   if (recorder.active && frames % recorder.every === 0) {
     recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
@@ -305,6 +335,10 @@ requestAnimationFrame(frame);
 window.__atl = {
   shell: "skate-atl",
   ready: true,
+  quality,
+  gpu: gpuName,
+  // The post chain, to tune the effects from the console (high tier only).
+  post,
   level: {
     name: level.name,
     format: level.format ?? "greybox",
@@ -321,6 +355,7 @@ window.__atl = {
     get props() {
       return geo ? { ...levelView.props } : null;
     },
+    signs: streetSigns ? { count: streetSigns.count, names: streetSigns.names } : null,
     get landmarks() {
       return landmarks ? { ...landmarks.info } : null;
     },

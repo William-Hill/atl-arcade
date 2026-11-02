@@ -12,10 +12,15 @@
 //   path, the trail, or in a building. No two props are closer than 2.5 m.
 // - Roofs: roof units by roof area, and water towers on brick lofts and
 //   warehouses, from the building style.
+// - Street signs: one post at each intersection of two named streets
+//   (src/level/geo/signs.js), on a free corner. A sign may stand on a
+//   sidewalk, as a real sign does. Signs go first, so a tree never takes
+//   the corner.
 
 import { cleanRing, signedArea } from "./extrude.js";
 import { createGeoGroundSampler, pointInRings } from "./geo-ground.js";
 import { STYLES, chooseStyle, hash32, seededRandom } from "./styles.js";
+import { cornerSpots, shortName, streetIntersections } from "./signs.js";
 
 // Solid size of each prop for the ground sampler: radius and height in m.
 // Every height is over SKATE.maxStep, so a prop stops the skater.
@@ -26,6 +31,7 @@ export const PROP_SOLID = {
   bench: { r: 0.9, h: 0.75 },
   bin: { r: 0.35, h: 1.05 },
   bike_rack: { r: 0.8, h: 0.85 },
+  street_sign: { r: 0.12, h: 3.2 },
 };
 
 const MIN_GAP = 2.5;
@@ -63,11 +69,11 @@ function along(points, step, offset, fn) {
   }
 }
 
-function isOpen(sample, x, z, r, areaIds) {
+function isOpen(sample, x, z, r, openIds) {
   for (const [ox, oz] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]]) {
     const g = sample(x + ox, z + oz);
     if (!g) return false;
-    if (g.id !== "ground" && !areaIds.has(g.id)) return false;
+    if (g.id !== "ground" && !openIds.has(g.id)) return false;
   }
   return true;
 }
@@ -76,6 +82,8 @@ function isOpen(sample, x, z, r, areaIds) {
 // level without props.
 export function streetProps(level, sample) {
   const areaIds = new Set((level.areas ?? []).map((a) => a.id));
+  // A sign may also stand on a sidewalk.
+  const signIds = new Set([...areaIds, ...(level.strips ?? []).filter((s) => s.kind === "sidewalk").map((s) => s.id)]);
   const out = [];
   const taken = new Map();
   const key = (x, z) => `${Math.floor(x / MIN_GAP)},${Math.floor(z / MIN_GAP)}`;
@@ -89,16 +97,24 @@ export function streetProps(level, sample) {
     }
     return true;
   }
-  function put(kind, x, z, yaw = 0, scale = 1) {
+  function put(kind, x, z, yaw = 0, scale = 1, extra = null) {
     const solid = PROP_SOLID[kind];
-    if (!free(x, z) || !isOpen(sample, x, z, solid ? solid.r + 0.3 : 0.5, areaIds)) return false;
+    if (!free(x, z) || !isOpen(sample, x, z, solid ? solid.r + 0.3 : 0.5, kind === "street_sign" ? signIds : areaIds)) return false;
     const k = key(x, z);
     if (!taken.has(k)) taken.set(k, []);
     taken.get(k).push([x, z]);
     const p = { kind, x: Math.round(x * 100) / 100, y: 0, z: Math.round(z * 100) / 100, yaw: Math.round(yaw * 1000) / 1000 };
     if (scale !== 1) p.scale = Math.round(scale * 100) / 100;
+    if (extra) Object.assign(p, extra);
     out.push(p);
     return true;
+  }
+
+  // The blades point along the streets: yaws[i] turns the blade (+x) along
+  // street i.
+  for (const ix of streetIntersections(level)) {
+    const extra = { names: ix.names.map(shortName), yaws: ix.dirs.map(([dx, dz]) => Math.round(yawToward(dx, dz) * 1000) / 1000) };
+    for (const [x, z] of cornerSpots(ix)) if (put("street_sign", x, z, 0, 1, extra)) break;
   }
 
   const strips = (level.strips ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));

@@ -254,27 +254,29 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
 // shadow map cannot cover 2 km at a useful resolution. The shell turns the
 // shadow map off on a geodata level for speed; the light keeps the setup
 // for a faster machine.
-export function createGeoLights() {
+export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048 } = {}) {
   const group = new THREE.Group();
   group.add(new THREE.HemisphereLight(0xcfe8ff, 0x5a6a48, 0.7));
   const sun = new THREE.DirectionalLight(0xfff1d6, 1.5);
   const offset = new THREE.Vector3(30, 50, 20);
   sun.position.copy(offset);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  const r = 45;
+  sun.shadow.mapSize.set(shadowMapSize, shadowMapSize);
+  const r = shadowRadius;
   sun.shadow.camera.left = -r;
   sun.shadow.camera.right = r;
   sun.shadow.camera.top = r;
   sun.shadow.camera.bottom = -r;
   sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 160;
-  sun.shadow.bias = -0.0005;
+  sun.shadow.camera.far = 200;
+  sun.shadow.bias = -0.0004;
+  sun.shadow.normalBias = 0.04;
   group.add(sun);
   group.add(sun.target);
   return {
     group,
     sun,
+    sunDirection: offset.clone().normalize(),
     // Snap to whole meters, so the shadow edges do not shimmer.
     follow(x, z) {
       const sx = Math.round(x);

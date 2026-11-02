@@ -2,7 +2,7 @@
 import * as THREE from "three";
 import spec from "./object-sculpt-spec.json";
 import { createSignTexture } from "../../src/render/landmark-signs.js";
-import { applyBoxUVs, landmarkEnvironment, landmarkMaterials } from "../../src/render/landmark-materials.js";
+import { applyBoxUVs, landmarkEnvironment, landmarkMaterials, landmarkTexturesReady } from "../../src/render/landmark-materials.js";
 (window as any).__colors = Object.fromEntries((spec as any).materials.map((m: any) => [m.id, new THREE.Color(m.baseColor)]));
 import {
   configureKrogStreetMarketRenderer,
@@ -148,6 +148,8 @@ if (hidePart) {
 }
 // The capture scripts wait for a few drawn frames (window.__frames).
 (window as any).__frames = 0;
+// Draw only after the scan textures load, so the captures show them.
+await landmarkTexturesReady();
 renderer.setAnimationLoop(() => {
   renderer.render(scene, camera);
   (window as any).__frames += 1;

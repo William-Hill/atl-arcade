@@ -342,3 +342,14 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Triangles: the generator subdivides every box and uses 32 by 20 sphere segments. `post_generate.py` sets each box to 1 segment, the Ponce City Market hip roof to 4 segments, and the Krog Street Market bulbs to 12 by 8 segments. A decimate ratio of 0.0625 collapsed the boxes, so it is not used. The tower is 4732 triangles (from 27232), and the front 3584 (from 8824). The bulb patch came after the Krog Street Market optimization review; the in-game render was checked after it.
 - Size: `ponce-city-market-tower.json` is 1.33 MB (111 KB gzip). `krog-street-market-front.json` is 1.06 MB (84 KB gzip).
 - Known limits: the Krog Street Market roof profile extrudes 50 m back as a plain metal slab, so an oblique view shows a long flat roof. The canopy posts are not solid in the game.
+
+## 2026-11-02: Scanned textures on the landmarks (M2-01, #18)
+
+- Why: the research on the X links (`docs/research/2026-11-02-x-links-level-and-assets.md`) found that procedural noise reads as fake next to a real scan. William said "Yes, do the textures".
+- Source: 3 CC0 scan sets from Poly Haven: `red_brick` (brick, 1.4 m tile), `beige_wall_001` (stone trim, 3.0 m tile), and `corrugated_iron` (the Krog Street Market roof metal, 1.12 m tile). Each set has a color map, an OpenGL normal map, and a roughness map.
+- Build: `scripts/landmark-textures.py` downloads the 1k maps and writes 512 px maps to `assets/landmarks/textures/`. The script multiplies the color map by the AO map, so the material needs no AO map. It also tints the color map in linear space, so its mean color is the spec base color. The img2threejs color gate reads the spec base colors, so this tint keeps the models inside the gate. No pixel clipped.
+- Copper patina: Poly Haven has no CC0 patina scan. The copper keeps its canvas texture.
+- Tiles: the maps tile at the real scan size, through the world-meter box UVs (`applyBoxUVs`). The normal maps use the per-pixel tangent frame of three.js, because the box UVs have no tangents.
+- Load: `landmarkTexturesReady()` resolves when the maps load. The landmarks count in `info.towers` only after that, and the preview pages draw only after that, so the screenshots show the final look.
+- Size: 9 maps, 418 KB in the build. `npm run playtest:beltline` median 59.9 FPS, gate 55 PASS.
+- Not done: the OSM facade shader still draws flat brick, so the tower brick is more detailed than the brick of the buildings around it. The img2threejs passes were not run again; the unlit color gate does not read the maps.

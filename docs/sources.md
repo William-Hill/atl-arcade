@@ -33,6 +33,7 @@ Every dataset that the game uses is listed here, with its license and the attrib
 |---|---|---|
 | Street kit (`assets/kit/street-kit.glb`) | Built from Blender primitives by `scripts/blender/street_kit.py`. See `assets/kit/provenance.json`. | Original work for this project |
 | Mural designs | Drawn in code from a fixed seed (`src/render/murals.js`) | Original work for this project |
+| Landmark scan textures (`assets/landmarks/textures/`) | Poly Haven `red_brick` (Rob Tuytel), `beige_wall_001` and `corrugated_iron` (Dimitrios Savva, Rico Cilliers, Jenelle van Heerden), resized and tinted by `scripts/landmark-textures.py`. See `assets/landmarks/textures/provenance.json`. | CC0 1.0 |
 
 ## Reference photos (not in the game)
 

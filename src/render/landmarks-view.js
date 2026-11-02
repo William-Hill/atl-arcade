@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { landmarkPlacements } from "../level/geo/landmarks.js";
 import { createSignTexture } from "./landmark-signs.js";
-import { landmarkEnvironment, landmarkMaterials } from "./landmark-materials.js";
+import { landmarkEnvironment, landmarkMaterials, landmarkTexturesReady } from "./landmark-materials.js";
 
 // Past this distance (m) a landmark shows its flat, vertex-colored bake;
 // nearer, its physical-material groups.
@@ -100,7 +100,7 @@ export function createLandmarksView(level, { gradientMap = null, renderer = null
     const load = TEMPLATES[p.id];
     if (!load) continue;
     tasks.push(
-      Promise.all([load(), renderer ? landmarkEnvironment(renderer) : null]).then(([mod, envMap]) => {
+      Promise.all([load(), renderer ? landmarkEnvironment(renderer) : null]).then(async ([mod, envMap]) => {
         const t = mod.default ?? mod;
         const lod = new THREE.LOD();
         lod.name = `landmark-${p.id}`;
@@ -122,6 +122,9 @@ export function createLandmarksView(level, { gradientMap = null, renderer = null
         } else {
           lod.addLevel(far, 0);
         }
+        // Count the model only when its scan textures have loaded, so a
+        // screenshot that waits on `info.towers` shows the final look.
+        if (parts.length) await landmarkTexturesReady();
         lod.position.set(p.model.x, p.model.y, p.model.z);
         lod.rotation.y = p.model.yaw;
         root.add(lod);

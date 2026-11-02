@@ -1,9 +1,37 @@
 import * as THREE from "three";
+import brickInfo from "../../assets/landmarks/textures/brick/set.json";
+import trimInfo from "../../assets/landmarks/textures/trim/set.json";
+import metalInfo from "../../assets/landmarks/textures/metal/set.json";
 
-// Physical materials for the landmark models, from procedural canvas
-// textures: a color map, a bump map, and a roughness map per material. The
-// landmark preview pages (landmarks/*/preview.ts) and the game use this one
-// module, so the review judges the look that the game shows.
+// One static URL per file, so Vite bundles each map.
+const SCANS = {
+  brick: {
+    info: brickInfo,
+    color: new URL("../../assets/landmarks/textures/brick/color.jpg", import.meta.url).href,
+    normal: new URL("../../assets/landmarks/textures/brick/normal.jpg", import.meta.url).href,
+    rough: new URL("../../assets/landmarks/textures/brick/rough.jpg", import.meta.url).href,
+  },
+  trim: {
+    info: trimInfo,
+    color: new URL("../../assets/landmarks/textures/trim/color.jpg", import.meta.url).href,
+    normal: new URL("../../assets/landmarks/textures/trim/normal.jpg", import.meta.url).href,
+    rough: new URL("../../assets/landmarks/textures/trim/rough.jpg", import.meta.url).href,
+  },
+  metal: {
+    info: metalInfo,
+    color: new URL("../../assets/landmarks/textures/metal/color.jpg", import.meta.url).href,
+    normal: new URL("../../assets/landmarks/textures/metal/normal.jpg", import.meta.url).href,
+    rough: new URL("../../assets/landmarks/textures/metal/rough.jpg", import.meta.url).href,
+  },
+};
+
+// Physical materials for the landmark models. Brick, stone trim, and the
+// corrugated metal use CC0 scans from Poly Haven (assets/landmarks/textures/,
+// built by scripts/landmark-textures.py): a color map, an OpenGL normal map,
+// and a roughness map. The copper patina has no CC0 scan, so it keeps a
+// procedural canvas texture. The landmark preview pages
+// (landmarks/*/preview.ts) and the game use this one module, so the review
+// judges the look that the game shows.
 //
 // Every texture tiles in world meters: applyBoxUVs() projects each vertex on
 // the plane of its dominant normal axis, so one brick course or one copper
@@ -42,67 +70,38 @@ function hex(r, g, b) {
   return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
 }
 
-// Running-bond brick. One tile is 2 m by 2 m: 26 courses of about 7.7 cm,
-// bricks about 25 cm long, mortar about 1 cm.
-function brickSet(base = [126, 59, 51]) {
-  const size = 512;
-  const col = canvas(size);
-  const bump = canvas(size);
-  const rough = canvas(size);
-  const g = col.getContext("2d");
-  const b = bump.getContext("2d");
-  const r = rough.getContext("2d");
-  const rand = rng(1913);
-  g.fillStyle = "rgb(176, 166, 150)";
-  g.fillRect(0, 0, size, size);
-  b.fillStyle = "rgb(40, 40, 40)";
-  b.fillRect(0, 0, size, size);
-  r.fillStyle = "rgb(250, 250, 250)";
-  r.fillRect(0, 0, size, size);
-  const courses = 26;
-  const ch = size / courses;
-  const bw = size / 8;
-  const mortar = 2.5;
-  for (let row = 0; row < courses; row += 1) {
-    const offset = row % 2 ? bw / 2 : 0;
-    for (let k = -1; k < 9; k += 1) {
-      const x = k * bw + offset;
-      const y = row * ch;
-      const j = (rand() - 0.5) * 34;
-      const burnt = rand() < 0.12 ? -28 : 0;
-      g.fillStyle = hex(base[0] + j + burnt, base[1] + j * 0.5 + burnt * 0.6, base[2] + j * 0.4 + burnt * 0.5);
-      g.fillRect(x + mortar, y + mortar, bw - mortar * 2, ch - mortar * 2);
-      b.fillStyle = `rgb(${200 + Math.round(rand() * 40)}, 0, 0)`;
-      b.fillRect(x + mortar, y + mortar, bw - mortar * 2, ch - mortar * 2);
-      r.fillStyle = `rgb(${200 + Math.round(rand() * 30)}, 0, 0)`;
-      r.fillRect(x + mortar, y + mortar, bw - mortar * 2, ch - mortar * 2);
-    }
-  }
-  return { map: texture(col, { color: true, repeatMeters: 2 }), bumpMap: texture(bump, { repeatMeters: 2 }), roughnessMap: texture(rough, { repeatMeters: 2 }) };
+const loader = new THREE.TextureLoader();
+const pending = [];
+
+function scanTexture(url, { color = false, repeatMeters = 1 } = {}) {
+  let t;
+  // A texture that fails to load stays blank; the material still draws.
+  pending.push(new Promise((resolve) => {
+    t = loader.load(url, () => resolve(), undefined, () => resolve());
+  }));
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 8;
+  if (color) t.colorSpace = THREE.SRGBColorSpace;
+  t.repeat.set(1 / repeatMeters, 1 / repeatMeters);
+  return t;
 }
 
-// Smooth stone or painted trim, with a faint grain.
-function stoneSet(base = [220, 214, 202], seed = 7) {
-  const size = 256;
-  const col = canvas(size);
-  const bump = canvas(size);
-  const g = col.getContext("2d");
-  const b = bump.getContext("2d");
-  const rand = rng(seed);
-  g.fillStyle = hex(...base);
-  g.fillRect(0, 0, size, size);
-  b.fillStyle = "rgb(128, 128, 128)";
-  b.fillRect(0, 0, size, size);
-  for (let i = 0; i < 2200; i += 1) {
-    const x = rand() * size;
-    const y = rand() * size;
-    const d = (rand() - 0.5) * 24;
-    g.fillStyle = hex(base[0] + d, base[1] + d, base[2] + d);
-    g.fillRect(x, y, 2, 2);
-    b.fillStyle = `rgb(${128 + Math.round(d * 2)}, 0, 0)`;
-    b.fillRect(x, y, 2, 2);
-  }
-  return { map: texture(col, { color: true, repeatMeters: 1.5 }), bumpMap: texture(bump, { repeatMeters: 1.5 }) };
+// One scan set: color (with the AO and the spec color tint baked in), normal,
+// and roughness, tiled at the real size of the scan.
+function scanSet(id) {
+  const scan = SCANS[id];
+  const repeatMeters = scan.info.tileMeters;
+  return {
+    map: scanTexture(scan.color, { color: true, repeatMeters }),
+    normalMap: scanTexture(scan.normal, { repeatMeters }),
+    roughnessMap: scanTexture(scan.rough, { repeatMeters }),
+  };
+}
+
+// Resolves when the scan textures of the materials made so far have loaded.
+export function landmarkTexturesReady() {
+  return Promise.all(pending);
 }
 
 // Patinated copper: blue-green with darker vertical run-off streaks and
@@ -137,34 +136,6 @@ function copperSet(base = [126, 158, 154]) {
     b.fillStyle = "rgb(255, 255, 255)";
     b.fillRect(x, 0, 4, size);
   }
-  return { map: texture(col, { color: true, repeatMeters: 2 }), bumpMap: texture(bump, { repeatMeters: 2 }) };
-}
-
-// Corrugated metal: ribs every 7.5 cm, silver with soft streaks.
-function corrugatedSet(base = [188, 192, 196]) {
-  const size = 512;
-  const col = canvas(size);
-  const bump = canvas(size);
-  const g = col.getContext("2d");
-  const b = bump.getContext("2d");
-  const rand = rng(1920);
-  const ribs = 2 / 0.075;
-  const rw = size / ribs;
-  for (let x = 0; x < size; x += 1) {
-    const phase = (x % rw) / rw;
-    const s = Math.cos(phase * Math.PI * 2);
-    g.fillStyle = hex(base[0] + s * 10, base[1] + s * 10, base[2] + s * 10);
-    g.fillRect(x, 0, 1, size);
-    const v = Math.round(128 + s * 60);
-    b.fillStyle = `rgb(${v}, ${v}, ${v})`;
-    b.fillRect(x, 0, 1, size);
-  }
-  for (let i = 0; i < 40; i += 1) {
-    g.globalAlpha = 0.12;
-    g.fillStyle = rand() < 0.5 ? "rgb(120, 118, 112)" : "rgb(230, 232, 236)";
-    g.fillRect(rand() * size, rand() * size, 4 + rand() * 30, 40 + rand() * 200);
-  }
-  g.globalAlpha = 1;
   return { map: texture(col, { color: true, repeatMeters: 2 }), bumpMap: texture(bump, { repeatMeters: 2 }) };
 }
 
@@ -213,23 +184,24 @@ export function landmarkMaterials({ envMap = null, overhangs = null, baseY = 0 }
   const key = `${(overhangs ?? []).join(",")}@${baseY}`;
   if (caches.has(key)) return caches.get(key);
   let cache = null;
-  const brick = brickSet();
-  const stone = stoneSet();
+  const brick = scanSet("brick");
+  const stone = scanSet("trim");
   const copper = copperSet();
-  const metal = corrugatedSet();
+  const metal = scanSet("metal");
   const std = (opts) => new THREE.MeshStandardMaterial({ envMap, envMapIntensity: 0.6, ...opts });
   cache = {
-    brick: std({ ...brick, bumpScale: 0.6, roughness: 0.92, metalness: 0 }),
-    trim: std({ ...stone, bumpScale: 0.15, roughness: 0.8, metalness: 0 }),
+    // With a roughness map, `roughness` scales the map.
+    brick: std({ ...brick, normalScale: new THREE.Vector2(1, 1), roughness: 1, metalness: 0 }),
+    trim: std({ ...stone, normalScale: new THREE.Vector2(0.6, 0.6), roughness: 1, metalness: 0 }),
     "copper-patina": std({ ...copper, bumpScale: 0.8, roughness: 0.55, metalness: 0.35 }),
     gold: std({ color: 0xd4a93a, roughness: 0.3, metalness: 1 }),
     "glass-dark": std({ color: 0x24303c, roughness: 0.12, metalness: 0.2, envMapIntensity: 1.0 }),
     // Painted steel: little metalness, so the bright room environment does
     // not turn the black paint grey.
     steel: std({ color: 0x1e2023, roughness: 0.55, metalness: 0.1, envMapIntensity: 0.25 }),
-    // Corrugated metal: a soft bump, because the 7.5 cm ribs alias at a
+    // Corrugated metal: a soft normal, because the ribs alias at a
     // street-level distance with a strong one.
-    metal: std({ ...metal, bumpScale: 0.25, roughness: 0.5, metalness: 0.3, envMapIntensity: 0.35 }),
+    metal: std({ ...metal, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.8, metalness: 0.3, envMapIntensity: 0.35 }),
     brass: std({ color: 0xd8a848, roughness: 0.25, metalness: 1, emissive: 0x3a2808, emissiveIntensity: 0.6 }),
     "letters-white": std({ color: 0xf4f4f2, roughness: 0.5, metalness: 0 }),
     bulb: new THREE.MeshStandardMaterial({ color: 0xfff1c8, emissive: 0xffd27a, emissiveIntensity: 1.4, roughness: 0.4 }),

@@ -9,6 +9,8 @@ export const STYLES = [
   {
     id: "brick-loft",
     walls: [[0.62, 0.3, 0.24], [0.7, 0.36, 0.26], [0.55, 0.27, 0.22]],
+    // The facade shader adds the brick scan detail (assets/landmarks/textures/brick).
+    brick: true,
     trim: [0.9, 0.86, 0.78],
     glass: [0.2, 0.32, 0.42],
     floorHeight: 4.2,
@@ -22,6 +24,8 @@ export const STYLES = [
   {
     id: "brick-warehouse",
     walls: [[0.58, 0.28, 0.22], [0.66, 0.33, 0.25]],
+    // The facade shader adds the brick scan detail (assets/landmarks/textures/brick).
+    brick: true,
     trim: [0.84, 0.8, 0.72],
     glass: [0.18, 0.28, 0.36],
     floorHeight: 5,
@@ -155,6 +159,8 @@ export const STYLES = [
     // starts right on top of the brick.
     id: "brick-market-hall",
     walls: [[0.6, 0.29, 0.23]],
+    // The facade shader adds the brick scan detail (assets/landmarks/textures/brick).
+    brick: true,
     trim: [0.42, 0.4, 0.38],
     glass: [0.2, 0.3, 0.38],
     floorHeight: 6,

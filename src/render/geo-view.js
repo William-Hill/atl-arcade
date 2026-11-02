@@ -3,8 +3,12 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { buildGeoMeshes, buildPropMeshes } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 import { createMuralAtlas } from "./murals.js";
+import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 
 const KIT_URL = new URL("../../assets/kit/street-kit.glb", import.meta.url).href;
+// The CC0 brick scan (scripts/landmark-textures.py), shared with the
+// landmarks, so the buildings and the landmarks show the same brick.
+const BRICK_URL = new URL("../../assets/landmarks/textures/brick/color.jpg", import.meta.url).href;
 // Prop tile distances from the camera to the tile center (m). Under
 // PROP_LOD0_DISTANCE a tile shows its detailed props, under
 // PROP_DRAW_DISTANCE its simple props, and past that nothing.
@@ -44,16 +48,30 @@ export function geoGeometry(mesh) {
 // The facade shader: a toon material that draws windows, storefronts, and
 // cornices from the facade attribute (see src/level/geo/extrude.js). The
 // windows cost no geometry.
-export function createFacadeMaterial(gradientMap) {
+//
+// On a brick style the wall color gets the detail of the brick scan: the
+// scan divided by its mean color, so each building keeps its own wall color
+// and gets real brick courses, mortar, and brick-to-brick variation.
+export function createFacadeMaterial(gradientMap, { brickMap = null } = {}) {
   const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
   const n = STYLES.length;
-  const styleA = STYLES.map((s) => new THREE.Vector4(s.window[0], s.window[1], s.storefront ? 1 : 0, 0));
+  // styleA: window width and height (cell fractions), storefront, brick.
+  const styleA = STYLES.map((s) => new THREE.Vector4(s.window[0], s.window[1], s.storefront ? 1 : 0, s.brick ? 1 : 0));
+  // styleM: meters per bay and per floor, to tile the scan at its real size.
+  const styleM = STYLES.map((s) => new THREE.Vector2(s.bay, s.floorHeight));
+  // The scan's mean color (linear): its tint makes the mean the spec color.
+  const brickMean = new THREE.Color(brickInfo.targetHex);
   const glass = STYLES.map((s) => new THREE.Vector3(...s.glass));
   const trim = STYLES.map((s) => new THREE.Vector3(...s.trim));
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uStyleA = { value: styleA };
     shader.uniforms.uGlass = { value: glass };
     shader.uniforms.uTrim = { value: trim };
+    shader.uniforms.uStyleM = { value: styleM };
+    shader.uniforms.uBrick = { value: brickMap };
+    shader.uniforms.uBrickMean = { value: new THREE.Vector3(brickMean.r, brickMean.g, brickMean.b) };
+    shader.uniforms.uBrickTile = { value: brickInfo.tileMeters };
+    shader.uniforms.uBrickOn = { value: brickMap ? 1 : 0 };
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFacade = facade;");
@@ -64,7 +82,12 @@ export function createFacadeMaterial(gradientMap) {
 varying vec4 vFacade;
 uniform vec4 uStyleA[${n}];
 uniform vec3 uGlass[${n}];
-uniform vec3 uTrim[${n}];`,
+uniform vec3 uTrim[${n}];
+uniform vec2 uStyleM[${n}];
+uniform sampler2D uBrick;
+uniform vec3 uBrickMean;
+uniform float uBrickTile;
+uniform float uBrickOn;`,
       )
       .replace(
         "#include <color_fragment>",
@@ -91,20 +114,37 @@ uniform vec3 uTrim[${n}];`,
     float mull = win.x > 0.5 ? (1.0 - smoothstep(0.025 - aa.x, 0.025 + aa.x, abs(cell.x - 0.5))) * inWin : 0.0;
     vec3 glass = uGlass[st] + vec3(0.18 * cell.y) + vec3(0.12) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
     vec3 wallCol = diffuseColor.rgb;
+    // Brick detail: the scan over its mean, kept in a safe range. The far
+    // fade below turns it off where a brick is under a pixel.
+    float far0 = smoothstep(0.25, 0.6, max(aa.x, aa.y));
+    // Sample outside the branch, so the mipmap level stays correct.
+    vec3 detail = clamp(texture2D(uBrick, vFacade.yz * uStyleM[st] / uBrickTile).rgb / uBrickMean, 0.35, 2.2);
+    if (uBrickOn > 0.5 && a.w > 0.5) wallCol *= mix(detail, vec3(1.0), far0);
     vec3 col = mix(wallCol, uTrim[st], max(frame, sill) * 0.85);
     col = mix(col, glass, inWin);
     col = mix(col, uTrim[st], mull * 0.9);
     // Far away a window cell is under a few pixels: fade to the mean color,
     // so the grid does not shimmer.
-    float far = smoothstep(0.25, 0.6, max(aa.x, aa.y));
+    float far = far0;
     vec3 mean = mix(wallCol, uGlass[st] + vec3(0.09), win.x * win.y * 0.9);
     diffuseColor.rgb = mix(col, mean, far);
   }
 }`,
       );
   };
-  mat.customProgramCacheKey = () => "facade-v2";
+  mat.customProgramCacheKey = () => (brickMap ? "facade-v3-brick" : "facade-v2");
   return mat;
+}
+
+// The brick scan for the facade shader. It tiles by the shader's own meter
+// coordinates, so it needs only repeat wrap and mipmaps.
+function loadBrickMap() {
+  const t = new THREE.TextureLoader().load(BRICK_URL);
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
 }
 
 function addMesh(root, byId, name, geometry, material, { castShadow = false } = {}) {
@@ -158,7 +198,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   let muralMap = null;
   const materials = {
     surface: new THREE.MeshToonMaterial({ vertexColors: true, gradientMap }),
-    building: createFacadeMaterial(gradientMap),
+    building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap() }),
     props: new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp({ soft: true }) }),
     get mural() {
       if (!muralMap) muralMap = new THREE.MeshToonMaterial({ map: createMuralAtlas(), gradientMap });

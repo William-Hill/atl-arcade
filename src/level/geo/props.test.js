@@ -97,3 +97,8 @@ describe("prop placement", () => {
     expect(Math.cos(f)).toBeCloseTo(0, 9);
   });
 });
+
+it("only the brick styles get the brick scan detail on the facades", () => {
+  const brick = STYLES.filter((s) => s.brick).map((s) => s.id);
+  expect(brick).toEqual(["brick-loft", "brick-warehouse", "brick-market-hall"]);
+});

@@ -352,4 +352,13 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Tiles: the maps tile at the real scan size, through the world-meter box UVs (`applyBoxUVs`). The normal maps use the per-pixel tangent frame of three.js, because the box UVs have no tangents.
 - Load: `landmarkTexturesReady()` resolves when the maps load. The landmarks count in `info.towers` only after that, and the preview pages draw only after that, so the screenshots show the final look.
 - Size: 9 maps, 418 KB in the build. `npm run playtest:beltline` median 59.9 FPS, gate 55 PASS.
-- Not done: the OSM facade shader still draws flat brick, so the tower brick is more detailed than the brick of the buildings around it. The img2threejs passes were not run again; the unlit color gate does not read the maps.
+- Not done: the img2threejs passes were not run again; the unlit color gate does not read the maps.
+
+## 2026-11-02: Brick scan on the OSM building facades (M1-08 follow-up)
+
+- Why: after the landmark scans, the tower brick was more detailed than the brick of the buildings around it. William said "Yes, do facades".
+- What: the facade shader (`createFacadeMaterial` in `src/render/geo-view.js`) samples the same CC0 brick scan as the landmarks (`assets/landmarks/textures/brick/color.jpg`). It divides the scan by its mean color and multiplies the wall color by the result. Each building keeps its own wall color and gets brick courses, mortar, and brick-to-brick variation.
+- Where: only on the styles with `brick: true` (`brick-loft`, `brick-warehouse`, `brick-market-hall`). The church style has a white wall color too, so it has no flag.
+- Size: the shader turns the bay and floor coordinates into meters (style `bay` and `floorHeight`). It tiles the scan at its real size (1.4 m). A wall with a bay count rounded from its length gets up to about 25% stretch along the wall.
+- Far: the detail fades out with the same factor that fades the windows, so far walls do not shimmer.
+- No new file: the map is the one the landmarks load. `npm run playtest:beltline` median 59.9 FPS, gate 55 PASS.

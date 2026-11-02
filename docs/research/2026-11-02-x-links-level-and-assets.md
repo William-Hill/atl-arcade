@@ -87,12 +87,34 @@ Do not use these models, whatever the license:
 | [zavrenn](https://x.com/zavrenn/status/2116564845860360225): a small city in Three.js r187, built with Codex and no imported models | The video shows a plaza with a fountain, an elevated rail loop with a station, a gazebo pond, lamps, and cafe umbrellas. All of it is built in code. | Medium. It proves that code-built detail can reach this density in Three.js. The game already uses this approach. The lesson is density: many small props per plaza, and lit windows. |
 | [3DxDEV7](https://x.com/3DxDEV7/status/2116463999935975713): iCity, a Blender add-on that builds a city in about 30 s | Roads, towers, parks, a wet-road option, and a night mode with lit windows. | Low. It is a Blender add-on, and the game builds from OpenStreetMap data in JavaScript. Two ideas apply: a night mode with a random lit-window probability, and a wetness control. |
 | [matt503ea5sf9z5](https://x.com/matt503ea5sf9z5/status/2116766863631774206): a city tool in a custom Zig engine | A custom tool that builds buildings and moves streets. | Low. It confirms the pipeline in this repository: build the level from data with agents, with no scene editor. |
-| [alightinastorm](https://x.com/alightinastorm/status/2117066551316951380): "Vibe Human 2.0", a Three.js human creator | IK rig, procedural walk, clothing, and AI skins, built in a weekend. The author plans to open-source it. | Medium, later. It can be a source of more playable skaters (#42) if it becomes open source. No repository or license exists yet. Check again before #42. |
+| [alightinastorm](https://x.com/alightinastorm/status/2117066551316951380): "Vibe Human 2.0", a Three.js human creator | IK rig, procedural walk, clothing, and AI skins. The author ("robot 2.0") plans to open-source it. See the Vibe Human section below. | Low now. The code has no license, and version 2.0 is not public. |
 | [CY160909](https://x.com/CY160909/status/2116708301211599133): [Open 3D Skills](https://github.com/Moh4696/open-3d-skills) (MIT) | 8 agent skills: three.js scenes, scroll films, exploded views, browser checks, and 60 fps recording. | Medium. The `frame-capture` skill (60 fps recording) can make the trailer and playtest videos. The browser-check skill overlaps with the Playwright checks here. Install with `npx skills add Moh4696/open-3d-skills --skill <name>`. |
 | [repalash](https://x.com/repalash/status/2116478976013255020): [three-motionbricks](https://github.com/repalash/three-motionbricks) (Apache-2.0) | NVIDIA MotionBricks in Three.js: a robot that walks and runs, with the motion generated in the browser. | Low now. The model is 190 MB (194 MB on phones), and it drives a Unitree G1 robot, not a human skater. The NVIDIA Open Model Agreement covers the model weights. The sample motions are for evaluation only. The "white city" demo shows a clean, low-detail city look. |
 | [NicolasZu](https://x.com/NicolasZu/status/2116601766410326177): [gamedev-cheatsheet.com](https://gamedev-cheatsheet.com/) | 34 game development concepts with example prompts: game feel (coyote time, easing, screen shake, squash and stretch, camera deadzone, input buffering, hit stop) and performance (LOD, draw calls, chunk streaming). | Medium. Use the vocabulary in prompts and issues. The game feel concepts apply to the skate controller. Chunk streaming applies when the level grows past one block. |
 | [cutetoxicguy](https://x.com/cutetoxicguy/status/2116530826586263715): [Construct 1.0](https://github.com/rtmandreyev/construct) (Apache-2.0; Blender add-on GPL-3.0) | An agent researches a real object (dimensions, photos), writes a structured scene, and a deterministic engine builds it. Each detail has a provenance label: verified, supplied, inferred, or decorative. It exports GLB with named parts and joints. | High as a method. It is the same idea as img2threejs, plus a research step for real dimensions and a provenance label on each part. Add the provenance labels to the landmark specs, so a reviewer sees which dimensions come from a source. The Construct models are holographic blockouts, so the game does not use them directly. |
 | [PermitZIPhvac](https://x.com/PermitZIPhvac/status/2117049163976245282): Mutiny BIM | A recruitment post for an open BIM (building information) tool. | None for the game. |
+
+## Vibe Human (follow-up search, 2026-11-02)
+
+- Repository: [vibe-stack/vibe-human](https://github.com/vibe-stack/vibe-human), TypeScript, React, and Vite. It has 31 stars and was created 2026-05-03. The last push was 2026-05-25.
+- Live demo: https://vibe-stack.github.io/vibe-human/ (HTTP 200 on 2026-11-02).
+- License: none. The repository has no LICENSE file, and the README is the default Vite template. With no license, all rights stay with the author, so the game cannot use the code.
+- Version 2.0 (the 2026-11-02 video) is not in the repository. The last public code is from May. Earlier posts describe:
+  - textures from GPT Image 2;
+  - facial expressions and target locking written in code;
+  - hair drawn as curves and card meshes;
+  - cloth collision with a triangle BVH.
+- The video shows realistic humans. Skate ATL uses a toon look, so the style does not match without a new shader.
+- Action: check again before #42 (second skater). Use it only if the author publishes it with an open license.
+
+## Use now: status of each method (2026-11-02)
+
+| Method | Use now? | Why |
+|---|---|---|
+| PBR textures from real scans | Yes | Poly Haven has CC0 PBR sets that fit the landmarks: `brick_wall_001` to `brick_wall_09`, `concrete_wall_001`, `corrugated_iron` to `corrugated_iron_03`. Each set has color, normal, roughness, and AO maps. They can replace the canvas maps in `src/render/landmark-materials.js` at 1k, and the facade shader brick later. The article's alignment step is not needed, because a scan set is already aligned. It applies only to maps made with image generation. |
+| Construct | Yes, as a method | Apache-2.0, no Python packages, created 2026-10-24 (more than 7 days). The useful part is the provenance label per part (verified, supplied, inferred, decorative). It can go into the img2threejs landmark specs. Construct models are plain blockouts with no textures, so they do not go into the game. |
+| Open 3D Skills | Not yet | The repository was created 2026-10-31, which is 2 days old. The project rule is 7 days, and this project applied that rule to img2threejs, a tool, too. The first date for use is 2026-11-07. |
+| Game dev cheat sheet | Yes | The skate controller already has coyote time and a jump buffer (`src/sim/skate/constants.js`), input deadzones (`src/input/mapping.js`), and a camera deadzone (`src/sim/camera.js`). Missing: screen shake, hit stop, and squash and stretch on a hard landing or a trick landing. Those are small game-feel tasks for the skate controller and the camera. |
 
 ## Recommended next steps
 

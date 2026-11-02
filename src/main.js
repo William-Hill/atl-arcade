@@ -88,7 +88,7 @@ if (attribution && level.attribution) {
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: quality === "high", markings: quality === "high" && params.get("markings") !== "0" }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: quality === "high", markings: quality === "high" && params.get("markings") !== "0", kit: quality === "high" && params.get("kit") !== "0", interiors: quality === "high" && params.get("interiors") !== "0" }) : createLevelView(level);
 scene.add(levelView.root);
 
 // Street name signs at the real intersections (src/level/geo/signs.js).
@@ -361,6 +361,7 @@ window.__atl = {
       return geo ? { ...levelView.props } : null;
     },
     signs: streetSigns ? { count: streetSigns.count, names: streetSigns.names } : null,
+    kit: geo ? levelView.kit : null,
     get landmarks() {
       return landmarks ? { ...landmarks.info } : null;
     },

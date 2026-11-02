@@ -11,7 +11,7 @@ Direction: "Stylized high-end", picked by William. The target is the Jet Set Rad
 | Street names | 95 signs at the real intersections | Yes, OpenStreetMap |
 | Building footprints | 1045, real shapes and positions | Yes, OpenStreetMap |
 | Building heights | 21 from OSM tags, 912 from Overture, 112 defaults | Mostly (Overture heights are estimates) |
-| Building look | Extruded footprints, shader windows, brick scan on brick styles | No. A style is chosen by rules, not from photos |
+| Building look | Extruded footprints; high tier: interior-mapped windows, cornices, copings, belt courses, gable roofs on houses | No. A style is chosen by rules, not from photos |
 | Landmarks | Ponce City Market tower and Krog Street Market front, hand-modeled | From reference photos |
 | Ground | Asphalt, concrete, trail, and grass scans; center lines and crosswalks | Markings follow real street classes |
 | Props | Trees, lamps, benches, bins, bike racks, roof units, placed by rules | Positions follow real streets, not a survey |
@@ -33,7 +33,7 @@ These are the gaps, from the largest to the smallest effect on the screen:
 
 Each step is a separate issue. Each step keeps the low tier at the 55 FPS gate.
 
-1. **Facade kit (largest effect).**
+1. **Facade kit (largest effect).** Done on 2026-11-02 for the high tier: interior mapping, cornices, copings, belt courses, and gable roofs. Still open: instanced window sills and storefront frames, balconies, and the Overture `roof_shape`.
    - Replace the painted windows with an interior-mapping shader: each window shows a fake room with depth, at no geometry cost.
    - Add real geometry for each style: window recesses and sills, a cornice, storefront frames, and parapets. Use instanced modules along the bays, so the cost stays low.
    - Use the Overture `roof_shape` where it exists (only 2 of 1077 buildings have one now), and pitched roofs for houses by type.

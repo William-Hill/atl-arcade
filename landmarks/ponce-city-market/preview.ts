@@ -82,11 +82,20 @@ if (params.get("bake") === "1") {
   const normals: number[] = [];
   const colors: number[] = [];
   const indices: number[] = [];
+  // Letter cards keep their text: the game draws them with a canvas texture.
+  const cards: any[] = [];
   model.updateMatrixWorld(true);
   const nm = new THREE.Matrix3();
   model.traverse((o: any) => {
     if (!o.isMesh || !isShown(o)) return;
-    const g = o.geometry.index ? o.geometry : o.geometry;
+    const sc = o.userData?.sculptComponent;
+    if (sc?.canvasText) {
+      const c = new THREE.Vector3();
+      o.getWorldPosition(c);
+      cards.push({ ...sc.canvasText, width: sc.dimensions.width, height: sc.dimensions.height, position: [+c.x.toFixed(3), +c.y.toFixed(3), +c.z.toFixed(3)] });
+      return;
+    }
+    const g = o.geometry;
     const pos = g.attributes.position;
     const nor = g.attributes.normal;
     nm.getNormalMatrix(o.matrixWorld);
@@ -106,5 +115,5 @@ if (params.get("bake") === "1") {
     if (g.index) for (let i = 0; i < g.index.count; i += 1) indices.push(base + g.index.getX(i));
     else for (let i = 0; i < pos.count; i += 1) indices.push(base + i);
   });
-  (window as any).__bake = { positions, normals, colors, indices };
+  (window as any).__bake = { positions, normals, colors, indices, cards };
 }

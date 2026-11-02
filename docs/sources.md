@@ -41,7 +41,7 @@ These photos are visual references for landmark models. No pixels of them are in
 | Photo | Author | License | Used for |
 |---|---|---|---|
 | [Ponce City Market from Historic Fourth Ward Park](https://commons.wikimedia.org/wiki/File:Ponce_City_Market_from_Historic_Fourth_Ward_Park.jpg) | Tyler Lahti | CC BY-SA 2.0 | The tower top of `assets/landmarks/ponce-city-market-tower.json`. A 1280 px copy and small crops are in `landmarks/ponce-city-market/ref/` and `crops/`, under the same license. |
-| [Krog Street Market](https://commons.wikimedia.org/wiki/File:Krog_Street_Market.jpg) | LittleT889 | CC BY-SA 4.0 | Downloaded for the next landmark. Not used yet. |
+| [Krog Street Market](https://commons.wikimedia.org/wiki/File:Krog_Street_Market.jpg) | LittleT889 | CC BY-SA 4.0 | The entrance front of `assets/landmarks/krog-street-market-front.json`. A 1280 px copy and small crops are in `landmarks/krog-street-market/ref/` and `crops/`, under the same license. |
 
 ## Code libraries (not datasets)
 

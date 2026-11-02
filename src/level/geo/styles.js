@@ -150,6 +150,22 @@ export const STYLES = [
     roof: {},
   },
   {
+    // Krog Street Market: brick walls, shop windows, and no parapet, because
+    // the metal sawtooth roof (assets/landmarks/krog-street-market-front.json)
+    // starts right on top of the brick.
+    id: "brick-market-hall",
+    walls: [[0.6, 0.29, 0.23]],
+    trim: [0.42, 0.4, 0.38],
+    glass: [0.2, 0.3, 0.38],
+    floorHeight: 6,
+    bay: 4.2,
+    window: [0.62, 0.5],
+    parapet: 0,
+    storefront: true,
+    awnings: 0,
+    roof: { roof_unit: 1 / 700 },
+  },
+  {
     id: "garage",
     walls: [[0.78, 0.76, 0.72], [0.66, 0.6, 0.56]],
     trim: [0.9, 0.9, 0.9],
@@ -226,7 +242,7 @@ const BY_TYPE = {
 // Roebuck brick warehouse; Krog Street Market is a 1920s brick warehouse.
 const BY_NAME = [
   [/ponce city market/i, "brick-warehouse"],
-  [/krog street market/i, "brick-warehouse"],
+  [/krog street market/i, "brick-market-hall"],
   [/ford factory/i, "brick-loft"],
   [/stove works/i, "brick-loft"],
   [/studioplex/i, "brick-loft"],

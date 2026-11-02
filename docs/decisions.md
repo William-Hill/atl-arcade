@@ -314,4 +314,16 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Result: blockout (0.72), structural (0.72), and form (0.74) passed. The material pass stopped at `request-input`: Tier 1 groups the render into at most 5 colors (k-means k=5), and the tower has 6 part colors, so the small gold finial never forms a group (delta-E 45.81). Changing the gold or enlarging the finial to pass would bend the model to the tool, so the model stays at the form-pass level.
 - Game: `scripts/bake-landmark.mjs` bakes the factory into one vertex-colored template (`assets/landmarks/ponce-city-market-tower.json`, 1704 triangles, 110 KB). The game does not bundle the 470 KB factory. `src/level/geo/landmarks.js` places the tower near the north edge of the real roof and the sign on the east edge, facing the trail. Both positions are approximate.
 - The tower is at its real size (8 m wide, 21 m above the roof), so it reads small on the 238 m by 188 m OSM footprint.
-- Not done: Krog Street Market (the reference photo is downloaded), and the lighting, interaction, and optimization passes.
+- Not done: the lighting, interaction, and optimization passes.
+
+## 2026-11-02: Krog Street Market front with img2threejs (M2-01, #18)
+
+- Reference: one Wikimedia Commons photo (LittleT889, CC BY-SA 4.0), a street-level view of the entrance. Scale from the brick wall: about 30 px per meter.
+- Scope: the parts above and on the brick box. A sawtooth metal roof profile (extruded 50 m back), the black canopy with its truss, 2 posts, 5 brass pendants, and 2 letter cards ("KROG STREET" on a transparent card, "MARKET" on the fascia). The OSM box and a new "brick-market-hall" style (no parapet) give the brick walls.
+- A close crop corrected the first analysis: the roof is a sawtooth (a rise to a vertical step, a fall, and a tall rise), not 2 gables.
+- The letter cards keep their text through the bake (`cards` in the template), and the game draws them with `createSignTexture`. "KROG STREET" uses a condensed font (DIN Condensed, then Arial Narrow, then Impact).
+- Placement: the front faces east, to the parking drive. On the west side, the OSM data has a sidewalk and Krog Street within 6 m, so a canopy there would hang over the street. Approximate.
+- Review camera: the photo's own camera (about 1.6 m high, 36 m out, a 10.6 degree lens), so the render frames the crop.
+- Tier 1 masks: neither the Ponce City Market nor the first Krog Tier 1 runs isolated the subject. Both masks fell back to almost the whole frame, so the silhouette IoU read 1.0. Those silhouette passes were not real evidence. With a transparent reference mask and a transparent render, the Krog front measured IoU 0.534, which led to the canopy truss (IoU 0.788). The Ponce City Market tower was not measured again this way.
+- Result: blockout (0.72), structural (0.72), and form (0.73) passed. The material pass stopped at `request-input` on the same Tier 1 color limit: the 5 brass pendants are too small to form one of the 5 color groups (delta-E 55.78).
+- Size in the game: 472 triangles, 3.6 KB gzip.

@@ -23,7 +23,7 @@ describe("building styles", () => {
     const used = new Set(LEVEL.buildings.map(chooseStyle));
     expect(used.size).toBeGreaterThanOrEqual(10);
     expect(chooseStyle(LEVEL.buildings.find((b) => b.name === "Ponce City Market"))).toBe("brick-warehouse");
-    expect(chooseStyle(LEVEL.buildings.find((b) => b.name === "Krog Street Market"))).toBe("brick-warehouse");
+    expect(chooseStyle(LEVEL.buildings.find((b) => b.name === "Krog Street Market"))).toBe("brick-market-hall");
   });
 
   it("is deterministic: the same id gives the same style, color, and random numbers", () => {

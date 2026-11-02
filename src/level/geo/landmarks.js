@@ -6,6 +6,9 @@
 
 import { pointInRings } from "./geo-ground.js";
 
+// model.base: "roof" stands the model on the roof (y = building height);
+// "ground" stands it on the ground with its front (+z, z = 0) on the wall
+// line of `side`, facing out.
 export const LANDMARKS = [
   {
     id: "ponce-city-market",
@@ -13,8 +16,18 @@ export const LANDMARKS = [
     // The tower stands near the north edge (Ponce de Leon Avenue side),
     // and the sign stands on the east edge, facing the BeltLine trail.
     // Both are approximate: the photo is one aerial view.
-    tower: { side: [0, -1], inset: 14 },
+    model: { side: [0, -1], inset: 14, base: "roof" },
     sign: { side: [1, 0], inset: 6, text: "PONCE CITY MARKET", width: 36, height: 5.5 },
+  },
+  {
+    id: "krog-street-market",
+    buildingName: "Krog Street Market",
+    // The entrance front faces east, to the parking drive: the photo shows a
+    // parking drive in front of it, and the OSM data has open ground then a
+    // service road on the east side, but a sidewalk and Krog Street within
+    // 6 m on the west side. Approximate. The model holds its own letters,
+    // so there is no separate sign.
+    model: { side: [1, 0], inset: 14, base: "ground" },
   },
 ];
 
@@ -83,24 +96,44 @@ export function edgeAnchor(b, side, inset) {
   return best ? [best.x, best.z] : null;
 }
 
-// Returns [{ id, building, tower: { x, y, z }, sign: { x, y, z, yaw, ... } }]
+// From `start`, the last inside point on the line toward `side`: a point on
+// the wall. 0.25 m steps.
+export function wallPoint(b, side, start) {
+  const rings = [b.outer, ...(b.holes ?? [])];
+  let last = start;
+  for (let d = 0; d < 1000; d += 0.25) {
+    const p = [start[0] + side[0] * d, start[1] + side[1] * d];
+    if (!pointInRings(p[0], p[1], rings)) break;
+    last = p;
+  }
+  return last;
+}
+
+// Returns [{ id, building, model: { x, y, z, yaw }, sign?: { x, y, z, yaw, ... } }]
 // for every landmark whose building is in the level.
 export function landmarkPlacements(level) {
   const out = [];
   for (const lm of LANDMARKS) {
     const b = (level.buildings ?? []).find((x) => x.name === lm.buildingName);
     if (!b) continue;
-    const t = edgeAnchor(b, lm.tower.side, lm.tower.inset);
-    const s = edgeAnchor(b, lm.sign.side, lm.sign.inset);
-    if (!t || !s) continue;
-    // Yaw that turns the sign's +z face (the letters) toward `side`.
-    const yaw = Math.atan2(lm.sign.side[0], lm.sign.side[1]);
-    out.push({
-      id: lm.id,
-      building: b.id,
-      tower: { x: t[0], y: b.height, z: t[1] },
-      sign: { x: s[0], y: b.height, z: s[1], yaw, text: lm.sign.text, width: lm.sign.width, height: lm.sign.height },
-    });
+    const a = edgeAnchor(b, lm.model.side, lm.model.inset);
+    if (!a) continue;
+    let model;
+    if (lm.model.base === "ground") {
+      const w = wallPoint(b, lm.model.side, a);
+      // Yaw that turns the model's +z (its front) toward `side`.
+      model = { x: w[0], y: 0, z: w[1], yaw: Math.atan2(lm.model.side[0], lm.model.side[1]) };
+    } else {
+      model = { x: a[0], y: b.height, z: a[1], yaw: 0 };
+    }
+    const entry = { id: lm.id, building: b.id, model };
+    if (lm.sign) {
+      const s = edgeAnchor(b, lm.sign.side, lm.sign.inset);
+      if (s) {
+        entry.sign = { x: s[0], y: b.height, z: s[1], yaw: Math.atan2(lm.sign.side[0], lm.sign.side[1]), text: lm.sign.text, width: lm.sign.width, height: lm.sign.height };
+      }
+    }
+    out.push(entry);
   }
   return out;
 }

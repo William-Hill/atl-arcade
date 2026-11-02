@@ -9,7 +9,23 @@ import { createSignTexture } from "./landmark-signs.js";
 
 const TEMPLATES = {
   "ponce-city-market": () => import("../../assets/landmarks/ponce-city-market-tower.json"),
+  "krog-street-market": () => import("../../assets/landmarks/krog-street-market-front.json"),
 };
+
+// A letter card from a baked template (text, colors, size, position).
+function cardMesh(card) {
+  const transparent = card.background === "transparent";
+  const map = createSignTexture(card.text, {
+    color: card.color,
+    background: card.background,
+    condensed: transparent,
+    height: Math.round((2048 * card.height) / card.width),
+  });
+  const mat = new THREE.MeshToonMaterial({ map, transparent, alphaTest: 0.5, side: THREE.DoubleSide });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(card.width, card.height), mat);
+  mesh.position.set(...card.position);
+  return mesh;
+}
 
 function templateGeometry(t) {
   const g = new THREE.BufferGeometry();
@@ -48,20 +64,26 @@ function signMesh(sign) {
 export function createLandmarksView(level, { gradientMap = null } = {}) {
   const root = new THREE.Group();
   root.name = "landmarks";
+  // `towers` counts every landmark model (towers and fronts).
   const info = { towers: 0, signs: 0, triangles: 0 };
   const tasks = [];
   for (const p of landmarkPlacements(level)) {
-    root.add(signMesh(p.sign));
-    info.signs += 1;
+    if (p.sign) {
+      root.add(signMesh(p.sign));
+      info.signs += 1;
+    }
     const load = TEMPLATES[p.id];
     if (!load) continue;
     tasks.push(
       load().then((mod) => {
         const t = mod.default ?? mod;
-        const mesh = new THREE.Mesh(templateGeometry(t), new THREE.MeshToonMaterial({ vertexColors: true, gradientMap }));
-        mesh.name = `landmark-${p.id}`;
-        mesh.position.set(p.tower.x, p.tower.y, p.tower.z);
-        root.add(mesh);
+        const group = new THREE.Group();
+        group.name = `landmark-${p.id}`;
+        group.add(new THREE.Mesh(templateGeometry(t), new THREE.MeshToonMaterial({ vertexColors: true, gradientMap })));
+        for (const card of t.cards ?? []) group.add(cardMesh(card));
+        group.position.set(p.model.x, p.model.y, p.model.z);
+        group.rotation.y = p.model.yaw;
+        root.add(group);
         info.towers += 1;
         info.triangles += t.indices.length / 3;
       }),

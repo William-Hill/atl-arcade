@@ -1,0 +1,2041 @@
+{
+  "schemaVersion": 1,
+  "kind": "img2threejs.material-analysis",
+  "referenceId": "krog-front",
+  "manifest": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-regions.json",
+  "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+  "targetThreshold": 0.7,
+  "notObservedMaterials": [],
+  "unresolvedNotObservedMaterials": [],
+  "regions": [
+    {
+      "componentId": "roof-profile",
+      "regionId": "metal",
+      "materialSpecId": "metal",
+      "hypothesis": {
+        "componentId": "roof-profile",
+        "regionId": "metal",
+        "materialId": null,
+        "family": "metal",
+        "subtype": "aluminum",
+        "finish": "satin",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "metal.aluminum",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 0.829,
+        "method": "family-subtype-finish",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "metal",
+            "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal",
+            "palette": [
+              "#7C92AF",
+              "#98C1F9",
+              "#5E708A",
+              "#9CC4FA",
+              "#1E2634"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_albedo.png",
+                "url": "metal_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_roughness.png",
+                "url": "metal_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_height.png",
+                "url": "metal_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_normal.png",
+                "url": "metal_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_ao.png",
+                "url": "metal_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 340,
+              "sourceHeight": 140,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 340,
+                "height": 140
+              },
+              "mask": {
+                "backgroundColor": "#778EAD",
+                "backgroundNoise": 52.621,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.981
+              },
+              "mapStats": {
+                "valueRange": 0.5196,
+                "heightP90Gradient": 0.13322,
+                "roughnessBase": 0.722,
+                "roughnessVariation": 0.217,
+                "normalStrength": 0.312,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#7C92AF",
+                "#98C1F9",
+                "#5E708A",
+                "#9CC4FA",
+                "#1E2634"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#97BEF3",
+              "#88ABDB",
+              "#83A0CA",
+              "#575C64",
+              "#6F839E"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#97BEF3",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  243,
+                  190,
+                  151
+                ]
+              },
+              {
+                "stop": "#88ABDB",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  219,
+                  171,
+                  136
+                ]
+              },
+              {
+                "stop": "#83A0CA",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  202,
+                  160,
+                  131
+                ]
+              },
+              {
+                "stop": "#6F839E",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  158,
+                  131,
+                  111
+                ]
+              }
+            ],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 149.1,
+              "meanSaturation": 0.343,
+              "gradientStrength": 0.642,
+              "mottle": 0.047,
+              "streakRatio": 2.39,
+              "hueSpread": 0.001,
+              "specularFraction": 0.0
+            }
+          }
+        },
+        "profileId": "metal.aluminum",
+        "family": "metal",
+        "subtype": "aluminum",
+        "finish": "satin",
+        "renderPrior": {
+          "metalness": 1.0,
+          "roughness": 0.3,
+          "anisotropy": 0.2
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "anisotropyMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "grazing"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "bright neutral conductor",
+          "soft satin highlight unless polished",
+          "often fine machining direction"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "directional surface frequency",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+        "bbox": {
+          "x": 913,
+          "y": 1134,
+          "width": 340,
+          "height": 140
+        },
+        "sourceWidth": 4032,
+        "sourceHeight": 3024,
+        "loaderWarnings": [],
+        "coverage": 0.0039
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#97BEF3",
+          "#88ABDB",
+          "#83A0CA",
+          "#575C64",
+          "#6F839E"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#97BEF3",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              243,
+              190,
+              151
+            ]
+          },
+          {
+            "stop": "#88ABDB",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              219,
+              171,
+              136
+            ]
+          },
+          {
+            "stop": "#83A0CA",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              202,
+              160,
+              131
+            ]
+          },
+          {
+            "stop": "#6F839E",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              158,
+              131,
+              111
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 149.1,
+          "meanSaturation": 0.343,
+          "gradientStrength": 0.642,
+          "mottle": 0.047,
+          "streakRatio": 2.39,
+          "hueSpread": 0.001,
+          "specularFraction": 0.0
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "metal",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+        "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal",
+        "palette": [
+          "#7C92AF",
+          "#98C1F9",
+          "#5E708A",
+          "#9CC4FA",
+          "#1E2634"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_albedo.png",
+            "url": "metal_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_roughness.png",
+            "url": "metal_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_height.png",
+            "url": "metal_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_normal.png",
+            "url": "metal_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_ao.png",
+            "url": "metal_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 340,
+          "sourceHeight": 140,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 140
+          },
+          "mask": {
+            "backgroundColor": "#778EAD",
+            "backgroundNoise": 52.621,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.981
+          },
+          "mapStats": {
+            "valueRange": 0.5196,
+            "heightP90Gradient": 0.13322,
+            "roughnessBase": 0.722,
+            "roughnessVariation": 0.217,
+            "normalStrength": 0.312,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#7C92AF",
+            "#98C1F9",
+            "#5E708A",
+            "#9CC4FA",
+            "#1E2634"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_albedo.png",
+            "url": "metal_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_roughness.png",
+            "url": "metal_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_height.png",
+            "url": "metal_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_normal.png",
+            "url": "metal_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_ao.png",
+            "url": "metal_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 340,
+          "sourceHeight": 140,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 140
+          },
+          "mask": {
+            "backgroundColor": "#778EAD",
+            "backgroundNoise": 52.621,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.981
+          },
+          "mapStats": {
+            "valueRange": 0.5196,
+            "heightP90Gradient": 0.13322,
+            "roughnessBase": 0.722,
+            "roughnessVariation": 0.217,
+            "normalStrength": 0.312,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#7C92AF",
+            "#98C1F9",
+            "#5E708A",
+            "#9CC4FA",
+            "#1E2634"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_albedo.png",
+          "url": "metal_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_roughness.png",
+          "url": "metal_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_height.png",
+          "url": "metal_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_normal.png",
+          "url": "metal_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_ao.png",
+          "url": "metal_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "canopy",
+      "regionId": "steel",
+      "materialSpecId": "steel",
+      "hypothesis": {
+        "componentId": "canopy",
+        "regionId": "steel",
+        "materialId": null,
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "aliases": [],
+        "confidence": 0.805,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "coating.painted-metal",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 0.805,
+        "method": "family-subtype-finish",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/01-steel.png",
+            "bbox": {
+              "x": 1520,
+              "y": 1360,
+              "width": 1400,
+              "height": 40
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0046
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.805,
+            "estimatedFidelity": 0.805,
+            "targetThreshold": 0.7,
+            "materialId": "steel",
+            "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/01-steel.png",
+            "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel",
+            "palette": [
+              "#02040A",
+              "#000105",
+              "#0A0C12",
+              "#282527",
+              "#66635C"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_albedo.png",
+                "url": "steel_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_roughness.png",
+                "url": "steel_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_height.png",
+                "url": "steel_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_normal.png",
+                "url": "steel_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_ao.png",
+                "url": "steel_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 1400,
+              "sourceHeight": 40,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 1400,
+                "height": 40
+              },
+              "mask": {
+                "backgroundColor": "#120E18",
+                "backgroundNoise": 43.301,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.8911
+              },
+              "mapStats": {
+                "valueRange": 0.1879,
+                "heightP90Gradient": 0.13329,
+                "roughnessBase": 0.727,
+                "roughnessVariation": 0.179,
+                "normalStrength": 0.312,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#02040A",
+                "#000105",
+                "#0A0C12",
+                "#282527",
+                "#66635C"
+              ]
+            },
+            "warnings": [
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped",
+              "low value range weakens height/roughness inference"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "painted-metal",
+            "recipe": {
+              "metalness": 0.0,
+              "roughness": 0.5,
+              "clearcoat": 1.0,
+              "clearcoatRoughness": 0.05,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 1.0,
+              "anisotropy": 0.0,
+              "procedural": "flat-clearcoat"
+            },
+            "palette": [
+              "#2A2226",
+              "#080A10",
+              "#05070D",
+              "#0E0E11",
+              "#1E1C1B"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#080A10",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  16,
+                  10,
+                  8
+                ]
+              },
+              {
+                "stop": "#05070D",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  13,
+                  7,
+                  5
+                ]
+              },
+              {
+                "stop": "#0E0E11",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  17,
+                  14,
+                  14
+                ]
+              }
+            ],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 13.9,
+              "meanSaturation": 0.674,
+              "gradientStrength": 0.191,
+              "mottle": 0.029,
+              "streakRatio": 2.54,
+              "hueSpread": 0.039,
+              "specularFraction": 0.0
+            }
+          }
+        },
+        "profileId": "coating.painted-metal",
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.45,
+          "clearcoat": 0.75,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-1",
+          "adobe.pbr-guide-2"
+        ],
+        "visualCues": [
+          "diffuse paint colour under a separate glossy coat",
+          "chips may expose metallic substrate"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "directional surface frequency",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/01-steel.png",
+        "bbox": {
+          "x": 1520,
+          "y": 1360,
+          "width": 1400,
+          "height": 40
+        },
+        "sourceWidth": 4032,
+        "sourceHeight": 3024,
+        "loaderWarnings": [],
+        "coverage": 0.0046
+      },
+      "textureAnalysis": {
+        "finishClass": "painted-metal",
+        "recipe": {
+          "metalness": 0.0,
+          "roughness": 0.5,
+          "clearcoat": 1.0,
+          "clearcoatRoughness": 0.05,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 1.0,
+          "anisotropy": 0.0,
+          "procedural": "flat-clearcoat"
+        },
+        "palette": [
+          "#2A2226",
+          "#080A10",
+          "#05070D",
+          "#0E0E11",
+          "#1E1C1B"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#080A10",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              16,
+              10,
+              8
+            ]
+          },
+          {
+            "stop": "#05070D",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              13,
+              7,
+              5
+            ]
+          },
+          {
+            "stop": "#0E0E11",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              17,
+              14,
+              14
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 13.9,
+          "meanSaturation": 0.674,
+          "gradientStrength": 0.191,
+          "mottle": 0.029,
+          "streakRatio": 2.54,
+          "hueSpread": 0.039,
+          "specularFraction": 0.0
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.805,
+        "estimatedFidelity": 0.805,
+        "targetThreshold": 0.7,
+        "materialId": "steel",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/01-steel.png",
+        "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel",
+        "palette": [
+          "#02040A",
+          "#000105",
+          "#0A0C12",
+          "#282527",
+          "#66635C"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_albedo.png",
+            "url": "steel_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_roughness.png",
+            "url": "steel_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_height.png",
+            "url": "steel_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_normal.png",
+            "url": "steel_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_ao.png",
+            "url": "steel_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 1400,
+          "sourceHeight": 40,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 1400,
+            "height": 40
+          },
+          "mask": {
+            "backgroundColor": "#120E18",
+            "backgroundNoise": 43.301,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.8911
+          },
+          "mapStats": {
+            "valueRange": 0.1879,
+            "heightP90Gradient": 0.13329,
+            "roughnessBase": 0.727,
+            "roughnessVariation": 0.179,
+            "normalStrength": 0.312,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#02040A",
+            "#000105",
+            "#0A0C12",
+            "#282527",
+            "#66635C"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped",
+          "low value range weakens height/roughness inference"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/01-steel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.805,
+        "estimatedFidelity": 0.805,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_albedo.png",
+            "url": "steel_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_roughness.png",
+            "url": "steel_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_height.png",
+            "url": "steel_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_normal.png",
+            "url": "steel_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_ao.png",
+            "url": "steel_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 1400,
+          "sourceHeight": 40,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 1400,
+            "height": 40
+          },
+          "mask": {
+            "backgroundColor": "#120E18",
+            "backgroundNoise": 43.301,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.8911
+          },
+          "mapStats": {
+            "valueRange": 0.1879,
+            "heightP90Gradient": 0.13329,
+            "roughnessBase": 0.727,
+            "roughnessVariation": 0.179,
+            "normalStrength": 0.312,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#02040A",
+            "#000105",
+            "#0A0C12",
+            "#282527",
+            "#66635C"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped",
+          "low value range weakens height/roughness inference"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_albedo.png",
+          "url": "steel_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_roughness.png",
+          "url": "steel_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_height.png",
+          "url": "steel_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_normal.png",
+          "url": "steel_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_ao.png",
+          "url": "steel_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "market-letters",
+      "regionId": "market",
+      "materialSpecId": "letters-white",
+      "hypothesis": {
+        "componentId": "market-letters",
+        "regionId": "market",
+        "materialId": null,
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "coating.painted-metal",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 0.829,
+        "method": "family-subtype-finish",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/02-market.png",
+            "bbox": {
+              "x": 2362,
+              "y": 1285,
+              "width": 504,
+              "height": 62
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0026
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "letters-white",
+            "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/02-market.png",
+            "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market",
+            "palette": [
+              "#8597B7",
+              "#0C1320",
+              "#020510",
+              "#2C3444",
+              "#646F86"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_albedo.png",
+                "url": "letters-white_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_roughness.png",
+                "url": "letters-white_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_height.png",
+                "url": "letters-white_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_normal.png",
+                "url": "letters-white_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_ao.png",
+                "url": "letters-white_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 504,
+              "sourceHeight": 62,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 504,
+                "height": 62
+              },
+              "mask": {
+                "backgroundColor": "#7B879D",
+                "backgroundNoise": 203.524,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9795
+              },
+              "mapStats": {
+                "valueRange": 0.6072,
+                "heightP90Gradient": 0.22201,
+                "roughnessBase": 0.785,
+                "roughnessVariation": 0.209,
+                "normalStrength": 0.416,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#8597B7",
+                "#0C1320",
+                "#020510",
+                "#2C3444",
+                "#646F86"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "candy-coat",
+            "recipe": {
+              "metalness": 0.35,
+              "roughness": 0.18,
+              "clearcoat": 0.6,
+              "clearcoatRoughness": 0.15,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 0.7,
+              "anisotropy": 0.0,
+              "procedural": "gradient-smoke"
+            },
+            "palette": [
+              "#535F73",
+              "#4C586F",
+              "#515A6F",
+              "#2B364D",
+              "#1D232E"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#535F73",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  115,
+                  95,
+                  83
+                ]
+              },
+              {
+                "stop": "#4C586F",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  111,
+                  88,
+                  76
+                ]
+              },
+              {
+                "stop": "#515A6F",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  111,
+                  90,
+                  81
+                ]
+              },
+              {
+                "stop": "#2B364D",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  77,
+                  54,
+                  43
+                ]
+              },
+              {
+                "stop": "#1D232E",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  46,
+                  35,
+                  29
+                ]
+              }
+            ],
+            "gradientAxis": "horizontal",
+            "stats": {
+              "meanLum": 63.1,
+              "meanSaturation": 0.534,
+              "gradientStrength": 0.478,
+              "mottle": 0.15,
+              "streakRatio": 5.05,
+              "hueSpread": 0.013,
+              "specularFraction": 0.0
+            }
+          }
+        },
+        "profileId": "coating.painted-metal",
+        "family": "coating",
+        "subtype": "paint-over-metal",
+        "finish": "gloss-or-satin",
+        "renderPrior": {
+          "metalness": 0.0,
+          "roughness": 0.45,
+          "clearcoat": 0.75,
+          "clearcoatRoughness": 0.12,
+          "ior": 1.5
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-physical",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-1",
+          "adobe.pbr-guide-2"
+        ],
+        "visualCues": [
+          "diffuse paint colour under a separate glossy coat",
+          "chips may expose metallic substrate"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "directional surface frequency",
+        "visible meso/micro variation",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/02-market.png",
+        "bbox": {
+          "x": 2362,
+          "y": 1285,
+          "width": 504,
+          "height": 62
+        },
+        "sourceWidth": 4032,
+        "sourceHeight": 3024,
+        "loaderWarnings": [],
+        "coverage": 0.0026
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#535F73",
+          "#4C586F",
+          "#515A6F",
+          "#2B364D",
+          "#1D232E"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#535F73",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              115,
+              95,
+              83
+            ]
+          },
+          {
+            "stop": "#4C586F",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              111,
+              88,
+              76
+            ]
+          },
+          {
+            "stop": "#515A6F",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              111,
+              90,
+              81
+            ]
+          },
+          {
+            "stop": "#2B364D",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              77,
+              54,
+              43
+            ]
+          },
+          {
+            "stop": "#1D232E",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              46,
+              35,
+              29
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 63.1,
+          "meanSaturation": 0.534,
+          "gradientStrength": 0.478,
+          "mottle": 0.15,
+          "streakRatio": 5.05,
+          "hueSpread": 0.013,
+          "specularFraction": 0.0
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "letters-white",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/02-market.png",
+        "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market",
+        "palette": [
+          "#8597B7",
+          "#0C1320",
+          "#020510",
+          "#2C3444",
+          "#646F86"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_albedo.png",
+            "url": "letters-white_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_roughness.png",
+            "url": "letters-white_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_height.png",
+            "url": "letters-white_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_normal.png",
+            "url": "letters-white_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_ao.png",
+            "url": "letters-white_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 504,
+          "sourceHeight": 62,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 504,
+            "height": 62
+          },
+          "mask": {
+            "backgroundColor": "#7B879D",
+            "backgroundNoise": 203.524,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9795
+          },
+          "mapStats": {
+            "valueRange": 0.6072,
+            "heightP90Gradient": 0.22201,
+            "roughnessBase": 0.785,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.416,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#8597B7",
+            "#0C1320",
+            "#020510",
+            "#2C3444",
+            "#646F86"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/02-market.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_albedo.png",
+            "url": "letters-white_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_roughness.png",
+            "url": "letters-white_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_height.png",
+            "url": "letters-white_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_normal.png",
+            "url": "letters-white_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_ao.png",
+            "url": "letters-white_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 504,
+          "sourceHeight": 62,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 504,
+            "height": 62
+          },
+          "mask": {
+            "backgroundColor": "#7B879D",
+            "backgroundNoise": 203.524,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9795
+          },
+          "mapStats": {
+            "valueRange": 0.6072,
+            "heightP90Gradient": 0.22201,
+            "roughnessBase": 0.785,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.416,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#8597B7",
+            "#0C1320",
+            "#020510",
+            "#2C3444",
+            "#646F86"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_albedo.png",
+          "url": "letters-white_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_roughness.png",
+          "url": "letters-white_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_height.png",
+          "url": "letters-white_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_normal.png",
+          "url": "letters-white_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_ao.png",
+          "url": "letters-white_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    },
+    {
+      "componentId": "pendant-0",
+      "regionId": "brass",
+      "materialSpecId": "brass",
+      "hypothesis": {
+        "componentId": "pendant-0",
+        "regionId": "brass",
+        "materialId": null,
+        "family": "metal",
+        "subtype": "brass-bronze",
+        "finish": "polished-or-aged",
+        "aliases": [],
+        "confidence": 0.829,
+        "source": "vision"
+      },
+      "assignment": {
+        "materialId": "metal.brass",
+        "status": "proceed",
+        "source": "vision",
+        "confidence": 0.829,
+        "method": "family-subtype-finish",
+        "alternatives": [],
+        "evidence": {
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/03-brass.png",
+            "bbox": {
+              "x": 2331,
+              "y": 1433,
+              "width": 50,
+              "height": 45
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0002
+          },
+          "pbr": {
+            "ok": true,
+            "verdict": "pass",
+            "confidence": 0.829,
+            "estimatedFidelity": 0.829,
+            "targetThreshold": 0.7,
+            "materialId": "brass",
+            "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/03-brass.png",
+            "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass",
+            "palette": [
+              "#100907",
+              "#AF9469",
+              "#7D6E54",
+              "#F0CD8B",
+              "#41382B"
+            ],
+            "maps": {
+              "albedo": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_albedo.png",
+                "url": "brass_albedo.png",
+                "channel": "albedo",
+                "source": "reference-pixel-extraction"
+              },
+              "roughness": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_roughness.png",
+                "url": "brass_roughness.png",
+                "channel": "roughness",
+                "source": "reference-pixel-extraction"
+              },
+              "height": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_height.png",
+                "url": "brass_height.png",
+                "channel": "height",
+                "source": "reference-pixel-extraction"
+              },
+              "normal": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_normal.png",
+                "url": "brass_normal.png",
+                "channel": "normal",
+                "source": "reference-pixel-extraction"
+              },
+              "ao": {
+                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_ao.png",
+                "url": "brass_ao.png",
+                "channel": "ao",
+                "source": "reference-pixel-extraction"
+              }
+            },
+            "diagnostics": {
+              "sourceWidth": 50,
+              "sourceHeight": 45,
+              "mapSize": 512,
+              "cropBBoxPixels": {
+                "x": 0,
+                "y": 0,
+                "width": 50,
+                "height": 45
+              },
+              "mask": {
+                "backgroundColor": "#0F0C0B",
+                "backgroundNoise": 71.141,
+                "transparentPixelFraction": 0.0,
+                "foregroundCoverage": 0.9156
+              },
+              "mapStats": {
+                "valueRange": 0.8393,
+                "heightP90Gradient": 0.06167,
+                "roughnessBase": 0.719,
+                "roughnessVariation": 0.115,
+                "normalStrength": 0.229,
+                "blurRadius": 10
+              },
+              "palette": [
+                "#100907",
+                "#AF9469",
+                "#7D6E54",
+                "#F0CD8B",
+                "#41382B"
+              ]
+            },
+            "warnings": [
+              "image is not clearly isolated from background; using most pixels as material evidence",
+              "object/background separation is weak",
+              "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+            ],
+            "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+          },
+          "texture": {
+            "finishClass": "painted-metal",
+            "recipe": {
+              "metalness": 0.0,
+              "roughness": 0.5,
+              "clearcoat": 1.0,
+              "clearcoatRoughness": 0.05,
+              "transmission": 0.0,
+              "ior": 1.5,
+              "envMapIntensity": 1.0,
+              "anisotropy": 0.0,
+              "procedural": "flat-clearcoat"
+            },
+            "palette": [
+              "#0E0E11",
+              "#705D43",
+              "#B39969",
+              "#7C6C4F",
+              "#0A0301"
+            ],
+            "paletteHueRisk": [
+              {
+                "stop": "#0E0E11",
+                "hueRisk": "blue-collapse",
+                "suggestedRgb": [
+                  17,
+                  14,
+                  14
+                ]
+              }
+            ],
+            "gradientAxis": "vertical",
+            "stats": {
+              "meanLum": 91.5,
+              "meanSaturation": 0.432,
+              "gradientStrength": 0.59,
+              "mottle": 0.034,
+              "streakRatio": 0.76,
+              "hueSpread": 0.169,
+              "specularFraction": 0.0
+            }
+          }
+        },
+        "profileId": "metal.brass",
+        "family": "metal",
+        "subtype": "brass-bronze",
+        "finish": "polished-or-aged",
+        "renderPrior": {
+          "metalness": 1.0,
+          "roughness": 0.3
+        },
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "environment-reflection",
+          "grazing",
+          "reference-beauty"
+        ],
+        "sourceRefs": [
+          "three.mesh-standard",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "visualCues": [
+          "warm yellow-to-brown conductor reflection",
+          "aged recesses darken and roughen"
+        ]
+      },
+      "observations": [
+        "chromatic base-colour response",
+        "strong image-space gradient; verify it is material pattern, not lighting",
+        "single-image PBR inference requires controlled render validation"
+      ],
+      "crop": {
+        "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/03-brass.png",
+        "bbox": {
+          "x": 2331,
+          "y": 1433,
+          "width": 50,
+          "height": 45
+        },
+        "sourceWidth": 4032,
+        "sourceHeight": 3024,
+        "loaderWarnings": [],
+        "coverage": 0.0002
+      },
+      "textureAnalysis": {
+        "finishClass": "painted-metal",
+        "recipe": {
+          "metalness": 0.0,
+          "roughness": 0.5,
+          "clearcoat": 1.0,
+          "clearcoatRoughness": 0.05,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 1.0,
+          "anisotropy": 0.0,
+          "procedural": "flat-clearcoat"
+        },
+        "palette": [
+          "#0E0E11",
+          "#705D43",
+          "#B39969",
+          "#7C6C4F",
+          "#0A0301"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#0E0E11",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              17,
+              14,
+              14
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 91.5,
+          "meanSaturation": 0.432,
+          "gradientStrength": 0.59,
+          "mottle": 0.034,
+          "streakRatio": 0.76,
+          "hueSpread": 0.169,
+          "specularFraction": 0.0
+        }
+      },
+      "pbrReport": {
+        "ok": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "materialId": "brass",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/03-brass.png",
+        "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass",
+        "palette": [
+          "#100907",
+          "#AF9469",
+          "#7D6E54",
+          "#F0CD8B",
+          "#41382B"
+        ],
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_albedo.png",
+            "url": "brass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_roughness.png",
+            "url": "brass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_height.png",
+            "url": "brass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_normal.png",
+            "url": "brass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_ao.png",
+            "url": "brass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 50,
+          "sourceHeight": 45,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 50,
+            "height": 45
+          },
+          "mask": {
+            "backgroundColor": "#0F0C0B",
+            "backgroundNoise": 71.141,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9156
+          },
+          "mapStats": {
+            "valueRange": 0.8393,
+            "heightP90Gradient": 0.06167,
+            "roughnessBase": 0.719,
+            "roughnessVariation": 0.115,
+            "normalStrength": 0.229,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#100907",
+            "#AF9469",
+            "#7D6E54",
+            "#F0CD8B",
+            "#41382B"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ],
+        "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/03-brass.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_albedo.png",
+            "url": "brass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_roughness.png",
+            "url": "brass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_height.png",
+            "url": "brass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_normal.png",
+            "url": "brass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_ao.png",
+            "url": "brass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 50,
+          "sourceHeight": 45,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 50,
+            "height": 45
+          },
+          "mask": {
+            "backgroundColor": "#0F0C0B",
+            "backgroundNoise": 71.141,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9156
+          },
+          "mapStats": {
+            "valueRange": 0.8393,
+            "heightP90Gradient": 0.06167,
+            "roughnessBase": 0.719,
+            "roughnessVariation": 0.115,
+            "normalStrength": 0.229,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#100907",
+            "#AF9469",
+            "#7D6E54",
+            "#F0CD8B",
+            "#41382B"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "maps": {
+        "albedo": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_albedo.png",
+          "url": "brass_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_roughness.png",
+          "url": "brass_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_height.png",
+          "url": "brass_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_normal.png",
+          "url": "brass_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_ao.png",
+          "url": "brass_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    }
+  ],
+  "status": "proceed",
+  "limitations": [
+    "PBR extraction is reference-derived inference, not inverse rendering.",
+    "A crop must be checked against the component visible footprint before accepting material scores."
+  ],
+  "artifact": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-analysis.json"
+}

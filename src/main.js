@@ -72,7 +72,7 @@ scene.add(levelView.root);
 
 // Landmark models on the real roofs (img2threejs towers, rooftop signs).
 // ?landmarks=0 leaves them out.
-const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(level) : null;
+const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(level, { renderer }) : null;
 if (landmarks) {
   scene.add(landmarks.root);
   landmarks.ready.catch((err) => console.error(err));

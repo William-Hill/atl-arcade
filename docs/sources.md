@@ -50,4 +50,4 @@ These are not datasets. They are here so that the license list is in one place.
 | Library | Version | License | Used for |
 |---|---|---|---|
 | earcut | 3.2.4 | ISC | Roof and park polygon triangulation (`src/level/geo/extrude.js`) |
-| img2threejs (skill, not a dependency) | v2.0.0, commit a669e9a | Apache-2.0 | Landmark reconstruction in `landmarks/` |
+| img2threejs (skill, not a dependency) | v2.0.0, commit a669e9a, with the local patch `tools/img2threejs-footprint-color.patch` | Apache-2.0 | Landmark reconstruction in `landmarks/` |

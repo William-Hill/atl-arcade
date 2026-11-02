@@ -4,7 +4,7 @@ import * as THREE from "three";
 // or on a transparent background (background "transparent"). This is plain
 // type, not a logo or a trademark artwork.
 
-export function createSignTexture(text, { color = "#f2c230", background = "#2b2e33", width = 2048, height = 256, weight = 900, condensed = false } = {}) {
+export function createSignTexture(text, { color = "#f2c230", background = "#2b2e33", width = 2048, height = 256, weight = 900, condensed = false, outline = null } = {}) {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -31,6 +31,14 @@ export function createSignTexture(text, { color = "#f2c230", background = "#2b2e
     g.save();
     g.translate(width / 2, height / 2 + size * 0.04);
     g.scale(scale, 1);
+    // `outline`: a light edge around each letter, like the returns of
+    // channel letters.
+    if (outline) {
+      g.strokeStyle = outline;
+      g.lineWidth = Math.max(2, size * 0.05);
+      g.lineJoin = "round";
+      g.strokeText(text, 0, 0);
+    }
     g.fillText(text, 0, 0);
     g.restore();
   } else {

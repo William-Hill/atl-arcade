@@ -15,13 +15,15 @@ import json
 s = json.load(open("object-sculpt-spec.json"))
 by_id = {c["id"]: c for c in s["componentTree"]}
 tpl = copy.deepcopy(by_id.get("tower-shaft") or s["componentTree"][0])
-# Materials (flat game colors, de-lit by eye from the day photo).
+# Materials (flat game colors, de-lit by eye from the day photo). The game
+# draws them with src/render/landmark-materials.js.
 base_mat = copy.deepcopy(next(m for m in s["materials"]))
 want = {
     "metal": ("Corrugated metal", "#B9BEC3", 0.45, 0.8),
     "steel": ("Black painted steel", "#1E2023", 0.5, 0.4),
     "letters-white": ("White letters", "#F4F4F2", 0.5, 0.0),
     "brass": ("Brass pendant", "#D8A848", 0.2, 1.0),
+    "bulb": ("Lit bulb", "#FFF1C8", 0.4, 0.0),
 }
 have = {m["id"] for m in s["materials"]}
 for mid, (name, col, rough, metal) in want.items():
@@ -90,6 +92,20 @@ s["componentTree"] = [
 for i, (x, z) in enumerate([(-2.2, 3.0), (-1.5, 1.6), (2.4, 3.0), (2.6, 1.6), (7.4, 3.0)]):
     s["componentTree"].append(comp(f"pendant-{i}", f"Pendant light {i}", "micro", "detail", "cylinder", [0.5, 0.4, 0.5], [x, 4.3, z], "canopy", "brass", AS,
                                    "A small round brass shade; a cylinder.", 0.6, 0.6))
+    s["componentTree"].append(comp(f"pendant-cord-{i}", f"Pendant cord {i}", "micro", "detail", "cylinder", [0.03, 0.1, 0.03], [x, 4.55, z], "canopy", "steel", AS,
+                                   "The short drop from the truss to the shade; a thin cylinder.", 0.3, 0.6))
+    s["componentTree"].append(comp(f"pendant-bulb-{i}", f"Pendant bulb {i}", "micro", "detail", "sphere", [0.22, 0.22, 0.22], [x, 4.08, z], "canopy", "bulb", "continuous-sculpt",
+                                   "The lit bulb under the shade; a small sphere.", 0.4, 0.6))
+# The open steel truss under the deck, front and back faces: top and bottom
+# chords and diagonals in 0.95 m bays, as in the front crop.
+for side, tz in (("f", 3.7), ("b", 0.3)):
+    s["componentTree"].append(comp(f"truss-top-{side}", f"Truss top chord {side}", "micro", "detail", "box", [15.4, 0.1, 0.1], [1.05, 5.5, tz], "canopy", "steel", AS, "A steel chord; a box.", 0.5, 0.6))
+    s["componentTree"].append(comp(f"truss-bottom-{side}", f"Truss bottom chord {side}", "micro", "detail", "box", [15.4, 0.1, 0.1], [1.05, 4.6, tz], "canopy", "steel", AS, "A steel chord; a box.", 0.5, 0.6))
+    for k in range(16):
+        x = -6.6 + 0.475 + k * 0.95
+        tilt = 0.7853981634 if k % 2 == 0 else -0.7853981634
+        s["componentTree"].append(comp(f"truss-diag-{side}{k}", f"Truss diagonal {side}{k}", "micro", "detail", "box", [0.07, 1.27, 0.07], [x, 5.05, tz], "canopy", "steel", AS,
+                                       "A steel diagonal of the truss web, turned 45 degrees in the plane of the truss; a box.", 0.4, 0.6, rot=(0, 0, tilt)))
 s["repetitionSystems"] = []
 s["featureReviewTargets"] = [
     {"id": "sawtooth-roof", "name": "Silver metal sawtooth: a low rise, a vertical step, a fall, and a tall rise to the right", "tier": "critical", "threshold": 0.7, "components": ["roof-profile"]},
@@ -126,7 +142,7 @@ print("components", len(s["componentTree"]))
 
 # ---- strict-quality fields -------------------------------------------------
 s = json.load(open("object-sculpt-spec.json"))
-CLASS = {"metal": "metal", "steel": "metal", "letters-white": "plastic", "brass": "metal"}
+CLASS = {"metal": "metal", "steel": "metal", "letters-white": "plastic", "brass": "metal", "bulb": "glass"}
 
 
 def rgba(hexcol, a=1.0):
@@ -242,7 +258,7 @@ print("transforms are parent-relative")
 s = json.load(open("object-sculpt-spec.json"))
 for c in s["componentTree"]:
     if c["id"] == "krog-street-letters":
-        c["canvasText"] = {"text": "KROG STREET", "color": "#1E2023", "background": "transparent", "drawnBy": "src/render/landmark-signs.js createSignTexture"}
+        c["canvasText"] = {"text": "KROG STREET", "color": "#1E2023", "background": "transparent", "outline": "#C9CCD0", "drawnBy": "src/render/landmark-signs.js createSignTexture"}
     if c["id"] == "market-letters":
         c["canvasText"] = {"text": "MARKET", "color": "#F4F4F2", "background": "#1E2023", "drawnBy": "src/render/landmark-signs.js createSignTexture"}
 json.dump(s, open("object-sculpt-spec.json", "w"), indent=2)
@@ -250,7 +266,21 @@ print("letter cards recorded")
 
 # ---- game budget --------------------------------------------------------------
 s = json.load(open("object-sculpt-spec.json"))
-s["performanceBudget"] = {"qualityPriority": "runtime-budget", "targetTriangles": 3000, "maxDrawCalls": 6, "textureSize": 1024, "fpsTarget": 60,
-                          "optimizationPolicy": "A game landmark on a 2 km level with a 55 FPS gate in headless SwiftShader: few triangles, flat colors, baked into one mesh."}
+s["performanceBudget"] = {"qualityPriority": "balanced", "targetTriangles": 20000, "maxDrawCalls": 8, "textureSize": 512, "fpsTarget": 60,
+                          "optimizationPolicy": "A game landmark with physical materials near the camera and a flat baked mesh past 250 m; the 55 FPS gate in headless SwiftShader holds."}
+for c in s["componentTree"]:
+    if c["primitive"] == "box":
+        c.setdefault("geometryDescriptor", {})["boxSegments"] = 1
+s["occlusionOverhangs"] = [4.55]
+SURF = {
+    "metal": {"macroRoughness": 0.42, "microRoughness": 0.08, "bumpAmplitude": 1.2, "normalPattern": "corrugation ribs every 7.5 cm (corrugatedSet bump map)", "displacementPattern": "", "occlusionPattern": "", "edgeWearPattern": "", "notes": "Soft streaks in the color map."},
+    "steel": {"macroRoughness": 0.5, "microRoughness": 0.05, "bumpAmplitude": 0.0, "normalPattern": "painted steel", "displacementPattern": "", "occlusionPattern": "", "edgeWearPattern": "", "notes": ""},
+    "brass": {"macroRoughness": 0.25, "microRoughness": 0.05, "bumpAmplitude": 0.0, "normalPattern": "polished brass", "displacementPattern": "", "occlusionPattern": "", "edgeWearPattern": "", "notes": "A faint emissive warmth from the bulb."},
+    "bulb": {"macroRoughness": 0.4, "microRoughness": 0.0, "bumpAmplitude": 0.0, "normalPattern": "", "displacementPattern": "", "occlusionPattern": "", "edgeWearPattern": "", "notes": "Emissive."},
+    "letters-white": {"macroRoughness": 0.5, "microRoughness": 0.0, "bumpAmplitude": 0.0, "normalPattern": "", "displacementPattern": "", "occlusionPattern": "", "edgeWearPattern": "", "notes": ""},
+}
+for c in s["componentTree"]:
+    if c["materialId"] in SURF:
+        c["surfaceDetail"] = dict(SURF[c["materialId"]])
 json.dump(s, open("object-sculpt-spec.json", "w"), indent=2)
 print("budget written")

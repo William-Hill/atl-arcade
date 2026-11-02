@@ -22,7 +22,7 @@ const shots = [];
 for (const az of azArg.split(",").map(Number)) {
   const sep = url.includes("?") ? "&" : "?";
   await page.goto(`${url}${sep}az=${az}&el=${elArg}`);
-  await page.waitForFunction(() => window.__preview && window.__preview.ready, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__preview && window.__preview.ready && window.__frames > 3, null, { timeout: 30000 });
   await page.waitForTimeout(400);
   const path = resolve(outDir, `az${String(az).padStart(3, "0")}.png`);
   await page.screenshot({ path, omitBackground: url.includes("bg=none") });

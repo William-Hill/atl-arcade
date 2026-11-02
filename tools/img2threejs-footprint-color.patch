@@ -1,0 +1,111 @@
+--- /Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/forge/stage4_review/diagnose_render.py.orig	2026-11-02 08:05:48
++++ /Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/forge/stage4_review/diagnose_render.py	2026-11-02 09:33:20
+@@ -207,6 +207,62 @@
+         results.append({"componentId": recipe.get("componentId"), "deltaE": round(best_delta, 2)})
+     max_delta = max((entry["deltaE"] for entry in results), default=0.0)
+     return {"checked": len(results), "maxDeltaE": round(max_delta, 2), "perComponent": results}
++
++
++# Local patch (atl-arcade, 2026-11-02): per-part color on the visible footprint.
++# The cluster check above compares every part against at most 5 k-means groups
++# of the whole render, so a small part never forms a group and always fails.
++# grimoire/review/divine_eye_microscope.md asks for the visible footprint
++# instead: the pixels that change when one part is hidden. With
++# --footprint-dir, the directory holds full.png (an unlit, map-stripped
++# render) and hide-<componentId>.png (the same render with that part hidden).
++FOOTPRINT_PIXEL_DELTA = 24  # max channel difference that counts as changed
++FOOTPRINT_MIN_PIXELS = 12  # under this, the part is reported unmeasured
++
++
++def footprint_color_delta(components: list[tuple[str, dict[str, Any]]], footprint_dir: Path, textured: set[str] | None = None) -> dict[str, Any]:
++    width, height, full, _w = load_image(footprint_dir / "full.png")
++    results = []
++    for component_id, recipe in components:
++        # A part with a canvas texture (for example a letter card) has two or
++        # more colors, so one recipe color cannot describe its footprint; the
++        # visual review judges it.
++        if textured and component_id in textured:
++            results.append({"componentId": component_id, "status": "textured-card"})
++            continue
++        dominant = recipe.get("dominantAlbedo")
++        hidden_path = footprint_dir / f"hide-{component_id}.png"
++        if not isinstance(dominant, str) or not hidden_path.exists():
++            results.append({"componentId": component_id, "status": "no-evidence"})
++            continue
++        hw, hh, hidden, _w2 = load_image(hidden_path)
++        if (hw, hh) != (width, height):
++            results.append({"componentId": component_id, "status": "size-mismatch"})
++            continue
++        total = [0, 0, 0]
++        count = 0
++        for (r, g, b, _a), (hr, hg, hb, _ha) in zip(full, hidden):
++            if max(abs(r - hr), abs(g - hg), abs(b - hb)) > FOOTPRINT_PIXEL_DELTA:
++                total[0] += r
++                total[1] += g
++                total[2] += b
++                count += 1
++        if count < FOOTPRINT_MIN_PIXELS:
++            results.append({"componentId": component_id, "status": "unmeasured-too-small", "footprintPixels": count})
++            continue
++        mean = tuple(int(round(v / count)) for v in total)
++        rgb_text = dominant[dominant.index("(") + 1 : dominant.index(")")]
++        er, eg, eb = (int(float(part.strip())) for part in rgb_text.split(",")[:3])
++        delta = lab_distance(srgb_to_lab((er, eg, eb)), srgb_to_lab(mean))
++        results.append({"componentId": component_id, "status": "measured", "footprintPixels": count, "meanRgb": list(mean), "deltaE": round(delta, 2)})
++    measured = [r["deltaE"] for r in results if r.get("status") == "measured"]
++    return {
++        "method": "visible-footprint",
++        "checked": len(measured),
++        "unmeasured": [r["componentId"] for r in results if r.get("status") != "measured"],
++        "maxDeltaE": round(max(measured), 2) if measured else 0.0,
++        "perComponent": results,
++    }
+ 
+ 
+ def render_hash(render_path: Path) -> str:
+@@ -230,6 +286,7 @@
+     render_path: Path,
+     spec_path: Path | None = None,
+     pass_id: str | None = None,
++    footprint_dir: Path | None = None,
+ ) -> dict[str, Any]:
+     reference_mask, reference_mask_warnings = load_mask(reference_path)
+     render_mask, render_mask_warnings = load_mask(render_path)
+@@ -274,7 +331,20 @@
+             for component in spec.get("componentTree", [])
+             if isinstance(component, dict) and isinstance(component.get("colorMaterialRecipe"), dict)
+         ]
+-        color_report = per_part_color_delta(recipes, render_path)
++        if footprint_dir is not None:
++            components = [
++                (str(component.get("id")), component["colorMaterialRecipe"])
++                for component in spec.get("componentTree", [])
++                if isinstance(component, dict) and isinstance(component.get("colorMaterialRecipe"), dict)
++            ]
++            textured = {
++                str(component.get("id"))
++                for component in spec.get("componentTree", [])
++                if isinstance(component, dict) and component.get("canvasText")
++            }
++            color_report = footprint_color_delta(components, footprint_dir, textured)
++        else:
++            color_report = per_part_color_delta(recipes, render_path)
+         gated = color_is_gated(pass_id)
+         color_report["gated"] = gated
+         checks["colorDelta"] = color_report
+@@ -318,6 +388,7 @@
+     parser.add_argument("--out-spec", type=Path, help="Write the spec with the recorded result to this path")
+     parser.add_argument("--map-stripped-scene", type=Path, help="Write a scene JSON with material maps disabled")
+     parser.add_argument("--map-stripped-render", type=Path, help="Existing unlit/map-stripped render evidence")
++    parser.add_argument("--footprint-dir", type=Path, help="Per-part visible-footprint renders: full.png and hide-<componentId>.png (local patch)")
+     parser.add_argument("--json", action="store_true")
+     args = parser.parse_args(argv)
+ 
+@@ -332,6 +403,7 @@
+             args.render.expanduser().resolve(),
+             spec_path,
+             args.pass_id,
++            args.footprint_dir.expanduser().resolve() if args.footprint_dir else None,
+         )
+         if args.pass_id == "blockout":
+             if not args.map_stripped_render:

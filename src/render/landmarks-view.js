@@ -1,6 +1,11 @@
 import * as THREE from "three";
 import { landmarkPlacements } from "../level/geo/landmarks.js";
 import { createSignTexture } from "./landmark-signs.js";
+import { landmarkEnvironment, landmarkMaterials } from "./landmark-materials.js";
+
+// Past this distance (m) a landmark shows its flat, vertex-colored bake;
+// nearer, its physical-material groups.
+export const LANDMARK_FAR_DISTANCE = 250;
 
 // Landmark models on the real roofs: the baked img2threejs tower templates
 // (assets/landmarks/*.json) and the rooftop signs. One mesh per tower, one
@@ -19,9 +24,11 @@ function cardMesh(card) {
     color: card.color,
     background: card.background,
     condensed: transparent,
+    outline: card.outline ?? null,
     height: Math.round((2048 * card.height) / card.width),
   });
-  const mat = new THREE.MeshToonMaterial({ map, transparent, alphaTest: 0.5, side: THREE.DoubleSide });
+  // A light glow from the texture itself keeps sign letters readable in shade.
+  const mat = new THREE.MeshStandardMaterial({ map, transparent, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.5, emissive: 0xffffff, emissiveMap: map, emissiveIntensity: 0.45 });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(card.width, card.height), mat);
   mesh.position.set(...card.position);
   return mesh;
@@ -60,12 +67,30 @@ function signMesh(sign) {
   return group;
 }
 
+function groupMeshes(t, mats) {
+  const out = [];
+  for (const [id, grp] of Object.entries(t.groups ?? {})) {
+    if (!mats[id]) continue;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(grp.positions, 3));
+    g.setAttribute("normal", new THREE.Float32BufferAttribute(grp.normals, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(grp.uvs, 2));
+    if (grp.indices) g.setIndex(grp.indices);
+    g.computeBoundingSphere();
+    const m = new THREE.Mesh(g, mats[id]);
+    m.name = `landmark-group-${id}`;
+    out.push(m);
+  }
+  return out;
+}
+
 // Returns { root, ready } where `ready` resolves when the towers load.
-export function createLandmarksView(level, { gradientMap = null } = {}) {
+// With `renderer`, the near level gets physical materials and reflections.
+export function createLandmarksView(level, { gradientMap = null, renderer = null } = {}) {
   const root = new THREE.Group();
   root.name = "landmarks";
   // `towers` counts every landmark model (towers and fronts).
-  const info = { towers: 0, signs: 0, triangles: 0 };
+  const info = { towers: 0, signs: 0, triangles: 0, pbr: 0 };
   const tasks = [];
   for (const p of landmarkPlacements(level)) {
     if (p.sign) {
@@ -75,17 +100,33 @@ export function createLandmarksView(level, { gradientMap = null } = {}) {
     const load = TEMPLATES[p.id];
     if (!load) continue;
     tasks.push(
-      load().then((mod) => {
+      Promise.all([load(), renderer ? landmarkEnvironment(renderer) : null]).then(([mod, envMap]) => {
         const t = mod.default ?? mod;
-        const group = new THREE.Group();
-        group.name = `landmark-${p.id}`;
-        group.add(new THREE.Mesh(templateGeometry(t), new THREE.MeshToonMaterial({ vertexColors: true, gradientMap })));
-        for (const card of t.cards ?? []) group.add(cardMesh(card));
-        group.position.set(p.model.x, p.model.y, p.model.z);
-        group.rotation.y = p.model.yaw;
-        root.add(group);
+        const lod = new THREE.LOD();
+        lod.name = `landmark-${p.id}`;
+        const far = new THREE.Group();
+        far.add(new THREE.Mesh(templateGeometry(t), new THREE.MeshToonMaterial({ vertexColors: true, gradientMap })));
+        const near = new THREE.Group();
+        // The occlusion heights are in model meters; the base is the model's
+        // world height (a roof for a tower, the ground for a front).
+        const parts = t.groups && renderer ? groupMeshes(t, landmarkMaterials({ envMap, overhangs: t.overhangs ?? null, baseY: p.model.y })) : [];
+        for (const m of parts) near.add(m);
+        for (const card of t.cards ?? []) {
+          (parts.length ? near : far).add(cardMesh(card));
+          if (parts.length) far.add(cardMesh(card));
+        }
+        if (parts.length) {
+          lod.addLevel(near, 0);
+          lod.addLevel(far, LANDMARK_FAR_DISTANCE);
+          info.pbr += 1;
+        } else {
+          lod.addLevel(far, 0);
+        }
+        lod.position.set(p.model.x, p.model.y, p.model.z);
+        lod.rotation.y = p.model.yaw;
+        root.add(lod);
         info.towers += 1;
-        info.triangles += t.indices.length / 3;
+        info.triangles += parts.length ? Object.values(t.groups).reduce((n, g) => n + g.positions.length / 9, 0) : t.indices.length / 3;
       }),
     );
   }

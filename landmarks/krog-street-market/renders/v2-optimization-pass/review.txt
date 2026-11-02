@@ -1,0 +1,2 @@
+STATUS pass=optimization-pass completed=7 blocked=none next=forge/stage4_review/append_review.py /Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/object-sculpt-spec.json --pass-id optimization-pass
+/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/object-sculpt-spec.json

@@ -2,8 +2,10 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 // Street name signs: a post with two green blades, white letters, as on an
-// Atlanta corner. Every sign is in one merged mesh, and the names are in one
-// canvas atlas (one row per name), so all the signs cost 2 draw calls.
+// Atlanta corner. The names are in one canvas atlas (one row per name, and
+// a last row in the post color), so the posts and blades share one
+// material. The signs are merged into one mesh per SIGN_TILE square, so the
+// renderer culls the tiles out of view, and update() hides the far tiles.
 
 const ROW = 64; // px per atlas row.
 const ATLAS_W = 1024;
@@ -13,9 +15,13 @@ const POST_H = 3.1;
 const POST_R = 0.045;
 const BLADE_Y = [POST_H - 0.05, POST_H - 0.33];
 const GREEN = "#0d6b3c";
+const POST_COLOR = "#4b5a54";
+export const SIGN_TILE = 256; // m
+const SIGN_DRAW_DISTANCE = 180; // m from the camera to the nearest tile edge
 
 function makeAtlas(names) {
-  const rows = names.length;
+  // One row per name and one row for the post color.
+  const rows = names.length + 1;
   const canvas = document.createElement("canvas");
   canvas.width = ATLAS_W;
   canvas.height = THREE.MathUtils.ceilPowerOfTwo(Math.max(1, rows) * ROW);
@@ -45,6 +51,8 @@ function makeAtlas(names) {
     ctx.lineWidth = 3;
     ctx.strokeRect((ATLAS_W - w) / 2 + 5, y + 5, w - 10, ROW - 10);
   });
+  ctx.fillStyle = POST_COLOR;
+  ctx.fillRect(0, names.length * ROW, ATLAS_W, ROW);
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
@@ -83,15 +91,21 @@ export function createStreetSigns(signs, { gradientMap = null } = {}) {
   const rowOf = new Map(names.map((n, i) => [n, i]));
   const { tex, rows, widths } = makeAtlas(names);
 
-  const posts = [];
-  const blades = [];
+  const postV = 1 - (names.length + 0.5) / rows;
+  const tiles = new Map();
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const up = new THREE.Vector3(0, 1, 0);
   for (const s of signs) {
-    const post = new THREE.CylinderGeometry(POST_R, POST_R * 1.2, POST_H, 8);
+    const key = `${Math.floor(s.x / SIGN_TILE)},${Math.floor(s.z / SIGN_TILE)}`;
+    let parts = tiles.get(key);
+    if (!parts) tiles.set(key, (parts = []));
+    // No normals-only cap faces, so the post merges with the blades.
+    const post = new THREE.CylinderGeometry(POST_R, POST_R * 1.2, POST_H, 8, 1, true);
+    const puv = post.attributes.uv;
+    for (let i = 0; i < puv.count; i += 1) puv.setXY(i, 0.5, postV);
     post.translate(s.x, s.y + POST_H / 2, s.z);
-    posts.push(post);
+    parts.push(post);
     s.names.forEach((name, i) => {
       const row = rowOf.get(name);
       const length = (BLADE_H * widths[row]) / ROW;
@@ -101,16 +115,36 @@ export function createStreetSigns(signs, { gradientMap = null } = {}) {
       q.setFromAxisAngle(up, s.yaws[i] ?? 0);
       m.compose(new THREE.Vector3(s.x, s.y + BLADE_Y[i], s.z), q, new THREE.Vector3(1, 1, 1));
       g.applyMatrix4(m);
-      blades.push(g);
+      parts.push(g.index ? g.toNonIndexed() : g);
     });
   }
-  const postMesh = new THREE.Mesh(mergeGeometries(posts), new THREE.MeshToonMaterial({ color: 0x4b5a54, gradientMap }));
-  const bladeMesh = new THREE.Mesh(mergeGeometries(blades), new THREE.MeshToonMaterial({ map: tex, gradientMap }));
-  for (const mesh of [postMesh, bladeMesh]) {
+  const material = new THREE.MeshToonMaterial({ map: tex, gradientMap });
+  const meshes = [];
+  for (const [key, parts] of [...tiles].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+    const geom = mergeGeometries(parts.map((g) => (g.index ? g.toNonIndexed() : g)));
+    const mesh = new THREE.Mesh(geom, material);
+    const [ix, iz] = key.split(",").map(Number);
+    mesh.userData.box = [ix * SIGN_TILE, iz * SIGN_TILE];
+    mesh.name = `street-signs-${key}`;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.matrixAutoUpdate = false;
     group.add(mesh);
+    meshes.push(mesh);
   }
-  return { group, count: signs.length, names };
+  return {
+    group,
+    count: signs.length,
+    names,
+    tiles: meshes.length,
+    // Hides the tiles whose nearest edge is past the draw distance.
+    update(cameraPosition) {
+      for (const mesh of meshes) {
+        const [x0, z0] = mesh.userData.box;
+        const dx = Math.max(x0 - cameraPosition.x, 0, cameraPosition.x - (x0 + SIGN_TILE));
+        const dz = Math.max(z0 - cameraPosition.z, 0, cameraPosition.z - (z0 + SIGN_TILE));
+        mesh.visible = Math.hypot(dx, dz) < SIGN_DRAW_DISTANCE;
+      }
+    },
+  };
 }

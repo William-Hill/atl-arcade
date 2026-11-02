@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SURFACE_COLORS, buildGeoMeshes, buildPropMeshes } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
+import { mergeMeshes } from "../level/geo/extrude.js";
 import { createMuralAtlas } from "./murals.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
@@ -292,7 +293,7 @@ export async function loadKitTemplates(url = KIT_URL) {
 }
 
 // `groundDetail: false` keeps the flat art colors on the ground.
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -307,13 +308,15 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     },
   };
   const byId = new Map();
+  // Road markings join the render copy of their surface tile (no extra
+  // draw call). The shared meshes, which the physics reads, stay as they are.
+  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, t.mesh]) : []);
   for (const { material, tile, mesh } of meshes) {
-    addMesh(root, byId, `${material}-${tile}`, geoGeometry(mesh), materials[material], { castShadow: material === "building" });
+    const extra = material === "surface" ? markingTiles.get(tile) : null;
+    if (extra) markingTiles.delete(tile);
+    addMesh(root, byId, `${material}-${tile}`, geoGeometry(extra ? mergeMeshes([mesh, extra]) : mesh), materials[material], { castShadow: material === "building" });
   }
-
-  // Road markings: a visual only, so they are not in the shared meshes
-  // that the physics reads.
-  addMesh(root, byId, "markings", geoGeometry(roadMarkings(level)), materials.surface);
+  for (const [tile, mesh] of markingTiles) addMesh(root, byId, `markings-${tile}`, geoGeometry(mesh), materials.surface);
 
   // Kit props load after the level shows. Each prop tile is one merged mesh;
   // far tiles are hidden in update().

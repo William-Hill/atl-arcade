@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { MARKING_COLORS, roadMarkings } from "./markings.js";
+import { MARKING_COLORS, mergeMarkings, roadMarkings } from "./markings.js";
 
 const LEVEL = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../levels/beltline-eastside/level.json"), "utf8"));
 
@@ -21,7 +21,7 @@ describe("road markings", () => {
         { id: "c", kind: "street", highway: "service", width: 4, points: [[25, 0], [25, 20]] },
       ],
     };
-    const m = roadMarkings(level);
+    const m = mergeMarkings(roadMarkings(level));
     // Two lines, each cut once at the cross street (the driveway does not cut it).
     expect(count(m, MARKING_COLORS.yellow)).toBe(4);
     for (let i = 0; i < m.positions.length; i += 3) {
@@ -34,7 +34,9 @@ describe("road markings", () => {
   });
 
   it("marks the BeltLine level streets", () => {
-    const m = roadMarkings(LEVEL);
+    const tiles = roadMarkings(LEVEL);
+    expect(tiles.length).toBeGreaterThan(10);
+    const m = mergeMarkings(tiles);
     expect(count(m, MARKING_COLORS.yellow)).toBeGreaterThan(50);
     expect(count(m, MARKING_COLORS.white)).toBeGreaterThan(500);
     expect(m.indices.length % 3).toBe(0);

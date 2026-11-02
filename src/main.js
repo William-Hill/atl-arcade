@@ -65,11 +65,14 @@ if (geo) {
   }
   geoLights = createGeoLights({ shadowRadius: tier.shadows ? 70 : 45, shadowMapSize: tier.shadows ? 4096 : 2048 });
   scene.add(geoLights.group);
-  sky = createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
-  scene.add(sky.mesh);
-  scene.background = sky.fogColor.clone();
+  // The low tier has no sky dome (a flat horizon color), to keep the
+  // headless frame budget. ?sky=0 leaves it out on the high tier too.
+  sky = !tier.post || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
+  if (sky) scene.add(sky.mesh);
+  const horizon = sky ? sky.fogColor : new THREE.Color(0xbfe4ff);
+  scene.background = horizon.clone();
   // ?fog=0 removes the fog (for an overview screenshot).
-  scene.fog = params.get("fog") === "0" ? null : new THREE.Fog(sky.fogColor, GEO_FOG_NEAR, GEO_FAR);
+  scene.fog = params.get("fog") === "0" ? null : new THREE.Fog(horizon, GEO_FOG_NEAR, GEO_FAR);
 } else {
   scene.background = new THREE.Color(0x10101c);
   scene.fog = new THREE.Fog(0x10101c, 60, 160);
@@ -85,11 +88,12 @@ if (attribution && level.attribution) {
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: quality === "high" }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: quality === "high", markings: quality === "high" && params.get("markings") !== "0" }) : createLevelView(level);
 scene.add(levelView.root);
 
 // Street name signs at the real intersections (src/level/geo/signs.js).
-const streetSigns = geo ? createStreetSigns(env.props.filter((p) => p.kind === "street_sign")) : null;
+// ?signs=0 leaves them out.
+const streetSigns = geo && params.get("signs") !== "0" ? createStreetSigns(env.props.filter((p) => p.kind === "street_sign")) : null;
 if (streetSigns) scene.add(streetSigns.group);
 
 // Landmark models on the real roofs (img2threejs towers, rooftop signs).
@@ -320,6 +324,7 @@ function frame(now) {
   }
   if (levelView.update) levelView.update(camera.position);
   if (sky) sky.update(camera, now / 1000);
+  if (streetSigns) streetSigns.update(camera.position);
   if (post) post.render();
   else renderer.render(scene, camera);
   frames += 1;

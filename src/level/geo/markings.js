@@ -9,10 +9,15 @@
 // street that is not a service road, so no line crosses an intersection.
 // It goes on past a driveway or an alley, as on a real street.
 //
-// The output is one mesh { positions, indices, colors }, a few cm over the
-// street top. It is a visual only; the ground sampler does not see it.
+// The output is a list of meshes { tile, mesh: { positions, indices,
+// colors } }, one per GEO_TILE square, with the tile keys of
+// buildGeoMeshes(). The view merges each tile into the render mesh of its
+// surface tile, so the markings cost no draw call. The markings are a few
+// cm over the street top. They are a visual only; the ground sampler and
+// the physics do not see them.
 
 import { streetIntersections } from "./signs.js";
+import { GEO_TILE } from "./geo-mesh.js";
 
 export const MARKING_COLORS = {
   yellow: [0.96, 0.74, 0.16],
@@ -137,9 +142,36 @@ export function roadMarkings(level) {
     }
   }
 
-  return {
-    positions: Float32Array.from(mesh.positions),
-    indices: Uint32Array.from(mesh.indices),
-    colors: Float32Array.from(mesh.colors),
-  };
+  // Split the quads (4 vertices, 6 indices each) into tiles.
+  const tiles = new Map();
+  for (let q = 0; q < mesh.positions.length / 12; q += 1) {
+    const x = mesh.positions[q * 12];
+    const z = mesh.positions[q * 12 + 2];
+    const key = `${Math.floor(x / GEO_TILE)},${Math.floor(z / GEO_TILE)}`;
+    let t = tiles.get(key);
+    if (!t) tiles.set(key, (t = { positions: [], indices: [], colors: [] }));
+    const base = t.positions.length / 3;
+    for (let k = 0; k < 12; k += 1) {
+      t.positions.push(mesh.positions[q * 12 + k]);
+      t.colors.push(mesh.colors[q * 12 + k]);
+    }
+    t.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
+  }
+  return [...tiles.entries()]
+    .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+    .map(([tile, t]) => ({ tile, mesh: { positions: Float32Array.from(t.positions), indices: Uint32Array.from(t.indices), colors: Float32Array.from(t.colors) } }));
+}
+
+// Every tile in one mesh (for the tests).
+export function mergeMarkings(tiles) {
+  const positions = [];
+  const colors = [];
+  const indices = [];
+  for (const { mesh } of tiles) {
+    const base = positions.length / 3;
+    positions.push(...mesh.positions);
+    colors.push(...mesh.colors);
+    for (const i of mesh.indices) indices.push(base + i);
+  }
+  return { positions, colors, indices };
 }

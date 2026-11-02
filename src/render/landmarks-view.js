@@ -79,6 +79,9 @@ function groupMeshes(t, mats) {
     g.computeBoundingSphere();
     const m = new THREE.Mesh(g, mats[id]);
     m.name = `landmark-group-${id}`;
+    // Used only when the renderer has a shadow map (the high tier).
+    m.castShadow = true;
+    m.receiveShadow = true;
     out.push(m);
   }
   return out;

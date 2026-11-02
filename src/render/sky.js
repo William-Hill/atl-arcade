@@ -78,7 +78,10 @@ export function createSky({ radius, sunDirection, clouds = false }) {
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 32, 16), material);
   mesh.name = "sky";
   mesh.frustumCulled = false;
-  mesh.renderOrder = -1;
+  // Draw after the opaque scene: the dome is on the far plane, so the depth
+  // test drops every pixel that a building or the ground covers, and the
+  // sky shader runs only on the sky pixels.
+  mesh.renderOrder = 1000;
   return {
     mesh,
     fogColor: SKY.horizon.clone(),

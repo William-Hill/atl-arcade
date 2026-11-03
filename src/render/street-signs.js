@@ -86,7 +86,9 @@ function bladeGeometry(length, row, atlasRows, widthPx) {
 export function createStreetSigns(signs, { gradientMap = null } = {}) {
   const group = new THREE.Group();
   group.name = "street-signs";
-  if (!signs.length) return { group, count: 0 };
+  // No signs (?props=0, or a level with no named crossings): the same shape
+  // as a full result, so the frame loop can call update() on it.
+  if (!signs.length) return { group, count: 0, names: [], update() {} };
   const names = [...new Set(signs.flatMap((s) => s.names))].sort();
   const rowOf = new Map(names.map((n, i) => [n, i]));
   const { tex, rows, widths } = makeAtlas(names);

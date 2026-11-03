@@ -3,7 +3,8 @@ import { readFileSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { MODEL_YAW } from "./skater-model.js";
 
-const GLB = new URL("../../assets/skaters/nia/skater.glb", import.meta.url);
+// The height range (m) of each skater, with the skates.
+const SKATERS = { nia: [1.65, 1.75], marcus: [1.72, 1.84] };
 
 function readGlbJson(url) {
   const buf = readFileSync(url);
@@ -12,7 +13,8 @@ function readGlbJson(url) {
   return JSON.parse(buf.toString("utf8", 20, 20 + length));
 }
 
-describe("the Nia skater GLB", () => {
+describe.each(Object.entries(SKATERS))("the %s skater GLB", (name, [minH, maxH]) => {
+  const GLB = new URL(`../../assets/skaters/${name}/skater.glb`, import.meta.url);
   const gltf = readGlbJson(GLB);
 
   it("is under 3 MB and uses Draco", () => {
@@ -35,11 +37,11 @@ describe("the Nia skater GLB", () => {
     expect(names).toContain("mixamorig:LeftFoot");
   });
 
-  it("is about 1.7 m tall with the wheels at y = 0", () => {
+  it("has the dossier height with the wheels at y = 0", () => {
     const pos = gltf.accessors[gltf.meshes[0].primitives[0].attributes.POSITION];
     expect(pos.min[1]).toBeCloseTo(0, 2);
-    expect(pos.max[1]).toBeGreaterThan(1.65);
-    expect(pos.max[1]).toBeLessThan(1.75);
+    expect(pos.max[1]).toBeGreaterThan(minH);
+    expect(pos.max[1]).toBeLessThan(maxH);
   });
 });
 

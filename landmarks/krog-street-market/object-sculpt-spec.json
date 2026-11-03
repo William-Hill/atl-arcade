@@ -12815,8 +12815,7 @@
       ],
       "roughness": {
         "base": 0.3,
-        "map": "material-evidence/metal/metal_roughness.png",
-        "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
       },
       "metalness": {
         "base": 1.0,
@@ -13147,8 +13146,7 @@
       ],
       "roughness": {
         "base": 0.45,
-        "map": "material-evidence/steel/steel_roughness.png",
-        "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
       },
       "metalness": {
         "base": 0.0,
@@ -13470,8 +13468,7 @@
       ],
       "roughness": {
         "base": 0.45,
-        "map": "material-evidence/letters-white/letters-white_roughness.png",
-        "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
       },
       "metalness": {
         "base": 0.0,
@@ -13813,8 +13810,7 @@
       ],
       "roughness": {
         "base": 0.3,
-        "map": "material-evidence/brass/brass_roughness.png",
-        "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
       },
       "metalness": {
         "base": 1.0,
@@ -14105,8 +14101,7 @@
       ],
       "roughness": {
         "base": 0.4,
-        "map": "material-evidence/bulb/bulb_roughness.png",
-        "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
       },
       "metalness": 0.0,
       "normal": {

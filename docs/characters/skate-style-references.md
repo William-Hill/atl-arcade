@@ -33,7 +33,7 @@ The sources do not describe the posture or a tempo in numbers. The values below 
 4. The weight shifts from skate to skate every beat. The shoulders turn against the hips.
 5. The turns use the ATL Ryde corner step: the outside skate steps out wide, the inside skate drags twice behind on its toe, and the outside skate comes back in. (The first version used a Cross Step. No source gave its mechanics.)
 6. The switch button (R, or LB on a gamepad) turns the skater to ride backward. She swizzles the skates and looks over each shoulder in turn. The travel direction does not change.
-7. The idle clip claps on beats 2 and 4. The hands rise from the shoulders to clap.
+7. The idle clip is a relaxed lean: the weight on the right skate, the right hand on the hip, a left toe-stop tap on beat 4, and a head nod on each beat (as in the dossier and the `idle()` clip).
 
 ### The beat
 

@@ -32,15 +32,18 @@ function fakeSkater() {
 
 // A two-mesh GLB stand-in: a body and separate skates on one skeleton, and a
 // rigid (not skinned) badge. The skates material uses every KEPT property.
-function twoMeshSkater() {
+// With `opaque`, the skates material has no transparency.
+function twoMeshSkater({ opaque = false } = {}) {
   const s = fakeSkater();
   const skeleton = s.skinnedMesh.skeleton;
   const textures = { emissiveMap: new THREE.Texture(), normalMap: new THREE.Texture() };
   const skatesMaterial = new THREE.MeshStandardMaterial({
     name: "skates",
     color: 0x2266aa,
-    opacity: 0.8,
-    transparent: true,
+    opacity: opaque ? 1 : 0.8,
+    transparent: !opaque,
+    // GLTFLoader sets depthWrite false for alpha blend.
+    depthWrite: opaque,
     vertexColors: true,
     emissive: 0x331100,
     emissiveIntensity: 2,
@@ -113,6 +116,7 @@ describe("the toon skater with two skinned meshes", () => {
     expect(m.color.getHex()).toBe(0x2266aa);
     expect(m.opacity).toBeCloseTo(0.8);
     expect(m.transparent).toBe(true);
+    expect(m.depthWrite).toBe(false);
     expect(m.vertexColors).toBe(true);
     expect(m.emissive.getHex()).toBe(0x331100);
     expect(m.emissiveIntensity).toBe(2);
@@ -136,8 +140,8 @@ describe("the toon skater with two skinned meshes", () => {
     for (const key of KEPT) expect(key in m, key).toBe(true);
   });
 
-  it("builds one outline hull for each skinned mesh, on its geometry and skeleton", () => {
-    const s = twoMeshSkater();
+  it("builds one outline hull for each opaque skinned mesh, on its geometry and skeleton", () => {
+    const s = twoMeshSkater({ opaque: true });
     const hulls = toonSkater(s);
     expect(hulls.length).toBe(2);
     const sources = [s.skinnedMesh, s.skates];
@@ -155,6 +159,17 @@ describe("the toon skater with two skinned meshes", () => {
     // The rigid badge gets a toon material and no hull.
     expect(s.badge.material.isMeshToonMaterial).toBe(true);
     expect(hulls.some((h) => h.geometry === s.badge.geometry)).toBe(false);
+  });
+
+  it("builds no outline hull for the transparent skates", () => {
+    const s = twoMeshSkater();
+    const hulls = toonSkater(s);
+    expect(hulls.length).toBe(1);
+    expect(hulls[0].userData.outlineOf).toBe(s.skinnedMesh);
+    expect(s.skates.parent.children.some((c) => c.userData.outlineOf === s.skates)).toBe(false);
+    // The transparent skates keep the toon material.
+    expect(s.skates.material.isMeshToonMaterial).toBe(true);
+    expect(s.skates.material.depthWrite).toBe(false);
   });
 
   it("keeps the face decal and adds the rim on the toon skater material", async () => {

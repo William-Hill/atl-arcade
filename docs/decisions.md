@@ -564,3 +564,5 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - The decal writes `diffuseColor` at `map_fragment`, and the rim reads it at `emissivemap_fragment`. Thus the rim also lights the decal colors. The toon shader has no roughness or metalness chunks, so those two decal lines do nothing there. The normal line works, because the toon material keeps `normalMap` (#60).
 - Test hooks: `window.__atl.skaterModel.holdFace(eyes, mouth)` holds one face state, `freezePose(true)` stops the clips, and `materialKey` gives the shader key. The Playwright test `e2e/skater-face.spec.js` stops the idle clip, because the clip moves the head and changes the pixels with no decal.
 - Evidence: `reports/toon-face/`.
+- Review fix: `KEPT` also has `depthWrite`. For glTF alpha blend, GLTFLoader sets `transparent: true` and `depthWrite: false`, and the toon material now keeps both.
+- Review fix: `toonSkater()` adds no outline hull to a skinned mesh with a transparent material, because the opaque hull shows through the mesh. Nia and Marcus have only opaque materials, so their hulls do not change.

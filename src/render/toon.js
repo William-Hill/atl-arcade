@@ -3,11 +3,11 @@ import * as THREE from "three";
 // The toon look for the skater, on both tiers:
 //
 // - A toon material with a 3-step ramp, in place of the PBR material of the
-//   GLB. The color, the maps, the opacity, the vertex colors and the
-//   emissive light stay (KEPT).
+//   GLB. The color, the maps, the opacity, the depth write, the vertex colors
+//   and the emissive light stay (KEPT).
 // - A rim light: the edges that face away from the camera get a little
 //   light, so the skater stands out from the city.
-// - An ink outline from an inverted hull: for each skinned mesh, a second
+// - An ink outline from an inverted hull: for each opaque skinned mesh, a second
 //   skinned mesh on the same skeleton and geometry, drawn with its back faces and moved out along its
 //   normals. Its width grows with the distance, so it stays about 2 px wide.
 //
@@ -56,6 +56,8 @@ export const KEPT = [
   "map",
   "opacity",
   "transparent",
+  // GLTFLoader sets depthWrite false for alpha blend. Keep it with transparent.
+  "depthWrite",
   "alphaTest",
   "side",
   "vertexColors",
@@ -147,8 +149,15 @@ function outlineHull(src) {
   return hull;
 }
 
+// True when the mesh has a transparent material. An opaque hull behind a
+// transparent mesh shows through it, so such a mesh gets no hull.
+function isTransparent(mesh) {
+  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  return mats.some((m) => m.transparent);
+}
+
 // Gives a loaded skater (loadSkaterModel()) the toon materials and an
-// outline hull for each skinned mesh. Returns the hull meshes.
+// outline hull for each opaque skinned mesh. Returns the hull meshes.
 export function toonSkater(loaded) {
   const meshes = [];
   loaded.root.traverse((o) => {
@@ -157,5 +166,5 @@ export function toonSkater(loaded) {
   for (const m of meshes) {
     m.material = Array.isArray(m.material) ? m.material.map(toonMaterial) : toonMaterial(m.material);
   }
-  return meshes.filter((m) => m.isSkinnedMesh).map(outlineHull);
+  return meshes.filter((m) => m.isSkinnedMesh && !isTransparent(m)).map(outlineHull);
 }

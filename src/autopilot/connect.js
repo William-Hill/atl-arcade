@@ -1,6 +1,6 @@
 // Connects Skate ATL to an Autopilot agent service on this machine. main.js
-// imports this file dynamically, and only when the page has ?autopilot=1, so
-// the normal build never loads the bridge.
+// imports this file dynamically, only in a dev build and only when the page
+// has ?autopilot=1. A production build does not contain the bridge.
 //
 // URL parameters:
 //   autopilot=1                 turn the bridge on

@@ -285,10 +285,10 @@ window.__atl = {
   },
 };
 
-// Autopilot (an automated playtest agent) connects only with ?autopilot=1.
-// The dynamic import keeps the bridge out of the normal bundle: Vite puts it
-// in its own chunk, and the page loads that chunk only on this branch.
-if (params.get("autopilot") === "1") {
+// Autopilot (an automated playtest agent) connects only in a dev build
+// (npm run dev) with ?autopilot=1. A production build has no bridge: Vite
+// removes this branch, so a link cannot connect a player's page to a port.
+if (import.meta.env.DEV && params.get("autopilot") === "1") {
   import("./autopilot/connect.js").then(({ connectAutopilot }) =>
     connectAutopilot({ params, scene, camera, canvas, renderer, atl: window.__atl, level, skaterObject: skaterView.group, threeRevision: THREE.REVISION }),
   );

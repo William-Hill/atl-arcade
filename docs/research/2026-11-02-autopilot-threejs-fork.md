@@ -61,7 +61,8 @@ Input reaches the game as a player's input does:
 
 ## 3. Skate ATL
 
-- `src/main.js` imports `src/autopilot/connect.js` dynamically, and only when the page has `?autopilot=1`.
+- `src/main.js` imports `src/autopilot/connect.js` dynamically, only in a dev build (`import.meta.env.DEV`) and only
+  when the page has `?autopilot=1`.
 - `src/autopilot/hooks.js` maps the hooks to `window.__atl`: the skater state, `resetSkater`, the bindings, the fixed
   tick clock (`ticks * FIXED_DT`), and `renderer.render` for frames. Its `move` hook pushes and steers toward the asked
   direction, because a skater steers and does not strafe. `classOf` gives each level object its `kind` (rail, ledge,
@@ -72,8 +73,10 @@ Input reaches the game as a player's input does:
 
 ### Build check
 
-`vite build` puts the bridge in its own chunk, `connect-*.js` (30,960 bytes). The main chunk
-loads it only through `import()` behind `autopilot === "1"`. The main chunk has no bridge code.
+A production build (`vite build`) has no bridge code: Vite removes the dev-only branch, and no chunk contains
+`v1/bridge`. Before the dev-only gate, the bridge was a separate 30,960-byte chunk that a production page loaded with
+`?autopilot=1`. A security review flagged that: a link could connect a player's page to a WebSocket port on the
+player's machine. Autopilot runs use the dev server (`npm run dev`), so the gate costs nothing.
 
 ## 4. Evidence
 
@@ -200,7 +203,7 @@ For comparison, the Godot addon has about 11,684 lines of GDScript in its main f
    `AUTOPILOT_SHARE=0`. I did not verify the redaction in `redact.py`.
 4. **Remote control of the page.** Whatever the bridge connects to can read the game, press keys, and call functions.
    The bridge connects only to loopback addresses unless the game passes `allowRemote: true`. Skate ATL does not pass
-   it. A security review flagged the first version of this.
+   it, and loads the bridge only in a dev build. Two security reviews flagged the earlier versions.
 5. **The cost of a real run.** A real request needs the Jev decision model and a language model (Claude Opus by
    default, with fast mode at 2 times the price). Ask before any such run.
 6. **A fork to maintain.** Until upstream takes the change, each upstream release needs a merge and a test run.

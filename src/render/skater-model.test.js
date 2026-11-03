@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { readFileSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { MODEL_YAW } from "./skater-model.js";
+import { MODEL_YAW, SKATER_MODELS, SKATER_MODELS_SMALL, skaterModelUrl } from "./skater-model.js";
 
 // The height range (m) of each skater, with the skates.
 const SKATERS = { nia: [1.65, 1.75], marcus: [1.72, 1.84] };
@@ -42,6 +42,34 @@ describe.each(Object.entries(SKATERS))("the %s skater GLB", (name, [minH, maxH])
     expect(pos.min[1]).toBeCloseTo(0, 2);
     expect(pos.max[1]).toBeGreaterThan(minH);
     expect(pos.max[1]).toBeLessThan(maxH);
+  });
+});
+
+// The 1024 px phone variant (#74): the same mesh, rig, and clips, a smaller file.
+describe.each(Object.keys(SKATERS))("the %s phone GLB", (name) => {
+  const FULL = new URL(`../../assets/skaters/${name}/skater.glb`, import.meta.url);
+  const SMALL = new URL(`../../assets/skaters/${name}/skater-1024.glb`, import.meta.url);
+  const full = readGlbJson(FULL);
+  const small = readGlbJson(SMALL);
+  const tris = (g) => g.accessors[g.meshes[0].primitives[0].indices].count / 3;
+
+  it("is smaller than the full GLB and uses Draco", () => {
+    expect(statSync(SMALL).size).toBeLessThan(statSync(FULL).size);
+    expect(small.extensionsRequired).toEqual(["KHR_draco_mesh_compression"]);
+  });
+
+  it("has the same triangles, joints, and clips as the full GLB", () => {
+    expect(tris(small)).toBe(tris(full));
+    expect(small.skins[0].joints.map((i) => small.nodes[i].name)).toEqual(full.skins[0].joints.map((i) => full.nodes[i].name));
+    expect(small.animations.map((a) => a.name).sort()).toEqual(full.animations.map((a) => a.name).sort());
+  });
+});
+
+describe("skaterModelUrl", () => {
+  it("gives the small variant only when asked", () => {
+    expect(skaterModelUrl("nia")).toBe(SKATER_MODELS.nia);
+    expect(skaterModelUrl("nia", { small: true })).toBe(SKATER_MODELS_SMALL.nia);
+    expect(skaterModelUrl("nobody")).toBeNull();
   });
 });
 

@@ -95,6 +95,17 @@
       "date": "2026-10-31",
       "tool": "Blender 5.2.2 (background mode), scripts/blender/nia_clips.py",
       "step": "Fifth pass: the coast is now the ATL ride glide, one bar, with a scissor stance, a dip on each beat, and shoulder rolls."
+    },
+    {
+      "tool": "@gltf-transform/cli 4.1.1 (npx), approved by William on 2026-11-03",
+      "date": "2026-11-03",
+      "command": "npx @gltf-transform/cli@4.1.1 resize assets/skaters/nia/skater.glb assets/skaters/nia/skater-1024.glb --width 1024 --height 1024 && npx @gltf-transform/cli@4.1.1 draco assets/skaters/nia/skater-1024.glb assets/skaters/nia/skater-1024.glb --quantize-position 14 --quantize-normal 10 --quantize-texcoord 12 --quantize-generic 12",
+      "actions": [
+        "Made the phone variant (#74): the base color texture from 2048 px to 1024 px. The normal and roughness maps were already 1024 px; the tool encoded them again as JPEG.",
+        "The resize decoded the Draco meshes. The draco command compressed them again with the M1-01 quantization (position 14, normal 10, texcoord 12, generic 12). It also welded identical vertices.",
+        "No new generation and no credits. The mesh, the rig, the joint names, and the 24 clips are the same as skater.glb (src/render/skater-model.test.js checks them)."
+      ],
+      "result": "assets/skaters/nia/skater-1024.glb, 1,598,396 bytes (skater.glb is 2,735,736 bytes), the same triangles, joints, and clips"
     }
   ],
   "credits_spent_total": 115,
@@ -105,5 +116,11 @@
   "file_size_bytes": 2639720,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
-  "animations": 24
+  "animations": 24,
+  "phone_variant": {
+    "file": "assets/skaters/nia/skater-1024.glb",
+    "file_size_bytes": 1598396,
+    "base_color": "1024x1024 JPEG",
+    "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
+  }
 }

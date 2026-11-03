@@ -23,7 +23,9 @@ export default defineConfig({
   },
   // The beat timing test measures timer jitter in ms, so other tests and
   // other apps on the computer can make it fail (#63). It runs in its own
-  // project, last, with one retry. A real drift fails both attempts.
+  // project with one retry. A real drift fails both attempts. With 1 worker,
+  // Playwright runs the projects in config order, so this project runs last.
+  // `dependencies` is not used: it skips the test when a chromium test fails.
   // The test writes the load average to its report.
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] }, grepInvert: BEAT_TIMING },

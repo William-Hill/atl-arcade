@@ -556,6 +556,31 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Why: the goal is the official game of the City of Atlanta. Most residents reach a city link from a phone.
 - Evidence and findings: `production/audits/2026-11-playability/REPORT.md`.
 
+## 2026-11-03: Phone render tier and the frame-time governor (#72)
+
+- Tier: a new `phone` tier for a touch device whose short screen side is 900 CSS px or less (`isPhone()` in `src/render/quality.js`). A software renderer still gets `low`. `?quality=phone` forces it.
+- Look: the low-tier scene (no shadow map, no sky dome, no facade kit, no interiors, no ground scans, no road markings) plus a lite post pass. The skater keeps the blob shadow. The toon ramp is on every tier already.
+- Lite post (`createLitePost()` in `src/render/post.js`): one scene pass into a target with a depth texture, then one fullscreen pass for the ink and the halftone. Silhouettes come from the depth step. Creases come from the second difference of the inverse depth, which is near zero on a flat surface. No GTAO, no bloom, no MSAA, no normal buffer.
+- Pixel ratio: each tier has a cap. Phone 1.5, low 2, high 2.
+- Far terrain: the phone tier does not draw the coarse far-terrain drape. On the low tier the drape covers the skater near the spawn (#87).
+- Governor (`src/render/governor.js`, pure, with Vitest tests): after a 3 s warmup it takes the median of 90 frame times. Over 25 ms (under 40 FPS) it steps down one rung: pixel ratio 1.5, then 1.25, then 1, then the post pass off. It waits 2 s after a step. It never steps up, so the frame rate cannot swing between two rungs. It runs on the phone and high tiers. The low tier is the floor of the playtest gate, so it has no governor. `?governor=0` turns it off, and `?govbudget=<ms>` sets the budget.
+- Draw counts: `renderer.info` now counts the whole frame. Before, the post passes reset it, and `__atl.rendererInfo` showed only the last pass.
+- Measurements (`reports/phone-tier/`), BeltLine spawn, governor off:
+  - ANGLE Metal on an Apple M4 Max: phone 40–42 draw calls and 137k–139k triangles; high 151–157 calls and 424k–427k triangles. Both hold 60 FPS, so this GPU does not show the cost.
+  - SwiftShader, Pixel 7 profile, no CPU throttle, load average 12–14: low 27.5 FPS (pixel ratio 2), phone 50.3 FPS (pixel ratio 1.5), high 1.9 FPS.
+- Not verified: FPS on a real phone GPU. The acceptance target (median over 40 FPS on a mid-range phone) needs a real device.
+
+## 2026-11-03: Touch controls for phones (#71)
+
+- Scheme: a floating stick under the left thumb and four buttons under the right thumb. The stick steers left and right, pushes when up, and brakes when down. The buttons are JUMP (tap), GRIND (hold), GROOVE (style1), and SPIN (style2). A drag on the open part of the screen turns the camera.
+- Why: the scheme maps onto the current controller input shape, so the simulation does not change. Auto-push was the other choice. It changes the push feel and needs a playtest first, so it waits for a human playtest on a phone.
+- Code: `src/input/touch-map.js` is pure, with Vitest tests. `src/input/touch.js` is the overlay. It keeps the held state per pointer, so two thumbs work at the same time. `createInput({ touch })` merges the touch input with the keyboard and the gamepad, and `input.source` says "touch" while a thumb is down.
+- When: the overlay shows on a touch screen (`maxTouchPoints > 0` or `(pointer: coarse)`). `?touch=1` forces it on, and `?touch=0` turns it off. On a touch screen the keyboard help is hidden, because the stick sits there.
+- Sizes: JUMP is 88 px, GRIND 76 px, and the dance buttons 64 px. The stick base is 128 px. All stay inside the safe area (`viewport-fit=cover` and `env(safe-area-inset-*)`).
+- Switch (R on the keyboard) has no touch button yet.
+- Tests: `e2e/touch.spec.js` drives real touch events through CDP on the iPhone 15 and Pixel 7 profiles in Chromium. Touch only, the skater pushes, steers, grinds the straight rail, and jumps. `E2E_PORT` sets the e2e port, so two checkouts can run the suite at the same time.
+- Not verified: a real phone, iOS Safari (WebKit is not installed), and the feel. A human playtest on a phone must tune `TOUCH` in `src/input/touch-map.js`.
+
 ## 2026-11-03: The skater slides along a wall (#58)
 
 - Decision (the project owner, 2026-11-03): on a wall hit, the skater slides along the wall. A head-on hit still stops the skater (a bonk). This applies on the ground and in the air.

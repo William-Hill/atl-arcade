@@ -1,0 +1,53 @@
+[
+  {
+    "device": "Pixel 7",
+    "request": "low",
+    "quality": "low",
+    "pixelRatio": 2,
+    "post": null,
+    "rung": null,
+    "lastMedianMs": null,
+    "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+    "fps": 27.5,
+    "info": {
+      "calls": 39,
+      "triangles": 94159
+    },
+    "errors": [],
+    "load": "12.04 12.33 13.19"
+  },
+  {
+    "device": "Pixel 7",
+    "request": "phone",
+    "quality": "phone",
+    "pixelRatio": 1.5,
+    "post": "lite",
+    "rung": null,
+    "lastMedianMs": null,
+    "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+    "fps": 50.3,
+    "info": {
+      "calls": 40,
+      "triangles": 136901
+    },
+    "errors": [],
+    "load": "13.36 12.59 13.27"
+  },
+  {
+    "device": "Pixel 7",
+    "request": "high",
+    "quality": "high",
+    "pixelRatio": 2,
+    "post": "full",
+    "rung": null,
+    "lastMedianMs": null,
+    "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+    "fps": 1.9,
+    "info": {
+      "calls": 151,
+      "triangles": 423647
+    },
+    "errors": [],
+    "load": "14.46 12.90 13.34"
+  }
+]

@@ -59,10 +59,11 @@ function el(tag, parent, props = {}) {
   return node;
 }
 
-// camera: the Three.js camera. tiltShift: from addTiltShift(), or null on
-// the low tier. render(): draws one frame. sampleLook(dt): { yaw, pitch }
+// camera: the Three.js camera. tiltShift: a function that returns the pass
+// from addTiltShift(), or null when the chain has no blur (the low and
+// phone tiers, or after a governor step). render(): draws one frame. sampleLook(dt): { yaw, pitch }
 // in rad, or null. floor(x, z): the ground height, or null. onChange(open).
-export function createPhotoPanel({ root = document.body, canvas, camera, tiltShift = null, render, sampleLook = () => null, floor = null, onChange = () => {} }) {
+export function createPhotoPanel({ root = document.body, canvas, camera, tiltShift = () => null, render, sampleLook = () => null, floor = null, onChange = () => {} }) {
   if (!document.getElementById("photo-mode-style")) el("style", document.head, { id: "photo-mode-style", textContent: STYLE });
 
   let state = createPhotoState();
@@ -80,11 +81,7 @@ export function createPhotoPanel({ root = document.body, canvas, camera, tiltShi
   const band = el("input", bandLabel, { id: "photo-band", type: "range", min: "10", max: "90", step: "1" });
   const strengthLabel = el("label", panel, { textContent: "Blur strength" });
   const strength = el("input", strengthLabel, { id: "photo-strength", type: "range", min: "0", max: "100", step: "1" });
-  if (!tiltShift) {
-    band.disabled = true;
-    strength.disabled = true;
-    el("p", panel, { className: "photo-note", textContent: "The blur needs the high render tier. Photos save with no blur." });
-  }
+  const note = el("p", panel, { className: "photo-note", textContent: "The blur needs the high render tier. Photos save with no blur." });
   const row = el("div", panel, { className: "photo-row" });
   const saveButton = el("button", row, { id: "photo-save", type: "button", textContent: "Save PNG" });
   const closeButton = el("button", row, { id: "photo-close", type: "button", textContent: "Close" });
@@ -92,16 +89,20 @@ export function createPhotoPanel({ root = document.body, canvas, camera, tiltShi
 
   function show() {
     const open = state.open;
+    const blur = tiltShift();
+    band.disabled = !blur;
+    strength.disabled = !blur;
+    note.hidden = Boolean(blur);
     toggleButton.setAttribute("aria-pressed", String(open));
     panel.hidden = !open;
-    guide.hidden = !(open && tiltShift);
+    guide.hidden = !(open && blur);
     document.body.classList.toggle("photo-open", open);
     band.value = String(Math.round(state.center * 100));
     strength.value = String(Math.round(state.strength * 100));
-    if (tiltShift) {
-      tiltShift.set({ center: state.center, strength: state.strength });
-      tiltShift.enabled = open;
-      const { halfWidth } = tiltShift.params;
+    if (blur) {
+      blur.set({ center: state.center, strength: state.strength });
+      blur.enabled = open;
+      const { halfWidth } = blur.params;
       guide.style.bottom = `${(state.center - halfWidth) * 100}%`;
       guide.style.height = `${2 * halfWidth * 100}%`;
     }
@@ -200,7 +201,7 @@ export function createPhotoPanel({ root = document.body, canvas, camera, tiltShi
   const onKeyUp = (e) => keys.delete(e.code);
   const onBlur = () => keys.clear();
   const onWheel = (e) => {
-    if (!state.open || !tiltShift) return;
+    if (!state.open || !tiltShift()) return;
     e.preventDefault();
     setParams({ center: nudgeBand(state, e.deltaY < 0 ? 1 : -1).center });
   };
@@ -235,7 +236,8 @@ export function createPhotoPanel({ root = document.body, canvas, camera, tiltShi
       const move = { forward: axis(MOVE_KEYS.forward), right: axis(MOVE_KEYS.right), up: axis(MOVE_KEYS.up), fast: FAST_KEYS.some((k) => keys.has(k)), look: sampleLook(dt) };
       state = stepFreeCam(state, move, dt, floor);
       placeCamera();
-      if (tiltShift) tiltShift.sync();
+      const blur = tiltShift();
+      if (blur) blur.sync();
     },
   };
 }

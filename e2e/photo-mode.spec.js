@@ -74,7 +74,7 @@ test("photo mode on the high tier: stops the sim, flies, blurs, and saves a PNG"
   test.setTimeout(240000);
   const errors = collectErrors(page);
   // A fixed camera high over Fourth Ward Park, as in e2e/beltline.spec.js.
-  await open(page, "quality=high&landmarks=0&view=fixed&cam=380,40,120,200,0,-150");
+  await open(page, "quality=high&governor=0&landmarks=0&view=fixed&cam=380,40,120,200,0,-150");
   expect(await page.evaluate(() => window.__atl.quality)).toBe("high");
 
   // Normal play: the blur pass is off.

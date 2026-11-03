@@ -1,0 +1,104 @@
+[
+  {
+    "device": "iPhone 15",
+    "request": "auto",
+    "quality": "phone",
+    "pixelRatio": 1.5,
+    "post": "lite",
+    "rung": null,
+    "lastMedianMs": null,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+    "fps": 60,
+    "info": {
+      "calls": 42,
+      "triangles": 138775
+    },
+    "errors": [],
+    "load": "10.99 12.41 13.29"
+  },
+  {
+    "device": "iPhone 15",
+    "request": "phone",
+    "quality": "phone",
+    "pixelRatio": 1.5,
+    "post": "lite",
+    "rung": null,
+    "lastMedianMs": null,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+    "fps": 60,
+    "info": {
+      "calls": 42,
+      "triangles": 138775
+    },
+    "errors": [],
+    "load": "10.35 12.26 13.23"
+  },
+  {
+    "device": "iPhone 15",
+    "request": "high",
+    "quality": "high",
+    "pixelRatio": 2,
+    "post": "full",
+    "rung": null,
+    "lastMedianMs": null,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+    "fps": 60,
+    "info": {
+      "calls": 157,
+      "triangles": 427389
+    },
+    "errors": [],
+    "load": "10.00 12.15 13.18"
+  },
+  {
+    "device": "Pixel 7",
+    "request": "auto",
+    "quality": "phone",
+    "pixelRatio": 1.5,
+    "post": "lite",
+    "rung": null,
+    "lastMedianMs": null,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+    "fps": 60,
+    "info": {
+      "calls": 40,
+      "triangles": 137261
+    },
+    "errors": [],
+    "load": "9.39 11.95 13.10"
+  },
+  {
+    "device": "Pixel 7",
+    "request": "phone",
+    "quality": "phone",
+    "pixelRatio": 1.5,
+    "post": "lite",
+    "rung": null,
+    "lastMedianMs": null,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+    "fps": 60,
+    "info": {
+      "calls": 40,
+      "triangles": 137261
+    },
+    "errors": [],
+    "load": "9.68 11.97 13.10"
+  },
+  {
+    "device": "Pixel 7",
+    "request": "high",
+    "quality": "high",
+    "pixelRatio": 2,
+    "post": "full",
+    "rung": null,
+    "lastMedianMs": null,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+    "fps": 60,
+    "info": {
+      "calls": 151,
+      "triangles": 423647
+    },
+    "errors": [],
+    "load": "10.02 12.00 13.10"
+  }
+]

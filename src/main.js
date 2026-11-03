@@ -16,6 +16,7 @@ import { BeatClock } from "./audio/beat-clock.js";
 import { loadLevel } from "./level/levels.js";
 import { createLevelEnv } from "./level/ground.js";
 import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
+import { terrainOf } from "./level/geo/terrain.js";
 import { createGeoLights, createGeoView, loadKitTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
 import { QUALITY, qualityFor, rendererName } from "./render/quality.js";
@@ -91,7 +92,7 @@ if (attribution && level.attribution) {
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: quality === "high", markings: quality === "high" && params.get("markings") !== "0", kit: quality === "high" && params.get("kit") !== "0", interiors: quality === "high" && params.get("interiors") !== "0" }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: quality === "high", markings: quality === "high" && params.get("markings") !== "0", kit: quality === "high" && params.get("kit") !== "0", interiors: quality === "high" && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0" }) : createLevelView(level);
 scene.add(levelView.root);
 
 // Street name signs at the real intersections (src/level/geo/signs.js).
@@ -165,14 +166,17 @@ const camera = new THREE.PerspectiveCamera(60, 1, 0.1, geo ? (params.get("fog") 
 const view = params.get("view") ?? "follow";
 // ?cam=x,y,z,lookX,lookY,lookZ sets the fixed camera (for screenshots).
 const camParam = (params.get("cam") ?? "").split(",").map(Number);
+// On a level with terrain each height is over the terrain under that point,
+// so a camera from before the terrain still sees the same place.
+const terrainY = (x, z) => (geo ? terrainOf(level).height(x, z) : 0);
 if (camParam.length === 6 && camParam.every(Number.isFinite)) {
-  camera.position.set(camParam[0], camParam[1], camParam[2]);
-  camera.lookAt(camParam[3], camParam[4], camParam[5]);
+  camera.position.set(camParam[0], camParam[1] + terrainY(camParam[0], camParam[2]), camParam[2]);
+  camera.lookAt(camParam[3], camParam[4] + terrainY(camParam[3], camParam[5]), camParam[5]);
 } else if (geo) {
   // The fixed view looks at the spawn on the trail from the south-west.
-  const [sx, , sz] = level.spawn.position;
-  camera.position.set(sx - 40, 45, sz + 60);
-  camera.lookAt(sx, 0, sz);
+  const [sx, sy, sz] = level.spawn.position;
+  camera.position.set(sx - 40, sy + 45, sz + 60);
+  camera.lookAt(sx, sy, sz);
 } else {
   camera.position.set(-6, 38, 44);
   camera.lookAt(0, 0, 2);
@@ -183,7 +187,7 @@ if (view === "orbit") {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI / 2 - 0.05;
-  camera.position.set(level.spawn.position[0] - 8, 6, level.spawn.position[2] + 10);
+  camera.position.set(level.spawn.position[0] - 8, level.spawn.position[1] + 6, level.spawn.position[2] + 10);
 }
 
 // The high tier post chain (src/render/post.js).
@@ -337,9 +341,11 @@ function frame(now) {
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
   }
   hud.update(run, now, beat.running ? beat.phase() : null);
-  if (geoLights) geoLights.follow(skater.position[0], skater.position[2]);
+  if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
   if (blob) {
-    const g = env.sampleGround(skater.position[0], skater.position[2]);
+    // With the skater height, as the controller samples: under a bridge the
+    // blob stays on the road, not on the deck.
+    const g = env.sampleGround(skater.position[0], skater.position[2], skater.position[1]);
     blob.position.set(skater.position[0], (g ? g.height : 0) + 0.02, skater.position[2]);
   }
   if (levelView.update) levelView.update(camera.position);
@@ -386,8 +392,9 @@ window.__atl = {
     get landmarks() {
       return landmarks ? { ...landmarks.info } : null;
     },
-    // The ground under (x, z), from the pure sampler.
-    sample: (x, z) => env.sampleGround(x, z),
+    // The ground under (x, z), from the pure sampler. With `y`, a bridge
+    // high over y is left out (the skater is under it).
+    sample: (x, z, y) => env.sampleGround(x, z, y),
   },
   physics: {
     colliderCount: physics.colliderCount,

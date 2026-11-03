@@ -202,7 +202,7 @@ function stepRolling(s, input, dt, env, k) {
   const nx = s.position[0] + t[0] * s.speed * dt;
   const ny = s.position[1] + t[1] * s.speed * dt;
   const nz = s.position[2] + t[2] * s.speed * dt;
-  const g = env.sampleGround(nx, nz);
+  const g = env.sampleGround(nx, nz, ny);
 
   if (!g) {
     // Nothing under the feet: fall with the current velocity.
@@ -251,7 +251,8 @@ function stepRolling(s, input, dt, env, k) {
 // because the ramp ahead rises fast but it is not a wall.
 const PROBE_ANGLES = [0, 0.61, -0.61];
 
-function probeHits(env, x, z, dirX, dirZ, radius, isWall) {
+// `y` is the skater height, for a level with bridges (geo-ground.js).
+function probeHits(env, x, z, dirX, dirZ, radius, isWall, y = Infinity) {
   const len = Math.hypot(dirX, dirZ);
   if (len < 1e-6 || !(radius > 0)) return false;
   const hx = dirX / len;
@@ -261,7 +262,7 @@ function probeHits(env, x, z, dirX, dirZ, radius, isWall) {
     const sn = Math.sin(a);
     const px = x + (hx * c - hz * sn) * radius;
     const pz = z + (hx * sn + hz * c) * radius;
-    const p = env.sampleGround(px, pz);
+    const p = env.sampleGround(px, pz, y);
     if (p && isWall(p)) return true;
   }
   return false;
@@ -269,11 +270,11 @@ function probeHits(env, x, z, dirX, dirZ, radius, isWall) {
 
 function wallAhead(s, env, t, nx, ny, nz, k) {
   if (!s.groundNormal || s.groundNormal[1] < 0.9) return false;
-  return probeHits(env, nx, nz, t[0], t[2], k.bodyRadius, (p) => p.height - ny > k.maxStep && p.normal[1] > 0.9);
+  return probeHits(env, nx, nz, t[0], t[2], k.bodyRadius, (p) => p.height - ny > k.maxStep && p.normal[1] > 0.9, ny);
 }
 
 function wallAheadInAir(s, env, nx, ny, nz, prevY, k) {
-  return probeHits(env, nx, nz, s.velocity[0], s.velocity[2], k.bodyRadius, (p) => p.height > prevY + k.maxStep && ny < p.height && p.normal[1] > 0.9);
+  return probeHits(env, nx, nz, s.velocity[0], s.velocity[2], k.bodyRadius, (p) => p.height > prevY + k.maxStep && ny < p.height && p.normal[1] > 0.9, prevY);
 }
 
 function stepAir(s, input, dt, env, k) {
@@ -293,7 +294,7 @@ function stepAir(s, input, dt, env, k) {
   let nx = s.position[0] + s.velocity[0] * dt;
   const ny = prevY + s.velocity[1] * dt;
   let nz = s.position[2] + s.velocity[2] * dt;
-  let g = env.sampleGround(nx, nz);
+  let g = env.sampleGround(nx, nz, prevY);
 
   // The side of anything taller than a step is a wall in the air too: the
   // skater keeps its column, loses its horizontal speed, and falls. The probe
@@ -304,7 +305,7 @@ function stepAir(s, input, dt, env, k) {
     s.velocity[0] = 0;
     s.velocity[2] = 0;
     s.bonked = true;
-    g = env.sampleGround(nx, nz);
+    g = env.sampleGround(nx, nz, prevY);
   }
 
   s.position = [nx, ny, nz];

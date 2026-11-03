@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { SURFACE_COLORS, buildGeoMeshes, buildPropMeshes } from "../level/geo/geo-mesh.js";
+import { GEO_TILE, SURFACE_COLORS, buildGeoMeshes, buildPropMeshes } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
 import { facadeKit } from "../level/geo/facade-kit.js";
+import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { createMuralAtlas } from "./murals.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
@@ -21,6 +22,9 @@ const BRICK_URL = new URL("../../assets/landmarks/textures/brick/color.jpg", imp
 // PROP_DRAW_DISTANCE its simple props, and past that nothing.
 export const PROP_LOD0_DISTANCE = 60;
 export const PROP_DRAW_DISTANCE = 200;
+// The distance from the camera to the nearest edge of a surface tile past
+// which the low tier shows the coarse terrain drape (m).
+export const FAR_TERRAIN_DISTANCE = 60;
 
 // Three.js view of a geodata level: one merged mesh per material per tile,
 // with a toon (cel) material and vertex colors. The simulation never sees
@@ -391,7 +395,7 @@ export async function loadKitTemplates(url = KIT_URL) {
 }
 
 // `groundDetail: false` keeps the flat art colors on the ground.
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, interiors = false } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, interiors = false, farTerrain = false } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -408,7 +412,9 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const byId = new Map();
   // Road markings join the render copy of their surface tile (no extra
   // draw call). The shared meshes, which the physics reads, stay as they are.
-  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, t.mesh]) : []);
+  // The markings follow the terrain like the streets (terrain.js).
+  const terrain = terrainOf(level);
+  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, drapeMesh(t.mesh, terrain)]) : []);
   // The facade kit (cornices, copings, belt courses, house roofs) joins the
   // render copy of its building tile in the same way.
   const kitParts = kit ? facadeKit(level) : { tiles: [], counts: {} };
@@ -420,6 +426,21 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     addMesh(root, byId, `${material}-${tile}`, geoGeometry(extra ? mergeMeshes([mesh, extra]) : mesh), materials[material], { castShadow: material === "building" });
   }
   for (const [tile, mesh] of markingTiles) addMesh(root, byId, `markings-${tile}`, geoGeometry(mesh), materials.surface);
+
+  // A far level of detail for the surfaces (the low tier): a surface tile
+  // past FAR_TERRAIN_DISTANCE shows a drape on a 16 m terrain, with about a
+  // quarter of the triangles. The physics keeps the exact tiles.
+  const terrainLods = [];
+  if (farTerrain && !terrain.flat) {
+    for (const { tile, mesh } of buildGeoMeshes(level, { terrainStep: 2, surfacesOnly: true })) {
+      const near = byId.get(`surface-${tile}`);
+      if (!near) continue;
+      const far = addMesh(root, byId, `surface-far-${tile}`, geoGeometry(mesh), materials.surface);
+      far.visible = false;
+      const [ix, iz] = tile.split(",").map(Number);
+      terrainLods.push({ near, far, x0: ix * GEO_TILE, z0: iz * GEO_TILE });
+    }
+  }
   for (const [tile, mesh] of kitTiles) addMesh(root, byId, `kit-${tile}`, geoGeometry(mesh), materials.building, { castShadow: true });
 
   // Kit props load after the level shows. Each prop tile is one merged mesh;
@@ -447,10 +468,18 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     },
     props,
     kit: kitParts.counts,
+    terrainLods: terrainLods.length,
     addProps,
     // Shows each prop tile at one level of detail by its distance from the
     // camera, and hides the far tiles.
     update(cameraPosition) {
+      for (const t of terrainLods) {
+        const dx = Math.max(t.x0 - cameraPosition.x, 0, cameraPosition.x - (t.x0 + GEO_TILE));
+        const dz = Math.max(t.z0 - cameraPosition.z, 0, cameraPosition.z - (t.z0 + GEO_TILE));
+        const far = Math.hypot(dx, dz) > FAR_TERRAIN_DISTANCE;
+        t.near.visible = !far;
+        t.far.visible = far;
+      }
       let lod0 = 0;
       for (const obj of propTiles) {
         const [cx, cz] = obj.userData.center;
@@ -492,11 +521,12 @@ export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048 } = {}
     sun,
     sunDirection: offset.clone().normalize(),
     // Snap to whole meters, so the shadow edges do not shimmer.
-    follow(x, z) {
+    follow(x, z, y = 0) {
       const sx = Math.round(x);
       const sz = Math.round(z);
-      sun.target.position.set(sx, 0, sz);
-      sun.position.set(sx + offset.x, offset.y, sz + offset.z);
+      const sy = Math.round(y);
+      sun.target.position.set(sx, sy, sz);
+      sun.position.set(sx + offset.x, sy + offset.y, sz + offset.z);
     },
   };
 }

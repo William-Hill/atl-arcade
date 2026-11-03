@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.86,
+  "estimatedFidelity": 0.86,
+  "targetThreshold": 0.7,
+  "materialId": "sign-yellow",
+  "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/crops/sign.png",
+  "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow",
+  "palette": [
+    "#F7E878",
+    "#6F5139",
+    "#976E29",
+    "#B69216",
+    "#CFB948"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_albedo.png",
+      "url": "sign-yellow_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_roughness.png",
+      "url": "sign-yellow_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_height.png",
+      "url": "sign-yellow_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_normal.png",
+      "url": "sign-yellow_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_ao.png",
+      "url": "sign-yellow_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 265,
+    "sourceHeight": 44,
+    "mapSize": 1024,
+    "cropBBoxPixels": {
+      "x": 0,
+      "y": 0,
+      "width": 265,
+      "height": 44
+    },
+    "mask": {
+      "backgroundColor": "#917E5F",
+      "backgroundNoise": 124.02,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.5901
+    },
+    "mapStats": {
+      "valueRange": 0.636,
+      "heightP90Gradient": 0.11665,
+      "roughnessBase": 0.757,
+      "roughnessVariation": 0.186,
+      "normalStrength": 0.293,
+      "blurRadius": 21
+    },
+    "palette": [
+      "#F7E878",
+      "#6F5139",
+      "#976E29",
+      "#B69216",
+      "#CFB948"
+    ]
+  },
+  "warnings": [
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

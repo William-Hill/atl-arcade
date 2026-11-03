@@ -9,6 +9,8 @@ export const STYLES = [
   {
     id: "brick-loft",
     walls: [[0.62, 0.3, 0.24], [0.7, 0.36, 0.26], [0.55, 0.27, 0.22]],
+    // The facade shader adds the brick scan detail (assets/landmarks/textures/brick).
+    brick: true,
     trim: [0.9, 0.86, 0.78],
     glass: [0.2, 0.32, 0.42],
     floorHeight: 4.2,
@@ -22,6 +24,8 @@ export const STYLES = [
   {
     id: "brick-warehouse",
     walls: [[0.58, 0.28, 0.22], [0.66, 0.33, 0.25]],
+    // The facade shader adds the brick scan detail (assets/landmarks/textures/brick).
+    brick: true,
     trim: [0.84, 0.8, 0.72],
     glass: [0.18, 0.28, 0.36],
     floorHeight: 5,
@@ -150,6 +154,24 @@ export const STYLES = [
     roof: {},
   },
   {
+    // Krog Street Market: brick walls, shop windows, and no parapet, because
+    // the metal sawtooth roof (assets/landmarks/krog-street-market-front.json)
+    // starts right on top of the brick.
+    id: "brick-market-hall",
+    walls: [[0.6, 0.29, 0.23]],
+    // The facade shader adds the brick scan detail (assets/landmarks/textures/brick).
+    brick: true,
+    trim: [0.42, 0.4, 0.38],
+    glass: [0.2, 0.3, 0.38],
+    floorHeight: 6,
+    bay: 4.2,
+    window: [0.62, 0.5],
+    parapet: 0,
+    storefront: true,
+    awnings: 0,
+    roof: { roof_unit: 1 / 700 },
+  },
+  {
     id: "garage",
     walls: [[0.78, 0.76, 0.72], [0.66, 0.6, 0.56]],
     trim: [0.9, 0.9, 0.9],
@@ -226,7 +248,7 @@ const BY_TYPE = {
 // Roebuck brick warehouse; Krog Street Market is a 1920s brick warehouse.
 const BY_NAME = [
   [/ponce city market/i, "brick-warehouse"],
-  [/krog street market/i, "brick-warehouse"],
+  [/krog street market/i, "brick-market-hall"],
   [/ford factory/i, "brick-loft"],
   [/stove works/i, "brick-loft"],
   [/studioplex/i, "brick-loft"],

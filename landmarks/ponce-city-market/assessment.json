@@ -1,0 +1,485 @@
+{
+  "targetName": "Ponce City Market",
+  "sourceImage": "ref/reference.jpg",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "multi-storey brick warehouse landmark (adaptive reuse)",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "geometric",
+        "stepped-cuboid",
+        "regular-grid"
+      ],
+      "structureKind": [
+        "static-architecture"
+      ],
+      "motionPotential": [
+        "static"
+      ],
+      "materialFamilies": [
+        "brick-masonry",
+        "glass",
+        "roof-membrane",
+        "patinated-copper",
+        "painted-steel"
+      ],
+      "notes": "Real footprint from OpenStreetMap way 184803195. Photo sets style and feature placement only."
+    },
+    "complexity": {
+      "tier": "moderate",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 2,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 3,
+        "materialLayerCount": 2,
+        "localDetailDensity": 1,
+        "occlusionRisk": 1,
+        "actionReadinessNeed": 0
+      },
+      "estimatedCounts": {
+        "macroComponents": 4,
+        "mesoComponents": 6,
+        "microFeatureGroups": 3,
+        "materialLayers": 6,
+        "repetitionSystems": 2
+      },
+      "reasoning": [
+        "Stepped cuboid masses on a known footprint, one tower with an octagonal lantern, a rooftop sign.",
+        "Window grids repeat; they come from the game facade shader, so geometry stays low.",
+        "Moderate: few macro parts, repeated meso systems (bays, lantern posts, sign letters)."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "moderate",
+      "minimumComponentLevels": [
+        "macro",
+        "meso"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": false,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Moderate: macro masses plus meso tower, lantern, sign, and roof units."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Hidden north and west facades: assumed the same bay grid (inference, low confidence).",
+      "Exact tower position along the block: about 70 % from the south-west end, at the back edge (inference from perspective, confidence 0.5).",
+      "Real heights: OSM gives 50 m for the main block; wing heights estimated from the photo (confidence 0.5)."
+    ],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 6,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {
+          "id": "tower-lantern",
+          "kind": "contour",
+          "description": "Octagonal open lantern of 8 posts with arched openings on a square brick tower shaft",
+          "region": {
+            "x": 0.58,
+            "y": 0.25,
+            "width": 0.05,
+            "height": 0.08,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "silhouette",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "clock-tower.lantern"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r0c1.png",
+          "confidence": 0.8
+        },
+        {
+          "id": "copper-dome",
+          "kind": "gloss",
+          "description": "Blue-green patinated copper dome cap, satin (roughness about 0.6)",
+          "region": {
+            "x": 0.58,
+            "y": 0.25,
+            "width": 0.05,
+            "height": 0.03,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "albedo, roughness",
+          "mapsTo": {
+            "type": "material.localOverrides",
+            "ref": "copper-patina.dome"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r0c1.png",
+          "confidence": 0.8
+        },
+        {
+          "id": "flagpole",
+          "kind": "linework",
+          "description": "Thin vertical pole above the dome, about 0.6 tower widths tall",
+          "region": {
+            "x": 0.6,
+            "y": 0.19,
+            "width": 0.01,
+            "height": 0.07,
+            "units": "normalized"
+          },
+          "scale": "micro",
+          "affects": "silhouette",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "clock-tower.flagpole"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r0c1.png",
+          "confidence": 0.7
+        },
+        {
+          "id": "rooftop-sign",
+          "kind": "linework",
+          "description": "PONCE CITY MARKET in yellow block letters on a steel frame on the north wing roof, facing south-east",
+          "region": {
+            "x": 0.47,
+            "y": 0.31,
+            "width": 0.08,
+            "height": 0.04,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "albedo, silhouette",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "rooftop-sign.letters"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r0c1.png",
+          "confidence": 0.9
+        },
+        {
+          "id": "cornice-band",
+          "kind": "bevel",
+          "description": "Light grey cornice and parapet at each roof line, about 1 m tall",
+          "region": {
+            "x": 0.43,
+            "y": 0.38,
+            "width": 0.3,
+            "height": 0.05,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "albedo, silhouette",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "main-block.cornice"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r1c1.png",
+          "confidence": 0.8
+        },
+        {
+          "id": "window-grid",
+          "kind": "linework",
+          "description": "Regular window grid, one window per bay per floor, brick pilasters between bays",
+          "region": {
+            "x": 0.43,
+            "y": 0.4,
+            "width": 0.3,
+            "height": 0.25,
+            "units": "normalized"
+          },
+          "scale": "micro",
+          "affects": "albedo",
+          "mapsTo": {
+            "type": "material.localOverrides",
+            "ref": "brick.window-grid"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r1c1.png",
+          "confidence": 0.9
+        },
+        {
+          "id": "roof-units",
+          "kind": "fastener",
+          "description": "Grey mechanical boxes on the flat roof of the main block",
+          "region": {
+            "x": 0.48,
+            "y": 0.38,
+            "width": 0.2,
+            "height": 0.04,
+            "units": "normalized"
+          },
+          "scale": "micro",
+          "affects": "silhouette",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "main-block.roof-units"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r1c1.png",
+          "confidence": 0.7
+        },
+        {
+          "id": "stepped-wings",
+          "kind": "contour",
+          "description": "Lower brick wings step down at both ends of the main block",
+          "region": {
+            "x": 0.31,
+            "y": 0.33,
+            "width": 0.42,
+            "height": 0.3,
+            "units": "normalized"
+          },
+          "scale": "macro",
+          "affects": "silhouette",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "main-block.stepped-wings"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r1c1.png",
+          "confidence": 0.6
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "ref/reference.jpg"
+  },
+  "qualityContract": {
+    "qualityBar": "moderate",
+    "definitionOfDone": [
+      "The rendered model matches the reference silhouette, primary proportions, visible component hierarchy, material response, and most recognizable local features for the selected fidelity tier."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 2,
+      "mesoComponents": 3,
+      "microFeatureGroups": 2,
+      "materialLayers": 2,
+      "repetitionSystems": 0,
+      "reviewViewpoints": 3
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Ponce City Market brick building facade window grid tower dome cupola architecture parapet cornice brick albedo roughness low poly game prop performance budget",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "62f2831e1d52eeb6dbb94a87c44fa25b1f4926626a7b1f8c2bcadc63e04e9471"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-roughness",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Material And PBR",
+        "key_path": null,
+        "score": 8.485019761707,
+        "snippets": [
+          "Roughness is microfacet scatter: high roughness reads matte and low roughness reads glossy. Recognition cues: low roughness reads as a sharp, mirror-like, tight specular highlight; high roughness reads as a blurry, wide, dim highlight and matte ..."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Material And PBR",
+            "key_path": null
+          },
+          {
+            "path": "grimoire/intake/image_analysis.md",
+            "heading": "Layer 5 \u2014 Materials & surface (PBR)",
+            "key_path": null
+          },
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[1]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/glossary/3d_vocabulary.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          },
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation \u2014 merged recognition cues + Three.js target instead of duplicating this entity."
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-color-space-srgb-vs-linearnocolorspace",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[11]",
+        "score": 6.615447681944,
+        "snippets": [
+          "... (c\u1ea7n gamma/sRGB) v\u00e0 c\u00e1c b\u1ea3n \u0111\u1ed3 d\u1eef li\u1ec7u to\u00e1n h\u1ecdc (ph\u1ea3i gi\u1eef tuy\u1ebfn t\u00ednh/kh\u00f4ng hi\u1ec7u ch\u1ec9nh). Recognition cues: Base color/albedo and emissive textures are the only ones that should look like natural photographic color; Normal, roughness, ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[11]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.description-pbr-vocabulary-caption-calibration",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.description_conventions[7]",
+        "score": 6.411707488269,
+        "snippets": [
+          "Embedding a technical material-attribute block (Albedo, Metalness, Roughness, Normals) with measured reflectance ranges directly into the structured description, not just prose. Nh\u00fang m\u1ed9t kh\u1ed1i thu\u1ed9c t\u00ednh v\u1eadt li\u1ec7u k\u1ef9 thu\u1eadt (Albedo, Metalness, ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.description_conventions[7]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  }
+}

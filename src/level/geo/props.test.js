@@ -23,7 +23,7 @@ describe("building styles", () => {
     const used = new Set(LEVEL.buildings.map(chooseStyle));
     expect(used.size).toBeGreaterThanOrEqual(10);
     expect(chooseStyle(LEVEL.buildings.find((b) => b.name === "Ponce City Market"))).toBe("brick-warehouse");
-    expect(chooseStyle(LEVEL.buildings.find((b) => b.name === "Krog Street Market"))).toBe("brick-warehouse");
+    expect(chooseStyle(LEVEL.buildings.find((b) => b.name === "Krog Street Market"))).toBe("brick-market-hall");
   });
 
   it("is deterministic: the same id gives the same style, color, and random numbers", () => {
@@ -96,4 +96,9 @@ describe("prop placement", () => {
     expect(Math.sin(f)).toBeCloseTo(1, 9);
     expect(Math.cos(f)).toBeCloseTo(0, 9);
   });
+});
+
+it("only the brick styles get the brick scan detail on the facades", () => {
+  const brick = STYLES.filter((s) => s.brick).map((s) => s.id);
+  expect(brick).toEqual(["brick-loft", "brick-warehouse", "brick-market-hall"]);
 });

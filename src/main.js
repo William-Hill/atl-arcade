@@ -17,6 +17,7 @@ import { loadLevel } from "./level/levels.js";
 import { createLevelEnv } from "./level/ground.js";
 import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { createGeoLights, createGeoView, loadKitTemplates } from "./render/geo-view.js";
+import { createLandmarksView } from "./render/landmarks-view.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
 import { createLookInput } from "./input/look.js";
@@ -71,6 +72,14 @@ if (attribution && level.attribution) {
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
 const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist") }) : createLevelView(level);
 scene.add(levelView.root);
+
+// Landmark models on the real roofs (img2threejs towers, rooftop signs).
+// ?landmarks=0 leaves them out.
+const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(level, { renderer }) : null;
+if (landmarks) {
+  scene.add(landmarks.root);
+  landmarks.ready.catch((err) => console.error(err));
+}
 
 // The street kit (trees, lamps, benches, roof units) loads after the level
 // shows. ?props=0 leaves it out.
@@ -332,6 +341,9 @@ window.__atl = {
     },
     get props() {
       return geo ? { ...levelView.props } : null;
+    },
+    get landmarks() {
+      return landmarks ? { ...landmarks.info } : null;
     },
     // The ground under (x, z), from the pure sampler.
     sample: (x, z) => env.sampleGround(x, z),

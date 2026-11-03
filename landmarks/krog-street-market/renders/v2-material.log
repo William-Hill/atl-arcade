@@ -1,0 +1,3 @@
+post_generate: 40 box geometries at 1 segment
+IoU 0.9035 color max 7.88 measured 10
+pass material-pass: gates PASS; review renders/v2-material-pass/cmp.png

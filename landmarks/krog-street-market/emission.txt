@@ -1,0 +1,2 @@
+no target selected; the artifact of record is src/createObjectModel.ts
+Artifact of record: src/createKrogStreetMarketModel.ts (the generator's output path here). The game bake (scripts/bake-landmark.mjs -> assets/landmarks/krog-street-market-front.json) is a project step outside img2threejs.

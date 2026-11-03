@@ -1,0 +1,109 @@
+STATUS pass=blockout completed=0 blocked=blockout requires a browser screenshot and self-correction review before structural-pass unlocks next=diagnose_render.py
+{
+  "passed": true,
+  "checks": {
+    "silhouetteIoU": 1.0,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0,
+    "colorDelta": {
+      "checked": 21,
+      "maxDeltaE": 53.58,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 12.42
+        },
+        {
+          "componentId": null,
+          "deltaE": 13.2
+        },
+        {
+          "componentId": null,
+          "deltaE": 12.42
+        },
+        {
+          "componentId": null,
+          "deltaE": 13.2
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.39
+        },
+        {
+          "componentId": null,
+          "deltaE": 41.28
+        },
+        {
+          "componentId": null,
+          "deltaE": 52.95
+        },
+        {
+          "componentId": null,
+          "deltaE": 53.58
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        },
+        {
+          "componentId": null,
+          "deltaE": 50.07
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [],
+  "maskWarnings": [
+    "reference: image is not clearly isolated from background; using most pixels as material evidence",
+    "render: image is not clearly isolated from background; using most pixels as material evidence"
+  ],
+  "renderHash": "2fe1db2bfc40fc72",
+  "passId": "blockout",
+  "mapStrippedRender": "renders/blockout-top/az020.png"
+}

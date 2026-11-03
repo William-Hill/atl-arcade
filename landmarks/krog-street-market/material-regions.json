@@ -1,0 +1,6 @@
+{"referenceId": "krog-front", "regions": [
+ {"componentId": "roof-profile", "regionId": "metal", "sourceImage": "ref/reference-4000.jpg", "bbox": {"x": 913, "y": 1134, "width": 340, "height": 140}, "family": "metal", "subtype": "aluminum", "finish": "satin", "materialSpecId": "metal"},
+ {"componentId": "canopy", "regionId": "steel", "sourceImage": "ref/reference-4000.jpg", "bbox": {"x": 1520, "y": 1360, "width": 1400, "height": 40}, "family": "coating", "subtype": "paint-over-metal", "finish": "gloss-or-satin", "materialSpecId": "steel"},
+ {"componentId": "market-letters", "regionId": "market", "sourceImage": "ref/reference-4000.jpg", "bbox": {"x": 2362, "y": 1285, "width": 504, "height": 62}, "family": "coating", "subtype": "paint-over-metal", "finish": "gloss-or-satin", "materialSpecId": "letters-white"},
+ {"componentId": "pendant-0", "regionId": "brass", "sourceImage": "ref/reference-4000.jpg", "bbox": {"x": 2331, "y": 1433, "width": 50, "height": 45}, "family": "metal", "subtype": "brass-bronze", "finish": "polished-or-aged", "materialSpecId": "brass"}
+]}

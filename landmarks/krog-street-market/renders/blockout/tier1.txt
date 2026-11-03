@@ -1,0 +1,69 @@
+STATUS pass=blockout completed=0 blocked=blockout requires a browser screenshot and self-correction review before structural-pass unlocks next=diagnose_render.py
+{
+  "passed": true,
+  "checks": {
+    "silhouetteIoU": 1.0,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0,
+    "colorDelta": {
+      "checked": 11,
+      "maxDeltaE": 54.76,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 4.51
+        },
+        {
+          "componentId": null,
+          "deltaE": 9.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 9.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 9.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 9.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 17.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 54.76
+        },
+        {
+          "componentId": null,
+          "deltaE": 54.76
+        },
+        {
+          "componentId": null,
+          "deltaE": 54.76
+        },
+        {
+          "componentId": null,
+          "deltaE": 54.76
+        },
+        {
+          "componentId": null,
+          "deltaE": 54.76
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [],
+  "maskWarnings": [
+    "reference: image is not clearly isolated from background; using most pixels as material evidence",
+    "render: image is not clearly isolated from background; using most pixels as material evidence"
+  ],
+  "renderHash": "b3a229677dfdf90d",
+  "passId": "blockout",
+  "mapStrippedRender": "renders/blockout/unlit/az000.png"
+}

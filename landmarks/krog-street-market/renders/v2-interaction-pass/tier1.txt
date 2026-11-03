@@ -1,0 +1,420 @@
+STATUS pass=interaction-pass completed=6 blocked=none next=diagnose_render.py
+{
+  "passed": true,
+  "checks": {
+    "silhouetteIoU": 0.9035,
+    "aspectRatioDelta": 0.029,
+    "scaleDelta": 0.0082,
+    "bilateralSymmetryError": 0.3069,
+    "colorDelta": {
+      "method": "visible-footprint",
+      "checked": 10,
+      "unmeasured": [
+        "krog-street-letters",
+        "market-letters",
+        "pendant-cord-0",
+        "pendant-bulb-0",
+        "pendant-cord-1",
+        "pendant-bulb-1",
+        "pendant-cord-2",
+        "pendant-bulb-2",
+        "pendant-cord-3",
+        "pendant-bulb-3",
+        "pendant-cord-4",
+        "pendant-bulb-4",
+        "truss-top-f",
+        "truss-bottom-f",
+        "truss-diag-f0",
+        "truss-diag-f1",
+        "truss-diag-f2",
+        "truss-diag-f3",
+        "truss-diag-f4",
+        "truss-diag-f5",
+        "truss-diag-f6",
+        "truss-diag-f7",
+        "truss-diag-f8",
+        "truss-diag-f9",
+        "truss-diag-f10",
+        "truss-diag-f11",
+        "truss-diag-f12",
+        "truss-diag-f13",
+        "truss-diag-f14",
+        "truss-diag-f15",
+        "truss-top-b",
+        "truss-bottom-b",
+        "truss-diag-b0",
+        "truss-diag-b1",
+        "truss-diag-b2",
+        "truss-diag-b3",
+        "truss-diag-b4",
+        "truss-diag-b5",
+        "truss-diag-b6",
+        "truss-diag-b7",
+        "truss-diag-b8",
+        "truss-diag-b9",
+        "truss-diag-b10",
+        "truss-diag-b11",
+        "truss-diag-b12",
+        "truss-diag-b13",
+        "truss-diag-b14",
+        "truss-diag-b15"
+      ],
+      "maxDeltaE": 7.88,
+      "perComponent": [
+        {
+          "componentId": "roof-profile",
+          "status": "measured",
+          "footprintPixels": 98846,
+          "meanRgb": [
+            184,
+            190,
+            195
+          ],
+          "deltaE": 0.37
+        },
+        {
+          "componentId": "canopy",
+          "status": "measured",
+          "footprintPixels": 17403,
+          "meanRgb": [
+            33,
+            35,
+            38
+          ],
+          "deltaE": 1.46
+        },
+        {
+          "componentId": "canopy-truss",
+          "status": "measured",
+          "footprintPixels": 21598,
+          "meanRgb": [
+            30,
+            32,
+            35
+          ],
+          "deltaE": 0.0
+        },
+        {
+          "componentId": "post-a",
+          "status": "measured",
+          "footprintPixels": 265,
+          "meanRgb": [
+            39,
+            44,
+            50
+          ],
+          "deltaE": 6.05
+        },
+        {
+          "componentId": "post-b",
+          "status": "measured",
+          "footprintPixels": 301,
+          "meanRgb": [
+            41,
+            47,
+            53
+          ],
+          "deltaE": 7.35
+        },
+        {
+          "componentId": "krog-street-letters",
+          "status": "textured-card"
+        },
+        {
+          "componentId": "market-letters",
+          "status": "textured-card"
+        },
+        {
+          "componentId": "pendant-0",
+          "status": "measured",
+          "footprintPixels": 519,
+          "meanRgb": [
+            208,
+            166,
+            79
+          ],
+          "deltaE": 5.35
+        },
+        {
+          "componentId": "pendant-cord-0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "pendant-bulb-0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "pendant-1",
+          "status": "measured",
+          "footprintPixels": 450,
+          "meanRgb": [
+            213,
+            170,
+            80
+          ],
+          "deltaE": 3.93
+        },
+        {
+          "componentId": "pendant-cord-1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 3
+        },
+        {
+          "componentId": "pendant-bulb-1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "pendant-2",
+          "status": "measured",
+          "footprintPixels": 211,
+          "meanRgb": [
+            201,
+            161,
+            78
+          ],
+          "deltaE": 7.88
+        },
+        {
+          "componentId": "pendant-cord-2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "pendant-bulb-2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "pendant-3",
+          "status": "measured",
+          "footprintPixels": 90,
+          "meanRgb": [
+            215,
+            169,
+            75
+          ],
+          "deltaE": 1.44
+        },
+        {
+          "componentId": "pendant-cord-3",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "pendant-bulb-3",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "pendant-4",
+          "status": "measured",
+          "footprintPixels": 500,
+          "meanRgb": [
+            210,
+            164,
+            73
+          ],
+          "deltaE": 2.9
+        },
+        {
+          "componentId": "pendant-cord-4",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "pendant-bulb-4",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-top-f",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 3
+        },
+        {
+          "componentId": "truss-bottom-f",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 11
+        },
+        {
+          "componentId": "truss-diag-f0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f3",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f4",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f5",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f6",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f7",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f8",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f9",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f10",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f11",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f12",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f13",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f14",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-f15",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-top-b",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-bottom-b",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b3",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b4",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b5",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b6",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b7",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b8",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b9",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b10",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b11",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b12",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b13",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b14",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "truss-diag-b15",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        }
+      ],
+      "gated": true
+    }
+  },
+  "failures": [],
+  "maskWarnings": [],
+  "renderHash": "c037a70b3872d3db",
+  "passId": "interaction-pass"
+}

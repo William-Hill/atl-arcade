@@ -303,6 +303,66 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Why the tiles are small: with 125 m tiles and LOD0 within 75 m or 110 m, the trail playtest ran at a median of 30 FPS, because one near tile put up to 60 detailed trees on screen. With 50 m tiles it ran at 59.5 and 59.9 FPS in two runs.
 - Windows: the facade shader blends each window edge over one pixel (anti-aliasing with `fwidth`). Far windows fade to the mean wall color, so the grid does not shimmer. Each window has a sill, and a wide window has a center mullion.
 
+## 2026-11-01: Landmark models with img2threejs (M2-01, #18)
+
+- Why: William asked whether img2threejs can be used, and picked "landmarks first".
+- Install: `npx img2threejs@0.1.1 install --host claude`. It links release v2.0.0 (published 2026-09-06, commit a669e9a) into `~/.claude/skills/img2threejs`. Both versions are older than 7 days. The skill is a tool, not a project dependency.
+- Scope of the model: the OSM footprint and the facade shader already give the building mass and the windows. img2threejs models only what a box cannot show: the Ponce City Market tower top. The rooftop sign is game code (`src/render/landmark-signs.js`), because it is a flat card on a different roof.
+- Reference: one Wikimedia Commons photo (Tyler Lahti, CC BY-SA 2.0). A close crop corrected the first analysis: the tower top is a square brick belvedere under a truncated hipped copper roof, not an octagonal lantern with a dome.
+- Pipeline: the spec is written by `landmarks/ponce-city-market/build_spec.py`. `post_generate.py` gives the roof cone 4 segments, because the generator builds every cone with 8 and reads no per-part count. `run_pass.sh` runs the mechanical gates of one pass.
+- Gate fixes that the reference needed: a polygon mask of the tower (the aerial crop has the city behind it), a render at the crop's aspect ratio, and a transparent background for the turntable gate.
+- Result: blockout (0.72), structural (0.72), and form (0.74) passed. The material pass stopped at `request-input`: Tier 1 groups the render into at most 5 colors (k-means k=5), and the tower has 6 part colors, so the small gold finial never forms a group (delta-E 45.81). Changing the gold or enlarging the finial to pass would bend the model to the tool, so the model stays at the form-pass level.
+- Game: `scripts/bake-landmark.mjs` bakes the factory into one vertex-colored template (`assets/landmarks/ponce-city-market-tower.json`, 1704 triangles, 110 KB). The game does not bundle the 470 KB factory. `src/level/geo/landmarks.js` places the tower near the north edge of the real roof and the sign on the east edge, facing the trail. Both positions are approximate.
+- The tower is at its real size (8 m wide, 21 m above the roof), so it reads small on the 238 m by 188 m OSM footprint.
+- Not done: the lighting, interaction, and optimization passes.
+
+## 2026-11-02: Krog Street Market front with img2threejs (M2-01, #18)
+
+- Reference: one Wikimedia Commons photo (LittleT889, CC BY-SA 4.0), a street-level view of the entrance. Scale from the brick wall: about 30 px per meter.
+- Scope: the parts above and on the brick box. A sawtooth metal roof profile (extruded 50 m back), the black canopy with its truss, 2 posts, 5 brass pendants, and 2 letter cards ("KROG STREET" on a transparent card, "MARKET" on the fascia). The OSM box and a new "brick-market-hall" style (no parapet) give the brick walls.
+- A close crop corrected the first analysis: the roof is a sawtooth (a rise to a vertical step, a fall, and a tall rise), not 2 gables.
+- The letter cards keep their text through the bake (`cards` in the template), and the game draws them with `createSignTexture`. "KROG STREET" uses a condensed font (DIN Condensed, then Arial Narrow, then Impact).
+- Placement: the front faces east, to the parking drive. On the west side, the OSM data has a sidewalk and Krog Street within 6 m, so a canopy there would hang over the street. Approximate.
+- Review camera: the photo's own camera (about 1.6 m high, 36 m out, a 10.6 degree lens), so the render frames the crop.
+- Tier 1 masks: neither the Ponce City Market nor the first Krog Tier 1 runs isolated the subject. Both masks fell back to almost the whole frame, so the silhouette IoU read 1.0. Those silhouette passes were not real evidence. With a transparent reference mask and a transparent render, the Krog front measured IoU 0.534, which led to the canopy truss (IoU 0.788). The Ponce City Market tower was not measured again this way.
+- Result: blockout (0.72), structural (0.72), and form (0.73) passed. The material pass stopped at `request-input` on the same Tier 1 color limit: the 5 brass pendants are too small to form one of the 5 color groups (delta-E 55.78).
+- Size in the game: 472 triangles, 3.6 KB gzip.
+
+## 2026-11-02: Landmarks v2, the full img2threejs pipeline (M2-01, #18)
+
+- Why: William said the landmarks did not reach the quality that img2threejs gives elsewhere. He picked "Full pipeline, real materials".
+- Cause of the gap in v1: a flat vertex-color bake, a 3000-triangle budget, shallow specs, and only 3 of 8 passes.
+- Specs: each spec is deeper now. The Ponce City Market tower has 152 parts (arched window frames with holes, stone panels, 22 dentils a face, a frieze, a cornice, a hip roof, a cap, and a finial). The Krog Street Market front has 58 parts (a canopy truss with 16 diagonals a side, 5 pendants with cords and bulbs). The budget is 20000 triangles.
+- Passes: both models ran all 8 passes, each with gates and a review. Ponce City Market fidelity went from 0.78 (blockout) to 0.80 (optimization). Krog Street Market stayed at 0.78. Both state files are `complete`, with part coverage, action-ready, and emission evidence. The plugin gates are skipped, because no domain plugin applies.
+- Tier 1 masks: the v1 silhouette IoU of 1.0 was not valid evidence (both masks fell back to the full frame). v2 uses a transparent polygon mask of the reference and a transparent render. Ponce City Market measures IoU 0.865, and Krog Street Market 0.9035.
+- Review cameras: the cameras are fitted to the crop (Ponce City Market: 70 m out, a 9.5 degree lens; Krog Street Market: a 5.6 degree lens). They are fits, not solved physical cameras.
+- Gate patch: Tier 1 groups the whole render into 5 colors, so a small part with its own color (the gold finial, the brass pendants) always failed. William picked "Patch the gate locally". The local patch (`tools/img2threejs-footprint-color.patch`, applied to `forge/stage4_review/diagnose_render.py` in `~/.img2threejs`) adds `--footprint-dir`. Each part is compared on its own visible footprint (a render with the part and a render without it, both unlit). Parts with fewer than 12 visible pixels are reported as unmeasured. Text cards are reported as `textured-card` and judged in the review. Ponce City Market measures 27 parts (max delta-E 10.38), and Krog Street Market 10 parts (max 7.88). An upstream issue draft is in `tools/img2threejs-footprint-gate-issue.md`. It is not sent.
+- Materials in the game: the near level now uses physical materials (`src/render/landmark-materials.js`): canvas color, bump, and roughness maps for brick, stone, copper patina, and corrugated metal, with world-meter UVs. A RoomEnvironment reflection map, and a small shader term darkens the walls under an overhang (cornice, canopy). The game lights, no tone mapping, and no shadow map stay as before.
+- LOD: each landmark is a `THREE.LOD`. Within 250 m it shows the physical-material groups. Past 250 m it shows the flat vertex-color toon mesh.
+- Triangles: the generator subdivides every box and uses 32 by 20 sphere segments. `post_generate.py` sets each box to 1 segment, the Ponce City Market hip roof to 4 segments, and the Krog Street Market bulbs to 12 by 8 segments. A decimate ratio of 0.0625 collapsed the boxes, so it is not used. The tower is 4732 triangles (from 27232), and the front 3584 (from 8824). The bulb patch came after the Krog Street Market optimization review; the in-game render was checked after it.
+- Size: `ponce-city-market-tower.json` is 1.33 MB (111 KB gzip). `krog-street-market-front.json` is 1.06 MB (84 KB gzip).
+- Known limits: the Krog Street Market roof profile extrudes 50 m back as a plain metal slab, so an oblique view shows a long flat roof. The canopy posts are not solid in the game.
+
+## 2026-11-02: Scanned textures on the landmarks (M2-01, #18)
+
+- Why: the research on the X links (`docs/research/2026-11-02-x-links-level-and-assets.md`) found that procedural noise reads as fake next to a real scan. William said "Yes, do the textures".
+- Source: 3 CC0 scan sets from Poly Haven: `red_brick` (brick, 1.4 m tile), `beige_wall_001` (stone trim, 3.0 m tile), and `corrugated_iron` (the Krog Street Market roof metal, 1.12 m tile). Each set has a color map, an OpenGL normal map, and a roughness map.
+- Build: `scripts/landmark-textures.py` downloads the 1k maps and writes 512 px maps to `assets/landmarks/textures/`. The script multiplies the color map by the AO map, so the material needs no AO map. It also tints the color map in linear space, so its mean color is the spec base color. The img2threejs color gate reads the spec base colors, so this tint keeps the models inside the gate. No pixel clipped.
+- Copper patina: Poly Haven has no CC0 patina scan. The copper keeps its canvas texture.
+- Tiles: the maps tile at the real scan size, through the world-meter box UVs (`applyBoxUVs`). The normal maps use the per-pixel tangent frame of three.js, because the box UVs have no tangents.
+- Load: `landmarkTexturesReady()` resolves when the maps load. The landmarks count in `info.towers` only after that, and the preview pages draw only after that, so the screenshots show the final look.
+- Size: 9 maps, 418 KB in the build. `npm run playtest:beltline` median 59.9 FPS, gate 55 PASS.
+- Not done: the img2threejs passes were not run again; the unlit color gate does not read the maps.
+
+## 2026-11-02: Brick scan on the OSM building facades (M1-08 follow-up)
+
+- Why: after the landmark scans, the tower brick was more detailed than the brick of the buildings around it. William said "Yes, do facades".
+- What: the facade shader (`createFacadeMaterial` in `src/render/geo-view.js`) samples the same CC0 brick scan as the landmarks (`assets/landmarks/textures/brick/color.jpg`). It divides the scan by its mean color and multiplies the wall color by the result. Each building keeps its own wall color and gets brick courses, mortar, and brick-to-brick variation.
+- Where: only on the styles with `brick: true` (`brick-loft`, `brick-warehouse`, `brick-market-hall`). The church style has a white wall color too, so it has no flag.
+- Size: the shader turns the bay and floor coordinates into meters (style `bay` and `floorHeight`). It tiles the scan at its real size (1.4 m). A wall with a bay count rounded from its length gets up to about 25% stretch along the wall.
+- Far: the detail fades out with the same factor that fades the windows, so far walls do not shimmer.
+- No new file: the map is the one the landmarks load. `npm run playtest:beltline` median 59.9 FPS, gate 55 PASS.
+
 ## 2026-11-02: A second playable skater, and the pipelines compared (M1-10, #42)
 
 - Scope change: version 1 had one skater in the concept. William asked for more playable characters, so M1 now has two: Nia "Sway" Ellis (West End) and Marcus "Tempo" Reid (Old Fourth Ward). Each new skater adds art cost and a skater review, so a third skater needs a new issue.

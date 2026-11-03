@@ -33,6 +33,16 @@ Every dataset that the game uses is listed here, with its license and the attrib
 |---|---|---|
 | Street kit (`assets/kit/street-kit.glb`) | Built from Blender primitives by `scripts/blender/street_kit.py`. See `assets/kit/provenance.json`. | Original work for this project |
 | Mural designs | Drawn in code from a fixed seed (`src/render/murals.js`) | Original work for this project |
+| Landmark scan textures (`assets/landmarks/textures/`) | Poly Haven `red_brick` (Rob Tuytel), `beige_wall_001` and `corrugated_iron` (Dimitrios Savva, Rico Cilliers, Jenelle van Heerden), resized and tinted by `scripts/landmark-textures.py`. See `assets/landmarks/textures/provenance.json`. | CC0 1.0 |
+
+## Reference photos (not in the game)
+
+These photos are visual references for landmark models. No pixels of them are in the game.
+
+| Photo | Author | License | Used for |
+|---|---|---|---|
+| [Ponce City Market from Historic Fourth Ward Park](https://commons.wikimedia.org/wiki/File:Ponce_City_Market_from_Historic_Fourth_Ward_Park.jpg) | Tyler Lahti | CC BY-SA 2.0 | The tower top of `assets/landmarks/ponce-city-market-tower.json`. A 1280 px copy and small crops are in `landmarks/ponce-city-market/ref/` and `crops/`, under the same license. |
+| [Krog Street Market](https://commons.wikimedia.org/wiki/File:Krog_Street_Market.jpg) | LittleT889 | CC BY-SA 4.0 | The entrance front of `assets/landmarks/krog-street-market-front.json`. A 1280 px copy and small crops are in `landmarks/krog-street-market/ref/` and `crops/`, under the same license. |
 
 ## Code libraries (not datasets)
 
@@ -41,3 +51,4 @@ These are not datasets. They are here so that the license list is in one place.
 | Library | Version | License | Used for |
 |---|---|---|---|
 | earcut | 3.2.4 | ISC | Roof and park polygon triangulation (`src/level/geo/extrude.js`) |
+| img2threejs (skill, not a dependency) | v2.0.0, commit a669e9a, with the local patch `tools/img2threejs-footprint-color.patch` | Apache-2.0 | Landmark reconstruction in `landmarks/` |

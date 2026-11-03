@@ -1,0 +1,4 @@
+post_generate: hip roof has 4 segments
+post_generate: 125 box geometries at 1 segment
+IoU 0.8652 color max 10.38 measured 27
+pass optimization-pass: gates PASS; review renders/v2-optimization-pass/cmp.png

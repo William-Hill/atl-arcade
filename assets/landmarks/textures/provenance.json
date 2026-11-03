@@ -1,0 +1,13 @@
+{
+  "asset": "Landmark scan textures: brick/, trim/, and metal/ (color.jpg, normal.jpg, rough.jpg, set.json), 512 px each",
+  "date": "2026-11-02",
+  "tool": "scripts/landmark-textures.py (Pillow, NumPy): downloads the Poly Haven 1k JPG maps, resizes them to 512 px, multiplies the color map by the AO map, and tints the color map so its mean matches the img2threejs spec base color",
+  "sources": [
+    { "materialId": "brick", "asset": "red_brick", "url": "https://polyhaven.com/a/red_brick", "authors": "Rob Tuytel", "tileMeters": 1.4 },
+    { "materialId": "trim", "asset": "beige_wall_001", "url": "https://polyhaven.com/a/beige_wall_001", "authors": "Dimitrios Savva (photography), Rico Cilliers (processing)", "tileMeters": 3.0 },
+    { "materialId": "metal", "asset": "corrugated_iron", "url": "https://polyhaven.com/a/corrugated_iron", "authors": "Dimitrios Savva (photography), Jenelle van Heerden (processing)", "tileMeters": 1.12 }
+  ],
+  "license": "CC0 1.0 (Poly Haven). No attribution is required; the authors are listed here as a courtesy.",
+  "prompt": "None. These are photo scans, not generated art.",
+  "credits": "No paid credits."
+}

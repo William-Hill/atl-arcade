@@ -145,7 +145,7 @@ Other sources describe ATL style as "swaggy, ryding" with leg crosses, claps, an
 
 **BPM.** Estimate 70 to 80. Not verified.
 
-**Animator spec (2 bars, solo version).**
+**Animator spec (2 bars, solo version).** The video checks above supersede the arm and sway lines below: the shipped clip keeps the arms near shoulder height with the forearms hanging down (first pass), and a later pass can add the per-count turn of 30 to 45 degrees, the forward drop, and the infinity-sign hand trace (second pass).
 - Arms: both arms up and out at about 45 degrees, elbows soft, as if over the shoulders of friends. Or one arm up and one arm out.
 - Beats 1 and 2: Hips and Spine sway to the left. Weight goes on the LeftFoot. Knees dip on beat 2.
 - Beats 3 and 4: sway to the right. Dip on beat 4.

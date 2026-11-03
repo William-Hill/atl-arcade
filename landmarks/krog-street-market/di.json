@@ -1,6 +1,6 @@
 {
-  "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/ref/reference.jpg",
-  "zonesDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory",
+  "sourceImage": "ref/reference.jpg",
+  "zonesDir": "detail-inventory",
   "detailInventory": {
     "scanMethod": "grid-3x3",
     "targetMinDetails": 6,
@@ -22,7 +22,7 @@
           "type": "",
           "ref": ""
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+        "evidenceRef": "detail-inventory/zone-r0c0.png",
         "confidence": 0.0
       },
       {
@@ -42,7 +42,7 @@
           "type": "",
           "ref": ""
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c1.png",
+        "evidenceRef": "detail-inventory/zone-r0c1.png",
         "confidence": 0.0
       },
       {
@@ -62,7 +62,7 @@
           "type": "",
           "ref": ""
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c2.png",
+        "evidenceRef": "detail-inventory/zone-r0c2.png",
         "confidence": 0.0
       },
       {
@@ -82,7 +82,7 @@
           "type": "",
           "ref": ""
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r1c0.png",
+        "evidenceRef": "detail-inventory/zone-r1c0.png",
         "confidence": 0.0
       },
       {
@@ -102,7 +102,7 @@
           "type": "",
           "ref": ""
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r1c1.png",
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
         "confidence": 0.0
       },
       {
@@ -122,7 +122,7 @@
           "type": "",
           "ref": ""
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r1c2.png",
+        "evidenceRef": "detail-inventory/zone-r1c2.png",
         "confidence": 0.0
       },
       {
@@ -142,7 +142,7 @@
           "type": "",
           "ref": ""
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r2c0.png",
+        "evidenceRef": "detail-inventory/zone-r2c0.png",
         "confidence": 0.0
       },
       {
@@ -162,7 +162,7 @@
           "type": "",
           "ref": ""
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r2c1.png",
+        "evidenceRef": "detail-inventory/zone-r2c1.png",
         "confidence": 0.0
       },
       {
@@ -182,7 +182,7 @@
           "type": "",
           "ref": ""
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r2c2.png",
+        "evidenceRef": "detail-inventory/zone-r2c2.png",
         "confidence": 0.0
       }
     ]

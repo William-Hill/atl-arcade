@@ -1,6 +1,6 @@
 {
-  "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/ref/reference.jpg",
-  "zonesDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory",
+  "sourceImage": "ref/reference.jpg",
+  "zonesDir": "detail-inventory",
   "detailInventory": {
     "scanMethod": "grid-3x3",
     "targetMinDetails": 6,
@@ -22,7 +22,7 @@
           "type": "component.localFeatures",
           "ref": "clock-tower.lantern"
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r0c1.png",
+        "evidenceRef": "detail-inventory/zone-r0c1.png",
         "confidence": 0.8
       },
       {
@@ -42,7 +42,7 @@
           "type": "material.localOverrides",
           "ref": "copper-patina.dome"
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r0c1.png",
+        "evidenceRef": "detail-inventory/zone-r0c1.png",
         "confidence": 0.8
       },
       {
@@ -62,7 +62,7 @@
           "type": "component.localFeatures",
           "ref": "clock-tower.flagpole"
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r0c1.png",
+        "evidenceRef": "detail-inventory/zone-r0c1.png",
         "confidence": 0.7
       },
       {
@@ -82,7 +82,7 @@
           "type": "component.localFeatures",
           "ref": "rooftop-sign.letters"
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r0c1.png",
+        "evidenceRef": "detail-inventory/zone-r0c1.png",
         "confidence": 0.9
       },
       {
@@ -102,7 +102,7 @@
           "type": "component.localFeatures",
           "ref": "main-block.cornice"
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r1c1.png",
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
         "confidence": 0.8
       },
       {
@@ -122,7 +122,7 @@
           "type": "material.localOverrides",
           "ref": "brick.window-grid"
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r1c1.png",
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
         "confidence": 0.9
       },
       {
@@ -142,7 +142,7 @@
           "type": "component.localFeatures",
           "ref": "main-block.roof-units"
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r1c1.png",
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
         "confidence": 0.7
       },
       {
@@ -162,7 +162,7 @@
           "type": "component.localFeatures",
           "ref": "main-block.stepped-wings"
         },
-        "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/detail-inventory/zone-r1c1.png",
+        "evidenceRef": "detail-inventory/zone-r1c1.png",
         "confidence": 0.6
       }
     ]

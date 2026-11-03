@@ -3,7 +3,8 @@ import { mkdtempSync, readFileSync, cpSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildingHeight, buildLevel, classifyWay, clipPolyline, joinRings, overpassQuery, parseHeight } from "./build-block.mjs";
+import { createGeoGroundSampler } from "../src/level/geo/geo-ground.js";
+import { buildingHeight, buildLevel, classifyWay, clipOffCorridor, clipPolyline, hasGroundWalls, joinRings, overpassQuery, parseHeight, trailCorridor } from "./build-block.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const BBOX = { south: 33.756, west: -84.3685, north: 33.7735, east: -84.358 };
@@ -103,6 +104,89 @@ describe("build-block geometry", () => {
     expect(q).toContain("33.756,-84.3685,33.7735,-84.358");
     expect(q).toContain('way["building"]');
     expect(q).toContain('way["highway"]');
+  });
+});
+
+describe("build-block footprints off the trail (#57)", () => {
+  it("skips roofs and footprints with no walls down to the ground", () => {
+    expect(hasGroundWalls({ building: "roof", layer: "1" })).toBe(false);
+    expect(hasGroundWalls({ building: "yes", min_height: "6" })).toBe(false);
+    expect(hasGroundWalls({ building: "yes", "building:min_level": "2" })).toBe(false);
+    expect(hasGroundWalls({ building: "yes", layer: "1" })).toBe(true);
+    expect(hasGroundWalls({ building: "office" })).toBe(true);
+  });
+
+  it("cuts the trail corridor out of a footprint and keeps a footprint off the trail", () => {
+    const corridor = trailCorridor([{ id: "t", kind: "trail", width: 4, points: [[-50, 0], [50, 0]] }]);
+    const across = { id: "b", height: 10, outer: [[-10, -10], [10, -10], [10, 10], [-10, 10]] };
+    const pieces = clipOffCorridor(across, corridor);
+    expect(pieces.map((p) => p.id)).toEqual(["b-0", "b-1"]);
+    for (const p of pieces) {
+      expect(p.height).toBe(10);
+      for (const [, z] of p.outer) expect(Math.abs(z)).toBeGreaterThanOrEqual(2.5 - 1e-9);
+    }
+    const away = { id: "c", height: 10, outer: [[-10, 20], [10, 20], [10, 30], [-10, 30]] };
+    expect(clipOffCorridor(away, corridor)).toEqual([away]);
+  });
+
+  it("skips a raised footprint (layer 1) over a path, and keeps one beside it", () => {
+    const c = { lat: (BBOX.south + BBOX.north) / 2, lon: (BBOX.west + BBOX.east) / 2 };
+    const d = 0.0002;
+    const square = (lon) => [
+      { lat: c.lat, lon },
+      { lat: c.lat, lon: lon + d },
+      { lat: c.lat + d, lon: lon + d },
+      { lat: c.lat + d, lon },
+      { lat: c.lat, lon },
+    ];
+    const raw = {
+      elements: [
+        { type: "way", id: 1, tags: { building: "yes", layer: "1" }, geometry: square(c.lon) },
+        { type: "way", id: 2, tags: { building: "yes", layer: "1" }, geometry: square(c.lon + 0.001) },
+        { type: "way", id: 3, tags: { highway: "footway" }, geometry: [{ lat: c.lat + d / 2, lon: c.lon - d }, { lat: c.lat + d / 2, lon: c.lon + 2 * d }] },
+      ],
+    };
+    const level = buildLevel(raw, { bbox: BBOX, name: "t", title: "t" });
+    expect(level.buildings.map((b) => b.id)).toEqual(["w2"]);
+  });
+});
+
+describe("build-block committed BeltLine level (#57)", () => {
+  const level = JSON.parse(readFileSync(resolve(ROOT, "levels/beltline-eastside/level.json"), "utf8"));
+  const sample = createGeoGroundSampler(level);
+  const buildingIds = new Set(level.buildings.map((b) => b.id));
+  // Every point every 0.5 m on the center line of the strips, and the building under it.
+  const walls = (strips) => {
+    const hits = new Set();
+    for (const s of strips) {
+      for (let i = 0; i < s.points.length - 1; i += 1) {
+        const [ax, az] = s.points[i];
+        const [bx, bz] = s.points[i + 1];
+        const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / 0.5));
+        for (let k = 0; k <= n; k += 1) {
+          const g = sample(ax + ((bx - ax) * k) / n, az + ((bz - az) * k) / n);
+          if (g && buildingIds.has(g.id)) hits.add(`${s.id} -> ${g.id}`);
+        }
+      }
+    }
+    return [...hits];
+  };
+
+  it("has no building wall on the full trail center line", () => {
+    const trail = level.strips.filter((s) => s.kind === "trail");
+    expect(trail.reduce((n, s) => n + s.points.length - 1, 0)).toBeGreaterThan(50);
+    expect(walls(trail)).toEqual([]);
+  });
+
+  it("has no roof or shed wall on the paths under them", () => {
+    // Stone Mountain Trail, and the paths through the Beltline Shed.
+    const ids = ["w44851091", "w1387075148", "w431443667", "w431795703"];
+    const paths = level.strips.filter((s) => ids.includes(s.id));
+    expect(paths.length).toBe(ids.length);
+    expect(walls(paths)).toEqual([]);
+    for (const id of ["w1365544414", "w270468871", "w223977988"]) expect(buildingIds.has(id)).toBe(false);
+    // 725 Ponce stays, cut back off the trail.
+    expect(buildingIds.has("w741961703")).toBe(true);
   });
 });
 

@@ -515,6 +515,38 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Evidence: the report `reports/m0-07-beat-alignment.json` records the attempt number and the 1, 5, and 15 minute load averages (`os.loadavg()`) before and after the taps. The retry writes over the report, so each attempt is also attached to the Playwright test result.
 - Run only this test: `npx playwright test --project=beat-timing`.
 
+## 2026-11-03: No building walls on the trail (#57)
+
+- Problem: `scripts/build-block.mjs` extruded every OSM footprint as a solid from the ground. Roofs, raised sheds, and the "725 Ponce" edge made walls on the trail and on paths.
+- Rule 1: the build skips a footprint with no walls down to the ground: `building=roof`, a `min_height` over 0, or a `building:min_level` over 0. On the BeltLine level this removes the canopies `w1365544414` and `w270468871` (one is on the Stone Mountain Trail).
+- Rule 2: the build skips a footprint with `layer` over 0 when a trail or path center line goes into it. This removes the "Beltline Shed" (`w223977988`) over the paths `w431443667` and `w431795703`. A raised footprint beside the ways stays, for example New Realm Brewing (`w961282227`, `layer=1`).
+- Rule 3: the build cuts a corridor (the trail half width plus 0.5 m) out of each footprint that the trail touches. The "725 Ponce" edge (`w741961703`) follows the trail and has no layer tag, so rules 1 and 2 do not apply to it. On this level, the cut changes only that footprint.
+- Library: `polygon-clipping` 0.15.7 (2023-12-18) does the polygon difference. Only the build script uses it, so it is a dev dependency.
+- Test: a Vitest test samples the full trail center line every 0.5 m with `createGeoGroundSampler` and finds no building.
+- Not fixed: five paths still go into Ponce City Market (`w184803195`) and one footway goes into `w211747264`. These are raised walkways and building passages (`level=2`, `bridge=yes`, `tunnel=building_passage`). They are out of the scope of #57.
+
+## 2026-11-03: Protect the ground under bridges with more than two points (#59)
+
+- Problem: in `src/level/geo/terrain.js`, `gradeTrail` protected the middle half of each bridge segment. Near an inner joint of a bridge with more than two points, the grid had no protection, so the trail grade could move the ground under the deck.
+- Fix: the new `bridgeMiddle` finds the nearest point on the full bridge polyline and its length along the line. The protected part is the middle half of the full length (0.25 to 0.75), within width / 2 + 2 m of the center line.
+- Bridges with more than two points on the BeltLine level: `w741961708` (trail), `w182470306`, `w431443668`, and `w44851092` (paths), `w638312736` (sidewalk), and `w156324725`, `w29094065`, and `w29094070` (streets).
+- Level data: the rebuild changes 61 terrain cells. The largest change is 2.35 m at about (-45, -717). The spawn height changes by 0.02 m.
+
+## 2026-11-03: The toon material keeps the GLB material properties (#60)
+
+- `toonMaterial()` now copies each property in `KEPT` when the source material has it: `map`, `opacity`, `transparent`, `alphaTest`, `side`, `vertexColors`, `emissive`, `emissiveIntensity`, `emissiveMap`, `normalMap`, `normalMapType`, and `normalScale`. Colors and vectors are copies.
+- `toonSkater()` builds one outline hull for each skinned mesh and returns the list of hulls. A skater with separate skates or hair gets an outline on each part.
+- Nia and Marcus each have one skinned mesh with a normal map. The toon material dropped the normal map before; now it keeps it. The change in the screenshots is small: on the BeltLine, 91 pixels (Nia) and 29 pixels (Marcus) of 42,000 in the skater area changed by more than 16 levels. Two runs of the same code differ by 5 to 16 pixels there.
+- Known problem, not fixed here: `toonSkater()` replaces the face decal material of Nia (`attachFace()` in `loadSkaterModel()`), so the decal eyes and mouth do not show with `?toon=1`. This was true before this change.
+
+## 2026-11-03: No absolute local paths in the landmark files (#62)
+
+- Problem: the img2threejs tools write absolute paths (`/Users/<name>/Development/atl-arcade/.claude/worktrees/<w>/...` and `/Users/<name>/.img2threejs/releases/<sha>/img2threejs/...`). 60 tracked files in `landmarks/krog-street-market/` and `landmarks/ponce-city-market/` had them: the specs, `material-analysis.json`, `di.json`, the pass checks and reviews, the material evidence, and the generated factories in `src/`.
+- Fix: `scripts/landmark-paths.mjs` writes a repository path relative to the landmark folder, an img2threejs skill path as `<img2threejs>/...`, and any other home folder path as `~/...`. A second run changes nothing.
+- The writer is the img2threejs skill, outside the repository, so it does not change. `run_pass.sh` and `review.sh` of each landmark run `landmark-paths.mjs` on exit, also when a gate fails.
+- Guard: `scripts/landmark-paths.test.js` fails when a text file in a landmark folder has an absolute home folder path. A manual img2threejs step that adds one must run `node scripts/landmark-paths.mjs landmarks/<name>`.
+- The tools run in the landmark folder, so the relative paths resolve. `validate_sculpt_spec.py` and `orchestrate_passes.py check` give the same result before and after the change.
+
 ## 2026-11-03: The skater slides along a wall (#58)
 
 - Decision (the project owner, 2026-11-03): on a wall hit, the skater slides along the wall. A head-on hit still stops the skater (a bonk). This applies on the ground and in the air.

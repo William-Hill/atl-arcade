@@ -5,8 +5,8 @@
   "estimatedFidelity": 0.86,
   "targetThreshold": 0.7,
   "materialId": "copper-patina",
-  "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/crops/copper.png",
-  "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/copper-patina",
+  "sourceImage": "crops/copper.png",
+  "outDir": "material-evidence/copper-patina",
   "palette": [
     "#7E98A1",
     "#3F434F",
@@ -16,31 +16,31 @@
   ],
   "maps": {
     "albedo": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/copper-patina/copper-patina_albedo.png",
+      "path": "material-evidence/copper-patina/copper-patina_albedo.png",
       "url": "copper-patina_albedo.png",
       "channel": "albedo",
       "source": "reference-pixel-extraction"
     },
     "roughness": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/copper-patina/copper-patina_roughness.png",
+      "path": "material-evidence/copper-patina/copper-patina_roughness.png",
       "url": "copper-patina_roughness.png",
       "channel": "roughness",
       "source": "reference-pixel-extraction"
     },
     "height": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/copper-patina/copper-patina_height.png",
+      "path": "material-evidence/copper-patina/copper-patina_height.png",
       "url": "copper-patina_height.png",
       "channel": "height",
       "source": "reference-pixel-extraction"
     },
     "normal": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/copper-patina/copper-patina_normal.png",
+      "path": "material-evidence/copper-patina/copper-patina_normal.png",
       "url": "copper-patina_normal.png",
       "channel": "normal",
       "source": "reference-pixel-extraction"
     },
     "ao": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/copper-patina/copper-patina_ao.png",
+      "path": "material-evidence/copper-patina/copper-patina_ao.png",
       "url": "copper-patina_ao.png",
       "channel": "ao",
       "source": "reference-pixel-extraction"

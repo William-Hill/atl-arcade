@@ -3,6 +3,9 @@
 #   sh review.sh <pass-id> <fidelity> <action> <summary> <layer-json> <feature-json>
 set -e
 SK="$HOME/.claude/skills/img2threejs"
+# The img2threejs tools write absolute local paths. On exit, write them
+# relative to this folder (scripts/landmark-paths.mjs, #62).
+trap 'node ../../scripts/landmark-paths.mjs . > /dev/null' EXIT
 P="$1"; F="$2"; A="$3"; SUM="$4"; L="$5"; FE="$6"
 R="renders/v2-$P"
 echo "$FE" > "$R/features.json"

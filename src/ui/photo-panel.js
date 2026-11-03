@@ -72,6 +72,10 @@ export function createPhotoPanel({ root = document.body, canvas, camera, tiltShi
 
   const toggleButton = el("button", root, { id: "photo-toggle", type: "button", innerHTML: "PHOTO<kbd>P</kbd>", title: "Photo mode (P)" });
   toggleButton.setAttribute("aria-pressed", "false");
+  // The visible text reads "PHOTO P". Screen readers get a clear name.
+  toggleButton.setAttribute("aria-label", "Photo mode");
+  toggleButton.setAttribute("aria-keyshortcuts", "P");
+  toggleButton.setAttribute("aria-controls", "photo-panel");
   const guide = el("div", root, { id: "photo-band-guide", hidden: true });
   const panel = el("div", root, { id: "photo-panel", hidden: true });
   panel.setAttribute("role", "dialog");
@@ -177,6 +181,8 @@ export function createPhotoPanel({ root = document.body, canvas, camera, tiltShi
 
   const typing = (e) => e.target instanceof HTMLElement && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA");
   const onKeyDown = (e) => {
+    // Ctrl, Cmd, and Alt combinations stay with the browser (print, zoom).
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.code === PHOTO_KEY && !e.repeat) {
       e.preventDefault();
       toggle();

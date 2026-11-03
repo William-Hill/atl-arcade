@@ -74,6 +74,8 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     }
   }
   s.grindHeld = wantsGrind;
+  // The grind steps copy the previous state, so set the push flag here too.
+  s.pushing = s.state === "rolling" && Boolean(input.push);
 
   // Style moves: a button press starts the next dance in that button's list,
   // while rolling at speed. A dance runs for its beats, and a held button

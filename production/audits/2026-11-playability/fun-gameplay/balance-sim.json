@@ -1,0 +1,102 @@
+{
+  "per": [
+    {
+      "id": "groove",
+      "seconds": "1.20",
+      "points": 150,
+      "pointsPerSecond": 125
+    },
+    {
+      "id": "spin",
+      "seconds": "0.60",
+      "points": 160,
+      "pointsPerSecond": 267
+    }
+  ],
+  "grind": {
+    "oneSecond": 160,
+    "threeSeconds": 280
+  },
+  "hopPoints": 50,
+  "curve": [
+    {
+      "links": 3,
+      "bankAt150": 1350
+    },
+    {
+      "links": 5,
+      "bankAt150": 3750
+    },
+    {
+      "links": 10,
+      "bankAt150": 15000
+    },
+    {
+      "links": 20,
+      "bankAt150": 60000
+    },
+    {
+      "links": 50,
+      "bankAt150": 375000
+    },
+    {
+      "links": 100,
+      "bankAt150": 1500000
+    }
+  ],
+  "holdQ": {
+    "score": 0,
+    "pendingValue": 0,
+    "links": 0,
+    "maxLinks": 0,
+    "best": 0,
+    "firstBank": null,
+    "style": 0,
+    "speed": "11.76"
+  },
+  "coastQ": {
+    "score": 2400,
+    "pendingValue": 0,
+    "links": 0,
+    "maxLinks": 4,
+    "best": 2400,
+    "firstBank": {
+      "t": "7.6",
+      "points": 2400
+    },
+    "style": 1,
+    "speed": "0.00"
+  },
+  "altQE": {
+    "score": 0,
+    "pendingValue": 3432120,
+    "links": 148,
+    "maxLinks": 148,
+    "best": 0,
+    "firstBank": null,
+    "style": 1,
+    "speed": "11.76"
+  },
+  "hops": {
+    "score": 0,
+    "pendingValue": 1462050,
+    "links": 171,
+    "maxLinks": 171,
+    "best": 0,
+    "firstBank": null,
+    "style": 0,
+    "speed": "11.92"
+  }
+}
+{
+  "holdQLate": {
+    "score": 0,
+    "pendingValue": 1470150,
+    "links": 99,
+    "maxLinks": 99,
+    "best": 0,
+    "firstBank": null,
+    "style": 1,
+    "speed": "11.76"
+  }
+}

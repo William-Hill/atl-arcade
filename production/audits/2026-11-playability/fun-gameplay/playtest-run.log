@@ -1,0 +1,42 @@
+12:16  up 16 days, 59 mins, 7 users, load averages: 53.49 60.68 42.62
+
+> atl-arcade@0.0.1 playtest
+> node scripts/playtest.mjs --port 5191
+
+file:///Users/william-meroxa/Development/atl-arcade/node_modules/vite/dist/node/chunks/node.js:14661
+			throw new Error(`Port ${port} is already in use`);
+			      ^
+
+Error: Port 5191 is already in use
+    at httpServerStart (file:///Users/william-meroxa/Development/atl-arcade/node_modules/vite/dist/node/chunks/node.js:14661:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async startServer (file:///Users/william-meroxa/Development/atl-arcade/node_modules/vite/dist/node/chunks/node.js:25127:30)
+    at async Object.listen (file:///Users/william-meroxa/Development/atl-arcade/node_modules/vite/dist/node/chunks/node.js:24933:4)
+    at async file:///Users/william-meroxa/Development/atl-arcade/scripts/playtest.mjs:56:1
+
+Node.js v26.5.0
+EXIT=1
+12:16  up 16 days, 59 mins, 7 users, load averages: 53.49 60.68 42.62
+
+> atl-arcade@0.0.1 playtest:beltline
+> node scripts/playtest.mjs --level beltline-eastside --port 5192
+
+trail  40s sim, median 12 fps (avg 11.3, p5 6.7), score 0, max combo 0, combos 0, falls/min 0, first 3-link none
+
+overall median 12 fps over 548 frames; gate 55: FAIL
+report: reports/playtest-beltline-eastside-2026-11-03-17-16-08.json
+EXIT=1
+12:17  up 16 days, 1 hr, 7 users, load averages: 55.71 60.71 44.01
+12:17  up 16 days,  1:01, 7 users, load averages: 41.76 56.80 43.17
+
+> atl-arcade@0.0.1 playtest
+> node scripts/playtest.mjs --port 5197
+
+lap    9.67s sim, median 20 fps (avg 19.5, p5 15), score 0, max combo 0, combos 0, falls/min 0, first 3-link none
+rails  24.17s sim, median 20 fps (avg 21.5, p5 15), score 344, max combo 2, combos 1, falls/min 2.48, first 3-link none
+combo  10.95s sim, median 20 fps (avg 15.3, p5 8.6), score 1542, max combo 3, combos 2, falls/min 0, first 3-link 4.15s
+
+overall median 20 fps over 922 frames; gate 55: FAIL
+report: reports/playtest-2026-11-03-17-17-45.json
+EXIT=1
+12:18  up 16 days,  1:02, 7 users, load averages: 39.63 53.63 42.84

@@ -1,0 +1,607 @@
+{
+  "load": "12:23  up 16 days,  1:07, 7 users, load averages: 25.47 42.08 41.25",
+  "views": [
+    {
+      "name": "390x844",
+      "layout": {
+        "viewportMeta": "width=device-width, initial-scale=1",
+        "inner": [
+          390,
+          844
+        ],
+        "html": {
+          "rect": [
+            0,
+            0,
+            390,
+            844
+          ],
+          "fontSize": "16px",
+          "color": "rgb(243, 243, 247)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "body": {
+          "rect": [
+            0,
+            0,
+            390,
+            844
+          ],
+          "fontSize": "16px",
+          "color": "rgb(243, 243, 247)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "canvas": {
+          "rect": [
+            0,
+            0,
+            390,
+            844
+          ],
+          "fontSize": "16px",
+          "color": "rgb(243, 243, 247)",
+          "display": "block",
+          "touchAction": "none",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "hud": {
+          "rect": [
+            16,
+            16,
+            260,
+            164
+          ],
+          "fontSize": "14px",
+          "color": "rgb(243, 243, 247)",
+          "display": "flex",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "hint": {
+          "rect": [
+            16,
+            145,
+            260,
+            16
+          ],
+          "fontSize": "13px",
+          "color": "rgb(255, 209, 102)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto",
+          "text": "Press any key or click to start the beat"
+        },
+        "shellInfo": {
+          "rect": [
+            16,
+            717,
+            374,
+            111
+          ],
+          "fontSize": "13px",
+          "color": "rgb(243, 243, 247)",
+          "display": "flex",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto",
+          "text": "WASD or arrows to skate, Space to jump, hold F to grind, Q and E to dance, R to skate backward or forward, drag the mouse or use the right stick to turn the camera, H for colliders. Land moves on the click for a bonus. Add ?view=orbit to look around."
+        },
+        "attribution": {
+          "rect": [
+            0,
+            6,
+            382,
+            43
+          ],
+          "fontSize": "11px",
+          "color": "rgb(255, 255, 255)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto",
+          "text": "Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright. Heights: Overture Maps Foundation. Elevation: USGS 3DEP",
+          "hidden": false
+        },
+        "skaterButtons": [
+          {
+            "skater": "nia",
+            "w": 96,
+            "h": 45,
+            "top": 32,
+            "right": 120
+          },
+          {
+            "skater": "marcus",
+            "w": 96,
+            "h": 45,
+            "top": 32,
+            "right": 16
+          }
+        ],
+        "hudLabel": {
+          "rect": [
+            16,
+            167,
+            64,
+            13
+          ],
+          "fontSize": "11px",
+          "color": "rgb(243, 243, 247)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "clipped": [],
+        "overlaps": {
+          "hudWithShellInfo": false,
+          "hudWithSkaterSelect": true,
+          "attributionWithSkaterSelect": true,
+          "pulseWithSkaterSelect": 0
+        },
+        "reducedMotionQueryHonored": null,
+        "fullscreenApi": "function"
+      },
+      "gestures": {
+        "before": {
+          "position": [
+            337.072,
+            24.244,
+            -1.316
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": 0,
+            "pitch": 0,
+            "idle": null
+          },
+          "beatRunning": false,
+          "audioState": "no context",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterTap": {
+          "position": [
+            337.072,
+            24.244,
+            -1.322
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": 0,
+            "pitch": 0,
+            "idle": null
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterHold": {
+          "position": [
+            337.073,
+            24.244,
+            -1.328
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": 0,
+            "pitch": 0,
+            "idle": null
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterSwipe": {
+          "position": [
+            337.074,
+            24.244,
+            -1.334
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": -1.4040000000000004,
+            "pitch": 0,
+            "idle": 0.8332999999999993
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterSwipeUp": {
+          "position": [
+            337.074,
+            24.244,
+            -1.337
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": -1.4040000000000004,
+            "pitch": -0.3,
+            "idle": 0.4332000000000009
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterPinch": {
+          "position": [
+            337.074,
+            24.244,
+            -1.341
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": -1.9800000000000009,
+            "pitch": -0.3,
+            "idle": 0.6332999999999996
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        }
+      },
+      "background": {
+        "hudTop": {
+          "meanL": 0.115,
+          "maxL": 0.308
+        },
+        "shellInfo": {
+          "meanL": 0.343,
+          "maxL": 0.73
+        },
+        "hint": {
+          "meanL": 0.119,
+          "maxL": 0.308
+        }
+      },
+      "contrast": {
+        "hint #ffd166 on hint area": {
+          "onMean": 4.31,
+          "onBrightest": 2.03
+        },
+        "paper #f3f3f7 on HUD area": {
+          "onMean": 5.75,
+          "onBrightest": 2.65
+        },
+        "paper #f3f3f7 on shell-info area": {
+          "onMean": 2.41,
+          "onBrightest": 1.22
+        },
+        "pink #ff5fb2 on HUD area": {
+          "onMean": 2.28,
+          "onBrightest": 1.05
+        }
+      }
+    },
+    {
+      "name": "844x390",
+      "layout": {
+        "viewportMeta": "width=device-width, initial-scale=1",
+        "inner": [
+          844,
+          390
+        ],
+        "html": {
+          "rect": [
+            0,
+            0,
+            844,
+            390
+          ],
+          "fontSize": "16px",
+          "color": "rgb(243, 243, 247)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "body": {
+          "rect": [
+            0,
+            0,
+            844,
+            390
+          ],
+          "fontSize": "16px",
+          "color": "rgb(243, 243, 247)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "canvas": {
+          "rect": [
+            0,
+            0,
+            844,
+            390
+          ],
+          "fontSize": "16px",
+          "color": "rgb(243, 243, 247)",
+          "display": "block",
+          "touchAction": "none",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "hud": {
+          "rect": [
+            16,
+            16,
+            260,
+            164
+          ],
+          "fontSize": "14px",
+          "color": "rgb(243, 243, 247)",
+          "display": "flex",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "hint": {
+          "rect": [
+            16,
+            145,
+            260,
+            16
+          ],
+          "fontSize": "13px",
+          "color": "rgb(255, 209, 102)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto",
+          "text": "Press any key or click to start the beat"
+        },
+        "shellInfo": {
+          "rect": [
+            16,
+            317,
+            828,
+            57
+          ],
+          "fontSize": "13px",
+          "color": "rgb(243, 243, 247)",
+          "display": "flex",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto",
+          "text": "WASD or arrows to skate, Space to jump, hold F to grind, Q and E to dance, R to skate backward or forward, drag the mouse or use the right stick to turn the camera, H for colliders. Land moves on the click for a bonus. Add ?view=orbit to look around."
+        },
+        "attribution": {
+          "rect": [
+            21,
+            6,
+            815,
+            14
+          ],
+          "fontSize": "11px",
+          "color": "rgb(255, 255, 255)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto",
+          "text": "Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright. Heights: Overture Maps Foundation. Elevation: USGS 3DEP",
+          "hidden": false
+        },
+        "skaterButtons": [
+          {
+            "skater": "nia",
+            "w": 96,
+            "h": 45,
+            "top": 32,
+            "right": 120
+          },
+          {
+            "skater": "marcus",
+            "w": 96,
+            "h": 45,
+            "top": 32,
+            "right": 16
+          }
+        ],
+        "hudLabel": {
+          "rect": [
+            16,
+            167,
+            64,
+            13
+          ],
+          "fontSize": "11px",
+          "color": "rgb(243, 243, 247)",
+          "display": "block",
+          "touchAction": "auto",
+          "userSelect": "auto",
+          "overscroll": "auto"
+        },
+        "clipped": [],
+        "overlaps": {
+          "hudWithShellInfo": false,
+          "hudWithSkaterSelect": false,
+          "attributionWithSkaterSelect": false,
+          "pulseWithSkaterSelect": 0
+        },
+        "reducedMotionQueryHonored": null,
+        "fullscreenApi": "function"
+      },
+      "gestures": {
+        "before": {
+          "position": [
+            337.072,
+            24.244,
+            -1.316
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": 0,
+            "pitch": 0,
+            "idle": null
+          },
+          "beatRunning": false,
+          "audioState": "no context",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterTap": {
+          "position": [
+            337.072,
+            24.244,
+            -1.322
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": 0,
+            "pitch": 0,
+            "idle": null
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterHold": {
+          "position": [
+            337.073,
+            24.244,
+            -1.328
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": 0,
+            "pitch": 0,
+            "idle": null
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterSwipe": {
+          "position": [
+            337.073,
+            24.244,
+            -1.332
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": -3.0384000549316412,
+            "pitch": 0,
+            "idle": 0.6000000000000003
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterSwipeUp": {
+          "position": [
+            337.074,
+            24.244,
+            -1.335
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": -3.0384000549316412,
+            "pitch": -0.3,
+            "idle": 0.43329999999999946
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        },
+        "afterPinch": {
+          "position": [
+            337.074,
+            24.244,
+            -1.339
+          ],
+          "speed": 0.004,
+          "yaw": 1.464,
+          "state": "rolling",
+          "look": {
+            "yaw": 2.6687852522479445,
+            "pitch": -0.3,
+            "idle": 0.6333000000000013
+          },
+          "beatRunning": true,
+          "audioState": "running",
+          "scale": 1,
+          "scrollY": 0
+        }
+      },
+      "background": {
+        "hudTop": {
+          "meanL": 0.089,
+          "maxL": 0.645
+        },
+        "shellInfo": {
+          "meanL": 0.192,
+          "maxL": 0.779
+        },
+        "hint": {
+          "meanL": 0.075,
+          "maxL": 0.169
+        }
+      },
+      "contrast": {
+        "hint #ffd166 on hint area": {
+          "onMean": 5.83,
+          "onBrightest": 3.33
+        },
+        "paper #f3f3f7 on HUD area": {
+          "onMean": 6.83,
+          "onBrightest": 1.37
+        },
+        "paper #f3f3f7 on shell-info area": {
+          "onMean": 3.92,
+          "onBrightest": 1.14
+        },
+        "pink #ff5fb2 on HUD area": {
+          "onMean": 2.71,
+          "onBrightest": 1.85
+        }
+      }
+    }
+  ],
+  "reducedMotion": {
+    "matches": true,
+    "hudTagTransition": "opacity 0.3s"
+  }
+}

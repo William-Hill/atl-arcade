@@ -546,3 +546,12 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - The writer is the img2threejs skill, outside the repository, so it does not change. `run_pass.sh` and `review.sh` of each landmark run `landmark-paths.mjs` on exit, also when a gate fails.
 - Guard: `scripts/landmark-paths.test.js` fails when a text file in a landmark folder has an absolute home folder path. A manual img2threejs step that adds one must run `node scripts/landmark-paths.mjs landmarks/<name>`.
 - The tools run in the landmark folder, so the relative paths resolve. `validate_sculpt_spec.py` and `orchestrate_passes.py check` give the same result before and after the change.
+
+## 2026-11-03: Mobile playability is a top priority (#65)
+
+- Decision: William made mobile playability the top priority for Skate ATL. The game must be playable on a phone browser (iOS Safari and Android Chrome) before Version 1 ships.
+- This replaces the concept risk-table line "Desktop first, phones in version 2" (`docs/games/2026-10-30-skate-atl-concept.md`). The concept scope table also lists touch controls under "Full vision"; that line is replaced too.
+- Effect on the milestones: the touch input and a phone quality tier move from M2-07 (#24) into M1 as their own issues. The rest of #24 (store and device polish) stays in M2.
+- Effect on reviews: every audit and playtest from now on weighs a finding by its effect on a phone player first.
+- Why: the goal is the official game of the City of Atlanta. Most residents reach a city link from a phone.
+- Evidence and findings: `production/audits/2026-11-playability/REPORT.md`.

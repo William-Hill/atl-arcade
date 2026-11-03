@@ -1,0 +1,193 @@
+{
+  "date": "2026-11-03T17:52:57.204Z",
+  "base": "http://localhost:5175",
+  "rows": [
+    {
+      "name": "metal-high-desk-rolling-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "push"
+    },
+    {
+      "name": "metal-high-desk-dance-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-high-desk-pcm",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle"
+    },
+    {
+      "name": "metal-high-desk-ksm-front",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle"
+    },
+    {
+      "name": "metal-high-phone-rolling-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-high-phone-dance-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-high-phone-rolling-marcus",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-high-phone-dance-marcus",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-high-phone-pcm",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle"
+    },
+    {
+      "name": "metal-high-phone-ksm-front",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle"
+    },
+    {
+      "name": "metal-high-land-rolling-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-high-land-dance-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-low-desk-rolling-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-low-desk-dance-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-low-desk-pcm",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "idle"
+    },
+    {
+      "name": "metal-low-desk-ksm-front",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "idle"
+    },
+    {
+      "name": "metal-low-phone-rolling-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-low-phone-dance-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-low-phone-pcm",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "idle"
+    },
+    {
+      "name": "metal-low-phone-ksm-front",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "idle"
+    },
+    {
+      "name": "metal-low-land-rolling-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-low-land-dance-nia",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "low",
+      "clip": "coast"
+    },
+    {
+      "name": "metal-high-desk-npc-skater",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle",
+      "type": "skater",
+      "y": 0.07,
+      "ground": 23.090958980372584
+    },
+    {
+      "name": "metal-high-desk-npc-cyclist",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle",
+      "type": "cyclist",
+      "y": 0.07,
+      "ground": 24.802301537072882
+    },
+    {
+      "name": "metal-high-desk-npc-family",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle",
+      "type": "family",
+      "y": 0.07,
+      "ground": 23.34311071574603
+    },
+    {
+      "name": "metal-high-phone-npc-skater",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle",
+      "type": "skater",
+      "y": 0.07,
+      "ground": 23.091264623857995
+    },
+    {
+      "name": "metal-high-phone-npc-cyclist",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle",
+      "type": "cyclist",
+      "y": 0.07,
+      "ground": 24.805163649761784
+    },
+    {
+      "name": "metal-high-phone-npc-family",
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+      "quality": "high",
+      "clip": "idle",
+      "type": "family",
+      "y": 0.07,
+      "ground": 23.343711388924877
+    }
+  ],
+  "errors": []
+}

@@ -360,9 +360,9 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     let inners = [];
     if (e.type === "way" && e.geometry) outers = [project(e.geometry)];
     else if (e.type === "relation" && e.members) {
-      const ways = (role) => e.members.filter((m) => m.type === "way" && m.geometry && (m.role || "outer") === role).map((m) => project(m.geometry));
-      outers = joinRings(ways("outer"));
-      inners = joinRings(ways("inner"));
+      const memberRings = (role) => e.members.filter((m) => m.type === "way" && m.geometry && (m.role || "outer") === role).map((m) => project(m.geometry));
+      outers = joinRings(memberRings("outer"));
+      inners = joinRings(memberRings("inner"));
     }
     if (isBuilding) {
       if (!hasGroundWalls(tags)) continue;

@@ -21,7 +21,7 @@ import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { terrainOf } from "./level/geo/terrain.js";
 import { createGeoLights, createGeoView, loadKitTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
-import { QUALITY, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
+import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
 import { createLitePost, createPost } from "./render/post.js";
@@ -42,7 +42,11 @@ const params = new URLSearchParams(window.location.search);
 const physicsReady = initPhysics();
 const skaterName = resolveSkater(params.get("skater"));
 const loader = createLoader(document.getElementById("loader"), { skater: skaterName !== "capsule" });
-const skaterBytes = skaterName !== "capsule" ? fetchSkaterModel(skaterName, (n, total) => loader.progress("skater", n, total)) : null;
+// A phone gets the skater with a 1024 px base color (#74). The tier is not
+// known yet (it needs the WebGL renderer), so this uses the same device test
+// as the phone tier. ?quality=phone forces it, and ?quality=high keeps 2048 px.
+const smallSkater = params.get("quality") === "phone" || (params.get("quality") !== "high" && isPhone({ touch: (navigator.maxTouchPoints ?? 0) > 0 || (window.matchMedia?.("(pointer: coarse)").matches ?? false), width: window.screen?.width ?? window.innerWidth, height: window.screen?.height ?? window.innerHeight }));
+const skaterBytes = skaterName !== "capsule" ? fetchSkaterModel(skaterName, (n, total) => loader.progress("skater", n, total), { small: smallSkater }) : null;
 // A failed download is reported where the model loads, not here.
 skaterBytes?.catch(() => {});
 // ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
@@ -550,6 +554,8 @@ window.__atl = {
     get name() {
       return skaterModel.name;
     },
+    // True when the 1024 px phone variant loaded.
+    small: smallSkater,
     get loaded() {
       return skaterModel.loaded;
     },

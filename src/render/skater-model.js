@@ -11,6 +11,18 @@ export const SKATER_MODELS = {
   marcus: new URL("../../assets/skaters/marcus/skater.glb", import.meta.url).href,
 };
 
+// The same models with a 1024 px base color in place of 2048 px, for a phone
+// (#74). The mesh, the rig, and the clips are the same.
+export const SKATER_MODELS_SMALL = {
+  nia: new URL("../../assets/skaters/nia/skater-1024.glb", import.meta.url).href,
+  marcus: new URL("../../assets/skaters/marcus/skater-1024.glb", import.meta.url).href,
+};
+
+// Pure: the model URL for a skater. `small` picks the 1024 px variant.
+export function skaterModelUrl(name, { small = false } = {}) {
+  return (small ? SKATER_MODELS_SMALL[name] : null) ?? SKATER_MODELS[name] ?? null;
+}
+
 // The GLB faces +z (the glTF convention). The controller faces +x at yaw 0,
 // so the wrapper turns the model by +90 degrees about y.
 export const MODEL_YAW = Math.PI / 2;
@@ -38,8 +50,8 @@ export function wrapModel(model) {
 // Starts the download of a skater GLB at once (#74), so that it runs in
 // parallel with the level load. loadSkaterModel() takes the promise.
 // `onProgress(loaded, total)` reports the bytes.
-export function fetchSkaterModel(name = "nia", onProgress = null) {
-  const url = SKATER_MODELS[name];
+export function fetchSkaterModel(name = "nia", onProgress = null, { small = false } = {}) {
+  const url = skaterModelUrl(name, { small });
   if (!url) return Promise.reject(new Error(`Unknown skater model: ${name}`));
   return fetch(url).then(async (res) => {
     if (!res.ok) throw new Error(`Skater model ${name}: HTTP ${res.status}`);

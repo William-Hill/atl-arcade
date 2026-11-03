@@ -600,5 +600,6 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Result, 3 runs each, back to back, machine GPU, load average about 30:
   - Before: first game frame 5,943–6,023 ms, skater 8,893–8,957 ms, 5.51 MB, no load screen.
   - After: first game frame 5,806–5,921 ms, skater 6,351–6,457 ms, 5.08 MB, a load screen at about 0.2 s.
+  - With the phone skater (1024 px), load average about 32: first game frame 5,527–5,777 ms, skater 5,658–5,878 ms, 4.00 MB.
 - The 4 s target is not met. The marks show the path: `buildGeoMeshes` takes about 2.8 s of main-thread CPU at the 4x throttle, and the physics then waits about 1.1 s for the WASM compile. Next step: build the level meshes at build time or in a worker (#98).
-- Not done: the 1024 px skater texture for the phone tier. The `gltf-transform` resize command needs `npx` to download a tool, and that step needs William's approval.
+- Phone skater: `assets/skaters/<name>/skater-1024.glb` has a 1024 px base color in place of 2048 px, with the same mesh, rig, and clips (William approved the `npx @gltf-transform/cli@4.1.1` step). Nia goes from 2,735,736 to 1,598,396 bytes, and Marcus from 2,071,416 to 1,493,828 bytes. A phone screen (the `isPhone()` test of the phone tier) or `?quality=phone` loads it, and `?quality=high` keeps 2048 px. The resize decoded the Draco meshes, so a second step compressed them again with the M1-01 quantization. The provenance files record both commands.

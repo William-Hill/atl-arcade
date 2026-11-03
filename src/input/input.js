@@ -6,7 +6,9 @@
 import { createBindings } from "./bindings.js";
 import { EMPTY_INPUT, isActive, mapGamepad, mapKeyboard, mergeInputs } from "./mapping.js";
 
-export function createInput({ target = window, bindings = createBindings(), getGamepads = () => (navigator.getGamepads ? navigator.getGamepads() : []) } = {}) {
+// `touch` is an optional touch overlay from src/input/touch.js. Its input
+// merges with the keyboard and the gamepad.
+export function createInput({ target = window, bindings = createBindings(), getGamepads = () => (navigator.getGamepads ? navigator.getGamepads() : []), touch = null } = {}) {
   const down = new Set();
   let current = bindings;
   let source = "keyboard";
@@ -41,14 +43,24 @@ export function createInput({ target = window, bindings = createBindings(), getG
       const keyboard = mapKeyboard(down, current);
       const pad = firstPad();
       padId = pad ? pad.id ?? "gamepad" : null;
+      let out = keyboard;
       if (!pad) {
-        source = "keyboard";
-        return keyboard;
+        if (source === "gamepad") source = "keyboard";
+      } else {
+        const gamepad = mapGamepad({ axes: Array.from(pad.axes ?? []), buttons: Array.from(pad.buttons ?? []) }, current);
+        if (isActive(gamepad)) source = "gamepad";
+        else if (isActive(keyboard)) source = "keyboard";
+        out = mergeInputs(keyboard, gamepad);
       }
-      const gamepad = mapGamepad({ axes: Array.from(pad.axes ?? []), buttons: Array.from(pad.buttons ?? []) }, current);
-      if (isActive(gamepad)) source = "gamepad";
-      else if (isActive(keyboard)) source = "keyboard";
-      return mergeInputs(keyboard, gamepad);
+      if (touch) {
+        const t = touch.sample();
+        if (touch.touching) source = "touch";
+        // A key after a touch gives the source back to the keyboard. An
+        // active gamepad keeps the source that the gamepad step set.
+        else if (source === "touch" && isActive(keyboard)) source = "keyboard";
+        out = mergeInputs(out, t);
+      }
+      return out;
     },
     get source() {
       return source;

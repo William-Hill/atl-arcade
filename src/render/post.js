@@ -25,6 +25,26 @@ export function halftoneRadius(luma, { start } = HALFTONE) {
   return 0.5 * Math.sqrt(t);
 }
 
+// Sync the composer with the renderer. The EffectComposer keeps its own copy
+// of the pixel ratio from its constructor. When the governor (#72) changes
+// the renderer pixel ratio, the composer must get the new value, or the
+// chain renders at the old resolution. `size` is the drawing buffer size.
+export function syncComposerSize(composer, renderer, size) {
+  const pr = renderer.getPixelRatio();
+  composer.setPixelRatio(pr);
+  composer.setSize(size.x / pr, size.y / pr);
+}
+
+// Dispose a composer and its passes. EffectComposer.dispose() frees only
+// its own render targets and its copy pass. GTAO, bloom, and the shader
+// passes own render targets and materials, so each pass gets a dispose call.
+export function disposeComposer(composer) {
+  for (const pass of composer.passes) {
+    if (typeof pass.dispose === "function") pass.dispose();
+  }
+  composer.dispose();
+}
+
 const InkShader = {
   uniforms: {
     tDiffuse: { value: null },
@@ -142,12 +162,12 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
     setSize() {
       const s = renderer.getDrawingBufferSize(new THREE.Vector2());
       // EffectComposer multiplies by the pixel ratio itself.
-      composer.setSize(s.x / renderer.getPixelRatio(), s.y / renderer.getPixelRatio());
+      syncComposerSize(composer, renderer, s);
       ink.uniforms.resolution.value.set(s.x, s.y);
     },
     dispose() {
-      composer.dispose();
-      target.dispose();
+      // The composer also disposes `target`, its first render target.
+      disposeComposer(composer);
     },
   };
 }

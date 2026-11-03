@@ -370,3 +370,104 @@ describe("jump buffer", () => {
     expect(s.jumpBuffer).toBe(0);
   });
 });
+
+describe("wall slide (#58)", () => {
+  // building-north has its face at z = -10. The north sidewalk top is at y = 0.15.
+  const FACE = -10;
+  const clearance = (s) => s.position[2] - FACE;
+
+  it("slides along a wall on a shallow approach and keeps the body out of it", () => {
+    // Yaw 0.1 turns the heading a little to the north, toward the wall.
+    const { state, states } = runScript(roll(8, 0.1, [0, 0.15, -9.2]), [{ frames: 90 }], { env: greybox, trace: true });
+    expect(states.some((s) => s.wallSlide)).toBe(true);
+    expect(states.some((s) => s.bonked)).toBe(false);
+    expect(state.speed).toBeGreaterThan(0);
+    expect(state.position[0]).toBeGreaterThan(5);
+    for (const s of states) expect(clearance(s)).toBeGreaterThanOrEqual(SKATE.bodyRadius - 1e-9);
+    // The heading turns parallel to the wall.
+    expect(Math.abs(Math.sin(state.yaw))).toBeLessThan(1e-6);
+  });
+
+  it("loses only part of the speed on a slide", () => {
+    const free = runScript(roll(8, 0, [0, 0.15, -8]), [{ frames: 90 }], { env: greybox }).state;
+    const slid = runScript(roll(8, 0.1, [0, 0.15, -9.2]), [{ frames: 90 }], { env: greybox }).state;
+    expect(slid.speed).toBeGreaterThan(free.speed * 0.8);
+    expect(slid.speed).toBeLessThanOrEqual(free.speed + 1e-9);
+  });
+
+  it("still bonks on a head-on hit", () => {
+    const nearHeadOn = Math.PI / 2 - 0.2; // 78 degrees to the wall
+    const { state, states } = runScript(roll(6, nearHeadOn, [0, 0.15, -8]), [{ frames: 60 }], { env: greybox, trace: true });
+    expect(states.some((s) => s.bonked)).toBe(true);
+    expect(state.speed).toBe(0);
+    for (const s of states) expect(clearance(s)).toBeGreaterThanOrEqual(SKATE.bodyRadius - 1e-9);
+  });
+
+  it("keeps moving when the skater skates parallel to a building within 0.25 m", () => {
+    const { state, states } = runScript(roll(6, 0, [0, 0.15, FACE + 0.25]), [{ frames: 60 }], { env: greybox, trace: true });
+    expect(states.some((s) => s.bonked)).toBe(false);
+    expect(state.speed).toBeGreaterThan(3);
+    expect(state.position[0]).toBeGreaterThan(4);
+    expect(clearance(state)).toBeGreaterThanOrEqual(SKATE.bodyRadius - 1e-9);
+  });
+
+  it("slides along a wall in the air on a shallow approach", () => {
+    const { states } = runScript(roll(8, 0.1, [0, 0.15, -9.5]), [{ frames: 1, input: { jump: true } }, { frames: 40 }], { env: greybox, trace: true });
+    const air = states.filter((s) => s.state === "air");
+    expect(air.some((s) => s.wallSlide)).toBe(true);
+    expect(air.some((s) => s.bonked)).toBe(false);
+    for (const s of states) expect(clearance(s)).toBeGreaterThanOrEqual(SKATE.bodyRadius - 1e-9);
+    const last = states[states.length - 1];
+    expect(Math.hypot(last.velocity[0], last.velocity[2])).toBeGreaterThan(4);
+  });
+
+  it("gives the same end state for the same slide script", () => {
+    const script = [{ frames: 30, input: { push: true, steer: 0.3 } }, { frames: 60 }];
+    const a = runScript(roll(6, 0.2, [0, 0.15, -9]), script, { env: greybox }).state;
+    const b = runScript(roll(6, 0.2, [0, 0.15, -9]), script, { env: greybox }).state;
+    expect(a).toEqual(b);
+  });
+});
+
+describe("wall slide on other walls (#58)", () => {
+  // A straight wall 2 m tall on the side n . (x, z) < c, turned by `angle`
+  // from the x axis. Flat ground at y = 0 elsewhere; a drop to y = -2 past `dropX`.
+  function wallEnv(angle, dropX = Infinity) {
+    const n = [-Math.sin(angle), Math.cos(angle)]; // the wall normal, toward +z at angle 0
+    return {
+      n,
+      dist: (p) => p[0] * n[0] + p[2] * n[1] + 1,
+      sampleGround(x, z) {
+        if (x * n[0] + z * n[1] < -1) return { height: 2, normal: [0, 1, 0], id: "wall" };
+        if (x > dropX) return { height: -2, normal: [0, 1, 0], id: "low" };
+        return { height: 0, normal: [0, 1, 0], id: "ground" };
+      },
+    };
+  }
+
+  it("slides parallel to a wall that is not on a ring axis, at a crawl too", () => {
+    let maxHeadingError = 0;
+    for (const angle of [0.1, 0.2, 0.3]) {
+      for (const speed of [0.3, 0.6, 1, 2]) {
+        const env = wallEnv(angle);
+        // Yaw -angle is parallel to the wall; +0.4 rad turns the heading toward it.
+        const start = [0, 0, -(1 - 0.34) / Math.cos(angle)];
+        const { states } = runScript(roll(speed, -angle + 0.4, start), [{ frames: 90 }], { env, trace: true });
+        expect(states.some((s) => s.bonked)).toBe(false);
+        for (const s of states) expect(env.dist(s.position)).toBeGreaterThanOrEqual(SKATE.bodyRadius - 1e-9);
+        const slide = states.find((s) => s.wallSlide && s.speed > 0);
+        if (slide) maxHeadingError = Math.max(maxHeadingError, Math.abs(Math.sin(slide.yaw + angle)));
+      }
+    }
+    expect(maxHeadingError).toBeLessThan(0.01);
+  });
+
+  it("rolls off an edge into the air during a slide, not a bonk", () => {
+    const env = wallEnv(0, 2);
+    // Parallel to the wall, 0.25 m from it: the slide pushes the body out and goes on.
+    const { states } = runScript(roll(4, 0, [1.5, 0, -0.75]), [{ frames: 20 }], { env, trace: true });
+    expect(states.some((s) => s.bonked)).toBe(false);
+    expect(states.some((s) => s.state === "air" && s.airFrom === "edge")).toBe(true);
+    expect(states[states.length - 1].position[0]).toBeGreaterThan(2);
+  });
+});

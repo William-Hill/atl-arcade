@@ -4,7 +4,8 @@ import { createRenderer, fitToWindow } from "./render/renderer.js";
 import { createLevelLights, createLevelView } from "./render/level-view.js";
 import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
-import { loadSkaterModel } from "./render/skater-model.js";
+import { fetchSkaterModel, loadSkaterModel } from "./render/skater-model.js";
+import { createLoader } from "./ui/loader.js";
 import { toonSkater } from "./render/toon.js";
 import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
@@ -34,8 +35,20 @@ import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
 
 const params = new URLSearchParams(window.location.search);
+// Start the slow downloads at once, in parallel with the level (#74): the
+// physics WASM and the skater GLB. A test that started the GLB after the
+// physics gave the same first frame (the WASM compile, not the link, is the
+// limit) and a skater 1.6 s later.
+const physicsReady = initPhysics();
+const skaterName = resolveSkater(params.get("skater"));
+const loader = createLoader(document.getElementById("loader"), { skater: skaterName !== "capsule" });
+const skaterBytes = skaterName !== "capsule" ? fetchSkaterModel(skaterName, (n, total) => loader.progress("skater", n, total)) : null;
+// A failed download is reported where the model loads, not here.
+skaterBytes?.catch(() => {});
 // ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
 const level = await loadLevel(params.get("level"));
+performance.mark("atl:level");
+loader.step("level");
 const geo = isGeoLevel(level);
 const env = createLevelEnv(level, { props: params.get("props") !== "0" });
 const skaterEnv = createSkaterEnv(level);
@@ -67,6 +80,7 @@ const GEO_FOG_NEAR = tier.fogNear;
 // A geodata level gets a day sky, a far fog, and a sun that follows the
 // skater. Its meshes are built once and shared with the physics.
 const geoMeshes = geo ? buildGeoMeshes(level) : null;
+performance.mark("atl:meshes");
 let geoLights = null;
 let sky = null;
 if (geo) {
@@ -106,6 +120,7 @@ if (attribution && level.attribution) {
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
 const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0" }) : createLevelView(level);
 scene.add(levelView.root);
+performance.mark("atl:view");
 
 // Street name signs at the real intersections (src/level/geo/signs.js).
 // ?signs=0 leaves them out.
@@ -160,12 +175,12 @@ if (geo && !tier.shadows) {
 // skater (src/ui/skater-select.js), and ?skater=capsule keeps the capsule.
 // The skater gets the toon look (src/render/toon.js); ?toon=0 keeps the GLB
 // materials.
-const skaterName = resolveSkater(params.get("skater"));
 createSkaterSelect(document.body, skaterName);
 const skaterModel = { name: skaterName, loaded: false, error: null };
 if (skaterName !== "capsule") {
-  loadSkaterModel(skaterName)
+  loadSkaterModel(skaterName, skaterBytes)
     .then((loaded) => {
+      loader.step("skater");
       if (params.get("toon") !== "0") toonSkater(loaded);
       skaterView.attachModel(loaded);
       skaterModel.loaded = true;
@@ -234,8 +249,12 @@ window.addEventListener("resize", resize);
 
 const silhouette = createSilhouette(renderer);
 
-const RAPIER = await initPhysics();
+performance.mark("atl:scene");
+const RAPIER = await physicsReady;
+performance.mark("atl:physics");
+loader.step("physics");
 const physics = createPhysicsWorld(RAPIER, level, { geoMeshes });
+performance.mark("atl:world");
 const debug = createDebugColliders(physics.world);
 scene.add(debug.lines);
 debug.visible = params.get("debug") === "1";
@@ -393,6 +412,10 @@ function frame(now) {
   if (post) post.render();
   else renderer.render(scene, camera);
   frames += 1;
+  if (frames === 1) {
+    loader.hide();
+    performance.mark("atl:first-frame");
+  }
   if (recorder.active && frames % recorder.every === 0) {
     recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
   }

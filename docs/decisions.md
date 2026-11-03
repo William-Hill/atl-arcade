@@ -569,3 +569,16 @@ Not verified: no person played the new clips; real skaters did not review the mo
   - ANGLE Metal on an Apple M4 Max: phone 40–42 draw calls and 137k–139k triangles; high 151–157 calls and 424k–427k triangles. Both hold 60 FPS, so this GPU does not show the cost.
   - SwiftShader, Pixel 7 profile, no CPU throttle, load average 12–14: low 27.5 FPS (pixel ratio 2), phone 50.3 FPS (pixel ratio 1.5), high 1.9 FPS.
 - Not verified: FPS on a real phone GPU. The acceptance target (median over 40 FPS on a mid-range phone) needs a real device.
+
+## 2026-11-03: First load on a phone (#74)
+
+- Rapier WASM as a file: `@dimforge/rapier3d-compat` inlines its 3 MB WASM as base64 in `rapier.mjs`. The Vite plugin `tools/vite/rapier-wasm-file.js` swaps the base64 bytes for the URL of `rapier_wasm3d_bg.wasm`, which the same package ships. The build stops if the pattern does not match exactly once. The dev server does not prebundle Rapier (`optimizeDeps.exclude`), so the URL works in dev too. No new dependency.
+- Bundle: `main.js` goes from 4,541 kB (1,742 kB gzip) to 437 kB (113 kB gzip). The WASM is 3,082 kB (1,188 kB gzip). Vercel compresses `application/wasm` (https://vercel.com/docs/compression).
+- Early downloads: the physics WASM and the skater GLB start at the top of `src/main.js`, in parallel with the level JSON. `fetchSkaterModel()` reports the GLB bytes to the load screen. A test that started the GLB after the physics gave the same first frame and a later skater, so both start at once.
+- Load screen: plain markup and inline CSS in `index.html`, so it shows at the first paint. `src/ui/loader.js` (pure part tested) moves the bar for the level, the physics, and the skater bytes, and fades the screen out after the first game frame.
+- Check: `npm run loadcheck -- --gpu` serves `dist/` with `vite preview`, gzips `.wasm` as the host does, and opens the BeltLine level as a Pixel 7 on Fast 4G (9 Mbps, 60 ms) with a 4x CPU throttle. It prints the startup marks (`atl:level`, `atl:meshes`, `atl:scene`, `atl:physics`, `atl:world`, `atl:first-frame`).
+- Result, 3 runs each, back to back, machine GPU, load average about 30:
+  - Before: first game frame 5,943–6,023 ms, skater 8,893–8,957 ms, 5.51 MB, no load screen.
+  - After: first game frame 5,806–5,921 ms, skater 6,351–6,457 ms, 5.08 MB, a load screen at about 0.2 s.
+- The 4 s target is not met. The marks show the path: `buildGeoMeshes` takes about 2.8 s of main-thread CPU at the 4x throttle, and the physics then waits about 1.1 s for the WASM compile. Next step: build the level meshes at build time or in a worker (#98).
+- Not done: the 1024 px skater texture for the phone tier. The `gltf-transform` resize command needs `npx` to download a tool, and that step needs William's approval.

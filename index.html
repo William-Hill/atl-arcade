@@ -7,6 +7,20 @@
   <link rel="stylesheet" href="/src/shell.css" />
 </head>
 <body>
+  <!-- The load screen (#74): plain markup and inline CSS, so it shows at
+       the first paint. src/ui/loader.js moves the bar and removes it. -->
+  <div id="loader">
+    <style>
+      #loader { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: #0b0b12; color: #f3f3f7; font: 600 16px system-ui, sans-serif; transition: opacity 0.35s; }
+      #loader[data-hidden="1"] { opacity: 0; pointer-events: none; }
+      #loader .loader-title { font-size: 28px; font-weight: 800; color: #ff5fb2; letter-spacing: 0.04em; }
+      #loader .loader-bar { width: min(70vw, 320px); height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.15); overflow: hidden; }
+      #loader .loader-fill { width: 0; height: 100%; background: #ff5fb2; transition: width 0.2s; }
+    </style>
+    <div class="loader-title">Skate ATL</div>
+    <div class="loader-bar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="loader-fill"></div></div>
+    <div>Lacing up the skates…</div>
+  </div>
   <canvas id="stage"></canvas>
   <div id="hud"></div>
   <div id="shell-info">

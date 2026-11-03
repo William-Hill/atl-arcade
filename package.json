@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "description": "ATL Arcade — Atlanta games on real open data. Skate ATL first.",
+  "description": "ATL Arcade \u2014 Atlanta games on real open data. Skate ATL first.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "playtest": "node scripts/playtest.mjs",
-    "playtest:beltline": "node scripts/playtest.mjs --level beltline-eastside"
+    "playtest:beltline": "node scripts/playtest.mjs --level beltline-eastside",
+    "loadcheck": "node scripts/load-check.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

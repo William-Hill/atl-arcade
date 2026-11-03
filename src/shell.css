@@ -38,8 +38,8 @@ html, body {
 
 #hud {
   position: fixed;
-  left: 16px;
-  top: 16px;
+  left: calc(16px + env(safe-area-inset-left));
+  top: calc(16px + env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -79,8 +79,8 @@ html, body {
 /* Map data attribution (ODbL). Shown on every geodata level. */
 #attribution {
   position: fixed;
-  right: 8px;
-  top: 6px;
+  right: calc(8px + env(safe-area-inset-right));
+  top: calc(6px + env(safe-area-inset-top));
   font: 11px/1.3 system-ui, sans-serif;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
@@ -90,8 +90,8 @@ html, body {
 /* Under the map attribution line, which must stay readable. */
 #skater-select {
   position: fixed;
-  right: 16px;
-  top: 32px;
+  right: calc(16px + env(safe-area-inset-right));
+  top: calc(32px + env(safe-area-inset-top));
   display: flex;
   gap: 8px;
 }

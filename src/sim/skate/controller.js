@@ -262,8 +262,16 @@ const RING = Array.from({ length: RING_SIZE }, (_, i) => {
   const a = (i * 2 * Math.PI) / RING_SIZE;
   return [Math.cos(a), Math.sin(a)];
 });
-const CLEAR_MARGIN = 1e-3; // m kept past bodyRadius after a slide, so the ring does not touch the wall.
+// The ring is a polygon of RING_SIZE points. Its radius is bodyRadius /
+// cos(pi / RING_SIZE), so the polygon sides stay outside the body circle and a
+// wall cannot go between two probes into the body.
+const RING_SCALE = 1 / Math.cos(Math.PI / RING_SIZE);
+const CLEAR_MARGIN = 1e-3; // m kept past the ring radius after a slide, so the ring does not touch the wall.
 const EDGE_STEPS = 10; // bisection steps that find the wall edge along a ray.
+// The rays that find a wall reach this many body radii (plus the step). The
+// rays 33.75 degrees off the normal need 1 / cos(33.75) = 1.2 radii to hit a
+// straight wall one radius away, so the line fit also works at a crawl.
+const WALL_REACH = 1.3;
 
 // `y` is the skater height, for a level with bridges (geo-ground.js).
 function ringHits(env, x, z, radius, isWall, y = Infinity) {
@@ -285,11 +293,11 @@ function airWall(prevY, ny, k) {
 
 function wallNear(s, env, nx, ny, nz, k) {
   if (!s.groundNormal || s.groundNormal[1] < 0.9) return false;
-  return ringHits(env, nx, nz, k.bodyRadius, rollWall(ny, k), ny);
+  return ringHits(env, nx, nz, k.bodyRadius * RING_SCALE, rollWall(ny, k), ny);
 }
 
 function wallNearInAir(env, nx, ny, nz, prevY, k) {
-  return ringHits(env, nx, nz, k.bodyRadius, airWall(prevY, ny, k), prevY);
+  return ringHits(env, nx, nz, k.bodyRadius * RING_SCALE, airWall(prevY, ny, k), prevY);
 }
 
 // The distance along the ray (dx, dz) from (x, z) to the first wall point,
@@ -353,7 +361,7 @@ function slideVelocity(vx, vz, n, k) {
   const sp = Math.hypot(vx, vz);
   if (sp < 1e-9) return null;
   const into = -(vx * n[0] + vz * n[1]) / sp;
-  if (into <= 0) return [vx, vz]; // moving away from the wall already
+  if (into <= 0) return [vx, vz]; // The skater already goes away from the wall.
   const angle = Math.asin(Math.min(1, into));
   if (angle > k.wallBonkAngle) return null;
   const ax = vx + into * sp * n[0];
@@ -362,14 +370,14 @@ function slideVelocity(vx, vz, n, k) {
   return [ax * scrub, az * scrub];
 }
 
-// Move (x, z) by (vx, vz) dt, then push it out to one body radius (plus a
+// Move (x, z) by (vx, vz) dt, then push it out to the ring radius (plus a
 // margin) from the wall edge line.
 function slideTo(x, z, v, dt, wall, k) {
   let px = x + v[0] * dt;
   let pz = z + v[1] * dt;
   const n = wall.normal;
   const dist = (px - wall.point[0]) * n[0] + (pz - wall.point[1]) * n[1];
-  const want = k.bodyRadius + CLEAR_MARGIN;
+  const want = k.bodyRadius * RING_SCALE + CLEAR_MARGIN;
   if (dist < want) {
     px += (want - dist) * n[0];
     pz += (want - dist) * n[1];
@@ -378,28 +386,46 @@ function slideTo(x, z, v, dt, wall, k) {
 }
 
 // A rolling slide. Returns false for a bonk; the caller then stops the skater.
+// The slide is horizontal; the speed keeps its ratio to the horizontal
+// velocity, so a slide on a slope does not lose the slope part of the speed.
+// A slide off an edge goes into the air, as a roll off an edge does.
 function slideRolling(s, env, t, ref, dt, k) {
   const [x, y, z] = s.position;
   const isWall = rollWall(ref, k);
-  const wall = findWall(env, x, z, k.bodyRadius + Math.abs(s.speed) * dt + 0.05, isWall, ref);
+  const wall = findWall(env, x, z, k.bodyRadius * WALL_REACH + Math.abs(s.speed) * dt + 0.05, isWall, ref);
   if (!wall) return false;
-  const v = slideVelocity(t[0] * s.speed, t[2] * s.speed, wall.normal, k);
+  const hx = t[0] * s.speed;
+  const hz = t[2] * s.speed;
+  const v = slideVelocity(hx, hz, wall.normal, k);
   if (!v) return false;
   const [px, pz] = slideTo(x, z, v, dt, wall, k);
   const g = env.sampleGround(px, pz, ref);
-  if (!g) return false;
-  const rise = g.height - y;
-  if (rise > k.maxStep || rise < -k.dropThreshold) return false;
-  if (ringHits(env, px, pz, k.bodyRadius, rollWall(Math.max(y, g.height), k), Math.max(y, g.height))) return false;
+  const rise = g ? g.height - y : -Infinity;
+  if (rise > k.maxStep) return false;
+  const top = g ? Math.max(y, g.height) : y;
+  if (ringHits(env, px, pz, k.bodyRadius * RING_SCALE, rollWall(top, k), top)) return false;
+  const h = Math.hypot(hx, hz);
   const sp = Math.hypot(v[0], v[1]);
-  s.speed = sp < k.stopSpeed ? 0 : sp;
+  const speed = h > 1e-9 ? s.speed * (sp / h) : 0;
   if (sp > 1e-6) s.yaw = yawFromHeading(v[0], v[1]);
+  s.wallSlide = true;
+  if (rise < -k.dropThreshold) {
+    // The ground falls away: leave the edge with the slide velocity.
+    s.speed = speed;
+    s.velocity = [v[0], 0, v[1]];
+    s.state = "air";
+    s.airTime = 0;
+    s.airFrom = "edge";
+    s.groundId = null;
+    s.position = [px, y, pz];
+    return true;
+  }
+  s.speed = speed < k.stopSpeed ? 0 : speed;
   s.position = [px, g.height, pz];
   s.groundNormal = [...g.normal];
   s.groundId = g.id;
   const tt = surfaceTangent(s.yaw, g.normal);
   s.velocity = [tt[0] * s.speed, tt[1] * s.speed, tt[2] * s.speed];
-  s.wallSlide = true;
   return true;
 }
 
@@ -407,7 +433,7 @@ function slideRolling(s, env, t, ref, dt, k) {
 function slideAir(s, env, ny, prevY, dt, k) {
   const [x, , z] = s.position;
   const isWall = airWall(prevY, ny, k);
-  const reach = k.bodyRadius + Math.hypot(s.velocity[0], s.velocity[2]) * dt + 0.05;
+  const reach = k.bodyRadius * WALL_REACH + Math.hypot(s.velocity[0], s.velocity[2]) * dt + 0.05;
   const wall = findWall(env, x, z, reach, isWall, prevY);
   if (!wall) return null;
   const v = slideVelocity(s.velocity[0], s.velocity[2], wall.normal, k);
@@ -415,7 +441,7 @@ function slideAir(s, env, ny, prevY, dt, k) {
   const [px, pz] = slideTo(x, z, v, dt, wall, k);
   const g = env.sampleGround(px, pz, prevY);
   if (g && isWall(g)) return null;
-  if (ringHits(env, px, pz, k.bodyRadius, isWall, prevY)) return null;
+  if (ringHits(env, px, pz, k.bodyRadius * RING_SCALE, isWall, prevY)) return null;
   s.velocity[0] = v[0];
   s.velocity[2] = v[1];
   return { nx: px, nz: pz, g };

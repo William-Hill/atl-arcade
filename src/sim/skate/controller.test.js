@@ -428,3 +428,46 @@ describe("wall slide (#58)", () => {
     expect(a).toEqual(b);
   });
 });
+
+describe("wall slide on other walls (#58)", () => {
+  // A straight wall 2 m tall on the side n . (x, z) < c, turned by `angle`
+  // from the x axis. Flat ground at y = 0 elsewhere; a drop to y = -2 past `dropX`.
+  function wallEnv(angle, dropX = Infinity) {
+    const n = [-Math.sin(angle), Math.cos(angle)]; // the wall normal, toward +z at angle 0
+    return {
+      n,
+      dist: (p) => p[0] * n[0] + p[2] * n[1] + 1,
+      sampleGround(x, z) {
+        if (x * n[0] + z * n[1] < -1) return { height: 2, normal: [0, 1, 0], id: "wall" };
+        if (x > dropX) return { height: -2, normal: [0, 1, 0], id: "low" };
+        return { height: 0, normal: [0, 1, 0], id: "ground" };
+      },
+    };
+  }
+
+  it("slides parallel to a wall that is not on a ring axis, at a crawl too", () => {
+    let maxHeadingError = 0;
+    for (const angle of [0.1, 0.2, 0.3]) {
+      for (const speed of [0.3, 0.6, 1, 2]) {
+        const env = wallEnv(angle);
+        // Yaw -angle is parallel to the wall; +0.4 rad turns the heading toward it.
+        const start = [0, 0, -(1 - 0.34) / Math.cos(angle)];
+        const { states } = runScript(roll(speed, -angle + 0.4, start), [{ frames: 90 }], { env, trace: true });
+        expect(states.some((s) => s.bonked)).toBe(false);
+        for (const s of states) expect(env.dist(s.position)).toBeGreaterThanOrEqual(SKATE.bodyRadius - 1e-9);
+        const slide = states.find((s) => s.wallSlide && s.speed > 0);
+        if (slide) maxHeadingError = Math.max(maxHeadingError, Math.abs(Math.sin(slide.yaw + angle)));
+      }
+    }
+    expect(maxHeadingError).toBeLessThan(0.01);
+  });
+
+  it("rolls off an edge into the air during a slide, not a bonk", () => {
+    const env = wallEnv(0, 2);
+    // Parallel to the wall, 0.25 m from it: the slide pushes the body out and goes on.
+    const { states } = runScript(roll(4, 0, [1.5, 0, -0.75]), [{ frames: 20 }], { env, trace: true });
+    expect(states.some((s) => s.bonked)).toBe(false);
+    expect(states.some((s) => s.state === "air" && s.airFrom === "edge")).toBe(true);
+    expect(states[states.length - 1].position[0]).toBeGreaterThan(2);
+  });
+});

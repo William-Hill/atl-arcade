@@ -103,14 +103,17 @@ const attribution = document.getElementById("attribution");
 if (attribution && level.attribution) {
   // A compact screen shows the short credit; a tap shows the full text (#73).
   const short = Object.assign(document.createElement("button"), { type: "button", className: "attr-short", textContent: shortAttribution(level.attribution) });
+  const full = Object.assign(document.createElement("span"), { id: "attr-full", className: "attr-full", textContent: level.attribution });
   short.setAttribute("aria-expanded", "false");
-  const full = Object.assign(document.createElement("span"), { className: "attr-full", textContent: level.attribution });
+  short.setAttribute("aria-controls", full.id);
   short.addEventListener("click", (e) => {
     e.stopPropagation();
     const open = attribution.classList.toggle("open");
     short.setAttribute("aria-expanded", String(open));
+    // A tap or a mouse click (detail > 0) removes the focus, so the Space key
+    // jumps and does not toggle the credit. A keyboard user keeps the focus.
+    if (e.detail > 0) short.blur();
   });
-  short.addEventListener("focus", () => short.blur());
   attribution.replaceChildren(short, full);
   attribution.hidden = false;
 }

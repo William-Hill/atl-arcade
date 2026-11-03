@@ -1,0 +1,20 @@
+{
+  "asset": "Face decals for Nia \"Sway\" Ellis: eyes.png (open, half, closed, happy) and mouth.png (neutral, smile, open)",
+  "date": "2026-11-01",
+  "issue": "M1-02 (#12)",
+  "tool": "scripts/art/nia_face_decals.py (Python, numpy, Pillow, OpenCV 4.13). No generative AI.",
+  "inputs": [
+    "assets/skaters/nia/raw/nia-nodraco.glb (the bind-pose mesh and UVs, not in git; see assets/skaters/nia/provenance.json)",
+    "the base color image of assets/skaters/nia/skater.glb (2048 px, from the Tripo texture)"
+  ],
+  "method": [
+    "Baked a front orthographic view of the head from the mesh UVs and the base color, at 4000 px/m.",
+    "Eyes: found the painted eyes by color distance from the local skin, filled them with skin by inpaint (OpenCV TELEA), and drew the lid lines: half (lid over the top half), closed (lid line bends down, lash flick), happy (lid line bends up).",
+    "Mouth: smile warps the painted lips so that the corners lift. Open warps the lower lip and the chin down and paints the mouth, the top teeth, and the tongue in the gap.",
+    "Each state is one cell in a row. The alpha marks the changed pixels and fades to 0 at the cell edge. The atlases ship at 2000 px/m."
+  ],
+  "rects_m": { "eyes": [-0.075, 0.075, 1.432, 1.486], "mouth": [-0.05, 0.046, 1.362, 1.405], "note": "x0, x1, y0, y1 in glTF bind-pose space; must match FACE_DECALS in src/render/skater-face.js" },
+  "review_files": ["preview.png (every eye and mouth state on the bake)", "views/*.png (the decals on the model, made by e2e/skater-face.spec.js)"],
+  "credits": "Derived from the Nia model texture (Tripo, from original concept art). No third-party art.",
+  "credits_spent": 0
+}

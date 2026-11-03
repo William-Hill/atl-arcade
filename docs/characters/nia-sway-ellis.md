@@ -79,7 +79,7 @@ These rules make the Tripo or Meshy output easy to rig and animate.
 | Air (X Games) | jump, land, mute grab, japan, Liu Kang |
 | Rails (X Games) | frontside, soul, unity, manual |
 | Fail | bail |
-| Style, Q (Atlanta dances, 2 beats each, in this order) | Bankhead Bounce, Walk It Out, the Prep, Swag Surf, Snap Lean, crisscross |
+| Style, Q (Atlanta dances, 2 beats each, in this order) | Bankhead Bounce, Walk It Out, the Prep, Swag Surf, Snap Lean, Cross Step (clip `dance_crisscross`; spec: `atl-dance-references.md`, section 3) |
 | Style, E (spins, 1 beat each) | toe-stop spin, sit spin |
 
 The sources for each move are in `skate-style-references.md` and `atl-dance-references.md`.

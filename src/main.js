@@ -203,7 +203,10 @@ function simulate(dt) {
   skater = run.skater;
   if (crowd) crowd = stepCrowd(crowd, dt, skater.position);
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
-  if (run.banked) events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+  if (run.banked) {
+    events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+    skaterView.cheer();
+  }
   if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
   if (skater.respawned) events.push({ tick: run.tick, type: "respawn" });
   if (skater.justSnapped) events.push({ tick: skater.tick, type: "snap", id: skater.grind.id, s: skater.grind.s });
@@ -426,6 +429,10 @@ window.__atl = {
     },
     get weights() {
       return skaterView.weights;
+    },
+    // The face decal state: { eyes, mouth }.
+    get face() {
+      return skaterView.face;
     },
     // The model yaw offset: PI when the skater rides backward.
     get facing() {

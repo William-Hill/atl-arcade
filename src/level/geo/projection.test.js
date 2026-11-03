@@ -45,6 +45,8 @@ describe("projection", () => {
   it("parses a bbox in the Overpass order and rejects bad input", () => {
     expect(parseBbox("33.756,-84.3685,33.7735,-84.358")).toEqual(BBOX);
     expect(() => parseBbox("1,2,3")).toThrow();
+    expect(() => parseBbox("33.756,,33.7735,-84.358")).toThrow(); // (not 0, the prime meridian)
+    expect(() => parseBbox(" ,-84.3685,33.7735,-84.358")).toThrow();
     expect(() => parseBbox("33.8,-84.3,33.7,-84.2")).toThrow();
     expect(() => parseBbox("a,b,c,d")).toThrow();
   });

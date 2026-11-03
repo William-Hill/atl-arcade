@@ -31,7 +31,7 @@ If you reject the model, generate it again. Record the credits for each try.
 1. Blender MCP: import the GLB, check the scale (1 unit = 1 m, height about 1.7 m with skates), and set the feet on the ground at the origin.
 2. Blender MCP: reduce the mesh to under 20,000 triangles. Keep the face and the skates sharp.
 3. Rig: keep the Tripo rig if it is a clean humanoid rig. If not, rig the model in Blender.
-4. Animate: use Cascadeur through its MCP. If Cascadeur does not work, animate with the Blender MCP.
-5. Export `assets/skaters/nia/skater.glb` with Draco compression, under 3 MB.
+4. Do not animate in M1-01. M1-02 adds the animations (Cascadeur through its MCP, else the Blender MCP).
+5. Export `assets/skaters/nia/skater.glb` with no animation clips, with Draco compression, under 3 MB.
 6. Write `assets/skaters/nia/provenance.json` with the tool, the prompt, the credits, and the date.
 7. Load the model in Three.js with `GLTFLoader` and `DRACOLoader`, and commit five-view screenshots.

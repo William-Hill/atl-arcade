@@ -430,3 +430,43 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Why not now: the game has 13 JPG textures (4 at 1024 px, 9 at 512 px, 1.9 MB in all) and two small GLBs. KTX2 would save about 30 MB of GPU memory on a real GPU and nothing on SwiftShader, which transcodes KTX2 to plain RGBA. It also needs a native encoder (KTX-Software `toktx`), which the build does not have.
 - When to do it: when the textures and models pass a size budget, for example more ground scans or more landmarks. Use gltf-transform with ETC1S for color maps and UASTC for normal maps, and `KTX2Loader` with the basis transcoder in `three/examples/jsm/libs/basis/`.
 - Decided by William on 2026-11-02.
+
+
+## 2026-11-02: A second playable skater, and the pipelines compared (M1-10, #42)
+
+- Scope change: version 1 had one skater in the concept. William asked for more playable characters, so M1 now has two: Nia "Sway" Ellis (West End) and Marcus "Tempo" Reid (Old Fourth Ward). Each new skater adds art cost and a skater review, so a third skater needs a new issue.
+- Marcus: an original character, a middle-school band teacher and jam skater. The dossier is `docs/characters/marcus-tempo-reid.md`. Teal and navy are a contrast to the peach and forest of Nia.
+- Pipeline: A (Tripo Studio, then `scripts/blender/skater_build.py`). Pipeline B (img2character) cannot retarget to the M1-02 Mixamo clips and does not write a GLB, so it was read from source and not installed. The comparison is `docs/characters/pipeline-comparison-m1-10.md`.
+- Tripo Agentic Canvas was not available on the account (beta for Max and Team users first). The 3D Workspace made Marcus with the Nia settings, for 115 Tripo credits.
+- Shared clips: both skaters use the same 24 clips and the same clip table. `nia_clips.py` takes `SKATER_CFG` (armature, mesh, rest feet), so one script keys every Mixamo skater. A move set for each skater is out of scope.
+- Skater select: a row of buttons at the top right of the shell (`src/ui/skater-select.js`). A click loads the page again with `?skater=<id>` and keeps the other query values. An unknown value gives Nia. The buttons take no keyboard focus, so Space and the arrows stay with the game.
+- Tests: the GLB tests, the five views, the contact sheets, and the T-pose gate run for each skater.
+- Political rule: real Atlanta skaters must review both skaters and the move set before release.
+
+## 2026-11-02: NPCs on the BeltLine (M1-09, #41)
+
+- Module: `src/sim/npc/crowd.js` is pure and seeded (mulberry32). `createCrowd(level, { seed })` spawns the crowd and `stepCrowd(crowd, dt, niaPosition)` steps it at the fixed 60 Hz step. `src/sim/npc/path.js` gives fast arc-length lookups (binary search). A Vitest test shows that its points are the same as `pointAt` in `src/playtest/trail-script.js`. The lines come from `chainStrips`, and the spawn uses `projectOnLine`.
+- Crowd: 28 NPCs on the trail (7 roller skaters, 6 joggers, 5 cyclists, 5 dog walkers, 5 families) and 12 walkers and joggers on 4 walk lines. Half of the trail NPCs start within 200 m of the spawn, so the player sees them; the other half spread over the full 2254 m trail.
+- Walk lines: no sidewalk longer than 80 m is within 172 m of the spawn, but park paths in Historic Fourth Ward Park are within 12 m. The walk lines are the 4 sidewalk or park path chains nearest to the spawn (longer than 80 m, within 200 m).
+- Steering: each NPC has an arc length and a side offset on its line. NPCs keep right (1.1 m from the trail center line), slow down behind a slower NPC, and pass in the middle when no NPC comes the other way. An NPC that cannot move for 2 s turns around. The NPCs move in order, and a move that would overlap another NPC does not happen. Thus no two NPC circles overlap. The test runs 60 s with 3 seeds, and 60 s with Nia on the trail.
+- Nia: an NPC within 9 m of Nia steps to the side away from her and slows to 60 % of its speed. When she touches an NPC, it slides aside (if there is room) and wobbles for 0.8 s with a lean of 0.25 rad or less. NPCs have no fallen state, so nobody falls.
+- The crowd does not change Nia's motion in this version. Why: the Playwright and playtest runs replay scripts from the pure controller and compare the end state to 0.01 m. If the crowd slowed Nia, the planner would also have to run the crowd. A soft slowdown for Nia is a follow-up.
+- Render: `src/render/npc-view.js` builds low-poly figures from Three.js primitives with vertex colors (one figure per type: a skater with skates and a helmet, a jogger with a cap, a cyclist on a bike, a person with a dog on a leash, an adult with a child, a walker). One instanced mesh per type: 6 draw calls for 40 NPCs. A `tint` attribute picks the vertex color, the instance shirt color (10 colors), or the instance skin tone (6 tones). The figures bob and sway by speed. Each figure has a flat shadow disc, as the trees do.
+- Draw cost: with all 40 NPCs drawn, the crowd added 6 draw calls and 11,152 triangles (47,212 to 58,364) at the spawn. Now `sync()` draws only the NPCs within 150 m of the camera (the fog starts at 150 m), and the heads are icosahedrons with 20 faces.
+- FPS: `npm run playtest:beltline` ran at a median of 59.9 FPS in two runs with the crowd on (`reports/playtest-beltline-eastside-2026-11-03-03-38-34.json`). The gate is 55. Earlier runs failed at 20 to 30 FPS while another session ran headless Chromium at up to 848 % CPU (load average 26 to 36). In those runs the greybox, which has no NPCs, also failed at 30 FPS. An A/B in one page under that load gave the same median frame time with and without the crowd (33 to 67 ms).
+- No Blender kit for the NPCs: the figures are code, so the kit GLB and its provenance do not change. Rigged models are a later task.
+- Shell: the crowd is on for a geodata level. `?npcs=0` leaves it out, and `?npcseed=<n>` picks another crowd. `resetSkater` resets the crowd to its seed, so a scripted run sees the same crowd each time. `window.__atl.npcs` gives the count, the minimum gap, the bumps, and the NPCs in view. `window.__atl.setFixedCamera()` aims the fixed camera, for a screenshot of the moving crowd.
+- Political rules: the crowd is friendly people on the trail. There is no crime, police, or traffic. A bump is soft and nobody falls.
+
+## 2026-11-01: Face expressions for Nia are decals, not a face rig (M1-02)
+
+- Decision: Nia's face changes with two small decal atlases: eyes (open, half, closed, happy) and mouth (neutral, smile, open). A shader projects them onto the front of the head in bind-pose space, so they follow the skin. Under the eye decal the normal map and the roughness map become flat skin, because they also carry the painted eyes.
+- The mood comes from the body clip: a smile while she stands, coasts, or carves; an open mouth in the air; happy eyes in a dance; closed eyes on a bail. She blinks every 2.2 to 5 s, and she cheers for 1.2 s when a combo banks. The logic is pure (`src/render/face-anim.js`) with Vitest tests.
+- Why: the Tripo mesh is one surface with the eyes and the lips painted on, so bones or shape keys have no lids or lips to move. A UV texture swap does not work, because the UV atlas cuts the face into many small islands.
+- Limits: the decals are painted by a script, not by an artist. A light oval shows on the closed lids in a close-up. The follow camera keeps the face small, so the effect is mostly visible in close-ups and menus.
+
+## 2026-11-03: Review fixes before the M1-02 merge
+
+- Playwright evidence goes to `e2e/__screenshots__/`. One exception: `e2e/skater-anim.spec.js` writes the clip contact sheet to `assets/skaters/<name>/clips/`, which holds committed review evidence next to the asset. The five model views moved to `e2e/__screenshots__/nia-<view>.png`; the committed `assets/skaters/nia/views/` change only on purpose.
+- The animation layer measures the yaw rate per simulation tick (`measureYawRate`), so a display above 60 Hz no longer flips the clip between coast and a carve on frames with no tick.
+- The Q dance list names the Cross Step (clip `dance_crisscross`), which has a spec in `atl-dance-references.md`.

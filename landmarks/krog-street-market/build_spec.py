@@ -9,6 +9,7 @@
 # ground; the front face is z = 0 and the front faces +z; x = 0 is the
 # middle of the photographed front.
 
+import os
 import copy
 import json
 
@@ -169,10 +170,17 @@ for c in s["componentTree"]:
 for m in s["materials"]:
     r = m.get("roughness")
     base = r if isinstance(r, (int, float)) else (r or {}).get("base", 0.7)
+    # Point to an evidence map only when extract_pbr_evidence.py made it: a
+    # reference to a missing file breaks the tools that read the spec.
     ev = f"material-evidence/{m['id']}/{m['id']}_roughness.png"
-    m["roughness"] = {"base": base, "map": ev, "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."}
+    m["roughness"] = {"base": base, "notes": "The game uses the base value only (toon shading)."}
+    if os.path.exists(ev):
+        m["roughness"]["map"] = ev
+    ao = f"material-evidence/{m['id']}/{m['id']}_ao.png"
     if not m.get("ambientOcclusion"):
-        m["ambientOcclusion"] = {"map": f"material-evidence/{m['id']}/{m['id']}_ao.png", "intensity": 0.5}
+        m["ambientOcclusion"] = {"intensity": 0.5}
+        if os.path.exists(ao):
+            m["ambientOcclusion"]["map"] = ao
 mats["metal"]["localOverrides"] = [{"id": "corrugation", "type": "normal-ribs", "region": "the whole metal wall", "amount": 0.2, "notes": "Fine vertical ribs; not modeled in the game (flat toon color)."}]
 s["lightingFromPhoto"] = [
     {"role": "key", "type": "directional", "color": "#FFE7C4", "intensity": 1.5, "direction": [0.5, 0.8, 0.3], "notes": "The game sun"},

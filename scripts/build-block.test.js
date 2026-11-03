@@ -194,7 +194,9 @@ describe("build-block offline run", () => {
   it("rebuilds the committed level from the cached fetch with no network, byte for byte", () => {
     const out = mkdtempSync(join(tmpdir(), "build-block-"));
     cpSync(resolve(ROOT, "levels/beltline-eastside/raw"), join(out, "raw"), { recursive: true });
-    // The height overrides (with sources) are an input too.
+    // The height overrides (with sources) are an input too. The building
+    // source file (data/buildings/beltline-eastside.json, #88) comes from the
+    // repository by the level name, and gives every height.
     cpSync(resolve(ROOT, "levels/beltline-eastside/heights.json"), join(out, "heights.json"));
     const log = execFileSync(
       process.execPath,

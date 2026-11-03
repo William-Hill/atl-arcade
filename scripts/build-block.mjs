@@ -9,6 +9,8 @@
 //   --title <text>                 the display name.
 //   --refresh                      fetch again, even when a cache exists.
 //   --offline                      never fetch; fail when the cache is missing.
+//   --sources <file>               the building source file. Default:
+//                                  data/buildings/<name>.json when it exists.
 //
 // The first run fetches from the Overpass API and writes the raw answer to
 // <out>/raw/overpass.json. Later runs read that file, so the script runs
@@ -299,7 +301,10 @@ function inBox([x, z], box) {
 // `overture` maps an OSM id ("w123") to { height, floors } (raw/overture.json).
 // `terrain` is the grid from raw/terrain.json (scripts/terrain-dem.py).
 // `heights` maps an OSM id to { height, source } (the level heights.json).
-export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null }) {
+// `sources` maps a level building id to its record in the building source
+// file (data/buildings/<name>.json, issue #88). With `sources`, each height
+// comes from its record, and a building with no record is an error.
+export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, sources = null }) {
   const origin = bboxCenter(bbox);
   const proj = createProjection(origin);
   const project = (g) => g.map(({ lat, lon }) => proj.toLocal(lat, lon).map(round));
@@ -377,8 +382,14 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
         // shed roof that the way runs under: skip it.
         if (Number(tags.layer) > 0 && ways.some((st) => stripCrosses(st, item.outer))) continue;
         for (const piece of clipOffCorridor(item, corridor)) {
+          if (sources) {
+            const rec = sources[piece.id];
+            if (!rec?.height?.source || !(rec.height.value > 0)) throw new Error(`build-block: building ${piece.id} has no height record in the building source file`);
+            piece.height = round(rec.height.value);
+            piece.heightSource = rec.height.source;
+          }
           buildings.push(piece);
-          counts[source] += 1;
+          counts[piece.heightSource] = (counts[piece.heightSource] ?? 0) + 1;
         }
       }
     } else {
@@ -420,6 +431,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     stats: {
       buildings: buildings.length,
       buildingHeights: counts,
+      ...(sources ? { buildingSources: `data/buildings/${name}.json` } : {}),
       strips: Object.fromEntries(["street", "sidewalk", "path", "trail"].map((k) => [k, strips.filter((s) => s.kind === k).length])),
       areas: areas.length,
     },
@@ -566,7 +578,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   // The value options need a value: "--out" with nothing after it is an error,
   // not the default.
-  const missing = ["bbox", "out", "name", "title"].filter((k) => k in args && typeof args[k] !== "string");
+  const missing = ["bbox", "out", "name", "title", "sources"].filter((k) => k in args && typeof args[k] !== "string");
   if (missing.length) {
     console.error(`build-block: ${missing.map((k) => `--${k}`).join(", ")} needs a value`);
     process.exit(2);
@@ -624,7 +636,13 @@ async function main() {
   const heightsFile = resolve(outDir, "heights.json");
   const heights = existsSync(heightsFile) ? JSON.parse(readFileSync(heightsFile, "utf8")).heights : null;
   if (heights) console.log(`build-block: ${Object.keys(heights).length} height overrides from ${heightsFile}`);
-  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights });
+  // The building source file (issue #88, scripts/building-sources.mjs). Each
+  // height comes from it when it exists.
+  const sourcesFile = typeof args.sources === "string" ? resolve(args.sources) : resolve(import.meta.dirname, "..", "data", "buildings", `${name}.json`);
+  const sources = existsSync(sourcesFile) ? JSON.parse(readFileSync(sourcesFile, "utf8")).buildings : null;
+  if (typeof args.sources === "string" && !sources) throw new Error(`build-block: no building source file at ${sourcesFile}`);
+  if (sources) console.log(`build-block: ${Object.keys(sources).length} building records from ${sourcesFile}`);
+  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, sources });
   const outFile = resolve(outDir, "level.json");
   writeFileSync(outFile, `${JSON.stringify(level)}\n`);
   console.log(`build-block: wrote ${outFile}`);

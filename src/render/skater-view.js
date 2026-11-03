@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { SKATER_BODY } from "../sim/skate/constants.js";
+import { cheer, createFaceState, stepFace } from "./face-anim.js";
 import { CLIPS, beatPhase, createAnimState, grooveRate, stepAnim, stepFacing } from "./skater-anim.js";
 
 // The skater bound to the controller output. It starts as a capsule (the
@@ -38,6 +39,7 @@ export function createSkaterView() {
   const actions = new Map();
   let anim = createAnimState();
   let current = null;
+  let faceState = createFaceState();
 
   function play(name, fade) {
     const next = actions.get(name);
@@ -66,6 +68,14 @@ export function createSkaterView() {
     get facing() {
       return facing;
     },
+    // The face decal state: { eyes, mouth }, or null without a face.
+    get face() {
+      return model?.face ? { eyes: model.face.eyes, mouth: model.face.mouth } : null;
+    },
+    // A banked combo: Nia cheers.
+    cheer() {
+      faceState = cheer(faceState);
+    },
     // The effective weight of each running clip, for the tests.
     get weights() {
       const out = {};
@@ -88,6 +98,7 @@ export function createSkaterView() {
         actions.set(clip.name, action);
       }
       anim = createAnimState();
+      faceState = createFaceState();
       current = null;
       facing = 0;
       pivot.rotation.y = 0;
@@ -118,6 +129,10 @@ export function createSkaterView() {
         facing = stepFacing(facing, anim.facing, dt);
         pivot.rotation.y = facing;
         mixer.update(dt);
+        if (model.face) {
+          faceState = stepFace(faceState, anim.clip, dt);
+          model.face.set(faceState.eyes, faceState.mouth);
+        }
       }
     },
   };

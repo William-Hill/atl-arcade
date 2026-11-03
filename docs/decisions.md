@@ -505,3 +505,10 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Playwright evidence goes to `e2e/__screenshots__/`. One exception: `e2e/skater-anim.spec.js` writes the clip contact sheet to `assets/skaters/<name>/clips/`, which holds committed review evidence next to the asset. The five model views moved to `e2e/__screenshots__/nia-<view>.png`; the committed `assets/skaters/nia/views/` change only on purpose.
 - The animation layer measures the yaw rate per simulation tick (`measureYawRate`), so a display above 60 Hz no longer flips the clip between coast and a carve on frames with no tick.
 - The Q dance list names the Cross Step (clip `dance_crisscross`), which has a spec in `atl-dance-references.md`.
+
+## 2026-11-03: The toon material keeps the GLB material properties (#60)
+
+- `toonMaterial()` now copies each property in `KEPT` when the source material has it: `map`, `opacity`, `transparent`, `alphaTest`, `side`, `vertexColors`, `emissive`, `emissiveIntensity`, `emissiveMap`, `normalMap`, `normalMapType`, and `normalScale`. Colors and vectors are copies.
+- `toonSkater()` builds one outline hull for each skinned mesh and returns the list of hulls. A skater with separate skates or hair gets an outline on each part.
+- Nia and Marcus each have one skinned mesh with a normal map. The toon material dropped the normal map before; now it keeps it. The change in the screenshots is small: on the BeltLine, 91 pixels (Nia) and 29 pixels (Marcus) of 42,000 in the skater area changed by more than 16 levels. Two runs of the same code differ by 5 to 16 pixels there.
+- Known problem, not fixed here: `toonSkater()` replaces the face decal material of Nia (`attachFace()` in `loadSkaterModel()`), so the decal eyes and mouth do not show with `?toon=1`. This was true before this change.

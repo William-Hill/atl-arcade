@@ -3,6 +3,7 @@
 // from the run state. The simulation never sees this.
 
 import { comboString, comboValue } from "../sim/skate/combo.js";
+import { startHint } from "./layout.js";
 
 function el(tag, className, parent) {
   const node = document.createElement(tag);
@@ -11,7 +12,8 @@ function el(tag, className, parent) {
   return node;
 }
 
-export function createHud(root) {
+// `touch` is true when the touch controls show: the hints name a tap.
+export function createHud(root, { touch = false } = {}) {
   root.innerHTML = "";
   const score = el("div", "hud-score", root);
   score.id = "hud-score";
@@ -25,7 +27,7 @@ export function createHud(root) {
   pulse.id = "hud-pulse";
   const hint = el("div", "hud-hint", root);
   hint.id = "hud-hint";
-  hint.textContent = "Press any key or click to start the beat";
+  hint.textContent = startHint(touch);
 
   const styleWrap = el("div", "hud-meter hud-style", root);
   el("span", "hud-label", styleWrap).textContent = "STYLE";

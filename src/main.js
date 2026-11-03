@@ -13,6 +13,7 @@ import { createSkaterEnv } from "./sim/skate/skater.js";
 import { createRun, stepRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
 import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
+import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
 import { loadLevel } from "./level/levels.js";
 import { createLevelEnv } from "./level/ground.js";
@@ -100,9 +101,24 @@ if (geo) {
 // ODbL: a level built from OpenStreetMap shows its attribution on screen.
 const attribution = document.getElementById("attribution");
 if (attribution && level.attribution) {
-  attribution.textContent = level.attribution;
+  // A compact screen shows the short credit; a tap shows the full text (#73).
+  const short = Object.assign(document.createElement("button"), { type: "button", className: "attr-short", textContent: shortAttribution(level.attribution) });
+  const full = Object.assign(document.createElement("span"), { id: "attr-full", className: "attr-full", textContent: level.attribution });
+  short.setAttribute("aria-expanded", "false");
+  short.setAttribute("aria-controls", full.id);
+  short.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = attribution.classList.toggle("open");
+    short.setAttribute("aria-expanded", String(open));
+    // A tap or a mouse click (detail > 0) removes the focus, so the Space key
+    // jumps and does not toggle the credit. A keyboard user keeps the focus.
+    if (e.detail > 0) short.blur();
+  });
+  attribution.replaceChildren(short, full);
   attribution.hidden = false;
 }
+// ?dev=1 or ?debug=1 shows the developer hints.
+if (params.get("dev") === "1" || params.get("debug") === "1") document.body.classList.add("dev");
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
@@ -254,7 +270,7 @@ if (touch) document.body.classList.add("touch");
 const input = createInput({ target: window, touch });
 let run = createRun(level);
 let skater = run.skater;
-const hud = createHud(document.getElementById("hud"));
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch) });
 // Simulation events for the tests and the playtest harness.
 const events = [];
 
@@ -347,6 +363,14 @@ const recorder = { active: false, every: 10, samples: [] };
 // Frame-time sampler for the playtest harness: milliseconds per frame.
 const fps = { active: false, frameMs: [] };
 const projected = new THREE.Vector3();
+
+// The skater height on the screen, as a fraction of the screen height
+// (feet to 1.7 m), for the phone layout test (#73).
+function skaterScreenHeight() {
+  const feet = new THREE.Vector3(skater.position[0], skater.position[1], skater.position[2]).project(camera);
+  const head = new THREE.Vector3(skater.position[0], skater.position[1] + 1.7, skater.position[2]).project(camera);
+  return Math.abs(head.y - feet.y) / 2;
+}
 
 function projectSkater() {
   projected.set(skater.position[0], skater.position[1] + 0.8, skater.position[2]).project(camera);
@@ -641,6 +665,10 @@ window.__atl = {
   },
   get frames() {
     return frames;
+  },
+  skaterScreenHeight,
+  get fov() {
+    return camera.fov;
   },
   get rendererInfo() {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };

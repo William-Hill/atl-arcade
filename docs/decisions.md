@@ -443,3 +443,15 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - High tier only, as the rest of the kit. `?depth=0` turns it off for an A/B check. The low tier does not build the kit, so the low tier gate cannot change, and it was not run again for this change.
 - Render only: the physics keeps the plain boxes.
 - Not done: recessed storefront glass (the wall boxes cannot have holes), and parapet changes (the parapet and the coping exist already).
+
+## 2026-11-02: Toon pass, part 1: the skater and a halftone (BeltLine level)
+
+- Why: item 4 of the stage report (`docs/research/2026-11-02-stage-accuracy-and-characters.md`) is the toon pass for the Jet Set Radio look. William picked it on 2026-11-02.
+- Skater, both tiers (`src/render/toon.js`, with Vitest tests):
+  - The GLB materials become `MeshToonMaterial` with a 3-step ramp (96, 180, 255). The map and the color stay.
+  - A rim light on the edges that face away from the camera (strength 0.38). It does not show clearly in the test views, so its effect is not verified.
+  - An ink outline from an inverted hull: a second `SkinnedMesh` on the same skeleton and geometry, with back faces, moved out along the view-space normal. Its width is the larger of 0.008 m and 0.0024 m per meter of distance, about 2 px from 5 m to 60 m. It is the only outline on the low tier, which has no ink pass.
+- Halftone, high tier (`src/render/post.js`): the ink pass darkens a dark pixel with a 45 degree grid of dots (5 px cells). A dot grows as the linear luminance falls under 0.16. It fades out with the ink. No extra pass.
+- `?toon=0` keeps the GLB materials and no hull. `?halftone=0` turns the halftone off.
+- Not done in this part: a ramp for each city material and a rim light on the city. These need `src/render/geo-view.js`, which PR #50 also changes. Do them after PR #50 merges.
+- Low tier gate, 2026-11-02 21:16 to 21:19, load average 15 to 18, in the order toon off, toon on, toon off, toon on: each run gave a median of 30 FPS, with averages of 34.0, 33.5, 34.2, and 34.2 FPS. Gate 55: FAIL for all four. The toon pass does not make the low tier slower. An earlier single pair gave 59.9 FPS for toon off and 30 FPS for toon on, but the repeat runs show that pair was noise. Evidence: `reports/toon/`.

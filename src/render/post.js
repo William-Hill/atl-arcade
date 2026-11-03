@@ -11,6 +11,19 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 // The ink pass reads the depth and normal buffers that GTAO already draws,
 // so the outlines cost no extra scene pass. The outlines give the Jet Set
 // Radio cel look; they fade out with the fog.
+//
+// The ink pass also draws a halftone in the shadows: a screen grid of dots,
+// turned 45 degrees, that darkens a dark pixel. A dot grows as the pixel
+// gets darker, as in print. It fades out with the ink.
+
+export const HALFTONE = { cell: 5, start: 0.16, strength: 0.22 };
+
+// Pure: the dot radius (in cells, 0..0.5) for a linear luminance, as in the
+// shader. Black gets a radius of 0.5, and `start` or brighter gets none.
+export function halftoneRadius(luma, { start } = HALFTONE) {
+  const t = Math.min(Math.max(1 - luma / start, 0), 1);
+  return 0.5 * Math.sqrt(t);
+}
 
 const InkShader = {
   uniforms: {
@@ -24,6 +37,9 @@ const InkShader = {
     fadeFar: { value: 400 },
     strength: { value: 0.85 },
     thickness: { value: 1 },
+    // x: the dot cell (px), y: the luminance where the dots start, z: the
+    // darkening inside a dot. x = 0 turns the halftone off.
+    halftone: { value: new THREE.Vector3(HALFTONE.cell, HALFTONE.start, HALFTONE.strength) },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -40,6 +56,7 @@ const InkShader = {
     uniform float fadeFar;
     uniform float strength;
     uniform float thickness;
+    uniform vec3 halftone;
     varying vec2 vUv;
     float viewDepth(vec2 uv) {
       return -perspectiveDepthToViewZ(texture2D(tDepth, uv).x, cameraNear, cameraFar);
@@ -64,13 +81,23 @@ const InkShader = {
         float dn2 = 1.0 - dot(n, viewNormal(uv));
         edge = max(edge, smoothstep(0.35, 0.6, dn2) * step(abs(dz), 0.05));
       }
-      edge *= 1.0 - smoothstep(fadeNear, fadeFar, d);
+      float fade = 1.0 - smoothstep(fadeNear, fadeFar, d);
+      edge *= fade;
+      if (halftone.x > 0.0) {
+        float luma = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
+        float r = 0.5 * sqrt(clamp(1.0 - luma / halftone.y, 0.0, 1.0));
+        vec2 p = gl_FragCoord.xy / halftone.x;
+        p = mat2(0.7071, -0.7071, 0.7071, 0.7071) * p;
+        float dist = length(fract(p) - 0.5);
+        float dotMask = 1.0 - smoothstep(r - 0.08, r + 0.08, dist);
+        col.rgb *= 1.0 - halftone.z * dotMask * step(0.01, r) * fade;
+      }
       col.rgb *= 1.0 - strength * edge;
       gl_FragColor = col;
     }`,
 };
 
-export function createPost(renderer, scene, camera, { fadeNear, fadeFar }) {
+export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true }) {
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
   const composer = new EffectComposer(renderer, target);
@@ -87,6 +114,7 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar }) {
   const ink = new ShaderPass(InkShader);
   ink.uniforms.fadeNear.value = fadeNear;
   ink.uniforms.fadeFar.value = fadeFar;
+  if (!halftone) ink.uniforms.halftone.value.x = 0;
   composer.addPass(ink);
 
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.28, 0.5, 0.92);
@@ -99,6 +127,7 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar }) {
     ink.uniforms.cameraNear.value = camera.near;
     ink.uniforms.cameraFar.value = camera.far;
     ink.uniforms.thickness.value = 1.25 * Math.max(1, renderer.getPixelRatio());
+    if (ink.uniforms.halftone.value.x > 0) ink.uniforms.halftone.value.x = HALFTONE.cell * Math.max(1, renderer.getPixelRatio());
   }
   return {
     composer,

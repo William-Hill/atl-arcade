@@ -1,0 +1,15 @@
+{
+  "source": "OpenStreetMap via the Overpass API",
+  "license": "ODbL 1.0",
+  "attribution": "(c) OpenStreetMap contributors",
+  "endpoint": "https://overpass-api.de/api/interpreter",
+  "fetchedAt": "2026-11-01T21:04:47.305Z",
+  "osmBase": "2026-11-01T21:03:20Z",
+  "bbox": {
+    "south": 33.756,
+    "west": -84.3685,
+    "north": 33.7735,
+    "east": -84.358
+  },
+  "query": "[out:json][timeout:120];\n(\n  way[\"building\"](33.756,-84.3685,33.7735,-84.358);\n  relation[\"building\"](33.756,-84.3685,33.7735,-84.358);\n  way[\"highway\"](33.756,-84.3685,33.7735,-84.358);\n  way[\"leisure\"=\"park\"](33.756,-84.3685,33.7735,-84.358);\n  relation[\"leisure\"=\"park\"](33.756,-84.3685,33.7735,-84.358);\n  way[\"landuse\"=\"grass\"](33.756,-84.3685,33.7735,-84.358);\n);\nout body geom;"
+}

@@ -12,27 +12,56 @@ import { createSkaterEnv } from "./sim/skate/skater.js";
 import { createRun, stepRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
 import { BeatClock } from "./audio/beat-clock.js";
-import { GREYBOX } from "./level/greybox.js";
+import { loadLevel } from "./level/levels.js";
 import { createLevelEnv } from "./level/ground.js";
-import { createPhysicsWorld, initPhysics } from "./physics/world.js";
+import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
+import { createGeoLights, createGeoView } from "./render/geo-view.js";
+import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
 import { createLookInput } from "./input/look.js";
 import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 
 const params = new URLSearchParams(window.location.search);
-const level = GREYBOX;
+// ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
+const level = await loadLevel(params.get("level"));
+const geo = isGeoLevel(level);
 const env = createLevelEnv(level);
 const skaterEnv = createSkaterEnv(level);
 
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x10101c);
-scene.fog = new THREE.Fog(0x10101c, 60, 160);
-scene.add(createLevelLights());
+// Draw distance on a geodata level. The fog ends at the far plane, so the
+// cut is not visible. 320 m keeps the playtest at 60 FPS in headless
+// SwiftShader with video capture on (see docs/decisions.md).
+const GEO_FAR = 320;
+const GEO_FOG_NEAR = 150;
 
-const levelView = createLevelView(level);
+// A geodata level gets a day sky, a far fog, and a sun that follows the
+// skater. Its meshes are built once and shared with the physics.
+const geoMeshes = geo ? buildGeoMeshes(level) : null;
+let geoLights = null;
+if (geo) {
+  scene.background = new THREE.Color(0x9fd4ff);
+  // ?fog=0 removes the fog (for an overview screenshot).
+  scene.fog = params.get("fog") === "0" ? null : new THREE.Fog(0x9fd4ff, GEO_FOG_NEAR, GEO_FAR);
+  geoLights = createGeoLights();
+  scene.add(geoLights.group);
+} else {
+  scene.background = new THREE.Color(0x10101c);
+  scene.fog = new THREE.Fog(0x10101c, 60, 160);
+  scene.add(createLevelLights());
+}
+
+// ODbL: a level built from OpenStreetMap shows its attribution on screen.
+const attribution = document.getElementById("attribution");
+if (attribution && level.attribution) {
+  attribution.textContent = level.attribution;
+  attribution.hidden = false;
+}
+
+const levelView = geo ? createGeoView(level, geoMeshes) : createLevelView(level);
 scene.add(levelView.root);
 
 const skaterView = createSkaterView();
@@ -54,11 +83,23 @@ if (skaterName !== "capsule") {
     });
 }
 
-const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 500);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, geo ? (params.get("fog") === "0" ? 4000 : GEO_FAR) : 500);
 // view=follow (default), view=orbit (drag to look), view=fixed (screenshot reference).
 const view = params.get("view") ?? "follow";
-camera.position.set(-6, 38, 44);
-camera.lookAt(0, 0, 2);
+// ?cam=x,y,z,lookX,lookY,lookZ sets the fixed camera (for screenshots).
+const camParam = (params.get("cam") ?? "").split(",").map(Number);
+if (camParam.length === 6 && camParam.every(Number.isFinite)) {
+  camera.position.set(camParam[0], camParam[1], camParam[2]);
+  camera.lookAt(camParam[3], camParam[4], camParam[5]);
+} else if (geo) {
+  // The fixed view looks at the spawn on the trail from the south-west.
+  const [sx, , sz] = level.spawn.position;
+  camera.position.set(sx - 40, 45, sz + 60);
+  camera.lookAt(sx, 0, sz);
+} else {
+  camera.position.set(-6, 38, 44);
+  camera.lookAt(0, 0, 2);
+}
 
 let controls = null;
 if (view === "orbit") {
@@ -74,7 +115,7 @@ window.addEventListener("resize", () => fitToWindow(renderer, camera));
 const silhouette = createSilhouette(renderer);
 
 const RAPIER = await initPhysics();
-const physics = createPhysicsWorld(RAPIER, level);
+const physics = createPhysicsWorld(RAPIER, level, { geoMeshes });
 const debug = createDebugColliders(physics.world);
 scene.add(debug.lines);
 debug.visible = params.get("debug") === "1";
@@ -211,6 +252,7 @@ function frame(now) {
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
   }
   hud.update(run, now, beat.running ? beat.phase() : null);
+  if (geoLights) geoLights.follow(skater.position[0], skater.position[2]);
   renderer.render(scene, camera);
   frames += 1;
   if (recorder.active && frames % recorder.every === 0) {
@@ -225,7 +267,20 @@ requestAnimationFrame(frame);
 window.__atl = {
   shell: "skate-atl",
   ready: true,
-  level: { name: level.name, objectCount: level.objects.length, ids: level.objects.map((o) => o.id) },
+  level: {
+    name: level.name,
+    format: level.format ?? "greybox",
+    objectCount: level.objects.length,
+    // Every id that has colliders: the level objects, and for a geodata
+    // level, the merged meshes.
+    ids: [...level.objects.map((o) => o.id), ...(geoMeshes ? geoMeshes.map((m) => `${m.material}-${m.tile}`) : [])],
+    stats: level.stats ?? null,
+    bounds: level.bounds,
+    spawn: level.spawn,
+    meshCount: geoMeshes ? geoMeshes.length : level.objects.length,
+    // The ground under (x, z), from the pure sampler.
+    sample: (x, z) => env.sampleGround(x, z),
+  },
   physics: {
     colliderCount: physics.colliderCount,
     collidersById: Object.fromEntries([...physics.colliders].map(([id, list]) => [id, list.length])),

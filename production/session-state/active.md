@@ -11,10 +11,13 @@
 | Issue | Branch | PR | Verified |
 |---|---|---|---|
 | M1-01 First skater (Nia) | `claude/m1-01-skater-cleanup-70c838` | PR open | Vitest on the GLB (size, Draco, triangles, joints, height); Playwright loads it skinned with no console errors and no off-host requests; five views in `assets/skaters/nia/views/` |
+| M1-03 Geodata pipeline (BeltLine Eastside Trail, Ponce City Market to Krog Street Market) | `claude/m1-03-geodata-beltline` (from M1-02) | PR open | Vitest on the projection, the extrusion, the sampler, the merged meshes, the build script, and an offline rebuild byte for byte; Playwright loads the level with a collider on each of 66 merged meshes, rides 10 s on the trail and 3 s on a real street and a real sidewalk (node and browser within 1 cm), and saves 8 screenshots (`e2e/__screenshots__/beltline-*.png`); `npm run playtest:beltline` median 59.9 FPS, gate 55 PASS (`reports/playtest-beltline-eastside-2026-11-01-21-39-03.json`) |
 | M1-02 Face decals for Nia | `m1-02-nia-face` (from M1-02) | PR open | Vitest face mood and blink logic; Playwright close-ups of six eye and mouth states in `assets/skaters/nia/face/views/`; in the game she smiles while she stands and blinks |
 | M1-02 Animation set and binding | `claude/m1-02-skater-animations` (from M1-01) | PR open | Vitest state -> clip table, switch, and wall probe; Playwright contact sheet per clip (20 clips) in `assets/skaters/nia/clips/`; no T-pose frame over 287 samples of the three scripted sessions (worst IoU 0.464); a Playwright test of the backward ride |
 
 M1-01 not verified: no human looked at the model in the game, and the model has no animations yet. Cascadeur reads the GLB only without Draco (see `docs/decisions.md`). M1-02 not verified: no person played the second clip set (ATL free skate, X Games rails and air, backward ride); real skaters did not review the moves; the manual clip has no input yet; air_japan, air_liukang, carve_right, dance_crisscross, dance_spin, dance_sitspin, and manual did not show in the scripted sessions (the contact sheets cover them); the wall probe can stop a skater who rides along a wall at less than 0.17 m. Next: M1-03.
+
+M1-03 not verified: no person played the block; 1024 of 1045 building heights are defaults by building type; the world is flat (bridges sit on the ground); the Atlanta open data cross-check and Overture heights are not done; no rails, ledges, or ramps yet (M1-04); the FPS margin on the block is small (90th percentile frame 33 ms); shadow acne shows on some walls.
 
 ## M0 status, 2026-10-30
 

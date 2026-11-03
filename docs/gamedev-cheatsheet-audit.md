@@ -35,12 +35,12 @@ This file compares each concept with the code. "Done" means the code has it now.
 | Concept | Status | What to do | When |
 |---|---|---|---|
 | Level of detail | Gap | Real neighborhoods have many buildings. Add two or three LOD steps for extruded blocks and props, with hysteresis. | M1 |
-| Frustum culling | Partial | Three.js culls each mesh by its bounding sphere by default. Merged city blocks must keep small enough bounds to cull. | M1 |
-| Draw calls | Gap | Instance repeated props (cones, benches, rails, trees) with `InstancedMesh`, and merge static blocks that share a material. | M1 |
+| Frustum culling | Partial | Three.js culls each mesh by its bounding sphere by default. The merged city meshes are 250 m tiles, so the tiles out of view are culled. | M1 |
+| Draw calls | Partial (2026-11-01) | The geodata level merges static blocks per material per 250 m tile: 66 meshes for 2063 features (`src/level/geo/geo-mesh.js`). Props (cones, benches, rails, trees) still need `InstancedMesh`. | M1 |
 | Texture atlas | Gap | Pack mural and prop textures into atlases for the neighborhood builds. | M1 |
 | Chunk streaming | Later | Stream neighborhood chunks with two radii (load and unload) for a big map. | M2 |
 | Frame budget | Partial | The playtest harness records frame time (`__atl.fps`). Add a per-system time (input, sim, render) before any optimization. | M1 |
-| Spatial partitioning | Later | Rapier has a broad phase. The ground sampler needs a grid when a neighborhood has thousands of colliders. | M1 |
+| Spatial partitioning | Done (2026-11-01) | Rapier has a broad phase. The geodata ground sampler uses a 16 m grid (`src/level/geo/geo-ground.js`). | — |
 | Z-fighting | Check | The camera near plane is 0.1 and the far plane is 500. Murals on walls must sit 1 cm off the wall or use polygon offset. | M1 |
 | Billboarding | Later | For name tags and score pop-ups. | M2 |
 | Quaternions | Done | The rig uses quaternions. The sim yaw is one angle, so it has no Euler problem. | — |

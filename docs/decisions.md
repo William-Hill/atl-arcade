@@ -258,6 +258,27 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Decision: the carve clips are the ATL Ryde corner step from the Dun Beezy lesson, 2 beats. In a left turn, the right skate steps out wide, the left skate drags twice behind on its toe, and the right skate comes back in. The body leans into the turn. `carve_right` is the mirror.
 - This replaces the Cross Step clip, which came from a name only, with no source for the mechanics.
 
+## 2026-11-01: The first real block from geodata (M1-03)
+
+- Block: the Atlanta BeltLine Eastside Trail from Ponce City Market south to Krog Street Market. William picked it. The bbox is `33.7560,-84.3685,33.7735,-84.3580`, about 970 m by 1950 m. The first bbox was 600 m wide and cut out the bend of the trail around Historic Fourth Ward Park, so the bbox goes farther east.
+- Source: OpenStreetMap through the Overpass API. Overture needs a GeoParquet reader that is not on this machine. See `docs/sources.md`.
+- Pipeline: `scripts/build-block.mjs --bbox ... --out levels/beltline-eastside/` fetches once and caches the raw answer in `levels/beltline-eastside/raw/`. Later runs read the cache. `--offline` fails when there is no cache, and `--refresh` fetches again. A Vitest test rebuilds the committed `level.json` from the cache, byte for byte.
+- Projection: a local equirectangular projection about the bbox center, in meters (+x east, +z south). Over the block the error is under 0.1 % of the great-circle distance (Vitest).
+- Level format `geo-level/1`: `buildings` (footprint rings and a height), `strips` (street, sidewalk, path, and trail center lines with a width), and `areas` (parks). The file keeps center lines, not polygons. The runtime builds the meshes from them. `objects` is empty. Rails, ledges, and ramps on real features are M1-04.
+- Flat world: there is no terrain height. Bridges and the trail bridges are on the ground. A digital elevation model is a later task.
+- Surface heights: ground 0, park 0.02 m, street 0.03 m, path 0.05 m, trail 0.07 m, sidewalk 0.15 m. The small steps stop z-fighting. The sidewalk is a 0.15 m curb with side walls. Every step is under `SKATE.maxStep` (0.25 m), so she rolls over the curbs.
+- Widths: from the `width` tag, else from the road class (trunk 14 m, secondary 12 m, tertiary 10 m, residential 8 m, service 4 m, driveway 3 m), else the lane count times 3.3 m. The trail is 4.3 m (14 ft). Sidewalks are 2 m. Crossings, steps, tunnels, and proposed roads are not in the level.
+- Building heights: the `height` tag, else `building:levels` times 3.2 m plus 1 m, else a default by building type (house 7 m, apartments 15 m, office 18 m, garage 3 m, other 8 m). 1024 of the 1045 buildings use the default. Each building records its `heightSource`. Overture heights can replace the defaults later.
+- Ground sampler: a pure polygon and strip sampler (`src/level/geo/geo-ground.js`) with a 16 m grid. It keeps the controller contract (`sampleGround(x, z)`), so the sim did not change. A sample takes about 0.5 microseconds in node.
+- Draw calls: all flat surfaces share one toon material with vertex colors, and all buildings share a second one. The meshes merge per 250 m tile, so the block is 66 meshes (54,279 triangles) in place of 2063 features. The tiles let Three.js cull the meshes out of view.
+- Colliders: one static Rapier trimesh per merged mesh, from the same triangles as the render. Buildings are in the wall group, so the follow camera ray stops at them. Surfaces are in the ground group.
+- Light: the sun shadow box (90 m) follows the skater, because one shadow map cannot cover 2 km.
+- Draw distance: 320 m, with fog from 150 m to 320 m. With an 800 m far plane the trail playtest ran at a median of 30 FPS in headless SwiftShader with video capture on. Each of these changes alone gave 59.9 FPS: no shadows, a 250 m far plane, or a pixel ratio of 0.5. The far plane costs the least in look. The 90th percentile frame is still 33 ms, so the margin is small. The 30 FPS run is `reports/playtest-beltline-eastside-2026-11-01-21-22-45.json`.
+- Known issue: shadow acne (a dot pattern) shows on some building walls that face away from the sun. A `normalBias` of 0.04 did not remove it, so the change is not in.
+- Shell: `?level=beltline-eastside` (alias `beltline`) loads the block. The greybox stays the default. The level JSON is a separate chunk, so the greybox page does not download it. `?cam=x,y,z,lookX,lookY,lookZ` sets the fixed camera and `?fog=0` removes the fog, for screenshots.
+- Playtest: `npm run playtest` still runs the three greybox sessions, so the M0 numbers stay comparable. `npm run playtest:beltline` runs a 40 s ride on the trail, planned with the pure controller and a trail follower (`src/playtest/trail-script.js`).
+- Political rules: the level has no traffic. Streets are skate surfaces only.
+
 ## 2026-11-01: Face expressions for Nia are decals, not a face rig (M1-02)
 
 - Decision: Nia's face changes with two small decal atlases: eyes (open, half, closed, happy) and mouth (neutral, smile, open). A shader projects them onto the front of the head in bind-pose space, so they follow the skin. Under the eye decal the normal map and the roughness map become flat skin, because they also carry the painted eyes.

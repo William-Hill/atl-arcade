@@ -5,6 +5,7 @@
 // never count, because the skater rides them through the grind system.
 
 import { rampSurface } from "./ramp.js";
+import { createGeoGroundSampler } from "./geo/geo-ground.js";
 
 export function createGroundSampler(level) {
   const boxes = level.objects.filter((o) => o.size && o.kind !== "rail");
@@ -29,6 +30,9 @@ export function createGroundSampler(level) {
 
 // Everything the skate controller needs from a level: the ground sampler,
 // the bounds, and the spawn point for an out-of-bounds respawn.
+// A geodata level (format "geo-level/1") uses the polygon and strip sampler.
 export function createLevelEnv(level) {
-  return { sampleGround: createGroundSampler(level), bounds: level.bounds, spawn: level.spawn };
+  const geo = typeof level.format === "string" && level.format.startsWith("geo-level/");
+  const sampleGround = geo ? createGeoGroundSampler(level) : createGroundSampler(level);
+  return { sampleGround, bounds: level.bounds, spawn: level.spawn };
 }

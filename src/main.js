@@ -5,6 +5,7 @@ import { createLevelLights, createLevelView } from "./render/level-view.js";
 import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
 import { loadSkaterModel } from "./render/skater-model.js";
+import { toonSkater } from "./render/toon.js";
 import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
@@ -146,12 +147,15 @@ if (geo && !tier.shadows) {
 
 // The GLB skater replaces the capsule when it loads. ?skater=<id> picks the
 // skater (src/ui/skater-select.js), and ?skater=capsule keeps the capsule.
+// The skater gets the toon look (src/render/toon.js); ?toon=0 keeps the GLB
+// materials.
 const skaterName = resolveSkater(params.get("skater"));
 createSkaterSelect(document.body, skaterName);
 const skaterModel = { name: skaterName, loaded: false, error: null };
 if (skaterName !== "capsule") {
   loadSkaterModel(skaterName)
     .then((loaded) => {
+      if (params.get("toon") !== "0") toonSkater(loaded);
       skaterView.attachModel(loaded);
       skaterModel.loaded = true;
     })
@@ -191,7 +195,7 @@ if (view === "orbit") {
 }
 
 // The high tier post chain (src/render/post.js).
-const post = tier.post ? createPost(renderer, scene, camera, { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8 }) : null;
+const post = tier.post ? createPost(renderer, scene, camera, { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: params.get("halftone") !== "0" }) : null;
 function resize() {
   fitToWindow(renderer, camera);
   if (post) post.setSize();

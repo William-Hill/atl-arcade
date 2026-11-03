@@ -323,7 +323,9 @@ function frame(now) {
   hud.update(run, now, beat.running ? beat.phase() : null);
   if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
   if (blob) {
-    const g = env.sampleGround(skater.position[0], skater.position[2]);
+    // With the skater height, as the controller samples: under a bridge the
+    // blob stays on the road, not on the deck.
+    const g = env.sampleGround(skater.position[0], skater.position[2], skater.position[1]);
     blob.position.set(skater.position[0], (g ? g.height : 0) + 0.02, skater.position[2]);
   }
   if (levelView.update) levelView.update(camera.position);

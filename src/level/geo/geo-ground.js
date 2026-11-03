@@ -2,11 +2,20 @@
 // src/level/ground.js: sampleGround(x, z) returns the highest surface under
 // the column, { height, normal, id }, or null outside the level.
 //
+// With terrain (src/level/geo/terrain.js) each surface sits its offset over
+// the terrain, with the terrain normal, and a building top is its span top.
+// A bridge deck has its own height line. sampleGround(x, z, y) with the
+// skater height `y` leaves out a bridge more than BRIDGE_HEADROOM over `y`,
+// so the skater rolls under a bridge and not into it.
+//
 // Buildings and areas are polygons. Streets, sidewalks, paths, and the trail
 // are strips: a point is on a strip when it is within width / 2 of the
 // center line. A uniform grid keeps each query to a few candidates.
 
+import { BRIDGE, bridgeDeck, buildingSpan, terrainOf } from "./terrain.js";
+
 export const GEO_CELL = 16; // m, grid cell size.
+export const BRIDGE_HEADROOM = 2.5; // m
 const UP = [0, 1, 0];
 
 // Even-odd test over the outer ring and the holes.
@@ -31,6 +40,20 @@ export function distanceToSegment(x, z, ax, az, bx, bz) {
   return Math.hypot(x - (ax + t * dx), z - (az + t * dz));
 }
 
+// The deck normal at (x, z): the deck slope along its segment, from two
+// samples 0.5 m apart. The deck is level across its width.
+function deckNormal(s, x, z) {
+  const dx = s.b[0] - s.a[0];
+  const dz = s.b[1] - s.a[1];
+  const len = Math.hypot(dx, dz) || 1;
+  const ux = dx / len;
+  const uz = dz / len;
+  const slope = (s.deck(x + ux * 0.25, z + uz * 0.25) - s.deck(x - ux * 0.25, z - uz * 0.25)) / 0.5;
+  if (Math.abs(slope) < 1e-4) return UP;
+  const l = Math.hypot(slope, 1);
+  return [(-ux * slope) / l, 1 / l, (-uz * slope) / l];
+}
+
 function cellKey(ix, iz) {
   return ix * 65536 + iz;
 }
@@ -46,16 +69,31 @@ export function surfaceTop(level, kind) {
 // { id, top, kind, rings } or { id, top, kind, a, b, r }.
 export function geoShapes(level) {
   const shapes = [];
+  const terrain = terrainOf(level);
   for (const b of level.buildings ?? []) {
-    shapes.push({ id: b.id, kind: "building", top: b.height, rings: [b.outer, ...(b.holes ?? [])] });
+    // A building top is absolute (it does not follow the terrain).
+    shapes.push({ id: b.id, kind: "building", top: buildingSpan(level, b).top, abs: true, rings: [b.outer, ...(b.holes ?? [])] });
   }
   for (const a of level.areas ?? []) {
     shapes.push({ id: a.id, kind: a.kind, top: surfaceTop(level, a.kind), rings: [a.outer, ...(a.holes ?? [])] });
   }
   for (const s of level.strips ?? []) {
     const top = surfaceTop(level, s.kind);
+    const deck = s.bridge && !terrain.flat ? bridgeDeck(level, s) : null;
     for (let i = 0; i < s.points.length - 1; i += 1) {
-      shapes.push({ id: s.id, kind: s.kind, top, a: s.points[i], b: s.points[i + 1], r: s.width / 2 });
+      const a = s.points[i];
+      const b = s.points[i + 1];
+      shapes.push({ id: s.id, kind: s.kind, top, a, b, r: s.width / 2, deck });
+      if (deck) {
+        // The parapets: a wall on each side of the deck.
+        const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+        const o = s.width / 2 - BRIDGE.parapetWidth / 2;
+        const nx = (-(b[1] - a[1]) / len) * o;
+        const nz = ((b[0] - a[0]) / len) * o;
+        for (const k of [1, -1]) {
+          shapes.push({ id: `${s.id}:parapet`, kind: "parapet", top: top + BRIDGE.parapet, a: [a[0] + nx * k, a[1] + nz * k], b: [b[0] + nx * k, b[1] + nz * k], r: BRIDGE.parapetWidth / 2, deck });
+        }
+      }
     }
   }
   return shapes;
@@ -109,14 +147,29 @@ export function createGeoGroundSampler(level, cell = GEO_CELL, { obstacles = [] 
   const { minX, maxX, minZ, maxZ } = level.bounds;
   const groundTop = level.surfaces?.ground ?? 0;
 
-  function sampleGround(x, z) {
+  const terrain = terrainOf(level);
+
+  function sampleGround(x, z, y = Infinity) {
     if (x < minX || x > maxX || z < minZ || z > maxZ) return null;
-    let best = { height: groundTop, normal: UP, id: "ground" };
+    const flat = terrain.flat;
+    const t = flat ? 0 : terrain.height(x, z);
+    const n = flat ? UP : terrain.normal(x, z);
+    let best = { height: groundTop + t, normal: n, id: "ground" };
     const list = grid.get(cellKey(Math.floor(x / cell), Math.floor(z / cell)));
     if (list) {
       for (const s of list) {
-        if (s.top <= best.height) continue;
-        if (contains(s, x, z)) best = { height: s.top, normal: UP, id: s.id };
+        let h;
+        let normal = n;
+        if (s.abs) {
+          h = s.top;
+          normal = UP;
+        } else if (s.deck) {
+          h = s.top + s.deck(x, z);
+          if (h > y + BRIDGE_HEADROOM) continue;
+          normal = deckNormal(s, x, z);
+        } else h = s.top + t;
+        if (h <= best.height) continue;
+        if (contains(s, x, z)) best = { height: h, normal, id: s.id };
       }
     }
     return best;

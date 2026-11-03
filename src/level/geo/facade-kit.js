@@ -16,6 +16,7 @@
 import { FACE, orientRing } from "./extrude.js";
 import { GEO_TILE } from "./geo-mesh.js";
 import { STYLES, STYLE_INDEX, chooseStyle, hash32, wallColor } from "./styles.js";
+import { buildingSpan } from "./terrain.js";
 
 export const KIT = {
   cornice: { out: 0.35, height: 0.5, minParapet: 0.5 },
@@ -214,22 +215,26 @@ export function gableRoof(m, ring, top, wall, shingle, style) {
 }
 
 // The kit parts for one building, into mesh `m`. Returns the part counts.
-export function buildingKit(m, b) {
+// `span` ({ base, top }, src/level/geo/terrain.js) is where the walls stand;
+// without it the building stands on y = 0.
+export function buildingKit(m, b, span = { base: 0, top: b.height }) {
   const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
   const si = STYLE_INDEX[style.id];
   const ring = orientRing(b.outer, false);
   const counts = { cornice: 0, coping: 0, belt: 0, roof: 0 };
   if (ring.length < 3 || !(b.height > 0)) return counts;
-  const top = b.height;
-  const floors = Math.max(1, Math.round(top / style.floorHeight));
-  const floorH = top / floors;
-  if (HOUSES.has(style.id) && top <= KIT.roof.maxHeight) {
+  const { base, top } = span;
+  // The same floor count as extrudeFootprint(), so the belt course sits on
+  // the line of the facade floors.
+  const floors = Math.max(1, Math.round((top - base) / style.floorHeight));
+  const floorH = (top - base) / floors;
+  if (HOUSES.has(style.id) && b.height <= KIT.roof.maxHeight) {
     const shingle = SHINGLES[hash32(`${b.id}:roof`) % SHINGLES.length];
     if (gableRoof(m, ring, top, wallColor(style, b.id), shingle, si)) counts.roof = 1;
     return counts;
   }
   const p = style.parapet ?? 0;
-  if (p >= KIT.cornice.minParapet && top > 5) {
+  if (p >= KIT.cornice.minParapet && b.height > 5) {
     ledge(m, ring, top - KIT.cornice.height, top, KIT.cornice.out, style.trim, si);
     counts.cornice = 1;
   }
@@ -238,7 +243,7 @@ export function buildingKit(m, b) {
     counts.coping = 1;
   }
   if (style.storefront && floors >= 2) {
-    const y = floorH - KIT.belt.height / 2;
+    const y = base + floorH - KIT.belt.height / 2;
     ledge(m, ring, y, y + KIT.belt.height, KIT.belt.out, style.trim, si);
     counts.belt = 1;
   }
@@ -255,7 +260,7 @@ export function facadeKit(level) {
     const key = `${Math.floor(x / GEO_TILE)},${Math.floor(z / GEO_TILE)}`;
     let m = tiles.get(key);
     if (!m) tiles.set(key, (m = emptyMesh()));
-    const c = buildingKit(m, b);
+    const c = buildingKit(m, b, buildingSpan(level, b));
     for (const k of Object.keys(counts)) counts[k] += c[k];
   }
   const out = [...tiles.entries()]

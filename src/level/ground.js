@@ -38,7 +38,7 @@ export function createLevelEnv(level, { props = true } = {}) {
   const geo = typeof level.format === "string" && level.format.startsWith("geo-level/");
   if (!geo) return { sampleGround: createGroundSampler(level), bounds: level.bounds, spawn: level.spawn, props: [] };
   const placed = props ? levelProps(level) : [];
-  const obstacles = propObstacles(placed.filter((p) => p.y === 0));
+  const obstacles = propObstacles(placed.filter((p) => !p.roof));
   const sampleGround = createGeoGroundSampler(level, GEO_CELL, { obstacles });
   return { sampleGround, bounds: level.bounds, spawn: level.spawn, props: placed };
 }

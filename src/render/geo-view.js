@@ -4,6 +4,7 @@ import { SURFACE_COLORS, buildGeoMeshes, buildPropMeshes } from "../level/geo/ge
 import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
 import { facadeKit } from "../level/geo/facade-kit.js";
+import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { createMuralAtlas } from "./murals.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
@@ -408,7 +409,9 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const byId = new Map();
   // Road markings join the render copy of their surface tile (no extra
   // draw call). The shared meshes, which the physics reads, stay as they are.
-  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, t.mesh]) : []);
+  // The markings follow the terrain like the streets (terrain.js).
+  const terrain = terrainOf(level);
+  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, drapeMesh(t.mesh, terrain)]) : []);
   // The facade kit (cornices, copings, belt courses, house roofs) joins the
   // render copy of its building tile in the same way.
   const kitParts = kit ? facadeKit(level) : { tiles: [], counts: {} };
@@ -491,11 +494,12 @@ export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048 } = {}
     sun,
     sunDirection: offset.clone().normalize(),
     // Snap to whole meters, so the shadow edges do not shimmer.
-    follow(x, z) {
+    follow(x, z, y = 0) {
       const sx = Math.round(x);
       const sz = Math.round(z);
-      sun.target.position.set(sx, 0, sz);
-      sun.position.set(sx + offset.x, offset.y, sz + offset.z);
+      const sy = Math.round(y);
+      sun.target.position.set(sx, sy, sz);
+      sun.position.set(sx + offset.x, sy + offset.y, sz + offset.z);
     },
   };
 }

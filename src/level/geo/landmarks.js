@@ -5,6 +5,7 @@
 // This module finds where those parts stand on the real roof.
 
 import { pointInRings } from "./geo-ground.js";
+import { buildingSpan, terrainOf } from "./terrain.js";
 
 // model.base: "roof" stands the model on the roof (y = building height);
 // "ground" stands it on the ground with its front (+z, z = 0) on the wall
@@ -122,15 +123,16 @@ export function landmarkPlacements(level) {
     if (lm.model.base === "ground") {
       const w = wallPoint(b, lm.model.side, a);
       // Yaw that turns the model's +z (its front) toward `side`.
-      model = { x: w[0], y: 0, z: w[1], yaw: Math.atan2(lm.model.side[0], lm.model.side[1]) };
+      // On a slope the model stands on the terrain at its wall point.
+      model = { x: w[0], y: terrainOf(level).height(w[0], w[1]), z: w[1], yaw: Math.atan2(lm.model.side[0], lm.model.side[1]) };
     } else {
-      model = { x: a[0], y: b.height, z: a[1], yaw: 0 };
+      model = { x: a[0], y: buildingSpan(level, b).top, z: a[1], yaw: 0 };
     }
     const entry = { id: lm.id, building: b.id, model };
     if (lm.sign) {
       const s = edgeAnchor(b, lm.sign.side, lm.sign.inset);
       if (s) {
-        entry.sign = { x: s[0], y: b.height, z: s[1], yaw: Math.atan2(lm.sign.side[0], lm.sign.side[1]), text: lm.sign.text, width: lm.sign.width, height: lm.sign.height };
+        entry.sign = { x: s[0], y: buildingSpan(level, b).top, z: s[1], yaw: Math.atan2(lm.sign.side[0], lm.sign.side[1]), text: lm.sign.text, width: lm.sign.width, height: lm.sign.height };
       }
     }
     out.push(entry);

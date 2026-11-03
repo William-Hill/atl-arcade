@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { edgeAnchor, interiorPoint, landmarkPlacements, wallPoint } from "./landmarks.js";
 import { pointInRings } from "./geo-ground.js";
+import { buildingSpan, terrainOf } from "./terrain.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
 
@@ -12,7 +13,7 @@ describe("landmark placement", () => {
     expect(b.name).toBe("Ponce City Market");
     for (const p of [pcm.model, pcm.sign]) {
       expect(pointInRings(p.x, p.z, [b.outer, ...(b.holes ?? [])])).toBe(true);
-      expect(p.y).toBe(b.height);
+      expect(p.y).toBe(buildingSpan(LEVEL, b).top);
     }
     // The tower is north of the interior anchor (-z), the sign east (+x).
     const [cx, cz] = interiorPoint(b);
@@ -25,7 +26,7 @@ describe("landmark placement", () => {
     const krog = landmarkPlacements(LEVEL).find((p) => p.id === "krog-street-market");
     const b = LEVEL.buildings.find((x) => x.id === krog.building);
     const rings = [b.outer, ...(b.holes ?? [])];
-    expect(krog.model.y).toBe(0);
+    expect(krog.model.y).toBe(terrainOf(LEVEL).height(krog.model.x, krog.model.z));
     // On the wall: inside now, outside 1 m farther east.
     expect(pointInRings(krog.model.x, krog.model.z, rings)).toBe(true);
     expect(pointInRings(krog.model.x + 1, krog.model.z, rings)).toBe(false);

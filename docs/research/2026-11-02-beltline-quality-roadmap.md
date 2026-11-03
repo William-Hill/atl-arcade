@@ -15,7 +15,7 @@ Direction: "Stylized high-end", picked by William. The target is the Jet Set Rad
 | Landmarks | Ponce City Market tower and Krog Street Market front, hand-modeled | From reference photos |
 | Ground | Asphalt, concrete, trail, and grass scans; center lines and crosswalks | Markings follow real street classes |
 | Props | Trees, lamps, benches, bins, bike racks, roof units, placed by rules | Positions follow real streets, not a survey |
-| Terrain | Flat (y = 0) | No. Atlanta is hilly |
+| Terrain | USGS 3DEP grid (8 m), 50 m of relief, 26 OSM bridges with decks and parapets | Yes, USGS 3DEP and OSM bridge tags |
 | Light | High tier: sun shadows, AO, ink outlines, bloom, clouds | n/a |
 
 ## Why it still looks "basic"
@@ -37,7 +37,7 @@ Each step is a separate issue. Each step keeps the low tier at the 55 FPS gate.
    - Replace the painted windows with an interior-mapping shader: each window shows a fake room with depth, at no geometry cost.
    - Add real geometry for each style: window recesses and sills, a cornice, storefront frames, and parapets. Use instanced modules along the bays, so the cost stays low.
    - Use the Overture `roof_shape` where it exists (only 2 of 1077 buildings have one now), and pitched roofs for houses by type.
-2. **Terrain and bridges.**
+2. **Terrain and bridges.** Done on 2026-11-02: see the decision of that date.
    - Get the elevation from the USGS 3DEP 1 m DEM (public domain).
    - Lift the ground, the strips, and the building bases onto it. Put the trail on its real grade, with the three bridges.
    - The skate controller already samples a ground height and normal, so slopes need tests, not a new controller.

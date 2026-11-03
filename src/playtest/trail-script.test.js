@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { chainStrips, followLineScript, pointAt, projectOnLine } from "./trail-script.js";
 import { createLevelEnv } from "../level/ground.js";
+import { terrainOf } from "../level/geo/terrain.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
 
@@ -31,6 +32,10 @@ describe("trail script", () => {
     expect(offTrack).toBeLessThan(4.3 / 2);
     expect(state.respawned).toBeFalsy();
     expect(LEVEL.spawn.position[2] - state.position[2]).toBeGreaterThan(200);
-    expect(env.sampleGround(state.position[0], state.position[2]).height).toBeCloseTo(LEVEL.surfaces.trail, 6);
+    // She ends on the trail: on the ground or on a trail bridge deck.
+    const under = env.sampleGround(state.position[0], state.position[2], state.position[1]);
+    expect(LEVEL.strips.find((x) => x.id === under.id)?.kind).toBe("trail");
+    expect(state.position[1]).toBeCloseTo(under.height, 4);
+    expect(under.height).toBeGreaterThanOrEqual(LEVEL.surfaces.trail + terrainOf(LEVEL).height(state.position[0], state.position[2]) - 1e-4);
   });
 });

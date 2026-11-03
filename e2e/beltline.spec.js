@@ -4,6 +4,7 @@ import { createSkateState, runScript } from "../src/sim/skate/controller.js";
 import { createLevelEnv } from "../src/level/ground.js";
 import { pointInRings } from "../src/level/geo/geo-ground.js";
 import { chainStrips, followLineScript } from "../src/playtest/trail-script.js";
+import { buildingSpan, terrainOf } from "../src/level/geo/terrain.js";
 
 // M1-03: the BeltLine Eastside Trail block from OpenStreetMap loads in the
 // shell, Nia skates on the trail, and the camera shows the real block.
@@ -99,11 +100,15 @@ test("the ground sampler finds the trail, a street, a sidewalk, and a building w
     },
     { probes, pcm: insidePoint(ponce) },
   );
-  expect(result.trail.height).toBeCloseTo(LEVEL.surfaces.trail, 5);
-  expect(result.street.height).toBeGreaterThanOrEqual(LEVEL.surfaces.street - 1e-6);
-  expect(result.sidewalk.height).toBeGreaterThanOrEqual(LEVEL.surfaces.sidewalk - 1e-6);
+  // The browser sampler is the same pure sampler as in node, on the terrain.
+  const env = createLevelEnv(LEVEL, { props: false });
+  const ground = terrainOf(LEVEL);
+  expect(result.trail.height).toBeCloseTo(LEVEL.surfaces.trail + ground.height(...probes.trail), 4);
+  expect(result.street.height).toBeGreaterThanOrEqual(LEVEL.surfaces.street + ground.height(...probes.street) - 1e-4);
+  expect(result.sidewalk.height).toBeGreaterThanOrEqual(LEVEL.surfaces.sidewalk + ground.height(...probes.sidewalk) - 1e-4);
   expect(result.pcm.id).toBe(ponce.id);
-  expect(result.pcm.height).toBe(ponce.height);
+  expect(result.pcm.height).toBeCloseTo(buildingSpan(LEVEL, ponce).top, 4);
+  expect(result.pcm.height).toBeCloseTo(env.sampleGround(...insidePoint(ponce)).height, 4);
   expect(errors).toEqual([]);
 });
 
@@ -128,9 +133,10 @@ test("Nia skates north on the Eastside Trail and the run matches the pure contro
   // She went north (-z), she did not respawn, and she ends on the trail.
   expect(actual.position[2]).toBeLessThan(LEVEL.spawn.position[2] - 50);
   expect(actual.stats.respawns).toBe(0);
-  const under = await page.evaluate(([x, z]) => window.__atl.level.sample(x, z), [actual.position[0], actual.position[2]]);
+  const under = await page.evaluate(([x, z, y]) => window.__atl.level.sample(x, z, y), [actual.position[0], actual.position[2], actual.position[1]]);
   expect(LEVEL.strips.find((s) => s.id === under.id)?.kind, `surface under her: ${under.id}`).toBe("trail");
-  expect(actual.position[1]).toBeCloseTo(LEVEL.surfaces.trail, 5);
+  // On the terrain, her height is the trail top under her.
+  expect(actual.position[1]).toBeCloseTo(under.height, 5);
 
   // Let the follow camera settle, then save the evidence.
   await page.waitForTimeout(800);
@@ -188,16 +194,17 @@ for (const { kind, filter } of [
     await open(page, "view=follow");
     const strip = LEVEL.strips.filter(filter).sort((a, b) => length(b.points) - length(a.points))[0];
     const [a, b] = strip.points;
-    const start = { position: [(a[0] + b[0]) / 2, LEVEL.surfaces[kind], (a[1] + b[1]) / 2], yaw: Math.atan2(-(b[1] - a[1]), b[0] - a[0]) };
     const env = createLevelEnv(LEVEL);
+    const [mx, mz] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    const start = { position: [mx, env.sampleGround(mx, mz).height, mz], yaw: Math.atan2(-(b[1] - a[1]), b[0] - a[0]) };
     const planned = followLineScript(strip.points, start, env, { frames: 180, cruise: 5 });
     const actual = await page.evaluate(({ script, start }) => window.__atl.runScript(script, start), { script: planned.script, start });
     for (let i = 0; i < 3; i += 1) expect(Math.abs(actual.position[i] - planned.state.position[i])).toBeLessThan(0.01);
     expect(Math.hypot(actual.position[0] - start.position[0], actual.position[2] - start.position[2])).toBeGreaterThan(8);
     expect(actual.stats.respawns).toBe(0);
-    const under = await page.evaluate(([x, z]) => window.__atl.level.sample(x, z), [actual.position[0], actual.position[2]]);
+    const under = await page.evaluate(([x, z, y]) => window.__atl.level.sample(x, z, y), [actual.position[0], actual.position[2], actual.position[1]]);
     expect(LEVEL.strips.find((s) => s.id === under.id)?.kind, `surface under her: ${under.id}`).toBe(kind);
-    expect(actual.position[1]).toBeCloseTo(LEVEL.surfaces[kind], 5);
+    expect(actual.position[1]).toBeCloseTo(under.height, 5);
     await page.waitForTimeout(500);
     await page.screenshot({ path: `e2e/__screenshots__/beltline-${kind}.png` });
     expect(errors).toEqual([]);

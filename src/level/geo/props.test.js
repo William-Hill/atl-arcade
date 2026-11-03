@@ -4,6 +4,7 @@ import { createGeoGroundSampler } from "./geo-ground.js";
 import { createLevelEnv } from "../ground.js";
 import { levelProps, PROP_SOLID, roofProps, streetProps, yawFrontToward, yawToward } from "./props.js";
 import { chooseStyle, hash32, seededRandom, STYLES, wallColor } from "./styles.js";
+import { terrainOf } from "./terrain.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
 
@@ -84,8 +85,9 @@ describe("prop placement", () => {
     const env = createLevelEnv(LEVEL);
     const tree = env.props.find((p) => p.kind === "tree_round");
     const g = env.sampleGround(tree.x, tree.z);
-    expect(g.height).toBe(PROP_SOLID.tree_round.h);
-    expect(createLevelEnv(LEVEL, { props: false }).sampleGround(tree.x, tree.z).height).toBeLessThan(0.1);
+    const ground = terrainOf(LEVEL).height(tree.x, tree.z);
+    expect(g.height).toBeCloseTo(ground + PROP_SOLID.tree_round.h, 6);
+    expect(createLevelEnv(LEVEL, { props: false }).sampleGround(tree.x, tree.z).height).toBeLessThan(ground + 0.1);
     expect(levelProps(LEVEL).length).toBe(env.props.length);
   });
 

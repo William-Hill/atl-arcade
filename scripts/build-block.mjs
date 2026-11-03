@@ -22,6 +22,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import { bboxCenter, createProjection, parseBbox } from "../src/level/geo/projection.js";
 import { cleanRing, signedArea } from "../src/level/geo/extrude.js";
+import { decodeHeights, encodeHeights, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
 
 const ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
 const USER_AGENT = "atl-arcade-build-block/0.1 (https://github.com/William-Hill/atl-arcade)";
@@ -275,7 +276,8 @@ function inBox([x, z], box) {
 // Turns the raw Overpass answer into the level data. Pure, so a test can
 // call it on a small fixture.
 // `overture` maps an OSM id ("w123") to { height, floors } (raw/overture.json).
-export function buildLevel(raw, { bbox, name, title, overture = null }) {
+// `terrain` is the grid from raw/terrain.json (scripts/terrain-dem.py).
+export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null }) {
   const origin = bboxCenter(bbox);
   const proj = createProjection(origin);
   const project = (g) => g.map(({ lat, lon }) => proj.toLocal(lat, lon).map(round));
@@ -337,6 +339,12 @@ export function buildLevel(raw, { bbox, name, title, overture = null }) {
       const item = { id: pieces.length > 1 ? `${id}-${i}` : id, kind: cls.kind, width: round(cls.width), points };
       if (tags.name) item.name = tags.name;
       if (tags.highway) item.highway = tags.highway;
+      // A bridge deck runs from the ground at one end to the ground at the
+      // other (src/level/geo/terrain.js), over the ways under it.
+      if (tags.bridge && tags.bridge !== "no") {
+        item.bridge = true;
+        item.layer = Number(tags.layer) || 1;
+      }
       strips.push(item);
     }
   }
@@ -347,15 +355,23 @@ export function buildLevel(raw, { bbox, name, title, overture = null }) {
   strips.sort(byId);
   areas.sort(byId);
 
-  const spawn = trailSpawn(strips);
+  // Raise the bridge approaches that the grid smooths (src/level/geo/terrain.js).
+  let embankments = [];
+  if (terrain) {
+    // First a rail grade on the trail, then the embankments at the bridge ends.
+    const graded = gradeTrail({ ...terrain, heights: decodeHeights(terrain.data, terrain.cols * terrain.rows) }, strips).heights;
+    const r = raiseEmbankments({ ...terrain, heights: graded }, strips);
+    embankments = r.changes;
+    terrain = { ...terrain, data: encodeHeights(r.heights) };
+  }
+  const spawn = trailSpawn(strips.filter((st) => !st.bridge));
+  if (terrain) spawn.position[1] = round(spawn.position[1] + terrainOf({ terrain }).height(spawn.position[0], spawn.position[2]));
 
-  return {
+  const level = {
     name,
     title,
     format: "geo-level/1",
-    attribution: overture
-      ? "Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright. Heights: Overture Maps Foundation"
-      : "Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright",
+    attribution: `Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright${overture ? ". Heights: Overture Maps Foundation" : ""}${terrain ? ". Elevation: USGS 3DEP" : ""}`,
     bbox,
     origin,
     axes: "+x east, +y up, +z south; meters from the origin",
@@ -374,6 +390,12 @@ export function buildLevel(raw, { bbox, name, title, overture = null }) {
     // Greybox-style objects (rails, ledges, ramps). Empty until M1-04.
     objects: [],
   };
+  if (terrain) {
+    level.terrain = terrain;
+    level.stats.bridges = strips.filter((st) => st.bridge).length;
+    level.stats.embankments = embankments.length;
+  }
+  return level;
 }
 
 function inPolygon([x, z], ring) {
@@ -458,7 +480,11 @@ async function main() {
   const overtureFile = resolve(rawDir, "overture.json");
   const overture = existsSync(overtureFile) ? JSON.parse(readFileSync(overtureFile, "utf8")).heights : null;
   if (overture) console.log(`build-block: ${Object.keys(overture).length} Overture heights from ${overtureFile}`);
-  const level = buildLevel(raw, { bbox, name, title, overture });
+  // The ground elevation (scripts/terrain-dem.py), when present.
+  const terrainFile = resolve(rawDir, "terrain.json");
+  const terrain = existsSync(terrainFile) ? JSON.parse(readFileSync(terrainFile, "utf8")).terrain : null;
+  if (terrain) console.log(`build-block: terrain ${terrain.cols} x ${terrain.rows} from ${terrainFile}`);
+  const level = buildLevel(raw, { bbox, name, title, overture, terrain });
   const outFile = resolve(outDir, "level.json");
   writeFileSync(outFile, `${JSON.stringify(level)}\n`);
   console.log(`build-block: wrote ${outFile}`);

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildGeoMeshes, buildingColor, buildPropMeshes, GEO_MATERIALS, GEO_TILE, muralWalls, PROP_TILE } from "./geo-mesh.js";
 import { FACE } from "./extrude.js";
 import { STYLES } from "./styles.js";
+import { buildingSpan } from "./terrain.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
 
@@ -13,7 +14,8 @@ describe("geo meshes for the BeltLine Eastside block", () => {
     const tilesX = Math.ceil((LEVEL.bounds.maxX - LEVEL.bounds.minX) / GEO_TILE) + 1;
     const tilesZ = Math.ceil((LEVEL.bounds.maxZ - LEVEL.bounds.minZ) / GEO_TILE) + 1;
     expect(meshes.length).toBeLessThanOrEqual(GEO_MATERIALS.length * tilesX * tilesZ);
-    expect(meshes.length).toBeLessThan(LEVEL.buildings.length / 10);
+    // 125 m tiles (for culling of the draped terrain): still far fewer meshes than buildings.
+    expect(meshes.length).toBeLessThan(LEVEL.buildings.length / 3);
     const keys = new Set(meshes.map((m) => `${m.material}|${m.tile}`));
     expect(keys.size).toBe(meshes.length);
     for (const m of meshes) expect(GEO_MATERIALS).toContain(m.material);
@@ -29,14 +31,15 @@ describe("geo meshes for the BeltLine Eastside block", () => {
   });
 
   it("reaches the height of Ponce City Market (50 m) and no higher than the tallest building plus its parapet", () => {
-    const tallest = Math.max(...LEVEL.buildings.map((b) => b.height)) + Math.max(...STYLES.map((s) => s.parapet));
+    // The building tops stand on the terrain (terrain.js buildingSpan).
+    const tallest = Math.max(...LEVEL.buildings.map((b) => buildingSpan(LEVEL, b).top)) + Math.max(...STYLES.map((s) => s.parapet));
     let maxY = 0;
     for (const { material, mesh } of meshes) {
       if (material !== "building") continue;
       for (let i = 1; i < mesh.positions.length; i += 3) maxY = Math.max(maxY, mesh.positions[i]);
     }
     expect(maxY).toBeLessThanOrEqual(tallest + 1e-4);
-    expect(maxY).toBeGreaterThanOrEqual(50);
+    expect(maxY).toBeGreaterThanOrEqual(buildingSpan(LEVEL, LEVEL.buildings.find((b) => b.name === "Ponce City Market")).top);
     expect(LEVEL.buildings.find((b) => b.name === "Ponce City Market").height).toBe(50);
   });
 

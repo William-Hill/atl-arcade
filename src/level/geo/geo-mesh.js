@@ -8,8 +8,9 @@
 import { FACE, extrudeFootprint, flatPolygon, mergeMeshes, orientRing, placeTemplate, stripMesh } from "./extrude.js";
 import { createGeoGroundSampler, surfaceTop } from "./geo-ground.js";
 import { STYLES, STYLE_INDEX, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
+import { BRIDGE, bridgeDeck, buildingSpan, drapeMesh, liftMesh, terrainOf } from "./terrain.js";
 
-export const GEO_TILE = 250; // m.
+export const GEO_TILE = 125; // m. Small enough that the camera culls most of the draped terrain.
 export const PROP_TILE = 50; // m. Small, so only near props get full detail.
 
 // Material groups. Each group is one material in the render. All flat
@@ -147,6 +148,69 @@ export function awningsFor(b, style, isStreet) {
   return mesh;
 }
 
+// A bridge: its slab sides and two parapets, in the facade material (no
+// windows), lifted onto the deck line. The deck top is a surface strip.
+
+function boxAlong(m, a, b, o0, o1, y0, y1, deck, color) {
+  const dx = b[0] - a[0];
+  const dz = b[1] - a[1];
+  const len = Math.hypot(dx, dz);
+  if (len < 1e-6) return;
+  const nx = -dz / len;
+  const nz = dx / len;
+  const P = (p, o, y) => [p[0] + nx * o, y + deck(p[0] + nx * o, p[1] + nz * o), p[1] + nz * o];
+  const faces = [
+    [P(a, o0, y0), P(b, o0, y0), P(b, o0, y1), P(a, o0, y1), [-nx, 0, -nz]],
+    [P(a, o1, y0), P(b, o1, y0), P(b, o1, y1), P(a, o1, y1), [nx, 0, nz]],
+    [P(a, o0, y1), P(b, o0, y1), P(b, o1, y1), P(a, o1, y1), [0, 1, 0]],
+    [P(a, o0, y0), P(b, o0, y0), P(b, o1, y0), P(a, o1, y0), [0, -1, 0]],
+  ];
+  for (const [p0, p1, p2, p3, n] of faces) {
+    const base = m.positions.length / 3;
+    for (const q of [p0, p1, p2, p3]) {
+      m.positions.push(q[0], q[1], q[2]);
+      m.colors.push(color[0], color[1], color[2]);
+      m.facade.push(0, 0, 0, FACE.cornice);
+    }
+    const ux = p1[0] - p0[0];
+    const uy = p1[1] - p0[1];
+    const uz = p1[2] - p0[2];
+    const vx = p2[0] - p0[0];
+    const vy = p2[1] - p0[1];
+    const vz = p2[2] - p0[2];
+    const dot = (uy * vz - uz * vy) * n[0] + (uz * vx - ux * vz) * n[1] + (ux * vy - uy * vx) * n[2];
+    if (dot >= 0) m.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    else m.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
+  }
+}
+
+// The structure of one bridge strip: { deck: surface mesh, structure: mesh }.
+export function bridgeMeshes(level, s) {
+  const top = surfaceTop(level, s.kind);
+  const deck = bridgeDeck(level, s);
+  // A point each 1.5 m, so the mesh follows the deck arch.
+  const pts = [s.points[0]];
+  for (let i = 0; i < s.points.length - 1; i += 1) {
+    const [ax, az] = s.points[i];
+    const [bx, bz] = s.points[i + 1];
+    const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / 1.5));
+    for (let k = 1; k <= n; k += 1) pts.push([ax + ((bx - ax) * k) / n, az + ((bz - az) * k) / n]);
+  }
+  const deckMesh = liftMesh(stripMesh(pts, s.width, top, { color: SURFACE_COLORS[s.kind], jointSides: 0 }), deck);
+  const m = { positions: [], indices: [], colors: [], facade: [] };
+  const h = s.width / 2;
+  const pw = BRIDGE.parapetWidth;
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    // The slab under the deck, and a parapet on each side.
+    boxAlong(m, a, b, -h, h, top - BRIDGE.slab, top - 0.01, deck, BRIDGE.color);
+    boxAlong(m, a, b, -h, -h + pw, top, top + BRIDGE.parapet, deck, BRIDGE.color);
+    boxAlong(m, a, b, h - pw, h, top, top + BRIDGE.parapet, deck, BRIDGE.color);
+  }
+  return { deck: deckMesh, structure: m };
+}
+
 // Murals on walls that face the trail: [{ id, a: [x, z], b: [x, z], n: [x, z], y0, y1, cell }].
 // Murals, not graffiti: each one is an original design from the atlas.
 export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
@@ -179,13 +243,21 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
     const t = (best.len - w) / 2 / best.len;
     const [px, pz] = best.p;
     const [qx, qz] = best.q;
+    // On a slope the mural starts over the higher end of its wall.
+    const terrain = terrainOf(level);
+    const ma = [px + (qx - px) * t, pz + (qz - pz) * t];
+    const mb = [qx - (qx - px) * t, qz - (qz - pz) * t];
+    const g = Math.max(terrain.height(ma[0], ma[1]), terrain.height(mb[0], mb[1]));
+    const span = buildingSpan(level, b);
+    const y1 = Math.min(g + h, span.top - 0.6);
+    if (y1 - (g + 0.8) < 2) continue;
     out.push({
       id: b.id,
-      a: [px + (qx - px) * t, pz + (qz - pz) * t],
-      b: [qx - (qx - px) * t, qz - (qz - pz) * t],
+      a: ma,
+      b: mb,
       n: best.n,
-      y0: 0.8,
-      y1: h,
+      y0: g + 0.8,
+      y1,
       cell: hash32(`${b.id}:mural`) % MURAL_CELLS,
     });
     if (out.length >= maxCount) break;
@@ -262,6 +334,10 @@ export function buildGeoMeshes(level, { detail = true } = {}) {
 
   const { minX, maxX, minZ, maxZ } = level.bounds;
   const groundTop = level.surfaces?.ground ?? 0;
+  const terrain = terrainOf(level);
+  // A flat surface follows the terrain: drapeMesh() cuts it on the terrain
+  // triangles, so the surface offsets (a few cm) hold everywhere.
+  const drape = (m) => drapeMesh(m, terrain);
   for (let x0 = Math.floor(minX / GEO_TILE) * GEO_TILE; x0 < maxX; x0 += GEO_TILE) {
     for (let z0 = Math.floor(minZ / GEO_TILE) * GEO_TILE; z0 < maxZ; z0 += GEO_TILE) {
       const ax = Math.max(x0, minX);
@@ -274,16 +350,22 @@ export function buildGeoMeshes(level, { detail = true } = {}) {
         [bx, bz],
         [ax, bz],
       ];
-      add("surface", { outer }, flatPolygon(outer, [], groundTop, { color: SURFACE_COLORS.ground }));
+      add("surface", { outer }, drape(flatPolygon(outer, [], groundTop, { color: SURFACE_COLORS.ground })));
     }
   }
 
-  for (const a of level.areas ?? []) add("surface", a, flatPolygon(a.outer, a.holes ?? [], surfaceTop(level, a.kind), { color: SURFACE_COLORS[a.kind] }));
+  for (const a of level.areas ?? []) add("surface", a, drape(flatPolygon(a.outer, a.holes ?? [], surfaceTop(level, a.kind), { color: SURFACE_COLORS[a.kind] })));
 
   for (const s of level.strips ?? []) {
     const top = surfaceTop(level, s.kind);
     const curb = s.kind === "sidewalk";
-    add("surface", s, stripMesh(s.points, s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind] }));
+    if (s.bridge && !terrain.flat) {
+      const { deck, structure } = bridgeMeshes(level, s);
+      add("surface", s, deck);
+      add("building", s, structure);
+      continue;
+    }
+    add("surface", s, drape(stripMesh(s.points, s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind] })));
   }
 
   if (detail) {
@@ -294,15 +376,17 @@ export function buildGeoMeshes(level, { detail = true } = {}) {
       const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
       const color = wallColor(style, b.id);
       const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, parapet: style.parapet, corniceColor: style.trim };
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: 0, top: b.height }, { color, roofColor: tint(color, 0.45), facade }));
+      const span = buildingSpan(level, b);
+      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: tint(color, 0.45), facade }));
       const aw = awningsFor(b, style, isStreet);
-      if (aw.indices.length) add("building", b, aw);
+      if (aw.indices.length) add("building", b, span.base ? liftMesh(aw, () => span.base) : aw);
     }
     for (const m of muralWalls(level)) add("mural", { points: [m.a] }, muralMesh(m));
   } else {
     for (const b of level.buildings ?? []) {
       const color = buildingColor(b.id);
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: 0, top: b.height }, { color, roofColor: tint(color, 0.35) }));
+      const span = buildingSpan(level, b);
+      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: tint(color, 0.35) }));
     }
   }
 

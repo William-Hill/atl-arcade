@@ -21,6 +21,7 @@ import { cleanRing, signedArea } from "./extrude.js";
 import { createGeoGroundSampler, pointInRings } from "./geo-ground.js";
 import { STYLES, chooseStyle, hash32, seededRandom } from "./styles.js";
 import { cornerSpots, shortName, streetIntersections } from "./signs.js";
+import { buildingSpan, terrainOf } from "./terrain.js";
 
 // Solid size of each prop for the ground sampler: radius and height in m.
 // Every height is over SKATE.maxStep, so a prop stops the skater.
@@ -212,7 +213,9 @@ export function allRoofProps(level) {
   const out = [];
   for (const b of level.buildings ?? []) {
     const style = STYLES.find((s) => s.id === chooseStyle(b));
-    for (const p of roofProps(b, style)) out.push(p);
+    // A roof prop stands on the roof: the building span top (terrain.js).
+    const top = buildingSpan(level, b).top;
+    for (const p of roofProps(b, style)) out.push({ ...p, y: top, roof: true });
   }
   return out;
 }
@@ -228,6 +231,9 @@ export function propObstacles(props) {
 }
 
 // Every prop in a level: the street props and the roof props.
+// A street prop stands on the terrain (y is the terrain height under it).
 export function levelProps(level) {
-  return [...streetProps(level, createGeoGroundSampler(level)), ...allRoofProps(level)];
+  const t = terrainOf(level);
+  const street = streetProps(level, createGeoGroundSampler(level)).map((p) => (t.flat ? p : { ...p, y: Math.round(t.height(p.x, p.z) * 100) / 100 }));
+  return [...street, ...allRoofProps(level)];
 }

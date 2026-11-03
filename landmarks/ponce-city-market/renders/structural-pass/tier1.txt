@@ -1,0 +1,208 @@
+STATUS pass=structural-pass completed=1 blocked=none next=diagnose_render.py
+{
+  "passed": true,
+  "checks": {
+    "silhouetteIoU": 1.0,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0,
+    "colorDelta": {
+      "checked": 46,
+      "maxDeltaE": 60.52,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 19.53
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 19.53
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 19.34
+        },
+        {
+          "componentId": null,
+          "deltaE": 19.34
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 47.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.36
+        },
+        {
+          "componentId": null,
+          "deltaE": 60.52
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 37.25
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.69
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [],
+  "maskWarnings": [
+    "reference: image is not clearly isolated from background; using most pixels as material evidence",
+    "render: image is not clearly isolated from background; using most pixels as material evidence"
+  ],
+  "renderHash": "4385048dec410f44",
+  "passId": "structural-pass"
+}

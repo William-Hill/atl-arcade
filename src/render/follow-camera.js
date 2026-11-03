@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { cameraPivot, createCameraState, placeCamera, resolveClip, stepCamera } from "../sim/camera.js";
+import { NO_LOOK, cameraPivot, createCameraState, createLook, placeCamera, resolveClip, stepCamera, stepLook } from "../sim/camera.js";
 import { ALL_GROUPS, GROUP, collisionGroups } from "../physics/world.js";
 
 // Applies the pure camera state to a Three.js camera and keeps it out of
@@ -9,6 +9,7 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
   const rayGroups = collisionGroups(ALL_GROUPS, GROUP.wall | GROUP.ground | GROUP.ledge);
   const origin = new THREE.Vector3();
   const dir = new THREE.Vector3();
+  let look = createLook();
   let lastHit = null;
   let allowed = Infinity;
 
@@ -25,8 +26,10 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
   }
 
   return {
-    update(current, dt) {
-      state = stepCamera(state, current, dt);
+    // `lookDelta` is { yaw, pitch } in rad for this frame (mapLook), or null.
+    update(current, dt, lookDelta = null) {
+      look = stepLook(look, lookDelta ?? NO_LOOK, dt);
+      state = stepCamera(state, current, dt, undefined, look);
       const pivot = cameraPivot(current);
       const distance = wallDistance(state, pivot);
       lastHit = Number.isFinite(distance) ? distance : null;
@@ -38,10 +41,14 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
     },
     reset(current) {
       state = createCameraState(current);
+      look = createLook();
       allowed = Infinity;
     },
     get state() {
       return state;
+    },
+    get look() {
+      return look;
     },
     get lastHit() {
       return lastHit;

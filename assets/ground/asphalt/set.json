@@ -1,0 +1,19 @@
+{
+  "setId": "asphalt",
+  "asset": "asphalt_track",
+  "source": "https://polyhaven.com/a/asphalt_track",
+  "authors": {
+    "Dimitrios Savva": "All"
+  },
+  "license": "CC0 1.0",
+  "tileMeters": 2.0,
+  "meanLinear": [
+    0.0153,
+    0.0122,
+    0.0113
+  ],
+  "files": {
+    "diffuse": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_track/asphalt_track_diff_1k.jpg",
+    "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_track/asphalt_track_ao_1k.jpg"
+  }
+}

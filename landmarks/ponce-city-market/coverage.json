@@ -1,0 +1,16 @@
+{
+  "model": "ponce-city-market-tower",
+  "specifiedComponents": 151,
+  "builtParts": 152,
+  "errors": 0,
+  "warnings": 0,
+  "result": "pass",
+  "findings": [
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "tower-shaft",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    }
+  ]
+}

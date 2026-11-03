@@ -1,0 +1,3 @@
+STATUS pass=material-pass completed=3 blocked=none next=forge/stage3_build/orchestrate_passes.py check /Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/object-sculpt-spec.json
+PASS
+pass 'material-pass' is the current unlocked pass

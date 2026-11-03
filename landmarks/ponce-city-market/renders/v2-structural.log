@@ -1,0 +1,2 @@
+IoU 0.8627 color max 10.29 measured 6
+pass structural-pass: gates PASS; review renders/v2-structural-pass/cmp.png

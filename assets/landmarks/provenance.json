@@ -1,0 +1,38 @@
+{
+  "assets": {
+    "ponce-city-market-tower.json": {
+      "asset": "ponce-city-market-tower.json: the Ponce City Market tower top (brick belvedere with arched window frames, stone panels, dentils, cornice, truncated hipped copper roof, raised cap, gold finial), baked to physical-material groups and a flat vertex-colored far LOD",
+      "date": "2026-11-02",
+      "tool": "img2threejs v2.0.0 (commit a669e9a97cea4452b1c2310c5cca6aa0f6657c1f, Apache-2.0), run in Claude Code; baked by scripts/bake-landmark.mjs",
+      "method": "Reconstruction in code from one reference image: a 152-part sculpt spec (landmarks/ponce-city-market/object-sculpt-spec.json, written by build_spec.py), the generated Three.js factory, and post_generate.py. No mesh extraction and no photo texture: procedural canvas maps from src/render/landmark-materials.js.",
+      "reference": {
+        "title": "Ponce City Market from Historic Fourth Ward Park",
+        "author": "Tyler Lahti",
+        "license": "CC BY-SA 2.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Ponce_City_Market_from_Historic_Fourth_Ward_Park.jpg",
+        "use": "Visual reference for shapes and colors only; no pixels of the photo are in the game asset."
+      },
+      "prompt": "None. The spec and the scripts are the full recipe.",
+      "credits": "No paid generation credits.",
+      "review": "v2: all 8 img2threejs passes reviewed (fidelity 0.78 to 0.80); silhouette IoU 0.865 with a transparent reference mask; visible-footprint color gate (local patch, tools/img2threejs-footprint-color.patch) max delta-E 10.38 over 27 parts. See docs/decisions.md.",
+      "triangles": 4732
+    },
+    "krog-street-market-front.json": {
+      "asset": "krog-street-market-front.json: the Krog Street Market entrance front (the corrugated metal sawtooth roof profile, the black steel canopy with its truss, 2 posts, 5 brass pendants with bulbs, and 2 letter cards drawn at run time), baked to physical-material groups and a flat vertex-colored far LOD",
+      "date": "2026-11-02",
+      "tool": "img2threejs v2.0.0 (commit a669e9a97cea4452b1c2310c5cca6aa0f6657c1f, Apache-2.0), run in Claude Code; baked by scripts/bake-landmark.mjs",
+      "method": "Reconstruction in code from one reference image: a 58-part sculpt spec (landmarks/krog-street-market/object-sculpt-spec.json, written by build_spec.py), the generated Three.js factory, and post_generate.py. Procedural canvas maps; the letters are plain type drawn by src/render/landmark-signs.js.",
+      "reference": {
+        "title": "Krog Street Market",
+        "author": "LittleT889",
+        "license": "CC BY-SA 4.0",
+        "url": "https://commons.wikimedia.org/wiki/File:Krog_Street_Market.jpg",
+        "use": "Visual reference for shapes and colors only; no pixels of the photo are in the game asset."
+      },
+      "prompt": "None. The spec and the scripts are the full recipe.",
+      "credits": "No paid generation credits.",
+      "review": "v2: all 8 img2threejs passes reviewed (fidelity 0.78); silhouette IoU 0.9035 with a transparent reference mask; visible-footprint color gate (local patch) max delta-E 7.88 over 10 parts; the 2 letter cards are judged in the review.",
+      "triangles": 3584
+    }
+  }
+}

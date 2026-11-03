@@ -1,0 +1,6 @@
+[
+ {"id": "tower-top-silhouette", "score": 0.8, "notes": "Unchanged; finial now 0.3 m with a gold ball."},
+ {"id": "copper-roof-color", "score": 0.72, "notes": "Teal grey-green roof and cap."},
+ {"id": "arched-windows", "score": 0.74, "notes": "Unchanged."},
+ {"id": "finial", "score": 0.7, "notes": "Gold pole and ball read in the render. Tier 1 cannot see them: it groups the render into at most 5 colors (k-means k=5) and the tower has 6 part colors, so gold never forms a group (delta-E 45.81)."}
+]

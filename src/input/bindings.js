@@ -3,12 +3,12 @@
 // fold into `steer`.
 //
 // Keyboard: WASD or arrows, Space jump, Shift push, Q and E style, hold F
-// to grind, S or Down to brake. Grind is not on Control: Control plus W
+// to grind, S or Down to brake, R to switch between forward and backward. Grind is not on Control: Control plus W
 // closes the tab, and Control plus S or D opens browser dialogs.
 // Gamepad (standard mapping): left stick steer, A jump, X push, Y and B
-// style, RT grind, LT brake.
+// style, RT grind, LT brake, LB switch.
 
-export const ACTIONS = ["left", "right", "push", "brake", "jump", "grind", "style1", "style2"];
+export const ACTIONS = ["left", "right", "push", "brake", "jump", "grind", "style1", "style2", "switch"];
 
 export const DEFAULT_KEYBOARD = {
   left: ["KeyA", "ArrowLeft"],
@@ -19,6 +19,7 @@ export const DEFAULT_KEYBOARD = {
   grind: ["KeyF"],
   style1: ["KeyQ"],
   style2: ["KeyE"],
+  switch: ["KeyR"],
 };
 
 // Standard gamepad button indexes: 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 6 LT, 7 RT.
@@ -32,6 +33,7 @@ export const DEFAULT_GAMEPAD = {
     style1: [3],
     brake: [6],
     grind: [7],
+    switch: [4],
     left: [14], // d-pad left
     right: [15], // d-pad right
   },

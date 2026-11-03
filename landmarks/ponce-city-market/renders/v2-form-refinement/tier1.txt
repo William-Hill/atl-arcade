@@ -1,0 +1,1071 @@
+STATUS pass=form-refinement completed=2 blocked=none next=diagnose_render.py
+{
+  "passed": true,
+  "checks": {
+    "silhouetteIoU": 0.8651,
+    "aspectRatioDelta": 0.0273,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0274,
+    "colorDelta": {
+      "method": "visible-footprint",
+      "checked": 27,
+      "unmeasured": [
+        "tower-shaft",
+        "upper-band",
+        "cornice-cap",
+        "shaft-win-s0",
+        "shaft-sill-s0",
+        "shaft-win-s1",
+        "shaft-sill-s1",
+        "dentil-s0",
+        "dentil-s1",
+        "dentil-s2",
+        "dentil-s3",
+        "dentil-s4",
+        "dentil-s5",
+        "dentil-s6",
+        "dentil-s7",
+        "dentil-s8",
+        "dentil-s9",
+        "dentil-s10",
+        "dentil-s11",
+        "dentil-s12",
+        "dentil-s13",
+        "dentil-s14",
+        "dentil-s15",
+        "dentil-s16",
+        "dentil-s17",
+        "dentil-s18",
+        "dentil-s19",
+        "dentil-s20",
+        "dentil-s21",
+        "arch-frame-n0",
+        "arch-panel-n0",
+        "arch-n0",
+        "arch-frame-n1",
+        "arch-panel-n1",
+        "arch-n1",
+        "arch-frame-n2",
+        "arch-panel-n2",
+        "arch-n2",
+        "shaft-win-n0",
+        "shaft-sill-n0",
+        "shaft-win-n1",
+        "shaft-sill-n1",
+        "dentil-n0",
+        "dentil-n1",
+        "dentil-n2",
+        "dentil-n3",
+        "dentil-n4",
+        "dentil-n5",
+        "dentil-n6",
+        "dentil-n7",
+        "dentil-n8",
+        "dentil-n9",
+        "dentil-n10",
+        "dentil-n11",
+        "dentil-n12",
+        "dentil-n13",
+        "dentil-n14",
+        "dentil-n15",
+        "dentil-n16",
+        "dentil-n17",
+        "dentil-n18",
+        "dentil-n19",
+        "dentil-n20",
+        "dentil-n21",
+        "shaft-win-e0",
+        "shaft-sill-e0",
+        "shaft-win-e1",
+        "shaft-sill-e1",
+        "dentil-e0",
+        "dentil-e1",
+        "dentil-e2",
+        "dentil-e3",
+        "dentil-e4",
+        "dentil-e5",
+        "dentil-e6",
+        "dentil-e7",
+        "dentil-e8",
+        "dentil-e9",
+        "dentil-e10",
+        "dentil-e11",
+        "dentil-e12",
+        "dentil-e13",
+        "dentil-e14",
+        "dentil-e15",
+        "dentil-e16",
+        "dentil-e17",
+        "dentil-e18",
+        "dentil-e19",
+        "dentil-e20",
+        "dentil-e21",
+        "arch-frame-w0",
+        "arch-panel-w0",
+        "arch-w0",
+        "arch-frame-w1",
+        "arch-panel-w1",
+        "arch-w1",
+        "arch-frame-w2",
+        "arch-panel-w2",
+        "arch-w2",
+        "shaft-win-w0",
+        "shaft-sill-w0",
+        "shaft-win-w1",
+        "shaft-sill-w1",
+        "dentil-w0",
+        "dentil-w1",
+        "dentil-w2",
+        "dentil-w3",
+        "dentil-w4",
+        "dentil-w5",
+        "dentil-w6",
+        "dentil-w7",
+        "dentil-w8",
+        "dentil-w9",
+        "dentil-w10",
+        "dentil-w11",
+        "dentil-w12",
+        "dentil-w13",
+        "dentil-w14",
+        "dentil-w15",
+        "dentil-w16",
+        "dentil-w17",
+        "dentil-w18",
+        "dentil-w19",
+        "dentil-w20",
+        "dentil-w21"
+      ],
+      "maxDeltaE": 10.49,
+      "perComponent": [
+        {
+          "componentId": "tower-shaft",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "lower-sill",
+          "status": "measured",
+          "footprintPixels": 36,
+          "meanRgb": [
+            220,
+            214,
+            202
+          ],
+          "deltaE": 0.0
+        },
+        {
+          "componentId": "lower-band",
+          "status": "measured",
+          "footprintPixels": 104,
+          "meanRgb": [
+            206,
+            190,
+            179
+          ],
+          "deltaE": 8.73
+        },
+        {
+          "componentId": "belvedere",
+          "status": "measured",
+          "footprintPixels": 58499,
+          "meanRgb": [
+            128,
+            62,
+            54
+          ],
+          "deltaE": 1.28
+        },
+        {
+          "componentId": "frieze",
+          "status": "measured",
+          "footprintPixels": 32569,
+          "meanRgb": [
+            219,
+            213,
+            201
+          ],
+          "deltaE": 0.36
+        },
+        {
+          "componentId": "upper-band",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 4
+        },
+        {
+          "componentId": "cornice-cap",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "hip-roof",
+          "status": "measured",
+          "footprintPixels": 93110,
+          "meanRgb": [
+            126,
+            158,
+            154
+          ],
+          "deltaE": 0.0
+        },
+        {
+          "componentId": "roof-cap",
+          "status": "measured",
+          "footprintPixels": 8382,
+          "meanRgb": [
+            127,
+            159,
+            155
+          ],
+          "deltaE": 0.38
+        },
+        {
+          "componentId": "cap-trim",
+          "status": "measured",
+          "footprintPixels": 11463,
+          "meanRgb": [
+            219,
+            214,
+            202
+          ],
+          "deltaE": 0.38
+        },
+        {
+          "componentId": "finial",
+          "status": "measured",
+          "footprintPixels": 1393,
+          "meanRgb": [
+            212,
+            170,
+            60
+          ],
+          "deltaE": 0.74
+        },
+        {
+          "componentId": "finial-ball",
+          "status": "measured",
+          "footprintPixels": 513,
+          "meanRgb": [
+            209,
+            171,
+            68
+          ],
+          "deltaE": 4.38
+        },
+        {
+          "componentId": "arch-frame-s0",
+          "status": "measured",
+          "footprintPixels": 787,
+          "meanRgb": [
+            196,
+            192,
+            183
+          ],
+          "deltaE": 8.17
+        },
+        {
+          "componentId": "arch-panel-s0",
+          "status": "measured",
+          "footprintPixels": 9203,
+          "meanRgb": [
+            219,
+            212,
+            200
+          ],
+          "deltaE": 0.74
+        },
+        {
+          "componentId": "arch-s0",
+          "status": "measured",
+          "footprintPixels": 11544,
+          "meanRgb": [
+            46,
+            54,
+            66
+          ],
+          "deltaE": 0.91
+        },
+        {
+          "componentId": "arch-frame-s1",
+          "status": "measured",
+          "footprintPixels": 774,
+          "meanRgb": [
+            189,
+            186,
+            178
+          ],
+          "deltaE": 10.49
+        },
+        {
+          "componentId": "arch-panel-s1",
+          "status": "measured",
+          "footprintPixels": 11579,
+          "meanRgb": [
+            218,
+            211,
+            200
+          ],
+          "deltaE": 1.15
+        },
+        {
+          "componentId": "arch-s1",
+          "status": "measured",
+          "footprintPixels": 11956,
+          "meanRgb": [
+            46,
+            54,
+            65
+          ],
+          "deltaE": 1.13
+        },
+        {
+          "componentId": "arch-frame-s2",
+          "status": "measured",
+          "footprintPixels": 814,
+          "meanRgb": [
+            198,
+            194,
+            185
+          ],
+          "deltaE": 7.46
+        },
+        {
+          "componentId": "arch-panel-s2",
+          "status": "measured",
+          "footprintPixels": 11868,
+          "meanRgb": [
+            219,
+            212,
+            200
+          ],
+          "deltaE": 0.74
+        },
+        {
+          "componentId": "arch-s2",
+          "status": "measured",
+          "footprintPixels": 12406,
+          "meanRgb": [
+            46,
+            54,
+            66
+          ],
+          "deltaE": 0.91
+        },
+        {
+          "componentId": "shaft-win-s0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-sill-s0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-win-s1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-sill-s1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s3",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s4",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s5",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s6",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s7",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s8",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s9",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s10",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s11",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s12",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s13",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s14",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s15",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s16",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s17",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s18",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s19",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s20",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-s21",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-frame-n0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-panel-n0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-n0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-frame-n1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-panel-n1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-n1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-frame-n2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-panel-n2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-n2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-win-n0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-sill-n0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-win-n1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-sill-n1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n3",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n4",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n5",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n6",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n7",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n8",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n9",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n10",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n11",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n12",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n13",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n14",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n15",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n16",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n17",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n18",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n19",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n20",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-n21",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-frame-e0",
+          "status": "measured",
+          "footprintPixels": 1090,
+          "meanRgb": [
+            209,
+            203,
+            193
+          ],
+          "deltaE": 4.02
+        },
+        {
+          "componentId": "arch-panel-e0",
+          "status": "measured",
+          "footprintPixels": 1760,
+          "meanRgb": [
+            217,
+            209,
+            197
+          ],
+          "deltaE": 1.8
+        },
+        {
+          "componentId": "arch-e0",
+          "status": "measured",
+          "footprintPixels": 1032,
+          "meanRgb": [
+            56,
+            63,
+            74
+          ],
+          "deltaE": 5.07
+        },
+        {
+          "componentId": "arch-frame-e1",
+          "status": "measured",
+          "footprintPixels": 1699,
+          "meanRgb": [
+            206,
+            198,
+            188
+          ],
+          "deltaE": 5.67
+        },
+        {
+          "componentId": "arch-panel-e1",
+          "status": "measured",
+          "footprintPixels": 2823,
+          "meanRgb": [
+            217,
+            208,
+            196
+          ],
+          "deltaE": 2.22
+        },
+        {
+          "componentId": "arch-e1",
+          "status": "measured",
+          "footprintPixels": 3043,
+          "meanRgb": [
+            50,
+            58,
+            69
+          ],
+          "deltaE": 2.79
+        },
+        {
+          "componentId": "arch-frame-e2",
+          "status": "measured",
+          "footprintPixels": 1757,
+          "meanRgb": [
+            205,
+            197,
+            187
+          ],
+          "deltaE": 6.03
+        },
+        {
+          "componentId": "arch-panel-e2",
+          "status": "measured",
+          "footprintPixels": 3100,
+          "meanRgb": [
+            217,
+            209,
+            197
+          ],
+          "deltaE": 1.8
+        },
+        {
+          "componentId": "arch-e2",
+          "status": "measured",
+          "footprintPixels": 3376,
+          "meanRgb": [
+            50,
+            58,
+            69
+          ],
+          "deltaE": 2.79
+        },
+        {
+          "componentId": "shaft-win-e0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-sill-e0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-win-e1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-sill-e1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e3",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e4",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e5",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e6",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e7",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e8",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e9",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e10",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e11",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e12",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e13",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e14",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e15",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e16",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e17",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e18",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e19",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e20",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-e21",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-frame-w0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-panel-w0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-w0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-frame-w1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-panel-w1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-w1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-frame-w2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-panel-w2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "arch-w2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-win-w0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-sill-w0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-win-w1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "shaft-sill-w1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w0",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w1",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w2",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w3",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w4",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w5",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w6",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w7",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w8",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w9",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w10",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w11",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w12",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w13",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w14",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w15",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w16",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w17",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w18",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w19",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w20",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        },
+        {
+          "componentId": "dentil-w21",
+          "status": "unmeasured-too-small",
+          "footprintPixels": 0
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [],
+  "maskWarnings": [],
+  "renderHash": "f4c9f0c2cd66d62d",
+  "passId": "form-refinement"
+}

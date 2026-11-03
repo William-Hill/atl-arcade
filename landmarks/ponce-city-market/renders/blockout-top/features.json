@@ -1,0 +1,7 @@
+[
+ {"id": "tower-top-silhouette", "score": 0.45, "notes": "Square belvedere correct; roof is 8-sided (needs 4), too flat, eave overhang about 1.75 m (reference about 0.4 m), raised flat cap missing."},
+ {"id": "copper-roof-color", "score": 0.6, "notes": "Green reads, but the render is mint; the reference is a teal grey-green."},
+ {"id": "arched-windows", "score": 0.4, "notes": "3 openings per face are present but rectangular, with no white surrounds; the reference has narrow round-headed windows in white frames."},
+ {"id": "rooftop-sign-read", "score": 0.0, "notes": "Not in this view (the sign is reviewed in its own view); letters are not built yet in the blockout."},
+ {"id": "finial", "score": 0.7, "notes": "Gold pole present at the apex; the reference finial is shorter."}
+]

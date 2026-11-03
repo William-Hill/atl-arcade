@@ -1,0 +1,206 @@
+STATUS pass=material-pass completed=3 blocked=none next=diagnose_render.py
+{
+  "passed": false,
+  "checks": {
+    "silhouetteIoU": 1.0,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0,
+    "colorDelta": {
+      "checked": 45,
+      "maxDeltaE": 45.81,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 19.4
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 19.4
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.3
+        },
+        {
+          "componentId": null,
+          "deltaE": 18.3
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 45.81
+        },
+        {
+          "componentId": null,
+          "deltaE": 45.81
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 14.55
+        },
+        {
+          "componentId": null,
+          "deltaE": 16.69
+        }
+      ],
+      "gated": true
+    }
+  },
+  "failures": [
+    "max per-part color delta-E 45.81 exceeds threshold 20.0"
+  ],
+  "maskWarnings": [
+    "reference: image is not clearly isolated from background; using most pixels as material evidence",
+    "render: image is not clearly isolated from background; using most pixels as material evidence"
+  ],
+  "renderHash": "bd419ec594e71061",
+  "passId": "material-pass"
+}

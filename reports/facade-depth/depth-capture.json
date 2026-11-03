@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-03T02:02:14.981Z",
+  "rows": [
+    {
+      "name": "brick-loft",
+      "depth": true,
+      "near": 6,
+      "nearTriangles": 19960,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "shot": "facade-depth/brick-loft-depth1.jpg"
+    },
+    {
+      "name": "brick-loft",
+      "depth": false,
+      "near": 0,
+      "nearTriangles": 0,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "shot": "facade-depth/brick-loft-depth0.jpg"
+    },
+    {
+      "name": "storefront",
+      "depth": true,
+      "near": 4,
+      "nearTriangles": 21318,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "shot": "facade-depth/storefront-depth1.jpg"
+    },
+    {
+      "name": "storefront",
+      "depth": false,
+      "near": 0,
+      "nearTriangles": 0,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "shot": "facade-depth/storefront-depth0.jpg"
+    },
+    {
+      "name": "stucco",
+      "depth": true,
+      "near": 7,
+      "nearTriangles": 9264,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "shot": "facade-depth/stucco-depth1.jpg"
+    },
+    {
+      "name": "stucco",
+      "depth": false,
+      "near": 0,
+      "nearTriangles": 0,
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "shot": "facade-depth/stucco-depth0.jpg"
+    }
+  ],
+  "errors": []
+}

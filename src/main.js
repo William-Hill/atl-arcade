@@ -20,9 +20,10 @@ import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { terrainOf } from "./level/geo/terrain.js";
 import { createGeoLights, createGeoView, loadKitTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
-import { QUALITY, qualityFor, rendererName } from "./render/quality.js";
+import { QUALITY, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
+import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
-import { createPost } from "./render/post.js";
+import { createLitePost, createPost } from "./render/post.js";
 import { createStreetSigns } from "./render/street-signs.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
@@ -44,11 +45,21 @@ const skaterEnv = createSkaterEnv(level);
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
 const scene = new THREE.Scene();
-// The render tier (src/render/quality.js): low for a software GPU, high
-// for a real GPU. ?quality=low|high sets it.
+// The render tier (src/render/quality.js): low for a software GPU, phone
+// for a touch device with a small screen, high for every other GPU.
+// ?quality=low|phone|high sets it.
 const gpuName = rendererName(renderer);
-const quality = geo ? qualityFor(params.get("quality"), gpuName) : "low";
+const device = {
+  touch: (navigator.maxTouchPoints ?? 0) > 0 || (window.matchMedia?.("(pointer: coarse)").matches ?? false),
+  width: window.screen?.width ?? window.innerWidth,
+  height: window.screen?.height ?? window.innerHeight,
+};
+const quality = geo ? qualityFor(params.get("quality"), gpuName, device) : "low";
 const tier = QUALITY[quality];
+renderer.setPixelRatio(pixelRatioFor(window.devicePixelRatio, tier.pixelRatio));
+// Count the draw calls of the whole frame (all post passes), not only the
+// last pass. The frame loop resets the counters.
+renderer.info.autoReset = false;
 // Draw distance on a geodata level. The fog ends at the far plane, so the
 // cut is not visible. On the low tier, 320 m keeps the playtest at 60 FPS
 // in headless SwiftShader with video capture on (see docs/decisions.md).
@@ -74,7 +85,7 @@ if (geo) {
   scene.add(geoLights.group);
   // The low tier has no sky dome (a flat horizon color), to keep the
   // headless frame budget. ?sky=0 leaves it out on the high tier too.
-  sky = !tier.post || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
+  sky = tier.post !== "full" || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
   if (sky) scene.add(sky.mesh);
   const horizon = sky ? sky.fogColor : new THREE.Color(0xbfe4ff);
   scene.background = horizon.clone();
@@ -95,7 +106,7 @@ if (attribution && level.attribution) {
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: quality === "high", markings: quality === "high" && params.get("markings") !== "0", kit: quality === "high" && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: quality === "high" && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0" }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0" }) : createLevelView(level);
 scene.add(levelView.root);
 
 // Street name signs at the real intersections (src/level/geo/signs.js).
@@ -196,8 +207,26 @@ if (view === "orbit") {
   camera.position.set(level.spawn.position[0] - 8, level.spawn.position[1] + 6, level.spawn.position[2] + 10);
 }
 
-// The high tier post chain (src/render/post.js).
-const post = tier.post ? createPost(renderer, scene, camera, { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: params.get("halftone") !== "0" }) : null;
+// The post chain (src/render/post.js): the full chain on the high tier,
+// the lite ink pass on the phone tier, none on the low tier.
+const postOptions = { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: params.get("halftone") !== "0" };
+let post = tier.post === "full" ? createPost(renderer, scene, camera, postOptions) : tier.post === "lite" ? createLitePost(renderer, scene, camera, postOptions) : null;
+
+// The frame-time governor (src/render/governor.js) steps the phone and high
+// tiers down when the frame rate is too low. The low tier is the floor of
+// the headless playtest gate, so it has no governor. ?governor=0 turns it off,
+// and ?govbudget=<ms> sets the frame budget (for tests and tuning).
+const govBudget = Number(params.get("govbudget"));
+const govConfig = Number.isFinite(govBudget) && govBudget > 0 ? { ...GOVERNOR, budgetMs: govBudget } : GOVERNOR;
+let governor = geo && quality !== "low" && params.get("governor") !== "0" ? createGovernor(ladderFor(tier), govConfig) : null;
+function applyRung(rung) {
+  renderer.setPixelRatio(pixelRatioFor(window.devicePixelRatio, rung.pixelRatio));
+  if (!rung.post && post) {
+    post.dispose();
+    post = null;
+  }
+  resize();
+}
 function resize() {
   fitToWindow(renderer, camera);
   if (post) post.setSize();
@@ -336,6 +365,10 @@ function frame(now) {
     requestAnimationFrame(frame);
     return;
   }
+  if (governor) {
+    governor = governorStep(governor, elapsed * 1000);
+    if (governor.changed) applyRung(currentRung(governor));
+  }
 
   const stepped = advance(stepper, elapsed);
   stepper = stepped.stepper;
@@ -363,6 +396,7 @@ function frame(now) {
   if (sky) sky.update(camera, now / 1000);
   if (streetSigns) streetSigns.update(camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
+  renderer.info.reset();
   if (post) post.render();
   else renderer.render(scene, camera);
   frames += 1;
@@ -380,8 +414,14 @@ window.__atl = {
   ready: true,
   quality,
   gpu: gpuName,
-  // The post chain, to tune the effects from the console (high tier only).
-  post,
+  // The post chain, to tune the effects from the console.
+  get post() {
+    return post;
+  },
+  // The render settings now, after any governor step.
+  get render() {
+    return { quality, pixelRatio: renderer.getPixelRatio(), post: post ? post.kind : null, rung: governor ? governor.rung : null, lastMedianMs: governor ? governor.last : null };
+  },
   level: {
     name: level.name,
     format: level.format ?? "greybox",

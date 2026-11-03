@@ -22,7 +22,7 @@ M1-01 not verified: no human looked at the model in the game, and the model has 
 
 M1-03 not verified: no person played the block; 110 of 1042 building heights are defaults by building type (see #88); the world is flat (bridges sit on the ground); no rails, ledges, or ramps yet (M1-04); the FPS margin on the block is small (90th percentile frame 33 ms); shadow acne shows on some walls.
 
-#88 not verified: the FPS gate. `npm run playtest:beltline` gave a median of 20 FPS (gate 55 FAIL) 3 times, and 20 FPS with the old `main` level data too, while other sessions held the CPU (load average 17 to 43). `npm run e2e`: 49 passed, 2 failed in `e2e/camera.spec.js` (the greybox level, not this change); `main` failed 4 of 4 there under the same load. No person checked the city addresses on the street. The facade fact is a game style, not a surveyed material. 110 buildings keep a type default, Stove Works (7510 m^2, 6 m) among them.
+#88 not verified: the FPS gate. `npm run playtest:beltline` failed 5 times on 2026-11-03 (median 20, 20, 20, 15, and 15 FPS; gate 55). With the old `main` level data it also gave 20 FPS. The renderer is SwiftShader (CPU), and other sessions held the CPU (load average 17 to 72). The last pass, 59.9 FPS at 03:42 UTC, ran on a quiet machine. `npm test`: 386 of 386 pass. `npm run e2e`: 50 passed, 2 failed in `e2e/camera.spec.js` (the greybox level, not this change); `main` failed 4 of 4 there under the same load. No person checked the city addresses on the street. The facade fact is a game style, not a surveyed material. 110 buildings keep a type default, Stove Works (7510 m^2, 6 m) among them.
 
 ## M0 status, 2026-10-30
 

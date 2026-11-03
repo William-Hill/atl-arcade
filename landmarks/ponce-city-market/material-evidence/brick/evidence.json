@@ -5,8 +5,8 @@
   "estimatedFidelity": 0.86,
   "targetThreshold": 0.7,
   "materialId": "brick",
-  "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/crops/facade-brick.png",
-  "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/brick",
+  "sourceImage": "crops/facade-brick.png",
+  "outDir": "material-evidence/brick",
   "palette": [
     "#5F4D4D",
     "#8E8588",
@@ -16,31 +16,31 @@
   ],
   "maps": {
     "albedo": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/brick/brick_albedo.png",
+      "path": "material-evidence/brick/brick_albedo.png",
       "url": "brick_albedo.png",
       "channel": "albedo",
       "source": "reference-pixel-extraction"
     },
     "roughness": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/brick/brick_roughness.png",
+      "path": "material-evidence/brick/brick_roughness.png",
       "url": "brick_roughness.png",
       "channel": "roughness",
       "source": "reference-pixel-extraction"
     },
     "height": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/brick/brick_height.png",
+      "path": "material-evidence/brick/brick_height.png",
       "url": "brick_height.png",
       "channel": "height",
       "source": "reference-pixel-extraction"
     },
     "normal": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/brick/brick_normal.png",
+      "path": "material-evidence/brick/brick_normal.png",
       "url": "brick_normal.png",
       "channel": "normal",
       "source": "reference-pixel-extraction"
     },
     "ao": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/brick/brick_ao.png",
+      "path": "material-evidence/brick/brick_ao.png",
       "url": "brick_ao.png",
       "channel": "ao",
       "source": "reference-pixel-extraction"

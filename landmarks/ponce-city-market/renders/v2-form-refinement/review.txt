@@ -1,2 +1,2 @@
-STATUS pass=form-refinement completed=2 blocked=none next=forge/stage4_review/append_review.py /Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/object-sculpt-spec.json --pass-id form-refinement
-/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/object-sculpt-spec.json
+STATUS pass=form-refinement completed=2 blocked=none next=forge/stage4_review/append_review.py object-sculpt-spec.json --pass-id form-refinement
+object-sculpt-spec.json

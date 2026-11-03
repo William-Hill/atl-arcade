@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "kind": "img2threejs.material-analysis",
   "referenceId": "pcm-aerial-se",
-  "manifest": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-regions.json",
-  "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+  "manifest": "material-regions.json",
+  "registry": "<img2threejs>/docs/materials/material-reference.json",
   "targetThreshold": 0.7,
   "notObservedMaterials": [],
   "unresolvedNotObservedMaterials": [],
@@ -32,7 +32,7 @@
         "alternatives": [],
         "evidence": {
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/00-brick.png",
+            "path": "material-evidence/00-brick.png",
             "bbox": {
               "x": 1900,
               "y": 1100,
@@ -51,8 +51,8 @@
             "estimatedFidelity": 0.86,
             "targetThreshold": 0.7,
             "materialId": "brick",
-            "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/00-brick.png",
-            "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick",
+            "sourceImage": "material-evidence/00-brick.png",
+            "outDir": "material-evidence/pbr-00-brick",
             "palette": [
               "#5E4C4D",
               "#8C8385",
@@ -62,31 +62,31 @@
             ],
             "maps": {
               "albedo": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_albedo.png",
+                "path": "material-evidence/pbr-00-brick/brick_albedo.png",
                 "url": "brick_albedo.png",
                 "channel": "albedo",
                 "source": "reference-pixel-extraction"
               },
               "roughness": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_roughness.png",
+                "path": "material-evidence/pbr-00-brick/brick_roughness.png",
                 "url": "brick_roughness.png",
                 "channel": "roughness",
                 "source": "reference-pixel-extraction"
               },
               "height": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_height.png",
+                "path": "material-evidence/pbr-00-brick/brick_height.png",
                 "url": "brick_height.png",
                 "channel": "height",
                 "source": "reference-pixel-extraction"
               },
               "normal": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_normal.png",
+                "path": "material-evidence/pbr-00-brick/brick_normal.png",
                 "url": "brick_normal.png",
                 "channel": "normal",
                 "source": "reference-pixel-extraction"
               },
               "ao": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_ao.png",
+                "path": "material-evidence/pbr-00-brick/brick_ao.png",
                 "url": "brick_ao.png",
                 "channel": "ao",
                 "source": "reference-pixel-extraction"
@@ -205,7 +205,7 @@
         "single-image PBR inference requires controlled render validation"
       ],
       "crop": {
-        "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/00-brick.png",
+        "path": "material-evidence/00-brick.png",
         "bbox": {
           "x": 1900,
           "y": 1100,
@@ -256,8 +256,8 @@
         "estimatedFidelity": 0.86,
         "targetThreshold": 0.7,
         "materialId": "brick",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/00-brick.png",
-        "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick",
+        "sourceImage": "material-evidence/00-brick.png",
+        "outDir": "material-evidence/pbr-00-brick",
         "palette": [
           "#5E4C4D",
           "#8C8385",
@@ -267,31 +267,31 @@
         ],
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_albedo.png",
+            "path": "material-evidence/pbr-00-brick/brick_albedo.png",
             "url": "brick_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_roughness.png",
+            "path": "material-evidence/pbr-00-brick/brick_roughness.png",
             "url": "brick_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_height.png",
+            "path": "material-evidence/pbr-00-brick/brick_height.png",
             "url": "brick_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_normal.png",
+            "path": "material-evidence/pbr-00-brick/brick_normal.png",
             "url": "brick_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_ao.png",
+            "path": "material-evidence/pbr-00-brick/brick_ao.png",
             "url": "brick_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -336,7 +336,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/00-brick.png",
+        "sourceImage": "material-evidence/00-brick.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -347,31 +347,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_albedo.png",
+            "path": "material-evidence/pbr-00-brick/brick_albedo.png",
             "url": "brick_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_roughness.png",
+            "path": "material-evidence/pbr-00-brick/brick_roughness.png",
             "url": "brick_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_height.png",
+            "path": "material-evidence/pbr-00-brick/brick_height.png",
             "url": "brick_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_normal.png",
+            "path": "material-evidence/pbr-00-brick/brick_normal.png",
             "url": "brick_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_ao.png",
+            "path": "material-evidence/pbr-00-brick/brick_ao.png",
             "url": "brick_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -415,31 +415,31 @@
       },
       "maps": {
         "albedo": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_albedo.png",
+          "path": "material-evidence/pbr-00-brick/brick_albedo.png",
           "url": "brick_albedo.png",
           "channel": "albedo",
           "source": "reference-pixel-extraction"
         },
         "roughness": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_roughness.png",
+          "path": "material-evidence/pbr-00-brick/brick_roughness.png",
           "url": "brick_roughness.png",
           "channel": "roughness",
           "source": "reference-pixel-extraction"
         },
         "height": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_height.png",
+          "path": "material-evidence/pbr-00-brick/brick_height.png",
           "url": "brick_height.png",
           "channel": "height",
           "source": "reference-pixel-extraction"
         },
         "normal": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_normal.png",
+          "path": "material-evidence/pbr-00-brick/brick_normal.png",
           "url": "brick_normal.png",
           "channel": "normal",
           "source": "reference-pixel-extraction"
         },
         "ao": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-00-brick/brick_ao.png",
+          "path": "material-evidence/pbr-00-brick/brick_ao.png",
           "url": "brick_ao.png",
           "channel": "ao",
           "source": "reference-pixel-extraction"
@@ -470,7 +470,7 @@
         "alternatives": [],
         "evidence": {
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/01-trim.png",
+            "path": "material-evidence/01-trim.png",
             "bbox": {
               "x": 2350,
               "y": 623,
@@ -489,8 +489,8 @@
             "estimatedFidelity": 0.788,
             "targetThreshold": 0.7,
             "materialId": "trim",
-            "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/01-trim.png",
-            "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim",
+            "sourceImage": "material-evidence/01-trim.png",
+            "outDir": "material-evidence/pbr-01-trim",
             "palette": [
               "#96A0A7",
               "#696E73",
@@ -500,31 +500,31 @@
             ],
             "maps": {
               "albedo": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_albedo.png",
+                "path": "material-evidence/pbr-01-trim/trim_albedo.png",
                 "url": "trim_albedo.png",
                 "channel": "albedo",
                 "source": "reference-pixel-extraction"
               },
               "roughness": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_roughness.png",
+                "path": "material-evidence/pbr-01-trim/trim_roughness.png",
                 "url": "trim_roughness.png",
                 "channel": "roughness",
                 "source": "reference-pixel-extraction"
               },
               "height": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_height.png",
+                "path": "material-evidence/pbr-01-trim/trim_height.png",
                 "url": "trim_height.png",
                 "channel": "height",
                 "source": "reference-pixel-extraction"
               },
               "normal": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_normal.png",
+                "path": "material-evidence/pbr-01-trim/trim_normal.png",
                 "url": "trim_normal.png",
                 "channel": "normal",
                 "source": "reference-pixel-extraction"
               },
               "ao": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_ao.png",
+                "path": "material-evidence/pbr-01-trim/trim_ao.png",
                 "url": "trim_ao.png",
                 "channel": "ao",
                 "source": "reference-pixel-extraction"
@@ -647,7 +647,7 @@
         "single-image PBR inference requires controlled render validation"
       ],
       "crop": {
-        "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/01-trim.png",
+        "path": "material-evidence/01-trim.png",
         "bbox": {
           "x": 2350,
           "y": 623,
@@ -698,8 +698,8 @@
         "estimatedFidelity": 0.788,
         "targetThreshold": 0.7,
         "materialId": "trim",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/01-trim.png",
-        "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim",
+        "sourceImage": "material-evidence/01-trim.png",
+        "outDir": "material-evidence/pbr-01-trim",
         "palette": [
           "#96A0A7",
           "#696E73",
@@ -709,31 +709,31 @@
         ],
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_albedo.png",
+            "path": "material-evidence/pbr-01-trim/trim_albedo.png",
             "url": "trim_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_roughness.png",
+            "path": "material-evidence/pbr-01-trim/trim_roughness.png",
             "url": "trim_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_height.png",
+            "path": "material-evidence/pbr-01-trim/trim_height.png",
             "url": "trim_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_normal.png",
+            "path": "material-evidence/pbr-01-trim/trim_normal.png",
             "url": "trim_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_ao.png",
+            "path": "material-evidence/pbr-01-trim/trim_ao.png",
             "url": "trim_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -781,7 +781,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/01-trim.png",
+        "sourceImage": "material-evidence/01-trim.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -792,31 +792,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_albedo.png",
+            "path": "material-evidence/pbr-01-trim/trim_albedo.png",
             "url": "trim_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_roughness.png",
+            "path": "material-evidence/pbr-01-trim/trim_roughness.png",
             "url": "trim_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_height.png",
+            "path": "material-evidence/pbr-01-trim/trim_height.png",
             "url": "trim_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_normal.png",
+            "path": "material-evidence/pbr-01-trim/trim_normal.png",
             "url": "trim_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_ao.png",
+            "path": "material-evidence/pbr-01-trim/trim_ao.png",
             "url": "trim_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -863,31 +863,31 @@
       },
       "maps": {
         "albedo": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_albedo.png",
+          "path": "material-evidence/pbr-01-trim/trim_albedo.png",
           "url": "trim_albedo.png",
           "channel": "albedo",
           "source": "reference-pixel-extraction"
         },
         "roughness": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_roughness.png",
+          "path": "material-evidence/pbr-01-trim/trim_roughness.png",
           "url": "trim_roughness.png",
           "channel": "roughness",
           "source": "reference-pixel-extraction"
         },
         "height": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_height.png",
+          "path": "material-evidence/pbr-01-trim/trim_height.png",
           "url": "trim_height.png",
           "channel": "height",
           "source": "reference-pixel-extraction"
         },
         "normal": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_normal.png",
+          "path": "material-evidence/pbr-01-trim/trim_normal.png",
           "url": "trim_normal.png",
           "channel": "normal",
           "source": "reference-pixel-extraction"
         },
         "ao": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-01-trim/trim_ao.png",
+          "path": "material-evidence/pbr-01-trim/trim_ao.png",
           "url": "trim_ao.png",
           "channel": "ao",
           "source": "reference-pixel-extraction"
@@ -918,7 +918,7 @@
         "alternatives": [],
         "evidence": {
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/02-copper.png",
+            "path": "material-evidence/02-copper.png",
             "bbox": {
               "x": 2360,
               "y": 585,
@@ -937,8 +937,8 @@
             "estimatedFidelity": 0.86,
             "targetThreshold": 0.7,
             "materialId": "copper-patina",
-            "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/02-copper.png",
-            "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper",
+            "sourceImage": "material-evidence/02-copper.png",
+            "outDir": "material-evidence/pbr-02-copper",
             "palette": [
               "#7D98A1",
               "#3F4350",
@@ -948,31 +948,31 @@
             ],
             "maps": {
               "albedo": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_albedo.png",
+                "path": "material-evidence/pbr-02-copper/copper-patina_albedo.png",
                 "url": "copper-patina_albedo.png",
                 "channel": "albedo",
                 "source": "reference-pixel-extraction"
               },
               "roughness": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_roughness.png",
+                "path": "material-evidence/pbr-02-copper/copper-patina_roughness.png",
                 "url": "copper-patina_roughness.png",
                 "channel": "roughness",
                 "source": "reference-pixel-extraction"
               },
               "height": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_height.png",
+                "path": "material-evidence/pbr-02-copper/copper-patina_height.png",
                 "url": "copper-patina_height.png",
                 "channel": "height",
                 "source": "reference-pixel-extraction"
               },
               "normal": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_normal.png",
+                "path": "material-evidence/pbr-02-copper/copper-patina_normal.png",
                 "url": "copper-patina_normal.png",
                 "channel": "normal",
                 "source": "reference-pixel-extraction"
               },
               "ao": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_ao.png",
+                "path": "material-evidence/pbr-02-copper/copper-patina_ao.png",
                 "url": "copper-patina_ao.png",
                 "channel": "ao",
                 "source": "reference-pixel-extraction"
@@ -1118,7 +1118,7 @@
         "single-image PBR inference requires controlled render validation"
       ],
       "crop": {
-        "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/02-copper.png",
+        "path": "material-evidence/02-copper.png",
         "bbox": {
           "x": 2360,
           "y": 585,
@@ -1197,8 +1197,8 @@
         "estimatedFidelity": 0.86,
         "targetThreshold": 0.7,
         "materialId": "copper-patina",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/02-copper.png",
-        "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper",
+        "sourceImage": "material-evidence/02-copper.png",
+        "outDir": "material-evidence/pbr-02-copper",
         "palette": [
           "#7D98A1",
           "#3F4350",
@@ -1208,31 +1208,31 @@
         ],
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_albedo.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_albedo.png",
             "url": "copper-patina_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_roughness.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_roughness.png",
             "url": "copper-patina_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_height.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_height.png",
             "url": "copper-patina_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_normal.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_normal.png",
             "url": "copper-patina_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_ao.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_ao.png",
             "url": "copper-patina_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -1277,7 +1277,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/02-copper.png",
+        "sourceImage": "material-evidence/02-copper.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -1288,31 +1288,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_albedo.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_albedo.png",
             "url": "copper-patina_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_roughness.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_roughness.png",
             "url": "copper-patina_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_height.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_height.png",
             "url": "copper-patina_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_normal.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_normal.png",
             "url": "copper-patina_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_ao.png",
+            "path": "material-evidence/pbr-02-copper/copper-patina_ao.png",
             "url": "copper-patina_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -1356,31 +1356,31 @@
       },
       "maps": {
         "albedo": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_albedo.png",
+          "path": "material-evidence/pbr-02-copper/copper-patina_albedo.png",
           "url": "copper-patina_albedo.png",
           "channel": "albedo",
           "source": "reference-pixel-extraction"
         },
         "roughness": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_roughness.png",
+          "path": "material-evidence/pbr-02-copper/copper-patina_roughness.png",
           "url": "copper-patina_roughness.png",
           "channel": "roughness",
           "source": "reference-pixel-extraction"
         },
         "height": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_height.png",
+          "path": "material-evidence/pbr-02-copper/copper-patina_height.png",
           "url": "copper-patina_height.png",
           "channel": "height",
           "source": "reference-pixel-extraction"
         },
         "normal": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_normal.png",
+          "path": "material-evidence/pbr-02-copper/copper-patina_normal.png",
           "url": "copper-patina_normal.png",
           "channel": "normal",
           "source": "reference-pixel-extraction"
         },
         "ao": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-02-copper/copper-patina_ao.png",
+          "path": "material-evidence/pbr-02-copper/copper-patina_ao.png",
           "url": "copper-patina_ao.png",
           "channel": "ao",
           "source": "reference-pixel-extraction"
@@ -1411,7 +1411,7 @@
         "alternatives": [],
         "evidence": {
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/03-sign.png",
+            "path": "material-evidence/03-sign.png",
             "bbox": {
               "x": 1906,
               "y": 725,
@@ -1430,8 +1430,8 @@
             "estimatedFidelity": 0.86,
             "targetThreshold": 0.7,
             "materialId": "sign-yellow",
-            "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/03-sign.png",
-            "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign",
+            "sourceImage": "material-evidence/03-sign.png",
+            "outDir": "material-evidence/pbr-03-sign",
             "palette": [
               "#F8E878",
               "#B18A16",
@@ -1441,31 +1441,31 @@
             ],
             "maps": {
               "albedo": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_albedo.png",
+                "path": "material-evidence/pbr-03-sign/sign-yellow_albedo.png",
                 "url": "sign-yellow_albedo.png",
                 "channel": "albedo",
                 "source": "reference-pixel-extraction"
               },
               "roughness": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_roughness.png",
+                "path": "material-evidence/pbr-03-sign/sign-yellow_roughness.png",
                 "url": "sign-yellow_roughness.png",
                 "channel": "roughness",
                 "source": "reference-pixel-extraction"
               },
               "height": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_height.png",
+                "path": "material-evidence/pbr-03-sign/sign-yellow_height.png",
                 "url": "sign-yellow_height.png",
                 "channel": "height",
                 "source": "reference-pixel-extraction"
               },
               "normal": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_normal.png",
+                "path": "material-evidence/pbr-03-sign/sign-yellow_normal.png",
                 "url": "sign-yellow_normal.png",
                 "channel": "normal",
                 "source": "reference-pixel-extraction"
               },
               "ao": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_ao.png",
+                "path": "material-evidence/pbr-03-sign/sign-yellow_ao.png",
                 "url": "sign-yellow_ao.png",
                 "channel": "ao",
                 "source": "reference-pixel-extraction"
@@ -1589,7 +1589,7 @@
         "single-image PBR inference requires controlled render validation"
       ],
       "crop": {
-        "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/03-sign.png",
+        "path": "material-evidence/03-sign.png",
         "bbox": {
           "x": 1906,
           "y": 725,
@@ -1640,8 +1640,8 @@
         "estimatedFidelity": 0.86,
         "targetThreshold": 0.7,
         "materialId": "sign-yellow",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/03-sign.png",
-        "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign",
+        "sourceImage": "material-evidence/03-sign.png",
+        "outDir": "material-evidence/pbr-03-sign",
         "palette": [
           "#F8E878",
           "#B18A16",
@@ -1651,31 +1651,31 @@
         ],
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_albedo.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_albedo.png",
             "url": "sign-yellow_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_roughness.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_roughness.png",
             "url": "sign-yellow_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_height.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_height.png",
             "url": "sign-yellow_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_normal.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_normal.png",
             "url": "sign-yellow_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_ao.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_ao.png",
             "url": "sign-yellow_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -1720,7 +1720,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/03-sign.png",
+        "sourceImage": "material-evidence/03-sign.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -1731,31 +1731,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_albedo.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_albedo.png",
             "url": "sign-yellow_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_roughness.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_roughness.png",
             "url": "sign-yellow_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_height.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_height.png",
             "url": "sign-yellow_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_normal.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_normal.png",
             "url": "sign-yellow_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_ao.png",
+            "path": "material-evidence/pbr-03-sign/sign-yellow_ao.png",
             "url": "sign-yellow_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -1799,31 +1799,31 @@
       },
       "maps": {
         "albedo": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_albedo.png",
+          "path": "material-evidence/pbr-03-sign/sign-yellow_albedo.png",
           "url": "sign-yellow_albedo.png",
           "channel": "albedo",
           "source": "reference-pixel-extraction"
         },
         "roughness": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_roughness.png",
+          "path": "material-evidence/pbr-03-sign/sign-yellow_roughness.png",
           "url": "sign-yellow_roughness.png",
           "channel": "roughness",
           "source": "reference-pixel-extraction"
         },
         "height": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_height.png",
+          "path": "material-evidence/pbr-03-sign/sign-yellow_height.png",
           "url": "sign-yellow_height.png",
           "channel": "height",
           "source": "reference-pixel-extraction"
         },
         "normal": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_normal.png",
+          "path": "material-evidence/pbr-03-sign/sign-yellow_normal.png",
           "url": "sign-yellow_normal.png",
           "channel": "normal",
           "source": "reference-pixel-extraction"
         },
         "ao": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-03-sign/sign-yellow_ao.png",
+          "path": "material-evidence/pbr-03-sign/sign-yellow_ao.png",
           "url": "sign-yellow_ao.png",
           "channel": "ao",
           "source": "reference-pixel-extraction"
@@ -1854,7 +1854,7 @@
         "alternatives": [],
         "evidence": {
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/04-steel.png",
+            "path": "material-evidence/04-steel.png",
             "bbox": {
               "x": 1906,
               "y": 725,
@@ -1873,8 +1873,8 @@
             "estimatedFidelity": 0.86,
             "targetThreshold": 0.7,
             "materialId": "steel",
-            "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/04-steel.png",
-            "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel",
+            "sourceImage": "material-evidence/04-steel.png",
+            "outDir": "material-evidence/pbr-04-steel",
             "palette": [
               "#F8E878",
               "#B18A16",
@@ -1884,31 +1884,31 @@
             ],
             "maps": {
               "albedo": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_albedo.png",
+                "path": "material-evidence/pbr-04-steel/steel_albedo.png",
                 "url": "steel_albedo.png",
                 "channel": "albedo",
                 "source": "reference-pixel-extraction"
               },
               "roughness": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_roughness.png",
+                "path": "material-evidence/pbr-04-steel/steel_roughness.png",
                 "url": "steel_roughness.png",
                 "channel": "roughness",
                 "source": "reference-pixel-extraction"
               },
               "height": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_height.png",
+                "path": "material-evidence/pbr-04-steel/steel_height.png",
                 "url": "steel_height.png",
                 "channel": "height",
                 "source": "reference-pixel-extraction"
               },
               "normal": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_normal.png",
+                "path": "material-evidence/pbr-04-steel/steel_normal.png",
                 "url": "steel_normal.png",
                 "channel": "normal",
                 "source": "reference-pixel-extraction"
               },
               "ao": {
-                "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_ao.png",
+                "path": "material-evidence/pbr-04-steel/steel_ao.png",
                 "url": "steel_ao.png",
                 "channel": "ao",
                 "source": "reference-pixel-extraction"
@@ -2032,7 +2032,7 @@
         "single-image PBR inference requires controlled render validation"
       ],
       "crop": {
-        "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/04-steel.png",
+        "path": "material-evidence/04-steel.png",
         "bbox": {
           "x": 1906,
           "y": 725,
@@ -2083,8 +2083,8 @@
         "estimatedFidelity": 0.86,
         "targetThreshold": 0.7,
         "materialId": "steel",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/04-steel.png",
-        "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel",
+        "sourceImage": "material-evidence/04-steel.png",
+        "outDir": "material-evidence/pbr-04-steel",
         "palette": [
           "#F8E878",
           "#B18A16",
@@ -2094,31 +2094,31 @@
         ],
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_albedo.png",
+            "path": "material-evidence/pbr-04-steel/steel_albedo.png",
             "url": "steel_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_roughness.png",
+            "path": "material-evidence/pbr-04-steel/steel_roughness.png",
             "url": "steel_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_height.png",
+            "path": "material-evidence/pbr-04-steel/steel_height.png",
             "url": "steel_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_normal.png",
+            "path": "material-evidence/pbr-04-steel/steel_normal.png",
             "url": "steel_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_ao.png",
+            "path": "material-evidence/pbr-04-steel/steel_ao.png",
             "url": "steel_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -2163,7 +2163,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/04-steel.png",
+        "sourceImage": "material-evidence/04-steel.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -2174,31 +2174,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_albedo.png",
+            "path": "material-evidence/pbr-04-steel/steel_albedo.png",
             "url": "steel_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_roughness.png",
+            "path": "material-evidence/pbr-04-steel/steel_roughness.png",
             "url": "steel_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_height.png",
+            "path": "material-evidence/pbr-04-steel/steel_height.png",
             "url": "steel_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_normal.png",
+            "path": "material-evidence/pbr-04-steel/steel_normal.png",
             "url": "steel_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_ao.png",
+            "path": "material-evidence/pbr-04-steel/steel_ao.png",
             "url": "steel_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -2242,31 +2242,31 @@
       },
       "maps": {
         "albedo": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_albedo.png",
+          "path": "material-evidence/pbr-04-steel/steel_albedo.png",
           "url": "steel_albedo.png",
           "channel": "albedo",
           "source": "reference-pixel-extraction"
         },
         "roughness": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_roughness.png",
+          "path": "material-evidence/pbr-04-steel/steel_roughness.png",
           "url": "steel_roughness.png",
           "channel": "roughness",
           "source": "reference-pixel-extraction"
         },
         "height": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_height.png",
+          "path": "material-evidence/pbr-04-steel/steel_height.png",
           "url": "steel_height.png",
           "channel": "height",
           "source": "reference-pixel-extraction"
         },
         "normal": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_normal.png",
+          "path": "material-evidence/pbr-04-steel/steel_normal.png",
           "url": "steel_normal.png",
           "channel": "normal",
           "source": "reference-pixel-extraction"
         },
         "ao": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/pbr-04-steel/steel_ao.png",
+          "path": "material-evidence/pbr-04-steel/steel_ao.png",
           "url": "steel_ao.png",
           "channel": "ao",
           "source": "reference-pixel-extraction"
@@ -2279,5 +2279,5 @@
     "PBR extraction is reference-derived inference, not inverse rendering.",
     "A crop must be checked against the component visible footprint before accepting material scores."
   ],
-  "artifact": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-analysis.json"
+  "artifact": "material-analysis.json"
 }

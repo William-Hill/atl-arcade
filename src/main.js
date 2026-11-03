@@ -553,6 +553,21 @@ window.__atl = {
     get face() {
       return skaterView.face;
     },
+    // Holds the face in one state: holdFace("closed", "smile"). holdFace()
+    // gives the face back to the animation.
+    holdFace(eyes, mouth) {
+      skaterView.holdFace(eyes ? { eyes, mouth } : null);
+    },
+    // Stops the clips (true) or plays them again (false).
+    freezePose(frozen) {
+      skaterView.freezePose(frozen);
+    },
+    // The shader program key of the skater material ("skater-face",
+    // "skater-toon-rim", or both).
+    get materialKey() {
+      const m = skaterView.model;
+      return m ? m.skinnedMesh.material.customProgramCacheKey() : null;
+    },
     // The model yaw offset: PI when the skater rides backward.
     get facing() {
       return skaterView.facing;

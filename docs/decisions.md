@@ -531,3 +531,10 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Fix: the new `bridgeMiddle` finds the nearest point on the full bridge polyline and its length along the line. The protected part is the middle half of the full length (0.25 to 0.75), within width / 2 + 2 m of the center line.
 - Bridges with more than two points on the BeltLine level: `w741961708` (trail), `w182470306`, `w431443668`, and `w44851092` (paths), `w638312736` (sidewalk), and `w156324725`, `w29094065`, and `w29094070` (streets).
 - Level data: the rebuild changes 61 terrain cells. The largest change is 2.35 m at about (-45, -717). The spawn height changes by 0.02 m.
+
+## 2026-11-03: The toon material keeps the GLB material properties (#60)
+
+- `toonMaterial()` now copies each property in `KEPT` when the source material has it: `map`, `opacity`, `transparent`, `alphaTest`, `side`, `vertexColors`, `emissive`, `emissiveIntensity`, `emissiveMap`, `normalMap`, `normalMapType`, and `normalScale`. Colors and vectors are copies.
+- `toonSkater()` builds one outline hull for each skinned mesh and returns the list of hulls. A skater with separate skates or hair gets an outline on each part.
+- Nia and Marcus each have one skinned mesh with a normal map. The toon material dropped the normal map before; now it keeps it. The change in the screenshots is small: on the BeltLine, 91 pixels (Nia) and 29 pixels (Marcus) of 42,000 in the skater area changed by more than 16 levels. Two runs of the same code differ by 5 to 16 pixels there.
+- Known problem, not fixed here: `toonSkater()` replaces the face decal material of Nia (`attachFace()` in `loadSkaterModel()`), so the decal eyes and mouth do not show with `?toon=1`. This was true before this change.

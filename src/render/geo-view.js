@@ -1,9 +1,15 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { buildGeoMeshes, buildPropMeshes } from "../level/geo/geo-mesh.js";
+import { SURFACE_COLORS, buildGeoMeshes, buildPropMeshes } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
+import { roadMarkings } from "../level/geo/markings.js";
+import { mergeMeshes } from "../level/geo/extrude.js";
 import { createMuralAtlas } from "./murals.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
+import asphaltInfo from "../../assets/ground/asphalt/set.json";
+import concreteInfo from "../../assets/ground/concrete/set.json";
+import trailInfo from "../../assets/ground/trail/set.json";
+import grassInfo from "../../assets/ground/grass/set.json";
 
 const KIT_URL = new URL("../../assets/kit/street-kit.glb", import.meta.url).href;
 // The CC0 brick scan (scripts/landmark-textures.py), shared with the
@@ -136,6 +142,101 @@ uniform float uBrickOn;`,
   return mat;
 }
 
+// The ground scans (scripts/ground-textures.py, CC0). One static URL per
+// file, so Vite bundles each map.
+const GROUND = [
+  { info: asphaltInfo, url: new URL("../../assets/ground/asphalt/color.jpg", import.meta.url).href },
+  { info: concreteInfo, url: new URL("../../assets/ground/concrete/color.jpg", import.meta.url).href },
+  { info: trailInfo, url: new URL("../../assets/ground/trail/color.jpg", import.meta.url).href },
+  { info: grassInfo, url: new URL("../../assets/ground/grass/color.jpg", import.meta.url).href },
+];
+// Surface kind -> ground set (index in GROUND) and detail strength.
+const GROUND_OF = {
+  ground: [3, 0.6],
+  park: [3, 0.65],
+  street: [0, 0.8],
+  path: [1, 0.8],
+  sidewalk: [1, 0.8],
+  trail: [2, 0.7],
+};
+
+// The surface shader: a toon material whose art color (the vertex color of
+// each surface kind) gets the detail of a real scan, sampled in world
+// meters. The detail is the scan over its mean color, so the palette stays.
+// A second, rotated, larger sample breaks the tile repeat. The detail fades
+// out with distance, where a tile is under a few pixels.
+export function createSurfaceMaterial(gradientMap, { maps = null } = {}) {
+  const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
+  if (!maps) return mat;
+  const kinds = Object.keys(GROUND_OF);
+  const kindColor = kinds.map((k) => new THREE.Vector3(...SURFACE_COLORS[k]));
+  const kindSet = kinds.map((k) => GROUND_OF[k][0]);
+  const kindStrength = kinds.map((k) => GROUND_OF[k][1]);
+  mat.onBeforeCompile = (shader) => {
+    GROUND.forEach((g, i) => {
+      shader.uniforms[`uGround${i}`] = { value: maps[i] };
+      shader.uniforms[`uGroundMean${i}`] = { value: new THREE.Vector3(...g.info.meanLinear) };
+      shader.uniforms[`uGroundTile${i}`] = { value: g.info.tileMeters };
+    });
+    shader.uniforms.uKindColor = { value: kindColor };
+    shader.uniforms.uKindSet = { value: kindSet };
+    shader.uniforms.uKindStrength = { value: kindStrength };
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec2 vGroundXZ;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGroundXZ = (modelMatrix * vec4(transformed, 1.0)).xz;");
+    const decl = GROUND.map((_, i) => `uniform sampler2D uGround${i};\nuniform vec3 uGroundMean${i};\nuniform float uGroundTile${i};`).join("\n");
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+varying vec2 vGroundXZ;
+${decl}
+uniform vec3 uKindColor[${kinds.length}];
+uniform float uKindSet[${kinds.length}];
+uniform float uKindStrength[${kinds.length}];
+vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
+  vec3 a = texture2D(t, xz / tile).rgb / mean;
+  vec2 r = mat2(0.8, -0.6, 0.6, 0.8) * xz;
+  vec3 b = texture2D(t, r / (tile * 4.7)).rgb / mean;
+  return clamp(a * mix(vec3(1.0), b, 0.45), 0.3, 2.5);
+}`,
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+{
+  // The surface kind from its art color (each kind has its own color).
+  float set = -1.0;
+  float strength = 0.0;
+  for (int i = 0; i < ${kinds.length}; i++) {
+    if (distance(vColor.rgb, uKindColor[i]) < 0.01) { set = uKindSet[i]; strength = uKindStrength[i]; }
+  }
+  // Sample every set outside the branches, so the mipmap level is correct.
+  vec3 d0 = groundDetail(uGround0, uGroundMean0, uGroundTile0, vGroundXZ);
+  vec3 d1 = groundDetail(uGround1, uGroundMean1, uGroundTile1, vGroundXZ);
+  vec3 d2 = groundDetail(uGround2, uGroundMean2, uGroundTile2, vGroundXZ);
+  vec3 d3 = groundDetail(uGround3, uGroundMean3, uGroundTile3, vGroundXZ);
+  vec3 det = set < -0.5 ? vec3(1.0) : set < 0.5 ? d0 : set < 1.5 ? d1 : set < 2.5 ? d2 : d3;
+  float fade = 1.0 - smoothstep(90.0, 280.0, length(vViewPosition));
+  diffuseColor.rgb *= mix(vec3(1.0), det, strength * fade);
+}`,
+      );
+  };
+  mat.customProgramCacheKey = () => "surface-v1-ground";
+  return mat;
+}
+
+function loadGroundMaps() {
+  return GROUND.map((g) => {
+    const t = new THREE.TextureLoader().load(g.url);
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.RepeatWrapping;
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 8;
+    return t;
+  });
+}
+
 // The brick scan for the facade shader. It tiles by the shader's own meter
 // coordinates, so it needs only repeat wrap and mipmaps.
 function loadBrickMap() {
@@ -191,13 +292,14 @@ export async function loadKitTemplates(url = KIT_URL) {
   return templates;
 }
 
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE } = {}) {
+// `groundDetail: false` keeps the flat art colors on the ground.
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
   let muralMap = null;
   const materials = {
-    surface: new THREE.MeshToonMaterial({ vertexColors: true, gradientMap }),
+    surface: createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null }),
     building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap() }),
     props: new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp({ soft: true }) }),
     get mural() {
@@ -206,9 +308,15 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     },
   };
   const byId = new Map();
+  // Road markings join the render copy of their surface tile (no extra
+  // draw call). The shared meshes, which the physics reads, stay as they are.
+  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, t.mesh]) : []);
   for (const { material, tile, mesh } of meshes) {
-    addMesh(root, byId, `${material}-${tile}`, geoGeometry(mesh), materials[material], { castShadow: material === "building" });
+    const extra = material === "surface" ? markingTiles.get(tile) : null;
+    if (extra) markingTiles.delete(tile);
+    addMesh(root, byId, `${material}-${tile}`, geoGeometry(extra ? mergeMeshes([mesh, extra]) : mesh), materials[material], { castShadow: material === "building" });
   }
+  for (const [tile, mesh] of markingTiles) addMesh(root, byId, `markings-${tile}`, geoGeometry(mesh), materials.surface);
 
   // Kit props load after the level shows. Each prop tile is one merged mesh;
   // far tiles are hidden in update().
@@ -255,27 +363,29 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
 // shadow map cannot cover 2 km at a useful resolution. The shell turns the
 // shadow map off on a geodata level for speed; the light keeps the setup
 // for a faster machine.
-export function createGeoLights() {
+export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048 } = {}) {
   const group = new THREE.Group();
   group.add(new THREE.HemisphereLight(0xcfe8ff, 0x5a6a48, 0.7));
   const sun = new THREE.DirectionalLight(0xfff1d6, 1.5);
   const offset = new THREE.Vector3(30, 50, 20);
   sun.position.copy(offset);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  const r = 45;
+  sun.shadow.mapSize.set(shadowMapSize, shadowMapSize);
+  const r = shadowRadius;
   sun.shadow.camera.left = -r;
   sun.shadow.camera.right = r;
   sun.shadow.camera.top = r;
   sun.shadow.camera.bottom = -r;
   sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 160;
-  sun.shadow.bias = -0.0005;
+  sun.shadow.camera.far = 200;
+  sun.shadow.bias = -0.0004;
+  sun.shadow.normalBias = 0.04;
   group.add(sun);
   group.add(sun.target);
   return {
     group,
     sun,
+    sunDirection: offset.clone().normalize(),
     // Snap to whole meters, so the shadow edges do not shimmer.
     follow(x, z) {
       const sx = Math.round(x);

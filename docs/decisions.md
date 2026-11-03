@@ -601,6 +601,18 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - State: `wallSlide` is true on a tick where the skater slid. The controller stays pure and deterministic.
 - Not done: real skaters have not reviewed the feel of the slide (AGENTS.md). The two constants are first guesses.
 
+## 2026-11-03: The building source file (#88)
+
+- Decision: each building in a level has one record in `data/buildings/<level>.json`. The record has the name, the address, the height, the floors, and the facade. Each fact has a `value`, a `source`, a `confidence` (`high`, `medium`, `low`, or `none`), and a `ref`. `scripts/building-sources.mjs` writes the file and `data/buildings/<level>.report.md`. `scripts/build-block.mjs` takes each height from the file, and stops with an error when a building has no record.
+- Addresses: the open-data-atl catalog has a City of Atlanta address layer, "Official Address Points" (`dpcd-0a5785b3466a46c7a256f7fa9d628afd-0`, `https://gis.atlantaga.gov/dpcd/rest/services/AdministrativeArea/AddressPoint/MapServer/0`). `scripts/city-addresses.mjs` caches the 4455 current points in the box in `levels/beltline-eastside/raw/city-addresses.json`. A building gets the city address of the points inside its footprint. When one city address agrees with the OSM `addr:*` tags, the record uses that one; otherwise it uses the address with the most points. The OSM `addr:*` tags are the fallback. The tax parcel layer (25) is not used: it has owner names, and it adds no fact that the address points do not have.
+- Result on `beltline-eastside` (1042 buildings): 813 city addresses, 51 OSM addresses, 178 with no address. 35 buildings have a city address and an OSM address that do not agree; the report lists them. The source file uses the city address for them.
+- Heights: no City of Atlanta layer in the catalog has a building height. The zoning `HEIGHT` field is a limit, not a measure, so it is not used. The height order does not change: a researched override, the OSM `height` tag, the OSM `building:levels` tag, Overture (capped for small types), then the type default. 110 buildings keep the type default; none of them has an OSM tag or an Overture value.
+- The M1-03 status line "1024 of 1045 heights are defaults" was out of date. The level on `main` already had 111 defaults of 1042, because the Overture heights were in the build.
+- New override: FORTH Hotel (`w1229184074`, 800 Rankin St NE), 16 stories from Time Out (`https://www.timeout.com/atlanta/hotels/forth-hotel`), 52.2 m (was the 20 m hotel default). One height covers the full footprint, so the low part of the footprint is too tall. This is the only height change in the level.
+- Facade: OSM has no `building:material` tag on this level. The facade fact is the game style from `chooseStyle` (source `style-rule`, confidence `low`). It is a game choice, not a surveyed material.
+- Floors: 19 from OSM, 5 from research, and 1018 estimates from the height (confidence `low`).
+- Level data: the rebuild changes the FORTH Hotel height and adds `stats.buildingSources`. The offline rebuild test fixture (`levels/beltline-eastside/level.json`) changes on purpose.
+
 ## 2026-11-03: First load on a phone (#74)
 
 - Rapier WASM as a file: `@dimforge/rapier3d-compat` inlines its 3 MB WASM as base64 in `rapier.mjs`. The Vite plugin `tools/vite/rapier-wasm-file.js` swaps the base64 bytes for the URL of `rapier_wasm3d_bg.wasm`, which the same package ships. The build stops if the pattern does not match exactly once. The dev server does not prebundle Rapier (`optimizeDeps.exclude`), so the URL works in dev too. No new dependency.

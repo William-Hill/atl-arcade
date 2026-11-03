@@ -8,9 +8,9 @@
 
 ## Summary
 
-1. **The stage is real in plan, but not in height or grade.** The streets, the trail, and the footprints come from OpenStreetMap, so their positions are correct. The two errors that a local sees first are these:
+1. **The stage is real in plan, but not in height or grade.** The streets, the trail, and the footprints come from OpenStreetMap, so their positions match the OSM data. I did not check them against a survey or aerial images, so their real-world accuracy is not verified. The two errors that a local sees first are these:
    - The trail is flat. In the real place, the trail crosses Ponce de Leon Avenue, North Avenue, and Ralph McGill Boulevard on bridges, and it goes under Freedom Parkway and Highland Avenue.
-   - About 1 in 10 houses is 3 to 5 times too tall. 51 houses are taller than 20 m. Two 18- and 21-story towers next to Ponce City Market are only 20 m and 28 m high.
+   - Many houses are too tall: 71 of 730 houses are taller than 15 m, and 51 are taller than 20 m. I have no measured heights for these houses, so I give no ratio. Two 18- and 21-story towers next to Ponce City Market are only 20 m and 28 m high.
 2. **Graphics.** Stay on `WebGLRenderer` now. Do these steps first: compress the textures (KTX2), improve the toon shading, add instanced trees, and bake the light. Move to WebGPU later, as a test behind a flag. Do not use Google Photorealistic 3D Tiles. Its terms block caching and derived colliders, and its photos show real streets as they are.
 3. **img2threejs.** It can build a skinned body in code (`THREE.SkinnedMesh`, 49 bones). It cannot rig a face. It writes no morph targets, no face bones, no visemes, and no GLB. Nia has 65 Mixamo joints, 24 clips, and 0 face controls. Her face uses decals (PR #38).
 4. **X likes.** One liked collection is usable: the Scenario 3D collection on Hugging Face (1,342 models, 1,271 GLB, CC BY 4.0). The liked `plugin-character` (img2character) rigs a body, but not a face. A liked MetaHuman blendshape tool has no public code.
@@ -73,11 +73,11 @@ Result: the DEM alone puts a ditch at each bridge. Each bridge needs a deck at t
 
 | Building (OSM id) | Level height | Real | Error |
 |---|---|---|---|
-| Signal House (w269992060) | 27.7 m (Overture) | 21 stories ([BD+C](https://www.bdcnetwork.com/home/news/55165570/atlantas-old-fourth-ward-gets-a-21-story-162-unit-multifamily-residential-building)) | About -40 m against an estimate of 68 m |
-| Overline Residences (w1139043886) | 19.73 m (Overture) | 18 stories ([Atlanta Agent Magazine](https://atlantaagentmagazine.com/2023/09/28/overline-residences-opens/)) | About -38 m against an estimate of 59 m |
+| Signal House (w269992060) | 27.7 m (Overture) | 21 stories ([BD+C](https://www.bdcnetwork.com/home/news/55165570/atlantas-old-fourth-ward-gets-a-21-story-162-unit-multifamily-residential-building)) | About -40 m against an estimate of 68.2 m |
+| Overline Residences (w1139043886) | 19.73 m (Overture) | 18 stories ([Atlanta Agent Magazine](https://atlantaagentmagazine.com/2023/09/28/overline-residences-opens/)) | About -39 m against an estimate of 58.6 m |
 | 725 Ponce (w741961703) | 39.4 m (12 OSM levels × 3.2 + 1) | 12 stories ([Wikipedia](https://en.wikipedia.org/wiki/725_Ponce)) | Probably low, because office floors are often higher than 3.2 m. Not verified |
 | Kroger at 725 Ponce (w741961704) | 51.5 m (Overture) | A ground-floor store under the 12-story building ([Wikipedia](https://en.wikipedia.org/wiki/725_Ponce)) | The store footprint is 12 m taller than the office tower. This is wrong |
-| 619 Ponce (w1139043884) | 23.57 m (Overture) | 4 stories ([ULI](https://casestudies.uli.org/metro_area/atlanta)) | About +6 m against an estimate of 17.8 m |
+| 619 Ponce (w1139043884) | 23.57 m (Overture) | 4 stories ([ULI](https://casestudies.uli.org/metro_area/atlanta)) | About +9.8 m against an estimate of 13.8 m |
 | Ponce City Market (w184803195) | 50 m (OSM `height`), one block | 10 OSM levels and a taller center tower | The whole 17,681 m² footprint is one 50 m box. The real tower height is not verified. PR #44 adds a hand-made tower |
 | Fourth Ward Offices Tower One and Two (w1139043888, w1139043887) | 23.16 m and 10.9 m | Not verified | The twin names suggest a similar height. One value is probably wrong |
 
@@ -91,11 +91,11 @@ These buildings make the skyline that a player sees from the trail. Fix: put a `
 
 **5. No tree canopy.** OSM has 0 `natural=tree` nodes and 0 wood or forest areas in the box. The props place trees by rule. The real Eastside Trail has a dense canopy. A canopy source is necessary, for example an open canopy layer from the City of Atlanta. I did not check which canopy layers are open.
 
-**6. Art on the trail.** OSM has 12 `tourism=artwork` points in the box. Examples: "The Bridge" (a sculpture), "33 Oaks" and "Northern White" (David Landis), "Convergence" (Kevin Chambers), and two murals. The AGENTS.md rule applies: use a mural only with the permission of the artist. The sculptures are good positions for permitted art props or for "Art on the BeltLine" fact cards.
+**6. Art on the trail.** OSM has 12 `tourism=artwork` points in the box. Examples: "The Bridge" (a sculpture), "33 Oaks" and "Northern White" (David Landis), "Convergence" (Kevin Chambers), and two murals. AGENTS.md says "Murals, not graffiti". It has no rule about permission, but use a real mural only with the permission of the artist (a proposal for AGENTS.md). The sculptures are good positions for permitted art props or for "Art on the BeltLine" fact cards.
 
 **7. Small data defects.**
 
-- Two park rings are in the level twice. Freedom Park is in the file as `leisure=park` and as `landuse=grass` with the same outline (areas of 143,589 m² and 100,506 m²). Two equal faces can flicker (z-fighting).
+- Two park rings are in the level twice. Freedom Park is in the file as `leisure=park` and as `landuse=grass` with overlapping outlines (areas of 143,589 m² and 100,506 m²). Where two faces overlap at the same height, they can flicker (z-fighting).
 - Street widths are defaults by class. The level has 11 width values (3 m to 19.8 m). I did not compare them with real curb widths.
 - Two trail ways keep an old `construction=cycleway` tag (742982445, 1043756762). The build script includes them, which is correct, because the trail there is open.
 - 112 buildings use a type default height, for example Stove Works at 6 m (w211061297). Not verified against the real building.

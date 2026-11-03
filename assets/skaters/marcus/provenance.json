@@ -1,0 +1,65 @@
+{
+  "asset": "Marcus \"Tempo\" Reid, the second skater (M1-10, #42)",
+  "date": "2026-11-02",
+  "status": "shipped, animated with the M1-02 clip set (greybox clips in ATL and X Games style, not reviewed by skaters)",
+  "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
+  "source_image": "docs/characters/concept/marcus/marcus-tpose-front.png (see docs/characters/concept/marcus/provenance.json)",
+  "pipeline": "A (Tripo Studio 3D Workspace, Blender cleanup, Draco glTF). Pipeline B (img2character) was not used; see docs/characters/pipeline-comparison-m1-10.md.",
+  "steps": [
+    {
+      "tool": "Tripo Studio web UI (studio.tripo3d.ai), 3D Workspace, Image to 3D, through Claude in Chrome",
+      "task_id": "68e4a1d0-28d8-4b61-8e0b-8a3e63dfe487",
+      "settings": "HD Model, AI model H3.1 - Best Quality, Generate in Parts off, 8K Texture off",
+      "result": "145,790 triangles, 79,597 vertices, textured",
+      "credits_spent": 55
+    },
+    {
+      "tool": "Tripo Studio Retopology",
+      "settings": "Quad topology, Smart Mesh on, polygon count 9000",
+      "result": "9,095 quad faces, 8,494 vertices (17,006 triangles in the GLB)",
+      "credits_spent": 40
+    },
+    {
+      "tool": "Tripo Studio 3D Rigging",
+      "settings": "Rigging type Humanoid, skeleton preset Mixamo",
+      "result": "65 joints with the mixamorig: prefix, one skin, no animations",
+      "credits_spent": 20
+    },
+    {
+      "tool": "Tripo Studio Export",
+      "settings": "File name marcus-tripo, format GLB, texture resolution 4k, Export Skeleton on",
+      "result": "assets/skaters/marcus/raw/marcus-tripo.glb, 12,933,432 bytes (not in git)",
+      "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_build.py, which runs scripts/blender/nia_clips.py",
+      "date": "2026-11-02",
+      "command": "blender -b --factory-startup -P scripts/blender/skater_build.py -- --in assets/skaters/marcus/raw/marcus-tripo.glb --name marcus --height 1.78 --out assets/skaters/marcus/skater.glb",
+      "actions": [
+        "Imported the raw GLB. Removed the Tripo empties (Node_0, node_0, RootNode) and the Icosphere bone shape. Kept the world transform of the armature.",
+        "Scaled the armature and the mesh by 1.8154 (0.980 m to 1.780 m), centered the skater on x and y, put the wheels on z = 0, and applied the transforms.",
+        "Kept the Mixamo rig (65 mixamorig: joints) and the skin weights. The mesh was not decimated (17,006 triangles).",
+        "Resized the textures: base color 4096 to 2048, normal 2048 to 1024, roughness-metallic 2048 PNG to 1024. All written as JPEG, quality 88. Set the specular tint to white.",
+        "Keyed the 24 M1-02 clips with nia_clips.py on the rig MarcusRig. The rest feet are (0.24, -0.233, 0.045) in armature space; Nia has (0.242, -0.236, 0.03).",
+        "Removed 13,417 curves that stay at the rest pose. Exported a GLB with Draco (level 6; quantization: position 14, normal 10, texcoord 12, generic 12) and all clips."
+      ],
+      "result": "assets/skaters/marcus/skater.glb, 2,071,416 bytes, 17,006 triangles, 1 skinned mesh, 65 joints, 1.780 m tall, 24 animations, extensions: KHR_draco_mesh_compression only",
+      "time_seconds": 6.7,
+      "local_files_not_in_git": [
+        "assets/skaters/marcus/raw/marcus-tripo.glb",
+        "assets/skaters/marcus/raw/marcus-animated.blend"
+      ],
+      "credits_spent": 0
+    }
+  ],
+  "credits_spent_total": 115,
+  "tripo_credits_before": 3085,
+  "tripo_credits_after": 2970,
+  "file": "assets/skaters/marcus/skater.glb",
+  "triangles": 17006,
+  "file_size_bytes": 2071416,
+  "five_views": "assets/skaters/marcus/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
+  "contact_sheets": "assets/skaters/marcus/clips/<clip>.png, made by e2e/skater-anim.spec.js",
+  "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/marcus/provenance.json)",
+  "animations": 24
+}

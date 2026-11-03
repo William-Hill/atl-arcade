@@ -7,6 +7,7 @@
 // The sources are in docs/characters/skate-style-references.md.
 
 import { BEAT, SKATE, STYLE } from "../sim/skate/constants.js";
+import { FIXED_DT } from "../sim/fixed-step.js";
 
 // Clip names in assets/skaters/nia/skater.glb.
 //   once: the clip plays one time and holds the last frame.
@@ -87,6 +88,8 @@ export function createAnimState() {
     wasAirTrick: false,
     wasGrind: false,
     prevYaw: null,
+    prevTick: null,
+    yawRate: 0,
     facing: 0,
   };
 }
@@ -125,9 +128,24 @@ export function clipFor(state, ctx = {}) {
 
 // One frame. Returns the next anim state and, when the clip changes,
 // `change: { from, to, fade }`.
+// The yaw rate in rad/s. The simulation steps at a fixed tick, but a render
+// frame can come with no tick (a display above 60 Hz). So with a tick count,
+// the rate changes only when the tick advances, over the ticks' time, and a
+// frame with no tick keeps the last rate. A state with no tick uses `dt`.
+export function measureYawRate(prev, state, dt) {
+  if (prev.prevYaw === null) return 0;
+  const tick = state.tick;
+  if (Number.isFinite(tick) && Number.isFinite(prev.prevTick)) {
+    if (tick === prev.prevTick) return prev.yawRate ?? 0;
+    if (tick < prev.prevTick) return 0; // (a reset)
+    return wrapAngle(state.yaw - prev.prevYaw) / ((tick - prev.prevTick) * FIXED_DT);
+  }
+  return dt > 0 ? wrapAngle(state.yaw - prev.prevYaw) / dt : 0;
+}
+
 export function stepAnim(prev, state, dt) {
-  const yawRate = prev.prevYaw === null || dt <= 0 ? 0 : wrapAngle(state.yaw - prev.prevYaw) / dt;
-  const next = { ...prev, prevYaw: state.yaw, time: prev.time + dt, lock: Math.max(0, prev.lock - dt) };
+  const yawRate = measureYawRate(prev, state, dt);
+  const next = { ...prev, prevYaw: state.yaw, prevTick: state.tick ?? null, yawRate, time: prev.time + dt, lock: Math.max(0, prev.lock - dt) };
 
   // The variant counters change once per air trick and per rail.
   const onRail = state.state === "grind";

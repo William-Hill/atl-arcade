@@ -34,7 +34,9 @@ export function bboxCenter(bbox) {
 
 // Parses "south,west,north,east" (the Overpass order).
 export function parseBbox(text) {
-  const parts = String(text).split(",").map((s) => Number(s.trim()));
+  const raw = String(text).split(",").map((s) => s.trim());
+  // Number("") is 0: an empty segment must be an error, not the equator.
+  const parts = raw.map((s) => (s === "" ? NaN : Number(s)));
   if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) throw new Error(`bbox: expected south,west,north,east, got "${text}"`);
   const [south, west, north, east] = parts;
   if (south >= north || west >= east) throw new Error(`bbox: south must be < north and west must be < east, got "${text}"`);

@@ -1,0 +1,153 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { chainStrips, followLineScript, pointAt } from "../../playtest/trail-script.js";
+import { createLevelEnv } from "../../level/ground.js";
+import { createSkateState, stepSkate } from "../skate/controller.js";
+import { createScriptPlayer } from "../../input/scripted.js";
+import { CROWD, NPC_TYPES, createCrowd, minGap, seededRandom, stepCrowd } from "./crowd.js";
+import { createPath, pathOffsetPoint, pathPoint } from "./path.js";
+
+const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
+const DT = 1 / 60;
+
+function onLine(crowd, n) {
+  const line = crowd.lines[n.line];
+  return Math.abs(n.offset) <= line.halfWidth - n.radius + 1e-9;
+}
+
+describe("path", () => {
+  it("gives the same points as pointAt in trail-script.js", () => {
+    const [trail] = chainStrips(LEVEL.strips, "trail");
+    const path = createPath(trail);
+    for (let s = 0; s < path.length; s += 37.3) {
+      const a = pathPoint(path, s);
+      const b = pointAt(trail, s);
+      expect(a[0]).toBeCloseTo(b[0], 6);
+      expect(a[1]).toBeCloseTo(b[1], 6);
+    }
+  });
+
+  it("puts a positive offset on the right of the direction of travel", () => {
+    // A line to the north (-z): the right side is east (+x).
+    const path = createPath([
+      [0, 0],
+      [0, -10],
+    ]);
+    const [x, z] = pathOffsetPoint(path, 5, 1);
+    expect(x).toBeCloseTo(1, 6);
+    expect(z).toBeCloseTo(-5, 6);
+  });
+});
+
+describe("crowd", () => {
+  it("is the same for the same seed and different for another seed", () => {
+    const a = createCrowd(LEVEL, { seed: 7 });
+    const b = createCrowd(LEVEL, { seed: 7 });
+    const c = createCrowd(LEVEL, { seed: 8 });
+    expect(a.npcs.map((n) => [n.x, n.z])).toEqual(b.npcs.map((n) => [n.x, n.z]));
+    expect(a.npcs.map((n) => [n.x, n.z])).not.toEqual(c.npcs.map((n) => [n.x, n.z]));
+  });
+
+  it("spawns at least 20 NPCs on the trail, of every type in the issue", () => {
+    const crowd = createCrowd(LEVEL, { seed: 1 });
+    const onTrail = crowd.npcs.filter((n) => crowd.lines[n.line].kind === "trail");
+    expect(onTrail.length).toBeGreaterThanOrEqual(20);
+    for (const type of ["skater", "jogger", "cyclist", "dogWalker", "family"]) {
+      expect(onTrail.some((n) => n.type === type), type).toBe(true);
+    }
+    expect(crowd.lines.filter((l) => l.kind !== "trail").length).toBe(4);
+    expect(crowd.npcs.length).toBeGreaterThanOrEqual(36);
+  });
+
+  // Acceptance (#41): at least 20 NPCs on the trail with no overlap over a
+  // 60 s run.
+  for (const seed of [1, 2, 3]) {
+    it(`keeps every NPC apart and on its line for 60 s (seed ${seed})`, () => {
+      let crowd = createCrowd(LEVEL, { seed });
+      expect(minGap(crowd.npcs)).toBeGreaterThanOrEqual(0);
+      const start = crowd.npcs.map((n) => [n.x, n.z]);
+      let worst = Infinity;
+      for (let t = 0; t < 60 * 60; t += 1) {
+        crowd = stepCrowd(crowd, DT, null);
+        worst = Math.min(worst, minGap(crowd.npcs));
+        if (t % 60 === 0) for (const n of crowd.npcs) expect(onLine(crowd, n)).toBe(true);
+      }
+      expect(crowd.npcs.filter((n) => crowd.lines[n.line].kind === "trail").length).toBeGreaterThanOrEqual(20);
+      expect(worst).toBeGreaterThanOrEqual(0);
+      // They move: most NPCs are more than 20 m from where they started.
+      const far = crowd.npcs.filter((n, i) => Math.hypot(n.x - start[i][0], n.z - start[i][1]) > 20).length;
+      expect(far).toBeGreaterThan(crowd.npcs.length * 0.6);
+    });
+  }
+
+  it("keeps NPCs apart and gives way while Nia rides the trail for 60 s", () => {
+    const env = createLevelEnv(LEVEL);
+    const [trail] = chainStrips(LEVEL.strips, "trail");
+    const planned = followLineScript(trail, LEVEL.spawn, env, { frames: 3600 });
+    const player = createScriptPlayer(planned.script);
+    let s = createSkateState({ position: LEVEL.spawn.position, yaw: LEVEL.spawn.yaw });
+    let crowd = createCrowd(LEVEL, { seed: 1 });
+    let worst = Infinity;
+    let maxLean = 0;
+    let closest = Infinity;
+    for (let t = 0; t < 3600; t += 1) {
+      s = stepSkate(s, player.next() ?? {}, DT, env);
+      crowd = stepCrowd(crowd, DT, s.position);
+      worst = Math.min(worst, minGap(crowd.npcs));
+      for (const n of crowd.npcs) {
+        maxLean = Math.max(maxLean, n.lean);
+        closest = Math.min(closest, Math.hypot(n.x - s.position[0], n.z - s.position[2]));
+      }
+    }
+    expect(worst).toBeGreaterThanOrEqual(0);
+    // Nia passed NPCs on the trail, and a bump never leans an NPC more than
+    // the soft limit: nobody falls.
+    expect(closest).toBeLessThan(CROWD.giveWayDistance);
+    expect(maxLean).toBeLessThanOrEqual(CROWD.maxLean + 1e-9);
+  });
+
+  it("bumps an NPC softly when Nia runs into it: it slides aside and wobbles", () => {
+    const crowd = createCrowd(LEVEL, { seed: 1 });
+    const n = crowd.npcs[0];
+    // Nia stands just next to the NPC, on its left.
+    const leftX = n.x - n.fz * -1 * 0.3;
+    const leftZ = n.z + n.fx * -1 * 0.3;
+    const next = stepCrowd(crowd, DT, [leftX, 0, leftZ]);
+    const m = next.npcs[0];
+    expect(next.bumps).toBe(1);
+    expect(m.bump).toBeGreaterThan(0);
+    expect(m.lean).toBeGreaterThan(0);
+    expect(m.lean).toBeLessThanOrEqual(CROWD.maxLean);
+    expect(Math.hypot(m.x - leftX, m.z - leftZ)).toBeGreaterThan(Math.hypot(n.x - leftX, n.z - leftZ));
+    // The wobble ends and the NPC rides on.
+    let c = next;
+    for (let t = 0; t < 120; t += 1) c = stepCrowd(c, DT, null);
+    expect(c.npcs[0].lean).toBe(0);
+    expect(c.npcs[0].speed).toBeGreaterThan(0);
+  });
+
+  it("gives way: an NPC steps to the side away from Nia", () => {
+    const crowd = createCrowd(LEVEL, { seed: 1 });
+    const n = crowd.npcs[0];
+    const line = crowd.lines[n.line];
+    // Nia 5 m ahead, on the NPC's own side of the line.
+    const nia = [n.x + n.fx * 5, 0, n.z + n.fz * 5];
+    let c = crowd;
+    for (let t = 0; t < 30; t += 1) c = stepCrowd(c, DT, nia);
+    const m = c.npcs[0];
+    expect(Math.abs(m.offset - n.offset)).toBeGreaterThan(0.2);
+    expect(Math.abs(m.offset)).toBeLessThanOrEqual(line.halfWidth - m.radius + 1e-9);
+    expect(m.speed).toBeLessThan(n.cruise);
+  });
+
+  it("has a radius and a speed for every type", () => {
+    for (const t of Object.values(NPC_TYPES)) {
+      expect(t.radius).toBeGreaterThan(0);
+      expect(t.speed).toBeGreaterThan(0);
+    }
+    const r = seededRandom(3);
+    const v = r();
+    expect(v).toBeGreaterThanOrEqual(0);
+    expect(v).toBeLessThan(1);
+  });
+});

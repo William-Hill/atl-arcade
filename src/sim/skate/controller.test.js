@@ -156,9 +156,17 @@ describe("on the greybox", () => {
   it("stops one body radius short of a wall, so the body stays out of it", () => {
     const yawNorth = Math.PI / 2;
     const { state } = runScript(roll(6, yawNorth, [0, 0.15, -8]), [{ frames: 60 }], { env: greybox });
-    // The building face is at z = -10. One frame of travel at 6 m/s is 0.1 m.
-    expect(state.position[2]).toBeGreaterThan(-10 + SKATE.bodyRadius - 0.11);
+    // The building face is at z = -10. The probe stops a move whose next
+    // position is within one body radius, so the body keeps its full radius.
+    expect(state.position[2]).toBeGreaterThanOrEqual(-10 + SKATE.bodyRadius - 1e-9);
     expect(state.bonked || state.speed === 0).toBe(true);
+  });
+
+  it("rolls up the greybox stairs at cruising speed without a bonk", () => {
+    // Two 0.17 m treads in reach of the probe are two steps, not a wall.
+    const { state } = runScript(roll(10, Math.PI, [-20.3, 0.15, 10]), [{ frames: 12 }], { env: greybox });
+    expect(state.bonked).toBe(false);
+    expect(state.speed).toBeGreaterThan(5);
   });
 
   it("stops at a ledge side instead of rolling through it", () => {

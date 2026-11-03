@@ -211,3 +211,24 @@ test("photo mode on the low tier: the button opens it, with no blur", async ({ p
   expect(await page.evaluate(() => window.__atl.ticks)).toBeGreaterThan(opened.ticks);
   expect(errors).toEqual([]);
 });
+
+test("photo mode on a touch screen: the button clears the touch buttons", async ({ page }) => {
+  test.setTimeout(180000);
+  const errors = collectErrors(page);
+  await open(page, "quality=low&landmarks=0&props=0&touch=1");
+  const overlap = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  const toggle = await page.locator("#photo-toggle").boundingBox();
+  for (const sel of ["#attribution", ".touch-jump", ".touch-grind", ".touch-style1", ".touch-style2"]) {
+    expect(overlap(toggle, await page.locator(sel).boundingBox())).toBe(false);
+  }
+  await page.locator("#photo-toggle").click();
+  await waitFrames(page, 2);
+  await expect(page.locator("#touch-controls")).toBeHidden();
+  const panel = await page.locator("#photo-panel").boundingBox();
+  expect(overlap(toggle, panel)).toBe(false);
+  await page.screenshot({ path: "e2e/__screenshots__/photo-mode-touch.png" });
+  await page.locator("#photo-toggle").click();
+  await waitFrames(page, 2);
+  await expect(page.locator("#touch-controls")).toBeVisible();
+  expect(errors).toEqual([]);
+});

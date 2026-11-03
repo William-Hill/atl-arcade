@@ -39,7 +39,10 @@ const STYLE = `
   border-top: 1px dashed rgba(255, 255, 255, 0.45); border-bottom: 1px dashed rgba(255, 255, 255, 0.45);
 }
 #photo-band-guide[hidden] { display: none; }
-body.photo-open #hud, body.photo-open #shell-info, body.photo-open #skater-select { visibility: hidden; }
+body.photo-open #hud, body.photo-open #shell-info, body.photo-open #skater-select, body.photo-open #touch-controls { visibility: hidden; }
+/* On a touch screen the touch buttons fill the bottom right corner. */
+body.touch #photo-toggle { bottom: auto; top: calc(30px + env(safe-area-inset-top)); right: auto; left: 50%; transform: translateX(-50%); }
+body.touch #photo-panel { bottom: calc(16px + env(safe-area-inset-bottom)); }
 `;
 
 const MOVE_KEYS = {

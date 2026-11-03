@@ -5,8 +5,8 @@
   "estimatedFidelity": 0.86,
   "targetThreshold": 0.7,
   "materialId": "sign-yellow",
-  "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/crops/sign.png",
-  "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow",
+  "sourceImage": "crops/sign.png",
+  "outDir": "material-evidence/sign-yellow",
   "palette": [
     "#F7E878",
     "#6F5139",
@@ -16,31 +16,31 @@
   ],
   "maps": {
     "albedo": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_albedo.png",
+      "path": "material-evidence/sign-yellow/sign-yellow_albedo.png",
       "url": "sign-yellow_albedo.png",
       "channel": "albedo",
       "source": "reference-pixel-extraction"
     },
     "roughness": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_roughness.png",
+      "path": "material-evidence/sign-yellow/sign-yellow_roughness.png",
       "url": "sign-yellow_roughness.png",
       "channel": "roughness",
       "source": "reference-pixel-extraction"
     },
     "height": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_height.png",
+      "path": "material-evidence/sign-yellow/sign-yellow_height.png",
       "url": "sign-yellow_height.png",
       "channel": "height",
       "source": "reference-pixel-extraction"
     },
     "normal": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_normal.png",
+      "path": "material-evidence/sign-yellow/sign-yellow_normal.png",
       "url": "sign-yellow_normal.png",
       "channel": "normal",
       "source": "reference-pixel-extraction"
     },
     "ao": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/sign-yellow/sign-yellow_ao.png",
+      "path": "material-evidence/sign-yellow/sign-yellow_ao.png",
       "url": "sign-yellow_ao.png",
       "channel": "ao",
       "source": "reference-pixel-extraction"

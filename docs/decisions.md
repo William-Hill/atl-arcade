@@ -505,3 +505,12 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Playwright evidence goes to `e2e/__screenshots__/`. One exception: `e2e/skater-anim.spec.js` writes the clip contact sheet to `assets/skaters/<name>/clips/`, which holds committed review evidence next to the asset. The five model views moved to `e2e/__screenshots__/nia-<view>.png`; the committed `assets/skaters/nia/views/` change only on purpose.
 - The animation layer measures the yaw rate per simulation tick (`measureYawRate`), so a display above 60 Hz no longer flips the clip between coast and a carve on frames with no tick.
 - The Q dance list names the Cross Step (clip `dance_crisscross`), which has a spec in `atl-dance-references.md`.
+
+## 2026-11-03: The beat timing test runs last, with one retry (#63)
+
+- Problem: the test "32 taps aligned to the audio clock..." in `e2e/beat.spec.js` measures timer jitter in ms. At a load average of 14 to 30 (other apps), it failed in about half of the full-suite runs, on `main` too (for example mean 6.15 ms, sd 4.15 ms). Every tap was within 60 ms in every run. A red suite that is normal hides real failures.
+- Decision: the test has the tag `@beat-timing`. The `beat-timing` Playwright project runs only this test, after the `chromium` project, with `retries: 1`. The `chromium` project skips it. The 5 ms gates for the mean and the sd do not change.
+- Why not a loose gate: the 60 ms game window can hide a clock drift of 20 to 50 ms, which a player feels. A gate that applies only at low load passes with no check on a busy computer, and the test then proves nothing.
+- Why this does not hide real drift: a real drift fails both attempts. A pass on the retry shows as "flaky" in the Playwright output, so the noise stays visible.
+- Evidence: the report `reports/m0-07-beat-alignment.json` records the attempt number and the 1, 5, and 15 minute load averages (`os.loadavg()`) before and after the taps. The retry writes over the report, so each attempt is also attached to the Playwright test result.
+- Run only this test: `npx playwright test --project=beat-timing`.

@@ -36,6 +36,10 @@ html, body {
 
 #shell-info strong { color: var(--atl-pink); }
 
+/* Developer hints show only with ?dev=1 or ?debug=1. */
+.dev-only { display: none; }
+body.dev .dev-only { display: inline; opacity: 0.8; }
+
 #hud {
   position: fixed;
   left: calc(16px + env(safe-area-inset-left));
@@ -49,14 +53,28 @@ html, body {
   pointer-events: none;
 }
 
+/* Each HUD text sits on its own dark pill, so it reads on a bright sky or
+   a white wall: the text keeps a contrast of 4.5:1 or more over any scene
+   (#73). An empty item has no pill. */
+.hud-score, .hud-combo, .hud-pending, .hud-tag, .hud-hint, .hud-meter {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--hud-pill);
+}
+.hud-combo:empty, .hud-pending:empty, .hud-tag:empty { background: none; padding: 0; }
+:root { --hud-pill: rgba(11, 11, 18, 0.82); }
+
 .hud-score { font-size: 28px; font-weight: 700; letter-spacing: 0.02em; }
-.hud-combo { font-size: 18px; font-weight: 600; min-height: 22px; color: var(--atl-pink); }
+/* A lighter pink than the brand pink: 4.5:1 or more on the pill. */
+.hud-combo { font-size: 18px; font-weight: 600; min-height: 22px; color: #ff80c4; }
 .hud-combo[data-active="0"] { color: #ffd166; }
 .hud-pending { font-size: 16px; min-height: 20px; }
 .hud-tag { font-size: 22px; font-weight: 700; color: #7ef0c2; min-height: 26px; transition: opacity 0.3s; }
 .hud-tag[data-beat="GOOD"] { color: #ffd166; }
 .hud-meter { display: flex; align-items: center; gap: 8px; }
-.hud-label { font-size: 11px; letter-spacing: 0.12em; opacity: 0.8; width: 64px; }
+.hud-label { font-size: 14px; letter-spacing: 0.08em; min-width: 72px; }
 .hud-bar { position: relative; width: 180px; height: 10px; background: rgba(255, 255, 255, 0.15); border-radius: 5px; overflow: hidden; }
 .hud-fill { height: 100%; width: 0; background: var(--atl-pink); transition: width 0.15s; }
 .hud-style[data-ready="1"] .hud-fill { background: #7ef0c2; }
@@ -74,7 +92,7 @@ html, body {
   transform-origin: center;
 }
 .hud-tag[data-beat="PERFECT"] { color: #7ef0c2; }
-.hud-hint { font-size: 13px; color: #ffd166; margin-top: 4px; }
+.hud-hint { font-size: 14px; color: #ffd166; margin-top: 4px; }
 
 /* Map data attribution (ODbL). Shown on every geodata level. */
 #attribution {
@@ -86,6 +104,8 @@ html, body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   pointer-events: none;
 }
+/* The short credit is a button for a compact screen only. */
+#attribution .attr-short { display: none; }
 
 /* Under the map attribution line, which must stay readable. */
 #skater-select {
@@ -200,3 +220,77 @@ body.touch #shell-info { display: none; }
 .touch-grind { right: 100px; bottom: 4px; width: 76px; height: 76px; }
 .touch-style1 { right: 92px; bottom: 96px; width: 64px; height: 64px; font-size: 11px; }
 .touch-style2 { right: 8px; bottom: 104px; width: 64px; height: 64px; font-size: 12px; }
+
+
+/* Compact screens: a phone in portrait or landscape (#73). The layout keeps
+   the safe areas and puts each item in its own place:
+   - top line: the short map credit (a tap shows the full text);
+   - top left: the score and the HUD column;
+   - top right: the skater select, smaller;
+   - top middle: the beat pulse. */
+@media (max-width: 600px), (max-height: 500px) {
+  #attribution {
+    left: calc(8px + env(safe-area-inset-left));
+    right: auto;
+    top: env(safe-area-inset-top);
+    max-width: calc(100vw - 16px);
+    pointer-events: auto;
+    z-index: 20;
+  }
+  /* The credit is a tap target of 24 px height on a dark pill, so the
+     white text keeps a contrast of 4.5:1 or more over any scene. */
+  #attribution .attr-short {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--hud-pill);
+    color: #fff;
+    font: 12px/1.3 system-ui, sans-serif;
+    text-decoration: underline dotted;
+    cursor: pointer;
+  }
+  #attribution .attr-short:focus-visible { outline: 2px solid #ffd166; outline-offset: 1px; }
+  #attribution .attr-full { display: none; }
+  #attribution.open .attr-full {
+    display: block;
+    margin-top: 4px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--hud-pill);
+    font-size: 12px;
+  }
+
+  #hud {
+    left: calc(12px + env(safe-area-inset-left));
+    top: calc(24px + env(safe-area-inset-top));
+    min-width: 0;
+    /* Leave room for the skater select on the right. */
+    max-width: calc(100vw - 200px - env(safe-area-inset-left) - env(safe-area-inset-right));
+    gap: 4px;
+  }
+  .hud-score { font-size: 22px; }
+  .hud-combo, .hud-pending { min-height: 0; font-size: 15px; }
+  .hud-tag { min-height: 0; font-size: 16px; }
+  .hud-label { min-width: 0; }
+  .hud-bar { width: 72px; }
+
+  .hud-pulse {
+    position: fixed;
+    right: auto;
+    left: 50%;
+    top: calc(28px + env(safe-area-inset-top));
+    margin-left: -9px;
+  }
+
+  #skater-select {
+    right: calc(10px + env(safe-area-inset-right));
+    top: calc(24px + env(safe-area-inset-top));
+    gap: 6px;
+  }
+  #skater-select button { min-width: 0; width: 84px; min-height: 44px; padding: 4px 8px; }
+  #skater-select button span { font-size: 12px; }
+}
+

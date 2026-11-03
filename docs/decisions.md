@@ -612,3 +612,15 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Review fix: `KEPT` also has `depthWrite`. For glTF alpha blend, GLTFLoader sets `transparent: true` and `depthWrite: false`, and the toon material now keeps both.
 - Review fix: `toonSkater()` adds no outline hull to a skinned mesh with a transparent material, because the opaque hull shows through the mesh. Nia and Marcus have only opaque materials, so their hulls do not change.
 - Review fix: the chained hook calls the source hook with the source material as `this`, so a hook that reads `this.userData` keeps its state. The rim state stays in `userData.rim` of the toon material.
+
+## 2026-11-03: Phone layout: hints, HUD, credit, and landscape camera (#73)
+
+- Hints: the start hint names the device ("Tap to start the beat" on touch). The developer hints (H for the colliders, `?view=orbit`) show only with `?dev=1` or `?debug=1`.
+- HUD pills: each HUD text sits on its own dark pill (`--hud-pill`, black at 82%). The text keeps a WCAG contrast of 4.5:1 or more over a white or a black scene. The combo text uses a lighter pink (`#ff80c4`), because the brand pink gave 4.25:1 on the pill over white. All HUD text is 14 px or larger.
+- Compact layout (`@media (max-width: 600px), (max-height: 500px)`): one top line with the short credit "© OpenStreetMap contributors", the score and the HUD column on the left, the beat pulse in the middle, and a smaller skater select on the right. Every position adds the safe-area inset.
+- Credit: on a compact screen a tap on the short credit shows the full attribution text (OpenStreetMap, ODbL, Overture, USGS). A desktop shows the full text, as before.
+- Review fix: the short credit sits on the dark pill, so the white text keeps 4.5:1 or more. It is 24 px high, the WCAG minimum for a tap target. A keyboard user can focus it, and `aria-controls` points to the full text. A tap or a click removes the focus, so the Space key still jumps.
+- Landscape camera: a landscape screen 500 px high or less gets a 42 degree vertical field of view in place of 60 (`fovFor()` in `src/ui/layout.js`). The skater is about 1.5 times as tall, and the test measures at least 15% of the screen height at 844x390.
+- Tests: `e2e/phone-layout.spec.js` checks at 390x844 and 844x390 that no item overlaps another with the longest HUD (a 3-move combo, the pending score, a move tag, and the balance meter), the font sizes, and the contrast.
+- Not done: a fullscreen button and an orientation hint (MOB-9). A reduced-motion option (MOB-11). A shape cue for "style ready" (MOB-12). The skater select still reloads the page (MOB-13).
+- Not verified: iOS Safari (WebKit is not installed) and a real notch or home bar.

@@ -132,10 +132,23 @@ test("the follow camera rides the quarter pipe without snapping or flipping", as
 });
 
 test("a mouse drag turns the follow camera, and it goes back behind the skater", async ({ page }) => {
+  // The waits for the skater model (60 s) and a still camera (6 s) are longer than the default 30 s.
+  test.setTimeout(90000);
   const errors = collectErrors(page);
   await page.goto("/");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
-  const before = await page.evaluate(() => window.__atl.cameraPosition);
+  // The skater GLB downloads in parallel with the level (#74), so the page
+  // can be ready before the model and the camera settle. Wait for the model,
+  // then for a camera that holds still for 300 ms.
+  await page.waitForFunction(() => window.__atl.skaterModel.loaded || window.__atl.skaterModel.error, null, { timeout: 60000 });
+  let before = await page.evaluate(() => window.__atl.cameraPosition);
+  for (let i = 0; i < 20; i += 1) {
+    await page.waitForTimeout(300);
+    const now = await page.evaluate(() => window.__atl.cameraPosition);
+    const moved = Math.hypot(now[0] - before[0], now[1] - before[1], now[2] - before[2]);
+    before = now;
+    if (moved < 0.01) break;
+  }
   const box = await page.locator("canvas").boundingBox();
   const cx = box.x + box.width / 2;
   const cy = box.y + box.height / 2;

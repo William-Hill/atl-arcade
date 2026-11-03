@@ -206,6 +206,31 @@ describe("the toon skater with two skinned meshes", () => {
     expect(shader.uniforms.uFaceState.value.y).toBeGreaterThan(0);
   });
 
+  it("runs the source hook with the source material as the receiver", () => {
+    const source = new THREE.MeshStandardMaterial();
+    source.userData.tint = "vec3(1.0)";
+    let receiver = null;
+    const renderer = {};
+    let args = null;
+    source.onBeforeCompile = function (shader, r) {
+      receiver = this;
+      args = [shader, r];
+      shader.fragmentShader += `// tint ${this.userData.tint}`;
+    };
+    const m = toonMaterial(source);
+    const lib = THREE.ShaderLib.toon;
+    const shader = { uniforms: THREE.UniformsUtils.clone(lib.uniforms), vertexShader: lib.vertexShader, fragmentShader: lib.fragmentShader };
+    m.onBeforeCompile(shader, renderer);
+    expect(receiver).toBe(source);
+    expect(args[0]).toBe(shader);
+    expect(args[1]).toBe(renderer);
+    expect(shader.fragmentShader).toContain("// tint vec3(1.0)");
+    // The rim stays on the new material.
+    expect(m.userData.rim).toBeDefined();
+    expect(source.userData.rim).toBeUndefined();
+    expect(shader.uniforms.uRim).toBeDefined();
+  });
+
   it("keeps the rim alone on a material with no hook", () => {
     const m = toonMaterial(new THREE.MeshStandardMaterial());
     expect(m.customProgramCacheKey()).toBe("skater-toon-rim");

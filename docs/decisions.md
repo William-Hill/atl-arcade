@@ -586,3 +586,4 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Evidence: `reports/toon-face/`.
 - Review fix: `KEPT` also has `depthWrite`. For glTF alpha blend, GLTFLoader sets `transparent: true` and `depthWrite: false`, and the toon material now keeps both.
 - Review fix: `toonSkater()` adds no outline hull to a skinned mesh with a transparent material, because the opaque hull shows through the mesh. Nia and Marcus have only opaque materials, so their hulls do not change.
+- Review fix: the chained hook calls the source hook with the source material as `this`, so a hook that reads `this.userData` keeps its state. The rim state stays in `userData.rim` of the toon material.

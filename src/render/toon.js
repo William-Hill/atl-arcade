@@ -86,11 +86,13 @@ export function toonMaterial(source) {
   const rim = TOON.rim;
   mat.userData.rim = { color: new THREE.Color(...rim.color), strength: rim.strength, power: rim.power };
   // A hook on the source material (the face decal of attachFace()) stays:
-  // it runs first, then the rim. The rim lights the decal color too.
+  // it runs first, then the rim. The rim lights the decal color too. The
+  // source hook runs with the source material as `this`, so it keeps its
+  // own state (for example `this.userData`).
   const sourceHook = source.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile ? source.onBeforeCompile : null;
   const sourceKey = sourceHook && source.customProgramCacheKey ? source.customProgramCacheKey() : null;
   mat.onBeforeCompile = (shader, renderer) => {
-    if (sourceHook) sourceHook.call(mat, shader, renderer);
+    if (sourceHook) sourceHook.call(source, shader, renderer);
     shader.uniforms.uRimColor = { value: mat.userData.rim.color };
     shader.uniforms.uRim = { value: new THREE.Vector2(rim.strength, rim.power) };
     shader.fragmentShader = shader.fragmentShader

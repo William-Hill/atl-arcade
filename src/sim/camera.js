@@ -106,7 +106,9 @@ export function cameraGoal(skater, yaw, k = CAMERA, look = NO_LOOK) {
   } else {
     const hv = heading(yaw + look.yaw);
     const range = Math.hypot(dist, k.height);
-    const angle = Math.atan2(k.height, dist) + look.pitch;
+    // Never below the skater's horizon: a full look down keeps the camera
+    // at the skater's height, not under the ground.
+    const angle = Math.max(0, Math.atan2(k.height, dist) + look.pitch);
     const back = range * Math.cos(angle);
     position = [p[0] - hv[0] * back, p[1] + range * Math.sin(angle), p[2] - hv[2] * back];
   }

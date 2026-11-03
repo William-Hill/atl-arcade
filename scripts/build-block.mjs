@@ -20,6 +20,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { bboxCenter, createProjection, parseBbox } from "../src/level/geo/projection.js";
 import { cleanRing, signedArea } from "../src/level/geo/extrude.js";
 
@@ -119,6 +120,11 @@ async function fetchOverpass(query) {
       });
       if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
       const json = await res.json();
+      // Overpass answers HTTP 200 with a "remark" when the query times out or
+      // runs out of memory. That answer is incomplete: try the next endpoint,
+      // and never cache it.
+      if (json?.remark) throw new Error(`${url}: Overpass remark: ${json.remark}`);
+      if (!Array.isArray(json?.elements)) throw new Error(`${url}: the answer has no elements array`);
       return { json, endpoint: url };
     } catch (err) {
       lastError = err;
@@ -401,6 +407,13 @@ export function trailSpawn(strips) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  // The value options need a value: "--out" with nothing after it is an error,
+  // not the default.
+  const missing = ["bbox", "out", "name", "title"].filter((k) => k in args && typeof args[k] !== "string");
+  if (missing.length) {
+    console.error(`build-block: ${missing.map((k) => `--${k}`).join(", ")} needs a value`);
+    process.exit(2);
+  }
   if (!args.bbox || !args.out) {
     console.error("usage: node scripts/build-block.mjs --bbox south,west,north,east --out levels/<name>/ [--name n] [--title t] [--refresh] [--offline]");
     process.exit(2);
@@ -449,7 +462,7 @@ async function main() {
   console.log(JSON.stringify(level.stats));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   main().catch((err) => {
     console.error(err);
     process.exit(1);

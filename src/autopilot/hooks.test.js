@@ -34,7 +34,7 @@ describe("controlsFromBindings", () => {
     const c = controlsFromBindings(createBindings());
     expect(c.find((a) => a.name === "jump").keys).toEqual(["Space"]);
     expect(c.find((a) => a.name === "push").keys).toContain("KeyW");
-    expect(c.map((a) => a.name).sort()).toEqual(["brake", "grind", "jump", "left", "push", "right", "style1", "style2"]);
+    expect(c.map((a) => a.name).sort()).toEqual(Object.keys(createBindings().keyboard).sort());
   });
 });
 

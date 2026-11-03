@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "description": "ATL Arcade \u2014 Atlanta games on real open data. Skate ATL first.",
+  "description": "ATL Arcade — Atlanta games on real open data. Skate ATL first.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -21,7 +21,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, sep } from "node:path";
 import { preview } from "vite";
 import { chromium, devices } from "@playwright/test";
 
@@ -46,8 +46,12 @@ const wasmGzip = {
     server.middlewares.use((req, res, next) => {
       const path = (req.url ?? "").split("?")[0];
       if (!path.endsWith(".wasm") || !/gzip/.test(req.headers["accept-encoding"] ?? "")) return next();
+      // Serve only a file inside dist/. A path with ".." goes to Vite.
+      const root = resolve(dist);
       try {
-        if (!cache.has(path)) cache.set(path, gzipSync(readFileSync(resolve(dist, `.${path}`))));
+        const file = resolve(root, `.${decodeURIComponent(path)}`);
+        if (!file.startsWith(`${root}${sep}`)) return next();
+        if (!cache.has(path)) cache.set(path, gzipSync(readFileSync(file)));
       } catch {
         return next();
       }

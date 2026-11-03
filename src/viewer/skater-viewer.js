@@ -56,6 +56,7 @@ export function fitDistance(radius, vfovDeg, aspect) {
 function setView(name) {
   if (name === "face") {
     currentView = name;
+    userMoved = false;
     camera.position.set(0.55, FACE_TARGET.y + 0.02, 0);
     controls.target.copy(FACE_TARGET);
     controls.update();

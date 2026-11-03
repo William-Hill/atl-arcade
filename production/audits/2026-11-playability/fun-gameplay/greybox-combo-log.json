@@ -1,0 +1,38 @@
+[
+  {
+    "shot": "15-greybox-dance-in-combo",
+    "style": "Bankhead Bounce",
+    "state": "rolling",
+    "airFrom": "grind",
+    "airTime": 0.6000000000000002,
+    "links": 2,
+    "score": 0,
+    "combo": "Rail Grind + Hop",
+    "pending": "189 x 2",
+    "tick": 206
+  },
+  {
+    "shot": "16-greybox-vert-air",
+    "style": null,
+    "state": "air",
+    "airFrom": "ramp",
+    "airTime": 0.26666666666666666,
+    "links": 0,
+    "score": 1017,
+    "combo": "+1,017",
+    "pending": "",
+    "tick": 444
+  },
+  {
+    "shot": "17-greybox-combo-bank",
+    "style": null,
+    "state": "air",
+    "airFrom": "ramp",
+    "airTime": 0.8166666666666675,
+    "links": 0,
+    "score": 1017,
+    "combo": "+1,017",
+    "pending": "",
+    "tick": 477
+  }
+]

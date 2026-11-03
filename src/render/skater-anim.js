@@ -6,7 +6,7 @@
 // Free skate uses Atlanta rink style, and rails and air use X Games style.
 // The sources are in docs/characters/skate-style-references.md.
 
-import { BEAT, SKATE, STYLE } from "../sim/skate/constants.js";
+import { BEAT, STYLE } from "../sim/skate/constants.js";
 import { FIXED_DT } from "../sim/fixed-step.js";
 
 // Clip names in assets/skaters/nia/skater.glb.
@@ -118,9 +118,9 @@ export function clipFor(state, ctx = {}) {
   // Backward (the switch button): the backward ride swizzles the skates, so
   // it is the clip for the push, the coast, and the carves.
   if (state.backward) return "ride_back";
-  // pushCooldown counts down from SKATE.pushCooldown after each push. One
-  // stroke of the push clip is as long as the cooldown.
-  if (state.pushCooldown > 0 && state.pushCooldown <= SKATE.pushCooldown) return "push";
+  // The push clip plays only while the push button is held. The cooldown
+  // continues after a release, so it is not the check.
+  if (state.pushing) return "push";
   if (yawRate > ANIM.carveRate) return "carve_left";
   if (yawRate < -ANIM.carveRate) return "carve_right";
   return "coast";

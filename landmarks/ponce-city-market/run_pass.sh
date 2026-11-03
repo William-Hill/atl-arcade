@@ -8,6 +8,9 @@
 set -e
 P="$1"
 SK="$HOME/.claude/skills/img2threejs"
+# The img2threejs tools write absolute local paths. On exit, write them
+# relative to this folder (scripts/landmark-paths.mjs, #62).
+trap 'node ../../scripts/landmark-paths.mjs . > /dev/null' EXIT
 ROOT="$(cd ../.. && pwd)"
 URL="http://localhost:5174/landmarks/ponce-city-market/preview.html"
 VIEW="part=tower&frame=top&az=20&el=12"

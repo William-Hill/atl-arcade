@@ -30,6 +30,7 @@ export function createSkateState({ position = [0, 0, 0], yaw = 0 } = {}) {
     groundId: null,
     groundNormal: [0, 1, 0],
     pushCooldown: 0,
+    pushing: false, // true while the push button is held on the ground
     airTime: 0,
     jumpHeld: false,
     jumpBuffer: 0, // s left on a buffered jump press
@@ -100,6 +101,9 @@ export function stepSkate(prev, input = {}, dt, env = FLAT_GROUND, k = SKATE) {
   } else {
     stepAir(s, { steer, jump: wantsJump }, dt, env, k);
   }
+  // The renderer reads this flag. pushCooldown counts down after a release,
+  // so it does not tell if the player still pushes.
+  s.pushing = s.state === "rolling" && Boolean(input.push);
   if (s.justJumped) s.jumpBuffer = 0;
   if (env.bounds && env.spawn && isLost(s, env.bounds, k)) respawn(s, env.spawn);
   return s;

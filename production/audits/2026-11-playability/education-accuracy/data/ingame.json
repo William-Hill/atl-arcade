@@ -1,0 +1,1796 @@
+{
+ "origin": {
+  "lat": 33.76475,
+  "lon": -84.36325
+ },
+ "bounds": {
+  "minX": -485.31,
+  "maxX": 485.31,
+  "minZ": -972.96,
+  "maxZ": 972.96
+ },
+ "bbox": {
+  "south": 33.756,
+  "west": -84.3685,
+  "north": 33.7735,
+  "east": -84.358
+ },
+ "landmarks": [
+  {
+   "id": "ponce-city-market",
+   "part": "model",
+   "building": "w184803195",
+   "x": -219.2,
+   "z": -920.77,
+   "y": 53.68,
+   "yawDeg": 0,
+   "facingBearing": 180,
+   "lat": 33.773031,
+   "lon": -84.365621
+  },
+  {
+   "id": "ponce-city-market",
+   "part": "sign",
+   "text": "PONCE CITY MARKET",
+   "building": "w184803195",
+   "x": -151.2,
+   "z": -856.77,
+   "y": 53.68,
+   "yawDeg": 90,
+   "facingBearing": 90,
+   "lat": 33.772455,
+   "lon": -84.364886
+  },
+  {
+   "id": "krog-street-market",
+   "part": "model",
+   "building": "r5413435",
+   "x": -48.29,
+   "z": 849.23,
+   "y": 28.44,
+   "yawDeg": 90,
+   "facingBearing": 90,
+   "lat": 33.757113,
+   "lon": -84.363772
+  }
+ ],
+ "signs": [
+  {
+   "names": [
+    "Randolph St NE",
+    "Gaspero St NE"
+   ],
+   "x": -427.6,
+   "z": 895.44,
+   "lat": 33.756697,
+   "lon": -84.367876
+  },
+  {
+   "names": [
+    "Irwin St NE",
+    "Randolph St NE"
+   ],
+   "x": -424.94,
+   "z": 787.71,
+   "lat": 33.757666,
+   "lon": -84.367847
+  },
+  {
+   "names": [
+    "Randolph St NE",
+    "McGruder St NE"
+   ],
+   "x": -422.1,
+   "z": 680.18,
+   "lat": 33.758633,
+   "lon": -84.367816
+  },
+  {
+   "names": [
+    "Randolph St NE",
+    "John Wesley Dobbs Ave NE"
+   ],
+   "x": -434.55,
+   "z": 600.48,
+   "lat": 33.75935,
+   "lon": -84.367951
+  },
+  {
+   "names": [
+    "Randolph St NE",
+    "Bishop Way NE"
+   ],
+   "x": -432.81,
+   "z": 488.63,
+   "lat": 33.760356,
+   "lon": -84.367932
+  },
+  {
+   "names": [
+    "Highland Ave NE",
+    "Glen Iris Dr NE"
+   ],
+   "x": -416.3,
+   "z": 372.71,
+   "lat": 33.761398,
+   "lon": -84.367753
+  },
+  {
+   "names": [
+    "Glen Iris Dr NE",
+    "Fortune Pl NE"
+   ],
+   "x": -416.17,
+   "z": 285.01,
+   "lat": 33.762187,
+   "lon": -84.367752
+  },
+  {
+   "names": [
+    "Glen Iris Dr NE",
+    "East Ave NE"
+   ],
+   "x": -414.71,
+   "z": 164.58,
+   "lat": 33.76327,
+   "lon": -84.367736
+  },
+  {
+   "names": [
+    "Ralph McGill Blvd",
+    "Glen Iris Dr NE"
+   ],
+   "x": -412.95,
+   "z": 80.63,
+   "lat": 33.764025,
+   "lon": -84.367717
+  },
+  {
+   "names": [
+    "Glen Iris Dr NE",
+    "Wabash Ave NE"
+   ],
+   "x": -412.61,
+   "z": -15.78,
+   "lat": 33.764892,
+   "lon": -84.367714
+  },
+  {
+   "names": [
+    "Glen Iris Dr NE",
+    "Angier Ave NE"
+   ],
+   "x": -410.84,
+   "z": -151.76,
+   "lat": 33.766115,
+   "lon": -84.367694
+  },
+  {
+   "names": [
+    "Glen Iris Dr NE",
+    "Rankin St NE"
+   ],
+   "x": -409.89,
+   "z": -267.98,
+   "lat": 33.76716,
+   "lon": -84.367684
+  },
+  {
+   "names": [
+    "Glen Iris Dr NE",
+    "Dallas St NE"
+   ],
+   "x": -408.48,
+   "z": -382.18,
+   "lat": 33.768187,
+   "lon": -84.367669
+  },
+  {
+   "names": [
+    "Glen Iris Dr NE",
+    "Winton Ter NE"
+   ],
+   "x": -407.36,
+   "z": -439.61,
+   "lat": 33.768704,
+   "lon": -84.367657
+  },
+  {
+   "names": [
+    "Glen Iris Dr NE",
+    "Morgan St NE"
+   ],
+   "x": -406.48,
+   "z": -513,
+   "lat": 33.769364,
+   "lon": -84.367647
+  },
+  {
+   "names": [
+    "Glen Iris Dr NE",
+    "Blvd Pl NE"
+   ],
+   "x": -405.67,
+   "z": -579.76,
+   "lat": 33.769964,
+   "lon": -84.367638
+  },
+  {
+   "names": [
+    "North Ave NE",
+    "Glen Iris Dr NE"
+   ],
+   "x": -401,
+   "z": -698.86,
+   "lat": 33.771035,
+   "lon": -84.367588
+  },
+  {
+   "names": [
+    "Ponce de Leon Ave NE",
+    "Lakeview Ave NE"
+   ],
+   "x": -350.98,
+   "z": -957.83,
+   "lat": 33.773364,
+   "lon": -84.367047
+  },
+  {
+   "names": [
+    "John Wesley Dobbs Ave NE",
+    "Lampkin St NE"
+   ],
+   "x": -346.71,
+   "z": 591.71,
+   "lat": 33.759429,
+   "lon": -84.367001
+  },
+  {
+   "names": [
+    "Auburn Ave NE",
+    "Airline St NE"
+   ],
+   "x": -337.93,
+   "z": 919.98,
+   "lat": 33.756476,
+   "lon": -84.366906
+  },
+  {
+   "names": [
+    "Auburn Ave NE",
+    "Gaspero St NE"
+   ],
+   "x": -325.8,
+   "z": 908.17,
+   "lat": 33.756583,
+   "lon": -84.366774
+  },
+  {
+   "names": [
+    "Irwin St NE",
+    "Irwin Pl"
+   ],
+   "x": -314.08,
+   "z": 803.82,
+   "lat": 33.757521,
+   "lon": -84.366648
+  },
+  {
+   "names": [
+    "Fortune Pl NE",
+    "Fortune St NE"
+   ],
+   "x": -308.39,
+   "z": 287.22,
+   "lat": 33.762167,
+   "lon": -84.366586
+  },
+  {
+   "names": [
+    "East Ave NE",
+    "Fortune St NE"
+   ],
+   "x": -306.62,
+   "z": 167.06,
+   "lat": 33.763248,
+   "lon": -84.366567
+  },
+  {
+   "names": [
+    "Ralph McGill Blvd",
+    "Ralph McGill Blvd NE"
+   ],
+   "x": -313.83,
+   "z": 80.5,
+   "lat": 33.764026,
+   "lon": -84.366645
+  },
+  {
+   "names": [
+    "Ralph McGill Blvd NE",
+    "Willoughby Way NE"
+   ],
+   "x": -289.68,
+   "z": 85.05,
+   "lat": 33.763985,
+   "lon": -84.366384
+  },
+  {
+   "names": [
+    "Dallas St NE",
+    "Wilmer St NE"
+   ],
+   "x": -276.95,
+   "z": -414.72,
+   "lat": 33.76848,
+   "lon": -84.366246
+  },
+  {
+   "names": [
+    "Highland Ave NE",
+    "Corley St NE"
+   ],
+   "x": -272.83,
+   "z": 371.97,
+   "lat": 33.761405,
+   "lon": -84.366201
+  },
+  {
+   "names": [
+    "Rankin St NE",
+    "Wilmer St NE"
+   ],
+   "x": -275.08,
+   "z": -280.93,
+   "lat": 33.767276,
+   "lon": -84.366226
+  },
+  {
+   "names": [
+    "Corley St NE",
+    "John Wesley Dobbs Ave NE"
+   ],
+   "x": -271.84,
+   "z": 593.41,
+   "lat": 33.759413,
+   "lon": -84.366191
+  },
+  {
+   "names": [
+    "North Ave NE",
+    "Dallas St NE"
+   ],
+   "x": -234.37,
+   "z": -700.41,
+   "lat": 33.771049,
+   "lon": -84.365785
+  },
+  {
+   "names": [
+    "Garden Park Dr",
+    "Rankin St NE"
+   ],
+   "x": -213.04,
+   "z": -275.98,
+   "lat": 33.767232,
+   "lon": -84.365555
+  },
+  {
+   "names": [
+    "Auburn Ave NE",
+    "Irwin St NE"
+   ],
+   "x": -216.37,
+   "z": 805.41,
+   "lat": 33.757507,
+   "lon": -84.365591
+  },
+  {
+   "names": [
+    "Sampson St NE",
+    "Irwin Pl"
+   ],
+   "x": -226.06,
+   "z": 762.48,
+   "lat": 33.757893,
+   "lon": -84.365695
+  },
+  {
+   "names": [
+    "Sampson St NE",
+    "McGruder St NE"
+   ],
+   "x": -210.62,
+   "z": 685.6,
+   "lat": 33.758584,
+   "lon": -84.365528
+  },
+  {
+   "names": [
+    "Angier Ave NE",
+    "Garden Park Dr"
+   ],
+   "x": -211.27,
+   "z": -149.56,
+   "lat": 33.766095,
+   "lon": -84.365535
+  },
+  {
+   "names": [
+    "Sampson St NE",
+    "John Wesley Dobbs Ave NE"
+   ],
+   "x": -222.61,
+   "z": 570.01,
+   "lat": 33.759624,
+   "lon": -84.365658
+  },
+  {
+   "names": [
+    "Highland Ave NE",
+    "Sampson St NE"
+   ],
+   "x": -202.62,
+   "z": 372.22,
+   "lat": 33.761403,
+   "lon": -84.365442
+  },
+  {
+   "names": [
+    "Dallas St NE",
+    "Morgan St NE"
+   ],
+   "x": -208.3,
+   "z": -524.67,
+   "lat": 33.769468,
+   "lon": -84.365503
+  },
+  {
+   "names": [
+    "East Ave NE",
+    "Sampson St NE"
+   ],
+   "x": -202.26,
+   "z": 169.25,
+   "lat": 33.763228,
+   "lon": -84.365438
+  },
+  {
+   "names": [
+    "North Ave NE",
+    "North Angier Ave NE"
+   ],
+   "x": -146.69,
+   "z": -716.95,
+   "lat": 33.771198,
+   "lon": -84.364837
+  },
+  {
+   "names": [
+    "Irwin St NE",
+    "Lake Ave NE"
+   ],
+   "x": -151.72,
+   "z": 793.1,
+   "lat": 33.757617,
+   "lon": -84.364891
+  },
+  {
+   "names": [
+    "Ralph McGill Blvd NE",
+    "Garden Park Dr"
+   ],
+   "x": -143.04,
+   "z": -17.4,
+   "lat": 33.764906,
+   "lon": -84.364797
+  },
+  {
+   "names": [
+    "Krog St NE",
+    "Lake Ave NE"
+   ],
+   "x": -96.31,
+   "z": 794.53,
+   "lat": 33.757605,
+   "lon": -84.364292
+  },
+  {
+   "names": [
+    "Krog St NE",
+    "West Ashland Ave NE"
+   ],
+   "x": -54.35,
+   "z": 736.99,
+   "lat": 33.758122,
+   "lon": -84.363838
+  },
+  {
+   "names": [
+    "Angier Ave NE",
+    "Ashley Ave NE"
+   ],
+   "x": -57.47,
+   "z": -274.68,
+   "lat": 33.76722,
+   "lon": -84.363872
+  },
+  {
+   "names": [
+    "Ashley Ave NE",
+    "Willoughby Way NE"
+   ],
+   "x": -35.26,
+   "z": 83.72,
+   "lat": 33.763997,
+   "lon": -84.363631
+  },
+  {
+   "names": [
+    "North Angier Ave NE",
+    "Rankin St NE"
+   ],
+   "x": -26.95,
+   "z": -477.51,
+   "lat": 33.769044,
+   "lon": -84.363542
+  },
+  {
+   "names": [
+    "Ralph McGill Blvd NE",
+    "Ashley Ave NE"
+   ],
+   "x": -34.24,
+   "z": -130.61,
+   "lat": 33.765925,
+   "lon": -84.36362
+  },
+  {
+   "names": [
+    "Dixie Ave NE",
+    "Waddell St NE"
+   ],
+   "x": 4.76,
+   "z": 890.49,
+   "lat": 33.756742,
+   "lon": -84.363199
+  },
+  {
+   "names": [
+    "Lake Ave NE",
+    "Waddell St NE"
+   ],
+   "x": 9.28,
+   "z": 791.06,
+   "lat": 33.757636,
+   "lon": -84.36315
+  },
+  {
+   "names": [
+    "Inman Ln",
+    "Inman Way"
+   ],
+   "x": 22.06,
+   "z": 505.62,
+   "lat": 33.760203,
+   "lon": -84.363011
+  },
+  {
+   "names": [
+    "Ralph McGill Blvd NE",
+    "Ensley St NE"
+   ],
+   "x": 12.76,
+   "z": -203.16,
+   "lat": 33.766577,
+   "lon": -84.363112
+  },
+  {
+   "names": [
+    "Highland Ave NE",
+    "Alaska Ave NE"
+   ],
+   "x": 53.18,
+   "z": 371.31,
+   "lat": 33.761411,
+   "lon": -84.362675
+  },
+  {
+   "names": [
+    "Alaska Ave NE",
+    "Kendall St"
+   ],
+   "x": 52.45,
+   "z": 278.75,
+   "lat": 33.762243,
+   "lon": -84.362683
+  },
+  {
+   "names": [
+    "Inman Way",
+    "Montag Cir"
+   ],
+   "x": 50.56,
+   "z": 471.17,
+   "lat": 33.760513,
+   "lon": -84.362703
+  },
+  {
+   "names": [
+    "Ashland Ave NE",
+    "Lake Ave NE"
+   ],
+   "x": 59.53,
+   "z": 765.79,
+   "lat": 33.757863,
+   "lon": -84.362606
+  },
+  {
+   "names": [
+    "Brickworks Cir",
+    "Closed Lake Ave"
+   ],
+   "x": 76.26,
+   "z": 675.95,
+   "lat": 33.758671,
+   "lon": -84.362425
+  },
+  {
+   "names": [
+    "Ralph McGill Blvd NE",
+    "North Angier Ave NE"
+   ],
+   "x": 69.88,
+   "z": -235.08,
+   "lat": 33.766864,
+   "lon": -84.362494
+  },
+  {
+   "names": [
+    "North Ave NE",
+    "Somerset Ter NE"
+   ],
+   "x": 97.73,
+   "z": -718.31,
+   "lat": 33.77121,
+   "lon": -84.362193
+  },
+  {
+   "names": [
+    "Angier Springs Rd NE",
+    "Somerset Ter NE"
+   ],
+   "x": 93.79,
+   "z": -576.22,
+   "lat": 33.769932,
+   "lon": -84.362235
+  },
+  {
+   "names": [
+    "Closed Lake Ave",
+    "West Ashland Ave NE"
+   ],
+   "x": 101.57,
+   "z": 712.72,
+   "lat": 33.75834,
+   "lon": -84.362151
+  },
+  {
+   "names": [
+    "Inman Ln",
+    "Inman Way"
+   ],
+   "x": 89.68,
+   "z": 585.42,
+   "lat": 33.759485,
+   "lon": -84.36228
+  },
+  {
+   "names": [
+    "Lake Ave NE",
+    "West Ashland Ave NE"
+   ],
+   "x": 110.16,
+   "z": 725.1,
+   "lat": 33.758229,
+   "lon": -84.362058
+  },
+  {
+   "names": [
+    "Highland Ave NE",
+    "Patterson Way NE"
+   ],
+   "x": 115,
+   "z": 369.64,
+   "lat": 33.761426,
+   "lon": -84.362006
+  },
+  {
+   "names": [
+    "Alaska Ave NE",
+    "East Ave NE"
+   ],
+   "x": 126.92,
+   "z": 185.7,
+   "lat": 33.76308,
+   "lon": -84.361877
+  },
+  {
+   "names": [
+    "Inman Way",
+    "Montag Cir"
+   ],
+   "x": 126.43,
+   "z": 553.87,
+   "lat": 33.759769,
+   "lon": -84.361882
+  },
+  {
+   "names": [
+    "Patterson Way NE",
+    "Prospect Way NE"
+   ],
+   "x": 141.39,
+   "z": 274.89,
+   "lat": 33.762278,
+   "lon": -84.36172
+  },
+  {
+   "names": [
+    "East Ave NE",
+    "Prospect Way NE"
+   ],
+   "x": 155.29,
+   "z": 173.85,
+   "lat": 33.763187,
+   "lon": -84.36157
+  },
+  {
+   "names": [
+    "Inman Village Pkwy NE",
+    "Montag Cir"
+   ],
+   "x": 151.87,
+   "z": 583.9,
+   "lat": 33.759499,
+   "lon": -84.361607
+  },
+  {
+   "names": [
+    "Dixie Ave NE",
+    "Spruce St NE"
+   ],
+   "x": 174.04,
+   "z": 887.74,
+   "lat": 33.756766,
+   "lon": -84.361367
+  },
+  {
+   "names": [
+    "Ashland Ave NE",
+    "Virgil St NE"
+   ],
+   "x": 183.01,
+   "z": 767.02,
+   "lat": 33.757852,
+   "lon": -84.36127
+  },
+  {
+   "names": [
+    "Highland Ave NE",
+    "North Highland Ave NE"
+   ],
+   "x": 191.19,
+   "z": 385.9,
+   "lat": 33.76128,
+   "lon": -84.361182
+  },
+  {
+   "names": [
+    "Lake Ave NE",
+    "Montag Cir"
+   ],
+   "x": 200.24,
+   "z": 639.01,
+   "lat": 33.759003,
+   "lon": -84.361084
+  },
+  {
+   "names": [
+    "North Ave NE",
+    "Bonaventure Ave NE"
+   ],
+   "x": 215.14,
+   "z": -715.39,
+   "lat": 33.771184,
+   "lon": -84.360923
+  },
+  {
+   "names": [
+    "Angier Springs Rd NE",
+    "Bonaventure Ave NE"
+   ],
+   "x": 212.79,
+   "z": -640.7,
+   "lat": 33.770512,
+   "lon": -84.360948
+  },
+  {
+   "names": [
+    "East Ave NE",
+    "Patterson Way NE"
+   ],
+   "x": 228.86,
+   "z": 182.63,
+   "lat": 33.763108,
+   "lon": -84.360774
+  },
+  {
+   "names": [
+    "Inman Village Pkwy NE",
+    "Montag Cir"
+   ],
+   "x": 273.79,
+   "z": 489.03,
+   "lat": 33.760352,
+   "lon": -84.360288
+  },
+  {
+   "names": [
+    "Belgrade Ave NE",
+    "Woodall Ave NE"
+   ],
+   "x": 283.99,
+   "z": -541.27,
+   "lat": 33.769618,
+   "lon": -84.360178
+  },
+  {
+   "names": [
+    "Ashland Ave NE",
+    "Ashland Dr NE"
+   ],
+   "x": 291.34,
+   "z": 755.94,
+   "lat": 33.757952,
+   "lon": -84.360098
+  },
+  {
+   "names": [
+    "North Highland Ave NE",
+    "Inman Village Pkwy NE"
+   ],
+   "x": 293.03,
+   "z": 316.29,
+   "lat": 33.761906,
+   "lon": -84.36008
+  },
+  {
+   "names": [
+    "Hale St NE",
+    "Inman Village Pkwy NE"
+   ],
+   "x": 301.14,
+   "z": 451.35,
+   "lat": 33.760691,
+   "lon": -84.359992
+  },
+  {
+   "names": [
+    "Dixie Ave NE",
+    "Druid Cir NE"
+   ],
+   "x": 302.44,
+   "z": 886.72,
+   "lat": 33.756776,
+   "lon": -84.359978
+  },
+  {
+   "names": [
+    "Ashland Dr NE",
+    "Druid Cir NE"
+   ],
+   "x": 300.07,
+   "z": 856.63,
+   "lat": 33.757046,
+   "lon": -84.360004
+  },
+  {
+   "names": [
+    "John Lewis Freedom Pkwy NE",
+    "Belgrade Ave NE"
+   ],
+   "x": 349.51,
+   "z": -574.98,
+   "lat": 33.769921,
+   "lon": -84.359469
+  },
+  {
+   "names": [
+    "John Lewis Freedom Pkwy NE",
+    "North Ave NE"
+   ],
+   "x": 366.96,
+   "z": -696.51,
+   "lat": 33.771014,
+   "lon": -84.35928
+  },
+  {
+   "names": [
+    "Ashland Ave NE",
+    "Hale St NE"
+   ],
+   "x": 366.32,
+   "z": 756.7,
+   "lat": 33.757945,
+   "lon": -84.359287
+  },
+  {
+   "names": [
+    "Hale St NE",
+    "Lake Ave NE"
+   ],
+   "x": 368.75,
+   "z": 510.05,
+   "lat": 33.760163,
+   "lon": -84.359261
+  },
+  {
+   "names": [
+    "Hale St NE",
+    "Virgil St NE"
+   ],
+   "x": 356.22,
+   "z": 616,
+   "lat": 33.75921,
+   "lon": -84.359396
+  },
+  {
+   "names": [
+    "Euclid Ave NE",
+    "Delta Pl NE"
+   ],
+   "x": 387.25,
+   "z": 948.3,
+   "lat": 33.756222,
+   "lon": -84.359061
+  },
+  {
+   "names": [
+    "Bernina Ave NE",
+    "Elizabeth St NE"
+   ],
+   "x": 392.74,
+   "z": 96.19,
+   "lat": 33.763885,
+   "lon": -84.359001
+  },
+  {
+   "names": [
+    "Euclid Ave NE",
+    "Druid Cir NE"
+   ],
+   "x": 395.4,
+   "z": 923.65,
+   "lat": 33.756443,
+   "lon": -84.358973
+  },
+  {
+   "names": [
+    "John Lewis Freedom Pkwy NE",
+    "Ralph McGill Blvd NE"
+   ],
+   "x": 418.67,
+   "z": -394.6,
+   "lat": 33.768299,
+   "lon": -84.358721
+  },
+  {
+   "names": [
+    "North Highland Ave NE",
+    "Elizabeth St NE"
+   ],
+   "x": 469.9,
+   "z": 197.42,
+   "lat": 33.762975,
+   "lon": -84.358167
+  },
+  {
+   "names": [
+    "Austin Ave NE",
+    "Elizabeth St NE"
+   ],
+   "x": 476.44,
+   "z": 355.84,
+   "lat": 33.76155,
+   "lon": -84.358096
+  }
+ ],
+ "murals": [
+  {
+   "building": "r4314932",
+   "buildingName": "North Highland Steel",
+   "word": "SWEET AUBURN",
+   "widthM": 33.6,
+   "x": 282.32,
+   "z": 256.31,
+   "lat": 33.762445,
+   "lon": -84.360196
+  },
+  {
+   "building": "w1139043893",
+   "buildingName": "The Gravel Building",
+   "word": "OLD 4TH WARD",
+   "widthM": 18.9,
+   "x": -148.26,
+   "z": 827,
+   "lat": 33.757313,
+   "lon": -84.364854
+  },
+  {
+   "building": "w1396654871",
+   "buildingName": null,
+   "word": "KROG",
+   "widthM": 33.1,
+   "x": -185.62,
+   "z": 883.58,
+   "lat": 33.756804,
+   "lon": -84.365258
+  },
+  {
+   "building": "w182531217",
+   "buildingName": "Ford Factory Lofts",
+   "word": "O4W",
+   "widthM": 33.6,
+   "x": -104.95,
+   "z": -911.92,
+   "lat": 33.772951,
+   "lon": -84.364385
+  },
+  {
+   "building": "w182533626",
+   "buildingName": null,
+   "word": "PEACH",
+   "widthM": 33.6,
+   "x": 318.86,
+   "z": -183.32,
+   "lat": 33.766399,
+   "lon": -84.359801
+  },
+  {
+   "building": "w182533628",
+   "buildingName": null,
+   "word": "KROG",
+   "widthM": 19.1,
+   "x": 278.15,
+   "z": -250.39,
+   "lat": 33.767002,
+   "lon": -84.360241
+  },
+  {
+   "building": "w182544252",
+   "buildingName": null,
+   "word": "ATL",
+   "widthM": 21.5,
+   "x": 340.81,
+   "z": -126.87,
+   "lat": 33.765891,
+   "lon": -84.359563
+  },
+  {
+   "building": "w185605331",
+   "buildingName": "Telephone Factory Lofts",
+   "word": "O4W",
+   "widthM": 23.2,
+   "x": 201.48,
+   "z": -362.62,
+   "lat": 33.768011,
+   "lon": -84.36107
+  },
+  {
+   "building": "w208783341",
+   "buildingName": null,
+   "word": "A-TOWN",
+   "widthM": 10.7,
+   "x": 255.93,
+   "z": 307.83,
+   "lat": 33.761982,
+   "lon": -84.360481
+  },
+  {
+   "building": "w211061295",
+   "buildingName": null,
+   "word": "RINK",
+   "widthM": 18.3,
+   "x": -140.16,
+   "z": 780.25,
+   "lat": 33.757733,
+   "lon": -84.364766
+  },
+  {
+   "building": "w211061297",
+   "buildingName": "Stove Works",
+   "word": "GLIDE",
+   "widthM": 13.8,
+   "x": -167.12,
+   "z": 923.99,
+   "lat": 33.75644,
+   "lon": -84.365058
+  },
+  {
+   "building": "w211061298",
+   "buildingName": null,
+   "word": "A-TOWN",
+   "widthM": 18.3,
+   "x": -126.55,
+   "z": 744.88,
+   "lat": 33.758051,
+   "lon": -84.364619
+  },
+  {
+   "building": "w211061299",
+   "buildingName": null,
+   "word": "SWEET AUBURN",
+   "widthM": 33.6,
+   "x": -81.28,
+   "z": 628.46,
+   "lat": 33.759098,
+   "lon": -84.364129
+  },
+  {
+   "building": "w211061636",
+   "buildingName": null,
+   "word": "PEACH",
+   "widthM": 19.2,
+   "x": -103.03,
+   "z": 604.74,
+   "lat": 33.759311,
+   "lon": -84.364365
+  },
+  {
+   "building": "w211061637",
+   "buildingName": null,
+   "word": "INMAN",
+   "widthM": 10.8,
+   "x": -158.77,
+   "z": 741.53,
+   "lat": 33.758081,
+   "lon": -84.364968
+  },
+  {
+   "building": "w211061638",
+   "buildingName": null,
+   "word": "KROG",
+   "widthM": 8.6,
+   "x": -83.81,
+   "z": 562.45,
+   "lat": 33.759692,
+   "lon": -84.364157
+  },
+  {
+   "building": "w211061639",
+   "buildingName": null,
+   "word": "OLD 4TH WARD",
+   "widthM": 17.9,
+   "x": -137.62,
+   "z": 679.5,
+   "lat": 33.758639,
+   "lon": -84.364739
+  },
+  {
+   "building": "w211061640",
+   "buildingName": null,
+   "word": "ATL",
+   "widthM": 18.3,
+   "x": -121.63,
+   "z": 641.56,
+   "lat": 33.75898,
+   "lon": -84.364566
+  },
+  {
+   "building": "w211061641",
+   "buildingName": null,
+   "word": "SHINE",
+   "widthM": 19.1,
+   "x": -129.94,
+   "z": 660.53,
+   "lat": 33.75881,
+   "lon": -84.364656
+  },
+  {
+   "building": "w211061642",
+   "buildingName": null,
+   "word": "INMAN",
+   "widthM": 18.5,
+   "x": -112.7,
+   "z": 623.2,
+   "lat": 33.759145,
+   "lon": -84.364469
+  },
+  {
+   "building": "w211061643",
+   "buildingName": null,
+   "word": "PEACH",
+   "widthM": 12,
+   "x": -157.82,
+   "z": 721.8,
+   "lat": 33.758259,
+   "lon": -84.364957
+  },
+  {
+   "building": "w211062132",
+   "buildingName": null,
+   "word": "SHINE",
+   "widthM": 20.4,
+   "x": 34.7,
+   "z": 490.68,
+   "lat": 33.760337,
+   "lon": -84.362875
+  },
+  {
+   "building": "w211062135",
+   "buildingName": "Mariposa Loft Apartments",
+   "word": "SWEET AUBURN",
+   "widthM": 33.6,
+   "x": 105.4,
+   "z": 447.56,
+   "lat": 33.760725,
+   "lon": -84.36211
+  },
+  {
+   "building": "w211062188",
+   "buildingName": null,
+   "word": "SKATE ATL",
+   "widthM": 30.4,
+   "x": 219.05,
+   "z": 324.17,
+   "lat": 33.761835,
+   "lon": -84.36088
+  },
+  {
+   "building": "w211747264",
+   "buildingName": null,
+   "word": "A-TOWN",
+   "widthM": 19.9,
+   "x": 136.66,
+   "z": -437.05,
+   "lat": 33.76868,
+   "lon": -84.361772
+  },
+  {
+   "building": "w211747265",
+   "buildingName": null,
+   "word": "SWEET AUBURN",
+   "widthM": 20.1,
+   "x": 167.74,
+   "z": -400.94,
+   "lat": 33.768356,
+   "lon": -84.361435
+  },
+  {
+   "building": "w269992060",
+   "buildingName": "Signal House Apartments",
+   "word": "ATL",
+   "widthM": 33.6,
+   "x": -100.26,
+   "z": -746.57,
+   "lat": 33.771464,
+   "lon": -84.364335
+  },
+  {
+   "building": "w270469104",
+   "buildingName": null,
+   "word": "OLD 4TH WARD",
+   "widthM": 33.6,
+   "x": 236.13,
+   "z": -250.75,
+   "lat": 33.767005,
+   "lon": -84.360696
+  },
+  {
+   "building": "w330647640",
+   "buildingName": null,
+   "word": "GLIDE",
+   "widthM": 18.6,
+   "x": 154.66,
+   "z": 342.61,
+   "lat": 33.761669,
+   "lon": -84.361577
+  },
+  {
+   "building": "w330647642",
+   "buildingName": null,
+   "word": "RINK",
+   "widthM": 13.4,
+   "x": 181.22,
+   "z": 319.97,
+   "lat": 33.761872,
+   "lon": -84.36129
+  },
+  {
+   "building": "w330647644",
+   "buildingName": null,
+   "word": "OLD 4TH WARD",
+   "widthM": 24.8,
+   "x": 204.64,
+   "z": 294.19,
+   "lat": 33.762104,
+   "lon": -84.361036
+  },
+  {
+   "building": "w330647646",
+   "buildingName": null,
+   "word": "SKATE ATL",
+   "widthM": 24.8,
+   "x": 227.71,
+   "z": 262.29,
+   "lat": 33.762391,
+   "lon": -84.360787
+  },
+  {
+   "building": "w335271424",
+   "buildingName": "755 North",
+   "word": "ROLL ON",
+   "widthM": 33.6,
+   "x": 6.85,
+   "z": -634.68,
+   "lat": 33.770458,
+   "lon": -84.363176
+  },
+  {
+   "building": "w738377170",
+   "buildingName": null,
+   "word": "SWEET AUBURN",
+   "widthM": 22.3,
+   "x": -194.84,
+   "z": 941.75,
+   "lat": 33.756281,
+   "lon": -84.365358
+  },
+  {
+   "building": "w741961703",
+   "buildingName": "725 Ponce",
+   "word": "PEACH",
+   "widthM": 33.6,
+   "x": -69.58,
+   "z": -812.76,
+   "lat": 33.772059,
+   "lon": -84.364003
+  },
+  {
+   "building": "w887718742",
+   "buildingName": null,
+   "word": "KROG",
+   "widthM": 33.6,
+   "x": -2.31,
+   "z": -537.74,
+   "lat": 33.769586,
+   "lon": -84.363275
+  },
+  {
+   "building": "w887718749",
+   "buildingName": null,
+   "word": "SWEET AUBURN",
+   "widthM": 10.6,
+   "x": -82.65,
+   "z": -679.61,
+   "lat": 33.770862,
+   "lon": -84.364144
+  },
+  {
+   "building": "w961282227",
+   "buildingName": "New Realm Brewing",
+   "word": "INMAN",
+   "widthM": 12.9,
+   "x": 108.96,
+   "z": -467,
+   "lat": 33.76895,
+   "lon": -84.362071
+  },
+  {
+   "building": "w973976338",
+   "buildingName": null,
+   "word": "ATL",
+   "widthM": 23.3,
+   "x": 245.06,
+   "z": 230.17,
+   "lat": 33.76268,
+   "lon": -84.360599
+  }
+ ],
+ "buildings": [
+  {
+   "id": "r11742136",
+   "name": "Studioplex",
+   "height": 7.4,
+   "heightSource": "levels",
+   "x": -280.25,
+   "z": 972.96,
+   "lat": 33.756,
+   "lon": -84.366282
+  },
+  {
+   "id": "r15445924",
+   "name": "Iris O4W",
+   "height": 9.9,
+   "heightSource": "overture",
+   "x": -281.79,
+   "z": -208.09,
+   "lat": 33.766621,
+   "lon": -84.366298
+  },
+  {
+   "id": "r4314932",
+   "name": "North Highland Steel",
+   "height": 13.8,
+   "heightSource": "levels",
+   "x": 323.23,
+   "z": 249.76,
+   "lat": 33.762504,
+   "lon": -84.359753
+  },
+  {
+   "id": "r5413435",
+   "name": "Krog Street Market",
+   "height": 6.95,
+   "heightSource": "overture",
+   "x": -72.87,
+   "z": 876.67,
+   "lat": 33.756866,
+   "lon": -84.364038
+  },
+  {
+   "id": "w1139043884",
+   "name": "619 Ponce",
+   "height": 17.8,
+   "heightSource": "override",
+   "x": -366.23,
+   "z": -899.47,
+   "lat": 33.772839,
+   "lon": -84.367212
+  },
+  {
+   "id": "w1139043886",
+   "name": "Overline Residences",
+   "height": 58.6,
+   "heightSource": "override",
+   "x": -93.55,
+   "z": -387.91,
+   "lat": 33.768239,
+   "lon": -84.364262
+  },
+  {
+   "id": "w1139043887",
+   "name": "Fourth Ward Offices Tower Two",
+   "height": 10.9,
+   "heightSource": "overture",
+   "x": 72.84,
+   "z": -382.83,
+   "lat": 33.768193,
+   "lon": -84.362462
+  },
+  {
+   "id": "w1139043888",
+   "name": "Fourth Ward Offices Tower One",
+   "height": 23.16,
+   "heightSource": "overture",
+   "x": 24.1,
+   "z": -446.35,
+   "lat": 33.768764,
+   "lon": -84.362989
+  },
+  {
+   "id": "w1139043893",
+   "name": "The Gravel Building",
+   "height": 7.71,
+   "heightSource": "overture",
+   "x": -128.86,
+   "z": 827.14,
+   "lat": 33.757311,
+   "lon": -84.364644
+  },
+  {
+   "id": "w182531217",
+   "name": "Ford Factory Lofts",
+   "height": 20,
+   "heightSource": "height",
+   "x": -81.87,
+   "z": -908.38,
+   "lat": 33.772919,
+   "lon": -84.364136
+  },
+  {
+   "id": "w182533620",
+   "name": "Block Lofts",
+   "height": 13.8,
+   "heightSource": "levels",
+   "x": 175.35,
+   "z": -191.87,
+   "lat": 33.766475,
+   "lon": -84.361353
+  },
+  {
+   "id": "w182617891",
+   "name": "AMLI Parkside",
+   "height": 20.2,
+   "heightSource": "levels",
+   "x": -242.2,
+   "z": -44.67,
+   "lat": 33.765152,
+   "lon": -84.36587
+  },
+  {
+   "id": "w184803195",
+   "name": "Ponce City Market",
+   "height": 50,
+   "heightSource": "height",
+   "x": -219.31,
+   "z": -867.37,
+   "lat": 33.77255,
+   "lon": -84.365622
+  },
+  {
+   "id": "w185605331",
+   "name": "Telephone Factory Lofts",
+   "height": 9.13,
+   "heightSource": "overture",
+   "x": 224.73,
+   "z": -366.34,
+   "lat": 33.768045,
+   "lon": -84.360819
+  },
+  {
+   "id": "w208170014",
+   "name": "Mister Hot Shine Car Wash",
+   "height": 7.2,
+   "heightSource": "overture",
+   "x": -456.13,
+   "z": -930.8,
+   "lat": 33.773121,
+   "lon": -84.368184
+  },
+  {
+   "id": "w208170018",
+   "name": "Troy Pierless Lofts",
+   "height": 14.2,
+   "heightSource": "overture",
+   "x": -446.03,
+   "z": -827.59,
+   "lat": 33.772193,
+   "lon": -84.368075
+  },
+  {
+   "id": "w210903782",
+   "name": "Across the Street",
+   "height": 4.8,
+   "heightSource": "overture",
+   "x": -199.87,
+   "z": 361.45,
+   "lat": 33.761499,
+   "lon": -84.365412
+  },
+  {
+   "id": "w210903785",
+   "name": "Jack's Pizza",
+   "height": 5.5,
+   "heightSource": "overture",
+   "x": -177.98,
+   "z": 364.23,
+   "lat": 33.761474,
+   "lon": -84.365175
+  },
+  {
+   "id": "w210903816",
+   "name": "870 Inman",
+   "height": 17,
+   "heightSource": "levels",
+   "x": 249.73,
+   "z": 399.25,
+   "lat": 33.761159,
+   "lon": -84.360548
+  },
+  {
+   "id": "w210903819",
+   "name": "IPV Lofts",
+   "height": 13.8,
+   "heightSource": "levels",
+   "x": 335.57,
+   "z": 341.16,
+   "lat": 33.761682,
+   "lon": -84.35962
+  },
+  {
+   "id": "w211061297",
+   "name": "Stove Works",
+   "height": 6,
+   "heightSource": "default",
+   "x": -140.14,
+   "z": 921.88,
+   "lat": 33.756459,
+   "lon": -84.364766
+  },
+  {
+   "id": "w211062135",
+   "name": "Mariposa Loft Apartments",
+   "height": 13.8,
+   "heightSource": "levels",
+   "x": 145,
+   "z": 476.55,
+   "lat": 33.760464,
+   "lon": -84.361681
+  },
+  {
+   "id": "w217801487",
+   "name": "Small Carpenters At Large",
+   "height": 7.02,
+   "heightSource": "overture",
+   "x": 411.96,
+   "z": 398.92,
+   "lat": 33.761162,
+   "lon": -84.358793
+  },
+  {
+   "id": "w217821334",
+   "name": "Barking Hound Villages",
+   "height": 4.2,
+   "heightSource": "levels",
+   "x": 120.57,
+   "z": -650.52,
+   "lat": 33.7706,
+   "lon": -84.361946
+  },
+  {
+   "id": "w223977988",
+   "name": "Beltline Shed",
+   "height": 4.2,
+   "heightSource": "levels",
+   "x": -121.61,
+   "z": -829.82,
+   "lat": 33.772213,
+   "lon": -84.364566
+  },
+  {
+   "id": "w269992060",
+   "name": "Signal House Apartments",
+   "height": 68.2,
+   "heightSource": "override",
+   "x": -124.22,
+   "z": -749.71,
+   "lat": 33.771492,
+   "lon": -84.364594
+  },
+  {
+   "id": "w335271424",
+   "name": "755 North",
+   "height": 17,
+   "heightSource": "levels",
+   "x": 39.03,
+   "z": -640.99,
+   "lat": 33.770515,
+   "lon": -84.362828
+  },
+  {
+   "id": "w429537643",
+   "name": "The Collective",
+   "height": 4.2,
+   "heightSource": "levels",
+   "x": -5.87,
+   "z": 821.09,
+   "lat": 33.757366,
+   "lon": -84.363313
+  },
+  {
+   "id": "w496236697",
+   "name": "Venkman's",
+   "height": 8.8,
+   "heightSource": "overture",
+   "x": -0.34,
+   "z": -230.67,
+   "lat": 33.766824,
+   "lon": -84.363254
+  },
+  {
+   "id": "w496238157",
+   "name": "Beatlecat",
+   "height": 5.33,
+   "heightSource": "overture",
+   "x": 465.3,
+   "z": 234.19,
+   "lat": 33.762644,
+   "lon": -84.358216
+  },
+  {
+   "id": "w741961703",
+   "name": "725 Ponce",
+   "height": 39.4,
+   "heightSource": "levels",
+   "x": -48.57,
+   "z": -787.84,
+   "lat": 33.771835,
+   "lon": -84.363775
+  },
+  {
+   "id": "w741961704",
+   "name": "Kroger",
+   "height": 7,
+   "heightSource": "override",
+   "x": -9.04,
+   "z": -763.48,
+   "lat": 33.771616,
+   "lon": -84.363348
+  },
+  {
+   "id": "w928684047",
+   "name": "Windsor",
+   "height": 14.45,
+   "heightSource": "overture",
+   "x": -365.08,
+   "z": 36.78,
+   "lat": 33.764419,
+   "lon": -84.367199
+  },
+  {
+   "id": "w961282227",
+   "name": "New Realm Brewing",
+   "height": 12.1,
+   "heightSource": "overture",
+   "x": 119.79,
+   "z": -475.9,
+   "lat": 33.76903,
+   "lon": -84.361954
+  }
+ ],
+ "areas": [
+  {
+   "id": "r12045420-2",
+   "name": "Freedom Park",
+   "kind": "park",
+   "x": 399.37,
+   "z": -651.41,
+   "lat": 33.770608,
+   "lon": -84.35893
+  },
+  {
+   "id": "r12045420-4",
+   "name": "Freedom Park",
+   "kind": "park",
+   "x": -318.77,
+   "z": 350.08,
+   "lat": 33.761602,
+   "lon": -84.366698
+  },
+  {
+   "id": "w1229184075",
+   "name": "Parque en el centro bonito",
+   "kind": "park",
+   "x": 0.66,
+   "z": -364.73,
+   "lat": 33.76803,
+   "lon": -84.363243
+  },
+  {
+   "id": "w182470312",
+   "name": "Historic Fourth Ward Park",
+   "kind": "park",
+   "x": -154.69,
+   "z": -375.79,
+   "lat": 33.76813,
+   "lon": -84.364923
+  },
+  {
+   "id": "w93512033",
+   "name": "Atlanta Art Park",
+   "kind": "park",
+   "x": -388.06,
+   "z": 348.38,
+   "lat": 33.761617,
+   "lon": -84.367448
+  }
+ ],
+ "spawn": {
+  "x": 337.07,
+  "z": -1.3,
+  "lat": 33.764762,
+  "lon": -84.359604
+ }
+}

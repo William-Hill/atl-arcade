@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BRIDGE_CLEARANCE, bridgeDeck, createTerrain, decodeHeights, drapeMesh, encodeHeights, raiseEmbankments, terrainOf } from "./terrain.js";
+import { BRIDGE_CLEARANCE, bridgeDeck, bridgeMiddle, createTerrain, decodeHeights, drapeMesh, encodeHeights, gradeTrail, raiseEmbankments, terrainOf } from "./terrain.js";
 import { flatPolygon, stripMesh } from "./extrude.js";
 import { createGeoGroundSampler } from "./geo-ground.js";
 import { createSkateState, stepSkate } from "../../sim/skate/controller.js";
@@ -81,6 +81,42 @@ describe("terrain", () => {
     // The embankment falls back toward the terrain.
     expect(t.height(-38, 0)).toBeLessThan(t.height(-24, 0));
     expect(t.height(-24, 0)).toBeLessThan(t.height(-12, 0));
+  });
+});
+
+describe("gradeTrail under a bridge with more than two points (#59)", () => {
+  const bridge = { id: "b", kind: "trail", width: 4, bridge: true, points: [[-8, 0], [0, 0], [8, 0]] };
+
+  it("finds the middle half along the full bridge length, not each segment", () => {
+    const cum = [0, 8, 16];
+    // The inner joint is at the middle of the bridge.
+    expect(bridgeMiddle(bridge, cum, 16, 0, 0)).toBe(true);
+    expect(bridgeMiddle(bridge, cum, 16, -3, 1)).toBe(true);
+    // The ends sit on the approach grade.
+    expect(bridgeMiddle(bridge, cum, 16, -7, 0)).toBe(false);
+    expect(bridgeMiddle(bridge, cum, 16, 7, 0)).toBe(false);
+    // Too far to the side.
+    expect(bridgeMiddle(bridge, cum, 16, 0, 5)).toBe(false);
+  });
+
+  it("keeps the ground under the inner joint of the deck", () => {
+    // Flat ground at 10 m, with a road cut to 0 m along x = 0 under the bridge.
+    const cols = 41;
+    const rows = 21;
+    const heights = [];
+    for (let j = 0; j < rows; j += 1) for (let i = 0; i < cols; i += 1) heights.push(Math.abs(-80 + i * 4) <= 4 ? 0 : 10);
+    const grid = { cell: 4, x0: -80, z0: -40, cols, rows, heights };
+    const strips = [
+      { id: "west", kind: "trail", width: 4, points: [[-80, 0], [-8, 0]] },
+      bridge,
+      { id: "east", kind: "trail", width: 4, points: [[8, 0], [80, 0]] },
+    ];
+    const graded = gradeTrail(grid, strips).heights;
+    const at = (x, z) => graded[((z + 40) / 4) * cols + (x + 80) / 4];
+    expect(at(0, 0)).toBe(0);
+    // Far from the trail and on the at-grade trail, the ground stays.
+    expect(at(0, -36)).toBe(0);
+    expect(at(-60, 0)).toBeCloseTo(10, 6);
   });
 });
 

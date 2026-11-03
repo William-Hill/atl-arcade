@@ -147,7 +147,7 @@
             "type": "component",
             "ref": "roof-profile"
           },
-          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "evidenceRef": "detail-inventory/zone-r0c0.png",
           "confidence": 0.8
         },
         {
@@ -167,7 +167,7 @@
             "type": "component",
             "ref": "roof-profile"
           },
-          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "evidenceRef": "detail-inventory/zone-r0c0.png",
           "confidence": 0.8
         },
         {
@@ -187,7 +187,7 @@
             "type": "component",
             "ref": "krog-street-letters"
           },
-          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "evidenceRef": "detail-inventory/zone-r0c0.png",
           "confidence": 0.9
         },
         {
@@ -207,7 +207,7 @@
             "type": "component",
             "ref": "market-letters"
           },
-          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "evidenceRef": "detail-inventory/zone-r0c0.png",
           "confidence": 0.85
         },
         {
@@ -227,7 +227,7 @@
             "type": "component",
             "ref": "pendant-0"
           },
-          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "evidenceRef": "detail-inventory/zone-r0c0.png",
           "confidence": 0.7
         },
         {
@@ -247,7 +247,7 @@
             "type": "component",
             "ref": "canopy-truss"
           },
-          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "evidenceRef": "detail-inventory/zone-r0c0.png",
           "confidence": 0.7
         },
         {
@@ -267,7 +267,7 @@
             "type": "component",
             "ref": "pendant-0"
           },
-          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "evidenceRef": "detail-inventory/zone-r0c0.png",
           "confidence": 0.6
         }
       ]
@@ -932,7 +932,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -1126,7 +1126,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -1333,7 +1333,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -1540,7 +1540,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -1747,7 +1747,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -1953,7 +1953,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -2166,7 +2166,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -2381,7 +2381,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -2590,7 +2590,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -2796,7 +2796,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -3005,7 +3005,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -3214,7 +3214,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -3420,7 +3420,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -3629,7 +3629,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -3838,7 +3838,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -4044,7 +4044,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -4253,7 +4253,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -4462,7 +4462,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -4668,7 +4668,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -4877,7 +4877,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -5086,7 +5086,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -5292,7 +5292,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -5499,7 +5499,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -5706,7 +5706,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -5913,7 +5913,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -6120,7 +6120,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -6327,7 +6327,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -6534,7 +6534,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -6741,7 +6741,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -6948,7 +6948,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -7155,7 +7155,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -7362,7 +7362,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -7569,7 +7569,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -7776,7 +7776,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -7983,7 +7983,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -8190,7 +8190,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -8397,7 +8397,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -8604,7 +8604,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -8811,7 +8811,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -9018,7 +9018,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -9225,7 +9225,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -9432,7 +9432,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -9639,7 +9639,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -9846,7 +9846,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -10053,7 +10053,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -10260,7 +10260,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -10467,7 +10467,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -10674,7 +10674,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -10881,7 +10881,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -11088,7 +11088,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -11295,7 +11295,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -11502,7 +11502,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -11709,7 +11709,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -11916,7 +11916,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -12123,7 +12123,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -12330,7 +12330,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -12537,7 +12537,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -12744,7 +12744,7 @@
           "materialId": "metal",
           "profileId": "metal.aluminum",
           "crop": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "path": "material-evidence/00-metal.png",
             "bbox": {
               "x": 913,
               "y": 1134,
@@ -12874,7 +12874,7 @@
       "materialSubtype": "aluminum",
       "materialFinish": "satin",
       "materialReference": {
-        "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+        "registry": "<img2threejs>/docs/materials/material-reference.json",
         "profileId": "metal.aluminum",
         "method": "family-subtype-finish",
         "confidence": 0.829,
@@ -12906,7 +12906,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+        "sourceImage": "material-evidence/00-metal.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -12917,31 +12917,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_albedo.png",
+            "path": "material-evidence/pbr-00-metal/metal_albedo.png",
             "url": "metal_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_roughness.png",
+            "path": "material-evidence/pbr-00-metal/metal_roughness.png",
             "url": "metal_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_height.png",
+            "path": "material-evidence/pbr-00-metal/metal_height.png",
             "url": "metal_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_normal.png",
+            "path": "material-evidence/pbr-00-metal/metal_normal.png",
             "url": "metal_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_ao.png",
+            "path": "material-evidence/pbr-00-metal/metal_ao.png",
             "url": "metal_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -13058,7 +13058,7 @@
         "componentId": "roof-profile",
         "regionId": "metal",
         "crop": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+          "path": "material-evidence/00-metal.png",
           "bbox": {
             "x": 913,
             "y": 1134,
@@ -13197,7 +13197,7 @@
       "materialSubtype": "paint-over-metal",
       "materialFinish": "gloss-or-satin",
       "materialReference": {
-        "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+        "registry": "<img2threejs>/docs/materials/material-reference.json",
         "profileId": "coating.painted-metal",
         "method": "family-subtype-finish",
         "confidence": 0.805,
@@ -13240,7 +13240,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/01-steel.png",
+        "sourceImage": "material-evidence/01-steel.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -13251,31 +13251,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_albedo.png",
+            "path": "material-evidence/pbr-01-steel/steel_albedo.png",
             "url": "steel_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_roughness.png",
+            "path": "material-evidence/pbr-01-steel/steel_roughness.png",
             "url": "steel_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_height.png",
+            "path": "material-evidence/pbr-01-steel/steel_height.png",
             "url": "steel_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_normal.png",
+            "path": "material-evidence/pbr-01-steel/steel_normal.png",
             "url": "steel_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_ao.png",
+            "path": "material-evidence/pbr-01-steel/steel_ao.png",
             "url": "steel_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -13382,7 +13382,7 @@
         "componentId": "canopy",
         "regionId": "steel",
         "crop": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/01-steel.png",
+          "path": "material-evidence/01-steel.png",
           "bbox": {
             "x": 1520,
             "y": 1360,
@@ -13519,7 +13519,7 @@
       "materialSubtype": "paint-over-metal",
       "materialFinish": "gloss-or-satin",
       "materialReference": {
-        "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+        "registry": "<img2threejs>/docs/materials/material-reference.json",
         "profileId": "coating.painted-metal",
         "method": "family-subtype-finish",
         "confidence": 0.829,
@@ -13562,7 +13562,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/02-market.png",
+        "sourceImage": "material-evidence/02-market.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -13573,31 +13573,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_albedo.png",
+            "path": "material-evidence/pbr-02-market/letters-white_albedo.png",
             "url": "letters-white_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_roughness.png",
+            "path": "material-evidence/pbr-02-market/letters-white_roughness.png",
             "url": "letters-white_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_height.png",
+            "path": "material-evidence/pbr-02-market/letters-white_height.png",
             "url": "letters-white_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_normal.png",
+            "path": "material-evidence/pbr-02-market/letters-white_normal.png",
             "url": "letters-white_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_ao.png",
+            "path": "material-evidence/pbr-02-market/letters-white_ao.png",
             "url": "letters-white_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -13723,7 +13723,7 @@
         "componentId": "market-letters",
         "regionId": "market",
         "crop": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/02-market.png",
+          "path": "material-evidence/02-market.png",
           "bbox": {
             "x": 2362,
             "y": 1285,
@@ -13861,7 +13861,7 @@
       "materialSubtype": "brass-bronze",
       "materialFinish": "polished-or-aged",
       "materialReference": {
-        "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+        "registry": "<img2threejs>/docs/materials/material-reference.json",
         "profileId": "metal.brass",
         "method": "family-subtype-finish",
         "confidence": 0.829,
@@ -13890,7 +13890,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/03-brass.png",
+        "sourceImage": "material-evidence/03-brass.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -13901,31 +13901,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_albedo.png",
+            "path": "material-evidence/pbr-03-brass/brass_albedo.png",
             "url": "brass_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_roughness.png",
+            "path": "material-evidence/pbr-03-brass/brass_roughness.png",
             "url": "brass_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_height.png",
+            "path": "material-evidence/pbr-03-brass/brass_height.png",
             "url": "brass_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_normal.png",
+            "path": "material-evidence/pbr-03-brass/brass_normal.png",
             "url": "brass_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_ao.png",
+            "path": "material-evidence/pbr-03-brass/brass_ao.png",
             "url": "brass_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -14015,7 +14015,7 @@
         "componentId": "pendant-0",
         "regionId": "brass",
         "crop": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/03-brass.png",
+          "path": "material-evidence/03-brass.png",
           "bbox": {
             "x": 2331,
             "y": 1433,
@@ -14157,7 +14157,7 @@
       "materialSubtype": "aluminum",
       "materialFinish": "satin",
       "materialReference": {
-        "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+        "registry": "<img2threejs>/docs/materials/material-reference.json",
         "profileId": "metal.aluminum",
         "method": "family-subtype-finish",
         "confidence": 0.829,
@@ -14189,7 +14189,7 @@
       },
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+        "sourceImage": "material-evidence/00-metal.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
@@ -14200,31 +14200,31 @@
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_albedo.png",
+            "path": "material-evidence/pbr-00-metal/metal_albedo.png",
             "url": "metal_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_roughness.png",
+            "path": "material-evidence/pbr-00-metal/metal_roughness.png",
             "url": "metal_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_height.png",
+            "path": "material-evidence/pbr-00-metal/metal_height.png",
             "url": "metal_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_normal.png",
+            "path": "material-evidence/pbr-00-metal/metal_normal.png",
             "url": "metal_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_ao.png",
+            "path": "material-evidence/pbr-00-metal/metal_ao.png",
             "url": "metal_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
@@ -14341,7 +14341,7 @@
         "componentId": "roof-profile",
         "regionId": "metal",
         "crop": {
-          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+          "path": "material-evidence/00-metal.png",
           "bbox": {
             "x": 913,
             "y": 1134,
@@ -15603,8 +15603,8 @@
   "materialPipeline": {
     "schemaVersion": 1,
     "status": "proceed",
-    "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
-    "analysisArtifact": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-analysis.json",
+    "registry": "<img2threejs>/docs/materials/material-reference.json",
+    "analysisArtifact": "material-analysis.json",
     "targetThreshold": 0.7,
     "unresolvedNotObservedMaterials": [],
     "regions": [
@@ -15647,7 +15647,7 @@
   },
   "materialAnalysisHistory": [
     {
-      "analysisArtifact": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-analysis.json",
+      "analysisArtifact": "material-analysis.json",
       "status": "proceed",
       "unresolvedNotObservedMaterials": [],
       "regions": 4

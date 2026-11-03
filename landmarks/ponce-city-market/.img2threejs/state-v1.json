@@ -253,7 +253,7 @@
           "scope": "pass",
           "status": "done",
           "evidence": [
-            "/Users/william-meroxa/.claude/skills/img2threejs/grimoire/review/gates_reference.md"
+            "<img2threejs>/grimoire/review/gates_reference.md"
           ],
           "reason": "",
           "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"

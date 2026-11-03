@@ -1,2 +1,2 @@
-STATUS pass=structural-pass completed=1 blocked=none next=forge/stage4_review/append_review.py /Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/object-sculpt-spec.json --pass-id structural-pass
-/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/object-sculpt-spec.json
+STATUS pass=structural-pass completed=1 blocked=none next=forge/stage4_review/append_review.py object-sculpt-spec.json --pass-id structural-pass
+object-sculpt-spec.json

@@ -203,6 +203,14 @@ describe("player look", () => {
     expect(side[0]).toBeCloseTo(0, 9);
   });
 
+  it("leads the look-at point along the orbit heading when the player looks to the side", () => {
+    const s = { ...skaterAt([0, 0, 0], 0, SKATE.maxSpeed), velocity: [SKATE.maxSpeed, 0, 0] };
+    const side = cameraGoal(s, 0, k, { yaw: Math.PI / 2, pitch: 0 }).lookAt;
+    // Yaw 0 faces +x; a quarter look to the left orbits to -z.
+    expect(side[0]).toBeCloseTo(0, 6);
+    expect(side[2]).toBeLessThan(0);
+  });
+
   it("keeps the camera at or above the skater at the lowest pitch", () => {
     const s = skaterAt([0, 0, 0], 0, 0);
     const low = cameraGoal(s, 0, k, { yaw: 0, pitch: -Math.PI / 2 }).position;

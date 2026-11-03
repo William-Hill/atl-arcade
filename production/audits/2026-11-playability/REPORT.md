@@ -90,7 +90,7 @@ The P2 findings are in each area file. They do not have issues yet. The 11 new i
 ## Milestone changes
 
 - Touch controls (#71) and the phone tier (#72) move into M1. #24 keeps the store and device polish in M2.
-- The concept doc still says "Desktop first, phones in version 2". Update it to match the 2026-11-03 decision.
+- The concept doc (`docs/games/2026-10-30-skate-atl-concept.md`) now matches the 2026-11-03 decision: the platform line, the risk table, and the scope table.
 
 ## Verified
 

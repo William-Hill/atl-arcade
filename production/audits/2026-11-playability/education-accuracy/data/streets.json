@@ -1,0 +1,583 @@
+{
+ "signs": {
+  "posts": 95,
+  "uniqueNames": 68,
+  "notInTiger": [
+   "Bishop Way NE",
+   "Closed Lake Ave",
+   "Prospect Way NE",
+   "Austin Ave NE"
+  ],
+  "sample": [
+   {
+    "sign": "Randolph St NE",
+    "lat": 33.756697,
+    "lon": -84.367876,
+    "inTiger": true,
+    "nearestTiger": "Randolph St NE",
+    "nearestTigerM": 7.1
+   },
+   {
+    "sign": "Gaspero St NE",
+    "lat": 33.756697,
+    "lon": -84.367876,
+    "inTiger": true,
+    "nearestTiger": "Randolph St NE",
+    "nearestTigerM": 7.1
+   },
+   {
+    "sign": "Irwin St NE",
+    "lat": 33.757666,
+    "lon": -84.367847,
+    "inTiger": true,
+    "nearestTiger": "Randolph St NE",
+    "nearestTigerM": 7.1
+   },
+   {
+    "sign": "Randolph St NE",
+    "lat": 33.757666,
+    "lon": -84.367847,
+    "inTiger": true,
+    "nearestTiger": "Randolph St NE",
+    "nearestTigerM": 7.1
+   },
+   {
+    "sign": "Randolph St NE",
+    "lat": 33.758633,
+    "lon": -84.367816,
+    "inTiger": true,
+    "nearestTiger": "McGruder St NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "McGruder St NE",
+    "lat": 33.758633,
+    "lon": -84.367816,
+    "inTiger": true,
+    "nearestTiger": "McGruder St NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Randolph St NE",
+    "lat": 33.75935,
+    "lon": -84.367951,
+    "inTiger": true,
+    "nearestTiger": "Randolph St NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "John Wesley Dobbs Ave NE",
+    "lat": 33.75935,
+    "lon": -84.367951,
+    "inTiger": true,
+    "nearestTiger": "Randolph St NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Randolph St NE",
+    "lat": 33.760356,
+    "lon": -84.367932,
+    "inTiger": true,
+    "nearestTiger": "Randolph St NE",
+    "nearestTigerM": 6.9
+   },
+   {
+    "sign": "Bishop Way NE",
+    "lat": 33.760356,
+    "lon": -84.367932,
+    "inTiger": false,
+    "nearestTiger": "Randolph St NE",
+    "nearestTigerM": 6.9
+   },
+   {
+    "sign": "Highland Ave NE",
+    "lat": 33.761398,
+    "lon": -84.367753,
+    "inTiger": true,
+    "nearestTiger": "Highland Ave NE",
+    "nearestTigerM": 8
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.761398,
+    "lon": -84.367753,
+    "inTiger": true,
+    "nearestTiger": "Highland Ave NE",
+    "nearestTigerM": 8
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.762187,
+    "lon": -84.367752,
+    "inTiger": true,
+    "nearestTiger": "Fortune Pl NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Fortune Pl NE",
+    "lat": 33.762187,
+    "lon": -84.367752,
+    "inTiger": true,
+    "nearestTiger": "Fortune Pl NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.76327,
+    "lon": -84.367736,
+    "inTiger": true,
+    "nearestTiger": "East Ave NE",
+    "nearestTigerM": 7.1
+   },
+   {
+    "sign": "East Ave NE",
+    "lat": 33.76327,
+    "lon": -84.367736,
+    "inTiger": true,
+    "nearestTiger": "East Ave NE",
+    "nearestTigerM": 7.1
+   },
+   {
+    "sign": "Ralph McGill Blvd",
+    "lat": 33.764025,
+    "lon": -84.367717,
+    "inTiger": false,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7.9
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.764025,
+    "lon": -84.367717,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7.9
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.764892,
+    "lon": -84.367714,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7
+   },
+   {
+    "sign": "Wabash Ave NE",
+    "lat": 33.764892,
+    "lon": -84.367714,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.766115,
+    "lon": -84.367694,
+    "inTiger": true,
+    "nearestTiger": "Angier Ave NE",
+    "nearestTigerM": 7.1
+   },
+   {
+    "sign": "Angier Ave NE",
+    "lat": 33.766115,
+    "lon": -84.367694,
+    "inTiger": true,
+    "nearestTiger": "Angier Ave NE",
+    "nearestTigerM": 7.1
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.76716,
+    "lon": -84.367684,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 6.7
+   },
+   {
+    "sign": "Rankin St NE",
+    "lat": 33.76716,
+    "lon": -84.367684,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 6.7
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.768187,
+    "lon": -84.367669,
+    "inTiger": true,
+    "nearestTiger": "Dallas St NE",
+    "nearestTigerM": 6.5
+   },
+   {
+    "sign": "Dallas St NE",
+    "lat": 33.768187,
+    "lon": -84.367669,
+    "inTiger": true,
+    "nearestTiger": "Dallas St NE",
+    "nearestTigerM": 6.5
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.768704,
+    "lon": -84.367657,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Winton Ter NE",
+    "lat": 33.768704,
+    "lon": -84.367657,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.769364,
+    "lon": -84.367647,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Morgan St NE",
+    "lat": 33.769364,
+    "lon": -84.367647,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.769964,
+    "lon": -84.367638,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Blvd Pl NE",
+    "lat": 33.769964,
+    "lon": -84.367638,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "North Ave NE",
+    "lat": 33.771035,
+    "lon": -84.367588,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 10.4
+   },
+   {
+    "sign": "Glen Iris Dr NE",
+    "lat": 33.771035,
+    "lon": -84.367588,
+    "inTiger": true,
+    "nearestTiger": "Glen Iris Dr NE",
+    "nearestTigerM": 10.4
+   },
+   {
+    "sign": "Ponce de Leon Ave NE",
+    "lat": 33.773364,
+    "lon": -84.367047,
+    "inTiger": true,
+    "nearestTiger": "Ponce de Leon Ave NE",
+    "nearestTigerM": 10.2
+   },
+   {
+    "sign": "Lakeview Ave NE",
+    "lat": 33.773364,
+    "lon": -84.367047,
+    "inTiger": true,
+    "nearestTiger": "Ponce de Leon Ave NE",
+    "nearestTigerM": 10.2
+   },
+   {
+    "sign": "John Wesley Dobbs Ave NE",
+    "lat": 33.759429,
+    "lon": -84.367001,
+    "inTiger": true,
+    "nearestTiger": "John Wesley Dobbs Ave NE",
+    "nearestTigerM": 6.1
+   },
+   {
+    "sign": "Lampkin St NE",
+    "lat": 33.759429,
+    "lon": -84.367001,
+    "inTiger": false,
+    "nearestTiger": "John Wesley Dobbs Ave NE",
+    "nearestTigerM": 6.1
+   },
+   {
+    "sign": "Auburn Ave NE",
+    "lat": 33.756476,
+    "lon": -84.366906,
+    "inTiger": true,
+    "nearestTiger": "Airline St NE",
+    "nearestTigerM": 7.2
+   },
+   {
+    "sign": "Airline St NE",
+    "lat": 33.756476,
+    "lon": -84.366906,
+    "inTiger": true,
+    "nearestTiger": "Airline St NE",
+    "nearestTigerM": 7.2
+   }
+  ]
+ },
+ "centerlines": [
+  {
+   "name": "Ponce de Leon Avenue Northeast",
+   "strips": 10,
+   "tigerFeatures": 1,
+   "vsTiger": {
+    "n": 98,
+    "median": 3.1,
+    "p95": 5.1,
+    "max": 5.3
+   },
+   "vsLiveOsm": {
+    "n": 98,
+    "median": 0,
+    "p95": 0,
+    "max": 0
+   },
+   "widthM": 16.5
+  },
+  {
+   "name": "North Avenue Northeast",
+   "strips": 16,
+   "tigerFeatures": 1,
+   "vsTiger": {
+    "n": 161,
+    "median": 0,
+    "p95": 1,
+    "max": 1.1
+   },
+   "vsLiveOsm": {
+    "n": 161,
+    "median": 0,
+    "p95": 0,
+    "max": 0
+   },
+   "widthM": 12
+  },
+  {
+   "name": "Highland Avenue Northeast",
+   "strips": 8,
+   "tigerFeatures": 2,
+   "vsTiger": {
+    "n": 89,
+    "median": 0.1,
+    "p95": 1.4,
+    "max": 1.6
+   },
+   "vsLiveOsm": {
+    "n": 89,
+    "median": 0,
+    "p95": 0,
+    "max": 0
+   },
+   "widthM": 12
+  },
+  {
+   "name": "Irwin Street Northeast",
+   "strips": 5,
+   "tigerFeatures": 1,
+   "vsTiger": {
+    "n": 52,
+    "median": 0,
+    "p95": 0.1,
+    "max": 1.4
+   },
+   "vsLiveOsm": {
+    "n": 52,
+    "median": 0,
+    "p95": 0,
+    "max": 0
+   },
+   "widthM": 10
+  },
+  {
+   "name": "Krog Street Northeast",
+   "strips": 3,
+   "tigerFeatures": 2,
+   "vsTiger": {
+    "n": 64,
+    "median": 0.2,
+    "p95": 59.4,
+    "max": 86.1
+   },
+   "vsLiveOsm": {
+    "n": 64,
+    "median": 0,
+    "p95": 0,
+    "max": 0
+   },
+   "widthM": 8
+  },
+  {
+   "name": "Ralph McGill Boulevard Northeast",
+   "strips": 2,
+   "tigerFeatures": 1,
+   "vsTiger": {
+    "n": 141,
+    "median": 0,
+    "p95": 3.7,
+    "max": 4.3
+   },
+   "vsLiveOsm": {
+    "n": 141,
+    "median": 0,
+    "p95": 0,
+    "max": 0
+   },
+   "widthM": 12
+  }
+ ],
+ "trail": {
+  "ways": 13,
+  "lengthM": 2327,
+  "vsLiveOsm": {
+   "n": 104,
+   "max": 0.01
+  },
+  "liveTags": [
+   {
+    "id": 83291376,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": "yes",
+    "layer": "2",
+    "surface": "concrete"
+   },
+   {
+    "id": 83291377,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": null,
+    "layer": null,
+    "surface": "concrete"
+   },
+   {
+    "id": 83291378,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": null,
+    "layer": null,
+    "surface": "concrete"
+   },
+   {
+    "id": 83291379,
+    "name": "Atlanta BeltLine Eastside Trail",
+    "bridge": "yes",
+    "layer": "2",
+    "surface": "paved"
+   },
+   {
+    "id": 83294497,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": "yes",
+    "layer": "1",
+    "surface": "paved"
+   },
+   {
+    "id": 83294499,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": null,
+    "layer": null,
+    "surface": "concrete"
+   },
+   {
+    "id": 741961706,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": null,
+    "layer": null,
+    "surface": null
+   },
+   {
+    "id": 741961707,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": null,
+    "layer": null,
+    "surface": "concrete:plates"
+   },
+   {
+    "id": 741961708,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": "yes",
+    "layer": "1",
+    "surface": "concrete:plates"
+   },
+   {
+    "id": 741961709,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": null,
+    "layer": null,
+    "surface": null
+   },
+   {
+    "id": 741961710,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": null,
+    "layer": null,
+    "surface": null
+   },
+   {
+    "id": 742982445,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": null,
+    "layer": null,
+    "surface": null
+   },
+   {
+    "id": 1043756762,
+    "name": "Atlanta Beltline Eastside Trail",
+    "bridge": null,
+    "layer": null,
+    "surface": "concrete"
+   }
+  ]
+ },
+ "integrity": {
+  "featuresNotInRawFetch": [],
+  "streetNames": 74,
+  "streetNamesNotInTiger": [
+   "John Lewis Freedom Parkway Northeast",
+   "Inman Lane",
+   "Inman Way",
+   "Woodall Avenue Northeast",
+   "Prospect Way Northeast",
+   "Bishop Way Northeast",
+   "Ralph McGill Boulevard",
+   "Village Parkway",
+   "Closed Lake Avenue",
+   "Austin Avenue Northeast",
+   "Lampkin Street Northeast",
+   "Inman Village Parkway Northeast"
+  ]
+ },
+ "bounds": {
+  "bboxLocal": {
+   "minX": -485.31,
+   "maxX": 485.31,
+   "minZ": -972.96,
+   "maxZ": 972.96
+  },
+  "levelBounds": {
+   "minX": -485.31,
+   "maxX": 485.31,
+   "minZ": -972.96,
+   "maxZ": 972.96
+  },
+  "trailZ": [
+   -972.96,
+   972.96
+  ],
+  "trailNorthLat": 33.7735000274109,
+  "trailSouthLat": 33.7559999725891
+ }
+}

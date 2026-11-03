@@ -1,0 +1,139 @@
+{
+  "note": "Chromium headless with SwiftShader (software GPU on the CPU). Pessimistic proxy, not a phone GPU.",
+  "runs": [
+    {
+      "device": "Pixel 7",
+      "landscape": false,
+      "cpu": 4,
+      "q": "low",
+      "tier": "low",
+      "tag": "sw-Pixel7-port-low-cpu4x",
+      "readyMs": 8481,
+      "frames": 112,
+      "medianMs": 100,
+      "medianFps": 10,
+      "p95FrameMs": 200,
+      "p5Fps": 5,
+      "maxMs": 383.3,
+      "drawCalls": 41,
+      "triangles": 93550,
+      "lastPassInfo": {
+        "calls": 41,
+        "triangles": 93550
+      },
+      "rendererMemory": null,
+      "dpr": 2.625,
+      "canvasPx": [
+        824,
+        1678
+      ],
+      "jsHeapUsedMB": 27.3,
+      "jsHeapTotalMB": 240,
+      "loadBefore": "12:19  up 16 days,  1:02, 7 users, load averages: 43.33 52.49 42.89",
+      "loadAfter": "12:19  up 16 days,  1:03, 7 users, load averages: 45.99 52.61 43.10",
+      "errors": []
+    },
+    {
+      "device": "Pixel 7",
+      "landscape": false,
+      "cpu": 4,
+      "q": "high",
+      "tier": "high",
+      "tag": "sw-Pixel7-port-high-cpu4x",
+      "readyMs": 11874,
+      "frames": 13,
+      "medianMs": 816.6,
+      "medianFps": 1.2,
+      "p95FrameMs": 2399.9,
+      "p5Fps": 0.4,
+      "maxMs": 2399.9,
+      "drawCalls": 149,
+      "triangles": 424905,
+      "lastPassInfo": {
+        "calls": 1,
+        "triangles": 1
+      },
+      "rendererMemory": {
+        "geometries": 65,
+        "textures": 36
+      },
+      "dpr": 2.625,
+      "canvasPx": [
+        824,
+        1678
+      ],
+      "jsHeapUsedMB": 40.8,
+      "jsHeapTotalMB": 218.8,
+      "loadBefore": "12:19  up 16 days,  1:03, 7 users, load averages: 42.91 51.63 42.92",
+      "loadAfter": "12:20  up 16 days,  1:04, 7 users, load averages: 47.67 51.61 43.41",
+      "errors": []
+    },
+    {
+      "device": "iPhone 15",
+      "landscape": false,
+      "cpu": 1,
+      "q": "low",
+      "tier": "low",
+      "tag": "sw-iPhone15-port-low-cpu1x",
+      "readyMs": 1981,
+      "frames": 186,
+      "medianMs": 50,
+      "medianFps": 20,
+      "p95FrameMs": 116.6,
+      "p5Fps": 8.6,
+      "maxMs": 399.9,
+      "drawCalls": 24,
+      "triangles": 59417,
+      "lastPassInfo": {
+        "calls": 24,
+        "triangles": 59417
+      },
+      "rendererMemory": null,
+      "dpr": 3,
+      "canvasPx": [
+        786,
+        1318
+      ],
+      "jsHeapUsedMB": 36.9,
+      "jsHeapTotalMB": 183.3,
+      "loadBefore": "12:20  up 16 days,  1:04, 7 users, load averages: 46.82 51.37 43.38",
+      "loadAfter": "12:20  up 16 days,  1:04, 7 users, load averages: 45.07 50.75 43.29",
+      "errors": []
+    },
+    {
+      "device": "iPhone 15",
+      "landscape": false,
+      "cpu": 1,
+      "q": "high",
+      "tier": "high",
+      "tag": "sw-iPhone15-port-high-cpu1x",
+      "readyMs": 1304,
+      "frames": 14,
+      "medianMs": 666.6,
+      "medianFps": 1.5,
+      "p95FrameMs": 3116.5,
+      "p5Fps": 0.3,
+      "maxMs": 3116.5,
+      "drawCalls": 154,
+      "triangles": 427910,
+      "lastPassInfo": {
+        "calls": 1,
+        "triangles": 1
+      },
+      "rendererMemory": {
+        "geometries": 71,
+        "textures": 36
+      },
+      "dpr": 3,
+      "canvasPx": [
+        786,
+        1318
+      ],
+      "jsHeapUsedMB": 179.1,
+      "jsHeapTotalMB": 323.2,
+      "loadBefore": "12:21  up 16 days,  1:04, 7 users, load averages: 44.19 50.47 43.24",
+      "loadAfter": "12:21  up 16 days,  1:05, 7 users, load averages: 46.79 50.48 43.62",
+      "errors": []
+    }
+  ]
+}

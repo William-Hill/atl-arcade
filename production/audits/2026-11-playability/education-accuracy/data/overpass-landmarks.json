@@ -1,0 +1,1120 @@
+{
+ "query": "[out:json][timeout:90];\n(\n  nwr[\"building:part\"](33.7715,-84.3670,33.7735,-84.3640);\n  nwr[\"man_made\"=\"tower\"](33.7715,-84.3670,33.7735,-84.3640);\n  nwr[\"tourism\"=\"artwork\"](33.756,-84.3685,33.7735,-84.358);\n  nwr[\"name\"=\"Ponce City Market\"];\n  nwr[\"name\"=\"Krog Street Market\"](33.75,-84.37,33.77,-84.35);\n  way[\"name\"~\"Lake Avenue|Parque|Beltline Access|Stone Mountain Trail\"](33.756,-84.3685,33.7735,-84.358);\n  nwr[\"leisure\"=\"park\"][\"name\"~\"Parque\"](33.756,-84.3685,33.7735,-84.358);\n);\nout tags center;\n",
+ "endpoint": "https://overpass-api.de/api/interpreter",
+ "result": {
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+   "timestamp_osm_base": "2026-11-03T17:17:04Z",
+   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+   {
+    "type": "node",
+    "id": 3422675418,
+    "lat": 33.7730922,
+    "lon": -84.3655454,
+    "tags": {
+     "building:level_min": "14",
+     "building:part": "yes",
+     "country": "US",
+     "flag:name": "United States",
+     "flag:type": "national",
+     "flag:wikidata": "Q42537",
+     "height": "5",
+     "location": "roof",
+     "man_made": "flagpole",
+     "subject": "United States",
+     "subject:wikidata": "Q30"
+    }
+   },
+   {
+    "type": "node",
+    "id": 8246167537,
+    "lat": 33.7733946,
+    "lon": -84.3594065,
+    "tags": {
+     "name": "The Bridge",
+     "tourism": "artwork",
+     "wikipedia": "en:The Bridge (sculpture)"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14185903724,
+    "lat": 33.7582923,
+    "lon": -84.3647252,
+    "tags": {
+     "addr:floor": "G;1",
+     "artist_name": "Gabi Madrid",
+     "artwork_type": "installation",
+     "level": "0;1",
+     "material": "metal",
+     "name": "Home: Content",
+     "start_date": "2023",
+     "tourism": "artwork",
+     "website": "https://beltline.org/art/this-house-this-home/"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14185903731,
+    "lat": 33.757758,
+    "lon": -84.3647693,
+    "tags": {
+     "addr:floor": ";G;1",
+     "artist_name": "YikYak + olive47",
+     "artwork_type": "mural",
+     "fixme": "Please merge me into a nearby wall",
+     "material": "brick",
+     "name": "We \u2665\ufe0e ATL",
+     "tourism": "artwork"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14185903733,
+    "lat": 33.7573919,
+    "lon": -84.3652563,
+    "tags": {
+     "addr:floor": "G;1",
+     "artist_name": "Kevin Chambers",
+     "artwork_type": "statue",
+     "covered": "yes",
+     "level": "0;1",
+     "material": "bronze",
+     "name": "Convergence",
+     "start_date": "2024",
+     "tourism": "artwork"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14185903735,
+    "lat": 33.7575052,
+    "lon": -84.3653005,
+    "tags": {
+     "addr:floor": "G;1",
+     "artist_name": "@RISINGREDLOTUS",
+     "artwork_type": "mural",
+     "fixme": "Please merge me into a nearby wall",
+     "level": "0;1",
+     "material": "brick",
+     "name": "Untitled Koi Fish",
+     "tourism": "artwork"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14298298366,
+    "lat": 33.7706949,
+    "lon": -84.3635359,
+    "tags": {
+     "artist_name": "David Landis",
+     "artwork_type": "installation",
+     "material": "steel",
+     "name": "33 Oaks",
+     "start_date": "2015",
+     "tourism": "artwork",
+     "website": "https://beltline.org/art/33-oaks/"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14298298368,
+    "lat": 33.7719764,
+    "lon": -84.3643564,
+    "tags": {
+     "addr:floor": "G;1",
+     "artist_name": "Chase Kahwinhut Earles",
+     "artwork_type": "sculpture",
+     "description": "Caddo Bear Effigy",
+     "level": "0;1",
+     "material": "clay",
+     "name": "Naw\u2019-tsi\u0294",
+     "start_date": "2021",
+     "tourism": "artwork",
+     "website": "https://beltline.org/art/effigies/"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14298298369,
+    "lat": 33.7640768,
+    "lon": -84.3595774,
+    "tags": {
+     "artist_name": "David Landis",
+     "artwork_type": "installation",
+     "level": "0;1",
+     "material": "steel",
+     "name": "Northern White",
+     "start_date": "2012",
+     "tourism": "artwork",
+     "website": "https://beltline.org/art/northern-white/"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14303066153,
+    "lat": 33.7706949,
+    "lon": -84.3635358,
+    "tags": {
+     "artist_name": "David Landis",
+     "artwork_type": "installation",
+     "material": "steel",
+     "name": "33 Oaks",
+     "start_date": "2015",
+     "tourism": "artwork",
+     "website": "https://beltline.org/art/33-oaks/"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14303066155,
+    "lat": 33.7719763,
+    "lon": -84.3643564,
+    "tags": {
+     "addr:floor": "G;1",
+     "artist_name": "Chase Kahwinhut Earles",
+     "artwork_type": "sculpture",
+     "description": "Caddo Bear Effigy",
+     "level": "0;1",
+     "material": "clay",
+     "name": "Naw\u2019-tsi\u0294",
+     "start_date": "2021",
+     "tourism": "artwork",
+     "website": "https://beltline.org/art/effigies/"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14303066156,
+    "lat": 33.7640768,
+    "lon": -84.3595774,
+    "tags": {
+     "artist_name": "David Landis",
+     "artwork_type": "installation",
+     "level": "0;1",
+     "material": "steel",
+     "name": "Northern White",
+     "start_date": "2012",
+     "tourism": "artwork",
+     "website": "https://beltline.org/art/northern-white/"
+    }
+   },
+   {
+    "type": "node",
+    "id": 14313871641,
+    "lat": 33.7648164,
+    "lon": -84.3594642,
+    "tags": {
+     "artist_name": "Karen Anderson Singer",
+     "artwork_type": "installation",
+     "contact:facebook": "https://www.facebook.com/tinydoorsatl",
+     "contact:instagram": "https://www.instagram.com/tinydoorsatl",
+     "covered": "yes",
+     "email": "studio@tinydoorsatl.com",
+     "mimics": "door",
+     "name": "Tiny Door 2 - Beltline Trail",
+     "operator": "Tiny Doors ATL",
+     "start_date": "2014",
+     "tourism": "artwork",
+     "website": "https://www.tinydoorsatl.com/public-tiny-doors/2-old-fourth-ward-skatepark-on-the-beltline"
+    }
+   },
+   {
+    "type": "way",
+    "id": 44331706,
+    "center": {
+     "lat": 33.7595243,
+     "lon": -84.3614614
+    },
+    "tags": {
+     "bicycle": "designated",
+     "highway": "residential",
+     "name": "Lake Avenue Northeast",
+     "surface": "asphalt",
+     "tiger:cfcc": "A41",
+     "tiger:county": "Fulton, GA",
+     "tiger:name_base": "Lake",
+     "tiger:name_direction_suffix": "NE",
+     "tiger:name_type": "Ave",
+     "tiger:reviewed": "no",
+     "tiger:zip_left": "30307",
+     "tiger:zip_right": "30307"
+    }
+   },
+   {
+    "type": "way",
+    "id": 44851091,
+    "center": {
+     "lat": 33.7618292,
+     "lon": -84.3663391
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Stone Mountain Trail",
+     "segregated": "no",
+     "surface": "paved"
+    }
+   },
+   {
+    "type": "way",
+    "id": 44851092,
+    "center": {
+     "lat": 33.7642362,
+     "lon": -84.3596385
+    },
+    "tags": {
+     "bicycle": "designated",
+     "bridge": "yes",
+     "foot": "designated",
+     "highway": "cycleway",
+     "layer": "1",
+     "name": "Stone Mountain Trail",
+     "segregated": "no"
+    }
+   },
+   {
+    "type": "way",
+    "id": 184803195,
+    "center": {
+     "lat": 33.7724132,
+     "lon": -84.3658007
+    },
+    "tags": {
+     "addr:city": "Atlanta",
+     "addr:housenumber": "675",
+     "addr:postcode": "30308",
+     "addr:state": "GA",
+     "addr:street": "Ponce de Leon Avenue Northeast",
+     "building": "industrial",
+     "building:levels": "10",
+     "building:use": "commercial",
+     "height": "50",
+     "historic": "building",
+     "name": "Ponce City Market",
+     "old_name": "City Hall East;Sears",
+     "website": "https://poncecitymarket.com/",
+     "wheelchair": "yes",
+     "wikidata": "Q7227582"
+    }
+   },
+   {
+    "type": "way",
+    "id": 184819885,
+    "center": {
+     "lat": 33.7694742,
+     "lon": -84.3626772
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "surface": "paved"
+    }
+   },
+   {
+    "type": "way",
+    "id": 186813134,
+    "center": {
+     "lat": 33.7645533,
+     "lon": -84.3603112
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Beltline Access Line",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 186814444,
+    "center": {
+     "lat": 33.764172,
+     "lon": -84.3582969
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 186814445,
+    "center": {
+     "lat": 33.7639415,
+     "lon": -84.3591488
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 186814446,
+    "center": {
+     "lat": 33.7640643,
+     "lon": -84.3593378
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 186814447,
+    "center": {
+     "lat": 33.7641299,
+     "lon": -84.3595092
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 186814448,
+    "center": {
+     "lat": 33.7639938,
+     "lon": -84.3595402
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 217602874,
+    "center": {
+     "lat": 33.7593989,
+     "lon": -84.3641923
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "source": "bing_imagery",
+     "surface": "paved"
+    }
+   },
+   {
+    "type": "way",
+    "id": 217602876,
+    "center": {
+     "lat": 33.7584869,
+     "lon": -84.3646978
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "source": "bing_imagery",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 224776047,
+    "center": {
+     "lat": 33.7665892,
+     "lon": -84.355915
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Stone Mountain Trail",
+     "segregated": "no",
+     "surface": "asphalt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 310394974,
+    "center": {
+     "lat": 33.7720866,
+     "lon": -84.3641563
+    },
+    "tags": {
+     "highway": "footway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 335151383,
+    "center": {
+     "lat": 33.7730901,
+     "lon": -84.365544
+    },
+    "tags": {
+     "building:min_level": "14",
+     "building:part": "yes",
+     "height": "14",
+     "level": "4",
+     "min_height": "70",
+     "roof:shape": "pyramidal"
+    }
+   },
+   {
+    "type": "way",
+    "id": 431795702,
+    "center": {
+     "lat": 33.7726186,
+     "lon": -84.3645068
+    },
+    "tags": {
+     "bicycle": "designated",
+     "highway": "footway",
+     "motor_vehicle": "no",
+     "name": "Beltline Access Line",
+     "surface": "paved"
+    }
+   },
+   {
+    "type": "way",
+    "id": 496238155,
+    "center": {
+     "lat": 33.7676629,
+     "lon": -84.3609177
+    },
+    "tags": {
+     "handrail": "yes",
+     "highway": "steps",
+     "incline": "up",
+     "name": "Beltline Access Line",
+     "ramp": "yes",
+     "ramp:bicycle": "yes",
+     "ramp:wheelchair": "no",
+     "step_count": "40",
+     "surface": "concrete",
+     "tactile_paving": "no"
+    }
+   },
+   {
+    "type": "way",
+    "id": 554592637,
+    "center": {
+     "lat": 33.7611172,
+     "lon": -84.3626728
+    },
+    "tags": {
+     "bicycle": "designated",
+     "description": "Beltline access path",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "surface": "paved"
+    }
+   },
+   {
+    "type": "way",
+    "id": 554592638,
+    "center": {
+     "lat": 33.7609295,
+     "lon": -84.3626491
+    },
+    "tags": {
+     "description": "Beltline access path",
+     "handrail": "yes",
+     "highway": "steps",
+     "name": "Beltline Access Line",
+     "surface": "paved"
+    }
+   },
+   {
+    "type": "way",
+    "id": 554592639,
+    "center": {
+     "lat": 33.7608226,
+     "lon": -84.3625615
+    },
+    "tags": {
+     "bicycle": "designated",
+     "description": "Beltline access path",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "surface": "paved"
+    }
+   },
+   {
+    "type": "way",
+    "id": 586825917,
+    "center": {
+     "lat": 33.7584911,
+     "lon": -84.3623449
+    },
+    "tags": {
+     "highway": "residential",
+     "name": "Closed Lake Avenue"
+    }
+   },
+   {
+    "type": "way",
+    "id": 610655703,
+    "center": {
+     "lat": 33.7723095,
+     "lon": -84.365949
+    },
+    "tags": {
+     "landuse": "retail",
+     "name": "Ponce City Market",
+     "website": "https://poncecitymarket.com/"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1043074289,
+    "center": {
+     "lat": 33.7625445,
+     "lon": -84.3606771
+    },
+    "tags": {
+     "access": "yes",
+     "highway": "steps",
+     "name": "Beltline Access Line",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1118174874,
+    "center": {
+     "lat": 33.769265,
+     "lon": -84.3631087
+    },
+    "tags": {
+     "handrail": "yes",
+     "highway": "steps",
+     "incline": "down",
+     "name": "Beltline Access Line",
+     "ramp": "yes",
+     "ramp:bicycle": "yes",
+     "step_count": "49",
+     "surface": "concrete",
+     "tactile_paving": "no"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1118174882,
+    "center": {
+     "lat": 33.7712613,
+     "lon": -84.364258
+    },
+    "tags": {
+     "highway": "steps",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1118174883,
+    "center": {
+     "lat": 33.7712794,
+     "lon": -84.3640511
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1229184075,
+    "center": {
+     "lat": 33.7680894,
+     "lon": -84.3632544
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Parque en el centro bonito"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1229184079,
+    "center": {
+     "lat": 33.769009,
+     "lon": -84.3627208
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1229184080,
+    "center": {
+     "lat": 33.7689021,
+     "lon": -84.362397
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1229184081,
+    "center": {
+     "lat": 33.7689291,
+     "lon": -84.3626081
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1229184082,
+    "center": {
+     "lat": 33.7686774,
+     "lon": -84.3622668
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1353860784,
+    "center": {
+     "lat": 33.7693905,
+     "lon": -84.3628514
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1353860785,
+    "center": {
+     "lat": 33.769253,
+     "lon": -84.3630587
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "segregated": "no",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1376878303,
+    "center": {
+     "lat": 33.7693254,
+     "lon": -84.362986
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1387075148,
+    "center": {
+     "lat": 33.7639127,
+     "lon": -84.3604191
+    },
+    "tags": {
+     "bicycle": "designated",
+     "covered": "yes",
+     "foot": "designated",
+     "highway": "cycleway",
+     "motor_vehicle": "no",
+     "name": "Stone Mountain Trail",
+     "segregated": "no",
+     "surface": "paved"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1390483461,
+    "center": {
+     "lat": 33.757126,
+     "lon": -84.3645896
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1390483462,
+    "center": {
+     "lat": 33.7571332,
+     "lon": -84.3649199
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1390483463,
+    "center": {
+     "lat": 33.7571301,
+     "lon": -84.3648285
+    },
+    "tags": {
+     "access": "yes",
+     "bicycle": "dismount",
+     "foot": "yes",
+     "handrail": "yes",
+     "highway": "steps",
+     "incline": "down",
+     "name": "Beltline Access Line",
+     "ramp": "no",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1396654845,
+    "center": {
+     "lat": 33.7708265,
+     "lon": -84.3638257
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1396654846,
+    "center": {
+     "lat": 33.7708525,
+     "lon": -84.3639433
+    },
+    "tags": {
+     "highway": "steps",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1396654847,
+    "center": {
+     "lat": 33.7708971,
+     "lon": -84.3640087
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1396654868,
+    "center": {
+     "lat": 33.7565991,
+     "lon": -84.3654172
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1409591695,
+    "center": {
+     "lat": 33.7687661,
+     "lon": -84.3624775
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1409591696,
+    "center": {
+     "lat": 33.7687605,
+     "lon": -84.3623864
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431135522,
+    "center": {
+     "lat": 33.7611129,
+     "lon": -84.3617797
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431135523,
+    "center": {
+     "lat": 33.7631828,
+     "lon": -84.360101
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431135524,
+    "center": {
+     "lat": 33.7633448,
+     "lon": -84.3598049
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431135525,
+    "center": {
+     "lat": 33.7633139,
+     "lon": -84.3596658
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431135526,
+    "center": {
+     "lat": 33.7658446,
+     "lon": -84.3602425
+    },
+    "tags": {
+     "bicycle": "designated",
+     "check_date:surface": "2025-05-03",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431135527,
+    "center": {
+     "lat": 33.7685778,
+     "lon": -84.3618274
+    },
+    "tags": {
+     "highway": "steps",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431135530,
+    "center": {
+     "lat": 33.7683926,
+     "lon": -84.3615692
+    },
+    "tags": {
+     "highway": "steps",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431135531,
+    "center": {
+     "lat": 33.7682354,
+     "lon": -84.3615288
+    },
+    "tags": {
+     "highway": "steps",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431140282,
+    "center": {
+     "lat": 33.759329,
+     "lon": -84.3640547
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1431140283,
+    "center": {
+     "lat": 33.7622913,
+     "lon": -84.3604874
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Beltline Access Line"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1451196892,
+    "center": {
+     "lat": 33.7640716,
+     "lon": -84.3600805
+    },
+    "tags": {
+     "bicycle": "designated",
+     "foot": "designated",
+     "highway": "cycleway",
+     "name": "Stone Mountain Trail",
+     "segregated": "no"
+    }
+   },
+   {
+    "type": "relation",
+    "id": 4740971,
+    "center": {
+     "lat": 33.7724132,
+     "lon": -84.3658007
+    },
+    "tags": {
+     "height": "50",
+     "name": "Ponce City Market",
+     "type": "building"
+    }
+   },
+   {
+    "type": "relation",
+    "id": 5413435,
+    "center": {
+     "lat": 33.7569229,
+     "lon": -84.3639995
+    },
+    "tags": {
+     "addr:city": "Atlanta",
+     "addr:housenumber": "99",
+     "addr:postcode": "30307",
+     "addr:state": "GA",
+     "addr:street": "Krog Street Northeast",
+     "building": "retail",
+     "name": "Krog Street Market",
+     "type": "multipolygon",
+     "website": "http://www.krogstreetmarket.com",
+     "wikidata": "Q6438751"
+    }
+   }
+  ]
+ }
+}

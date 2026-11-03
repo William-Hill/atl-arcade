@@ -1,0 +1,614 @@
+{
+ "Ponce City Market": {
+  "query": "Ponce City Market, Atlanta",
+  "url": "https://nominatim.openstreetmap.org/search?q=Ponce+City+Market%2C+Atlanta&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 342337351,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 184803195,
+    "lat": "33.7724397",
+    "lon": "-84.3652032",
+    "category": "building",
+    "type": "industrial",
+    "place_rank": 30,
+    "importance": 0.39384141776543397,
+    "addresstype": "building",
+    "name": "Ponce City Market",
+    "display_name": "Ponce City Market, 675, Ponce de Leon Avenue Northeast, Atlanta, Fulton County, Georgia, 30308, United States",
+    "address": {
+     "building": "Ponce City Market",
+     "house_number": "675",
+     "road": "Ponce de Leon Avenue Northeast",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30308",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7716159",
+     "33.7732105",
+     "-84.3667896",
+     "-84.3648117"
+    ]
+   },
+   {
+    "place_id": 342347682,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 610655703,
+    "lat": "33.7722096",
+    "lon": "-84.3661028",
+    "category": "landuse",
+    "type": "retail",
+    "place_rank": 24,
+    "importance": 0.0800790806439307,
+    "addresstype": "retail",
+    "name": "Ponce City Market",
+    "display_name": "Ponce City Market, Atlanta, Fulton County, Georgia, United States",
+    "address": {
+     "retail": "Ponce City Market",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7712210",
+     "33.7733980",
+     "-84.3676436",
+     "-84.3642544"
+    ]
+   }
+  ]
+ },
+ "Krog Street Market": {
+  "query": "Krog Street Market, Atlanta",
+  "url": "https://nominatim.openstreetmap.org/search?q=Krog+Street+Market%2C+Atlanta&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 342915288,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "relation",
+    "osm_id": 5413435,
+    "lat": "33.7569916",
+    "lon": "-84.3640149",
+    "category": "building",
+    "type": "retail",
+    "place_rank": 30,
+    "importance": 7.908064393067854e-05,
+    "addresstype": "building",
+    "name": "Krog Street Market",
+    "display_name": "Krog Street Market, 99, Krog Street Northeast, Inman Park, Atlanta, Fulton County, Georgia, 30307, United States",
+    "address": {
+     "building": "Krog Street Market",
+     "house_number": "99",
+     "road": "Krog Street Northeast",
+     "neighbourhood": "Inman Park",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30307",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7563733",
+     "33.7574724",
+     "-84.3642998",
+     "-84.3636992"
+    ]
+   }
+  ]
+ },
+ "Historic Fourth Ward Park": {
+  "query": "Historic Fourth Ward Park, Atlanta",
+  "url": "https://nominatim.openstreetmap.org/search?q=Historic+Fourth+Ward+Park%2C+Atlanta&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 342269363,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 182470312,
+    "lat": "33.7680818",
+    "lon": "-84.3650511",
+    "category": "leisure",
+    "type": "park",
+    "place_rank": 24,
+    "importance": 0.0800790806439307,
+    "addresstype": "park",
+    "name": "Historic Fourth Ward Park",
+    "display_name": "Historic Fourth Ward Park, Atlanta, Fulton County, Georgia, United States",
+    "address": {
+     "park": "Historic Fourth Ward Park",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7651017",
+     "33.7710330",
+     "-84.3658970",
+     "-84.3637297"
+    ]
+   }
+  ]
+ },
+ "Freedom Park": {
+  "query": "Freedom Park, Atlanta",
+  "url": "https://nominatim.openstreetmap.org/search?q=Freedom+Park%2C+Atlanta&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 342353858,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "relation",
+    "osm_id": 12045420,
+    "lat": "33.7619738",
+    "lon": "-84.3654639",
+    "category": "leisure",
+    "type": "park",
+    "place_rank": 24,
+    "importance": 0.0800790806439307,
+    "addresstype": "park",
+    "name": "Freedom Park",
+    "display_name": "Freedom Park, Atlanta, Fulton County, Georgia, 30312, United States",
+    "address": {
+     "park": "Freedom Park",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30312",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7585602",
+     "33.7737673",
+     "-84.3742207",
+     "-84.3393875"
+    ]
+   }
+  ]
+ },
+ "Atlanta Art Park": {
+  "query": "Atlanta Art Park, Atlanta",
+  "url": "https://nominatim.openstreetmap.org/search?q=Atlanta+Art+Park%2C+Atlanta&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 341735464,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 93512033,
+    "lat": "33.7616149",
+    "lon": "-84.3674485",
+    "category": "leisure",
+    "type": "park",
+    "place_rank": 24,
+    "importance": 0.0800790806439307,
+    "addresstype": "park",
+    "name": "Atlanta Art Park",
+    "display_name": "Atlanta Art Park, 221, Atlanta, Fulton County, Georgia, United States",
+    "address": {
+     "park": "Atlanta Art Park",
+     "house_number": "221",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7614418",
+     "33.7618077",
+     "-84.3677557",
+     "-84.3670929"
+    ]
+   }
+  ]
+ },
+ "Parque en el centro bonito": {
+  "query": "Parque en el centro bonito, Atlanta",
+  "url": "https://nominatim.openstreetmap.org/search?q=Parque+en+el+centro+bonito%2C+Atlanta&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 339205224,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 1229184075,
+    "lat": "33.7681232",
+    "lon": "-84.3633031",
+    "category": "leisure",
+    "type": "park",
+    "place_rank": 24,
+    "importance": 0.0800790806439307,
+    "addresstype": "park",
+    "name": "Parque en el centro bonito",
+    "display_name": "Parque en el centro bonito, Atlanta, Fulton County, Georgia, United States",
+    "address": {
+     "park": "Parque en el centro bonito",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7677476",
+     "33.7684312",
+     "-84.3636633",
+     "-84.3628456"
+    ]
+   }
+  ]
+ },
+ "addr:675 Ponce de Leon Ave NE": {
+  "query": "675 Ponce de Leon Avenue NE, Atlanta, GA 30308",
+  "url": "https://nominatim.openstreetmap.org/search?q=675+Ponce+de+Leon+Avenue+NE%2C+Atlanta%2C+GA+30308&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 342305375,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 6177094674,
+    "lat": "33.7723214",
+    "lon": "-84.3653476",
+    "category": "office",
+    "type": "company",
+    "place_rank": 30,
+    "importance": 0.4910687115648455,
+    "addresstype": "office",
+    "name": "Boston Consulting Group",
+    "display_name": "Boston Consulting Group, 675, Ponce de Leon Avenue Northeast, Atlanta, Fulton County, Georgia, 30308, United States",
+    "address": {
+     "office": "Boston Consulting Group",
+     "house_number": "675",
+     "road": "Ponce de Leon Avenue Northeast",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30308",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7722714",
+     "33.7723714",
+     "-84.3653976",
+     "-84.3652976"
+    ]
+   },
+   {
+    "place_id": 342337351,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 184803195,
+    "lat": "33.7724397",
+    "lon": "-84.3652032",
+    "category": "building",
+    "type": "industrial",
+    "place_rank": 30,
+    "importance": 0.39384141776543397,
+    "addresstype": "building",
+    "name": "Ponce City Market",
+    "display_name": "Ponce City Market, 675, Ponce de Leon Avenue Northeast, Atlanta, Fulton County, Georgia, 30308, United States",
+    "address": {
+     "building": "Ponce City Market",
+     "house_number": "675",
+     "road": "Ponce de Leon Avenue Northeast",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30308",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7716159",
+     "33.7732105",
+     "-84.3667896",
+     "-84.3648117"
+    ]
+   },
+   {
+    "place_id": 342322081,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 4879481815,
+    "lat": "33.7730641",
+    "lon": "-84.3663093",
+    "category": "amenity",
+    "type": "bar",
+    "place_rank": 30,
+    "importance": 7.908064393067854e-05,
+    "addresstype": "amenity",
+    "name": "The Tap",
+    "display_name": "The Tap, 675, Ponce de Leon Avenue Northeast, Atlanta, Fulton County, Georgia, 30308, United States",
+    "address": {
+     "amenity": "The Tap",
+     "house_number": "675",
+     "road": "Ponce de Leon Avenue Northeast",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30308",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7730141",
+     "33.7731141",
+     "-84.3663593",
+     "-84.3662593"
+    ]
+   }
+  ]
+ },
+ "addr:99 Krog St NE": {
+  "query": "99 Krog Street NE, Atlanta, GA 30307",
+  "url": "https://nominatim.openstreetmap.org/search?q=99+Krog+Street+NE%2C+Atlanta%2C+GA+30307&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 342371891,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "relation",
+    "osm_id": 5413435,
+    "lat": "33.7569916",
+    "lon": "-84.3640149",
+    "category": "building",
+    "type": "retail",
+    "place_rank": 30,
+    "importance": 7.908064393067854e-05,
+    "addresstype": "building",
+    "name": "Krog Street Market",
+    "display_name": "Krog Street Market, 99, Krog Street Northeast, Inman Park, Atlanta, Fulton County, Georgia, 30307, United States",
+    "address": {
+     "building": "Krog Street Market",
+     "house_number": "99",
+     "road": "Krog Street Northeast",
+     "neighbourhood": "Inman Park",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30307",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7563733",
+     "33.7574724",
+     "-84.3642998",
+     "-84.3636992"
+    ]
+   },
+   {
+    "place_id": 342239592,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 13568699374,
+    "lat": "33.7566068",
+    "lon": "-84.3640273",
+    "category": "amenity",
+    "type": "restaurant",
+    "place_rank": 30,
+    "importance": 7.908064393067854e-05,
+    "addresstype": "amenity",
+    "name": "Varuni Napoli",
+    "display_name": "Varuni Napoli, 99, Krog Street Northeast, Inman Park, Atlanta, Fulton County, Georgia, 30307, United States",
+    "address": {
+     "amenity": "Varuni Napoli",
+     "house_number": "99",
+     "road": "Krog Street Northeast",
+     "neighbourhood": "Inman Park",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30307",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7565568",
+     "33.7566568",
+     "-84.3640773",
+     "-84.3639773"
+    ]
+   },
+   {
+    "place_id": 342250787,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "node",
+    "osm_id": 4879481767,
+    "lat": "33.7571021",
+    "lon": "-84.3641809",
+    "category": "amenity",
+    "type": "restaurant",
+    "place_rank": 30,
+    "importance": 7.908064393067854e-05,
+    "addresstype": "amenity",
+    "name": "Superica",
+    "display_name": "Superica, 99, Krog Street Northeast, Inman Park, Atlanta, Fulton County, Georgia, 30307, United States",
+    "address": {
+     "amenity": "Superica",
+     "house_number": "99",
+     "road": "Krog Street Northeast",
+     "neighbourhood": "Inman Park",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30307",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7570521",
+     "33.7571521",
+     "-84.3642309",
+     "-84.3641309"
+    ]
+   }
+  ]
+ },
+ "addr:680 Dallas St NE (H4W Park)": {
+  "query": "680 Dallas Street NE, Atlanta, GA 30308",
+  "url": "https://nominatim.openstreetmap.org/search?q=680+Dallas+Street+NE%2C+Atlanta%2C+GA+30308&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 394544156,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 9270689,
+    "lat": "33.7686235",
+    "lon": "-84.3657397",
+    "category": "place",
+    "type": "house",
+    "place_rank": 30,
+    "importance": 9.99999999995449e-06,
+    "addresstype": "place",
+    "name": "",
+    "display_name": "680, Dallas Street Northeast, Old Fourth Ward, Atlanta, Fulton County, Georgia, 30308, United States",
+    "address": {
+     "house_number": "680",
+     "road": "Dallas Street Northeast",
+     "neighbourhood": "Old Fourth Ward",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30308",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7685735",
+     "33.7686735",
+     "-84.3657897",
+     "-84.3656897"
+    ]
+   }
+  ]
+ },
+ "addr:725 Ponce de Leon Ave NE": {
+  "query": "725 Ponce de Leon Avenue NE, Atlanta, GA 30306",
+  "url": "https://nominatim.openstreetmap.org/search?q=725+Ponce+de+Leon+Avenue+NE%2C+Atlanta%2C+GA+30306&format=jsonv2&limit=3&addressdetails=1&viewbox=-84.3685%2C33.7735%2C-84.3580%2C33.7560&bounded=0",
+  "results": [
+   {
+    "place_id": 339692352,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 741961704,
+    "lat": "33.7715898",
+    "lon": "-84.3633479",
+    "category": "shop",
+    "type": "supermarket",
+    "place_rank": 30,
+    "importance": 7.908064393067854e-05,
+    "addresstype": "shop",
+    "name": "Kroger",
+    "display_name": "Kroger, 725, Ponce de Leon Avenue Northeast, Atlanta, Fulton County, Georgia, 30306, United States",
+    "address": {
+     "shop": "Kroger",
+     "house_number": "725",
+     "road": "Ponce de Leon Avenue Northeast",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30306",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7712622",
+     "33.7719707",
+     "-84.3635804",
+     "-84.3631242"
+    ]
+   },
+   {
+    "place_id": 343036610,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 741961703,
+    "lat": "33.7718694",
+    "lon": "-84.3637112",
+    "category": "building",
+    "type": "office",
+    "place_rank": 30,
+    "importance": 7.908064393067854e-05,
+    "addresstype": "building",
+    "name": "725 Ponce",
+    "display_name": "725 Ponce, 725, Ponce de Leon Avenue Northeast, Atlanta, Fulton County, Georgia, 30306, United States",
+    "address": {
+     "building": "725 Ponce",
+     "house_number": "725",
+     "road": "Ponce de Leon Avenue Northeast",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30306",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7712811",
+     "33.7724033",
+     "-84.3641386",
+     "-84.3635358"
+    ]
+   },
+   {
+    "place_id": 389685605,
+    "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 1060937493,
+    "lat": "33.7737217",
+    "lon": "-84.3619500",
+    "category": "place",
+    "type": "house",
+    "place_rank": 30,
+    "importance": 9.99999999995449e-06,
+    "addresstype": "place",
+    "name": "",
+    "display_name": "725, Ponce de Leon Avenue Northeast, Linwood, Atlanta, Fulton County, Georgia, 30306, United States",
+    "address": {
+     "house_number": "725",
+     "road": "Ponce de Leon Avenue Northeast",
+     "neighbourhood": "Linwood",
+     "city": "Atlanta",
+     "county": "Fulton County",
+     "state": "Georgia",
+     "ISO3166-2-lvl4": "US-GA",
+     "postcode": "30306",
+     "country": "United States",
+     "country_code": "us"
+    },
+    "boundingbox": [
+     "33.7736717",
+     "33.7737717",
+     "-84.3620000",
+     "-84.3619000"
+    ]
+   }
+  ]
+ }
+}

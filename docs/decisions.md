@@ -424,3 +424,9 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Both tiers get the trees. `?trees=kit` brings back the kit trees, and `?wind=0` turns the wind off, for an A/B check.
 - Low tier gate, 2026-11-02 19:33, back to back, load average 23 to 36: this branch gave a median of 29.9 FPS (average 25.4, p5 15), and `?trees=kit` gave a median of 29.9 FPS (average 22.4, p5 12). Gate 55: FAIL for both. The trees do not make the low tier slower, but the gate must be run again on a quiet machine before merge.
 - Not done: leaf cards with alpha, impostors past 200 m, and a canopy from real tree data (OSM has no trees in the box).
+
+## 2026-11-02: KTX2 texture compression is deferred
+
+- Why not now: the game has 13 JPG textures (4 at 1024 px, 9 at 512 px, 1.9 MB in all) and two small GLBs. KTX2 would save about 30 MB of GPU memory on a real GPU and nothing on SwiftShader, which transcodes KTX2 to plain RGBA. It also needs a native encoder (KTX-Software `toktx`), which the build does not have.
+- When to do it: when the textures and models pass a size budget, for example more ground scans or more landmarks. Use gltf-transform with ETC1S for color maps and UASTC for normal maps, and `KTX2Loader` with the basis transcoder in `three/examples/jsm/libs/basis/`.
+- Decided by William on 2026-11-02.

@@ -624,3 +624,14 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Tests: `e2e/phone-layout.spec.js` checks at 390x844 and 844x390 that no item overlaps another with the longest HUD (a 3-move combo, the pending score, a move tag, and the balance meter), the font sizes, and the contrast.
 - Not done: a fullscreen button and an orientation hint (MOB-9). A reduced-motion option (MOB-11). A shape cue for "style ready" (MOB-12). The skater select still reloads the page (MOB-13).
 - Not verified: iOS Safari (WebKit is not installed) and a real notch or home bar.
+
+## 2026-11-03: The camera tests check ticks, not frames
+
+- Problem: two tests in `e2e/camera.spec.js` failed at a load average of about 20 to 60, on `main` too. They are "the follow camera keeps the skater on screen for a whole lap" and "the follow camera rides the quarter pipe without snapping or flipping". The recorder samples once every N render frames. A slow frame loop gives fewer frames, so `samples.length > 20` and `onRamp.length > 20` failed (11 to 20 seen). Each slow frame also carries up to 5 simulation ticks, so the camera jump per frame went over 1 m (1.46 m seen).
+- Decision: the two tests sample every frame (`recorder.start(1)`) and check simulation ticks:
+  - The largest tick gap between two samples is at most 5 (`maxStepsPerFrame` in `src/sim/fixed-step.js`), and the samples cover the lap less 10 ticks. Thus the off-screen check sees every rendered frame.
+  - The on-ramp samples cover at least 80 ticks. The skater is on the ramp for about 95 ticks.
+  - The camera jump limit is 1 m per tick, not per frame. The bug that this check found was a 12 m jump in 1 tick.
+- Why not a loose gate: the intent does not change. Each frame that the player sees is checked for the skater on screen, and a camera snap still fails. Only the count of frames no longer depends on the machine.
+- Game code: no change. `src/main.js` and the recorder stay as they are.
+- Evidence: at a load average of 37 to 39, the old spec failed 4 of 4 runs (17, 19, 14, and 14 samples). At a load average of 120 to 45, the new spec passed 20 of 20 tests with `--repeat-each 5`.

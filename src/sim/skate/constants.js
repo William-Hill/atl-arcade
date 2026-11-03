@@ -31,7 +31,9 @@ export const SKATE = {
   bodyRadius: 0.3, // m. The skater stops this far from a wall, so the body does not go into it. min 0.2 / typical 0.3 / max 0.4.
   maxStep: 0.25, // m rise the skater rolls over (curbs, stairs). min 0.15 / typical 0.25 / max 0.4.
   launchNormalY: 0.15, // ramp surface normal y under which the skater leaves the lip. min 0.05 / typical 0.15 / max 0.3.
-  bonkSpeedKeep: 0, // fraction of speed kept after a wall hit. min 0 / typical 0 / max 0.3.
+  bonkSpeedKeep: 0, // fraction of speed kept after a head-on wall hit (a bonk). min 0 / typical 0 / max 0.3.
+  wallBonkAngle: 1.05, // rad between the travel direction and a wall face above which a hit is head-on and the skater bonks. Under it the skater slides. min 0.7 / typical 1.05 / max 1.4.
+  wallSlideKeep: 0.8, // fraction of the along-wall speed kept on a slide just under wallBonkAngle. A shallower hit keeps more; a graze keeps all. min 0.5 / typical 0.8 / max 1.
   fallFloor: -3, // m height under which a falling skater respawns. min -10 / typical -3 / max -1.
   boundsMargin: 1, // m past the level bounds at which a skater respawns. min 0.5 / typical 1 / max 5.
   sideSlope: 0.0, // reserved.

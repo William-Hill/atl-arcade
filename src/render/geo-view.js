@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SURFACE_COLORS, buildGeoMeshes, buildPropMeshes } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
+import { facadeKit } from "../level/geo/facade-kit.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { createMuralAtlas } from "./murals.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
@@ -58,8 +59,14 @@ export function geoGeometry(mesh) {
 // On a brick style the wall color gets the detail of the brick scan: the
 // scan divided by its mean color, so each building keeps its own wall color
 // and gets real brick courses, mortar, and brick-to-brick variation.
-export function createFacadeMaterial(gradientMap, { brickMap = null } = {}) {
+//
+// With `interiors` (the high tier) each window shows a room behind the glass
+// (interior mapping): the view ray goes through a window reveal and hits the
+// walls, the floor, or the ceiling of a box room. The room has depth and
+// parallax, at no geometry cost.
+export function createFacadeMaterial(gradientMap, { brickMap = null, interiors = false } = {}) {
   const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
+  if (interiors) mat.defines = { INTERIOR: 1 };
   const n = STYLES.length;
   // styleA: window width and height (cell fractions), storefront, brick.
   const styleA = STYLES.map((s) => new THREE.Vector4(s.window[0], s.window[1], s.storefront ? 1 : 0, s.brick ? 1 : 0));
@@ -93,7 +100,19 @@ uniform vec2 uStyleM[${n}];
 uniform sampler2D uBrick;
 uniform vec3 uBrickMean;
 uniform float uBrickTile;
-uniform float uBrickOn;`,
+uniform float uBrickOn;
+#ifdef INTERIOR
+float roomHash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+// Room colors: warm white, beige, pale blue, sage, peach, and a deep teal.
+vec3 roomColor(float h) {
+  if (h < 0.22) return vec3(0.95, 0.9, 0.8);
+  if (h < 0.4) return vec3(0.86, 0.76, 0.6);
+  if (h < 0.56) return vec3(0.66, 0.78, 0.86);
+  if (h < 0.72) return vec3(0.7, 0.8, 0.66);
+  if (h < 0.9) return vec3(0.96, 0.74, 0.6);
+  return vec3(0.22, 0.46, 0.5);
+}
+#endif`,
       )
       .replace(
         "#include <color_fragment>",
@@ -120,6 +139,82 @@ uniform float uBrickOn;`,
     float mull = win.x > 0.5 ? (1.0 - smoothstep(0.025 - aa.x, 0.025 + aa.x, abs(cell.x - 0.5))) * inWin : 0.0;
     vec3 glass = uGlass[st] + vec3(0.18 * cell.y) + vec3(0.12) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
     vec3 wallCol = diffuseColor.rgb;
+    #ifdef INTERIOR
+    vec3 roomGlow = vec3(0.0);
+    {
+      // A view-space frame for the wall: T along the wall (the way u grows),
+      // U up, and N out of the wall.
+      vec3 N = normalize(vNormal);
+      vec3 U = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+      vec3 T = normalize(cross(U, N));
+      vec3 P = -vViewPosition;
+      float su = dot(dFdx(P), T) * dFdx(vFacade.y) + dot(dFdy(P), T) * dFdy(vFacade.y);
+      if (su < 0.0) T = -T;
+      vec3 rd = normalize(P);
+      // The ray in room meters: x along the wall, y up, z into the room.
+      vec3 r = vec3(dot(rd, T), dot(rd, U), max(-dot(rd, N), 0.05));
+      vec2 m = uStyleM[st];
+      float depth = shop ? 6.0 : 4.0;
+      float reveal = 0.22;
+      vec3 p = vec3(cell.x * m.x, cell.y * m.y, 0.0);
+      // The window opening, in meters, and the ray at the glass plane.
+      float cy = shop ? 0.42 : 0.55;
+      vec2 o0 = vec2(0.5 - win.x * 0.5, cy - win.y * 0.5) * m;
+      vec2 o1 = vec2(0.5 + win.x * 0.5, cy + win.y * 0.5) * m;
+      vec3 q = p + r * (reveal / r.z);
+      vec3 rid = vec3(floor(vFacade.yz), float(st) + dot(wallCol, vec3(7.0, 13.0, 3.0)) + dot(N, vec3(5.0, 0.0, 9.0)));
+      float h0 = roomHash(rid);
+      float h1 = roomHash(rid + 17.3);
+      float h2 = roomHash(rid + 41.9);
+      vec3 col;
+      if (q.x < o0.x || q.x > o1.x || q.y < o0.y || q.y > o1.y) {
+        // The reveal: the wall depth around the glass. The bottom is the sill.
+        col = (q.y < o0.y) ? uTrim[st] * 0.95 : wallCol * 0.62;
+      } else {
+        // Hit the room box: the side walls, the floor or the ceiling, or the back.
+        float tx = r.x > 0.0 ? (m.x - p.x) / r.x : -p.x / min(r.x, -1e-4);
+        float ty = r.y > 0.0 ? (m.y - p.y) / r.y : -p.y / min(r.y, -1e-4);
+        float tz = (reveal + depth) / r.z;
+        float t = min(min(tx, ty), tz);
+        vec3 h = p + r * t;
+        vec3 base = roomColor(h0);
+        bool lit = shop || h1 > 0.3;
+        if (shop && (t == tz || t == tx) && h.y > 0.3 && h.y < 2.3) {
+          // Shop shelves: rows of goods in bright colors, with dark shelf lines.
+          float along = t == tz ? h.x : h.z;
+          float g = roomHash(vec3(floor(along / 0.45), floor(h.y / 0.5), rid.z));
+          col = roomColor(g) * (t == tz ? 0.85 : 0.65);
+          if (fract(h.y / 0.5) < 0.14) col = vec3(0.32, 0.27, 0.24);
+        } else if (t == tz) {
+          col = base * 0.92;
+          // Furniture: a low dark band on the back wall in some rooms.
+          if (h2 > 0.45 && h.y < m.y * (0.25 + 0.15 * h2)) col = mix(vec3(0.3, 0.24, 0.22), roomColor(h2), 0.35);
+        } else if (t == tx) {
+          col = base * 0.74;
+        } else if (r.y < 0.0) {
+          col = vec3(0.46, 0.33, 0.24) * (0.85 + 0.3 * h2);
+        } else {
+          col = vec3(0.97, 0.96, 0.92);
+          // A light panel on the ceiling.
+          vec2 lp = abs(vec2(h.x / m.x - 0.5, h.z / (reveal + depth) - 0.55));
+          if (lit && lp.x < 0.18 && lp.y < 0.1) col = vec3(1.4, 1.3, 1.1);
+        }
+        // Far into the room is a little darker.
+        col *= mix(1.0, 0.7, clamp(h.z / (reveal + depth), 0.0, 1.0));
+        if (!lit) col *= 0.42;
+        // Blinds pulled down from the top in some windows.
+        float blind = h2 < 0.35 ? h2 * 1.6 : 0.0;
+        if (!shop && cell.y > cy + win.y * 0.5 - win.y * blind) col = mix(uTrim[st], vec3(0.96, 0.93, 0.86), 0.5) * (0.82 + 0.1 * step(0.5, fract((cell.y) * 40.0)));
+        roomGlow = lit ? col * (shop ? 0.24 : 0.2) : vec3(0.0);
+        // The glass: a tint and a sky reflection that grows at a low angle.
+        float fres = 0.1 + 0.55 * pow(1.0 - r.z, 3.0);
+        vec3 sky = mix(vec3(0.75, 0.87, 1.0), uGlass[st] + vec3(0.25), 0.4);
+        col = mix(col * mix(vec3(1.0), uGlass[st] * 2.2, 0.25), sky, fres);
+        col += vec3(0.08) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
+      }
+      glass = col;
+    }
+    #endif
     // Brick detail: the scan over its mean, kept in a safe range. The far
     // fade below turns it off where a brick is under a pixel.
     float far0 = smoothstep(0.25, 0.6, max(aa.x, aa.y));
@@ -134,11 +229,14 @@ uniform float uBrickOn;`,
     float far = far0;
     vec3 mean = mix(wallCol, uGlass[st] + vec3(0.09), win.x * win.y * 0.9);
     diffuseColor.rgb = mix(col, mean, far);
+    #ifdef INTERIOR
+    totalEmissiveRadiance += roomGlow * inWin * (1.0 - far);
+    #endif
   }
 }`,
       );
   };
-  mat.customProgramCacheKey = () => (brickMap ? "facade-v3-brick" : "facade-v2");
+  mat.customProgramCacheKey = () => `facade-v4${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}`;
   return mat;
 }
 
@@ -293,14 +391,14 @@ export async function loadKitTemplates(url = KIT_URL) {
 }
 
 // `groundDetail: false` keeps the flat art colors on the ground.
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, interiors = false } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
   let muralMap = null;
   const materials = {
     surface: createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null }),
-    building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap() }),
+    building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors }),
     props: new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp({ soft: true }) }),
     get mural() {
       if (!muralMap) muralMap = new THREE.MeshToonMaterial({ map: createMuralAtlas(), gradientMap });
@@ -311,12 +409,18 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   // Road markings join the render copy of their surface tile (no extra
   // draw call). The shared meshes, which the physics reads, stay as they are.
   const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, t.mesh]) : []);
+  // The facade kit (cornices, copings, belt courses, house roofs) joins the
+  // render copy of its building tile in the same way.
+  const kitParts = kit ? facadeKit(level) : { tiles: [], counts: {} };
+  const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));
   for (const { material, tile, mesh } of meshes) {
-    const extra = material === "surface" ? markingTiles.get(tile) : null;
-    if (extra) markingTiles.delete(tile);
+    const extra = material === "surface" ? markingTiles.get(tile) : material === "building" ? kitTiles.get(tile) : null;
+    if (extra && material === "surface") markingTiles.delete(tile);
+    if (extra && material === "building") kitTiles.delete(tile);
     addMesh(root, byId, `${material}-${tile}`, geoGeometry(extra ? mergeMeshes([mesh, extra]) : mesh), materials[material], { castShadow: material === "building" });
   }
   for (const [tile, mesh] of markingTiles) addMesh(root, byId, `markings-${tile}`, geoGeometry(mesh), materials.surface);
+  for (const [tile, mesh] of kitTiles) addMesh(root, byId, `kit-${tile}`, geoGeometry(mesh), materials.building, { castShadow: true });
 
   // Kit props load after the level shows. Each prop tile is one merged mesh;
   // far tiles are hidden in update().
@@ -342,6 +446,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       return meshes.length + propTiles.length;
     },
     props,
+    kit: kitParts.counts,
     addProps,
     // Shows each prop tile at one level of detail by its distance from the
     // camera, and hides the far tiles.

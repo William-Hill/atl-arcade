@@ -216,7 +216,10 @@ function stepRolling(s, input, dt, env, k) {
   }
 
   const rise = g.height - ny;
-  if (rise > k.maxStep || wallAhead(s, env, t, nx, ny, nz, k)) {
+  // The probe measures a rise from the height the skater stands on at the
+  // next position (one step up, when it climbs one), so two walkable treads
+  // in a row are not a wall.
+  if (rise > k.maxStep || wallAhead(s, env, t, nx, Math.max(ny, g.height), nz, k)) {
     // A wall. Stop where we are.
     s.speed *= k.bonkSpeedKeep;
     s.bonked = true;

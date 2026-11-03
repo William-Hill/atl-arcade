@@ -23,8 +23,9 @@ for (const [name, cam] of Object.entries(cams)) {
     await page.waitForFunction(() => window.__atl?.ready && window.__atl.frames > 20, null, { timeout: 120000 });
     await page.waitForTimeout(1500);
     const info = await page.evaluate(() => ({ r: window.__atl.rendererInfo, d: window.__atl.level.facadeDepth, gpu: window.__atl.gpu }));
-    const path = resolve(outDir, `${name}-depth${depth}.png`);
-    await page.screenshot({ path });
+    // JPEG, as the committed evidence in reports/facade-depth/ is.
+    const path = resolve(outDir, `${name}-depth${depth}.jpg`);
+    await page.screenshot({ path, type: "jpeg", quality: 85 });
     rows.push({ name, depth: depth === "1", near: info.d?.near ?? null, nearTriangles: info.d?.nearTriangles ?? null, gpu: info.gpu, shot: path.split("/").slice(-2).join("/") });
   }
 }

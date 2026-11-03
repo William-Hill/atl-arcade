@@ -514,3 +514,22 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Why this does not hide real drift: a real drift fails both attempts. A pass on the retry shows as "flaky" in the Playwright output, so the noise stays visible.
 - Evidence: the report `reports/m0-07-beat-alignment.json` records the attempt number and the 1, 5, and 15 minute load averages (`os.loadavg()`) before and after the taps. The retry writes over the report, so each attempt is also attached to the Playwright test result.
 - Run only this test: `npx playwright test --project=beat-timing`.
+
+## 2026-11-03: The skater slides along a wall (#58)
+
+- Decision (the project owner, 2026-11-03): on a wall hit, the skater slides along the wall. A head-on hit still stops the skater (a bonk). This applies on the ground and in the air.
+- Contact: a ring of 16 probes one body radius (`SKATE.bodyRadius`, 0.30 m) around the next position finds the side of a wall. The old probe looked only ahead (0 and ±35°), so on a shallow approach the body went up to 0.10 m into the radius before the probe saw the wall. On a ramp the ring is off, as the old probe was.
+- Normal: 16 rays from the current position find the wall edge by bisection (10 steps). The nearest edge point gives the side of the wall. When the two rays next to it also hit, the line through their edge points gives the horizontal normal, which is exact for a straight wall. At a corner the nearest point gives the normal.
+- Response: the approach angle is the angle between the travel direction and the wall face. Above `wallBonkAngle` the skater bonks. Under it, the velocity goes onto the wall plane: the skater keeps the along-wall part, and the heading turns parallel to the wall. The scrub takes a share of that speed that grows with the approach angle, up to `1 - wallSlideKeep` just under `wallBonkAngle`. A graze keeps all of it.
+- Clearance: after a slide the skater is pushed out to `bodyRadius` + 1 mm from the wall edge line. If the slide position is not clear (a second wall, a step up, or a drop), the skater bonks. Thus the body never goes into a wall. A head-on approach still stops one body radius short.
+- New constants in `src/sim/skate/constants.js`:
+
+| Constant | Typical | Min | Max | Meaning |
+|---|---|---|---|---|
+| `wallBonkAngle` | 1.05 rad (60°) | 0.7 | 1.4 | approach angle above which a hit is head-on (a bonk) |
+| `wallSlideKeep` | 0.8 | 0.5 | 1 | fraction of the along-wall speed kept just under `wallBonkAngle` |
+
+- Measured on the greybox at 8 m/s: a 0.1 rad approach keeps 6.06 of 6.27 m/s, and the minimum clearance is 0.305 m. A 0.6 rad approach keeps 4.97 of 6.96 m/s. A 1.0 rad approach keeps 3.17 of 7.33 m/s. A 1.1 rad approach bonks.
+- Cost: on the BeltLine level the ring and the slide take about 15 ground samples per tick (27 ms for 1200 ticks in Node).
+- State: `wallSlide` is true on a tick where the skater slid. The controller stays pure and deterministic.
+- Not done: real skaters have not reviewed the feel of the slide (AGENTS.md). The two constants are first guesses.

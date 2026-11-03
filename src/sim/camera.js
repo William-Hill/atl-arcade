@@ -115,7 +115,10 @@ export function cameraGoal(skater, yaw, k = CAMERA, look = NO_LOOK) {
   const v = skater.velocity ?? [0, 0, 0];
   const forward = Math.max(0, v[0] * h[0] + v[2] * h[2]);
   const ahead = k.lookAhead * Math.min(forward / SKATE.maxSpeed, 1);
-  const lookAt = [p[0] + h[0] * ahead, p[1] + k.lookHeight, p[2] + h[2] * ahead];
+  // The look-ahead leads along the orbit heading (the skater heading plus the
+  // look yaw), so a look to the side keeps the skater in the middle.
+  const lead = look.yaw === 0 ? h : heading(yaw + look.yaw);
+  const lookAt = [p[0] + lead[0] * ahead, p[1] + k.lookHeight, p[2] + lead[2] * ahead];
   return { position, lookAt, distance: dist };
 }
 

@@ -35,7 +35,9 @@ test(`the ${name} GLB loads skinned with Draco and no console errors`, async ({ 
   for (const view of VIEWS) {
     await page.evaluate((v) => window.__skater.setView(v), view);
     await page.waitForTimeout(100);
-    await page.screenshot({ path: `assets/skaters/${name}/views/${view}.png` });
+    // Test evidence goes to e2e/__screenshots__/. The committed review views in
+    // assets/skaters/<name>/views/ change only when someone copies them on purpose.
+    await page.screenshot({ path: `e2e/__screenshots__/${name}-${view}.png` });
   }
 
   expect(cdn, `requests off localhost: ${cdn.join(" | ")}`).toEqual([]);

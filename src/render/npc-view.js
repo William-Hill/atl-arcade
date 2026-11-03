@@ -1,0 +1,287 @@
+import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+
+// Three.js view of the crowd from src/sim/npc/crowd.js. One instanced mesh
+// per NPC type, so the crowd costs one draw call per type. The figures are
+// low-poly and built here from primitives with vertex colors. Each instance
+// gets its own shirt color and skin tone. The figures face +x, like the
+// skater, and stand on y = 0.
+
+const SHIRTS = [0xff5fb2, 0x2ec4b6, 0xffd23f, 0xff8c42, 0x9b5de5, 0x8ac926, 0x3a86ff, 0xf15bb5, 0x00bbf9, 0xfee440];
+const SKINS = [0x5a3825, 0x7a4b2a, 0x9c6b43, 0xc68e5e, 0xe0b48a, 0xf1cfa8];
+
+// tint: 0 keeps the vertex color, 1 takes the instance shirt color, 2 takes
+// the instance skin tone.
+const FIXED = 0;
+const SHIRT = 1;
+const SKIN = 2;
+
+function part(geometry, color, tint, [x, y, z], rotation = null) {
+  // Non-indexed, because the icosahedron head is non-indexed and the merge
+  // needs one kind.
+  const g = geometry.index ? geometry.toNonIndexed() : geometry;
+  if (g !== geometry) geometry.dispose();
+  if (rotation) g.rotateX(rotation[0]).rotateY(rotation[1]).rotateZ(rotation[2]);
+  g.translate(x, y, z);
+  for (const name of Object.keys(g.attributes)) if (name !== "position" && name !== "normal") g.deleteAttribute(name);
+  const n = g.attributes.position.count;
+  const c = new THREE.Color(color);
+  const colors = new Float32Array(n * 3);
+  const tints = new Float32Array(n * 2);
+  for (let i = 0; i < n; i += 1) {
+    colors[i * 3] = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+    tints[i * 2] = tint === SHIRT ? 1 : 0;
+    tints[i * 2 + 1] = tint === SKIN ? 1 : 0;
+  }
+  g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  g.setAttribute("tint", new THREE.BufferAttribute(tints, 2));
+  return g;
+}
+
+const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+// Detail 0: 20 faces. At NPC size a finer head costs triangles and adds no look.
+const head = (r) => new THREE.IcosahedronGeometry(r, 0);
+
+// A person, about 1.7 m tall at scale 1. `pants` and the extras change by type.
+function person({ pants = 0x2b2d42, scale = 1, at = [0, 0, 0], seated = false, extras = [] } = {}) {
+  const parts = [];
+  const legH = 0.82;
+  if (!seated) {
+    parts.push(part(box(0.14, legH, 0.14), pants, FIXED, [0, legH / 2, -0.1]));
+    parts.push(part(box(0.14, legH, 0.14), pants, FIXED, [0, legH / 2, 0.1]));
+  } else {
+    parts.push(part(box(0.42, 0.13, 0.36), pants, FIXED, [0.12, legH - 0.06, 0]));
+    parts.push(part(box(0.12, 0.5, 0.12), pants, FIXED, [0.3, legH - 0.3, -0.1]));
+    parts.push(part(box(0.12, 0.5, 0.12), pants, FIXED, [0.3, legH - 0.3, 0.1]));
+  }
+  parts.push(part(box(0.26, 0.58, 0.42), 0xffffff, SHIRT, [0, legH + 0.29, 0]));
+  parts.push(part(box(0.12, 0.5, 0.11), 0xffffff, SHIRT, [0, legH + 0.32, -0.27]));
+  parts.push(part(box(0.12, 0.5, 0.11), 0xffffff, SHIRT, [0, legH + 0.32, 0.27]));
+  parts.push(part(box(0.1, 0.1, 0.1), 0xffffff, SKIN, [0, legH + 0.03, -0.27]));
+  parts.push(part(box(0.1, 0.1, 0.1), 0xffffff, SKIN, [0, legH + 0.03, 0.27]));
+  parts.push(part(box(0.1, 0.08, 0.1), 0xffffff, SKIN, [0, legH + 0.62, 0]));
+  parts.push(part(head(0.13), 0xffffff, SKIN, [0, legH + 0.78, 0]));
+  parts.push(...extras.map((f) => f(legH)));
+  for (const p of parts) {
+    p.scale(scale, scale, scale);
+    p.translate(at[0], at[1], at[2]);
+  }
+  return parts;
+}
+
+function dog(at) {
+  const fur = 0xb07a3c;
+  const parts = [
+    part(box(0.5, 0.2, 0.2), fur, FIXED, [0, 0.38, 0]),
+    part(box(0.18, 0.18, 0.16), fur, FIXED, [0.3, 0.5, 0]),
+    part(box(0.1, 0.07, 0.1), 0x3b2412, FIXED, [0.42, 0.47, 0]),
+    part(box(0.12, 0.05, 0.04), 0x3b2412, FIXED, [-0.28, 0.48, 0], [0, 0, 0.6]),
+  ];
+  for (const [x, z] of [
+    [0.18, -0.07],
+    [0.18, 0.07],
+    [-0.18, -0.07],
+    [-0.18, 0.07],
+  ]) {
+    parts.push(part(box(0.06, 0.28, 0.06), fur, FIXED, [x, 0.14, z]));
+  }
+  for (const p of parts) p.translate(at[0], at[1], at[2]);
+  return parts;
+}
+
+function bike() {
+  const frame = 0x222831;
+  const wheel = (x) => part(new THREE.TorusGeometry(0.32, 0.035, 4, 12), 0x1a1a1a, FIXED, [x, 0.36, 0]);
+  return [
+    wheel(0.5),
+    wheel(-0.5),
+    part(box(0.9, 0.05, 0.05), frame, FIXED, [0, 0.62, 0]),
+    part(box(0.05, 0.4, 0.05), frame, FIXED, [-0.2, 0.5, 0], [0, 0, -0.3]),
+    part(box(0.05, 0.45, 0.05), frame, FIXED, [0.45, 0.55, 0], [0, 0, 0.2]),
+    part(box(0.05, 0.05, 0.5), frame, FIXED, [0.5, 0.82, 0]),
+    part(box(0.22, 0.05, 0.12), 0x111111, FIXED, [-0.2, 0.76, 0]),
+  ];
+}
+
+const shadow = (r) => part(new THREE.CircleGeometry(r, 10).rotateX(-Math.PI / 2), 0x6e6655, FIXED, [0, 0.015, 0]);
+
+// The figure for each NPC type, as one merged geometry.
+export function npcGeometry(type) {
+  let parts;
+  switch (type) {
+    case "skater":
+      parts = [
+        ...person({
+          pants: 0x1d3557,
+          extras: [
+            () => part(box(0.3, 0.12, 0.13), 0xffffff, SHIRT, [0.04, 0.06, -0.1]),
+            () => part(box(0.3, 0.12, 0.13), 0xffffff, SHIRT, [0.04, 0.06, 0.1]),
+            (h) => part(new THREE.SphereGeometry(0.15, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2), 0xffffff, SHIRT, [0, h + 0.82, 0]),
+          ],
+        }),
+        shadow(0.4),
+      ];
+      break;
+    case "jogger":
+      parts = [...person({ pants: 0x111111, extras: [(h) => part(box(0.3, 0.05, 0.28), 0xffffff, SHIRT, [0.05, h + 0.9, 0])] }), shadow(0.35)];
+      break;
+    case "cyclist":
+      parts = [...bike(), ...person({ seated: true, pants: 0x14213d, at: [-0.15, 0, 0], extras: [(h) => part(new THREE.SphereGeometry(0.15, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2), 0xffffff, SHIRT, [0, h + 0.82, 0])] }), shadow(0.6)];
+      break;
+    case "dogWalker":
+      parts = [...person({ pants: 0x6c757d, at: [-0.15, 0, -0.18] }), ...dog([0.5, 0, 0.3]), part(box(0.6, 0.02, 0.02), 0xe63946, FIXED, [0.15, 0.7, 0.08], [0, -0.6, -0.6]), shadow(0.6)];
+      break;
+    case "family":
+      parts = [...person({ pants: 0x3d405b, at: [0, 0, -0.35] }), ...person({ pants: 0x81b29a, scale: 0.62, at: [0, 0, 0.38] }), shadow(0.8)];
+      break;
+    default:
+      parts = [...person({ pants: 0x495057 }), shadow(0.35)];
+  }
+  const merged = mergeGeometries(parts, false);
+  for (const p of parts) p.dispose();
+  merged.computeBoundingSphere();
+  return merged;
+}
+
+// A toon material where the tint attribute picks the vertex color, the
+// instance shirt color, or the instance skin tone.
+function crowdMaterial(gradientMap) {
+  const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
+  mat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nattribute vec2 tint;\nattribute vec3 instanceSkin;")
+      .replace(
+        "#include <color_vertex>",
+        `vColor = vec4(color, 1.0);
+#ifdef USE_INSTANCING_COLOR
+vColor.rgb = mix(vColor.rgb, instanceColor.rgb, tint.x);
+#endif
+vColor.rgb = mix(vColor.rgb, instanceSkin, tint.y);`,
+      );
+  };
+  mat.customProgramCacheKey = () => "crowd-v1";
+  return mat;
+}
+
+function rampTexture() {
+  const data = new Uint8Array([120, 120, 120, 255, 190, 190, 190, 255, 255, 255, 255, 255]);
+  const tex = new THREE.DataTexture(data, 3, 1, THREE.RGBAFormat);
+  tex.minFilter = THREE.NearestFilter;
+  tex.magFilter = THREE.NearestFilter;
+  tex.generateMipmaps = false;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+// Bob height (m) and step rate by type: joggers bounce, walkers a little,
+// skaters sway side to side, cyclists ride flat.
+const GAIT = {
+  skater: { bob: 0.02, sway: 0.08 },
+  jogger: { bob: 0.07, sway: 0.02 },
+  cyclist: { bob: 0, sway: 0.01 },
+  dogWalker: { bob: 0.025, sway: 0.02 },
+  family: { bob: 0.02, sway: 0.02 },
+  walker: { bob: 0.025, sway: 0.02 },
+};
+
+// NPCs farther than this from the camera are not drawn (m). The fog hides
+// them from 150 m on.
+export const NPC_DRAW_DISTANCE = 150;
+
+// Builds the meshes for a crowd. sync(crowd, cameraPosition) packs the NPCs
+// near the camera into the first instances of each mesh and draws only
+// those. Call it once per frame.
+export function createNpcView(crowd, { drawDistance = NPC_DRAW_DISTANCE } = {}) {
+  const group = new THREE.Group();
+  group.name = "npcs";
+  const material = crowdMaterial(rampTexture());
+  const byType = new Map();
+  for (const n of crowd.npcs) {
+    if (!byType.has(n.type)) byType.set(n.type, 0);
+    byType.set(n.type, byType.get(n.type) + 1);
+  }
+  const meshByType = new Map();
+  const meshes = [];
+  for (const [type, size] of byType) {
+    const geometry = npcGeometry(type);
+    const skin = new THREE.InstancedBufferAttribute(new Float32Array(size * 3), 3);
+    skin.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute("instanceSkin", skin);
+    const mesh = new THREE.InstancedMesh(geometry, material, size);
+    mesh.name = `npcs-${type}`;
+    // The instances spread over the whole block; the bounding sphere of
+    // the template would cull them wrongly.
+    mesh.frustumCulled = false;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.setColorAt(0, new THREE.Color());
+    mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+    mesh.userData.gait = GAIT[type] ?? GAIT.walker;
+    mesh.count = 0;
+    group.add(mesh);
+    meshes.push(mesh);
+    meshByType.set(type, mesh);
+  }
+
+  // The shirt and skin colors of each NPC, from its id.
+  const shirt = new Map();
+  const skin = new Map();
+  for (const n of crowd.npcs) {
+    shirt.set(n.id, new THREE.Color(SHIRTS[(n.id * 3 + 1) % SHIRTS.length]));
+    skin.set(n.id, new THREE.Color(SKINS[(n.id * 7 + 3) % SKINS.length]));
+  }
+
+  const m = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+  const e = new THREE.Euler(0, 0, 0, "YXZ");
+  const p = new THREE.Vector3();
+  const one = new THREE.Vector3(1, 1, 1);
+  const far2 = drawDistance * drawDistance;
+  let drawn = 0;
+  return {
+    group,
+    meshes,
+    get drawCalls() {
+      return meshes.length;
+    },
+    // The NPCs drawn in the last sync.
+    get drawn() {
+      return drawn;
+    },
+    sync(state, cameraPosition = null) {
+      for (const mesh of meshes) mesh.count = 0;
+      drawn = 0;
+      for (const n of state.npcs) {
+        if (cameraPosition) {
+          const dx = n.x - cameraPosition.x;
+          const dz = n.z - cameraPosition.z;
+          if (dx * dx + dz * dz > far2) continue;
+        }
+        const mesh = meshByType.get(n.type);
+        if (!mesh) continue;
+        const k = mesh.count;
+        mesh.count += 1;
+        drawn += 1;
+        const gait = mesh.userData.gait;
+        const moving = Math.min(1, n.speed / 0.5);
+        const bob = gait.bob * Math.abs(Math.sin(n.phase * 2)) * moving;
+        // The bump wobble: a lean to the side that dies out. Never a fall.
+        const wobble = n.lean ? n.lean * Math.sin(n.bump * 18) : 0;
+        e.set(gait.sway * Math.sin(n.phase) * moving + wobble, Math.atan2(-n.fz, n.fx), 0);
+        q.setFromEuler(e);
+        p.set(n.x, n.y + bob, n.z);
+        m.compose(p, q, one);
+        mesh.setMatrixAt(k, m);
+        mesh.setColorAt(k, shirt.get(n.id));
+        const c = skin.get(n.id);
+        mesh.geometry.attributes.instanceSkin.setXYZ(k, c.r, c.g, c.b);
+      }
+      for (const mesh of meshes) {
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.instanceColor.needsUpdate = true;
+        mesh.geometry.attributes.instanceSkin.needsUpdate = true;
+      }
+    },
+  };
+}

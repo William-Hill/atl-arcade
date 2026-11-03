@@ -22,6 +22,8 @@ import { createInput } from "./input/input.js";
 import { createLookInput } from "./input/look.js";
 import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
+import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
+import { createNpcView } from "./render/npc-view.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
@@ -79,6 +81,17 @@ if (geo && params.get("props") !== "0") {
       levelView.props.error = String(err);
       console.error(err);
     });
+}
+
+// NPCs on the trail and the park paths (M1-09). ?npcs=0 leaves them out,
+// and ?npcseed=<n> picks another seeded crowd.
+const npcSeed = Number(params.get("npcseed") ?? 1) || 1;
+const npcsOn = geo && params.get("npcs") !== "0";
+let crowd = npcsOn ? createCrowd(level, { seed: npcSeed }) : null;
+const npcView = crowd ? createNpcView(crowd) : null;
+if (npcView) {
+  npcView.sync(crowd);
+  scene.add(npcView.group);
 }
 
 const skaterView = createSkaterView();
@@ -190,8 +203,12 @@ function sampleInput() {
 function simulate(dt) {
   run = stepRun(run, sampleInput(), dt, env, skaterEnv, beat.running ? beat : null);
   skater = run.skater;
+  if (crowd) crowd = stepCrowd(crowd, dt, skater.position);
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
-  if (run.banked) events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+  if (run.banked) {
+    events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+    skaterView.cheer();
+  }
   if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
   if (skater.respawned) events.push({ tick: run.tick, type: "respawn" });
   if (skater.justSnapped) events.push({ tick: skater.tick, type: "snap", id: skater.grind.id, s: skater.grind.s });
@@ -206,6 +223,7 @@ let follow = null;
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   run = createRun(level, { position, yaw });
   skater = run.skater;
+  if (crowd) crowd = createCrowd(level, { seed: npcSeed });
   events.length = 0;
   if (follow) follow.reset(skater);
 }
@@ -284,6 +302,7 @@ function frame(now) {
     blob.position.set(skater.position[0], (g ? g.height : 0) + 0.02, skater.position[2]);
   }
   if (levelView.update) levelView.update(camera.position);
+  if (npcView) npcView.sync(crowd, camera.position);
   renderer.render(scene, camera);
   frames += 1;
   if (recorder.active && frames % recorder.every === 0) {
@@ -335,6 +354,43 @@ window.__atl = {
   get skater() {
     return skater;
   },
+  // The crowd (M1-09), or null on the greybox and with ?npcs=0.
+  npcs: crowd
+    ? {
+        get count() {
+          return crowd.npcs.length;
+        },
+        get onTrail() {
+          return crowd.npcs.filter((n) => crowd.lines[n.line].kind === "trail").length;
+        },
+        get bumps() {
+          return crowd.bumps;
+        },
+        get minGap() {
+          return minGap(crowd.npcs);
+        },
+        get drawCalls() {
+          return npcView.drawCalls;
+        },
+        get drawn() {
+          return npcView.drawn;
+        },
+        get list() {
+          return crowd.npcs.map((n) => ({ id: n.id, type: n.type, kind: crowd.lines[n.line].kind, x: n.x, y: n.y, z: n.z, lean: n.lean }));
+        },
+        // The NPCs on screen: in front of the camera, inside the view, and
+        // nearer than the fog end.
+        inView() {
+          const v = new THREE.Vector3();
+          return crowd.npcs.filter((n) => {
+            v.set(n.x, n.y + 1, n.z);
+            if (v.distanceTo(camera.position) > camera.far * 0.9) return false;
+            v.project(camera);
+            return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
+          }).map((n) => n.id);
+        },
+      }
+    : null,
   get events() {
     return events;
   },
@@ -376,6 +432,10 @@ window.__atl = {
     get weights() {
       return skaterView.weights;
     },
+    // The face decal state: { eyes, mouth }.
+    get face() {
+      return skaterView.face;
+    },
     // The model yaw offset: PI when the skater rides backward.
     get facing() {
       return skaterView.facing;
@@ -411,6 +471,14 @@ window.__atl = {
   },
   get cameraLook() {
     return follow ? { ...follow.look } : null;
+  },
+  // Moves the fixed camera (view=fixed only), for screenshots of things
+  // that move, such as the crowd.
+  setFixedCamera(x, y, z, lookX, lookY, lookZ) {
+    if (view !== "fixed") return false;
+    camera.position.set(x, y, z);
+    camera.lookAt(lookX, lookY, lookZ);
+    return true;
   },
   get cameraPosition() {
     return [camera.position.x, camera.position.y, camera.position.z];

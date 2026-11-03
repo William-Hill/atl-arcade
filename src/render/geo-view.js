@@ -6,6 +6,7 @@ import { roadMarkings } from "../level/geo/markings.js";
 import { facadeKit } from "../level/geo/facade-kit.js";
 import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
+import { treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
 import { createMuralAtlas } from "./murals.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
@@ -50,6 +51,7 @@ export function geoGeometry(mesh) {
   if (mesh.facade) geom.setAttribute("facade", new THREE.BufferAttribute(mesh.facade, 4));
   if (mesh.uvs) geom.setAttribute("uv", new THREE.BufferAttribute(mesh.uvs, 2));
   if (mesh.normals) geom.setAttribute("normal", new THREE.BufferAttribute(mesh.normals, 3));
+  if (mesh.sway) geom.setAttribute("sway", new THREE.BufferAttribute(mesh.sway, 1));
   geom.setIndex(new THREE.BufferAttribute(mesh.indices, 1));
   if (!mesh.normals) geom.computeVertexNormals();
   geom.computeBoundingSphere();
@@ -394,8 +396,36 @@ export async function loadKitTemplates(url = KIT_URL) {
   return templates;
 }
 
+// The prop material: the soft toon ramp, and wind on the tree crowns. The
+// vertex shader moves each vertex by its sway weight (0 for trunks and kit
+// props), with a phase from the world position, so near trees do not move
+// as one. The shadow map does not get the wind; the move is under 0.3 m.
+function createPropMaterial({ wind = true } = {}) {
+  const material = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp({ soft: true }) });
+  const time = { value: 0 };
+  if (wind) {
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.uWindTime = time;
+      shader.vertexShader = shader.vertexShader
+        .replace("#include <common>", "#include <common>\nattribute float sway;\nuniform float uWindTime;")
+        .replace(
+          "#include <begin_vertex>",
+          [
+            "#include <begin_vertex>",
+            "float windPhase = uWindTime * 1.3 + position.x * 0.17 + position.z * 0.13;",
+            "transformed.x += sway * (0.2 * sin(windPhase) + 0.05 * sin(windPhase * 2.7));",
+            "transformed.z += sway * 0.12 * cos(windPhase * 0.8);",
+          ].join("\n"),
+        );
+    };
+    material.customProgramCacheKey = () => "geo-props-wind";
+  }
+  return { material, time };
+}
+
 // `groundDetail: false` keeps the flat art colors on the ground.
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, interiors = false, farTerrain = false } = {}) {
+// `trees: false` keeps the two street kit trees (for an A/B check).
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, interiors = false, farTerrain = false, trees = true, wind = true } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -403,12 +433,14 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const materials = {
     surface: createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null }),
     building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors }),
-    props: new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp({ soft: true }) }),
+    props: null,
     get mural() {
       if (!muralMap) muralMap = new THREE.MeshToonMaterial({ map: createMuralAtlas(), gradientMap });
       return muralMap;
     },
   };
+  const propMaterial = createPropMaterial({ wind });
+  materials.props = propMaterial.material;
   const byId = new Map();
   // Road markings join the render copy of their surface tile (no extra
   // draw call). The shared meshes, which the physics reads, stay as they are.
@@ -448,7 +480,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const propTiles = [];
   const props = { count: 0, tiles: 0, loaded: false, error: null };
   function addProps(placements, templates) {
-    for (const t of buildPropMeshes(placements, templates)) {
+    // The procedural trees take the place of the two kit trees.
+    const all = trees ? { ...templates, ...treeTemplates() } : templates;
+    const placed = trees ? withProceduralTrees(placements) : placements;
+    for (const t of buildPropMeshes(placed, all)) {
       const obj = addMesh(root, byId, `props-${t.tile}-lod${t.lod}`, geoGeometry(t.mesh), materials.props, { castShadow: true });
       obj.userData.center = t.center;
       obj.userData.lod = t.lod;
@@ -472,7 +507,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     addProps,
     // Shows each prop tile at one level of detail by its distance from the
     // camera, and hides the far tiles.
-    update(cameraPosition) {
+    update(cameraPosition, seconds = performance.now() / 1000) {
+      propMaterial.time.value = seconds;
       for (const t of terrainLods) {
         const dx = Math.max(t.x0 - cameraPosition.x, 0, cameraPosition.x - (t.x0 + GEO_TILE));
         const dz = Math.max(t.z0 - cameraPosition.z, 0, cameraPosition.z - (t.z0 + GEO_TILE));

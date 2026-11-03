@@ -4,55 +4,205 @@ import { createRenderer, fitToWindow } from "./render/renderer.js";
 import { createLevelLights, createLevelView } from "./render/level-view.js";
 import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
+import { loadSkaterModel } from "./render/skater-model.js";
+import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkaterEnv } from "./sim/skate/skater.js";
 import { createRun, stepRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
+import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
 import { BeatClock } from "./audio/beat-clock.js";
-import { GREYBOX } from "./level/greybox.js";
+import { loadLevel } from "./level/levels.js";
 import { createLevelEnv } from "./level/ground.js";
-import { createPhysicsWorld, initPhysics } from "./physics/world.js";
+import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
+import { terrainOf } from "./level/geo/terrain.js";
+import { createGeoLights, createGeoView, loadKitTemplates } from "./render/geo-view.js";
+import { createLandmarksView } from "./render/landmarks-view.js";
+import { QUALITY, qualityFor, rendererName } from "./render/quality.js";
+import { createSky } from "./render/sky.js";
+import { createPost } from "./render/post.js";
+import { createStreetSigns } from "./render/street-signs.js";
+import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
+import { createLookInput } from "./input/look.js";
+import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
+import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
+import { createNpcView } from "./render/npc-view.js";
 
 const params = new URLSearchParams(window.location.search);
-const level = GREYBOX;
-const env = createLevelEnv(level);
+// ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
+const level = await loadLevel(params.get("level"));
+const geo = isGeoLevel(level);
+const env = createLevelEnv(level, { props: params.get("props") !== "0" });
 const skaterEnv = createSkaterEnv(level);
 
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x10101c);
-scene.fog = new THREE.Fog(0x10101c, 60, 160);
-scene.add(createLevelLights());
+// The render tier (src/render/quality.js): low for a software GPU, high
+// for a real GPU. ?quality=low|high sets it.
+const gpuName = rendererName(renderer);
+const quality = geo ? qualityFor(params.get("quality"), gpuName) : "low";
+const tier = QUALITY[quality];
+// Draw distance on a geodata level. The fog ends at the far plane, so the
+// cut is not visible. On the low tier, 320 m keeps the playtest at 60 FPS
+// in headless SwiftShader with video capture on (see docs/decisions.md).
+const GEO_FAR = tier.far;
+const GEO_FOG_NEAR = tier.fogNear;
 
-const levelView = createLevelView(level);
+// A geodata level gets a day sky, a far fog, and a sun that follows the
+// skater. Its meshes are built once and shared with the physics.
+const geoMeshes = geo ? buildGeoMeshes(level) : null;
+let geoLights = null;
+let sky = null;
+if (geo) {
+  // The low tier has no shadow map: in headless SwiftShader it halved the
+  // frame rate. The kit trees carry a shadow disc and the skater a blob.
+  renderer.shadowMap.enabled = tier.shadows;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  if (tier.post) {
+    // Neutral tone mapping keeps the art colors and rolls off the bright sun.
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    renderer.toneMappingExposure = 1.05;
+  }
+  geoLights = createGeoLights({ shadowRadius: tier.shadows ? 70 : 45, shadowMapSize: tier.shadows ? 4096 : 2048 });
+  scene.add(geoLights.group);
+  // The low tier has no sky dome (a flat horizon color), to keep the
+  // headless frame budget. ?sky=0 leaves it out on the high tier too.
+  sky = !tier.post || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
+  if (sky) scene.add(sky.mesh);
+  const horizon = sky ? sky.fogColor : new THREE.Color(0xbfe4ff);
+  scene.background = horizon.clone();
+  // ?fog=0 removes the fog (for an overview screenshot).
+  scene.fog = params.get("fog") === "0" ? null : new THREE.Fog(horizon, GEO_FOG_NEAR, GEO_FAR);
+} else {
+  scene.background = new THREE.Color(0x10101c);
+  scene.fog = new THREE.Fog(0x10101c, 60, 160);
+  scene.add(createLevelLights());
+}
+
+// ODbL: a level built from OpenStreetMap shows its attribution on screen.
+const attribution = document.getElementById("attribution");
+if (attribution && level.attribution) {
+  attribution.textContent = level.attribution;
+  attribution.hidden = false;
+}
+
+// ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
+const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: quality === "high", markings: quality === "high" && params.get("markings") !== "0", kit: quality === "high" && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: quality === "high" && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0" }) : createLevelView(level);
 scene.add(levelView.root);
+
+// Street name signs at the real intersections (src/level/geo/signs.js).
+// ?signs=0 leaves them out.
+const streetSigns = geo && params.get("signs") !== "0" ? createStreetSigns(env.props.filter((p) => p.kind === "street_sign")) : null;
+if (streetSigns) scene.add(streetSigns.group);
+
+// Landmark models on the real roofs (img2threejs towers, rooftop signs).
+// ?landmarks=0 leaves them out.
+const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(level, { renderer }) : null;
+if (landmarks) {
+  scene.add(landmarks.root);
+  landmarks.ready.catch((err) => console.error(err));
+}
+
+// The street kit (trees, lamps, benches, roof units) loads after the level
+// shows. ?props=0 leaves it out.
+if (geo && params.get("props") !== "0") {
+  loadKitTemplates()
+    .then((templates) => levelView.addProps(env.props, templates))
+    .catch((err) => {
+      levelView.props.error = String(err);
+      console.error(err);
+    });
+}
+
+// NPCs on the trail and the park paths (M1-09). ?npcs=0 leaves them out,
+// and ?npcseed=<n> picks another seeded crowd.
+const npcSeed = Number(params.get("npcseed") ?? 1) || 1;
+const npcsOn = geo && params.get("npcs") !== "0";
+let crowd = npcsOn ? createCrowd(level, { seed: npcSeed }) : null;
+const npcView = crowd ? createNpcView(crowd) : null;
+if (npcView) {
+  npcView.sync(crowd);
+  scene.add(npcView.group);
+}
 
 const skaterView = createSkaterView();
 scene.add(skaterView.group);
 
-const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 500);
+// A blob shadow under the skater for a level with no shadow map.
+let blob = null;
+if (geo && !tier.shadows) {
+  blob = new THREE.Mesh(
+    new THREE.CircleGeometry(0.55, 16).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }),
+  );
+  blob.renderOrder = 1;
+  scene.add(blob);
+}
+
+// The GLB skater replaces the capsule when it loads. ?skater=<id> picks the
+// skater (src/ui/skater-select.js), and ?skater=capsule keeps the capsule.
+const skaterName = resolveSkater(params.get("skater"));
+createSkaterSelect(document.body, skaterName);
+const skaterModel = { name: skaterName, loaded: false, error: null };
+if (skaterName !== "capsule") {
+  loadSkaterModel(skaterName)
+    .then((loaded) => {
+      skaterView.attachModel(loaded);
+      skaterModel.loaded = true;
+    })
+    .catch((err) => {
+      skaterModel.error = String(err);
+      console.error(err);
+    });
+}
+
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, geo ? (params.get("fog") === "0" ? 4000 : GEO_FAR) : 500);
 // view=follow (default), view=orbit (drag to look), view=fixed (screenshot reference).
 const view = params.get("view") ?? "follow";
-camera.position.set(-6, 38, 44);
-camera.lookAt(0, 0, 2);
+// ?cam=x,y,z,lookX,lookY,lookZ sets the fixed camera (for screenshots).
+const camParam = (params.get("cam") ?? "").split(",").map(Number);
+// On a level with terrain each height is over the terrain under that point,
+// so a camera from before the terrain still sees the same place.
+const terrainY = (x, z) => (geo ? terrainOf(level).height(x, z) : 0);
+if (camParam.length === 6 && camParam.every(Number.isFinite)) {
+  camera.position.set(camParam[0], camParam[1] + terrainY(camParam[0], camParam[2]), camParam[2]);
+  camera.lookAt(camParam[3], camParam[4] + terrainY(camParam[3], camParam[5]), camParam[5]);
+} else if (geo) {
+  // The fixed view looks at the spawn on the trail from the south-west.
+  const [sx, sy, sz] = level.spawn.position;
+  camera.position.set(sx - 40, sy + 45, sz + 60);
+  camera.lookAt(sx, sy, sz);
+} else {
+  camera.position.set(-6, 38, 44);
+  camera.lookAt(0, 0, 2);
+}
 
 let controls = null;
 if (view === "orbit") {
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI / 2 - 0.05;
-  camera.position.set(level.spawn.position[0] - 8, 6, level.spawn.position[2] + 10);
+  camera.position.set(level.spawn.position[0] - 8, level.spawn.position[1] + 6, level.spawn.position[2] + 10);
 }
 
-fitToWindow(renderer, camera);
-window.addEventListener("resize", () => fitToWindow(renderer, camera));
+// The high tier post chain (src/render/post.js).
+const post = tier.post ? createPost(renderer, scene, camera, { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8 }) : null;
+function resize() {
+  fitToWindow(renderer, camera);
+  if (post) post.setSize();
+}
+resize();
+window.addEventListener("resize", resize);
+
+const silhouette = createSilhouette(renderer);
 
 const RAPIER = await initPhysics();
-const physics = createPhysicsWorld(RAPIER, level);
+const physics = createPhysicsWorld(RAPIER, level, { geoMeshes });
 const debug = createDebugColliders(physics.world);
 scene.add(debug.lines);
 debug.visible = params.get("debug") === "1";
@@ -98,8 +248,12 @@ function sampleInput() {
 function simulate(dt) {
   run = stepRun(run, sampleInput(), dt, env, skaterEnv, beat.running ? beat : null);
   skater = run.skater;
+  if (crowd) crowd = stepCrowd(crowd, dt, skater.position);
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
-  if (run.banked) events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+  if (run.banked) {
+    events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+    skaterView.cheer();
+  }
   if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
   if (skater.respawned) events.push({ tick: run.tick, type: "respawn" });
   if (skater.justSnapped) events.push({ tick: skater.tick, type: "snap", id: skater.grind.id, s: skater.grind.s });
@@ -114,6 +268,7 @@ let follow = null;
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   run = createRun(level, { position, yaw });
   skater = run.skater;
+  if (crowd) crowd = createCrowd(level, { seed: npcSeed });
   events.length = 0;
   if (follow) follow.reset(skater);
 }
@@ -133,7 +288,12 @@ function runScript(entries, { position, yaw } = {}) {
   });
 }
 
-if (view === "follow") follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+// Mouse drag on the canvas and the right stick turn the follow camera.
+let lookInput = null;
+if (view === "follow") {
+  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+  lookInput = createLookInput({ element: renderer.domElement });
+}
 
 let stepper = createStepper();
 let ticks = 0;
@@ -171,14 +331,29 @@ function frame(now) {
   for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
   ticks += stepped.steps;
 
-  skaterView.sync(skater);
+  skaterView.sync(skater, Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
   if (controls) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
-  if (follow) follow.update(skater, Math.min(elapsed, 0.1));
+  if (follow) {
+    const dt = Math.min(elapsed, 0.1);
+    follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
+  }
   hud.update(run, now, beat.running ? beat.phase() : null);
-  renderer.render(scene, camera);
+  if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
+  if (blob) {
+    // With the skater height, as the controller samples: under a bridge the
+    // blob stays on the road, not on the deck.
+    const g = env.sampleGround(skater.position[0], skater.position[2], skater.position[1]);
+    blob.position.set(skater.position[0], (g ? g.height : 0) + 0.02, skater.position[2]);
+  }
+  if (levelView.update) levelView.update(camera.position);
+  if (sky) sky.update(camera, now / 1000);
+  if (streetSigns) streetSigns.update(camera.position);
+  if (npcView) npcView.sync(crowd, camera.position);
+  if (post) post.render();
+  else renderer.render(scene, camera);
   frames += 1;
   if (recorder.active && frames % recorder.every === 0) {
     recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
@@ -192,7 +367,38 @@ requestAnimationFrame(frame);
 window.__atl = {
   shell: "skate-atl",
   ready: true,
-  level: { name: level.name, objectCount: level.objects.length, ids: level.objects.map((o) => o.id) },
+  quality,
+  gpu: gpuName,
+  // The post chain, to tune the effects from the console (high tier only).
+  post,
+  level: {
+    name: level.name,
+    format: level.format ?? "greybox",
+    objectCount: level.objects.length,
+    // Every id that has colliders: the level objects, and for a geodata
+    // level, the merged meshes.
+    ids: [...level.objects.map((o) => o.id), ...(geoMeshes ? geoMeshes.filter((m) => m.material !== "mural").map((m) => `${m.material}-${m.tile}`) : [])],
+    stats: level.stats ?? null,
+    bounds: level.bounds,
+    spawn: level.spawn,
+    get meshCount() {
+      return geo ? levelView.meshCount : level.objects.length;
+    },
+    get props() {
+      return geo ? { ...levelView.props } : null;
+    },
+    signs: streetSigns ? { count: streetSigns.count, names: streetSigns.names } : null,
+    kit: geo ? levelView.kit : null,
+    get facadeDepth() {
+      return geo && levelView.facadeDepth ? { ...levelView.facadeDepth } : null;
+    },
+    get landmarks() {
+      return landmarks ? { ...landmarks.info } : null;
+    },
+    // The ground under (x, z), from the pure sampler. With `y`, a bridge
+    // high over y is left out (the skater is under it).
+    sample: (x, z, y) => env.sampleGround(x, z, y),
+  },
   physics: {
     colliderCount: physics.colliderCount,
     collidersById: Object.fromEntries([...physics.colliders].map(([id, list]) => [id, list.length])),
@@ -211,6 +417,43 @@ window.__atl = {
   get skater() {
     return skater;
   },
+  // The crowd (M1-09), or null on the greybox and with ?npcs=0.
+  npcs: crowd
+    ? {
+        get count() {
+          return crowd.npcs.length;
+        },
+        get onTrail() {
+          return crowd.npcs.filter((n) => crowd.lines[n.line].kind === "trail").length;
+        },
+        get bumps() {
+          return crowd.bumps;
+        },
+        get minGap() {
+          return minGap(crowd.npcs);
+        },
+        get drawCalls() {
+          return npcView.drawCalls;
+        },
+        get drawn() {
+          return npcView.drawn;
+        },
+        get list() {
+          return crowd.npcs.map((n) => ({ id: n.id, type: n.type, kind: crowd.lines[n.line].kind, x: n.x, y: n.y, z: n.z, lean: n.lean }));
+        },
+        // The NPCs on screen: in front of the camera, inside the view, and
+        // nearer than the fog end.
+        inView() {
+          const v = new THREE.Vector3();
+          return crowd.npcs.filter((n) => {
+            v.set(n.x, n.y + 1, n.z);
+            if (v.distanceTo(camera.position) > camera.far * 0.9) return false;
+            v.project(camera);
+            return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
+          }).map((n) => n.id);
+        },
+      }
+    : null,
   get events() {
     return events;
   },
@@ -236,6 +479,45 @@ window.__atl = {
     renderPaused = Boolean(v);
     last = performance.now();
   },
+  skaterModel: {
+    get name() {
+      return skaterModel.name;
+    },
+    get loaded() {
+      return skaterModel.loaded;
+    },
+    get error() {
+      return skaterModel.error;
+    },
+    get clip() {
+      return skaterView.clip;
+    },
+    get weights() {
+      return skaterView.weights;
+    },
+    // The face decal state: { eyes, mouth }.
+    get face() {
+      return skaterView.face;
+    },
+    // The model yaw offset: PI when the skater rides backward.
+    get facing() {
+      return skaterView.facing;
+    },
+    // The skater mask from a camera in front of it (for the T-pose check).
+    silhouette() {
+      const m = skaterView.model;
+      return m ? Array.from(silhouette(skaterView.group, m.skinnedMesh)) : null;
+    },
+    // The same mask with the skeleton in the bind pose (the T-pose).
+    tposeSilhouette() {
+      const m = skaterView.model;
+      if (!m) return null;
+      m.skinnedMesh.skeleton.pose();
+      const mask = Array.from(silhouette(skaterView.group, m.skinnedMesh));
+      skaterView.sync(skater, 0);
+      return mask;
+    },
+  },
   get skaterRotation() {
     const r = skaterView.group.rotation;
     return { x: r.x, y: r.y, z: r.z };
@@ -249,6 +531,17 @@ window.__atl = {
   projectSkater,
   get cameraState() {
     return follow ? follow.state : null;
+  },
+  get cameraLook() {
+    return follow ? { ...follow.look } : null;
+  },
+  // Moves the fixed camera (view=fixed only), for screenshots of things
+  // that move, such as the crowd.
+  setFixedCamera(x, y, z, lookX, lookY, lookZ) {
+    if (view !== "fixed") return false;
+    camera.position.set(x, y, z);
+    camera.lookAt(lookX, lookY, lookZ);
+    return true;
   },
   get cameraPosition() {
     return [camera.position.x, camera.position.y, camera.position.z];

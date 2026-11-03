@@ -1,0 +1,919 @@
+{
+  "model": "ponce-city-market-tower",
+  "parts": [
+    {
+      "name": "tower-shaft",
+      "kind": "part",
+      "module": "tower-shaft",
+      "triangles": 12
+    },
+    {
+      "name": "lower-sill",
+      "kind": "part",
+      "module": "lower-sill",
+      "triangles": 12
+    },
+    {
+      "name": "lower-band",
+      "kind": "part",
+      "module": "lower-band",
+      "triangles": 12
+    },
+    {
+      "name": "belvedere",
+      "kind": "part",
+      "module": "belvedere",
+      "triangles": 12
+    },
+    {
+      "name": "frieze",
+      "kind": "part",
+      "module": "frieze",
+      "triangles": 12
+    },
+    {
+      "name": "upper-band",
+      "kind": "part",
+      "module": "upper-band",
+      "triangles": 12
+    },
+    {
+      "name": "cornice-cap",
+      "kind": "part",
+      "module": "cornice-cap",
+      "triangles": 12
+    },
+    {
+      "name": "hip-roof",
+      "kind": "part",
+      "module": "hip-roof",
+      "triangles": 16
+    },
+    {
+      "name": "roof-cap",
+      "kind": "part",
+      "module": "roof-cap",
+      "triangles": 12
+    },
+    {
+      "name": "cap-trim",
+      "kind": "part",
+      "module": "cap-trim",
+      "triangles": 12
+    },
+    {
+      "name": "finial",
+      "kind": "part",
+      "module": "finial",
+      "triangles": 224
+    },
+    {
+      "name": "finial-ball",
+      "kind": "part",
+      "module": "finial-ball",
+      "triangles": 1216
+    },
+    {
+      "name": "dentil-s0",
+      "kind": "part",
+      "module": "dentil-s0",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s1",
+      "kind": "part",
+      "module": "dentil-s1",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s2",
+      "kind": "part",
+      "module": "dentil-s2",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s3",
+      "kind": "part",
+      "module": "dentil-s3",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s4",
+      "kind": "part",
+      "module": "dentil-s4",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s5",
+      "kind": "part",
+      "module": "dentil-s5",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s6",
+      "kind": "part",
+      "module": "dentil-s6",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s7",
+      "kind": "part",
+      "module": "dentil-s7",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s8",
+      "kind": "part",
+      "module": "dentil-s8",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s9",
+      "kind": "part",
+      "module": "dentil-s9",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s10",
+      "kind": "part",
+      "module": "dentil-s10",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s11",
+      "kind": "part",
+      "module": "dentil-s11",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s12",
+      "kind": "part",
+      "module": "dentil-s12",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s13",
+      "kind": "part",
+      "module": "dentil-s13",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s14",
+      "kind": "part",
+      "module": "dentil-s14",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s15",
+      "kind": "part",
+      "module": "dentil-s15",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s16",
+      "kind": "part",
+      "module": "dentil-s16",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s17",
+      "kind": "part",
+      "module": "dentil-s17",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s18",
+      "kind": "part",
+      "module": "dentil-s18",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s19",
+      "kind": "part",
+      "module": "dentil-s19",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s20",
+      "kind": "part",
+      "module": "dentil-s20",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-s21",
+      "kind": "part",
+      "module": "dentil-s21",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n0",
+      "kind": "part",
+      "module": "dentil-n0",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n1",
+      "kind": "part",
+      "module": "dentil-n1",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n2",
+      "kind": "part",
+      "module": "dentil-n2",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n3",
+      "kind": "part",
+      "module": "dentil-n3",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n4",
+      "kind": "part",
+      "module": "dentil-n4",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n5",
+      "kind": "part",
+      "module": "dentil-n5",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n6",
+      "kind": "part",
+      "module": "dentil-n6",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n7",
+      "kind": "part",
+      "module": "dentil-n7",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n8",
+      "kind": "part",
+      "module": "dentil-n8",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n9",
+      "kind": "part",
+      "module": "dentil-n9",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n10",
+      "kind": "part",
+      "module": "dentil-n10",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n11",
+      "kind": "part",
+      "module": "dentil-n11",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n12",
+      "kind": "part",
+      "module": "dentil-n12",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n13",
+      "kind": "part",
+      "module": "dentil-n13",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n14",
+      "kind": "part",
+      "module": "dentil-n14",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n15",
+      "kind": "part",
+      "module": "dentil-n15",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n16",
+      "kind": "part",
+      "module": "dentil-n16",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n17",
+      "kind": "part",
+      "module": "dentil-n17",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n18",
+      "kind": "part",
+      "module": "dentil-n18",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n19",
+      "kind": "part",
+      "module": "dentil-n19",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n20",
+      "kind": "part",
+      "module": "dentil-n20",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-n21",
+      "kind": "part",
+      "module": "dentil-n21",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e0",
+      "kind": "part",
+      "module": "dentil-e0",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e1",
+      "kind": "part",
+      "module": "dentil-e1",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e2",
+      "kind": "part",
+      "module": "dentil-e2",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e3",
+      "kind": "part",
+      "module": "dentil-e3",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e4",
+      "kind": "part",
+      "module": "dentil-e4",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e5",
+      "kind": "part",
+      "module": "dentil-e5",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e6",
+      "kind": "part",
+      "module": "dentil-e6",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e7",
+      "kind": "part",
+      "module": "dentil-e7",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e8",
+      "kind": "part",
+      "module": "dentil-e8",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e9",
+      "kind": "part",
+      "module": "dentil-e9",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e10",
+      "kind": "part",
+      "module": "dentil-e10",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e11",
+      "kind": "part",
+      "module": "dentil-e11",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e12",
+      "kind": "part",
+      "module": "dentil-e12",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e13",
+      "kind": "part",
+      "module": "dentil-e13",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e14",
+      "kind": "part",
+      "module": "dentil-e14",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e15",
+      "kind": "part",
+      "module": "dentil-e15",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e16",
+      "kind": "part",
+      "module": "dentil-e16",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e17",
+      "kind": "part",
+      "module": "dentil-e17",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e18",
+      "kind": "part",
+      "module": "dentil-e18",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e19",
+      "kind": "part",
+      "module": "dentil-e19",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e20",
+      "kind": "part",
+      "module": "dentil-e20",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-e21",
+      "kind": "part",
+      "module": "dentil-e21",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w0",
+      "kind": "part",
+      "module": "dentil-w0",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w1",
+      "kind": "part",
+      "module": "dentil-w1",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w2",
+      "kind": "part",
+      "module": "dentil-w2",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w3",
+      "kind": "part",
+      "module": "dentil-w3",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w4",
+      "kind": "part",
+      "module": "dentil-w4",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w5",
+      "kind": "part",
+      "module": "dentil-w5",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w6",
+      "kind": "part",
+      "module": "dentil-w6",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w7",
+      "kind": "part",
+      "module": "dentil-w7",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w8",
+      "kind": "part",
+      "module": "dentil-w8",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w9",
+      "kind": "part",
+      "module": "dentil-w9",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w10",
+      "kind": "part",
+      "module": "dentil-w10",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w11",
+      "kind": "part",
+      "module": "dentil-w11",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w12",
+      "kind": "part",
+      "module": "dentil-w12",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w13",
+      "kind": "part",
+      "module": "dentil-w13",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w14",
+      "kind": "part",
+      "module": "dentil-w14",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w15",
+      "kind": "part",
+      "module": "dentil-w15",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w16",
+      "kind": "part",
+      "module": "dentil-w16",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w17",
+      "kind": "part",
+      "module": "dentil-w17",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w18",
+      "kind": "part",
+      "module": "dentil-w18",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w19",
+      "kind": "part",
+      "module": "dentil-w19",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w20",
+      "kind": "part",
+      "module": "dentil-w20",
+      "triangles": 12
+    },
+    {
+      "name": "dentil-w21",
+      "kind": "part",
+      "module": "dentil-w21",
+      "triangles": 12
+    },
+    {
+      "name": "arch-frame-s0",
+      "kind": "part",
+      "module": "arch-frame-s0",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-s0",
+      "kind": "part",
+      "module": "arch-panel-s0",
+      "triangles": 12
+    },
+    {
+      "name": "arch-s0",
+      "kind": "part",
+      "module": "arch-s0",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-s1",
+      "kind": "part",
+      "module": "arch-frame-s1",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-s1",
+      "kind": "part",
+      "module": "arch-panel-s1",
+      "triangles": 12
+    },
+    {
+      "name": "arch-s1",
+      "kind": "part",
+      "module": "arch-s1",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-s2",
+      "kind": "part",
+      "module": "arch-frame-s2",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-s2",
+      "kind": "part",
+      "module": "arch-panel-s2",
+      "triangles": 12
+    },
+    {
+      "name": "arch-s2",
+      "kind": "part",
+      "module": "arch-s2",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-n0",
+      "kind": "part",
+      "module": "arch-frame-n0",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-n0",
+      "kind": "part",
+      "module": "arch-panel-n0",
+      "triangles": 12
+    },
+    {
+      "name": "arch-n0",
+      "kind": "part",
+      "module": "arch-n0",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-n1",
+      "kind": "part",
+      "module": "arch-frame-n1",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-n1",
+      "kind": "part",
+      "module": "arch-panel-n1",
+      "triangles": 12
+    },
+    {
+      "name": "arch-n1",
+      "kind": "part",
+      "module": "arch-n1",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-n2",
+      "kind": "part",
+      "module": "arch-frame-n2",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-n2",
+      "kind": "part",
+      "module": "arch-panel-n2",
+      "triangles": 12
+    },
+    {
+      "name": "arch-n2",
+      "kind": "part",
+      "module": "arch-n2",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-e0",
+      "kind": "part",
+      "module": "arch-frame-e0",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-e0",
+      "kind": "part",
+      "module": "arch-panel-e0",
+      "triangles": 12
+    },
+    {
+      "name": "arch-e0",
+      "kind": "part",
+      "module": "arch-e0",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-e1",
+      "kind": "part",
+      "module": "arch-frame-e1",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-e1",
+      "kind": "part",
+      "module": "arch-panel-e1",
+      "triangles": 12
+    },
+    {
+      "name": "arch-e1",
+      "kind": "part",
+      "module": "arch-e1",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-e2",
+      "kind": "part",
+      "module": "arch-frame-e2",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-e2",
+      "kind": "part",
+      "module": "arch-panel-e2",
+      "triangles": 12
+    },
+    {
+      "name": "arch-e2",
+      "kind": "part",
+      "module": "arch-e2",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-w0",
+      "kind": "part",
+      "module": "arch-frame-w0",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-w0",
+      "kind": "part",
+      "module": "arch-panel-w0",
+      "triangles": 12
+    },
+    {
+      "name": "arch-w0",
+      "kind": "part",
+      "module": "arch-w0",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-w1",
+      "kind": "part",
+      "module": "arch-frame-w1",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-w1",
+      "kind": "part",
+      "module": "arch-panel-w1",
+      "triangles": 12
+    },
+    {
+      "name": "arch-w1",
+      "kind": "part",
+      "module": "arch-w1",
+      "triangles": 48
+    },
+    {
+      "name": "arch-frame-w2",
+      "kind": "part",
+      "module": "arch-frame-w2",
+      "triangles": 100
+    },
+    {
+      "name": "arch-panel-w2",
+      "kind": "part",
+      "module": "arch-panel-w2",
+      "triangles": 12
+    },
+    {
+      "name": "arch-w2",
+      "kind": "part",
+      "module": "arch-w2",
+      "triangles": 48
+    },
+    {
+      "name": "shaft-win-s0",
+      "kind": "part",
+      "module": "shaft-win-s0",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-sill-s0",
+      "kind": "part",
+      "module": "shaft-sill-s0",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-win-s1",
+      "kind": "part",
+      "module": "shaft-win-s1",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-sill-s1",
+      "kind": "part",
+      "module": "shaft-sill-s1",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-win-n0",
+      "kind": "part",
+      "module": "shaft-win-n0",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-sill-n0",
+      "kind": "part",
+      "module": "shaft-sill-n0",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-win-n1",
+      "kind": "part",
+      "module": "shaft-win-n1",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-sill-n1",
+      "kind": "part",
+      "module": "shaft-sill-n1",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-win-e0",
+      "kind": "part",
+      "module": "shaft-win-e0",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-sill-e0",
+      "kind": "part",
+      "module": "shaft-sill-e0",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-win-e1",
+      "kind": "part",
+      "module": "shaft-win-e1",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-sill-e1",
+      "kind": "part",
+      "module": "shaft-sill-e1",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-win-w0",
+      "kind": "part",
+      "module": "shaft-win-w0",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-sill-w0",
+      "kind": "part",
+      "module": "shaft-sill-w0",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-win-w1",
+      "kind": "part",
+      "module": "shaft-win-w1",
+      "triangles": 12
+    },
+    {
+      "name": "shaft-sill-w1",
+      "kind": "part",
+      "module": "shaft-sill-w1",
+      "triangles": 12
+    }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 0
+}

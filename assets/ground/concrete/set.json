@@ -1,0 +1,19 @@
+{
+  "setId": "concrete",
+  "asset": "brushed_concrete_03",
+  "source": "https://polyhaven.com/a/brushed_concrete_03",
+  "authors": {
+    "Amal Kumar": "All"
+  },
+  "license": "CC0 1.0",
+  "tileMeters": 2.0,
+  "meanLinear": [
+    0.1202,
+    0.0912,
+    0.0615
+  ],
+  "files": {
+    "diffuse": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brushed_concrete_03/brushed_concrete_03_diff_1k.jpg",
+    "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brushed_concrete_03/brushed_concrete_03_ao_1k.jpg"
+  }
+}

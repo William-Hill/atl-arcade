@@ -1,0 +1,74 @@
+STATUS pass=material-pass completed=3 blocked=none next=diagnose_render.py
+{
+  "passed": false,
+  "checks": {
+    "silhouetteIoU": 0.788,
+    "aspectRatioDelta": 0.1082,
+    "scaleDelta": 0.1552,
+    "bilateralSymmetryError": 0.2586,
+    "colorDelta": {
+      "checked": 12,
+      "maxDeltaE": 55.78,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 3.43
+        },
+        {
+          "componentId": null,
+          "deltaE": 8.86
+        },
+        {
+          "componentId": null,
+          "deltaE": 8.86
+        },
+        {
+          "componentId": null,
+          "deltaE": 8.86
+        },
+        {
+          "componentId": null,
+          "deltaE": 8.86
+        },
+        {
+          "componentId": null,
+          "deltaE": 8.86
+        },
+        {
+          "componentId": null,
+          "deltaE": 17.54
+        },
+        {
+          "componentId": null,
+          "deltaE": 55.78
+        },
+        {
+          "componentId": null,
+          "deltaE": 55.78
+        },
+        {
+          "componentId": null,
+          "deltaE": 55.78
+        },
+        {
+          "componentId": null,
+          "deltaE": 55.78
+        },
+        {
+          "componentId": null,
+          "deltaE": 55.78
+        }
+      ],
+      "gated": true
+    }
+  },
+  "failures": [
+    "silhouette IoU 0.788 is below threshold 0.85",
+    "aspect-ratio delta 0.108 exceeds threshold 0.05",
+    "scale delta 0.155 exceeds threshold 0.08",
+    "max per-part color delta-E 55.78 exceeds threshold 20.0"
+  ],
+  "maskWarnings": [],
+  "renderHash": "51634df381d5beb9",
+  "passId": "material-pass"
+}

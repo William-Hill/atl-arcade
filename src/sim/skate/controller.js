@@ -32,6 +32,7 @@ export function createSkateState({ position = [0, 0, 0], yaw = 0 } = {}) {
     pushCooldown: 0,
     airTime: 0,
     jumpHeld: false,
+    jumpBuffer: 0, // s left on a buffered jump press
     justLanded: false,
     justJumped: false,
     bonked: false,
@@ -86,15 +87,20 @@ export function stepSkate(prev, input = {}, dt, env = FLAT_GROUND, k = SKATE) {
     tick: prev.tick + 1,
   };
   const steer = Math.max(-1, Math.min(1, input.steer ?? 0));
+  // Input buffer: a jump press stays live for jumpBuffer s, so a press just
+  // before a landing jumps on the first frame on the ground.
   const jumpEdge = Boolean(input.jump) && !prev.jumpHeld;
   s.jumpHeld = Boolean(input.jump);
+  s.jumpBuffer = jumpEdge ? k.jumpBuffer : Math.max(0, (prev.jumpBuffer ?? 0) - dt);
+  const wantsJump = s.jumpBuffer > 0;
   s.pushCooldown = Math.max(0, prev.pushCooldown - dt);
 
   if (s.state === "rolling") {
-    stepRolling(s, { steer, push: Boolean(input.push), brake: Boolean(input.brake), jump: jumpEdge }, dt, env, k);
+    stepRolling(s, { steer, push: Boolean(input.push), brake: Boolean(input.brake), jump: wantsJump }, dt, env, k);
   } else {
-    stepAir(s, { steer }, dt, env, k);
+    stepAir(s, { steer, jump: wantsJump }, dt, env, k);
   }
+  if (s.justJumped) s.jumpBuffer = 0;
   if (env.bounds && env.spawn && isLost(s, env.bounds, k)) respawn(s, env.spawn);
   return s;
 }
@@ -128,10 +134,15 @@ function stepRolling(s, input, dt, env, k) {
     s.yaw = wrapYaw(s.yaw + input.steer * k.carveRate * k.carveMinFactor * dt);
   }
 
-  // Push: a burst, then a cooldown.
-  if (input.push && s.pushCooldown <= 0) {
-    s.speed = Math.min(s.speed + k.pushImpulse, k.maxSpeed);
-    s.pushCooldown = k.pushCooldown;
+  // Push: a held button gives strokes of pushCooldown s. The thrust of a
+  // stroke rises and falls (a half sine wave), and its mean is pushAccel.
+  // A release stops the thrust at once; the roll friction then slows her.
+  if (input.push && s.pushCooldown <= 0) s.pushCooldown = k.pushCooldown;
+  if (input.push && s.pushCooldown > 0 && Math.abs(s.speed) < k.maxSpeed) {
+    const phase = 1 - s.pushCooldown / k.pushCooldown;
+    const thrust = k.pushAccel * (Math.PI / 2) * Math.sin(Math.PI * phase);
+    const dir = s.speed < 0 ? -1 : 1;
+    s.speed = dir * Math.min(Math.abs(s.speed) + thrust * dt, k.maxSpeed);
   }
 
   // Brake: toward zero, never past it.
@@ -140,8 +151,9 @@ function stepRolling(s, input, dt, env, k) {
     s.speed = sign * Math.max(0, Math.abs(s.speed) - k.brakeDecel * dt);
   }
 
-  // Roll friction and drag.
-  const drag = k.coastDecel + k.coastDrag * s.speed * s.speed;
+  // Roll friction and drag. On a ramp the skater pumps, so the friction is less.
+  const onRamp = s.groundNormal && s.groundNormal[1] < k.rampNormalY;
+  const drag = (k.coastDecel + k.coastDrag * s.speed * s.speed) * (onRamp ? k.rampFriction : 1);
   const sign = Math.sign(s.speed);
   s.speed = sign * Math.max(0, Math.abs(s.speed) - drag * dt);
   if (Math.abs(s.speed) < k.stopSpeed) s.speed = 0;
@@ -190,7 +202,7 @@ function stepRolling(s, input, dt, env, k) {
   const nx = s.position[0] + t[0] * s.speed * dt;
   const ny = s.position[1] + t[1] * s.speed * dt;
   const nz = s.position[2] + t[2] * s.speed * dt;
-  const g = env.sampleGround(nx, nz);
+  const g = env.sampleGround(nx, nz, ny);
 
   if (!g) {
     // Nothing under the feet: fall with the current velocity.
@@ -204,7 +216,10 @@ function stepRolling(s, input, dt, env, k) {
   }
 
   const rise = g.height - ny;
-  if (rise > k.maxStep) {
+  // The probe measures a rise from the height the skater stands on at the
+  // next position (one step up, when it climbs one), so two walkable treads
+  // in a row are not a wall.
+  if (rise > k.maxStep || wallAhead(s, env, t, nx, Math.max(ny, g.height), nz, k)) {
     // A wall. Stop where we are.
     s.speed *= k.bonkSpeedKeep;
     s.bonked = true;
@@ -229,25 +244,68 @@ function stepRolling(s, input, dt, env, k) {
   s.velocity = [t[0] * s.speed, t[1] * s.speed, t[2] * s.speed];
 }
 
+// The skater is a point for the ground, but the body has a radius. These
+// probes look one body radius ahead of the next position (and 35 degrees to
+// each side of it) for the side of a wall, so the skater stops before the
+// body goes into it. On a ramp (a steep ground normal) the probe is off,
+// because the ramp ahead rises fast but it is not a wall.
+const PROBE_ANGLES = [0, 0.61, -0.61];
+
+// `y` is the skater height, for a level with bridges (geo-ground.js).
+function probeHits(env, x, z, dirX, dirZ, radius, isWall, y = Infinity) {
+  const len = Math.hypot(dirX, dirZ);
+  if (len < 1e-6 || !(radius > 0)) return false;
+  const hx = dirX / len;
+  const hz = dirZ / len;
+  for (const a of PROBE_ANGLES) {
+    const c = Math.cos(a);
+    const sn = Math.sin(a);
+    const px = x + (hx * c - hz * sn) * radius;
+    const pz = z + (hx * sn + hz * c) * radius;
+    const p = env.sampleGround(px, pz, y);
+    if (p && isWall(p)) return true;
+  }
+  return false;
+}
+
+function wallAhead(s, env, t, nx, ny, nz, k) {
+  if (!s.groundNormal || s.groundNormal[1] < 0.9) return false;
+  return probeHits(env, nx, nz, t[0], t[2], k.bodyRadius, (p) => p.height - ny > k.maxStep && p.normal[1] > 0.9, ny);
+}
+
+function wallAheadInAir(s, env, nx, ny, nz, prevY, k) {
+  return probeHits(env, nx, nz, s.velocity[0], s.velocity[2], k.bodyRadius, (p) => p.height > prevY + k.maxStep && ny < p.height && p.normal[1] > 0.9, prevY);
+}
+
 function stepAir(s, input, dt, env, k) {
   if (steerActive(input.steer)) s.yaw = wrapYaw(s.yaw + input.steer * k.airTurnRate * dt);
+
+  // Coyote time: a jump press just after the skater rolls off an edge still
+  // jumps. The window is only for a roll-off, so it never gives a second jump.
+  if (input.jump && s.airFrom === "edge" && s.airTime < k.coyoteTime) {
+    s.velocity[1] = Math.max(s.velocity[1], 0) + k.jumpSpeed;
+    s.airTime = 0;
+    s.justJumped = true;
+    s.airFrom = "jump";
+  }
 
   const prevY = s.position[1];
   s.velocity[1] -= k.gravity * dt;
   let nx = s.position[0] + s.velocity[0] * dt;
   const ny = prevY + s.velocity[1] * dt;
   let nz = s.position[2] + s.velocity[2] * dt;
-  let g = env.sampleGround(nx, nz);
+  let g = env.sampleGround(nx, nz, prevY);
 
   // The side of anything taller than a step is a wall in the air too: the
-  // skater keeps its column, loses its horizontal speed, and falls.
-  if (g && g.height > prevY + k.maxStep && ny < g.height) {
+  // skater keeps its column, loses its horizontal speed, and falls. The probe
+  // one body radius ahead keeps the body out of the wall.
+  if ((g && g.height > prevY + k.maxStep && ny < g.height) || wallAheadInAir(s, env, nx, ny, nz, prevY, k)) {
     nx = s.position[0];
     nz = s.position[2];
     s.velocity[0] = 0;
     s.velocity[2] = 0;
     s.bonked = true;
-    g = env.sampleGround(nx, nz);
+    g = env.sampleGround(nx, nz, prevY);
   }
 
   s.position = [nx, ny, nz];

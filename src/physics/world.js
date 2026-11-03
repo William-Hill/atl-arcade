@@ -5,6 +5,7 @@
 import RAPIER from "@dimforge/rapier3d-compat";
 import { rampMesh } from "../level/ramp.js";
 import { sampleSpline, sub, length } from "../level/splines.js";
+import { buildGeoMeshes } from "../level/geo/geo-mesh.js";
 
 // Collision groups (membership bits). The character controller and camera
 // rays pick which ones they see.
@@ -45,9 +46,28 @@ export function quaternionFromY(dir) {
   return [axis[0] * s, axis[1] * s, axis[2] * s, Math.cos(angle / 2)];
 }
 
-export function createPhysicsWorld(R, level) {
+export function isGeoLevel(level) {
+  return typeof level.format === "string" && level.format.startsWith("geo-level/");
+}
+
+// A geodata level gets one static trimesh per merged mesh: the surfaces in
+// the ground group and the buildings in the wall group. Pass `geoMeshes` to
+// reuse the meshes that the render built.
+export function createPhysicsWorld(R, level, { geoMeshes = null } = {}) {
   const world = new R.World({ x: 0, y: -9.81, z: 0 });
   const colliders = new Map();
+
+  if (isGeoLevel(level)) {
+    for (const { material, tile, mesh } of geoMeshes ?? buildGeoMeshes(level)) {
+      // Murals sit 8 cm off a wall that already has a collider.
+      if (material === "mural") continue;
+      const group = collisionGroups(material === "building" ? GROUP.wall : GROUP.ground);
+      const positions = mesh.positions instanceof Float32Array ? mesh.positions : new Float32Array(mesh.positions);
+      const indices = mesh.indices instanceof Uint32Array ? mesh.indices : new Uint32Array(mesh.indices);
+      const desc = R.ColliderDesc.trimesh(positions, indices).setCollisionGroups(group);
+      colliders.set(`${material}-${tile}`, [world.createCollider(desc)]);
+    }
+  }
 
   for (const o of level.objects) {
     const group = collisionGroups(KIND_GROUP[o.kind] ?? GROUP.ground);

@@ -1,0 +1,25 @@
+{
+  "purpose": "Concept art for the skater Marcus \"Tempo\" Reid (M1-10, #42). Reference only, not a game asset.",
+  "date": "2026-11-02",
+  "credits": "The author generated these images with Autosprite. No third-party art is in them.",
+  "images": [
+    {
+      "file": "marcus-tpose-front.png",
+      "tool": "Autosprite create_character, quality pro, prompt template on (white background)",
+      "autosprite_character_id": "cmw0422ip00thq36q4s1lrse5",
+      "credits_spent": 3,
+      "use": "The input image for Tripo image-to-3D",
+      "prompt": "Full-body front view of an original stylized 3D game character in a strict T-pose, arms straight out to the sides, palms down, legs apart. A 28-year-old Black man roller skater with brown skin, a high-top fade haircut, a short neat beard. Short teal track jacket zipped over a white tee, navy knee-length shorts, white knee pads, teal wristbands. High-top black quad roller skates with four teal wheels each and white toe stops. Cel-shaded, clean shapes, no logos, no text."
+    },
+    {
+      "file": "marcus-hero.png",
+      "tool": "Autosprite create_character, quality pro, prompt template on (white background)",
+      "autosprite_character_id": "cmw042f1a00u5q36qqcgzsrr5",
+      "credits_spent": 3,
+      "use": "The style target for the toon shading (M1-06) and the skater select art",
+      "prompt": "Dynamic full-body action pose of an original cel-shaded game character, Jet Set Radio inspired style with bold ink outlines and flat color. A 28-year-old Black man roller skater doing a low crossover step on quad skates, arms out for balance, big smile. Brown skin, high-top fade, short neat beard. Short teal track jacket over a white tee, navy knee-length shorts, white knee pads. High-top black quad roller skates with teal wheels and white toe stops. No logos, no text."
+    }
+  ],
+  "autosprite_credits_before": 1851,
+  "autosprite_credits_spent": 6
+}

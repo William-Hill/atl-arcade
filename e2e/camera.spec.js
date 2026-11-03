@@ -106,3 +106,36 @@ test("the follow camera rides the quarter pipe without snapping or flipping", as
   for (const s of onRamp) expect(s.camera[0]).toBeLessThan(s.skater[0]);
   await page.screenshot({ path: "e2e/__screenshots__/camera-quarter-pipe.png" });
 });
+
+test("a mouse drag turns the follow camera, and it goes back behind the skater", async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto("/");
+  await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
+  const before = await page.evaluate(() => window.__atl.cameraPosition);
+  const box = await page.locator("canvas").boundingBox();
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  for (let i = 1; i <= 10; i += 1) await page.mouse.move(cx + i * 26, cy + i * 4);
+  await page.mouse.up();
+  await page.waitForFunction(() => Math.abs(window.__atl.cameraLook.yaw) > 1, null, { timeout: 5000 });
+  await page.waitForTimeout(300);
+  const look = await page.evaluate(() => window.__atl.cameraLook);
+  const turned = await page.evaluate(() => window.__atl.cameraPosition);
+  await page.screenshot({ path: "e2e/__screenshots__/camera-look-drag.png" });
+  // A drag right of 260 px looks right: the yaw offset is negative.
+  expect(look.yaw).toBeLessThan(-1);
+  expect(look.pitch).toBeGreaterThan(0);
+  expect(Math.hypot(turned[0] - before[0], turned[2] - before[2])).toBeGreaterThan(3);
+  // The skater stays on screen while the camera is turned.
+  await page.evaluate(() => window.__atl.recorder.start(1));
+  await page.waitForTimeout(200);
+  const samples = await page.evaluate(() => window.__atl.recorder.stop());
+  expect(samples.length).toBeGreaterThan(0);
+  for (const p of samples) expect(Math.max(Math.abs(p.x), Math.abs(p.y))).toBeLessThan(0.9);
+  await page.waitForFunction(() => window.__atl.cameraLook.yaw === 0 && window.__atl.cameraLook.pitch === 0, null, { timeout: 6000 });
+  const back = await page.evaluate(() => window.__atl.cameraPosition);
+  expect(Math.hypot(back[0] - before[0], back[1] - before[1], back[2] - before[2])).toBeLessThan(0.2);
+  expect(errors).toEqual([]);
+});

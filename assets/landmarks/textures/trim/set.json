@@ -1,0 +1,29 @@
+{
+  "materialId": "trim",
+  "source": "https://polyhaven.com/a/beige_wall_001",
+  "asset": "beige_wall_001",
+  "authors": {
+    "Dimitrios Savva": "Photography",
+    "Rico Cilliers": "Processing"
+  },
+  "license": "CC0 1.0",
+  "tileMeters": 3.0,
+  "meanLinear": [
+    0.3136,
+    0.2418,
+    0.1734
+  ],
+  "targetHex": "#DCD6CA",
+  "tintLinear": [
+    2.2821,
+    2.7812,
+    3.406
+  ],
+  "clippedPixels": 0.0,
+  "files": {
+    "diff": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg",
+    "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_nor_gl_1k.jpg",
+    "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_rough_1k.jpg",
+    "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_ao_1k.jpg"
+  }
+}

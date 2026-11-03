@@ -1,0 +1,41 @@
+{
+  "tool": "scripts/ground-textures.py (Poly Haven API download, AO multiply, resize)",
+  "prompt": null,
+  "license": "CC0 1.0",
+  "credits": [
+    {
+      "set": "asphalt",
+      "asset": "asphalt_track",
+      "authors": {
+        "Dimitrios Savva": "All"
+      },
+      "url": "https://polyhaven.com/a/asphalt_track"
+    },
+    {
+      "set": "concrete",
+      "asset": "brushed_concrete_03",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "url": "https://polyhaven.com/a/brushed_concrete_03"
+    },
+    {
+      "set": "trail",
+      "asset": "concrete_floor_03",
+      "authors": {
+        "Rob Tuytel": "processing",
+        "Matterfield": "photography"
+      },
+      "url": "https://polyhaven.com/a/concrete_floor_03"
+    },
+    {
+      "set": "grass",
+      "asset": "leafy_grass",
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "url": "https://polyhaven.com/a/leafy_grass"
+    }
+  ],
+  "note": "Scanned photo textures, not generated art."
+}

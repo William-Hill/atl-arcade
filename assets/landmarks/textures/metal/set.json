@@ -1,0 +1,29 @@
+{
+  "materialId": "metal",
+  "source": "https://polyhaven.com/a/corrugated_iron",
+  "asset": "corrugated_iron",
+  "authors": {
+    "Jenelle van Heerden": "Processing",
+    "Dimitrios Savva": "Photography"
+  },
+  "license": "CC0 1.0",
+  "tileMeters": 1.12,
+  "meanLinear": [
+    0.3503,
+    0.3914,
+    0.3714
+  ],
+  "targetHex": "#B9BEC3",
+  "tintLinear": [
+    1.3849,
+    1.3157,
+    1.4695
+  ],
+  "clippedPixels": 0.0,
+  "files": {
+    "diff": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/corrugated_iron/corrugated_iron_diff_1k.jpg",
+    "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/corrugated_iron/corrugated_iron_nor_gl_1k.jpg",
+    "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/corrugated_iron/corrugated_iron_rough_1k.jpg",
+    "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/corrugated_iron/corrugated_iron_ao_1k.jpg"
+  }
+}

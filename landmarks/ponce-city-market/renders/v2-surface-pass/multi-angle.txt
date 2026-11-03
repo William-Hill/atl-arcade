@@ -1,0 +1,5 @@
+reference area fraction: 0.6514
+collapse ratio threshold: 0.15
+  [ok] renders/v2-surface-pass/top/az110.png area=0.6532 ratio=1.0027
+  [ok] renders/v2-surface-pass/top/az200.png area=0.4549 ratio=0.6983
+verdict: no degenerate view

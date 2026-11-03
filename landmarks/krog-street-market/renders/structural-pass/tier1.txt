@@ -1,0 +1,68 @@
+STATUS pass=structural-pass completed=1 blocked=none next=diagnose_render.py
+{
+  "passed": true,
+  "checks": {
+    "silhouetteIoU": 1.0,
+    "aspectRatioDelta": 0.0,
+    "scaleDelta": 0.0,
+    "bilateralSymmetryError": 0.0,
+    "colorDelta": {
+      "checked": 11,
+      "maxDeltaE": 56.2,
+      "perComponent": [
+        {
+          "componentId": null,
+          "deltaE": 3.38
+        },
+        {
+          "componentId": null,
+          "deltaE": 9.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 9.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 9.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 9.33
+        },
+        {
+          "componentId": null,
+          "deltaE": 17.56
+        },
+        {
+          "componentId": null,
+          "deltaE": 56.2
+        },
+        {
+          "componentId": null,
+          "deltaE": 56.2
+        },
+        {
+          "componentId": null,
+          "deltaE": 56.2
+        },
+        {
+          "componentId": null,
+          "deltaE": 56.2
+        },
+        {
+          "componentId": null,
+          "deltaE": 56.2
+        }
+      ],
+      "gated": false
+    }
+  },
+  "failures": [],
+  "maskWarnings": [
+    "reference: image is not clearly isolated from background; using most pixels as material evidence",
+    "render: image is not clearly isolated from background; using most pixels as material evidence"
+  ],
+  "renderHash": "d46fab79f62bfa3c",
+  "passId": "structural-pass"
+}

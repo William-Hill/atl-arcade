@@ -1,7 +1,7 @@
 // Pure mapping from device snapshots to the controller input shape:
-// { steer, push, brake, jump, grind, style1, style2 }.
+// { steer, push, brake, jump, grind, style1, style2, switch }.
 
-export const EMPTY_INPUT = Object.freeze({ steer: 0, push: false, brake: false, jump: false, grind: false, style1: false, style2: false });
+export const EMPTY_INPUT = Object.freeze({ steer: 0, push: false, brake: false, jump: false, grind: false, style1: false, style2: false, switch: false });
 
 function any(codes, isDown) {
   return Boolean(codes && codes.some(isDown));
@@ -21,6 +21,7 @@ export function mapKeyboard(down, bindings) {
     grind: any(k.grind, isDown),
     style1: any(k.style1, isDown),
     style2: any(k.style2, isDown),
+    switch: any(k.switch, isDown),
   };
 }
 
@@ -44,6 +45,7 @@ export function mapGamepad(pad, bindings) {
     grind: any(g.buttons.grind, isDown),
     style1: any(g.buttons.style1, isDown),
     style2: any(g.buttons.style2, isDown),
+    switch: any(g.buttons.switch, isDown),
   };
 }
 
@@ -57,6 +59,7 @@ export function mergeInputs(a, b) {
     grind: a.grind || b.grind,
     style1: a.style1 || b.style1,
     style2: a.style2 || b.style2,
+    switch: a.switch || b.switch,
   };
 }
 

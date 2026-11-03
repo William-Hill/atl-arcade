@@ -1,0 +1,23 @@
+{
+  "purpose": "Concept art for the skater Nia \"Sway\" Ellis (M1-01, #11). Reference only, not a game asset.",
+  "date": "2026-10-31",
+  "credits": "The author generated these images with Autosprite. No third-party art is in them.",
+  "images": [
+    {
+      "file": "nia-tpose-front.png",
+      "tool": "Autosprite create_character, quality pro, prompt template on (white background)",
+      "autosprite_character_id": "cmvwlypvw004ox59881hdqwkn",
+      "credits_spent": 3,
+      "use": "The input image for Tripo image-to-3D",
+      "prompt": "Full-body front view of an original stylized 3D game character in a strict T-pose, arms straight out to the sides, palms down, legs apart. A 24-year-old Black woman roller skater with deep brown skin, box braids in a high bun close to the head, small gold hoop earrings. Cropped peach-orange bomber jacket over a cream tank top, forest-green joggers cuffed at the calf, cream knee pads, green wristband. High-top white quad roller skates with four gold wheels each and peach toe stops. Cel-shaded, clean shapes, no logos, no text."
+    },
+    {
+      "file": "nia-hero.png",
+      "tool": "Autosprite create_character, quality pro, prompt template on (white background)",
+      "autosprite_character_id": "cmvwlz32c0053x598h3aso54t",
+      "credits_spent": 3,
+      "use": "The style target for the toon shading (M1-06) and the menu art",
+      "prompt": "Dynamic full-body action pose of an original cel-shaded game character, Jet Set Radio inspired style with bold ink outlines and flat color. A 24-year-old Black woman roller skater skating backward with one arm raised, confident smile. Deep brown skin, box braids in a high bun, gold hoop earrings. Cropped peach-orange bomber jacket, cream tank top, forest-green joggers cuffed at the calf, cream knee pads. High-top white quad roller skates with gold wheels and peach toe stops. No logos, no text."
+    }
+  ]
+}

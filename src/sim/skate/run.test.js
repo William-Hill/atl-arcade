@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COMBO, GRIND, STYLE } from "./constants.js";
+import { COMBO, GRIND, STYLE, styleDuration } from "./constants.js";
 import { createRun, runScriptOnRun, stepRun } from "./run.js";
 import { createSkaterEnv } from "./skater.js";
 import { comboString } from "./combo.js";
@@ -10,14 +10,15 @@ const env = { sampleGround: createGroundSampler(GREYBOX) };
 const skaterEnv = createSkaterEnv(GREYBOX);
 const BAL = GRIND.balanceDrift / GRIND.balanceCorrect;
 
-// Approach the straight rail, grind with balance, jump off, land, shuffle.
+// Approach the straight rail, grind with balance, jump off, land, dance.
+// The dance is 2 beats (1.2 s), then the link window banks the combo.
 export const THREE_LINK = [
   { frames: 90, input: { push: true } },
   { frames: 40, input: { grind: true, steer: BAL } },
   { frames: 1, input: { grind: true, steer: BAL, jump: true } },
   { frames: 45, input: {} },
   { frames: 1, input: { style1: true } },
-  { frames: 100, input: {} },
+  { frames: 150, input: {} },
 ];
 
 describe("style moves", () => {
@@ -25,16 +26,41 @@ describe("style moves", () => {
     let r = createRun(GREYBOX);
     r.skater.speed = 5;
     r = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv);
-    expect(r.skater.style).toMatchObject({ id: "shuffle", anim: "tilt" });
-    const ticks = Math.ceil(STYLE.moves[0].duration * 60);
+    expect(r.skater.style).toMatchObject({ id: "groove", anim: "tilt", name: "Bankhead Bounce", clip: "dance_bankhead" });
+    const ticks = Math.ceil(styleDuration(STYLE.moves[0]) * 60);
     let done = null;
     for (let i = 0; i < ticks + 1 && !done; i += 1) {
       r = stepRun(r, {}, 1 / 60, env, skaterEnv);
       if (r.skater.justStyled) done = r.skater.justStyled;
     }
-    expect(done).toMatchObject({ id: "shuffle", points: 120 });
+    expect(done).toMatchObject({ id: "groove", name: "Bankhead Bounce", points: STYLE.moves[0].points });
     expect(r.combo.links).toHaveLength(1);
     expect(r.combo.style).toBeCloseTo(COMBO.styleGain);
+  });
+
+  it("starts the next dance on each new press, and repeats a dance while the button is held", () => {
+    let r = createRun(GREYBOX);
+    r.skater.speed = 9;
+    const names = [];
+    const press = () => {
+      r = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv);
+      names.push(r.skater.style.name);
+      for (let i = 0; i < 80; i += 1) r = stepRun(r, {}, 1 / 60, env, skaterEnv);
+      r.skater.speed = 9;
+    };
+    press();
+    press();
+    expect(names).toEqual(["Bankhead Bounce", "Walk It Out"]);
+    // Hold: the same dance runs again after it ends.
+    r = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv);
+    const held = r.skater.style.name;
+    let repeats = 0;
+    for (let i = 0; i < 150; i += 1) {
+      r = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv);
+      if (r.skater.justStyled) repeats += 1;
+      expect(r.skater.style?.name ?? held).toBe(held);
+    }
+    expect(repeats).toBe(2);
   });
 
   it("has two distinct moves on two buttons", () => {
@@ -65,7 +91,7 @@ describe("a scripted grind, jump, style run", () => {
     const { run, states } = runScriptOnRun(createRun(GREYBOX, { position: [-26, 0, -2], yaw: 0 }), THREE_LINK, { env, skaterEnv, trace: true });
     const peak = states.reduce((best, r) => (r.combo.links.length > best.combo.links.length ? r : best), states[0]);
     expect(peak.combo.links.map((l) => l.move)).toEqual(["grind", "air", "style"]);
-    expect(comboString(peak.combo)).toBe("Rail Grind + Hop + Shuffle");
+    expect(comboString(peak.combo)).toBe("Rail Grind + Hop + Bankhead Bounce");
     expect(peak.combo.multiplier).toBe(3);
     expect(peak.combo.pending).toBeGreaterThan(COMBO.grindBase + COMBO.hopPoints + 120 - 1);
     // After the link window the combo banks.

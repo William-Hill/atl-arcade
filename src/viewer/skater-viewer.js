@@ -12,8 +12,10 @@ const VIEWS = {
   right: [0, 1],
   "three-quarter": [Math.SQRT1_2, -Math.SQRT1_2],
 };
-const DISTANCE = 3.2;
+// Until the model loads: a 1.7 m skater centered at hip height.
 const TARGET = new THREE.Vector3(0, 0.85, 0);
+let radius = 0.95;
+let currentView = "three-quarter";
 
 const params = new URLSearchParams(window.location.search);
 const canvas = document.getElementById("stage");
@@ -35,16 +37,29 @@ const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 50);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(TARGET);
 
+// The camera distance at which a sphere of `radius` fills the narrower of the
+// vertical and horizontal fields of view, with a 10% margin.
+export function fitDistance(radius, vfovDeg, aspect) {
+  const vHalf = THREE.MathUtils.degToRad(vfovDeg) / 2;
+  const hHalf = Math.atan(Math.tan(vHalf) * aspect);
+  return (radius * 1.1) / Math.sin(Math.min(vHalf, hHalf));
+}
+
 function setView(name) {
   const dir = VIEWS[name];
   if (!dir) throw new Error(`Unknown view: ${name}`);
-  camera.position.set(TARGET.x + dir[0] * DISTANCE, TARGET.y + 0.2, TARGET.z + dir[1] * DISTANCE);
+  currentView = name;
+  const d = fitDistance(radius, camera.fov, camera.aspect);
+  camera.position.set(TARGET.x + dir[0] * d, TARGET.y + 0.2, TARGET.z + dir[1] * d);
   controls.update();
   renderer.render(scene, camera);
 }
 
 fitToWindow(renderer, camera);
-window.addEventListener("resize", () => fitToWindow(renderer, camera));
+window.addEventListener("resize", () => {
+  fitToWindow(renderer, camera);
+  setView(currentView);
+});
 
 const state = { ready: false, error: null, views: Object.keys(VIEWS), setView };
 window.__skater = state;
@@ -53,6 +68,10 @@ try {
   const model = await loadSkaterModel(params.get("skater") ?? "nia");
   scene.add(model.root);
   const box = new THREE.Box3().setFromObject(model.root, true);
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  TARGET.copy(sphere.center);
+  radius = sphere.radius;
+  controls.target.copy(TARGET);
   state.info = {
     triangles: model.skinnedMesh.geometry.index.count / 3,
     bones: model.skinnedMesh.skeleton.bones.length,

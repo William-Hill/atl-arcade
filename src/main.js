@@ -26,6 +26,8 @@ import { createPost } from "./render/post.js";
 import { createStreetSigns } from "./render/street-signs.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
+import { createTouchInput } from "./input/touch.js";
+import { wantsTouch } from "./input/touch-map.js";
 import { createLookInput } from "./input/look.js";
 import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
@@ -215,7 +217,12 @@ window.addEventListener("keydown", (e) => {
 });
 
 // Simulation.
-const input = createInput({ target: window });
+// Touch controls on a touch screen (?touch=1 forces them on, ?touch=0 off).
+const touch = wantsTouch(params.get("touch"), { maxTouchPoints: navigator.maxTouchPoints ?? 0, coarse: window.matchMedia?.("(pointer: coarse)").matches ?? false })
+  ? createTouchInput({ parent: document.body })
+  : null;
+if (touch) document.body.classList.add("touch");
+const input = createInput({ target: window, touch });
 let run = createRun(level);
 let skater = run.skater;
 const hud = createHud(document.getElementById("hud"));
@@ -474,6 +481,9 @@ window.__atl = {
     },
     get bindings() {
       return input.bindings;
+    },
+    get touch() {
+      return Boolean(touch);
     },
   },
   get renderPaused() {

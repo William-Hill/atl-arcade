@@ -114,3 +114,88 @@ html, body {
 #skater-select button span { font-size: 11px; opacity: 0.75; }
 #skater-select button[aria-pressed="true"] { border-color: var(--atl-pink); }
 #skater-select button[aria-pressed="true"] strong { color: var(--atl-pink); }
+
+/* Touch controls (src/input/touch.js). Shown only on a touch screen. The
+   targets are 64 px or larger and stay inside the safe area. */
+body.touch {
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* The keyboard help sits where the stick goes. */
+body.touch #shell-info { display: none; }
+
+#touch-controls {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.touch-stick-zone {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 45%;
+  height: 55%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.touch-stick-base {
+  position: absolute;
+  /* The rest position hints where the stick is. A touch moves it. */
+  left: calc(96px + env(safe-area-inset-left));
+  top: calc(100% - 112px - env(safe-area-inset-bottom));
+  width: 128px;
+  height: 128px;
+  margin: -64px 0 0 -64px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(11, 11, 18, 0.25);
+  opacity: 0.6;
+}
+.touch-stick-base[data-active="1"] { opacity: 1; }
+
+.touch-stick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  border-radius: 50%;
+  background: rgba(255, 95, 178, 0.85);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.touch-buttons {
+  position: absolute;
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  width: 200px;
+  height: 200px;
+}
+
+.touch-btn {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(11, 11, 18, 0.55);
+  color: var(--atl-paper);
+  font: 700 13px/1 system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.touch-btn[data-down="1"] { background: rgba(255, 95, 178, 0.75); border-color: #fff; }
+
+/* A thumb arc: JUMP is the biggest and nearest the corner. */
+.touch-jump { right: 0; bottom: 0; width: 88px; height: 88px; font-size: 15px; }
+.touch-grind { right: 100px; bottom: 4px; width: 76px; height: 76px; }
+.touch-style1 { right: 92px; bottom: 96px; width: 64px; height: 64px; font-size: 11px; }
+.touch-style2 { right: 8px; bottom: 104px; width: 64px; height: 64px; font-size: 12px; }

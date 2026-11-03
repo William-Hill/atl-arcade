@@ -1,7 +1,12 @@
-# Keys the Nia skate clips on the Mixamo rig (M1-02).
+# Keys the skate clips on a Mixamo rig (M1-02). Nia was first; M1-10 added Marcus.
 #
 # Run inside Blender (the Blender MCP runs it with exec) on the scene from
-# assets/skaters/nia/raw/nia-clean.blend. The armature is "NiaRig".
+# assets/skaters/<name>/raw/<name>-clean.blend. For Nia, the armature is
+# "NiaRig" and the mesh is "Nia". For another skater, set SKATER_CFG in the
+# exec globals before the run, for example:
+#   {"arm": "MarcusRig", "mesh": "Marcus", "feet": (0.20, -0.20, 0.03)}
+# "feet" is the rest x of the left foot, the rest x of the right foot, and the
+# rest y of both feet, in armature space (metres).
 #
 # Armature axes: +X is the skater's left, -Y is forward, +Z is up.
 # Leg IK holds the wheels on the ground. Each clip is baked to plain bone
@@ -12,7 +17,9 @@ import bpy
 from mathutils import Euler, Matrix, Quaternion, Vector
 
 FPS = 30
-ARM = "NiaRig"
+CFG = globals().get("SKATER_CFG") or {}
+ARM = CFG.get("arm", "NiaRig")
+MESH = CFG.get("mesh", "Nia")
 LEFT, FWD, UP = (1, 0, 0), (0, -1, 0), (0, 0, 1)
 
 
@@ -73,15 +80,15 @@ def mirror_rot(r):
 # whole number of beats, and frame 0 is a downbeat.
 BEAT = 24
 
-# Rest foot positions (armature space): left (0.242, 0.03), right (-0.236, 0.03).
+# Rest foot positions (armature space). Nia: left (0.242, 0.03), right (-0.236, 0.03).
 # A foot "pos" is an offset from the rest position.
-LX, RX = 0.242, -0.236
+LX, RX, FY = CFG.get("feet", (0.242, -0.236, 0.03))
 
 
 def at(x, y=0.0, z=0.0, side="L", rot=None):
     # A foot target at an absolute x, y (armature space) instead of an offset.
     rest_x = LX if side == "L" else RX
-    out = {"pos": (x - rest_x, y - 0.03, z)}
+    out = {"pos": (x - rest_x, y - FY, z)}
     if rot:
         out["rot"] = rot
     return out
@@ -1010,7 +1017,8 @@ def prune_static_channels(eps=1e-4):
     return removed
 
 
-def export(path, draco):
+def export(path, draco, **extra):
+    # extra: more glTF exporter options, for example the image format.
     arm = bpy.data.objects[ARM]
     arm.animation_data.action = None
     for pb in arm.pose.bones:
@@ -1018,7 +1026,7 @@ def export(path, draco):
         pb.location = Vector()
     bpy.context.scene.frame_set(0)
     for o in bpy.context.view_layer.objects:
-        o.select_set(o.name in ("Nia", ARM))
+        o.select_set(o.name in (MESH, ARM))
     opts = dict(
         export_format="GLB", use_selection=True, export_skins=True, export_animations=True,
         export_animation_mode="ACTIONS", export_force_sampling=False, export_optimize_animation_size=True,
@@ -1031,4 +1039,5 @@ def export(path, draco):
             export_draco_normal_quantization=10, export_draco_texcoord_quantization=12,
             export_draco_generic_quantization=12,
         )
+    opts.update(extra)
     bpy.ops.export_scene.gltf(filepath=path, **opts)

@@ -8,6 +8,7 @@ import { attachFace } from "./skater-face.js";
 // The shipped skater models. Vite bundles each GLB as an asset.
 export const SKATER_MODELS = {
   nia: new URL("../../assets/skaters/nia/skater.glb", import.meta.url).href,
+  marcus: new URL("../../assets/skaters/marcus/skater.glb", import.meta.url).href,
 };
 
 // The GLB faces +z (the glTF convention). The controller faces +x at yaw 0,

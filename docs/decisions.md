@@ -506,6 +506,70 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - The animation layer measures the yaw rate per simulation tick (`measureYawRate`), so a display above 60 Hz no longer flips the clip between coast and a carve on frames with no tick.
 - The Q dance list names the Cross Step (clip `dance_crisscross`), which has a spec in `atl-dance-references.md`.
 
+## 2026-11-03: The beat timing test runs last, with one retry (#63)
+
+- Problem: the test "32 taps aligned to the audio clock..." in `e2e/beat.spec.js` measures timer jitter in ms. At a load average of 14 to 30 (other apps), it failed in about half of the full-suite runs, on `main` too (for example mean 6.15 ms, sd 4.15 ms). Every tap was within 60 ms in every run. A red suite that is normal hides real failures.
+- Decision: the test has the tag `@beat-timing`. The `beat-timing` Playwright project runs only this test, with `retries: 1`. With 1 worker, Playwright runs the projects in config order, so it runs after the `chromium` project. Playwright does not document this order. The config does not use `dependencies`, because a failure in `chromium` then skips the beat test. The `chromium` project skips it. The 5 ms gates for the mean and the sd do not change.
+- Why not a loose gate: the 60 ms game window can hide a clock drift of 20 to 50 ms, which a player feels. A gate that applies only at low load passes with no check on a busy computer, and the test then proves nothing.
+- Why this does not hide real drift: a real drift fails both attempts. A pass on the retry shows as "flaky" in the Playwright output, so the noise stays visible.
+- Evidence: the report `reports/m0-07-beat-alignment.json` records the attempt number and the 1, 5, and 15 minute load averages (`os.loadavg()`) before and after the taps. The retry writes over the report, so each attempt is also attached to the Playwright test result.
+- Run only this test: `npx playwright test --project=beat-timing`.
+
+## 2026-11-03: No building walls on the trail (#57)
+
+- Problem: `scripts/build-block.mjs` extruded every OSM footprint as a solid from the ground. Roofs, raised sheds, and the "725 Ponce" edge made walls on the trail and on paths.
+- Rule 1: the build skips a footprint with no walls down to the ground: `building=roof`, a `min_height` over 0, or a `building:min_level` over 0. On the BeltLine level this removes the canopies `w1365544414` and `w270468871` (one is on the Stone Mountain Trail).
+- Rule 2: the build skips a footprint with `layer` over 0 when a trail or path center line goes into it. This removes the "Beltline Shed" (`w223977988`) over the paths `w431443667` and `w431795703`. A raised footprint beside the ways stays, for example New Realm Brewing (`w961282227`, `layer=1`).
+- Rule 3: the build cuts a corridor (the trail half width plus 0.5 m) out of each footprint that the trail touches. The "725 Ponce" edge (`w741961703`) follows the trail and has no layer tag, so rules 1 and 2 do not apply to it. On this level, the cut changes only that footprint.
+- Library: `polygon-clipping` 0.15.7 (2023-12-18) does the polygon difference. Only the build script uses it, so it is a dev dependency.
+- Test: a Vitest test samples the full trail center line every 0.5 m with `createGeoGroundSampler` and finds no building.
+- Not fixed: five paths still go into Ponce City Market (`w184803195`) and one footway goes into `w211747264`. These are raised walkways and building passages (`level=2`, `bridge=yes`, `tunnel=building_passage`). They are out of the scope of #57.
+
+## 2026-11-03: Protect the ground under bridges with more than two points (#59)
+
+- Problem: in `src/level/geo/terrain.js`, `gradeTrail` protected the middle half of each bridge segment. Near an inner joint of a bridge with more than two points, the grid had no protection, so the trail grade could move the ground under the deck.
+- Fix: the new `bridgeMiddle` finds the nearest point on the full bridge polyline and its length along the line. The protected part is the middle half of the full length (0.25 to 0.75), within width / 2 + 2 m of the center line.
+- Bridges with more than two points on the BeltLine level: `w741961708` (trail), `w182470306`, `w431443668`, and `w44851092` (paths), `w638312736` (sidewalk), and `w156324725`, `w29094065`, and `w29094070` (streets).
+- Level data: the rebuild changes 61 terrain cells. The largest change is 2.35 m at about (-45, -717). The spawn height changes by 0.02 m.
+
+## 2026-11-03: The toon material keeps the GLB material properties (#60)
+
+- `toonMaterial()` now copies each property in `KEPT` when the source material has it: `map`, `opacity`, `transparent`, `alphaTest`, `side`, `vertexColors`, `emissive`, `emissiveIntensity`, `emissiveMap`, `normalMap`, `normalMapType`, and `normalScale`. Colors and vectors are copies.
+- `toonSkater()` builds one outline hull for each skinned mesh and returns the list of hulls. A skater with separate skates or hair gets an outline on each part.
+- Nia and Marcus each have one skinned mesh with a normal map. The toon material dropped the normal map before; now it keeps it. The change in the screenshots is small: on the BeltLine, 91 pixels (Nia) and 29 pixels (Marcus) of 42,000 in the skater area changed by more than 16 levels. Two runs of the same code differ by 5 to 16 pixels there.
+- Known problem, not fixed here: `toonSkater()` replaces the face decal material of Nia (`attachFace()` in `loadSkaterModel()`), so the decal eyes and mouth do not show with `?toon=1`. This was true before this change.
+
+## 2026-11-03: No absolute local paths in the landmark files (#62)
+
+- Problem: the img2threejs tools write absolute paths (`/Users/<name>/Development/atl-arcade/.claude/worktrees/<w>/...` and `/Users/<name>/.img2threejs/releases/<sha>/img2threejs/...`). 60 tracked files in `landmarks/krog-street-market/` and `landmarks/ponce-city-market/` had them: the specs, `material-analysis.json`, `di.json`, the pass checks and reviews, the material evidence, and the generated factories in `src/`.
+- Fix: `scripts/landmark-paths.mjs` writes a repository path relative to the landmark folder, an img2threejs skill path as `<img2threejs>/...`, and any other home folder path as `~/...`. A second run changes nothing.
+- The writer is the img2threejs skill, outside the repository, so it does not change. `run_pass.sh` and `review.sh` of each landmark run `landmark-paths.mjs` on exit, also when a gate fails.
+- Guard: `scripts/landmark-paths.test.js` fails when a text file in a landmark folder has an absolute home folder path. A manual img2threejs step that adds one must run `node scripts/landmark-paths.mjs landmarks/<name>`.
+- The tools run in the landmark folder, so the relative paths resolve. `validate_sculpt_spec.py` and `orchestrate_passes.py check` give the same result before and after the change.
+
+## 2026-11-03: Mobile playability is a top priority (#65)
+
+- Decision: William made mobile playability the top priority for Skate ATL. The game must be playable on a phone browser (iOS Safari and Android Chrome) before Version 1 ships.
+- This replaces the concept risk-table line "Desktop first, phones in version 2" (`docs/games/2026-10-30-skate-atl-concept.md`). The concept scope table also lists touch controls under "Full vision"; that line is replaced too.
+- Effect on the milestones: the touch input and a phone quality tier move from M2-07 (#24) into M1 as their own issues. The rest of #24 (store and device polish) stays in M2.
+- Effect on reviews: every audit and playtest from now on weighs a finding by its effect on a phone player first.
+- Why: the goal is the official game of the City of Atlanta. Most residents reach a city link from a phone.
+- Evidence and findings: `production/audits/2026-11-playability/REPORT.md`.
+
+## 2026-11-03: Phone render tier and the frame-time governor (#72)
+
+- Tier: a new `phone` tier for a touch device whose short screen side is 900 CSS px or less (`isPhone()` in `src/render/quality.js`). A software renderer still gets `low`. `?quality=phone` forces it.
+- Look: the low-tier scene (no shadow map, no sky dome, no facade kit, no interiors, no ground scans, no road markings) plus a lite post pass. The skater keeps the blob shadow. The toon ramp is on every tier already.
+- Lite post (`createLitePost()` in `src/render/post.js`): one scene pass into a target with a depth texture, then one fullscreen pass for the ink and the halftone. Silhouettes come from the depth step. Creases come from the second difference of the inverse depth, which is near zero on a flat surface. No GTAO, no bloom, no MSAA, no normal buffer.
+- Pixel ratio: each tier has a cap. Phone 1.5, low 2, high 2.
+- Far terrain: the phone tier does not draw the coarse far-terrain drape. On the low tier the drape covers the skater near the spawn (#87).
+- Governor (`src/render/governor.js`, pure, with Vitest tests): after a 3 s warmup it takes the median of 90 frame times. Over 25 ms (under 40 FPS) it steps down one rung: pixel ratio 1.5, then 1.25, then 1, then the post pass off. It waits 2 s after a step. It never steps up, so the frame rate cannot swing between two rungs. It runs on the phone and high tiers. The low tier is the floor of the playtest gate, so it has no governor. `?governor=0` turns it off, and `?govbudget=<ms>` sets the budget.
+- Draw counts: `renderer.info` now counts the whole frame. Before, the post passes reset it, and `__atl.rendererInfo` showed only the last pass.
+- Measurements (`reports/phone-tier/`), BeltLine spawn, governor off:
+  - ANGLE Metal on an Apple M4 Max: phone 40–42 draw calls and 137k–139k triangles; high 151–157 calls and 424k–427k triangles. Both hold 60 FPS, so this GPU does not show the cost.
+  - SwiftShader, Pixel 7 profile, no CPU throttle, load average 12–14: low 27.5 FPS (pixel ratio 2), phone 50.3 FPS (pixel ratio 1.5), high 1.9 FPS.
+- Not verified: FPS on a real phone GPU. The acceptance target (median over 40 FPS on a mid-range phone) needs a real device.
+
 ## 2026-11-03: Touch controls for phones (#71)
 
 - Scheme: a floating stick under the left thumb and four buttons under the right thumb. The stick steers left and right, pushes when up, and brakes when down. The buttons are JUMP (tap), GRIND (hold), GROOVE (style1), and SPIN (style2). A drag on the open part of the screen turns the camera.
@@ -517,12 +581,45 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Tests: `e2e/touch.spec.js` drives real touch events through CDP on the iPhone 15 and Pixel 7 profiles in Chromium. Touch only, the skater pushes, steers, grinds the straight rail, and jumps. `E2E_PORT` sets the e2e port, so two checkouts can run the suite at the same time.
 - Not verified: a real phone, iOS Safari (WebKit is not installed), and the feel. A human playtest on a phone must tune `TOUCH` in `src/input/touch-map.js`.
 
+## 2026-11-03: The skater slides along a wall (#58)
+
+- Decision (the project owner, 2026-11-03): on a wall hit, the skater slides along the wall. A head-on hit still stops the skater (a bonk). This applies on the ground and in the air.
+- Contact: a ring of 16 probes around the next position finds the side of a wall. The ring radius is `SKATE.bodyRadius / cos(π/16)` (0.306 m), so the polygon of probes contains the full body circle (0.30 m). The old probe looked only ahead (0 and ±35°), so on a shallow approach the body went up to 0.10 m into the radius before the probe saw the wall. On a ramp the ring is off, as the old probe was.
+- Normal: 16 rays from the current position find the wall edge by bisection (10 steps). The rays reach 1.3 body radii plus the step, so the rays next to the nearest one also hit at a crawl. With a reach of 1 body radius, the heading after a slide was up to 0.19 rad off the wall line. The nearest edge point gives the side of the wall. When the two rays next to it also hit, the line through their edge points gives the horizontal normal, which is exact for a straight wall. At a corner the nearest point gives the normal.
+- Response: the approach angle is the angle between the travel direction and the wall face. Above `wallBonkAngle` the skater bonks. Under it, the velocity goes onto the wall plane: the skater keeps the along-wall part, and the heading turns parallel to the wall. The scrub takes a share of that speed that grows with the approach angle, up to `1 - wallSlideKeep` just under `wallBonkAngle`. A graze keeps all of it.
+- Clearance: after a slide the skater is pushed out to the ring radius + 1 mm from the wall edge line. If the slide position is not clear (a second wall or a step up), the skater bonks. A slide off an edge goes into the air, as a roll off an edge does.
+- Slope: the slide moves the skater horizontally. The speed keeps its ratio to the horizontal velocity, so a slide on a slope does not lose the slope part of the speed. Thus the body never goes into a wall. A head-on approach still stops one body radius short.
+- New constants in `src/sim/skate/constants.js`:
+
+| Constant | Typical | Min | Max | Meaning |
+|---|---|---|---|---|
+| `wallBonkAngle` | 1.05 rad (60°) | 0.7 | 1.4 | approach angle above which a hit is head-on (a bonk) |
+| `wallSlideKeep` | 0.8 | 0.5 | 1 | fraction of the along-wall speed kept just under `wallBonkAngle` |
+
+- Measured on the greybox at 8 m/s: a 0.1 rad approach keeps 6.09 of 6.31 m/s, and the minimum clearance is 0.316 m. A 0.6 rad approach keeps 4.97 of 6.96 m/s. A 1.0 rad approach keeps 3.17 of 7.33 m/s. A 1.1 rad approach bonks.
+- Cost: on the BeltLine level the ring and the slide take about 16 ground samples per tick (25 ms for 1200 ticks in Node).
+- State: `wallSlide` is true on a tick where the skater slid. The controller stays pure and deterministic.
+- Not done: real skaters have not reviewed the feel of the slide (AGENTS.md). The two constants are first guesses.
+
+## 2026-11-03: The toon material keeps the face decal of Nia
+
+- Problem: `toonSkater()` replaced the face decal material that `attachFace()` adds in `loadSkaterModel()`. The shader key went from `skater-face` to `skater-toon-rim`, so the decal eyes and mouth did not show with `?toon=1` (the default).
+- Decision: `toonMaterial()` keeps the `onBeforeCompile` hook of the source material. The source hook runs first, then the rim hook. The shader key is `skater-face+skater-toon-rim`. A material with no hook keeps the key `skater-toon-rim`.
+- Why a chain and not a new order: `attachFace()` runs in the loader and returns the `face.set()` handle. A chain keeps the loader and `toonSkater()` as they are, and it works for each future hook on a GLB material.
+- The decal writes `diffuseColor` at `map_fragment`, and the rim reads it at `emissivemap_fragment`. Thus the rim also lights the decal colors. The toon shader has no roughness or metalness chunks, so those two decal lines do nothing there. The normal line works, because the toon material keeps `normalMap` (#60).
+- Test hooks: `window.__atl.skaterModel.holdFace(eyes, mouth)` holds one face state, `freezePose(true)` stops the clips, and `materialKey` gives the shader key. The Playwright test `e2e/skater-face.spec.js` stops the idle clip, because the clip moves the head and changes the pixels with no decal.
+- Evidence: `reports/toon-face/`.
+- Review fix: `KEPT` also has `depthWrite`. For glTF alpha blend, GLTFLoader sets `transparent: true` and `depthWrite: false`, and the toon material now keeps both.
+- Review fix: `toonSkater()` adds no outline hull to a skinned mesh with a transparent material, because the opaque hull shows through the mesh. Nia and Marcus have only opaque materials, so their hulls do not change.
+- Review fix: the chained hook calls the source hook with the source material as `this`, so a hook that reads `this.userData` keeps its state. The rim state stays in `userData.rim` of the toon material.
+
 ## 2026-11-03: Phone layout: hints, HUD, credit, and landscape camera (#73)
 
 - Hints: the start hint names the device ("Tap to start the beat" on touch). The developer hints (H for the colliders, `?view=orbit`) show only with `?dev=1` or `?debug=1`.
 - HUD pills: each HUD text sits on its own dark pill (`--hud-pill`, black at 82%). The text keeps a WCAG contrast of 4.5:1 or more over a white or a black scene. The combo text uses a lighter pink (`#ff80c4`), because the brand pink gave 4.25:1 on the pill over white. All HUD text is 14 px or larger.
 - Compact layout (`@media (max-width: 600px), (max-height: 500px)`): one top line with the short credit "© OpenStreetMap contributors", the score and the HUD column on the left, the beat pulse in the middle, and a smaller skater select on the right. Every position adds the safe-area inset.
 - Credit: on a compact screen a tap on the short credit shows the full attribution text (OpenStreetMap, ODbL, Overture, USGS). A desktop shows the full text, as before.
+- Review fix: the short credit sits on the dark pill, so the white text keeps 4.5:1 or more. It is 24 px high, the WCAG minimum for a tap target. A keyboard user can focus it, and `aria-controls` points to the full text. A tap or a click removes the focus, so the Space key still jumps.
 - Landscape camera: a landscape screen 500 px high or less gets a 42 degree vertical field of view in place of 60 (`fovFor()` in `src/ui/layout.js`). The skater is about 1.5 times as tall, and the test measures at least 15% of the screen height at 844x390.
 - Tests: `e2e/phone-layout.spec.js` checks at 390x844 and 844x390 that no item overlaps another with the longest HUD (a 3-move combo, the pending score, a move tag, and the balance meter), the font sizes, and the contrast.
 - Not done: a fullscreen button and an orientation hint (MOB-9). A reduced-motion option (MOB-11). A shape cue for "style ready" (MOB-12). The skater select still reloads the page (MOB-13).

@@ -55,7 +55,9 @@ export function createInput({ target = window, bindings = createBindings(), getG
       if (touch) {
         const t = touch.sample();
         if (touch.touching) source = "touch";
-        else if (isActive(keyboard)) source = "keyboard";
+        // A key after a touch gives the source back to the keyboard. An
+        // active gamepad keeps the source that the gamepad step set.
+        else if (source === "touch" && isActive(keyboard)) source = "keyboard";
         out = mergeInputs(out, t);
       }
       return out;

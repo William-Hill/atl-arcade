@@ -21,6 +21,7 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
 
   const zone = document.createElement("div");
   zone.className = "touch-stick-zone";
+  zone.setAttribute("role", "group");
   zone.setAttribute("aria-label", "Stick: left and right to steer, up to push, down to brake");
   const base = document.createElement("div");
   base.className = "touch-stick-base";

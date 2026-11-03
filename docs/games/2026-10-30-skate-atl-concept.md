@@ -16,7 +16,7 @@
 | Core fantasy | I skate my city, and I look good. |
 | Unique hook | Like Tony Hawk meets Jet Set Radio, and also every level is a real Atlanta neighborhood built from city data, and the skating comes from Atlanta rink culture. |
 | Primary MDA aesthetic | Sensation and challenge. Secondary: discovery. |
-| Platform | Web first (desktop keyboard and gamepad; touch later), inside the open data site |
+| Platform | Web first, inside the open data site: phone browsers (touch) and desktop (keyboard and gamepad). Phones are the top priority (`docs/decisions.md`, 2026-11-03). |
 | Engine | Three.js in the browser, with Vite. Starting point: the Rush `codex/196-3d-spike` (GLB skater, AnimationMixer, Blender-MCP cleanup). Physics: a kinematic skate controller, Rapier for collisions. |
 | Estimated scope | Greybox movement prototype: 2 to 4 weeks. Version 1 (one neighborhood with art): 3 to 6 months, solo with agents. Full vision: 9 to 12 months. |
 
@@ -131,7 +131,7 @@ Difficulty rises through level density (more rails, bigger gaps, harder goals) a
 | Greybox movement prototype (fun test) | Capsule skater on one greybox block: skate, push, carve, jump, grind on 3 rails, 1 ramp, 2 style moves, combo counter, follow camera | 2 to 4 weeks |
 | Playable block | Greybox plus the GLB skater with animation, one real block from geodata, goals, run timer | 2 to 3 months |
 | Version 1 | 1 skater, 1 full neighborhood level with landmarks, 1 rink finale, 9 fact cards, 4 tracks, leaderboard | 3 to 6 months |
-| Full vision | 6 neighborhoods, 4 skaters, rink crews, touch controls, Atlanta Tycoon as a second mode in the same shell | 9 to 12 months |
+| Full vision | 6 neighborhoods, 4 skaters, rink crews, Atlanta Tycoon as a second mode in the same shell | 9 to 12 months |
 
 Prototype gate: if free movement plus grind plus style does not feel good on a greybox block after 4 weeks, pivot or kill.
 
@@ -140,7 +140,7 @@ Prototype gate: if free movement plus grind plus style does not feel good on a g
 | Risk | Mitigation |
 |---|---|
 | Skate controller feel (rail snap, carve, camera) built without a scene editor | Greybox prototype first. Agents tune with Playwright runs and screenshots. Study THPS controller write-ups. |
-| Browser performance on phones with a 3D neighborhood | Low-poly stylized blocks, Draco, instancing, frustum culling. Desktop first, phones in version 2. |
+| Browser performance on phones with a 3D neighborhood | Low-poly stylized blocks, Draco, instancing, frustum culling. Phones first: touch controls and a phone quality tier are in M1 (#71, #72). |
 | Generated skate animation quality | Pose review with contact sheets, as in Crossroads. Budget 1.5x credits for redos. |
 | Music rights | Original or local tracks only. Written agreements before launch. |
 | Cultural accuracy of the moves | Real skater review gate before release. |
@@ -175,5 +175,5 @@ Path B, prototype first:
 - Block by Block: https://en.wikipedia.org/wiki/Block_by_Block_(program)
 - NYC Video Game Festival: https://www.nyc.gov/site/mome/news/04242025-nyc-video-game-festival.page
 - Atlanta esports lab: https://www.ajc.com/news/business/atlanta-officials-open-new-esports-and-computer-lab-near-downtown/KDN4PXIL6ZB4JNKO6NA2VM2TKQ/
-- Crossroads cost analysis: `/Users/william-meroxa/Development/crossroads/docs/cost-analysis.md`
-- RenderATL Rush: `/Users/william-meroxa/Development/renderatl-rush`
+- Crossroads cost analysis: `crossroads/docs/cost-analysis.md` (a local sibling repository)
+- RenderATL Rush: the `renderatl-rush` repository (a local sibling repository)

@@ -40,6 +40,7 @@ export function createSkaterView() {
   let anim = createAnimState();
   let current = null;
   let faceState = createFaceState();
+  let heldFace = null;
 
   function play(name, fade) {
     const next = actions.get(name);
@@ -71,6 +72,15 @@ export function createSkaterView() {
     // The face decal state: { eyes, mouth }, or null without a face.
     get face() {
       return model?.face ? { eyes: model.face.eyes, mouth: model.face.mouth } : null;
+    },
+    // Holds the face in one state ({ eyes, mouth }), for the tests. null
+    // gives the face back to the animation.
+    holdFace(state) {
+      heldFace = state ? { eyes: state.eyes, mouth: state.mouth } : null;
+    },
+    // Stops the clips (true) or plays them again (false), for the tests.
+    freezePose(frozen) {
+      if (mixer) mixer.timeScale = frozen ? 0 : 1;
     },
     // A banked combo: Nia cheers.
     cheer() {
@@ -131,7 +141,8 @@ export function createSkaterView() {
         mixer.update(dt);
         if (model.face) {
           faceState = stepFace(faceState, anim.clip, dt);
-          model.face.set(faceState.eyes, faceState.mouth);
+          const f = heldFace ?? faceState;
+          model.face.set(f.eyes, f.mouth);
         }
       }
     },

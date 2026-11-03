@@ -1,0 +1,378 @@
+{
+ "trail": {
+  "officialName": "Eastside",
+  "officialExtent": "10th & Monroe to Krog Tunnel",
+  "officialMiles": "2.4",
+  "gameVsOfficial": {
+   "n": 602,
+   "median": 0.3,
+   "p95": 1.7,
+   "max": 3.6
+  },
+  "officialVsGame": {
+   "n": 223,
+   "median": 0.5,
+   "p95": 1.7,
+   "max": 3.6
+  },
+  "officialLenInBoundsM": 2294
+ },
+ "cityLabels": [
+  "Airline St NE",
+  "Alaska Ave NE",
+  "Angier Ave NE",
+  "Angier Springs Rd NE",
+  "Ashland Ave NE",
+  "Ashland Dr NE",
+  "Ashley Ave NE",
+  "Auburn Ave NE",
+  "Barnett St NE",
+  "Belgrade Ave NE",
+  "Bernina Ave NE",
+  "Bishops Way NE",
+  "Bonaventure Ave NE",
+  "Boulevard Pl NE",
+  "Brickworks Cir NE",
+  "Carter Ctr NE",
+  "Corduroy Ln",
+  "Corley St NE",
+  "Dallas St NE",
+  "Delta Pl NE",
+  "Dixie Ave NE",
+  "Druid Cir NE",
+  "East Ave NE",
+  "Edgewood Ave NE",
+  "Edith St NE",
+  "Elizabeth St NE",
+  "Ensley St NE",
+  "Euclid Ave NE",
+  "Fortune Pl NE",
+  "Fortune St NE",
+  "Freedom Pkwy NE",
+  "Freedom Pkwy North NE",
+  "Freedom Pkwy South NE",
+  "Gaspero St NE",
+  "Glen Iris Dr NE",
+  "Hale St NE",
+  "Highland Ave NE",
+  "Inman Ln NE",
+  "Inman Village Pkwy NE",
+  "Inman Way NE",
+  "Irwin Pl NE",
+  "Irwin St NE",
+  "John Wesley Dobbs Ave NE",
+  "Johnson Ave NE",
+  "Kendall St NE",
+  "Krog St NE",
+  "Lake Ave NE",
+  "Lakeview Ave NE",
+  "Lampkin St NE",
+  "Madeira Ave NE",
+  "Mcgruder St NE",
+  "Montag Cir NE",
+  "Morgan St NE",
+  "North Angier Ave NE",
+  "North Ave NE",
+  "North Highland Ave NE",
+  "Park Village Dr NE",
+  "Patterson Way",
+  "Ponce De Leon Ave NE",
+  "Ralph Mcgill Blvd NE",
+  "Randolph St NE",
+  "Rankin St NE",
+  "Sampson St NE",
+  "Somerset Ter NE",
+  "Spruce St NE",
+  "Village Pkwy NE",
+  "Virgil St NE",
+  "Wabash Ave NE",
+  "Waddell St NE",
+  "Waverly Way NE",
+  "West Ashland Ave NE",
+  "West NE",
+  "Willoughby Way NE",
+  "Wilmer St NE",
+  "Winton Ter NE",
+  "Woodall Ave NE"
+ ],
+ "oddSigns": [
+  {
+   "names": [
+    "Randolph St NE",
+    "Bishop Way NE"
+   ],
+   "lat": 33.760356,
+   "lon": -84.367932,
+   "nearestCityLabels": [
+    "Johnson Ave NE (6.5 m)",
+    "Glen Iris Dr NE (6.6 m)",
+    "Randolph St NE (9.2 m)"
+   ]
+  },
+  {
+   "names": [
+    "Ralph McGill Blvd",
+    "Glen Iris Dr NE"
+   ],
+   "lat": 33.764025,
+   "lon": -84.367717,
+   "nearestCityLabels": [
+    "Ralph Mcgill Blvd NE (7.4 m)",
+    "Glen Iris Dr NE (8.3 m)",
+    "Glen Iris Dr NE (11.2 m)"
+   ]
+  },
+  {
+   "names": [
+    "Ralph McGill Blvd",
+    "Ralph McGill Blvd NE"
+   ],
+   "lat": 33.764026,
+   "lon": -84.366645,
+   "nearestCityLabels": [
+    "Fortune St NE (2.0 m)",
+    "Ralph Mcgill Blvd NE (6.7 m)",
+    "Ralph Mcgill Blvd NE (6.9 m)"
+   ]
+  },
+  {
+   "names": [
+    "Inman Ln",
+    "Inman Way"
+   ],
+   "lat": 33.760203,
+   "lon": -84.363011,
+   "nearestCityLabels": [
+    "Inman Ln NE (6.5 m)",
+    "Inman Way NE (9.4 m)",
+    "Inman Way NE (11.8 m)"
+   ]
+  },
+  {
+   "names": [
+    "Inman Way",
+    "Montag Cir"
+   ],
+   "lat": 33.760513,
+   "lon": -84.362703,
+   "nearestCityLabels": [
+    "Inman Way NE (5.5 m)",
+    "Montag Cir NE (6.5 m)",
+    "Montag Cir NE (6.7 m)"
+   ]
+  },
+  {
+   "names": [
+    "Brickworks Cir",
+    "Closed Lake Ave"
+   ],
+   "lat": 33.758671,
+   "lon": -84.362425,
+   "nearestCityLabels": [
+    "Brickworks Cir NE (5.4 m)",
+    "Brickworks Cir NE (7.0 m)",
+    "Brickworks Cir NE (8.8 m)"
+   ]
+  },
+  {
+   "names": [
+    "Closed Lake Ave",
+    "West Ashland Ave NE"
+   ],
+   "lat": 33.75834,
+   "lon": -84.362151,
+   "nearestCityLabels": [
+    "Brickworks Cir NE (4.1 m)",
+    "West Ashland Ave NE (4.1 m)",
+    "Brickworks Cir NE (4.1 m)"
+   ]
+  },
+  {
+   "names": [
+    "Inman Ln",
+    "Inman Way"
+   ],
+   "lat": 33.759485,
+   "lon": -84.36228,
+   "nearestCityLabels": [
+    "Inman Way NE (4.8 m)",
+    "Inman Ln NE (8.1 m)",
+    "Inman Way NE (10.0 m)"
+   ]
+  },
+  {
+   "names": [
+    "Inman Way",
+    "Montag Cir"
+   ],
+   "lat": 33.759769,
+   "lon": -84.361882,
+   "nearestCityLabels": [
+    "Montag Cir NE (3.7 m)",
+    "Montag Cir NE (6.2 m)",
+    "Inman Way NE (6.2 m)"
+   ]
+  },
+  {
+   "names": [
+    "Patterson Way NE",
+    "Prospect Way NE"
+   ],
+   "lat": 33.762278,
+   "lon": -84.36172,
+   "nearestCityLabels": [
+    "Patterson Way (7.0 m)",
+    "Patterson Way (34.5 m)",
+    "Corduroy Ln (34.5 m)"
+   ]
+  },
+  {
+   "names": [
+    "East Ave NE",
+    "Prospect Way NE"
+   ],
+   "lat": 33.763187,
+   "lon": -84.36157,
+   "nearestCityLabels": [
+    "East Ave NE (5.5 m)",
+    "Freedom Pkwy North NE (40.9 m)",
+    "Freedom Pkwy South NE (52.8 m)"
+   ]
+  },
+  {
+   "names": [
+    "John Lewis Freedom Pkwy NE",
+    "Belgrade Ave NE"
+   ],
+   "lat": 33.769921,
+   "lon": -84.359469,
+   "nearestCityLabels": [
+    "Belgrade Ave NE (5.9 m)",
+    "Freedom Pkwy South NE (8.8 m)",
+    "Freedom Pkwy South NE (11.5 m)"
+   ]
+  },
+  {
+   "names": [
+    "John Lewis Freedom Pkwy NE",
+    "North Ave NE"
+   ],
+   "lat": 33.771014,
+   "lon": -84.35928,
+   "nearestCityLabels": [
+    "Freedom Pkwy North NE (9.9 m)",
+    "North Ave NE (10.8 m)",
+    "Freedom Pkwy North NE (14.9 m)"
+   ]
+  },
+  {
+   "names": [
+    "John Lewis Freedom Pkwy NE",
+    "Ralph McGill Blvd NE"
+   ],
+   "lat": 33.768299,
+   "lon": -84.358721,
+   "nearestCityLabels": [
+    "Freedom Pkwy South NE (8.6 m)",
+    "Ralph Mcgill Blvd NE (12.9 m)",
+    "Freedom Pkwy South NE (14.2 m)"
+   ]
+  },
+  {
+   "names": [
+    "Austin Ave NE",
+    "Elizabeth St NE"
+   ],
+   "lat": 33.76155,
+   "lon": -84.358096,
+   "nearestCityLabels": [
+    "Lake Ave NE (4.5 m)",
+    "Lake Ave NE (5.2 m)",
+    "Elizabeth St NE (5.2 m)"
+   ]
+  }
+ ],
+ "centerlines": [
+  {
+   "name": "Ponce de Leon Avenue Northeast",
+   "cityLines": 2,
+   "vsCity": {
+    "n": 98,
+    "median": 3.8,
+    "p95": 5.1,
+    "max": 5.4
+   }
+  },
+  {
+   "name": "North Avenue Northeast",
+   "cityLines": 7,
+   "vsCity": {
+    "n": 161,
+    "median": 0.9,
+    "p95": 2.1,
+    "max": 2.2
+   }
+  },
+  {
+   "name": "Highland Avenue Northeast",
+   "cityLines": 5,
+   "vsCity": {
+    "n": 89,
+    "median": 0.7,
+    "p95": 1.3,
+    "max": 1.3
+   }
+  },
+  {
+   "name": "Irwin Street Northeast",
+   "cityLines": 4,
+   "vsCity": {
+    "n": 52,
+    "median": 0.7,
+    "p95": 0.9,
+    "max": 1
+   }
+  },
+  {
+   "name": "Ralph McGill Boulevard Northeast",
+   "cityLines": 10,
+   "vsCity": {
+    "n": 141,
+    "median": 0.8,
+    "p95": 3.6,
+    "max": 3.8
+   }
+  },
+  {
+   "name": "Krog Street Northeast",
+   "cityLines": 3,
+   "vsCity": {
+    "n": 55,
+    "median": 0.6,
+    "p95": 2.4,
+    "max": 15.5
+   }
+  }
+ ],
+ "landmarkBuildings": [
+  {
+   "name": "Excelsior Mill",
+   "address": "695 North Ave NE`",
+   "designated": "2006-10-24"
+  },
+  {
+   "name": "Ponce De Leon Tourist Home",
+   "address": "881 Ponce De Leon Ave NE",
+   "designated": "2020-09-17"
+  },
+  {
+   "name": "Troy-Peerless Laundry Building",
+   "address": "650 Glen Iris Drive",
+   "designated": "2007-05-14"
+  }
+ ],
+ "historicDistricts": [
+  "Martin Luther King Jr. Landmark District",
+  "Inman Park Historic District"
+ ]
+}

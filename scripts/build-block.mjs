@@ -21,6 +21,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import polygonClipping from "polygon-clipping";
 import { bboxCenter, createProjection, parseBbox } from "../src/level/geo/projection.js";
 import { cleanRing, signedArea } from "../src/level/geo/extrude.js";
 import { decodeHeights, encodeHeights, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
@@ -323,33 +324,15 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     }
   }
 
+  // The strips come first: the building pass needs them.
+  const footprints = [];
   for (const e of raw.elements ?? []) {
     const tags = e.tags ?? {};
     const id = `${e.type === "way" ? "w" : "r"}${e.id}`;
     const isBuilding = tags.building && tags.building !== "no";
     const isPark = tags.leisure === "park" || tags.landuse === "grass";
     if (isBuilding || isPark) {
-      let outers = [];
-      let inners = [];
-      if (e.type === "way" && e.geometry) outers = [project(e.geometry)];
-      else if (e.type === "relation" && e.members) {
-        const ways = (role) => e.members.filter((m) => m.type === "way" && m.geometry && (m.role || "outer") === role).map((m) => project(m.geometry));
-        outers = joinRings(ways("outer"));
-        inners = joinRings(ways("inner"));
-      }
-      if (isBuilding) {
-        const { height, source } = buildingHeight(tags, overture?.[id], heights?.[id]);
-        const before = buildings.length;
-        const extra = { height: round(height), heightSource: source };
-        if (tags.name) extra.name = tags.name;
-        if (tags.building !== "yes") extra.type = tags.building;
-        addPolygon(buildings, id, outers, inners, extra);
-        counts[source] += buildings.length - before;
-      } else {
-        const extra = { kind: "park" };
-        if (tags.name) extra.name = tags.name;
-        addPolygon(areas, id, outers, inners, extra);
-      }
+      footprints.push({ e, tags, id, isBuilding });
       continue;
     }
     if (e.type !== "way" || !e.geometry) continue;
@@ -367,6 +350,41 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
         item.layer = Number(tags.layer) || 1;
       }
       strips.push(item);
+    }
+  }
+
+  const corridor = trailCorridor(strips);
+  const ways = strips.filter((st) => st.kind === "trail" || st.kind === "path");
+  for (const { e, tags, id, isBuilding } of footprints) {
+    let outers = [];
+    let inners = [];
+    if (e.type === "way" && e.geometry) outers = [project(e.geometry)];
+    else if (e.type === "relation" && e.members) {
+      const memberRings = (role) => e.members.filter((m) => m.type === "way" && m.geometry && (m.role || "outer") === role).map((m) => project(m.geometry));
+      outers = joinRings(memberRings("outer"));
+      inners = joinRings(memberRings("inner"));
+    }
+    if (isBuilding) {
+      if (!hasGroundWalls(tags)) continue;
+      const { height, source } = buildingHeight(tags, overture?.[id], heights?.[id]);
+      const extra = { height: round(height), heightSource: source };
+      if (tags.name) extra.name = tags.name;
+      if (tags.building !== "yes") extra.type = tags.building;
+      const items = [];
+      addPolygon(items, id, outers, inners, extra);
+      for (const item of items) {
+        // A raised footprint (layer > 0) over a trail or a path is a deck or a
+        // shed roof that the way runs under: skip it.
+        if (Number(tags.layer) > 0 && ways.some((st) => stripCrosses(st, item.outer))) continue;
+        for (const piece of clipOffCorridor(item, corridor)) {
+          buildings.push(piece);
+          counts[source] += 1;
+        }
+      }
+    } else {
+      const extra = { kind: "park" };
+      if (tags.name) extra.name = tags.name;
+      addPolygon(areas, id, outers, inners, extra);
     }
   }
 
@@ -417,6 +435,96 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     level.stats.embankments = embankments.length;
   }
   return level;
+}
+
+// OSM footprints with no walls down to the ground (issue #57): a roof is an
+// open canopy, and a min_height or a min_level lifts the walls off the ground.
+export function hasGroundWalls(tags) {
+  if (tags.building === "roof") return false;
+  if ((parseHeight(tags.min_height) ?? 0) > 0) return false;
+  if (Number(tags["building:min_level"]) > 0) return false;
+  return true;
+}
+
+// True when the strip center line goes into the ring, tested every 0.5 m.
+export function stripCrosses(strip, ring) {
+  for (let i = 0; i < strip.points.length - 1; i += 1) {
+    const [ax, az] = strip.points[i];
+    const [bx, bz] = strip.points[i + 1];
+    const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / 0.5));
+    for (let k = 0; k <= n; k += 1) if (inPolygon([ax + ((bx - ax) * k) / n, az + ((bz - az) * k) / n], ring)) return true;
+  }
+  return false;
+}
+
+// The clear corridor along the trail: the strip half width plus this margin.
+export const TRAIL_CLEARANCE = 0.5;
+
+// The trail corridor as polygons (one box for each segment and a 16-gon at
+// each point), with a bounding box for a fast reject.
+export function trailCorridor(strips) {
+  const polys = [];
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  for (const s of strips) {
+    if (s.kind !== "trail") continue;
+    const r = s.width / 2 + TRAIL_CLEARANCE;
+    for (const [i, [x, z]] of s.points.entries()) {
+      const disc = [];
+      for (let k = 0; k < 16; k += 1) disc.push([x + r * Math.cos((k * Math.PI) / 8), z + r * Math.sin((k * Math.PI) / 8)]);
+      polys.push([[...disc, disc[0]]]);
+      minX = Math.min(minX, x - r);
+      maxX = Math.max(maxX, x + r);
+      minZ = Math.min(minZ, z - r);
+      maxZ = Math.max(maxZ, z + r);
+      if (i === s.points.length - 1) continue;
+      const [bx, bz] = s.points[i + 1];
+      const len = Math.hypot(bx - x, bz - z);
+      if (len === 0) continue;
+      const nx = (-(bz - z) / len) * r;
+      const nz = ((bx - x) / len) * r;
+      polys.push([[[x + nx, z + nz], [bx + nx, bz + nz], [bx - nx, bz - nz], [x - nx, z - nz], [x + nx, z + nz]]]);
+    }
+  }
+  return { polys, box: { minX, maxX, minZ, maxZ } };
+}
+
+// Cuts the trail corridor out of a building footprint (issue #57: the
+// "725 Ponce" edge runs along the trail). Returns the item unchanged when the
+// corridor does not touch it, or the pieces that are left, each 4 m^2 or more.
+export function clipOffCorridor(item, corridor) {
+  const ring = item.outer;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  for (const [x, z] of ring) {
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    minZ = Math.min(minZ, z);
+    maxZ = Math.max(maxZ, z);
+  }
+  const b = corridor.box;
+  if (maxX < b.minX || minX > b.maxX || maxZ < b.minZ || minZ > b.maxZ) return [item];
+  const close = (r) => [...r, r[0]];
+  const shape = [close(ring), ...(item.holes ?? []).map(close)];
+  const near = corridor.polys.filter((p) => {
+    const xs = p[0].map((q) => q[0]);
+    const zs = p[0].map((q) => q[1]);
+    return Math.max(...xs) >= minX && Math.min(...xs) <= maxX && Math.max(...zs) >= minZ && Math.min(...zs) <= maxZ;
+  });
+  if (!near.length || !polygonClipping.intersection(shape, polygonClipping.union(...near)).length) return [item];
+  const pieces = [];
+  for (const poly of polygonClipping.difference(shape, ...near)) {
+    const [outer, ...holes] = poly.map((r) => cleanRing(r.slice(0, -1).map(([x, z]) => [round(x), round(z)])));
+    if (outer.length < 3 || Math.abs(signedArea(outer)) < 4) continue;
+    const kept = holes.filter((h) => h.length >= 3);
+    pieces.push({ outer, ...(kept.length ? { holes: kept } : {}) });
+  }
+  const { outer: _o, holes: _h, ...rest } = item;
+  return pieces.map((p, i) => ({ ...rest, id: pieces.length > 1 ? `${item.id}-${i}` : item.id, ...p }));
 }
 
 function inPolygon([x, z], ring) {

@@ -3,11 +3,12 @@ import * as THREE from "three";
 // The toon look for the skater, on both tiers:
 //
 // - A toon material with a 3-step ramp, in place of the PBR material of the
-//   GLB. The map and the color stay.
+//   GLB. The color, the maps, the opacity, the depth write, the vertex colors
+//   and the emissive light stay (KEPT).
 // - A rim light: the edges that face away from the camera get a little
 //   light, so the skater stands out from the city.
-// - An ink outline from an inverted hull: a second skinned mesh on the same
-//   skeleton and geometry, drawn with its back faces and moved out along its
+// - An ink outline from an inverted hull: for each opaque skinned mesh, a second
+//   skinned mesh on the same skeleton and geometry, drawn with its back faces and moved out along its
 //   normals. Its width grows with the distance, so it stays about 2 px wide.
 //
 // The low tier has no post chain and no ink pass, so the hull is its only
@@ -49,20 +50,49 @@ function toonRamp() {
   return ramp;
 }
 
+// The glTF material properties that the toon material keeps, when the
+// source material has them. MeshToonMaterial has each of these.
+export const KEPT = [
+  "map",
+  "opacity",
+  "transparent",
+  // GLTFLoader sets depthWrite false for alpha blend. Keep it with transparent.
+  "depthWrite",
+  "alphaTest",
+  "side",
+  "vertexColors",
+  "emissive",
+  "emissiveIntensity",
+  "emissiveMap",
+  "normalMap",
+  "normalMapType",
+  "normalScale",
+];
+
 // A toon material with a rim light, from a glTF material.
 export function toonMaterial(source) {
   const mat = new THREE.MeshToonMaterial({
     name: `${source.name ?? "skater"}-toon`,
     color: source.color ? source.color.clone() : new THREE.Color(1, 1, 1),
-    map: source.map ?? null,
     gradientMap: toonRamp(),
-    transparent: source.transparent,
-    alphaTest: source.alphaTest,
-    side: source.side,
   });
+  for (const key of KEPT) {
+    const value = source[key];
+    if (value === undefined || value === null) continue;
+    // Colors and vectors are copied, so that the two materials do not share them.
+    if (value.isColor || value.isVector2) mat[key].copy(value);
+    else mat[key] = value;
+  }
   const rim = TOON.rim;
   mat.userData.rim = { color: new THREE.Color(...rim.color), strength: rim.strength, power: rim.power };
-  mat.onBeforeCompile = (shader) => {
+  // A hook on the source material (the face decal of attachFace()) stays:
+  // it runs first, then the rim. The rim lights the decal color too. The
+  // source hook runs with the source material as `this`, so it keeps its
+  // own state (for example `this.userData`).
+  const sourceHook = source.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile ? source.onBeforeCompile : null;
+  const sourceKey = sourceHook && source.customProgramCacheKey ? source.customProgramCacheKey() : null;
+  mat.onBeforeCompile = (shader, renderer) => {
+    if (sourceHook) sourceHook.call(source, shader, renderer);
     shader.uniforms.uRimColor = { value: mat.userData.rim.color };
     shader.uniforms.uRim = { value: new THREE.Vector2(rim.strength, rim.power) };
     shader.fragmentShader = shader.fragmentShader
@@ -78,7 +108,8 @@ export function toonMaterial(source) {
 }`,
       );
   };
-  mat.customProgramCacheKey = () => "skater-toon-rim";
+  const key = sourceKey ? `${sourceKey}+skater-toon-rim` : "skater-toon-rim";
+  mat.customProgramCacheKey = () => key;
   return mat;
 }
 
@@ -104,19 +135,11 @@ export function outlineMaterial() {
   return mat;
 }
 
-// Gives a loaded skater (loadSkaterModel()) the toon materials and the
-// outline hull. Returns the hull mesh.
-export function toonSkater(loaded) {
-  const meshes = [];
-  loaded.root.traverse((o) => {
-    if (o.isMesh) meshes.push(o);
-  });
-  for (const m of meshes) {
-    m.material = Array.isArray(m.material) ? m.material.map(toonMaterial) : toonMaterial(m.material);
-  }
-  const src = loaded.skinnedMesh;
+// An outline hull for one skinned mesh, added next to it.
+function outlineHull(src) {
   const hull = new THREE.SkinnedMesh(src.geometry, outlineMaterial());
-  hull.name = "skater-outline";
+  hull.name = src.name ? `${src.name}-outline` : "skater-outline";
+  hull.userData.outlineOf = src;
   hull.castShadow = false;
   hull.receiveShadow = false;
   hull.frustumCulled = src.frustumCulled;
@@ -126,4 +149,24 @@ export function toonSkater(loaded) {
   hull.bind(src.skeleton, src.bindMatrix);
   src.parent.add(hull);
   return hull;
+}
+
+// True when the mesh has a transparent material. An opaque hull behind a
+// transparent mesh shows through it, so such a mesh gets no hull.
+function isTransparent(mesh) {
+  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  return mats.some((m) => m.transparent);
+}
+
+// Gives a loaded skater (loadSkaterModel()) the toon materials and an
+// outline hull for each opaque skinned mesh. Returns the hull meshes.
+export function toonSkater(loaded) {
+  const meshes = [];
+  loaded.root.traverse((o) => {
+    if (o.isMesh) meshes.push(o);
+  });
+  for (const m of meshes) {
+    m.material = Array.isArray(m.material) ? m.material.map(toonMaterial) : toonMaterial(m.material);
+  }
+  return meshes.filter((m) => m.isSkinnedMesh && !isTransparent(m)).map(outlineHull);
 }

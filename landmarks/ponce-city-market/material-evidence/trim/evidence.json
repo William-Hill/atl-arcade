@@ -5,8 +5,8 @@
   "estimatedFidelity": 0.788,
   "targetThreshold": 0.7,
   "materialId": "trim",
-  "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/crops/trim.png",
-  "outDir": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/trim",
+  "sourceImage": "crops/trim.png",
+  "outDir": "material-evidence/trim",
   "palette": [
     "#97A0A7",
     "#696E74",
@@ -16,31 +16,31 @@
   ],
   "maps": {
     "albedo": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/trim/trim_albedo.png",
+      "path": "material-evidence/trim/trim_albedo.png",
       "url": "trim_albedo.png",
       "channel": "albedo",
       "source": "reference-pixel-extraction"
     },
     "roughness": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/trim/trim_roughness.png",
+      "path": "material-evidence/trim/trim_roughness.png",
       "url": "trim_roughness.png",
       "channel": "roughness",
       "source": "reference-pixel-extraction"
     },
     "height": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/trim/trim_height.png",
+      "path": "material-evidence/trim/trim_height.png",
       "url": "trim_height.png",
       "channel": "height",
       "source": "reference-pixel-extraction"
     },
     "normal": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/trim/trim_normal.png",
+      "path": "material-evidence/trim/trim_normal.png",
       "url": "trim_normal.png",
       "channel": "normal",
       "source": "reference-pixel-extraction"
     },
     "ao": {
-      "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/ponce-city-market/material-evidence/trim/trim_ao.png",
+      "path": "material-evidence/trim/trim_ao.png",
       "url": "trim_ao.png",
       "channel": "ao",
       "source": "reference-pixel-extraction"

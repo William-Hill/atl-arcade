@@ -1,0 +1,360 @@
+{
+  "date": "2026-11-03T17:46:40.130Z",
+  "base": "http://localhost:5175",
+  "rows": [
+    {
+      "name": "high-desk-spawn",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "high-desk-rolling",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "coast"
+    },
+    {
+      "name": "high-desk-npcs",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "coast",
+      "npc": {
+        "id": 20,
+        "type": "dogWalker",
+        "kind": "trail",
+        "x": 335.5324362686699,
+        "y": 0.07,
+        "z": -1.4987785229699846,
+        "lean": 0
+      }
+    },
+    {
+      "name": "high-desk-pcm",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "high-desk-pcm-tower",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "high-desk-ksm-front",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "high-desk-ksm",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "high-phone-spawn",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "high-phone-rolling",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "coast"
+    },
+    {
+      "name": "high-phone-npcs",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "coast",
+      "npc": {
+        "id": 20,
+        "type": "dogWalker",
+        "kind": "trail",
+        "x": 335.50224270686346,
+        "y": 0.07,
+        "z": -1.217746140001928,
+        "lean": 0
+      }
+    },
+    {
+      "name": "high-phone-pcm",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "high-phone-ksm-front",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "high-phone-ksm",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-desk-spawn",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-desk-rolling",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "coast"
+    },
+    {
+      "name": "low-desk-npcs",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "coast",
+      "npc": {
+        "id": 20,
+        "type": "dogWalker",
+        "kind": "trail",
+        "x": 335.6505428582004,
+        "y": 0.07,
+        "z": 1.6144874156830584,
+        "lean": 0
+      }
+    },
+    {
+      "name": "low-desk-pcm",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-desk-pcm-tower",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-desk-ksm-front",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-desk-ksm",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-phone-spawn",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-phone-rolling",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "coast"
+    },
+    {
+      "name": "low-phone-npcs",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "coast",
+      "npc": {
+        "id": 20,
+        "type": "dogWalker",
+        "kind": "trail",
+        "x": 335.62437510463474,
+        "y": 0.07,
+        "z": 1.8580488142561626,
+        "lean": 0
+      }
+    },
+    {
+      "name": "low-phone-pcm",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-phone-ksm-front",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-phone-ksm",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "mural-count",
+      "count": 39,
+      "cells": 13
+    },
+    {
+      "name": "high-desk-mural-0",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle",
+      "mural": "r4314932",
+      "cell": 10
+    },
+    {
+      "name": "high-phone-mural-0",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle",
+      "mural": "r4314932",
+      "cell": 10
+    },
+    {
+      "name": "low-desk-mural-0",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle",
+      "mural": "r4314932",
+      "cell": 10
+    },
+    {
+      "name": "low-phone-mural-0",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle",
+      "mural": "r4314932",
+      "cell": 10
+    },
+    {
+      "name": "high-desk-mural-1",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle",
+      "mural": "w211061642",
+      "cell": 6
+    },
+    {
+      "name": "low-desk-mural-1",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle",
+      "mural": "w211061642",
+      "cell": 6
+    },
+    {
+      "name": "high-desk-mural-2",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle",
+      "mural": "w973976338",
+      "cell": 0
+    },
+    {
+      "name": "low-desk-mural-2",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "idle",
+      "mural": "w973976338",
+      "cell": 0
+    },
+    {
+      "name": "high-phone-spawn-marcus",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "marcus",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "low-phone-spawn-marcus",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "low",
+      "skater": "marcus",
+      "loaded": true,
+      "clip": "idle"
+    },
+    {
+      "name": "high-land-rolling",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)",
+      "quality": "high",
+      "skater": "nia",
+      "loaded": true,
+      "clip": "coast"
+    }
+  ],
+  "errors": []
+}

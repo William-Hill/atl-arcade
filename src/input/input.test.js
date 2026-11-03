@@ -85,3 +85,31 @@ describe("browser shortcuts", () => {
     expect(free.prevented).toBe(false);
   });
 });
+
+describe("touch", () => {
+  it("merges the touch overlay input and reports the touch source", () => {
+    const t = fakeTarget();
+    const touch = { touching: false, out: { steer: 0, push: false, brake: false, jump: false, grind: false, style1: false, style2: false, switch: false }, sample() { return this.out; } };
+    const input = createInput({ target: t, getGamepads: () => [], touch });
+    expect(input.sample().push).toBe(false);
+    expect(input.source).toBe("keyboard");
+    touch.touching = true;
+    touch.out = { ...touch.out, push: true, steer: -0.5, grind: true };
+    expect(input.sample()).toMatchObject({ push: true, steer: -0.5, grind: true });
+    expect(input.source).toBe("touch");
+    touch.touching = false;
+    touch.out = { ...touch.out, push: false, steer: 0, grind: false };
+    t.fire("keydown", key("KeyA"));
+    expect(input.sample().steer).toBe(1);
+    expect(input.source).toBe("keyboard");
+  });
+
+  it("keeps the gamepad source when a key and the gamepad are both active", () => {
+    const t = fakeTarget();
+    const touch = { touching: false, sample: () => ({ steer: 0, push: false, brake: false, jump: false, grind: false, style1: false, style2: false, switch: false }) };
+    const input = createInput({ target: t, getGamepads: () => [pad([2], [-1, 0])], touch });
+    t.fire("keydown", key("KeyA"));
+    input.sample();
+    expect(input.source).toBe("gamepad");
+  });
+});

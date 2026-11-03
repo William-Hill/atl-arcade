@@ -1,0 +1,122 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { buildPropMeshes } from "./geo-mesh.js";
+import { levelProps } from "./props.js";
+import { TREE_SPECIES, TREE_VARIANTS, isTreeKind, treeKindFor, treeTemplate, treeTemplates, withProceduralTrees } from "./trees.js";
+
+const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
+const SPECIES = Object.keys(TREE_SPECIES);
+const triangles = (t) => t.indices.length / 3;
+
+describe("procedural trees", () => {
+  it("gives the same mesh for the same species and variant", () => {
+    const a = treeTemplate("oak", 1);
+    const b = treeTemplate("oak", 1);
+    expect(Array.from(a.positions)).toEqual(Array.from(b.positions));
+    expect(Array.from(a.colors)).toEqual(Array.from(b.colors));
+  });
+
+  it("gives each variant its own shape", () => {
+    for (const s of SPECIES) {
+      const shapes = new Set();
+      for (let v = 0; v < TREE_VARIANTS; v += 1) shapes.add(Array.from(treeTemplate(s, v).positions.slice(0, 30)).join());
+      expect(shapes.size).toBe(TREE_VARIANTS);
+    }
+  });
+
+  it("keeps each tree inside the triangle budget of the street kit trees", () => {
+    // The kit trees are 932 (tree_round) and 200 (tree_tall) triangles at
+    // LOD0, and 120 and 94 at LOD1 (assets/kit/provenance.json).
+    for (const s of SPECIES) {
+      for (let v = 0; v < TREE_VARIANTS; v += 1) {
+        expect(triangles(treeTemplate(s, v, 0))).toBeLessThanOrEqual(900);
+        expect(triangles(treeTemplate(s, v, 1))).toBeLessThanOrEqual(130);
+      }
+    }
+  });
+
+  it("has well-formed attributes: unit normals, colors in 0..1.1, sway in 0..1", () => {
+    for (const s of SPECIES) {
+      const t = treeTemplate(s, 0);
+      const n = t.positions.length / 3;
+      expect(t.normals.length).toBe(n * 3);
+      expect(t.colors.length).toBe(n * 3);
+      expect(t.sway.length).toBe(n);
+      for (const i of t.indices) expect(i).toBeLessThan(n);
+      for (let i = 0; i < n; i += 1) {
+        expect(Math.hypot(t.normals[i * 3], t.normals[i * 3 + 1], t.normals[i * 3 + 2])).toBeCloseTo(1, 3);
+        expect(t.sway[i]).toBeGreaterThanOrEqual(0);
+        expect(t.sway[i]).toBeLessThanOrEqual(1);
+      }
+      for (const c of t.colors) {
+        expect(c).toBeGreaterThanOrEqual(0);
+        expect(c).toBeLessThanOrEqual(1.1);
+      }
+    }
+  });
+
+  it("keeps the trunk base still and moves the crown", () => {
+    for (const s of SPECIES) {
+      const t = treeTemplate(s, 2);
+      let low = 0;
+      let high = 0;
+      for (let i = 0; i < t.sway.length; i += 1) {
+        if (t.positions[i * 3 + 1] < 0.5) low = Math.max(low, t.sway[i]);
+        else high = Math.max(high, t.sway[i]);
+      }
+      expect(low).toBeLessThan(0.05);
+      expect(high).toBeGreaterThan(0.5);
+    }
+  });
+
+  it("keeps the crown over the skater on the trail trees", () => {
+    // tree_round goes 2.5 m to 4 m from the trail edge. Its species (oak and
+    // crape myrtle) must clear a skater (1.8 m) at the smallest scale, 0.85.
+    for (const s of ["oak", "myrtle"]) {
+      for (let v = 0; v < TREE_VARIANTS; v += 1) {
+        const t = treeTemplate(s, v);
+        let crownLow = Infinity;
+        for (let i = 0; i < t.sway.length; i += 1) {
+          const r = Math.hypot(t.positions[i * 3], t.positions[i * 3 + 2]);
+          if (r > 0.6) crownLow = Math.min(crownLow, t.positions[i * 3 + 1]);
+        }
+        expect(crownLow * 0.85).toBeGreaterThan(1.8);
+      }
+    }
+  });
+
+  it("names a template for every tree placement, the same one on each call", () => {
+    const templates = treeTemplates();
+    expect(Object.keys(templates).length).toBe(SPECIES.length * TREE_VARIANTS * 2);
+    const props = levelProps(LEVEL).filter((p) => isTreeKind(p.kind));
+    expect(props.length).toBeGreaterThan(100);
+    const used = new Set();
+    for (const p of props) {
+      const k = treeKindFor(p);
+      expect(templates[k]).toBeDefined();
+      expect(templates[`${k}_lod1`]).toBeDefined();
+      expect(treeKindFor(p)).toBe(k);
+      used.add(k.split(":")[1]);
+    }
+    expect(used).toEqual(new Set(SPECIES));
+    // Only tall placements get pines.
+    for (const p of props.filter((q) => q.kind === "tree_round")) expect(treeKindFor(p)).not.toMatch(/pine/);
+  });
+
+  it("changes only the tree kinds, and puts the wind weight in the prop tiles", () => {
+    const props = levelProps(LEVEL);
+    const swapped = withProceduralTrees(props);
+    expect(swapped.length).toBe(props.length);
+    for (let i = 0; i < props.length; i += 1) {
+      if (isTreeKind(props[i].kind)) expect(swapped[i].kind).toMatch(/^tree:/);
+      else expect(swapped[i]).toBe(props[i]);
+    }
+    const trees = swapped.filter((p) => p.kind.startsWith("tree:")).slice(0, 40);
+    const tiles = buildPropMeshes(trees, treeTemplates());
+    expect(tiles.length).toBeGreaterThan(0);
+    for (const t of tiles) {
+      expect(t.mesh.sway.length).toBe(t.mesh.positions.length / 3);
+      expect(Math.max(...t.mesh.sway)).toBeGreaterThan(0.5);
+    }
+  });
+});

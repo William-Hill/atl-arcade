@@ -303,7 +303,7 @@ export function buildPropMeshes(props, templates) {
     if (!templates[p.kind]) continue;
     const key = `${Math.floor(p.x / PROP_TILE)},${Math.floor(p.z / PROP_TILE)}`;
     let entry = tiles.get(key);
-    if (!entry) tiles.set(key, (entry = [0, 1].map(() => ({ positions: [], indices: [], colors: [], normals: [] }))));
+    if (!entry) tiles.set(key, (entry = [0, 1].map(() => ({ positions: [], indices: [], colors: [], normals: [], sway: [] }))));
     placeTemplate(entry[0], templates[p.kind], p);
     placeTemplate(entry[1], templates[`${p.kind}_lod1`] ?? templates[p.kind], p);
   }
@@ -314,6 +314,9 @@ export function buildPropMeshes(props, templates) {
       const m = entry[lod];
       const mesh = { positions: Float32Array.from(m.positions), indices: Uint32Array.from(m.indices), colors: Float32Array.from(m.colors) };
       if (m.normals.length === m.positions.length) mesh.normals = Float32Array.from(m.normals);
+      // Every prop tile has the wind attribute, so the wind shader never reads
+      // a missing attribute; a kit prop has 0 there.
+      mesh.sway = Float32Array.from(m.sway);
       out.push({ material: "props", tile, lod, center: [(ix + 0.5) * PROP_TILE, (iz + 0.5) * PROP_TILE], mesh });
     }
   }

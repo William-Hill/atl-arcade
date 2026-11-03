@@ -258,6 +258,8 @@ export function placeTemplate(mesh, template, { x = 0, y = 0, z = 0, yaw = 0, sc
       const k = i;
       mesh.colors.push(template.colors ? template.colors[k] : 1, template.colors ? template.colors[k + 1] : 1, template.colors ? template.colors[k + 2] : 1);
     }
+    // The wind weight (src/level/geo/trees.js). A template with none stays still.
+    if (mesh.sway) mesh.sway.push(template.sway ? template.sway[i / 3] : 0);
   }
   for (const i of template.indices) mesh.indices.push(base + i);
   return mesh;

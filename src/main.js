@@ -23,6 +23,8 @@ import { createLandmarksView } from "./render/landmarks-view.js";
 import { QUALITY, qualityFor, rendererName } from "./render/quality.js";
 import { createSky } from "./render/sky.js";
 import { createPost } from "./render/post.js";
+import { addTiltShift } from "./render/tilt-shift.js";
+import { createPhotoPanel } from "./ui/photo-panel.js";
 import { createStreetSigns } from "./render/street-signs.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
@@ -196,6 +198,12 @@ if (view === "orbit") {
 
 // The high tier post chain (src/render/post.js).
 const post = tier.post ? createPost(renderer, scene, camera, { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: params.get("halftone") !== "0" }) : null;
+// Photo mode's tilt-shift blur (src/render/tilt-shift.js), off in play.
+const tiltShift = post ? addTiltShift(post, camera, renderer) : null;
+function draw() {
+  if (post) post.render();
+  else renderer.render(scene, camera);
+}
 function resize() {
   fitToWindow(renderer, camera);
   if (post) post.setSize();
@@ -299,6 +307,21 @@ if (view === "follow") {
   lookInput = createLookInput({ element: renderer.domElement });
 }
 
+// Photo mode (#90, src/ui/photo-panel.js): P or the PHOTO button. The
+// simulation stops and a free camera moves while it is open.
+const photoLook = lookInput ?? createLookInput({ element: renderer.domElement });
+const photo = createPhotoPanel({
+  canvas,
+  camera,
+  tiltShift,
+  render: draw,
+  sampleLook: (dt) => mapLook(photoLook.sample(), dt),
+  floor: (x, z) => env.sampleGround(x, z)?.height ?? null,
+  onChange: (open) => {
+    if (controls) controls.enabled = !open;
+  },
+});
+
 let stepper = createStepper();
 let ticks = 0;
 let last = performance.now();
@@ -330,17 +353,24 @@ function frame(now) {
     return;
   }
 
-  const stepped = advance(stepper, elapsed);
-  stepper = stepped.stepper;
-  for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
-  ticks += stepped.steps;
+  if (photo.isOpen) {
+    // Photo mode stops the simulation and the skater animation.
+    stepper = { ...stepper, leftover: 0 };
+  } else {
+    const stepped = advance(stepper, elapsed);
+    stepper = stepped.stepper;
+    for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
+    ticks += stepped.steps;
+  }
 
-  skaterView.sync(skater, Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
-  if (controls) {
+  skaterView.sync(skater, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
+  if (photo.isOpen) {
+    photo.update(Math.min(elapsed, 0.1));
+  } else if (controls) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
-  if (follow) {
+  if (follow && !photo.isOpen) {
     const dt = Math.min(elapsed, 0.1);
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
   }
@@ -356,8 +386,7 @@ function frame(now) {
   if (sky) sky.update(camera, now / 1000);
   if (streetSigns) streetSigns.update(camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
-  if (post) post.render();
-  else renderer.render(scene, camera);
+  draw();
   frames += 1;
   if (recorder.active && frames % recorder.every === 0) {
     recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
@@ -375,6 +404,24 @@ window.__atl = {
   gpu: gpuName,
   // The post chain, to tune the effects from the console (high tier only).
   post,
+  // Photo mode (#90): open, close, toggle, set({ center, strength }), save().
+  photo: {
+    get isOpen() {
+      return photo.isOpen;
+    },
+    get state() {
+      return photo.state;
+    },
+    // The blur pass state, or null on the low tier (no blur).
+    get blur() {
+      return tiltShift ? { enabled: tiltShift.enabled, ...tiltShift.params } : null;
+    },
+    open: () => photo.open(),
+    close: () => photo.close(),
+    toggle: () => photo.toggle(),
+    set: (params) => photo.set(params),
+    save: () => photo.save(),
+  },
   level: {
     name: level.name,
     format: level.format ?? "greybox",

@@ -555,3 +555,14 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Effect on reviews: every audit and playtest from now on weighs a finding by its effect on a phone player first.
 - Why: the goal is the official game of the City of Atlanta. Most residents reach a city link from a phone.
 - Evidence and findings: `production/audits/2026-11-playability/REPORT.md`.
+
+## 2026-11-03: Photo mode with a depth tilt-shift blur (#90)
+
+- P or the PHOTO button (bottom right) opens and closes photo mode. Escape also closes it. While it is open, the fixed-step simulation and the skater animation stop, and the HUD hides. The map attribution stays on the screen.
+- A free camera moves in photo mode: WASD or the arrows fly, E and Q go up and down, Shift goes fast, and a drag or the right stick turns it. It stays within 150 m of the place where photo mode opened and 0.4 m over the ground. On close, the follow camera places itself again; a fixed or an orbit camera gets its old pose back.
+- The blur is a `ShaderPass` (`src/render/tilt-shift.js`) after the ink pass and before bloom. It reads the GTAO depth texture that the ink pass reads, so it adds no scene pass. A band (half height 0.08 in UV) stays sharp. Past the band the blur grows over 0.3 in UV, and 60% of it scales with the depth step from the focus depth (the depth at the band center). The blur is a 32-tap golden-angle disc with a radius of up to 14 px times the pixel ratio. A sample adds only as far as its own blur reaches, so the sharp band does not bleed out.
+- The pass is disabled in normal play, and EffectComposer skips a disabled pass, so play has no cost and no blur. `src/render/post.js` does not change: `addTiltShift()` inserts the pass into the composer.
+- The player moves the band with a slider, `[` and `]`, or the mouse wheel, and sets the strength with a slider or `-` and `=`.
+- Save PNG draws one frame and reads the canvas in the same task, so the WebGL buffer still holds the frame (no `preserveDrawingBuffer`). The PNG holds the canvas only, with no HUD. The file name is `skate-atl-YYYYMMDD-HHMMSS.png`: no skater, score, position, or other player data.
+- Low tier: photo mode, the free camera, and the PNG work; the sliders are disabled and a note says that the blur needs the high tier.
+- The pure parts (band math, state, free camera, file name) are in `src/render/tilt-shift.js` and `src/ui/photo-mode.js` with Vitest tests. The DOM is in `src/ui/photo-panel.js`, with its CSS inside, so `src/shell.css` and `src/ui/hud.js` do not change.

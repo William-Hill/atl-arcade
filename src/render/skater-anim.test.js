@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { ANIM, AIR_TRICKS, CLIPS, GRINDS, DANCE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, measureYawRate, stepAnim, stepFacing } from "./skater-anim.js";
-import { STYLE } from "../sim/skate/constants.js";
+import { SKATE, STYLE } from "../sim/skate/constants.js";
+import { createSkateState, runScript, stepSkate } from "../sim/skate/controller.js";
 
 const rolling = (extra = {}) => ({ state: "rolling", speed: 5, yaw: 0, pushCooldown: 0, style: null, ...extra });
 const air = (extra = {}) => ({ state: "air", speed: 5, yaw: 0, airTime: 0.1, airFrom: "jump", style: null, ...extra });
@@ -34,14 +35,26 @@ describe("the state -> clip table", () => {
   it("maps the rolling states", () => {
     expect(clipFor(rolling({ speed: 0 }))).toBe("idle");
     expect(clipFor(rolling())).toBe("coast");
-    expect(clipFor(rolling({ pushCooldown: 0.3 }))).toBe("push");
+    expect(clipFor(rolling({ pushing: true }))).toBe("push");
+    expect(clipFor(rolling({ pushCooldown: 0.3 }))).toBe("coast");
     expect(clipFor(rolling(), { yawRate: 1.5 })).toBe("carve_left");
     expect(clipFor(rolling(), { yawRate: -1.5 })).toBe("carve_right");
     expect(clipFor(rolling({ manual: true }))).toBe("manual");
     expect(clipFor(rolling({ backward: true }))).toBe("ride_back");
-    expect(clipFor(rolling({ backward: true, pushCooldown: 0.3 }))).toBe("ride_back");
+    expect(clipFor(rolling({ backward: true, pushing: true }))).toBe("ride_back");
     expect(clipFor(rolling({ backward: true, speed: 0 }))).toBe("idle");
     expect(clipFor({ ...rolling({ backward: true }), state: "grind" })).toBe("grind_frontside");
+  });
+
+  it("goes from push to coast in one tick when the player releases push at speed (#61)", () => {
+    // Release in the middle of a stroke, so pushCooldown is still above 0.
+    const frames = 90 + Math.round(SKATE.pushCooldown / 2 / (1 / 60));
+    const held = runScript(createSkateState(), [{ frames, input: { push: true } }]).state;
+    expect(held.speed).toBeGreaterThan(5);
+    expect(clipFor(held)).toBe("push");
+    const released = stepSkate(held, {}, 1 / 60);
+    expect(released.pushCooldown).toBeGreaterThan(0);
+    expect(clipFor(released)).toBe("coast");
   });
 
   it("maps the air, grind, bail, and style states", () => {

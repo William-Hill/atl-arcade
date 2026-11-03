@@ -192,7 +192,8 @@ body.touch #shell-info { display: none; }
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
-.touch-btn[data-down="1"] { background: rgba(255, 95, 178, 0.75); border-color: #fff; }
+/* A held button also gets smaller, so the state does not show by color only. */
+.touch-btn[data-down="1"] { background: rgba(255, 95, 178, 0.75); border-color: #fff; transform: scale(0.92); }
 
 /* A thumb arc: JUMP is the biggest and nearest the corner. */
 .touch-jump { right: 0; bottom: 0; width: 88px; height: 88px; font-size: 15px; }

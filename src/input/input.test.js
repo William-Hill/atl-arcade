@@ -103,4 +103,13 @@ describe("touch", () => {
     expect(input.sample().steer).toBe(1);
     expect(input.source).toBe("keyboard");
   });
+
+  it("keeps the gamepad source when a key and the gamepad are both active", () => {
+    const t = fakeTarget();
+    const touch = { touching: false, sample: () => ({ steer: 0, push: false, brake: false, jump: false, grind: false, style1: false, style2: false, switch: false }) };
+    const input = createInput({ target: t, getGamepads: () => [pad([2], [-1, 0])], touch });
+    t.fire("keydown", key("KeyA"));
+    input.sample();
+    expect(input.source).toBe("gamepad");
+  });
 });

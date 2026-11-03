@@ -6,6 +6,16 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## M2 early work, 2026-11-03
+
+| Issue | Branch | PR | Verified |
+|---|---|---|---|
+| #90 Photo mode with a depth tilt-shift blur | `claude/90-photo-mode-876a18` | PR open | Vitest on the band math, the state, the free camera, and the file name (18 tests); Playwright on the high tier opens it with P, checks that the ticks and the skater stop, moves the band and the strength with the sliders and the keys, measures the blur (the far strip loses detail, the band keeps it), saves a PNG named `skate-atl-YYYYMMDD-HHMMSS.png`, flies and turns the free camera, and closes with the button and with Escape; Playwright on the low tier opens it with the button, with no blur, and the follow camera returns on close; evidence `e2e/__screenshots__/photo-mode-{high,low,saved}.png`; full suite 52 of 52 pass |
+
+#90 FPS gate: FAIL on this Mac under load. `npm run playtest:beltline` gave a median of 15 FPS twice (load average 19 to 64, from another session's headless Chromium). An A/B run back to back gave 20 FPS on `main` (89dbb96) and 20 FPS on this branch, so photo mode closed adds no measurable cost. Run the playtest again on an idle machine before merge.
+
+#90 not verified: no person used photo mode; the free camera has no gamepad move and no touch move (a drag or the right stick only turns it); the blur ran only in headless SwiftShader, not on a real GPU or a phone; PR #95 and PR #96 are not merged yet, so a rebase can be necessary. See `docs/decisions.md` for the design.
+
 ## M1 status, 2026-10-31
 
 | Issue | Branch | PR | Verified |

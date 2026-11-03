@@ -26,6 +26,10 @@ export const PROP_DRAW_DISTANCE = 200;
 // The distance from the camera to the nearest edge of a surface tile past
 // which the low tier shows the coarse terrain drape (m).
 export const FAR_TERRAIN_DISTANCE = 60;
+// The facade depth tiles (sills and piers) show when the camera is under
+// this distance from the tile center (m). A depth tile is 50 m square, so
+// every part under about 85 m shows. Past that a sill is about a pixel.
+export const DEPTH_DISTANCE = 120;
 
 // Three.js view of a geodata level: one merged mesh per material per tile,
 // with a toon (cel) material and vertex colors. The simulation never sees
@@ -425,7 +429,7 @@ function createPropMaterial({ wind = true } = {}) {
 
 // `groundDetail: false` keeps the flat art colors on the ground.
 // `trees: false` keeps the two street kit trees (for an A/B check).
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, interiors = false, farTerrain = false, trees = true, wind = true } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -449,7 +453,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, drapeMesh(t.mesh, terrain)]) : []);
   // The facade kit (cornices, copings, belt courses, house roofs) joins the
   // render copy of its building tile in the same way.
-  const kitParts = kit ? facadeKit(level) : { tiles: [], counts: {} };
+  const kitParts = kit ? facadeKit(level) : { tiles: [], depthTiles: [], counts: {} };
   const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));
   for (const { material, tile, mesh } of meshes) {
     const extra = material === "surface" ? markingTiles.get(tile) : material === "building" ? kitTiles.get(tile) : null;
@@ -474,6 +478,17 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     }
   }
   for (const [tile, mesh] of kitTiles) addMesh(root, byId, `kit-${tile}`, geoGeometry(mesh), materials.building, { castShadow: true });
+  // The sills and the piers: one mesh per depth tile, hidden far away in
+  // update().
+  const depthTiles = [];
+  for (const t of depth ? kitParts.depthTiles : []) {
+    const obj = addMesh(root, byId, `depth-${t.tile}`, geoGeometry(t.mesh), materials.building);
+    obj.userData.center = t.center;
+    obj.userData.triangles = t.mesh.indices.length / 3;
+    obj.visible = false;
+    depthTiles.push(obj);
+  }
+  const facadeDepth = { tiles: depthTiles.length, near: 0, nearTriangles: 0 };
 
   // Kit props load after the level shows. Each prop tile is one merged mesh;
   // far tiles are hidden in update().
@@ -504,9 +519,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     props,
     kit: kitParts.counts,
     terrainLods: terrainLods.length,
+    facadeDepth,
     addProps,
     // Shows each prop tile at one level of detail by its distance from the
-    // camera, and hides the far tiles.
+    // camera, and hides the far prop and depth tiles.
     update(cameraPosition, seconds = performance.now() / 1000) {
       propMaterial.time.value = seconds;
       for (const t of terrainLods) {
@@ -516,6 +532,18 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
         t.near.visible = !far;
         t.far.visible = far;
       }
+      let near = 0;
+      let nearTriangles = 0;
+      for (const obj of depthTiles) {
+        const [cx, cz] = obj.userData.center;
+        obj.visible = Math.hypot(cx - cameraPosition.x, cz - cameraPosition.z) < depthDistance;
+        if (obj.visible) {
+          near += 1;
+          nearTriangles += obj.userData.triangles;
+        }
+      }
+      facadeDepth.near = near;
+      facadeDepth.nearTriangles = nearTriangles;
       let lod0 = 0;
       for (const obj of propTiles) {
         const [cx, cz] = obj.userData.center;

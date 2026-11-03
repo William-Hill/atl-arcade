@@ -524,3 +524,10 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Library: `polygon-clipping` 0.15.7 (2023-12-18) does the polygon difference. Only the build script uses it, so it is a dev dependency.
 - Test: a Vitest test samples the full trail center line every 0.5 m with `createGeoGroundSampler` and finds no building.
 - Not fixed: five paths still go into Ponce City Market (`w184803195`) and one footway goes into `w211747264`. These are raised walkways and building passages (`level=2`, `bridge=yes`, `tunnel=building_passage`). They are out of the scope of #57.
+
+## 2026-11-03: Protect the ground under bridges with more than two points (#59)
+
+- Problem: in `src/level/geo/terrain.js`, `gradeTrail` protected the middle half of each bridge segment. Near an inner joint of a bridge with more than two points, the grid had no protection, so the trail grade could move the ground under the deck.
+- Fix: the new `bridgeMiddle` finds the nearest point on the full bridge polyline and its length along the line. The protected part is the middle half of the full length (0.25 to 0.75), within width / 2 + 2 m of the center line.
+- Bridges with more than two points on the BeltLine level: `w741961708` (trail), `w182470306`, `w431443668`, and `w44851092` (paths), `w638312736` (sidewalk), and `w156324725`, `w29094065`, and `w29094070` (streets).
+- Level data: the rebuild changes 61 terrain cells. The largest change is 2.35 m at about (-45, -717). The spawn height changes by 0.02 m.

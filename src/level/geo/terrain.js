@@ -312,9 +312,33 @@ export function raiseEmbankments(grid, strips) {
 // to it, so its raw profile has short ramps of 40% and more. gradeTrail()
 // sets the grid in the trail corridor to a smooth profile: at each point of
 // the trail center line, the mean ground of the at-grade trail points within
-// TRAIL_GRADE.radius. The middle half of each bridge span keeps the ground
-// under it (the road under the deck). Pure: returns new heights.
+// TRAIL_GRADE.radius. The middle half of each bridge (along its full length)
+// keeps the ground under it (the road under the deck). Pure: returns new heights.
 export const TRAIL_GRADE = { radius: 60, step: 4, side: 8 };
+
+// True when (x, z) is within width / 2 + 2 m of the bridge center line, and
+// its nearest point on the line is in the middle half of the full length.
+// `cum` gives the length at each point, and `total` the full length.
+export function bridgeMiddle(b, cum, total, x, z) {
+  if (!(total > 0)) return false;
+  let best = Infinity;
+  let at = 0;
+  for (let i = 0; i < b.points.length - 1; i += 1) {
+    const [ax, az] = b.points[i];
+    const [bx, bz] = b.points[i + 1];
+    const dx = bx - ax;
+    const dz = bz - az;
+    const l2 = dx * dx + dz * dz;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / l2)) : 0;
+    const d = Math.hypot(x - (ax + t * dx), z - (az + t * dz));
+    if (d < best) {
+      best = d;
+      at = cum[i] + t * (cum[i + 1] - cum[i]);
+    }
+  }
+  const k = at / total;
+  return k > 0.25 && k < 0.75 && best < b.width / 2 + 2;
+}
 
 export function gradeTrail(grid, strips) {
   const t = createTerrain(grid);
@@ -357,20 +381,14 @@ export function gradeTrail(grid, strips) {
     const list = near(p.x, p.z, TRAIL_GRADE.radius);
     p.smooth = list.reduce((a, q) => a + q.h, 0) / list.length;
   }
-  const underSpan = (x, z) => spans.some((b) => {
-    for (let i = 0; i < b.points.length - 1; i += 1) {
-      const [ax, az] = b.points[i];
-      const [bx, bz] = b.points[i + 1];
-      const dx = bx - ax;
-      const dz = bz - az;
-      const l2 = dx * dx + dz * dz;
-      const k = l2 > 0 ? ((x - ax) * dx + (z - az) * dz) / l2 : 0;
-      // Only the middle half of the span: the deck ends sit on the graded approach.
-      if (k <= 0.25 || k >= 0.75) continue;
-      if (Math.hypot(x - (ax + k * dx), z - (az + k * dz)) < b.width / 2 + 2) return true;
-    }
-    return false;
+  // The middle half of each bridge, along the full length of its polyline
+  // (issue #59): the deck ends sit on the graded approach.
+  const spanLines = spans.map((b) => {
+    const cum = [0];
+    for (let i = 0; i < b.points.length - 1; i += 1) cum.push(cum[i] + Math.hypot(b.points[i + 1][0] - b.points[i][0], b.points[i + 1][1] - b.points[i][1]));
+    return { b, cum, total: cum[cum.length - 1] };
   });
+  const underSpan = (x, z) => spanLines.some(({ b, cum, total }) => bridgeMiddle(b, cum, total, x, z));
   for (let j = 0; j < rows; j += 1) {
     for (let i = 0; i < cols; i += 1) {
       const x = x0 + i * cell;

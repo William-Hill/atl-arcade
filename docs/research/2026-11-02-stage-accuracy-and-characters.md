@@ -28,7 +28,7 @@
 | Street names | 79 | `level.json` `strips[].name` |
 | Trail | 13 OSM ways, 2327 m of strip, 4.3 m wide | `level.json`, `TRAIL_WIDTH` in `scripts/build-block.mjs` |
 | Parks | 12 areas | `level.json` `areas` |
-| Terrain | Flat (y = 0) on PR #47. A 4 m USGS 3DEP grid on the terrain branch | `raw/terrain.json` (terrain branch) |
+| Terrain | Flat (y = 0) on PR #47. An 8 m USGS 3DEP grid on the terrain branch | `raw/terrain.json` (terrain branch) |
 
 ### Method
 
@@ -51,11 +51,12 @@
 | Highland Avenue (33.76144, -84.36148) | The road is on a bridge over the trail (`layer=1`) | Both at grade |
 | Irwin Street (33.75754, -84.36490) | At grade, with a raised table | At grade (correct) |
 
-The terrain branch adds the ground. Numbers from its grid:
+The terrain branch adds the ground. Numbers from its 8 m grid (fetched 2026-11-03 00:18 UTC):
 
-- The relief in the box is 51.25 m (269.29 m to 320.54 m above sea level).
-- The trail rises from 277.1 m to 313.8 m, a 36.7 m rise from Ponce de Leon to Irwin Street.
-- Over 8 m steps, the trail grade reaches 52.9 %. This peak is at the bridges. The 3DEP DEM is bare earth, so it removes the bridge decks and shows the road below.
+- The relief in the box is 50.43 m (270.09 m to 320.52 m above sea level).
+- Along the trail, the ground is between 275.8 m and 305.6 m.
+- With bilinear samples every 16 m, the trail grade reaches 54.6 %. The 6 steepest samples are all at the North Avenue bridge (ways 741961708, 83291378, 741961710, 83294499, 741961707, 741961709). The 3DEP DEM is bare earth, so it removes the bridge deck and shows the road below.
+- An earlier 4 m grid from the same branch gave the same result: a peak of 52.9 % at the bridges.
 
 Result: the DEM alone puts a ditch at each bridge. Each bridge needs a deck at the trail grade, with the road below it. I did not read the terrain branch code for the bridges, so I do not know if it does this now.
 

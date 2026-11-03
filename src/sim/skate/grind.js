@@ -91,7 +91,7 @@ export function stepGrind(prev, input, dt, grindables, k = GRIND, skate = SKATE)
   if (!g) throw new Error(`grind: unknown grindable ${prev.grind.id}`);
   // Reset every one-tick flag: stepSkate does not run on a rail, so a jump or
   // a landing on the snap tick would otherwise repeat on every grind tick.
-  const s = { ...prev, grind: { ...prev.grind }, justSnapped: false, justFell: false, justExited: false, justJumped: false, justLanded: false, bonked: false, respawned: false };
+  const s = { ...prev, grind: { ...prev.grind }, justSnapped: false, justFell: false, justExited: false, justJumped: false, justLanded: false, bonked: false, wallSlide: false, respawned: false };
   const steer = Math.max(-1, Math.min(1, input.steer ?? 0));
 
   // Balance: a constant lean push plus growth with the lean, minus the correction.

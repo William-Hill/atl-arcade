@@ -284,3 +284,12 @@ window.__atl = {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
   },
 };
+
+// Autopilot (an automated playtest agent) connects only with ?autopilot=1.
+// The dynamic import keeps the bridge out of the normal bundle: Vite puts it
+// in its own chunk, and the page loads that chunk only on this branch.
+if (params.get("autopilot") === "1") {
+  import("./autopilot/connect.js").then(({ connectAutopilot }) =>
+    connectAutopilot({ params, scene, camera, canvas, renderer, atl: window.__atl, level, skaterObject: skaterView.group, threeRevision: THREE.REVISION }),
+  );
+}

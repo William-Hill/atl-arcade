@@ -111,3 +111,9 @@ Grind moves from Control to F. On Windows and Linux, Control plus W closes the t
 ## 2026-10-31 — M0-10 verdict: PROCEED
 
 William played the greybox and marked it PROCEED. Free skating on the greybox block already felt good. The worst parts were the quarter-pipe camera (fixed in PR #29 after the session) and the capsule standing in for the skater. The M0 hypothesis was not tested: the session did not cover combos or rails, so the 3-minute combo and the accidental-fall numbers stay open for the first M1 playtest. Issue #10 asks for a 15-minute session with sound; William waived that requirement for this verdict, and the sound session moves to the first M1 playtest with the hypothesis numbers. M1 (the GLB skater and one real Atlanta block) may start. Report: `prototypes/greybox-skate/REPORT.md`.
+
+## 2026-11-02 — Autopilot bridge behind ?autopilot=1 (fork, experimental)
+
+The user chose "fork first" for Autopilot (PR #53). A fork of `ramenvr/autopilot`, branch `threejs-engine`, adds engine `threejs`: a browser bridge module and a Python adapter. Skate ATL connects through `src/autopilot/`. `main.js` imports `src/autopilot/connect.js` dynamically, and only when the page has `?autopilot=1`, so the normal bundle has no bridge code (Vite puts it in its own chunk). The hooks map the bridge to `window.__atl`: the skater state, `resetSkater`, the bindings, the fixed tick clock, and a render call for frames.
+
+`src/autopilot/autopilot-bridge.js` is a vendored copy of the fork file. It is our own code, not an npm dependency, so it adds nothing to `package.json`. Autopilot itself is less than 7 days old: do not install it as a dependency before 2026-11-05, and pin a version at least 7 days old then. The hello frame always says `share: false`, and every run sets `AUTOPILOT_SHARE=0`. Report: `docs/research/2026-11-02-autopilot-threejs-fork.md`.

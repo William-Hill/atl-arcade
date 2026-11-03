@@ -1,0 +1,609 @@
+{
+  "hello": {
+    "engine": "threejs",
+    "engine_version": "186",
+    "project": "atl-arcade",
+    "plugin_version": "0.1.0",
+    "features": [
+      "timed_hold",
+      "levels",
+      "pointer",
+      "media"
+    ],
+    "share": false,
+    "host": "game"
+  },
+  "pose_at_start": {
+    "at": {
+      "X": 0.0,
+      "Y": -2400.0,
+      "Z": 90.0
+    },
+    "eye": {
+      "X": 0.0,
+      "Y": -3050.0,
+      "Z": 280.0
+    },
+    "yaw": 90.0,
+    "pitch": -15.48,
+    "velocity": {
+      "X": 0.0,
+      "Y": 0.0,
+      "Z": 0.0
+    },
+    "on_ground": true
+  },
+  "steps": [
+    {
+      "op": "missing_ops",
+      "ok": true,
+      "ms": 352,
+      "answer": []
+    },
+    {
+      "op": "context",
+      "ok": true,
+      "ms": 27,
+      "answer": {
+        "world": "/Scene",
+        "scene": "/Scene",
+        "character": "/Scene/skater",
+        "controller": "",
+        "input_subsystem": "",
+        "camera_manager": "",
+        "camera": "",
+        "dimension": "3d",
+        "game_name": "atl-arcade",
+        "host": "game",
+        "engine": "threejs",
+        "session_running": true,
+        "paused": false,
+        "game_time": 0.53,
+        "project_dir": "",
+        "controls": [
+          {
+            "name": "left",
+            "action": "left",
+            "keys": [
+              "A",
+              "Left"
+            ],
+            "web_keys": [
+              "KeyA",
+              "ArrowLeft"
+            ],
+            "digital": true
+          },
+          {
+            "name": "right",
+            "action": "right",
+            "keys": [
+              "D",
+              "ArrowRight"
+            ],
+            "web_keys": [
+              "KeyD",
+              "ArrowRight"
+            ],
+            "digital": true
+          },
+          {
+            "name": "push",
+            "action": "push",
+            "keys": [
+              "LeftShift",
+              "RightShift",
+              "W",
+              "Up"
+            ],
+            "web_keys": [
+              "ShiftLeft",
+              "ShiftRight",
+              "KeyW",
+              "ArrowUp"
+            ],
+            "digital": true
+          },
+          {
+            "name": "brake",
+            "action": "brake",
+            "keys": [
+              "S",
+              "Down"
+            ],
+            "web_keys": [
+              "KeyS",
+              "ArrowDown"
+            ],
+            "digital": true
+          },
+          {
+            "name": "jump",
+            "action": "jump",
+            "keys": [
+              "SpaceBar"
+            ],
+            "web_keys": [
+              "Space"
+            ],
+            "digital": true
+          },
+          {
+            "name": "grind",
+            "action": "grind",
+            "keys": [
+              "F"
+            ],
+            "web_keys": [
+              "KeyF"
+            ],
+            "digital": true
+          },
+          {
+            "name": "style1",
+            "action": "style1",
+            "keys": [
+              "Q"
+            ],
+            "web_keys": [
+              "KeyQ"
+            ],
+            "digital": true
+          },
+          {
+            "name": "style2",
+            "action": "style2",
+            "keys": [
+              "E"
+            ],
+            "web_keys": [
+              "KeyE"
+            ],
+            "digital": true
+          }
+        ],
+        "net": {
+          "mode": "standalone"
+        },
+        "page": "http://localhost:5175/?mute=1&autopilot=1&autopilot_url=ws%3A%2F%2F127.0.0.1%3A8765%2Fv1%2Fbridge"
+      }
+    },
+    {
+      "op": "ping",
+      "ok": true,
+      "ms": 26,
+      "answer": {
+        "game_time": 0.55,
+        "wall_time": 1793676533.901
+      }
+    },
+    {
+      "op": "levels",
+      "ok": true,
+      "ms": 25,
+      "answer": {
+        "levels": [
+          "greybox-block"
+        ],
+        "open": "greybox-block",
+        "playing": "greybox-block"
+      }
+    },
+    {
+      "op": "find things (all_actors)",
+      "ok": true,
+      "ms": 20,
+      "answer": [
+        "/Scene/Group",
+        "/Scene/greybox-block",
+        "/Scene/greybox-block/street",
+        "/Scene/greybox-block/sidewalk-north",
+        "/Scene/greybox-block/sidewalk-south",
+        "/Scene/greybox-block/plaza",
+        "/Scene/greybox-block/stair-1",
+        "/Scene/greybox-block/stair-2",
+        "/Scene/greybox-block/stair-3",
+        "/Scene/greybox-block/stair-4",
+        "/Scene/greybox-block/ledge-north",
+        "/Scene/greybox-block/ledge-south",
+        "/Scene/greybox-block/rail-straight",
+        "/Scene/greybox-block/rail-kinked",
+        "/Scene/greybox-block/rail-curved",
+        "/Scene/greybox-block/quarter-pipe",
+        "/Scene/greybox-block/deck",
+        "/Scene/greybox-block/building-north",
+        "/Scene/greybox-block/building-south",
+        "/Scene/greybox-block/barrier-west",
+        "/Scene/greybox-block/barrier-east-north",
+        "/Scene/greybox-block/barrier-east-deck",
+        "/Scene/greybox-block/barrier-east-south",
+        "/Scene/skater",
+        "/Scene/debug-colliders"
+      ]
+    },
+    {
+      "op": "find class rail",
+      "ok": true,
+      "ms": 26,
+      "answer": [
+        "/Scene/greybox-block/rail-straight",
+        "/Scene/greybox-block/rail-kinked",
+        "/Scene/greybox-block/rail-curved"
+      ]
+    },
+    {
+      "op": "transforms (locs of 5 things)",
+      "ok": true,
+      "ms": 23,
+      "answer": {
+        "/Scene/Group": {
+          "X": 0.0,
+          "Y": 0.0,
+          "Z": 0.0
+        },
+        "/Scene/greybox-block": {
+          "X": 0.0,
+          "Y": 0.0,
+          "Z": 0.0
+        },
+        "/Scene/greybox-block/street": {
+          "X": -200.0,
+          "Y": 0.0,
+          "Z": -50.0
+        },
+        "/Scene/greybox-block/sidewalk-north": {
+          "X": 800.0,
+          "Y": 0.0,
+          "Z": 7.5
+        },
+        "/Scene/greybox-block/sidewalk-south": {
+          "X": -1000.0,
+          "Y": 500.0,
+          "Z": 7.5
+        }
+      }
+    },
+    {
+      "op": "bounds of the first thing",
+      "ok": true,
+      "ms": 20,
+      "answer": [
+        {
+          "X": 0.0,
+          "Y": 0.0,
+          "Z": 0.0
+        },
+        {
+          "X": 0.0,
+          "Y": 0.0,
+          "Z": 0.0
+        }
+      ]
+    },
+    {
+      "op": "pose",
+      "ok": true,
+      "ms": 25,
+      "answer": {
+        "at": {
+          "X": 0.0,
+          "Y": -2400.0,
+          "Z": 90.0
+        },
+        "eye": {
+          "X": 0.0,
+          "Y": -3050.0,
+          "Z": 280.0
+        },
+        "yaw": 90.0,
+        "pitch": -15.48,
+        "velocity": {
+          "X": 0.0,
+          "Y": 0.0,
+          "Z": 0.0
+        },
+        "on_ground": true
+      }
+    },
+    {
+      "op": "movement",
+      "ok": true,
+      "ms": 20,
+      "answer": {
+        "walk_speed": 1200,
+        "jump_z": 500,
+        "gravity": 2000,
+        "half_height": 90,
+        "radius": null,
+        "step": null,
+        "max_slope": null,
+        "air_control": null
+      }
+    },
+    {
+      "op": "view",
+      "ok": true,
+      "ms": 25,
+      "answer": {
+        "visible_count": 19,
+        "nearest": [
+          {
+            "name": "plaza",
+            "path": "/Scene/greybox-block/plaza",
+            "class": "ground",
+            "distance": 1084.16,
+            "screen_x": 2.44,
+            "screen_y": -0.56
+          },
+          {
+            "name": "stair-1",
+            "path": "/Scene/greybox-block/stair-1",
+            "class": "ground",
+            "distance": 1346.77,
+            "screen_x": 1.08,
+            "screen_y": 0
+          },
+          {
+            "name": "stair-2",
+            "path": "/Scene/greybox-block/stair-2",
+            "class": "ground",
+            "distance": 1374.45,
+            "screen_x": 1.03,
+            "screen_y": 0.01
+          },
+          {
+            "name": "stair-3",
+            "path": "/Scene/greybox-block/stair-3",
+            "class": "ground",
+            "distance": 1402.78,
+            "screen_x": 0.99,
+            "screen_y": 0.01
+          },
+          {
+            "name": "stair-4",
+            "path": "/Scene/greybox-block/stair-4",
+            "class": "ground",
+            "distance": 1431.71,
+            "screen_x": 0.95,
+            "screen_y": 0.02
+          },
+          {
+            "name": "rail-straight",
+            "path": "/Scene/greybox-block/rail-straight",
+            "class": "rail",
+            "distance": 1680.4,
+            "screen_x": -0.12,
+            "screen_y": 0.21
+          }
+        ],
+        "camera": {
+          "location": {
+            "X": 0,
+            "Y": -3050,
+            "Z": 280
+          },
+          "yaw": 90,
+          "pitch": -15.48,
+          "fov": 91.49,
+          "vfov": 60
+        },
+        "body": {
+          "on_ground": true,
+          "falling": false,
+          "state": "rolling"
+        },
+        "omitted": [
+          "held",
+          "openings",
+          "ways_up",
+          "lanes and slopes",
+          "under/overhead",
+          "look",
+          "blocks_player",
+          "sonar",
+          "line of sight"
+        ]
+      }
+    },
+    {
+      "op": "sees (the 3 nearest things)",
+      "ok": true,
+      "ms": 23,
+      "answer": {
+        "/Scene/greybox-block/plaza": {
+          "distance": 1084.16,
+          "screen_x": 2.44,
+          "screen_y": -0.56,
+          "partly_in_view": true,
+          "crosshair_on": false
+        },
+        "/Scene/greybox-block/stair-1": {
+          "distance": 1346.77,
+          "screen_x": 1.08,
+          "screen_y": 0,
+          "partly_in_view": true,
+          "crosshair_on": false
+        },
+        "/Scene/greybox-block/stair-2": {
+          "distance": 1374.45,
+          "screen_x": 1.03,
+          "screen_y": 0.01,
+          "partly_in_view": true,
+          "crosshair_on": false
+        }
+      }
+    },
+    {
+      "op": "screen",
+      "ok": true,
+      "ms": 20,
+      "answer": {
+        "hud.hud-score": "0",
+        "hud.hud-hint": "Press any key or click to start the beat",
+        "hud.hud-label": "STYLE",
+        "shell-info.strong": "Skate ATL",
+        "shell-info.span": "WASD or arrows to skate, Space to jump, hold F to grind, Q and E to dance, H for colliders. Land moves on the click for a bonus. Add ?view=orbit to look around."
+      }
+    },
+    {
+      "op": "ui",
+      "ok": true,
+      "ms": 21,
+      "answer": []
+    },
+    {
+      "op": "rc describe (context's player)",
+      "ok": true,
+      "ms": 23,
+      "answer": {
+        "Name": "/Scene/skater",
+        "Class": "Group"
+      }
+    },
+    {
+      "op": "key hold W with watch",
+      "ok": true,
+      "ms": 2112,
+      "answer": {
+        "key": "W",
+        "seconds": 2.0,
+        "from": {
+          "X": 0.0,
+          "Y": -2400.0,
+          "Z": 90.0
+        },
+        "to": {
+          "X": 0.0,
+          "Y": -1249.2,
+          "Z": 90.0
+        },
+        "moved_cm": 1150.8,
+        "watch": {
+          "changes": [
+            {
+              "t": 0.92,
+              "object": "/Scene/skater",
+              "what": "moved"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "op": "move toward kit -X for 2 s",
+      "ok": true,
+      "ms": 2040,
+      "answer": {
+        "moved": 1485.45,
+        "via": "game"
+      }
+    },
+    {
+      "op": "press SpaceBar",
+      "ok": true,
+      "ms": 0,
+      "answer": "posted"
+    },
+    {
+      "op": "pointer at the middle",
+      "ok": true,
+      "ms": 45,
+      "answer": {
+        "screen_x": 0,
+        "screen_y": 0,
+        "x": 640,
+        "y": 360,
+        "on_screen": true
+      }
+    },
+    {
+      "op": "capture",
+      "ok": true,
+      "ms": 48,
+      "answer": {
+        "width": 960,
+        "height": 540,
+        "t": 4.93,
+        "file": "<local>/still.jpg",
+        "bytes": 7331
+      }
+    },
+    {
+      "op": "record 2 s at 5 fps",
+      "ok": true,
+      "ms": 2060,
+      "answer": {
+        "recording": false,
+        "frames": 10,
+        "frames_received": 10,
+        "first": [
+          {
+            "n": 1,
+            "t": 5,
+            "width": 480,
+            "height": 270
+          }
+        ]
+      }
+    },
+    {
+      "op": "pause",
+      "ok": true,
+      "ms": 23,
+      "answer": [
+        {
+          "paused": true
+        },
+        {
+          "paused": false
+        }
+      ]
+    },
+    {
+      "op": "session restart",
+      "ok": true,
+      "ms": 1,
+      "answer": {
+        "pawn_back": true,
+        "pose": {
+          "at": {
+            "X": 0.0,
+            "Y": -2400.0,
+            "Z": 90.0
+          },
+          "eye": {
+            "X": -749.91,
+            "Y": -749.72,
+            "Z": 295.0
+          },
+          "yaw": 177.09,
+          "pitch": -15.48,
+          "velocity": {
+            "X": 0.0,
+            "Y": 0.0,
+            "Z": 0.0
+          },
+          "on_ground": true
+        }
+      }
+    },
+    {
+      "op": "codex_manifest (expected: unknown op)",
+      "ok": false,
+      "ms": 0,
+      "error": "GameError: codex_manifest: unknown op codex_manifest"
+    },
+    {
+      "op": "logs and findings so far",
+      "ok": true,
+      "ms": 0,
+      "answer": {
+        "logs": [],
+        "findings": [],
+        "heartbeat_age_s": 0.6
+      }
+    }
+  ],
+  "all_ok": true,
+  "when": "2026-11-02T22:29:00-0500"
+}

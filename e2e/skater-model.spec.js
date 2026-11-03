@@ -31,7 +31,9 @@ test("the Nia GLB loads skinned with Draco and no console errors", async ({ page
   for (const view of VIEWS) {
     await page.evaluate((v) => window.__skater.setView(v), view);
     await page.waitForTimeout(100);
-    await page.screenshot({ path: `assets/skaters/nia/views/${view}.png` });
+    // Test evidence goes to e2e/__screenshots__/. The committed review views in
+    // assets/skaters/nia/views/ change only when someone copies them on purpose.
+    await page.screenshot({ path: `e2e/__screenshots__/nia-${view}.png` });
   }
 
   expect(cdn, `requests off localhost: ${cdn.join(" | ")}`).toEqual([]);

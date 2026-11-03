@@ -278,3 +278,16 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Shell: `?level=beltline-eastside` (alias `beltline`) loads the block. The greybox stays the default. The level JSON is a separate chunk, so the greybox page does not download it. `?cam=x,y,z,lookX,lookY,lookZ` sets the fixed camera and `?fog=0` removes the fog, for screenshots.
 - Playtest: `npm run playtest` still runs the three greybox sessions, so the M0 numbers stay comparable. `npm run playtest:beltline` runs a 40 s ride on the trail, planned with the pure controller and a trail follower (`src/playtest/trail-script.js`).
 - Political rules: the level has no traffic. Streets are skate surfaces only.
+
+## 2026-11-01: Face expressions for Nia are decals, not a face rig (M1-02)
+
+- Decision: Nia's face changes with two small decal atlases: eyes (open, half, closed, happy) and mouth (neutral, smile, open). A shader projects them onto the front of the head in bind-pose space, so they follow the skin. Under the eye decal the normal map and the roughness map become flat skin, because they also carry the painted eyes.
+- The mood comes from the body clip: a smile while she stands, coasts, or carves; an open mouth in the air; happy eyes in a dance; closed eyes on a bail. She blinks every 2.2 to 5 s, and she cheers for 1.2 s when a combo banks. The logic is pure (`src/render/face-anim.js`) with Vitest tests.
+- Why: the Tripo mesh is one surface with the eyes and the lips painted on, so bones or shape keys have no lids or lips to move. A UV texture swap does not work, because the UV atlas cuts the face into many small islands.
+- Limits: the decals are painted by a script, not by an artist. A light oval shows on the closed lids in a close-up. The follow camera keeps the face small, so the effect is mostly visible in close-ups and menus.
+
+## 2026-11-03: Review fixes before the M1-02 merge
+
+- Playwright evidence goes to `e2e/__screenshots__/`. One exception: `e2e/skater-anim.spec.js` writes the clip contact sheet to `assets/skaters/<name>/clips/`, which holds committed review evidence next to the asset. The five model views moved to `e2e/__screenshots__/nia-<view>.png`; the committed `assets/skaters/nia/views/` change only on purpose.
+- The animation layer measures the yaw rate per simulation tick (`measureYawRate`), so a display above 60 Hz no longer flips the clip between coast and a carve on frames with no tick.
+- The Q dance list names the Cross Step (clip `dance_crisscross`), which has a spec in `atl-dance-references.md`.

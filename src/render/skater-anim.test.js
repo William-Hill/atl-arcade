@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { ANIM, AIR_TRICKS, CLIPS, GRINDS, DANCE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, stepAnim, stepFacing } from "./skater-anim.js";
+import { ANIM, AIR_TRICKS, CLIPS, GRINDS, DANCE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, measureYawRate, stepAnim, stepFacing } from "./skater-anim.js";
 import { STYLE } from "../sim/skate/constants.js";
 
 const rolling = (extra = {}) => ({ state: "rolling", speed: 5, yaw: 0, pushCooldown: 0, style: null, ...extra });
@@ -139,5 +139,26 @@ describe("ATL rhythm and the backward ride", () => {
   it("lands from a jump with the land clip, then rides", () => {
     const states = [rolling(), ...Array.from({ length: 20 }, () => air()), ...Array.from({ length: 40 }, () => rolling())];
     expect(run(states).changes.map((c) => c.to)).toEqual(["coast", "jump", "land", "coast"]);
+  });
+});
+
+describe("the yaw rate per simulation tick", () => {
+  // A steady left carve: 1.5 rad/s, one tick every 1/60 s.
+  const carve = (tick) => rolling({ tick, yaw: tick * (1.5 / 60) });
+
+  it("keeps the carve clip at 120 Hz, when half the frames have no tick", () => {
+    const frames = [];
+    for (let t = 1; t <= 60; t += 1) frames.push(carve(t), carve(t)); // two render frames per tick
+    const { changes } = run(frames, 1 / 120);
+    // The first frame has no rate yet (coast); after that the carve holds,
+    // with no switch back to coast on the frames without a tick.
+    expect(changes.map((c) => c.to)).toEqual(["coast", "carve_left"]);
+  });
+
+  it("measures the rate over the ticks, not the frame time", () => {
+    const a = { ...createAnimState(), prevYaw: carve(10).yaw, prevTick: 10, yawRate: 0 };
+    expect(measureYawRate(a, carve(12), 1 / 240)).toBeCloseTo(1.5, 6);
+    expect(measureYawRate({ ...a, yawRate: 1.5 }, carve(10), 1 / 240)).toBe(1.5);
+    expect(measureYawRate(a, carve(3), 1 / 60)).toBe(0); // a reset
   });
 });

@@ -3294,8 +3294,7 @@
       ],
       "roughness": {
         "base": 0.3,
-        "map": "material-evidence/metal/metal_roughness.png",
-        "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
       },
       "metalness": {
         "base": 1.0,
@@ -3626,8 +3625,7 @@
       ],
       "roughness": {
         "base": 0.45,
-        "map": "material-evidence/steel/steel_roughness.png",
-        "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
       },
       "metalness": {
         "base": 0.0,
@@ -3949,8 +3947,7 @@
       ],
       "roughness": {
         "base": 0.45,
-        "map": "material-evidence/letters-white/letters-white_roughness.png",
-        "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
       },
       "metalness": {
         "base": 0.0,
@@ -4292,8 +4289,7 @@
       ],
       "roughness": {
         "base": 0.3,
-        "map": "material-evidence/brass/brass_roughness.png",
-        "notes": "Evidence map from extract_pbr_evidence.py; the game uses the base value only (toon shading)."
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
       },
       "metalness": {
         "base": 1.0,
@@ -5196,7 +5192,7 @@
         "key_path": "categories.description_conventions[7]",
         "score": 8.296878702157,
         "snippets": [
-          "Embedding a technical material-attribute block (Albedo, Metalness, Roughness, Normals) with measured reflectance ranges directly into the structured description, not just prose. Nh\u00fang m\u1ed9t kh\u1ed1i thu\u1ed9c t\u00ednh v\u1eadt li\u1ec7u k\u1ef9 thu\u1eadt (Albedo, Metalness, ..."
+          "Embedding a technical material-attribute block (Albedo, Metalness, Roughness, Normals) with measured reflectance ranges directly into the structured description, not just prose. Nhúng một khối thuộc tính vật liệu kỹ thuật (Albedo, Metalness, ..."
         ],
         "source_refs": [
           {
@@ -5220,7 +5216,7 @@
         "key_path": "categories.material_pbr[11]",
         "score": 6.615447681944,
         "snippets": [
-          "... (c\u1ea7n gamma/sRGB) v\u00e0 c\u00e1c b\u1ea3n \u0111\u1ed3 d\u1eef li\u1ec7u to\u00e1n h\u1ecdc (ph\u1ea3i gi\u1eef tuy\u1ebfn t\u00ednh/kh\u00f4ng hi\u1ec7u ch\u1ec9nh). Recognition cues: Base color/albedo and emissive textures are the only ones that should look like natural photographic color; Normal, roughness, ..."
+          "... (cần gamma/sRGB) và các bản đồ dữ liệu toán học (phải giữ tuyến tính/không hiệu chỉnh). Recognition cues: Base color/albedo and emissive textures are the only ones that should look like natural photographic color; Normal, roughness, ..."
         ],
         "source_refs": [
           {
@@ -5244,7 +5240,7 @@
         "key_path": "categories.material_pbr[6]",
         "score": 5.734463963386,
         "snippets": [
-          "Directional specular stretching seen on brushed or grooved metal, where reflections elongate along the grain direction. Hi\u1ec7n t\u01b0\u1ee3ng ph\u1ea3n x\u1ea1 specular k\u00e9o d\u00e0i theo m\u1ed9t h\u01b0\u1edbng, th\u1ea5y tr\u00ean kim lo\u1ea1i \u0111\u01b0\u1ee3c ch\u1ea3i x\u01b0\u1edbc ho\u1eb7c c\u00f3 r\u00e3nh, ph\u1ea3n x\u1ea1 k\u00e9o d\u00e0i theo ..."
+          "Directional specular stretching seen on brushed or grooved metal, where reflections elongate along the grain direction. Hiện tượng phản xạ specular kéo dài theo một hướng, thấy trên kim loại được chải xước hoặc có rãnh, phản xạ kéo dài theo ..."
         ],
         "source_refs": [
           {

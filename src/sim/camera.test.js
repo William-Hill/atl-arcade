@@ -203,6 +203,12 @@ describe("player look", () => {
     expect(side[0]).toBeCloseTo(0, 9);
   });
 
+  it("keeps the camera at or above the skater at the lowest pitch", () => {
+    const s = skaterAt([0, 0, 0], 0, 0);
+    const low = cameraGoal(s, 0, k, { yaw: 0, pitch: -Math.PI / 2 }).position;
+    expect(low[1]).toBeGreaterThanOrEqual(0);
+  });
+
   it("raises the camera with a positive pitch", () => {
     const s = skaterAt([0, 0, 0], 0, 0);
     const up = cameraGoal(s, 0, k, { yaw: 0, pitch: 0.4 }).position;

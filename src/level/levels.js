@@ -14,7 +14,8 @@ export const LEVEL_ALIASES = { beltline: "beltline-eastside" };
 export function resolveLevelName(name) {
   const n = name ?? "greybox";
   const resolved = LEVEL_ALIASES[n] ?? n;
-  if (!LEVELS[resolved]) throw new Error(`unknown level "${n}". Known: ${Object.keys(LEVELS).join(", ")}`);
+  // Own keys only: "constructor" or "toString" is not a level.
+  if (!Object.hasOwn(LEVELS, resolved)) throw new Error(`unknown level "${n}". Known: ${Object.keys(LEVELS).join(", ")}`);
   return resolved;
 }
 

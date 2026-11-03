@@ -157,7 +157,7 @@ Autopilot's agent service isn't running: open the game's project in Unreal, Unit
 Command: `autopilot codex --project <this worktree>`. Exit code 1. Output:
 
 ```
-No Unreal, Unity or Godot project at /Users/william-meroxa/Development/atl-arcade/.claude/worktrees/autopilot-eval-244444
+No Unreal, Unity or Godot project at <worktree>
 ```
 
 ### 4.5 The play command on this repository
@@ -177,6 +177,7 @@ port 8765 after I stopped its shell. I found it with `lsof` and stopped it (PID
 
 - `.claude/vendor/autopilot/` (the plugin files, the license, and a README).
 - This report.
+- `docs/decisions.md` (the decision entry for this evaluation).
 
 No file under `src/`, `levels/`, or `scripts/` changed.
 

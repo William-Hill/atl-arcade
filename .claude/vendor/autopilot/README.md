@@ -12,8 +12,15 @@ These files are the Claude Code plugin of Autopilot, copied without change from
 
 Claude Code does not load this folder. Claude Code loads skills only from
 `.claude/skills/` and subagents only from `.claude/agents/`. The `.mcp.json` file in
-`claude-code-plugin/` is not the project `.mcp.json`, so the `autopilot` MCP server
-is not enabled.
+`claude-code-plugin/` is not the project `.mcp.json`, so this folder does not enable
+the `autopilot` MCP server in this project.
+
+This covers the project scope only. `autopilot connect claude` registers the
+`autopilot` MCP server at user scope and installs the `autopilot` skill and the
+`frame-describer` subagent in `~/.claude` (or in `CLAUDE_CONFIG_DIR`). User scope
+applies to every project, this one included. If someone ran that command on a
+computer, check the user configuration there (`claude mcp list`, `~/.claude/skills`,
+`~/.claude/agents`) or run `autopilot connect claude --remove`.
 
 Keep these files disabled. Autopilot plays only Unreal 5, Unity 6, and Godot 4
 projects. Skate ATL is a Three.js game, so the skill tells the agent to stop.

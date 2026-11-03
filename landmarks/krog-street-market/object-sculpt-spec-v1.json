@@ -1,0 +1,5803 @@
+{
+  "targetName": "Krog Street Market",
+  "targetId": "krog-street-market",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": "ref/reference.jpg",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40.0,
+    "aspect": 1.0,
+    "orientation": {
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    "positionHint": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "note": "For likeness work, solve the reference camera (forge/stage1_intake/solve_camera_pose.py) so the review render aligns with the photo and the reference can be projected. Confirm by overlay review."
+  },
+  "suitability": "conditional",
+  "scores": {
+    "object_isolation": 0,
+    "silhouette_readability": 0,
+    "depth_inference": 0,
+    "primitive_decomposition": 0,
+    "material_procedurality": 0,
+    "occlusion_risk": 0,
+    "interaction_fit": 0
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "brick warehouse food hall entrance (adaptive reuse)",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "geometric",
+        "gable",
+        "cantilever"
+      ],
+      "structureKind": [
+        "static-architecture"
+      ],
+      "motionPotential": [
+        "static"
+      ],
+      "materialFamilies": [
+        "corrugated-metal",
+        "painted-steel",
+        "painted-letters",
+        "brass"
+      ],
+      "notes": "Real footprint from OpenStreetMap relation 5413435. The photo sets the entrance front only."
+    },
+    "complexity": {
+      "tier": "moderate",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 2,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 2,
+        "materialLayerCount": 2,
+        "localDetailDensity": 1,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 0
+      },
+      "estimatedCounts": {
+        "macroComponents": 2,
+        "mesoComponents": 4,
+        "microFeatureGroups": 3,
+        "materialLayers": 5,
+        "repetitionSystems": 1
+      },
+      "reasoning": [
+        "A metal roof profile extruded over the footprint, a cantilever canopy, two letter cards, and 5 pendant lights.",
+        "Moderate: few macro parts, a repeated light row."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "moderate",
+      "minimumComponentLevels": [
+        "macro",
+        "meso"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": false,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Moderate: macro profile and canopy plus meso letters and micro lights."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 6,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {
+          "id": "sawtooth-step",
+          "kind": "contour",
+          "description": "The vertical step in the metal roof at about x = -8.6 m",
+          "region": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "",
+          "affects": "",
+          "mapsTo": {
+            "type": "component",
+            "ref": "roof-profile"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "confidence": 0.8
+        },
+        {
+          "id": "tall-right-end",
+          "kind": "contour",
+          "description": "The tall right end of the metal roof at about 10.2 m",
+          "region": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "",
+          "affects": "",
+          "mapsTo": {
+            "type": "component",
+            "ref": "roof-profile"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "confidence": 0.8
+        },
+        {
+          "id": "krog-street",
+          "kind": "linework",
+          "description": "KROG STREET block letters on the canopy top",
+          "region": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "",
+          "affects": "",
+          "mapsTo": {
+            "type": "component",
+            "ref": "krog-street-letters"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "confidence": 0.9
+        },
+        {
+          "id": "market",
+          "kind": "linework",
+          "description": "MARKET white letters on the canopy fascia",
+          "region": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "",
+          "affects": "",
+          "mapsTo": {
+            "type": "component",
+            "ref": "market-letters"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "confidence": 0.85
+        },
+        {
+          "id": "pendants",
+          "kind": "fastener",
+          "description": "5 brass pendant lights under the canopy",
+          "region": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "",
+          "affects": "",
+          "mapsTo": {
+            "type": "component",
+            "ref": "pendant-0"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "confidence": 0.7
+        },
+        {
+          "id": "truss",
+          "kind": "seam",
+          "description": "The dark steel truss under the canopy deck",
+          "region": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "",
+          "affects": "",
+          "mapsTo": {
+            "type": "component",
+            "ref": "canopy-truss"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "confidence": 0.7
+        },
+        {
+          "id": "brass-gloss",
+          "kind": "gloss",
+          "description": "Brass shades read as metallic",
+          "region": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "",
+          "affects": "",
+          "mapsTo": {
+            "type": "component",
+            "ref": "pendant-0"
+          },
+          "evidenceRef": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/detail-inventory/zone-r0c0.png",
+          "confidence": 0.6
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "ref/reference.jpg"
+  },
+  "qualityContract": {
+    "qualityBar": "moderate",
+    "definitionOfDone": [
+      "The rendered model matches the reference silhouette, primary proportions, visible component hierarchy, material response, and most recognizable local features for the selected fidelity tier."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 2,
+      "mesoComponents": 3,
+      "microFeatureGroups": 2,
+      "materialLayers": 2,
+      "repetitionSystems": 0,
+      "reviewViewpoints": 3
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ],
+    "mustNotDo": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.7,
+    "mustMatch": [
+      "macro silhouette and proportions",
+      "primary material albedo/roughness response",
+      "reference-derived PBR material response at or above 0.7 confidence when source pixels are usable",
+      "most recognizable local features"
+    ],
+    "niceToHave": [
+      "micro scratches, stains, chips, and dirt masks",
+      "secondary lighting match"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "front",
+      "three-quarter",
+      "side",
+      "thickness-axis",
+      "long-axis"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.7,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.8,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargets": [
+    {
+      "id": "sawtooth-roof",
+      "name": "Silver metal sawtooth: a low rise, a vertical step, a fall, and a tall rise to the right",
+      "tier": "critical",
+      "threshold": 0.7,
+      "components": [
+        "roof-profile"
+      ]
+    },
+    {
+      "id": "krog-street-letters",
+      "name": "KROG STREET in tall black block letters on top of the canopy",
+      "tier": "critical",
+      "threshold": 0.7,
+      "components": [
+        "krog-street-letters",
+        "canopy"
+      ]
+    },
+    {
+      "id": "market-letters",
+      "name": "MARKET in white letters on the black canopy front",
+      "tier": "important",
+      "threshold": 0.6,
+      "components": [
+        "market-letters"
+      ]
+    },
+    {
+      "id": "pendant-lights",
+      "name": "Brass pendant lights under the canopy",
+      "tier": "important",
+      "threshold": 0.6,
+      "components": [
+        "pendant-0"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "material-pass",
+    "completedPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement"
+    ],
+    "lastCompletedPass": "form-refinement",
+    "blockedReason": "",
+    "nextRequiredEvidence": [
+      "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+      "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+      "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+      "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+      "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+      "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+      "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+      "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "reference-derived albedo palette with dominant, secondary, and accent colors",
+      "independent albedo, roughness, height/normal, and AO maps",
+      "macro, meso, and micro surface-frequency response at 1024px or higher",
+      "local material masks: AO, dirt, wear, stains, moss, chips, scratches, wetness, or equivalent",
+      "neutral, grazing-light close-up, and reference-matched browser screenshots",
+      "browser render screenshot from your agent's browser/screenshot tool",
+      "single side-by-side full reference/render comparison sheet",
+      "all critical semantic feature scores at or above their thresholds",
+      "self-correction review appended with action=continue before the next pass"
+    ]
+  },
+  "lookDevTargets": {
+    "qualityPriority": "reference-fidelity",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 1024,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": true,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ]
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [
+    "Resolved unknown: Hidden roof and facades: the roof profile extrudes 50 m back; the game draws the facades from the OSM footprint.",
+    "Resolved unknown: Entrance side: placed by the game on the east face, to the parking drive (approximate).",
+    "Resolved unknown: Heights: OSM gives 6 m for the whole footprint; the metal profile starts at 5.5 m and overlaps the box top.",
+    "Resolved unknown: Hidden roof and facades: the roof profile extrudes 50 m back; the game draws the facades from the OSM footprint.",
+    "Resolved unknown: Entrance side: placed by the game on the east face, to the parking drive (approximate).",
+    "Resolved unknown: Heights: OSM gives 6 m for the whole footprint; the metal profile starts at 5.5 m and overlaps the box top.",
+    "Resolved unknown: Hidden roof and facades: the roof profile extrudes 50 m back; the game draws the facades from the OSM footprint.",
+    "Resolved unknown: Entrance side: placed by the game on the east face, to the parking drive (approximate).",
+    "Resolved unknown: Heights: OSM gives 6 m for the whole footprint; the metal profile starts at 5.5 m and overlaps the box top.",
+    "Resolved unknown: Hidden roof and facades: the roof profile extrudes 50 m back; the game draws the facades from the OSM footprint.",
+    "Resolved unknown: Entrance side: placed by the game on the east face, to the parking drive (approximate).",
+    "Resolved unknown: Heights: OSM gives 6 m for the whole footprint; the metal profile starts at 5.5 m and overlaps the box top.",
+    "Resolved unknown: Hidden roof and facades: the roof profile extrudes 50 m back; the game draws the facades from the OSM footprint.",
+    "Resolved unknown: Entrance side: placed by the game on the east face, to the parking drive (approximate).",
+    "Resolved unknown: Heights: OSM gives 6 m for the whole footprint; the metal profile starts at 5.5 m and overlaps the box top."
+  ],
+  "coordinateFrame": {
+    "front": "camera-facing side in the reference image",
+    "up": "image up direction",
+    "scaleReference": "unit scale; adjust after first browser render"
+  },
+  "silhouette": {
+    "boundingShape": "",
+    "aspectRatios": [],
+    "symmetry": "",
+    "dominantCurves": [],
+    "negativeSpaces": [],
+    "landmarks": []
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [],
+      "confidence": 0.5
+    }
+  ],
+  "componentTree": [
+    {
+      "id": "roof-profile",
+      "name": "Sawtooth metal upper wall and roof",
+      "level": "macro",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.75,
+      "primitive": "extrude",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A constant cross-section along the depth of the hall: an extruded 2D profile, not boxes.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": null,
+      "attachment": null,
+      "dimensions": {
+        "width": 1,
+        "height": 1,
+        "depth": 1,
+        "units": "m",
+        "confidence": 0.75
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          -50
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          0,
+          0,
+          -50
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "metal",
+      "materialLayers": [
+        "metal"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        "corrugation",
+        "sawtooth-step"
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "metal",
+      "colorMaterialRecipe": {
+        "materialId": "metal",
+        "dominantAlbedo": "rgba(185, 190, 195, 1.0)",
+        "secondaryAlbedo": "rgba(157, 161, 165, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    },
+    {
+      "id": "canopy",
+      "name": "Entrance canopy",
+      "level": "macro",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.75,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A flat cantilever slab; a box.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": null,
+      "attachment": null,
+      "dimensions": {
+        "width": 15.75,
+        "height": 0.63,
+        "depth": 4.0,
+        "units": "m",
+        "confidence": 0.75
+      },
+      "transform": {
+        "position": [
+          1.05,
+          5.86,
+          2.0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          1.05,
+          5.86,
+          2.0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "steel",
+      "materialLayers": [
+        "steel"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [
+        "soffit-truss"
+      ],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "steel",
+      "colorMaterialRecipe": {
+        "materialId": "steel",
+        "dominantAlbedo": "rgba(30, 32, 35, 1.0)",
+        "secondaryAlbedo": "rgba(25, 27, 29, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    },
+    {
+      "id": "canopy-truss",
+      "name": "Canopy steel truss",
+      "level": "meso",
+      "role": "detail",
+      "importance": 0.8,
+      "confidence": 0.7,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "The open steel truss under the canopy deck, read as a dark slab from street level (4.5 to 5.55 m); a box.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          0.0,
+          -1.31,
+          -0.1
+        ],
+        "localEnd": [
+          0.0,
+          -0.31,
+          -0.1
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02
+      },
+      "dimensions": {
+        "width": 15.4,
+        "height": 1.0,
+        "depth": 3.6,
+        "units": "m",
+        "confidence": 0.7
+      },
+      "transform": {
+        "position": [
+          0.0,
+          -0.81,
+          -0.1
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          1.05,
+          5.05,
+          1.9
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "steel",
+      "materialLayers": [
+        "steel"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "steel",
+      "colorMaterialRecipe": {
+        "materialId": "steel",
+        "dominantAlbedo": "rgba(30, 32, 35, 1.0)",
+        "secondaryAlbedo": "rgba(25, 27, 29, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    },
+    {
+      "id": "post-a",
+      "name": "Canopy post A",
+      "level": "meso",
+      "role": "detail",
+      "importance": 0.6,
+      "confidence": 0.7,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A square steel post; a box.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          -5.55,
+          -5.86,
+          1.6
+        ],
+        "localEnd": [
+          -5.55,
+          -0.31,
+          1.6
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 5.55,
+        "depth": 0.25,
+        "units": "m",
+        "confidence": 0.7
+      },
+      "transform": {
+        "position": [
+          -5.55,
+          -3.085,
+          1.6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          -4.5,
+          2.775,
+          3.6
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "steel",
+      "materialLayers": [
+        "steel"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "steel",
+      "colorMaterialRecipe": {
+        "materialId": "steel",
+        "dominantAlbedo": "rgba(30, 32, 35, 1.0)",
+        "secondaryAlbedo": "rgba(25, 27, 29, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    },
+    {
+      "id": "post-b",
+      "name": "Canopy post B",
+      "level": "meso",
+      "role": "detail",
+      "importance": 0.6,
+      "confidence": 0.7,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A square steel post; a box.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          6.95,
+          -5.86,
+          1.6
+        ],
+        "localEnd": [
+          6.95,
+          -0.31,
+          1.6
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02
+      },
+      "dimensions": {
+        "width": 0.25,
+        "height": 5.55,
+        "depth": 0.25,
+        "units": "m",
+        "confidence": 0.7
+      },
+      "transform": {
+        "position": [
+          6.95,
+          -3.085,
+          1.6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          8.0,
+          2.775,
+          3.6
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "steel",
+      "materialLayers": [
+        "steel"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "steel",
+      "colorMaterialRecipe": {
+        "materialId": "steel",
+        "dominantAlbedo": "rgba(30, 32, 35, 1.0)",
+        "secondaryAlbedo": "rgba(25, 27, 29, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    },
+    {
+      "id": "krog-street-letters",
+      "name": "KROG STREET letters",
+      "level": "meso",
+      "role": "detail",
+      "importance": 1.0,
+      "confidence": 0.85,
+      "primitive": "plane-card",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Black block letters standing on the canopy, read as a flat card with a transparent canvas texture.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          -0.95,
+          0.45,
+          0.6
+        ],
+        "localEnd": [
+          -0.95,
+          2.55,
+          0.6
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02
+      },
+      "dimensions": {
+        "width": 9.8,
+        "height": 2.1,
+        "depth": 0.02,
+        "units": "m",
+        "confidence": 0.85
+      },
+      "transform": {
+        "position": [
+          -0.95,
+          1.5,
+          0.6
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          0.1,
+          7.36,
+          2.6
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "steel",
+      "materialLayers": [
+        "steel"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "steel",
+      "colorMaterialRecipe": {
+        "materialId": "steel",
+        "dominantAlbedo": "rgba(30, 32, 35, 1.0)",
+        "secondaryAlbedo": "rgba(25, 27, 29, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ],
+      "canvasText": {
+        "text": "KROG STREET",
+        "color": "#1E2023",
+        "background": "transparent",
+        "drawnBy": "src/render/landmark-signs.js createSignTexture"
+      }
+    },
+    {
+      "id": "market-letters",
+      "name": "MARKET letters",
+      "level": "meso",
+      "role": "detail",
+      "importance": 0.9,
+      "confidence": 0.85,
+      "primitive": "plane-card",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "White letters on the canopy fascia; a flat card with a canvas texture.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          4.05,
+          -0.38,
+          2.02
+        ],
+        "localEnd": [
+          4.05,
+          0.38,
+          2.02
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02
+      },
+      "dimensions": {
+        "width": 5.3,
+        "height": 0.76,
+        "depth": 0.02,
+        "units": "m",
+        "confidence": 0.85
+      },
+      "transform": {
+        "position": [
+          4.05,
+          0.0,
+          2.02
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          5.1,
+          5.86,
+          4.02
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "letters-white",
+      "materialLayers": [
+        "letters-white"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "letters-white",
+      "colorMaterialRecipe": {
+        "materialId": "letters-white",
+        "dominantAlbedo": "rgba(244, 244, 242, 1.0)",
+        "secondaryAlbedo": "rgba(207, 207, 205, 1.0)",
+        "materialClass": "plastic",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ],
+      "canvasText": {
+        "text": "MARKET",
+        "color": "#F4F4F2",
+        "background": "#1E2023",
+        "drawnBy": "src/render/landmark-signs.js createSignTexture"
+      }
+    },
+    {
+      "id": "pendant-0",
+      "name": "Pendant light 0",
+      "level": "micro",
+      "role": "detail",
+      "importance": 0.6,
+      "confidence": 0.6,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A small round brass shade; a cylinder.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          -3.25,
+          -1.76,
+          1.0
+        ],
+        "localEnd": [
+          -3.25,
+          -1.36,
+          1.0
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02,
+        "baseRadius": 0.25,
+        "endRadius": 0.25
+      },
+      "dimensions": {
+        "width": 0.5,
+        "height": 0.4,
+        "depth": 0.5,
+        "units": "m",
+        "confidence": 0.6,
+        "radius": 0.25
+      },
+      "transform": {
+        "position": [
+          -3.25,
+          -1.56,
+          1.0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          -2.2,
+          4.3,
+          3.0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "brass",
+      "materialLayers": [
+        "brass"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "brass",
+      "colorMaterialRecipe": {
+        "materialId": "brass",
+        "dominantAlbedo": "rgba(216, 168, 72, 1.0)",
+        "secondaryAlbedo": "rgba(183, 142, 61, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    },
+    {
+      "id": "pendant-1",
+      "name": "Pendant light 1",
+      "level": "micro",
+      "role": "detail",
+      "importance": 0.6,
+      "confidence": 0.6,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A small round brass shade; a cylinder.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          -2.55,
+          -1.76,
+          -0.4
+        ],
+        "localEnd": [
+          -2.55,
+          -1.36,
+          -0.4
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02,
+        "baseRadius": 0.25,
+        "endRadius": 0.25
+      },
+      "dimensions": {
+        "width": 0.5,
+        "height": 0.4,
+        "depth": 0.5,
+        "units": "m",
+        "confidence": 0.6,
+        "radius": 0.25
+      },
+      "transform": {
+        "position": [
+          -2.55,
+          -1.56,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          -1.5,
+          4.3,
+          1.6
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "brass",
+      "materialLayers": [
+        "brass"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "brass",
+      "colorMaterialRecipe": {
+        "materialId": "brass",
+        "dominantAlbedo": "rgba(216, 168, 72, 1.0)",
+        "secondaryAlbedo": "rgba(183, 142, 61, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    },
+    {
+      "id": "pendant-2",
+      "name": "Pendant light 2",
+      "level": "micro",
+      "role": "detail",
+      "importance": 0.6,
+      "confidence": 0.6,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A small round brass shade; a cylinder.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          1.35,
+          -1.76,
+          1.0
+        ],
+        "localEnd": [
+          1.35,
+          -1.36,
+          1.0
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02,
+        "baseRadius": 0.25,
+        "endRadius": 0.25
+      },
+      "dimensions": {
+        "width": 0.5,
+        "height": 0.4,
+        "depth": 0.5,
+        "units": "m",
+        "confidence": 0.6,
+        "radius": 0.25
+      },
+      "transform": {
+        "position": [
+          1.35,
+          -1.56,
+          1.0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          2.4,
+          4.3,
+          3.0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "brass",
+      "materialLayers": [
+        "brass"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "brass",
+      "colorMaterialRecipe": {
+        "materialId": "brass",
+        "dominantAlbedo": "rgba(216, 168, 72, 1.0)",
+        "secondaryAlbedo": "rgba(183, 142, 61, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    },
+    {
+      "id": "pendant-3",
+      "name": "Pendant light 3",
+      "level": "micro",
+      "role": "detail",
+      "importance": 0.6,
+      "confidence": 0.6,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A small round brass shade; a cylinder.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          1.55,
+          -1.76,
+          -0.4
+        ],
+        "localEnd": [
+          1.55,
+          -1.36,
+          -0.4
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02,
+        "baseRadius": 0.25,
+        "endRadius": 0.25
+      },
+      "dimensions": {
+        "width": 0.5,
+        "height": 0.4,
+        "depth": 0.5,
+        "units": "m",
+        "confidence": 0.6,
+        "radius": 0.25
+      },
+      "transform": {
+        "position": [
+          1.55,
+          -1.56,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          2.6,
+          4.3,
+          1.6
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "brass",
+      "materialLayers": [
+        "brass"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "brass",
+      "colorMaterialRecipe": {
+        "materialId": "brass",
+        "dominantAlbedo": "rgba(216, 168, 72, 1.0)",
+        "secondaryAlbedo": "rgba(183, 142, 61, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    },
+    {
+      "id": "pendant-4",
+      "name": "Pendant light 4",
+      "level": "micro",
+      "role": "detail",
+      "importance": 0.6,
+      "confidence": 0.6,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A small round brass shade; a cylinder.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry",
+        "profile2D": {
+          "points": [
+            [
+              -14.06,
+              5.5
+            ],
+            [
+              10.32,
+              5.5
+            ],
+            [
+              10.32,
+              10.18
+            ],
+            [
+              -0.34,
+              6.88
+            ],
+            [
+              -8.6,
+              9.8
+            ],
+            [
+              -8.6,
+              8.28
+            ],
+            [
+              -14.06,
+              5.99
+            ]
+          ],
+          "depth": 50
+        }
+      },
+      "parent": "canopy",
+      "attachment": {
+        "parentSocket": "canopy",
+        "localStart": [
+          6.35,
+          -1.76,
+          1.0
+        ],
+        "localEnd": [
+          6.35,
+          -1.36,
+          1.0
+        ],
+        "contactType": "butt",
+        "embedDepth": 0.05,
+        "gapTolerance": 0.02,
+        "baseRadius": 0.25,
+        "endRadius": 0.25
+      },
+      "dimensions": {
+        "width": 0.5,
+        "height": 0.4,
+        "depth": 0.5,
+        "units": "m",
+        "confidence": 0.6,
+        "radius": 0.25
+      },
+      "transform": {
+        "position": [
+          6.35,
+          -1.56,
+          1.0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "worldPosition": [
+          7.4,
+          4.3,
+          3.0
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "brass",
+      "materialLayers": [
+        "brass"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout",
+      "materialId": "brass",
+      "colorMaterialRecipe": {
+        "materialId": "brass",
+        "dominantAlbedo": "rgba(216, 168, 72, 1.0)",
+        "secondaryAlbedo": "rgba(183, 142, 61, 1.0)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.8,
+        "notes": "Flat toon color; the game bakes it into vertex colors."
+      },
+      "profileUnits": "m (dimensions are 1 so the profile is not scaled)",
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "metal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "metal",
+          "materialId": "metal",
+          "profileId": "metal.aluminum",
+          "crop": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+            "bbox": {
+              "x": 913,
+              "y": 1134,
+              "width": 340,
+              "height": 140
+            },
+            "sourceWidth": 4032,
+            "sourceHeight": 3024,
+            "loaderWarnings": [],
+            "coverage": 0.0039
+          }
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "id": "metal",
+      "name": "Corrugated metal",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#B9BEC3",
+      "color": "#B9BEC3",
+      "albedo": {
+        "dominant": "#B9BEC3",
+        "secondary": [
+          "#B9BEC3"
+        ],
+        "samplingNotes": "Flat game color (vertex color); de-lit by eye from the day photo."
+      },
+      "colorVariation": {
+        "palette": [
+          "#B9BEC3"
+        ],
+        "pattern": "none",
+        "amplitude": 0.0,
+        "heightCorrelation": 0.0
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2.0,
+          2.0
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2.0,
+          "amplitude": 0.42,
+          "role": "broad color and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 12.0,
+          "amplitude": 0.22,
+          "role": "ridges, pores, grain, dents, or equivalent visible relief"
+        },
+        {
+          "id": "micro",
+          "frequency": 56.0,
+          "amplitude": 0.08,
+          "role": "highlight breakup visible under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.3,
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
+      },
+      "metalness": {
+        "base": 1.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "derived-from-independent-height-field",
+        "strength": 0.35,
+        "scale": 24.0,
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.25,
+        "contactShadowBias": 0.35,
+        "notes": "Darken creases, seams, intersections, and recessed local features."
+      },
+      "wear": {
+        "edgeWear": 0.0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.0,
+        "cavityBias": 0.0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [
+        {
+          "id": "corrugation",
+          "type": "normal-ribs",
+          "region": "the whole metal wall",
+          "amount": 0.2,
+          "notes": "Fine vertical ribs; not modeled in the game (flat toon color)."
+        }
+      ],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "referenceMaterialId": "metal.aluminum",
+      "materialFamily": "metal",
+      "materialSubtype": "aluminum",
+      "materialFinish": "satin",
+      "materialReference": {
+        "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+        "profileId": "metal.aluminum",
+        "method": "family-subtype-finish",
+        "confidence": 0.829,
+        "sourceRefs": [
+          "three.mesh-standard",
+          "three.pmrem",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "anisotropyMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "environment-reflection",
+          "grazing"
+        ]
+      },
+      "anisotropy": {
+        "base": 0.2,
+        "variation": 0.0
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_albedo.png",
+            "url": "metal_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_roughness.png",
+            "url": "metal_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_height.png",
+            "url": "metal_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_normal.png",
+            "url": "metal_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-00-metal/metal_ao.png",
+            "url": "metal_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 340,
+          "sourceHeight": 140,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 340,
+            "height": 140
+          },
+          "mask": {
+            "backgroundColor": "#778EAD",
+            "backgroundNoise": 52.621,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.981
+          },
+          "mapStats": {
+            "valueRange": 0.5196,
+            "heightP90Gradient": 0.13322,
+            "roughnessBase": 0.722,
+            "roughnessVariation": 0.217,
+            "normalStrength": 0.312,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#7C92AF",
+            "#98C1F9",
+            "#5E708A",
+            "#9CC4FA",
+            "#1E2634"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#97BEF3",
+          "#88ABDB",
+          "#83A0CA",
+          "#575C64",
+          "#6F839E"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#97BEF3",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              243,
+              190,
+              151
+            ]
+          },
+          {
+            "stop": "#88ABDB",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              219,
+              171,
+              136
+            ]
+          },
+          {
+            "stop": "#83A0CA",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              202,
+              160,
+              131
+            ]
+          },
+          {
+            "stop": "#6F839E",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              158,
+              131,
+              111
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 149.1,
+          "meanSaturation": 0.343,
+          "gradientStrength": 0.642,
+          "mottle": 0.047,
+          "streakRatio": 2.39,
+          "hueSpread": 0.001,
+          "specularFraction": 0.0
+        }
+      },
+      "materialEvidence": {
+        "componentId": "roof-profile",
+        "regionId": "metal",
+        "crop": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/00-metal.png",
+          "bbox": {
+            "x": 913,
+            "y": 1134,
+            "width": 340,
+            "height": 140
+          },
+          "sourceWidth": 4032,
+          "sourceHeight": 3024,
+          "loaderWarnings": [],
+          "coverage": 0.0039
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "directional surface frequency",
+          "visible meso/micro variation",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "roof-profile",
+          "regionId": "metal",
+          "materialId": null,
+          "family": "metal",
+          "subtype": "aluminum",
+          "finish": "satin",
+          "aliases": [],
+          "confidence": 0.829,
+          "source": "vision"
+        },
+        "alternatives": []
+      },
+      "needsEnvironment": true
+    },
+    {
+      "id": "steel",
+      "name": "Black painted steel",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#1E2023",
+      "color": "#1E2023",
+      "albedo": {
+        "dominant": "#1E2023",
+        "secondary": [
+          "#1E2023"
+        ],
+        "samplingNotes": "Flat game color (vertex color); de-lit by eye from the day photo."
+      },
+      "colorVariation": {
+        "palette": [
+          "#1E2023"
+        ],
+        "pattern": "none",
+        "amplitude": 0.0,
+        "heightCorrelation": 0.0
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2.0,
+          2.0
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2.0,
+          "amplitude": 0.42,
+          "role": "broad color and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 12.0,
+          "amplitude": 0.22,
+          "role": "ridges, pores, grain, dents, or equivalent visible relief"
+        },
+        {
+          "id": "micro",
+          "frequency": 56.0,
+          "amplitude": 0.08,
+          "role": "highlight breakup visible under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.45,
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "derived-from-independent-height-field",
+        "strength": 0.35,
+        "scale": 24.0,
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.25,
+        "contactShadowBias": 0.35,
+        "notes": "Darken creases, seams, intersections, and recessed local features."
+      },
+      "wear": {
+        "edgeWear": 0.0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.0,
+        "cavityBias": 0.0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "referenceMaterialId": "coating.painted-metal",
+      "materialFamily": "coating",
+      "materialSubtype": "paint-over-metal",
+      "materialFinish": "gloss-or-satin",
+      "materialReference": {
+        "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+        "profileId": "coating.painted-metal",
+        "method": "family-subtype-finish",
+        "confidence": 0.805,
+        "sourceRefs": [
+          "three.mesh-physical",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-1",
+          "adobe.pbr-guide-2"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ]
+      },
+      "clearcoat": {
+        "base": 0.75,
+        "variation": 0.0
+      },
+      "clearcoatRoughness": {
+        "base": 0.12,
+        "variation": 0.0
+      },
+      "ior": {
+        "base": 1.5,
+        "variation": 0.0
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/01-steel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.805,
+        "estimatedFidelity": 0.805,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_albedo.png",
+            "url": "steel_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_roughness.png",
+            "url": "steel_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_height.png",
+            "url": "steel_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_normal.png",
+            "url": "steel_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-01-steel/steel_ao.png",
+            "url": "steel_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 1400,
+          "sourceHeight": 40,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 1400,
+            "height": 40
+          },
+          "mask": {
+            "backgroundColor": "#120E18",
+            "backgroundNoise": 43.301,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.8911
+          },
+          "mapStats": {
+            "valueRange": 0.1879,
+            "heightP90Gradient": 0.13329,
+            "roughnessBase": 0.727,
+            "roughnessVariation": 0.179,
+            "normalStrength": 0.312,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#02040A",
+            "#000105",
+            "#0A0C12",
+            "#282527",
+            "#66635C"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped",
+          "low value range weakens height/roughness inference"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "painted-metal",
+        "recipe": {
+          "metalness": 0.0,
+          "roughness": 0.5,
+          "clearcoat": 1.0,
+          "clearcoatRoughness": 0.05,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 1.0,
+          "anisotropy": 0.0,
+          "procedural": "flat-clearcoat"
+        },
+        "palette": [
+          "#2A2226",
+          "#080A10",
+          "#05070D",
+          "#0E0E11",
+          "#1E1C1B"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#080A10",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              16,
+              10,
+              8
+            ]
+          },
+          {
+            "stop": "#05070D",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              13,
+              7,
+              5
+            ]
+          },
+          {
+            "stop": "#0E0E11",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              17,
+              14,
+              14
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 13.9,
+          "meanSaturation": 0.674,
+          "gradientStrength": 0.191,
+          "mottle": 0.029,
+          "streakRatio": 2.54,
+          "hueSpread": 0.039,
+          "specularFraction": 0.0
+        }
+      },
+      "materialEvidence": {
+        "componentId": "canopy",
+        "regionId": "steel",
+        "crop": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/01-steel.png",
+          "bbox": {
+            "x": 1520,
+            "y": 1360,
+            "width": 1400,
+            "height": 40
+          },
+          "sourceWidth": 4032,
+          "sourceHeight": 3024,
+          "loaderWarnings": [],
+          "coverage": 0.0046
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "directional surface frequency",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "canopy",
+          "regionId": "steel",
+          "materialId": null,
+          "family": "coating",
+          "subtype": "paint-over-metal",
+          "finish": "gloss-or-satin",
+          "aliases": [],
+          "confidence": 0.805,
+          "source": "vision"
+        },
+        "alternatives": []
+      }
+    },
+    {
+      "id": "letters-white",
+      "name": "White letters",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#F4F4F2",
+      "color": "#F4F4F2",
+      "albedo": {
+        "dominant": "#F4F4F2",
+        "secondary": [
+          "#F4F4F2"
+        ],
+        "samplingNotes": "Flat game color (vertex color); de-lit by eye from the day photo."
+      },
+      "colorVariation": {
+        "palette": [
+          "#F4F4F2"
+        ],
+        "pattern": "none",
+        "amplitude": 0.0,
+        "heightCorrelation": 0.0
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2.0,
+          2.0
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2.0,
+          "amplitude": 0.42,
+          "role": "broad color and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 12.0,
+          "amplitude": 0.22,
+          "role": "ridges, pores, grain, dents, or equivalent visible relief"
+        },
+        {
+          "id": "micro",
+          "frequency": 56.0,
+          "amplitude": 0.08,
+          "role": "highlight breakup visible under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.45,
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "derived-from-independent-height-field",
+        "strength": 0.35,
+        "scale": 24.0,
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.25,
+        "contactShadowBias": 0.35,
+        "notes": "Darken creases, seams, intersections, and recessed local features."
+      },
+      "wear": {
+        "edgeWear": 0.0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.0,
+        "cavityBias": 0.0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "referenceMaterialId": "coating.painted-metal",
+      "materialFamily": "coating",
+      "materialSubtype": "paint-over-metal",
+      "materialFinish": "gloss-or-satin",
+      "materialReference": {
+        "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+        "profileId": "coating.painted-metal",
+        "method": "family-subtype-finish",
+        "confidence": 0.829,
+        "sourceRefs": [
+          "three.mesh-physical",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-1",
+          "adobe.pbr-guide-2"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ]
+      },
+      "clearcoat": {
+        "base": 0.75,
+        "variation": 0.0
+      },
+      "clearcoatRoughness": {
+        "base": 0.12,
+        "variation": 0.0
+      },
+      "ior": {
+        "base": 1.5,
+        "variation": 0.0
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/02-market.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_albedo.png",
+            "url": "letters-white_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_roughness.png",
+            "url": "letters-white_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_height.png",
+            "url": "letters-white_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_normal.png",
+            "url": "letters-white_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-02-market/letters-white_ao.png",
+            "url": "letters-white_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 504,
+          "sourceHeight": 62,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 504,
+            "height": 62
+          },
+          "mask": {
+            "backgroundColor": "#7B879D",
+            "backgroundNoise": 203.524,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9795
+          },
+          "mapStats": {
+            "valueRange": 0.6072,
+            "heightP90Gradient": 0.22201,
+            "roughnessBase": 0.785,
+            "roughnessVariation": 0.209,
+            "normalStrength": 0.416,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#8597B7",
+            "#0C1320",
+            "#020510",
+            "#2C3444",
+            "#646F86"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0.0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#535F73",
+          "#4C586F",
+          "#515A6F",
+          "#2B364D",
+          "#1D232E"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#535F73",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              115,
+              95,
+              83
+            ]
+          },
+          {
+            "stop": "#4C586F",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              111,
+              88,
+              76
+            ]
+          },
+          {
+            "stop": "#515A6F",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              111,
+              90,
+              81
+            ]
+          },
+          {
+            "stop": "#2B364D",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              77,
+              54,
+              43
+            ]
+          },
+          {
+            "stop": "#1D232E",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              46,
+              35,
+              29
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 63.1,
+          "meanSaturation": 0.534,
+          "gradientStrength": 0.478,
+          "mottle": 0.15,
+          "streakRatio": 5.05,
+          "hueSpread": 0.013,
+          "specularFraction": 0.0
+        }
+      },
+      "materialEvidence": {
+        "componentId": "market-letters",
+        "regionId": "market",
+        "crop": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/02-market.png",
+          "bbox": {
+            "x": 2362,
+            "y": 1285,
+            "width": 504,
+            "height": 62
+          },
+          "sourceWidth": 4032,
+          "sourceHeight": 3024,
+          "loaderWarnings": [],
+          "coverage": 0.0026
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "directional surface frequency",
+          "visible meso/micro variation",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "market-letters",
+          "regionId": "market",
+          "materialId": null,
+          "family": "coating",
+          "subtype": "paint-over-metal",
+          "finish": "gloss-or-satin",
+          "aliases": [],
+          "confidence": 0.829,
+          "source": "vision"
+        },
+        "alternatives": []
+      }
+    },
+    {
+      "id": "brass",
+      "name": "Brass pendant",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#D8A848",
+      "color": "#D8A848",
+      "albedo": {
+        "dominant": "#D8A848",
+        "secondary": [
+          "#D8A848"
+        ],
+        "samplingNotes": "Flat game color (vertex color); de-lit by eye from the day photo."
+      },
+      "colorVariation": {
+        "palette": [
+          "#D8A848"
+        ],
+        "pattern": "none",
+        "amplitude": 0.0,
+        "heightCorrelation": 0.0
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2.0,
+          2.0
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2.0,
+          "amplitude": 0.42,
+          "role": "broad color and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 12.0,
+          "amplitude": 0.22,
+          "role": "ridges, pores, grain, dents, or equivalent visible relief"
+        },
+        {
+          "id": "micro",
+          "frequency": 56.0,
+          "amplitude": 0.08,
+          "role": "highlight breakup visible under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.3,
+        "notes": "The game uses the base value only (toon shading). No evidence map was extracted for this landmark."
+      },
+      "metalness": {
+        "base": 1.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "derived-from-independent-height-field",
+        "strength": 0.35,
+        "scale": 24.0,
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.25,
+        "contactShadowBias": 0.35,
+        "notes": "Darken creases, seams, intersections, and recessed local features."
+      },
+      "wear": {
+        "edgeWear": 0.0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.0,
+        "cavityBias": 0.0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "referenceMaterialId": "metal.brass",
+      "materialFamily": "metal",
+      "materialSubtype": "brass-bronze",
+      "materialFinish": "polished-or-aged",
+      "materialReference": {
+        "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+        "profileId": "metal.brass",
+        "method": "family-subtype-finish",
+        "confidence": 0.829,
+        "sourceRefs": [
+          "three.mesh-standard",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "environment-reflection",
+          "grazing",
+          "reference-beauty"
+        ]
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/03-brass.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_albedo.png",
+            "url": "brass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_roughness.png",
+            "url": "brass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_height.png",
+            "url": "brass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_normal.png",
+            "url": "brass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/pbr-03-brass/brass_ao.png",
+            "url": "brass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 50,
+          "sourceHeight": 45,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 50,
+            "height": 45
+          },
+          "mask": {
+            "backgroundColor": "#0F0C0B",
+            "backgroundNoise": 71.141,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.9156
+          },
+          "mapStats": {
+            "valueRange": 0.8393,
+            "heightP90Gradient": 0.06167,
+            "roughnessBase": 0.719,
+            "roughnessVariation": 0.115,
+            "normalStrength": 0.229,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#100907",
+            "#AF9469",
+            "#7D6E54",
+            "#F0CD8B",
+            "#41382B"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "painted-metal",
+        "recipe": {
+          "metalness": 0.0,
+          "roughness": 0.5,
+          "clearcoat": 1.0,
+          "clearcoatRoughness": 0.05,
+          "transmission": 0.0,
+          "ior": 1.5,
+          "envMapIntensity": 1.0,
+          "anisotropy": 0.0,
+          "procedural": "flat-clearcoat"
+        },
+        "palette": [
+          "#0E0E11",
+          "#705D43",
+          "#B39969",
+          "#7C6C4F",
+          "#0A0301"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#0E0E11",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              17,
+              14,
+              14
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 91.5,
+          "meanSaturation": 0.432,
+          "gradientStrength": 0.59,
+          "mottle": 0.034,
+          "streakRatio": 0.76,
+          "hueSpread": 0.169,
+          "specularFraction": 0.0
+        }
+      },
+      "materialEvidence": {
+        "componentId": "pendant-0",
+        "regionId": "brass",
+        "crop": {
+          "path": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-evidence/03-brass.png",
+          "bbox": {
+            "x": 2331,
+            "y": 1433,
+            "width": 50,
+            "height": 45
+          },
+          "sourceWidth": 4032,
+          "sourceHeight": 3024,
+          "loaderWarnings": [],
+          "coverage": 0.0002
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "pendant-0",
+          "regionId": "brass",
+          "materialId": null,
+          "family": "metal",
+          "subtype": "brass-bronze",
+          "finish": "polished-or-aged",
+          "aliases": [],
+          "confidence": 0.829,
+          "source": "vision"
+        },
+        "alternatives": []
+      },
+      "needsEnvironment": true
+    }
+  ],
+  "repetitionSystems": [],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-11-02T00:05:30.638871+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.72,
+      "aiVisionScore": 0.72,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.8,
+        "componentStructure": 0.75,
+        "formDetail": 0.65,
+        "materialSurface": 0.65,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.82,
+          "notes": "Profile corners match the crop within about 0.3 m."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.72,
+          "notes": "Right place and height; the font is heavier and wider than the real condensed letters."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "White on black at the fascia right."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.6,
+          "notes": "Brass shades present; the shapes read as boxes at this tier."
+        }
+      ],
+      "referenceScreenshot": "ref/reference.jpg",
+      "renderScreenshot": "renders/blockout/top/az000.png",
+      "comparisonImage": "renders/blockout/cmp.png",
+      "cameraView": "",
+      "notes": "",
+      "aiVisionNotes": ""
+    },
+    {
+      "timestamp": "2026-11-02T00:06:03.855592+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.72,
+      "aiVisionScore": 0.72,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.8,
+        "componentStructure": 0.78,
+        "formDetail": 0.6,
+        "materialSurface": 0.65,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.82,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.72,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.6,
+          "notes": "Micro parts are not in the structural pass by design."
+        }
+      ],
+      "referenceScreenshot": "ref/reference.jpg",
+      "renderScreenshot": "renders/structural-pass/top/az000.png",
+      "comparisonImage": "renders/structural-pass/cmp.png",
+      "cameraView": "",
+      "notes": "",
+      "aiVisionNotes": ""
+    },
+    {
+      "timestamp": "2026-11-02T00:06:38.638732+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.73,
+      "aiVisionScore": 0.73,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.8,
+        "componentStructure": 0.78,
+        "formDetail": 0.7,
+        "materialSurface": 0.65,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.82,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.72,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.66,
+          "notes": "5 brass shades in 2 rows; 8-sided at this tier."
+        }
+      ],
+      "referenceScreenshot": "ref/reference.jpg",
+      "renderScreenshot": "renders/form-refinement/top/az000.png",
+      "comparisonImage": "renders/form-refinement/cmp.png",
+      "cameraView": "",
+      "notes": "",
+      "aiVisionNotes": ""
+    },
+    {
+      "timestamp": "2026-11-02T00:08:56.809096+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.62,
+      "aiVisionScore": 0.62,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.6,
+        "componentStructure": 0.7,
+        "formDetail": 0.65,
+        "materialSurface": 0.6,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.8,
+          "notes": "Profile matches with real masks."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.62,
+          "notes": "Heavier and wider than the real condensed letters."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "White on black."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.55,
+          "notes": "Tier 1 per-part color delta-E 54.76: too small to form a color group."
+        }
+      ],
+      "referenceScreenshot": "ref/reference.jpg",
+      "renderScreenshot": "renders/material-pass/top/az000.png",
+      "comparisonImage": "renders/material-pass/cmp.png",
+      "cameraView": "",
+      "notes": "",
+      "aiVisionNotes": ""
+    },
+    {
+      "timestamp": "2026-11-02T00:10:07.948427+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.7,
+      "aiVisionScore": 0.7,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.75,
+        "componentStructure": 0.75,
+        "formDetail": 0.7,
+        "materialSurface": 0.65,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.8,
+          "notes": "Profile matches the transparent reference mask."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.65,
+          "notes": "Right place and height; heavier than the real condensed letters (DIN Condensed is not on this machine, so the canvas falls back)."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "White on black."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.6,
+          "notes": "Present; Tier 1 cannot see them (delta-E 55.78): too small to form one of the 5 color groups."
+        }
+      ],
+      "referenceScreenshot": "ref/reference.jpg",
+      "renderScreenshot": "renders/material-pass/top/az000.png",
+      "comparisonImage": "renders/material-pass/cmp.png",
+      "cameraView": "",
+      "notes": "",
+      "aiVisionNotes": ""
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-11-02T00:05:30.638871+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.72,
+      "aiVisionScore": 0.72,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.8,
+        "componentStructure": 0.75,
+        "formDetail": 0.65,
+        "materialSurface": 0.65,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.82,
+          "notes": "Profile corners match the crop within about 0.3 m."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.72,
+          "notes": "Right place and height; the font is heavier and wider than the real condensed letters."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "White on black at the fascia right."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.6,
+          "notes": "Brass shades present; the shapes read as boxes at this tier."
+        }
+      ],
+      "action": "continue",
+      "summary": "Blockout matches the masked reference front from the photo camera: the sawtooth metal profile (low rise, vertical step, fall, tall rise), the black canopy, KROG STREET on top, MARKET on the fascia, and the brass pendants. Open: the real letters are narrower with light edge returns, and the real fascia shows a truss.",
+      "matched": [],
+      "mismatches": [],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [],
+      "mapStrippedRender": "renders/blockout/unlit/az000.png",
+      "visualEvidence": {
+        "referenceScreenshot": "ref/reference.jpg",
+        "renderScreenshot": "renders/blockout/top/az000.png",
+        "comparisonImage": "renders/blockout/cmp.png",
+        "cameraView": "",
+        "notes": "",
+        "aiVisionNotes": ""
+      }
+    },
+    {
+      "timestamp": "2026-11-02T00:06:03.855592+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.72,
+      "aiVisionScore": 0.72,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.8,
+        "componentStructure": 0.78,
+        "formDetail": 0.6,
+        "materialSurface": 0.65,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.82,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.72,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.6,
+          "notes": "Micro parts are not in the structural pass by design."
+        }
+      ],
+      "action": "continue",
+      "summary": "Structural pass: the macro and meso parts (roof profile, canopy, posts, letter cards) are in place. The micro pendants are excluded by this pass level and return in the form pass.",
+      "matched": [],
+      "mismatches": [],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [],
+      "mapStrippedRender": "renders/structural-pass/unlit/az000.png",
+      "visualEvidence": {
+        "referenceScreenshot": "ref/reference.jpg",
+        "renderScreenshot": "renders/structural-pass/top/az000.png",
+        "comparisonImage": "renders/structural-pass/cmp.png",
+        "cameraView": "",
+        "notes": "",
+        "aiVisionNotes": ""
+      }
+    },
+    {
+      "timestamp": "2026-11-02T00:06:38.638732+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.73,
+      "aiVisionScore": 0.73,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.8,
+        "componentStructure": 0.78,
+        "formDetail": 0.7,
+        "materialSurface": 0.65,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.82,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.72,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "Unchanged."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.66,
+          "notes": "5 brass shades in 2 rows; 8-sided at this tier."
+        }
+      ],
+      "action": "continue",
+      "summary": "Form pass: all parts present, including the 5 brass pendants in 2 rows under the canopy. Open: the letters are heavier than the real condensed type, and the canopy fascia has no truss detail.",
+      "matched": [],
+      "mismatches": [],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [],
+      "mapStrippedRender": "renders/form-refinement/unlit/az000.png",
+      "visualEvidence": {
+        "referenceScreenshot": "ref/reference.jpg",
+        "renderScreenshot": "renders/form-refinement/top/az000.png",
+        "comparisonImage": "renders/form-refinement/cmp.png",
+        "cameraView": "",
+        "notes": "",
+        "aiVisionNotes": ""
+      }
+    },
+    {
+      "timestamp": "2026-11-02T00:08:56.809096+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.62,
+      "aiVisionScore": 0.62,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.6,
+        "componentStructure": 0.7,
+        "formDetail": 0.65,
+        "materialSurface": 0.6,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.8,
+          "notes": "Profile matches with real masks."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.62,
+          "notes": "Heavier and wider than the real condensed letters."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "White on black."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.55,
+          "notes": "Tier 1 per-part color delta-E 54.76: too small to form a color group."
+        }
+      ],
+      "action": "refine-spec",
+      "summary": "Material pass: with real transparent masks, Tier 1 measures IoU 0.534 (the earlier passes scored 1.0 only because both masks fell back to the whole frame). Cause: the real canopy assembly is about 1.7 m deep (fascia over a steel truss, 4.5 to 6.2 m); the model has a 0.63 m slab. Refine-spec: add a truss layer, use a condensed font for KROG STREET, and compare transparent reference and render.",
+      "matched": [],
+      "mismatches": [],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [],
+      "mapStrippedRender": "renders/material-pass/unlit/az000.png",
+      "visualEvidence": {
+        "referenceScreenshot": "ref/reference.jpg",
+        "renderScreenshot": "renders/material-pass/top/az000.png",
+        "comparisonImage": "renders/material-pass/cmp.png",
+        "cameraView": "",
+        "notes": "",
+        "aiVisionNotes": ""
+      }
+    },
+    {
+      "timestamp": "2026-11-02T00:10:07.948427+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.7,
+      "aiVisionScore": 0.7,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.75,
+        "componentStructure": 0.75,
+        "formDetail": 0.7,
+        "materialSurface": 0.65,
+        "lightingCamera": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "sawtooth-roof",
+          "score": 0.8,
+          "notes": "Profile matches the transparent reference mask."
+        },
+        {
+          "id": "krog-street-letters",
+          "score": 0.65,
+          "notes": "Right place and height; heavier than the real condensed letters (DIN Condensed is not on this machine, so the canvas falls back)."
+        },
+        {
+          "id": "market-letters",
+          "score": 0.7,
+          "notes": "White on black."
+        },
+        {
+          "id": "pendant-lights",
+          "score": 0.6,
+          "notes": "Present; Tier 1 cannot see them (delta-E 55.78): too small to form one of the 5 color groups."
+        }
+      ],
+      "action": "request-input",
+      "summary": "Material pass after refine-spec: the canopy truss raised the real-mask silhouette IoU from 0.534 to 0.788 (aspect delta 0.108, scale delta 0.155, framing level). Tier 1 still fails on per-part color for the 5 brass pendants (delta-E 55.78): a small part never forms one of the 5 k-means color groups. Same limit as the Ponce City Market finial. Input needed: accept the model at this level for the game, or extend the gate.",
+      "matched": [],
+      "mismatches": [],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [],
+      "mapStrippedRender": "renders/material-pass/unlit/az000.png",
+      "visualEvidence": {
+        "referenceScreenshot": "ref/reference.jpg",
+        "renderScreenshot": "renders/material-pass/top/az000.png",
+        "comparisonImage": "renders/material-pass/cmp.png",
+        "cameraView": "",
+        "notes": "",
+        "aiVisionNotes": ""
+      }
+    }
+  ],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "runtime-budget",
+    "targetTriangles": 3000,
+    "maxDrawCalls": 6,
+    "textureSize": 1024,
+    "fpsTarget": 60,
+    "optimizationPolicy": "A game landmark on a 2 km level with a 55 FPS gate in headless SwiftShader: few triangles, flat colors, baked into one mesh."
+  },
+  "lightingFromPhoto": [
+    {
+      "role": "key",
+      "type": "directional",
+      "color": "#FFE7C4",
+      "intensity": 1.5,
+      "direction": [
+        0.5,
+        0.8,
+        0.3
+      ],
+      "notes": "The game sun"
+    },
+    {
+      "role": "fill",
+      "type": "hemisphere",
+      "skyColor": "#CFE8FF",
+      "groundColor": "#5A6A48",
+      "intensity": 0.7
+    },
+    {
+      "role": "environment",
+      "type": "none",
+      "notes": "The photo is at dusk; the game shows the landmark by day, so the lighting follows the game."
+    },
+    {
+      "role": "exposure",
+      "type": "tone-mapping",
+      "notes": "Exposure 1.0 and the game's default tone mapping (none, sRGB output). Ground shadow: the game has no shadow map on this level; the roof below gets no contact shadow from the tower (accepted for the frame rate gate)."
+    }
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Run reference PBR extraction for important source-image materials and stop when confidence is below the target threshold.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [],
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Krog Street Market corrugated metal roof gable steel canopy metal albedo roughness",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "62f2831e1d52eeb6dbb94a87c44fa25b1f4926626a7b1f8c2bcadc63e04e9471"
+    },
+    "matches": [
+      {
+        "record_id": "core.description-pbr-vocabulary-caption-calibration",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.description_conventions[7]",
+        "score": 8.296878702157,
+        "snippets": [
+          "Embedding a technical material-attribute block (Albedo, Metalness, Roughness, Normals) with measured reflectance ranges directly into the structured description, not just prose. Nhúng một khối thuộc tính vật liệu kỹ thuật (Albedo, Metalness, ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.description_conventions[7]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-color-space-srgb-vs-linearnocolorspace",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[11]",
+        "score": 6.615447681944,
+        "snippets": [
+          "... (cần gamma/sRGB) và các bản đồ dữ liệu toán học (phải giữ tuyến tính/không hiệu chỉnh). Recognition cues: Base color/albedo and emissive textures are the only ones that should look like natural photographic color; Normal, roughness, ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[11]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-anisotropy",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[6]",
+        "score": 5.734463963386,
+        "snippets": [
+          "Directional specular stretching seen on brushed or grooved metal, where reflections elongate along the grain direction. Hiện tượng phản xạ specular kéo dài theo một hướng, thấy trên kim loại được chải xước hoặc có rãnh, phản xạ kéo dài theo ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[6]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  },
+  "materialPipeline": {
+    "schemaVersion": 1,
+    "status": "proceed",
+    "registry": "/Users/william-meroxa/.img2threejs/releases/a669e9a97cea4452b1c2310c5cca6aa0f6657c1f/img2threejs/docs/materials/material-reference.json",
+    "analysisArtifact": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-analysis.json",
+    "targetThreshold": 0.7,
+    "unresolvedNotObservedMaterials": [],
+    "regions": [
+      {
+        "componentId": "roof-profile",
+        "regionId": "metal",
+        "specMaterialId": "metal",
+        "profileId": "metal.aluminum",
+        "status": "proceed"
+      },
+      {
+        "componentId": "canopy",
+        "regionId": "steel",
+        "specMaterialId": "steel",
+        "profileId": "coating.painted-metal",
+        "status": "proceed"
+      },
+      {
+        "componentId": "market-letters",
+        "regionId": "market",
+        "specMaterialId": "letters-white",
+        "profileId": "coating.painted-metal",
+        "status": "proceed"
+      },
+      {
+        "componentId": "pendant-0",
+        "regionId": "brass",
+        "specMaterialId": "brass",
+        "profileId": "metal.brass",
+        "status": "proceed"
+      }
+    ],
+    "controlledViewsRequired": [
+      "albedo-unlit",
+      "environment-reflection",
+      "grazing",
+      "neutral-studio",
+      "reference-beauty"
+    ]
+  },
+  "materialAnalysisHistory": [
+    {
+      "analysisArtifact": "/Users/william-meroxa/Development/atl-arcade/.claude/worktrees/interesting-jennings-64cf2f/landmarks/krog-street-market/material-analysis.json",
+      "status": "proceed",
+      "unresolvedNotObservedMaterials": [],
+      "regions": 4
+    }
+  ],
+  "tier1Results": [
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 1.0,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0,
+        "colorDelta": {
+          "checked": 11,
+          "maxDeltaE": 54.76,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 4.51
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "b3a229677dfdf90d",
+      "passId": "blockout",
+      "mapStrippedRender": "renders/blockout/unlit/az000.png"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 1.0,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0,
+        "colorDelta": {
+          "checked": 11,
+          "maxDeltaE": 56.2,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 3.38
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.56
+            },
+            {
+              "componentId": null,
+              "deltaE": 56.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 56.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 56.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 56.2
+            },
+            {
+              "componentId": null,
+              "deltaE": 56.2
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "d46fab79f62bfa3c",
+      "passId": "structural-pass"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 1.0,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0,
+        "colorDelta": {
+          "checked": 11,
+          "maxDeltaE": 54.76,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 4.51
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "b3a229677dfdf90d",
+      "passId": "form-refinement"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 1.0,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0,
+        "colorDelta": {
+          "checked": 11,
+          "maxDeltaE": 54.76,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 4.51
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.33
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 54.76
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "max per-part color delta-E 54.76 exceeds threshold 20.0"
+      ],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "b3a229677dfdf90d",
+      "passId": "material-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.3807,
+        "aspectRatioDelta": 0.045,
+        "scaleDelta": 0.1669,
+        "bilateralSymmetryError": 0.2225,
+        "colorDelta": {
+          "checked": 11,
+          "maxDeltaE": 8.84,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 3.17
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.35
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.35
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.35
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.35
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.25
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.25
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.25
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.25
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.25
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.381 is below threshold 0.85",
+        "scale delta 0.167 exceeds threshold 0.08"
+      ],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "22d332638da791da",
+      "passId": "material-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.749,
+        "aspectRatioDelta": 0.1082,
+        "scaleDelta": 0.1552,
+        "bilateralSymmetryError": 0.2044,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 55.53,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 3.28
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.82
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.53
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.53
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.749 is below threshold 0.85",
+        "aspect-ratio delta 0.108 exceeds threshold 0.05",
+        "scale delta 0.155 exceeds threshold 0.08",
+        "max per-part color delta-E 55.53 exceeds threshold 20.0"
+      ],
+      "maskWarnings": [],
+      "renderHash": "0e5032e92188004e",
+      "passId": "material-pass"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.788,
+        "aspectRatioDelta": 0.1082,
+        "scaleDelta": 0.1552,
+        "bilateralSymmetryError": 0.2586,
+        "colorDelta": {
+          "checked": 12,
+          "maxDeltaE": 55.78,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 3.43
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 17.54
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.78
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.78
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.78
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.78
+            },
+            {
+              "componentId": null,
+              "deltaE": 55.78
+            }
+          ],
+          "gated": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.788 is below threshold 0.85",
+        "aspect-ratio delta 0.108 exceeds threshold 0.05",
+        "scale delta 0.155 exceeds threshold 0.08",
+        "max per-part color delta-E 55.78 exceeds threshold 20.0"
+      ],
+      "maskWarnings": [],
+      "renderHash": "51634df381d5beb9",
+      "passId": "material-pass"
+    }
+  ]
+}

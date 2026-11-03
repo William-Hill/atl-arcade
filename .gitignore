@@ -6,3 +6,8 @@ dist
 e2e/.output
 playwright-report
 reports/*.webm
+assets/skaters/*/raw/
+# img2threejs working files that the scripts can rebuild (large).
+landmarks/*/material-evidence/**/*.png
+landmarks/*/detail-inventory/*.png
+landmarks/*/ref/reference-4000.jpg

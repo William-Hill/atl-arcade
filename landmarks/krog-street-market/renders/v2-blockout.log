@@ -1,0 +1,2 @@
+IoU 0.9035 color max 29.54 measured 12
+pass blockout: gates PASS; review renders/v2-blockout/cmp.png

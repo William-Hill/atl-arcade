@@ -1,0 +1,12 @@
+# Gate inputs (footprint and alpha renders) are rebuilt by run_pass.sh, so
+# they are not committed. The review sheets and the gate results are.
+v2-*/footprints/
+v2-*/alpha/
+v2-*/alpha-el*/
+v2-*/front-alpha/
+# The top and orbit views of the last pass stay as evidence; the earlier
+# passes keep their review sheets (cmp.png) and gate results only.
+v2-*/top/
+v2-*/orbit/
+!v2-optimization-pass/top/
+!v2-optimization-pass/orbit/

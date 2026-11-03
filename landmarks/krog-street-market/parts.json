@@ -1,0 +1,355 @@
+{
+  "model": "krog-street-market-front",
+  "parts": [
+    {
+      "name": "roof-profile",
+      "kind": "part",
+      "module": "roof-profile",
+      "triangles": 24
+    },
+    {
+      "name": "canopy",
+      "kind": "part",
+      "module": "canopy",
+      "triangles": 12
+    },
+    {
+      "name": "canopy-truss",
+      "kind": "part",
+      "module": "canopy-truss",
+      "triangles": 12
+    },
+    {
+      "name": "post-a",
+      "kind": "part",
+      "module": "post-a",
+      "triangles": 12
+    },
+    {
+      "name": "post-b",
+      "kind": "part",
+      "module": "post-b",
+      "triangles": 12
+    },
+    {
+      "name": "krog-street-letters",
+      "kind": "part",
+      "module": "krog-street-letters",
+      "triangles": 288
+    },
+    {
+      "name": "market-letters",
+      "kind": "part",
+      "module": "market-letters",
+      "triangles": 288
+    },
+    {
+      "name": "pendant-0",
+      "kind": "part",
+      "module": "pendant-0",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-cord-0",
+      "kind": "part",
+      "module": "pendant-cord-0",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-bulb-0",
+      "kind": "part",
+      "module": "pendant-bulb-0",
+      "triangles": 1216
+    },
+    {
+      "name": "pendant-1",
+      "kind": "part",
+      "module": "pendant-1",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-cord-1",
+      "kind": "part",
+      "module": "pendant-cord-1",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-bulb-1",
+      "kind": "part",
+      "module": "pendant-bulb-1",
+      "triangles": 1216
+    },
+    {
+      "name": "pendant-2",
+      "kind": "part",
+      "module": "pendant-2",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-cord-2",
+      "kind": "part",
+      "module": "pendant-cord-2",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-bulb-2",
+      "kind": "part",
+      "module": "pendant-bulb-2",
+      "triangles": 1216
+    },
+    {
+      "name": "pendant-3",
+      "kind": "part",
+      "module": "pendant-3",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-cord-3",
+      "kind": "part",
+      "module": "pendant-cord-3",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-bulb-3",
+      "kind": "part",
+      "module": "pendant-bulb-3",
+      "triangles": 1216
+    },
+    {
+      "name": "pendant-4",
+      "kind": "part",
+      "module": "pendant-4",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-cord-4",
+      "kind": "part",
+      "module": "pendant-cord-4",
+      "triangles": 224
+    },
+    {
+      "name": "pendant-bulb-4",
+      "kind": "part",
+      "module": "pendant-bulb-4",
+      "triangles": 1216
+    },
+    {
+      "name": "truss-top-f",
+      "kind": "part",
+      "module": "truss-top-f",
+      "triangles": 12
+    },
+    {
+      "name": "truss-bottom-f",
+      "kind": "part",
+      "module": "truss-bottom-f",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f0",
+      "kind": "part",
+      "module": "truss-diag-f0",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f1",
+      "kind": "part",
+      "module": "truss-diag-f1",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f2",
+      "kind": "part",
+      "module": "truss-diag-f2",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f3",
+      "kind": "part",
+      "module": "truss-diag-f3",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f4",
+      "kind": "part",
+      "module": "truss-diag-f4",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f5",
+      "kind": "part",
+      "module": "truss-diag-f5",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f6",
+      "kind": "part",
+      "module": "truss-diag-f6",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f7",
+      "kind": "part",
+      "module": "truss-diag-f7",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f8",
+      "kind": "part",
+      "module": "truss-diag-f8",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f9",
+      "kind": "part",
+      "module": "truss-diag-f9",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f10",
+      "kind": "part",
+      "module": "truss-diag-f10",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f11",
+      "kind": "part",
+      "module": "truss-diag-f11",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f12",
+      "kind": "part",
+      "module": "truss-diag-f12",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f13",
+      "kind": "part",
+      "module": "truss-diag-f13",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f14",
+      "kind": "part",
+      "module": "truss-diag-f14",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-f15",
+      "kind": "part",
+      "module": "truss-diag-f15",
+      "triangles": 12
+    },
+    {
+      "name": "truss-top-b",
+      "kind": "part",
+      "module": "truss-top-b",
+      "triangles": 12
+    },
+    {
+      "name": "truss-bottom-b",
+      "kind": "part",
+      "module": "truss-bottom-b",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b0",
+      "kind": "part",
+      "module": "truss-diag-b0",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b1",
+      "kind": "part",
+      "module": "truss-diag-b1",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b2",
+      "kind": "part",
+      "module": "truss-diag-b2",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b3",
+      "kind": "part",
+      "module": "truss-diag-b3",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b4",
+      "kind": "part",
+      "module": "truss-diag-b4",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b5",
+      "kind": "part",
+      "module": "truss-diag-b5",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b6",
+      "kind": "part",
+      "module": "truss-diag-b6",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b7",
+      "kind": "part",
+      "module": "truss-diag-b7",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b8",
+      "kind": "part",
+      "module": "truss-diag-b8",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b9",
+      "kind": "part",
+      "module": "truss-diag-b9",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b10",
+      "kind": "part",
+      "module": "truss-diag-b10",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b11",
+      "kind": "part",
+      "module": "truss-diag-b11",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b12",
+      "kind": "part",
+      "module": "truss-diag-b12",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b13",
+      "kind": "part",
+      "module": "truss-diag-b13",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b14",
+      "kind": "part",
+      "module": "truss-diag-b14",
+      "triangles": 12
+    },
+    {
+      "name": "truss-diag-b15",
+      "kind": "part",
+      "module": "truss-diag-b15",
+      "triangles": 12
+    }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 0
+}

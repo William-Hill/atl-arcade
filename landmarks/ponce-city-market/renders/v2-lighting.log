@@ -1,0 +1,3 @@
+post_generate: hip roof has 4 segments
+IoU 0.8651 color max 10.49 measured 27
+pass lighting-pass: gates PASS; review renders/v2-lighting-pass/cmp.png

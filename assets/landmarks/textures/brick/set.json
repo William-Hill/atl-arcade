@@ -1,0 +1,28 @@
+{
+  "materialId": "brick",
+  "source": "https://polyhaven.com/a/red_brick",
+  "asset": "red_brick",
+  "authors": {
+    "Rob Tuytel": "All"
+  },
+  "license": "CC0 1.0",
+  "tileMeters": 1.4,
+  "meanLinear": [
+    0.2396,
+    0.1169,
+    0.0719
+  ],
+  "targetHex": "#7E3B33",
+  "tintLinear": [
+    0.8709,
+    0.3741,
+    0.4605
+  ],
+  "clippedPixels": 0.0,
+  "files": {
+    "diff": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/red_brick/red_brick_diff_1k.jpg",
+    "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/red_brick/red_brick_nor_gl_1k.jpg",
+    "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/red_brick/red_brick_rough_1k.jpg",
+    "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/red_brick/red_brick_ao_1k.jpg"
+  }
+}

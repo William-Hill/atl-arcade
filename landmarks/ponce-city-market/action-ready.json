@@ -1,0 +1,3 @@
+{"sculptRuntime": {"nodes": 153, "meshes": 152, "sockets": 0, "colliders": 152, "keys": ["nodes", "meshes", "sockets", "colliders", "destructionGroups"]},
+ "explodable": "every part is a named mesh under its own pivot node (parts.json: 152 parts, 0 unnamed meshes)",
+ "note": "Static scenery on a 50 m roof; no sockets are needed. Checked in the preview page with window.__previewModel."}

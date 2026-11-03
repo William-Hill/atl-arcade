@@ -5,10 +5,12 @@
 export const SKATE = {
   // Speed
   maxSpeed: 12, // m/s. min 8 / typical 12 / max 16. Cap after pushes.
-  pushImpulse: 2.4, // m/s added per push. min 1.5 / typical 2.4 / max 4.
-  pushCooldown: 0.4, // s between pushes while the button is held. min 0.25 / typical 0.4 / max 0.7.
-  coastDecel: 0.5, // m/s^2 linear roll friction. min 0.2 / typical 0.5 / max 1.2.
-  coastDrag: 0.012, // 1/m quadratic drag, times speed^2. min 0.005 / typical 0.012 / max 0.03.
+  pushAccel: 8, // m/s^2 mean thrust while the push button is held. 0 to 10 m/s in about 1.8 s. min 5 / typical 8 / max 12.
+  pushCooldown: 0.4, // s for one stroke. The thrust rises and falls over each stroke. min 0.25 / typical 0.4 / max 0.7.
+  coastDecel: 1.2, // m/s^2 linear roll friction. From full speed, half speed in about 1.9 s and a stop in about 6 s. min 0.5 / typical 1.2 / max 2.
+  coastDrag: 0.025, // 1/m quadratic drag, times speed^2. min 0.01 / typical 0.025 / max 0.04.
+  rampFriction: 0.2, // fraction of the roll friction and drag on a ramp (ground normal y under rampNormalY). Skaters pump transitions. min 0 / typical 0.2 / max 1.
+  rampNormalY: 0.97, // ground normal y under which the ground counts as a ramp. min 0.9 / typical 0.97 / max 0.995.
   brakeDecel: 8, // m/s^2 toe-stop brake. min 4 / typical 8 / max 14.
   stopSpeed: 0.05, // m/s under which the skater counts as stopped. Keep small.
 
@@ -21,9 +23,12 @@ export const SKATE = {
   // Jump and air
   jumpSpeed: 5, // m/s vertical. min 3.5 / typical 5 / max 7. Arc height = v^2 / (2 g).
   gravity: 20, // m/s^2 arcade gravity. min 12 / typical 20 / max 30.
+  jumpBuffer: 0.1, // s a jump press waits for the skater to reach the ground. min 0.05 / typical 0.1 / max 0.2.
+  coyoteTime: 0.12, // s after a roll off an edge in which a jump press still jumps. min 0.06 / typical 0.12 / max 0.2.
   dropThreshold: 0.3, // m drop under the feet that turns a roll into a fall. min 0.15 / typical 0.3 / max 0.6.
 
   // Ground contact
+  bodyRadius: 0.3, // m. The skater stops this far from a wall, so the body does not go into it. min 0.2 / typical 0.3 / max 0.4.
   maxStep: 0.25, // m rise the skater rolls over (curbs, stairs). min 0.15 / typical 0.25 / max 0.4.
   launchNormalY: 0.15, // ramp surface normal y under which the skater leaves the lip. min 0.05 / typical 0.15 / max 0.3.
   bonkSpeedKeep: 0, // fraction of speed kept after a wall hit. min 0 / typical 0 / max 0.3.
@@ -54,10 +59,19 @@ export const CAMERA = {
   minDistance: 1.2, // m closest the camera comes to the pivot when a wall pushes it in. min 0.5 / typical 1.2 / max 3.
   clipRelease: 4.0, // 1/s rate the camera eases back out after a wall clears. min 2 / typical 4 / max 10.
   vertNormalY: 0.9, // ground normal y under which the skater is on vert and the camera holds its yaw. min 0.7 / typical 0.9 / max 0.97.
+  // Player look control (mouse drag, right stick). The look offset turns the camera about the skater.
+  mouseLookRate: 0.006, // rad of look per pixel of mouse drag. min 0.002 / typical 0.006 / max 0.012.
+  stickLookRate: 2.8, // rad/s of look at full right stick. min 1.5 / typical 2.8 / max 5.
+  stickDeadzone: 0.15, // right stick deadzone. min 0.05 / typical 0.15 / max 0.3.
+  minPitch: -0.3, // rad the player can lower the camera from its rest angle. min -0.4 / typical -0.3 / max 0.
+  maxPitch: 0.75, // rad the player can raise the camera above its rest angle. min 0.3 / typical 0.75 / max 1.0.
+  lookHold: 1.0, // s with no look input before the camera goes back behind the skater. min 0.3 / typical 1 / max 3.
+  lookReturn: 2.5, // 1/s rate the look offset goes back to zero after the hold. min 1 / typical 2.5 / max 6.
 };
 
 // Grind: rail snap, balance, exit.
 export const GRIND = {
+  buffer: 0.15, // s a grind press (a tap) still snaps to a rail that comes in range. min 0.05 / typical 0.15 / max 0.3.
   snapRadius: 1.2, // m horizontal distance to the spline that allows a snap. min 0.6 / typical 1.2 / max 2.
   snapBelow: 0.35, // m the rail may sit below the feet (airborne approach). min 0.1 / typical 0.35 / max 1.
   snapAbove: 0.9, // m the rail may sit above the feet (rolling approach). min 0.4 / typical 0.9 / max 1.5.
@@ -74,15 +88,43 @@ export const GRIND = {
   endPop: 0.8, // m/s upward pop when the spline ends. min 0 / typical 0.8 / max 2.
 };
 
-// Style (dance) moves on the roll-out. Each has a duration and a score.
-// `anim` names the placeholder capsule animation in the renderer.
+// Style (dance) moves on the roll-out. Each button has a list of dances.
+// A press starts the next dance in the list; a held button repeats the dance.
+// `beats` sets the length on the game beat clock (BEAT.bpm). `clip` names
+// the skater clip, and `anim` names the placeholder capsule animation.
+// The sources for the dances are in docs/characters/atl-dance-references.md.
 export const STYLE = {
   minSpeed: 1.5, // m/s needed to start a style move. min 0.5 / typical 1.5 / max 3.
   moves: [
-    { id: "shuffle", name: "Shuffle", duration: 0.5, points: 120, anim: "tilt" },
-    { id: "spin", name: "Spin", duration: 0.7, points: 160, anim: "spin" },
+    {
+      id: "groove",
+      beats: 2,
+      points: 150,
+      anim: "tilt",
+      dances: [
+        { clip: "dance_bankhead", name: "Bankhead Bounce" },
+        { clip: "dance_walkitout", name: "Walk It Out" },
+        { clip: "dance_prep", name: "The Prep" },
+        { clip: "dance_swagsurf", name: "Swag Surf" },
+        { clip: "dance_snaplean", name: "Snap Lean" },
+        { clip: "dance_crisscross", name: "Crisscross" },
+      ],
+    },
+    {
+      id: "spin",
+      beats: 1,
+      points: 160,
+      anim: "spin",
+      dances: [
+        { clip: "dance_spin", name: "Toe Spin" },
+        { clip: "dance_sitspin", name: "Sit Spin" },
+      ],
+    },
   ],
 };
+
+// The length of a style move in seconds at `bpm`.
+export const styleDuration = (move, bpm = BEAT.bpm) => (move.beats * 60) / bpm;
 
 // Combo scoring.
 export const COMBO = {

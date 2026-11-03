@@ -28,7 +28,9 @@ async function main() {
   const level = resolve(dir);
   const { bbox } = JSON.parse(readFileSync(resolve(level, "raw", "fetch.json"), "utf8"));
   const rows = [];
-  for (let offset = 0; ; offset += PAGE) {
+  // The server can return fewer rows than PAGE in one page. Thus the next
+  // offset is the count of rows so far, not a multiple of PAGE.
+  for (let offset = 0; ; offset = rows.length) {
     const q = new URLSearchParams({
       where: "STATUS='Current'",
       geometry: `${bbox.west},${bbox.south},${bbox.east},${bbox.north}`,
@@ -60,7 +62,8 @@ async function main() {
         lat: Math.round(f.geometry.y * 1e7) / 1e7,
       });
     }
-    if (!json.exceededTransferLimit && (json.features ?? []).length < PAGE) break;
+    const n = (json.features ?? []).length;
+    if (n === 0 || (!json.exceededTransferLimit && n < PAGE)) break;
   }
   rows.sort((a, b) => a.id - b.id);
   const out = {

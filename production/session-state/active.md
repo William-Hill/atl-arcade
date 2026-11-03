@@ -4,7 +4,15 @@
 - Prior prototype: beat-lock (Phaser) — PIVOT, see prototypes/beat-lock-concept/PIVOT-NOTE.md
 - Hypothesis: free movement + grind + jump + style chain feels good; new player chains a 3-move combo within 3 minutes; accidental rail falls under 1 per minute.
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
-- Phase: M0 done. M0-01 to M0-09 merged to main on 2026-10-31. M0-10 verdict: PROCEED (`prototypes/greybox-skate/REPORT.md`). M1 may start.
+- Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
+
+## M1 status, 2026-10-31
+
+| Issue | Branch | PR | Verified |
+|---|---|---|---|
+| M1-01 First skater (Nia) | `claude/m1-01-skater-cleanup-70c838` | PR open | Vitest on the GLB (size, Draco, triangles, joints, height); Playwright loads it skinned with no console errors and no off-host requests; five views in `assets/skaters/nia/views/` |
+
+M1-01 not verified: no human looked at the model in the game, and the model has no animations yet. Cascadeur reads the GLB only without Draco (see `docs/decisions.md`). Next: M1-02 (#12) binds the animations.
 
 ## M0 status, 2026-10-30
 

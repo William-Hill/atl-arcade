@@ -6,3 +6,4 @@ dist
 e2e/.output
 playwright-report
 reports/*.webm
+assets/skaters/*/raw/

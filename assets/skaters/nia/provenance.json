@@ -1,0 +1,62 @@
+{
+  "asset": "Nia \"Sway\" Ellis, the first skater (M1-01, #11)",
+  "date": "2026-10-31",
+  "status": "shipped",
+  "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
+  "source_image": "docs/characters/concept/nia/nia-tpose-front.png (see docs/characters/concept/nia/provenance.json)",
+  "steps": [
+    {
+      "tool": "Tripo Studio web UI (studio.tripo3d.ai), Image to 3D",
+      "task_id": "24cf4b94-0f1b-41f7-9ee0-82d441c9067b",
+      "settings": "HD Model, AI model H3.1 - Best Quality, Generate in Parts off, 8K Texture off",
+      "result": "1,942,004 triangles, 988,848 vertices, textured",
+      "credits_spent": 55
+    },
+    {
+      "tool": "Tripo Studio Retopology",
+      "settings": "Quad topology, Smart Mesh on, polygon count 9000",
+      "result": "9,558 quad faces, 8,960 vertices (17,896 triangles in the GLB)",
+      "credits_spent": 40
+    },
+    {
+      "tool": "Tripo Studio 3D Rigging",
+      "settings": "Rigging type Humanoid, skeleton preset Mixamo",
+      "result": "65 joints with the mixamorig: prefix, one skin, no animations",
+      "credits_spent": 20
+    },
+    {
+      "tool": "Tripo Studio Export",
+      "settings": "Format GLB, texture resolution 4k, Export Skeleton on",
+      "result": "assets/skaters/nia/raw/nia-tripo.glb, 12,934,292 bytes (not in git)",
+      "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS through the Blender MCP (blender-mcp add-on, port 9876)",
+      "date": "2026-10-31",
+      "actions": [
+        "Imported assets/skaters/nia/raw/nia-tripo.glb with the glTF importer.",
+        "Removed the Tripo empties (Node_0, node_0, RootNode) and kept the world transform of the armature.",
+        "Scaled the armature and the mesh by 1.7384 (0.978 m to 1.700 m) and applied the location, the rotation, and the scale.",
+        "Checked that the wheels touch z = 0 and that the model faces -Y in Blender (+Z in glTF).",
+        "Kept the Mixamo rig (65 mixamorig: joints) and the skin weights. The mesh was not decimated, because it had 17,896 triangles.",
+        "Resized the textures: base color 4096 to 2048, normal 2048 to 1024, metallic-roughness 2048 PNG to 1024 JPEG. All JPEG, quality 88.",
+        "Set the specular tint to white, so that the exporter writes no KHR_materials_specular. KHR_materials_volume and FB_ngon_encoding are not written.",
+        "Exported a GLB with Draco (level 6; quantization: position 14, normal 10, texcoord 12, generic 12), no animations."
+      ],
+      "result": "assets/skaters/nia/skater.glb, 2,123,152 bytes, 17,896 triangles, 1 skinned mesh, 65 joints, 1.700 m tall, extensions: KHR_draco_mesh_compression only",
+      "local_files_not_in_git": [
+        "assets/skaters/nia/raw/nia-clean.blend (the cleaned Blender scene)",
+        "assets/skaters/nia/raw/nia-nodraco.glb (the same export without Draco, 3,732,876 bytes, for Cascadeur)"
+      ],
+      "credits_spent": 0
+    }
+  ],
+  "credits_spent_total": 115,
+  "tripo_credits_before": 3000,
+  "tripo_credits_after": 2885,
+  "file": "assets/skaters/nia/skater.glb",
+  "triangles": 17896,
+  "file_size_bytes": 2123152,
+  "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
+  "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)"
+}

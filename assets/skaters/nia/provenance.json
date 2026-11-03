@@ -1,7 +1,7 @@
 {
   "asset": "Nia \"Sway\" Ellis, the first skater (M1-01, #11)",
   "date": "2026-10-31",
-  "status": "shipped",
+  "status": "shipped, animated (greybox clips in ATL and X Games style, not reviewed by skaters)",
   "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
   "source_image": "docs/characters/concept/nia/nia-tpose-front.png (see docs/characters/concept/nia/provenance.json)",
   "steps": [
@@ -49,6 +49,52 @@
         "assets/skaters/nia/raw/nia-nodraco.glb (the same export without Draco, 3,732,876 bytes, for Cascadeur)"
       ],
       "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS through the Blender MCP, script scripts/blender/nia_clips.py",
+      "date": "2026-10-31",
+      "issue": "M1-02 (#12)",
+      "actions": [
+        "Keyed 15 clips by hand in Python on the Mixamo rig: idle, push, coast, carve_left, carve_right, jump, air_trick_1 (grab), air_trick_2 (split), grind, manual, bail, dance_1 to dance_4.",
+        "Leg IK (pole angle 0) and a copy-rotation on each foot held the wheels on the ground. Each clip was baked to bone keys at 30 fps, and the IK helpers were removed.",
+        "Removed the curves that stay at the rest pose (8,945 curves). Set the baked keys to linear.",
+        "Exported with Draco and the same mesh and texture settings as M1-01, with all actions as glTF animations."
+      ],
+      "result": "assets/skaters/nia/skater.glb, 2,290,112 bytes, 17,896 triangles, 65 joints, 15 animations (13 to 21 channels each)",
+      "contact_sheets": "assets/skaters/nia/clips/<clip>.png, made by e2e/skater-anim.spec.js",
+      "local_files_not_in_git": [
+        "assets/skaters/nia/raw/nia-animated.blend",
+        "assets/skaters/nia/raw/nia-nodraco.glb (the animated export without Draco, 3,899,844 bytes)"
+      ],
+      "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS through the Blender MCP, script scripts/blender/nia_clips.py",
+      "date": "2026-10-31",
+      "issue": "M1-02 (#12), second pass after the user playtest",
+      "actions": [
+        "Replaced the clip set with 20 clips in Atlanta rink style (free skate) and X Games style (rails and air). The sources are in docs/characters/skate-style-references.md.",
+        "Free skate: idle, push (ATL stride), coast, ride_back, carve_left, carve_right (Cross Step). Air: jump, land, air_mute, air_japan, air_liukang. Rails: grind_frontside, grind_soul, grind_unity, manual. Fail: bail. Style: dance_prep, dance_crisscross, dance_spin, dance_sitspin.",
+        "Keyed the groove clips at 24 frames per beat. Turned the knee pole targets with the hips for the rail stances.",
+        "Removed the curves that stay at the rest pose (11,665 curves). Exported with the same Draco, mesh, and texture settings."
+      ],
+      "result": "assets/skaters/nia/skater.glb, 2,427,940 bytes, 17,896 triangles, 65 joints, 20 animations (18 to 24 channels each)",
+      "credits_spent": 0
+    },
+    {
+      "date": "2026-10-31",
+      "tool": "Blender 5.2.2 (background mode), scripts/blender/nia_clips.py",
+      "step": "Third pass: the push stroke goes diagonally out and back, and the arms swing in a sine wave with shoulder turn. The other 19 clips are rebaked with no change."
+    },
+    {
+      "date": "2026-10-31",
+      "tool": "Blender 5.2.2 (background mode), scripts/blender/nia_clips.py",
+      "step": "Fourth pass: a new idle (hand on the hip, toe tap), and four new dances (Bankhead Bounce, Walk It Out, Swag Surf, Snap Lean). The Prep, crisscross, and the spins are retimed to whole beats. 24 animations."
+    },
+    {
+      "date": "2026-10-31",
+      "tool": "Blender 5.2.2 (background mode), scripts/blender/nia_clips.py",
+      "step": "Fifth pass: the coast is now the ATL ride glide, one bar, with a scissor stance, a dip on each beat, and shoulder rolls."
     }
   ],
   "credits_spent_total": 115,
@@ -56,7 +102,8 @@
   "tripo_credits_after": 2885,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2123152,
+  "file_size_bytes": 2639720,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
-  "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)"
+  "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
+  "animations": 24
 }

@@ -4,6 +4,8 @@ import { createRenderer, fitToWindow } from "./render/renderer.js";
 import { createLevelLights, createLevelView } from "./render/level-view.js";
 import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
+import { loadSkaterModel } from "./render/skater-model.js";
+import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkaterEnv } from "./sim/skate/skater.js";
@@ -14,6 +16,8 @@ import { GREYBOX } from "./level/greybox.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createPhysicsWorld, initPhysics } from "./physics/world.js";
 import { createInput } from "./input/input.js";
+import { createLookInput } from "./input/look.js";
+import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -34,6 +38,22 @@ scene.add(levelView.root);
 const skaterView = createSkaterView();
 scene.add(skaterView.group);
 
+// The GLB skater replaces the capsule when it loads. ?skater=capsule keeps
+// the capsule.
+const skaterName = params.get("skater") ?? "nia";
+const skaterModel = { name: skaterName, loaded: false, error: null };
+if (skaterName !== "capsule") {
+  loadSkaterModel(skaterName)
+    .then((loaded) => {
+      skaterView.attachModel(loaded);
+      skaterModel.loaded = true;
+    })
+    .catch((err) => {
+      skaterModel.error = String(err);
+      console.error(err);
+    });
+}
+
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 500);
 // view=follow (default), view=orbit (drag to look), view=fixed (screenshot reference).
 const view = params.get("view") ?? "follow";
@@ -50,6 +70,8 @@ if (view === "orbit") {
 
 fitToWindow(renderer, camera);
 window.addEventListener("resize", () => fitToWindow(renderer, camera));
+
+const silhouette = createSilhouette(renderer);
 
 const RAPIER = await initPhysics();
 const physics = createPhysicsWorld(RAPIER, level);
@@ -133,7 +155,12 @@ function runScript(entries, { position, yaw } = {}) {
   });
 }
 
-if (view === "follow") follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+// Mouse drag on the canvas and the right stick turn the follow camera.
+let lookInput = null;
+if (view === "follow") {
+  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+  lookInput = createLookInput({ element: renderer.domElement });
+}
 
 let stepper = createStepper();
 let ticks = 0;
@@ -171,12 +198,15 @@ function frame(now) {
   for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
   ticks += stepped.steps;
 
-  skaterView.sync(skater);
+  skaterView.sync(skater, Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
   if (controls) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
-  if (follow) follow.update(skater, Math.min(elapsed, 0.1));
+  if (follow) {
+    const dt = Math.min(elapsed, 0.1);
+    follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
+  }
   hud.update(run, now, beat.running ? beat.phase() : null);
   renderer.render(scene, camera);
   frames += 1;
@@ -236,6 +266,41 @@ window.__atl = {
     renderPaused = Boolean(v);
     last = performance.now();
   },
+  skaterModel: {
+    get name() {
+      return skaterModel.name;
+    },
+    get loaded() {
+      return skaterModel.loaded;
+    },
+    get error() {
+      return skaterModel.error;
+    },
+    get clip() {
+      return skaterView.clip;
+    },
+    get weights() {
+      return skaterView.weights;
+    },
+    // The model yaw offset: PI when the skater rides backward.
+    get facing() {
+      return skaterView.facing;
+    },
+    // The skater mask from a camera in front of it (for the T-pose check).
+    silhouette() {
+      const m = skaterView.model;
+      return m ? Array.from(silhouette(skaterView.group, m.skinnedMesh)) : null;
+    },
+    // The same mask with the skeleton in the bind pose (the T-pose).
+    tposeSilhouette() {
+      const m = skaterView.model;
+      if (!m) return null;
+      m.skinnedMesh.skeleton.pose();
+      const mask = Array.from(silhouette(skaterView.group, m.skinnedMesh));
+      skaterView.sync(skater, 0);
+      return mask;
+    },
+  },
   get skaterRotation() {
     const r = skaterView.group.rotation;
     return { x: r.x, y: r.y, z: r.z };
@@ -249,6 +314,9 @@ window.__atl = {
   projectSkater,
   get cameraState() {
     return follow ? follow.state : null;
+  },
+  get cameraLook() {
+    return follow ? { ...follow.look } : null;
   },
   get cameraPosition() {
     return [camera.position.x, camera.position.y, camera.position.z];

@@ -131,3 +131,135 @@ The first skater is Nia "Sway" Ellis, an original adult character from the West 
 The Cascadeur MCP (`csc.glb.process_import`) cannot read the Draco GLB. It logs `GLB/GLTF: vector` and imports nothing. The same export without Draco (`assets/skaters/nia/raw/nia-nodraco.glb`, not in git) imports with success: 67 objects, the 65 `mixamorig:` joints, the `NiaRig` transform, and the `Nia` mesh. The check did not test the Cascadeur Quick Rigging Tool or an animation export.
 
 Decision for M1-02: animate in Cascadeur from the GLB without Draco. Export the clips from Cascadeur without Draco, then compress the final GLB with Draco in Blender. To make the input again, import `skater.glb` into Blender and export it without Draco. If the Cascadeur rig setup fails, animate with the Blender MCP.
+
+## 2026-10-31 — Nia animation set and state binding (M1-02)
+
+The user chose to key every clip in Blender (0 credits) over Meshy dances or Meshy text-to-motion. The Meshy library has dances, but no clip for a push, a coast, a carve, a grind, or a manual. `scripts/blender/nia_clips.py` keys 15 clips on the Mixamo rig through the Blender MCP: idle, push, coast, carve_left, carve_right, jump, air_trick_1, air_trick_2, grind, manual, bail, and dance_1 to dance_4. Leg IK holds the wheels on the ground, and each clip is baked to plain bone keys. The clips are greybox quality. Real skaters must review them before release (AGENTS.md).
+
+All clips are in `assets/skaters/nia/skater.glb` (2,290,112 bytes). The export removes the curves that stay at the rest pose. Without this step every clip wrote all 195 channels, and the glTF JSON was 659 KB. Now it is 75 KB. Three.js blends a bone with no track back to the rest pose.
+
+`src/render/skater-anim.js` is the state to clip table. It is pure and has Vitest tests for the transitions:
+
+| Controller state | Clip |
+|---|---|
+| style move "shuffle" | dance_1, then dance_3 on the next shuffle |
+| style move "spin" | dance_2, then dance_4 (the renderer also turns the body) |
+| grind | grind |
+| air from a grind fall | bail (it holds for 0.9 s, also after the landing) |
+| air off a ramp for 0.25 s or more | air_trick_1, then air_trick_2 on the next trick |
+| other air | jump |
+| `state.manual` | manual (M0 has no manual input, so this clip is not reachable yet) |
+| speed under 0.3 m/s | idle |
+| up to 0.4 s after a push | push |
+| yaw rate over 0.6 rad/s | carve_left or carve_right |
+| other rolling | coast |
+
+The crossfade is 0.15 s, and 0.06 s into a bail, a push, a jump, or a dance. The game now shows Nia by default; `?skater=capsule` keeps the capsule.
+
+The T-pose check renders the skater alone, from a camera in front of it, into a 96 x 96 mask. Then it compares the mask with the bind-pose mask (IoU). The gate is IoU under 0.8. Over the three scripted sessions the worst sample was 0.587. A second bind-pose mask gives over 0.95, so a T-pose frame fails the gate. The first run found a fault in the check itself: Three.js updates a skeleton once per frame, so a silhouette drawn after the main render used the bones of the previous render. The silhouette now calls `skeleton.update()` first.
+
+## 2026-10-31 — ATL free skate, X Games rails and air, backward riding, wall probe (M1-02)
+
+The user played the first clip set. The forward skate looked like a skateboard kick push, not a roller skate glide with rhythm and Atlanta swag. The user asked for Atlanta rink style in free skate and X Games style on rails and in the air. The research and the sources are in `docs/characters/skate-style-references.md`.
+
+The clip set is now 20 clips, all keyed by `scripts/blender/nia_clips.py` (0 credits):
+
+| Group | Clips | Style |
+|---|---|---|
+| Free skate | idle (claps on beats 2 and 4), push (ATL stride: side strokes, left and right), coast (glide, bounce on the beat, weight shift), ride_back (backward swizzle, looks over the shoulders), carve_left and carve_right (Cross Step) | Atlanta rink |
+| Air | jump, land, air_mute, air_japan, air_liukang | X Games |
+| Rails | grind_frontside, grind_soul, grind_unity, manual | X Games |
+| Fail | bail | |
+| Style moves | dance_prep and dance_crisscross (shuffle), dance_spin and dance_sitspin (spin) | Atlanta rink |
+
+Changes in the state to clip table (`src/render/skater-anim.js`):
+
+- The game cycles the air tricks (mute, japan, Liu Kang) and the grind stances (frontside, soul, unity). Each new air or rail takes the next one.
+- A landing from a jump or an air trick plays `land` and holds it for 0.3 s.
+- Groove clips play in phase with the game beat clock. The clips are keyed at 75 BPM, and the renderer scales them to `BEAT.bpm` (100 now).
+- The switch button (R, gamepad LB) sets `state.backward`. On the ground the skater then rides backward: the model turns 180 degrees in 0.35 s and plays `ride_back`. The travel direction and the physics do not change. Air, rails, and dances face forward. A fall or a respawn resets the switch.
+
+The skater went half into walls, because the wall test used only the center point. The controller now probes one body radius (`SKATE.bodyRadius`, 0.3 m) ahead and 35 degrees to each side. A probe point on a flat surface higher than `maxStep` is a wall, and the skater stops. On a ramp (a steep ground normal) the probe is off, so the quarter pipe still launches. A test shows the stop point at the building: 0.05 m from the wall before, 0.34 m now.
+
+Not verified: no person played the new clips; real skaters did not review the moves; the stop 0.3 m short of a wall can also stop a skater who rides along a wall at less than 0.17 m.
+
+## 2026-10-31: Player camera control in the follow camera (M1-02)
+
+- Decision: a mouse drag on the canvas (left or right button) and the gamepad right stick turn the follow camera about the skater. The control turns the camera in yaw and in pitch (−0.3 to +0.75 rad from the rest angle).
+- After 1.0 s with no look input, the camera goes back behind the skater (`CAMERA.lookHold`, `CAMERA.lookReturn`).
+- The look input is separate from the skate input. The camera does not change the simulation, so the scripted tests stay deterministic.
+- The wall ray still keeps the camera in front of walls when the player turns it.
+- Why: the player asked for camera control in play. `?view=orbit` is a debug view and does not follow the skater.
+
+## 2026-10-31: Diagonal push stroke and arm swing for the stride (M1-02)
+
+- Decision: the push stroke goes diagonally out and back (the foot ends 0.38 m to the side and 0.36 m behind its rest point). The second pass pushed almost only to the side (0.07 m back).
+- The arms swing in a sine wave against the legs: the front arm 62 degrees forward with a bent elbow, the back arm 42 degrees back. The shoulders turn 18 degrees with the arms, and the torso leans forward 16 to 21 degrees through the stroke.
+- Why: the player saw that the feet went out to the side with no drive, and that the upper body was stiff. Real skaters push at about 45 degrees to the line of travel and swing the arms in opposition to the legs.
+
+## 2026-10-31: Stroke thrust and a shorter coast (M1-02)
+
+- Decision: a held push button gives a thrust over each 0.4 s stroke (a half sine wave, mean `SKATE.pushAccel` 8 m/s²). The old model added 2.4 m/s at once at each stroke start. A release stops the thrust at once.
+- The roll friction is stronger: `coastDecel` 0.5 → 1.2 m/s², `coastDrag` 0.012 → 0.025 1/m. From 12 m/s, the coast to a stop takes about 6 s and 26 m. Before, it took 13.7 s and 61 m.
+- On a ramp (ground normal y < 0.97), the friction is 20 % of the flat value (`rampFriction`), so the quarter pipe still gives vert air.
+- Why: the player wants her to speed up while the button is held and lose momentum after a release.
+- Tests: two ramp tests changed their input. The quarter pipe test now pushes on the run-in. The deck edge test starts at 6 m/s.
+
+## 2026-10-31: ATL dances on the style buttons, and a new idle (M1-02)
+
+- Decision: each style button has a list of dances. A press starts the next dance in the list. A held button repeats the dance.
+  - Q: Bankhead Bounce, Walk It Out, the Prep, Swag Surf, Snap Lean, crisscross. Each dance lasts 2 beats (1.2 s at 100 BPM).
+  - E: toe-stop spin, sit spin. Each spin lasts 1 beat.
+- The sim picks the dance (`state.style.clip`), and the dance name goes into the combo string. The renderer plays a dance from its first frame at the game tempo.
+- The idle is a relaxed lean with a hand on the hip, a toe tap on beat 4, and a head nod. The old idle raised the hands to clap, which read as a shoulder shrug.
+- Not in the game: Whoop Rico (no source describes the moves), and moves with a content flag (see `docs/characters/atl-dance-references.md`). "Snap Lean" is the name for the lean-and-snap move, because the song "Lean wit It, Rock wit It" has no lyric check.
+- Why: the player asked for classic Atlanta dances and a cooler idle. The old style moves lasted 0.5 s, which is too short to show a dance.
+
+## 2026-10-31: The ATL ride glide for the coast (M1-02)
+
+- Decision: the coast clip is one bar (4 beats). The stance is low and staggered, and the front skate switches every two beats. The body dips on each beat, the shoulders roll forward and down, and the arms hang loose.
+- Why: the player saw that the glide after a push was upright and stiff. The ATL references describe a low, bouncy ride with swag and shoulder rolls (`docs/characters/atl-dance-references.md`, ATL Rydin).
+
+## 2026-11-01: Coyote time for a roll off an edge (M1-02)
+
+- Decision: a jump press up to 0.12 s (`SKATE.coyoteTime`) after the skater rolls off an edge still jumps. The jump sets the vertical speed to `jumpSpeed` (plus any upward speed).
+- The window applies only when `airFrom` is "edge". A ramp launch, a grind exit, a fall, and a normal jump do not get it, so the player cannot jump twice.
+- Why: the gamedev cheat sheet audit (`docs/gamedev-cheatsheet-audit.md`) found that a late jump press at a ledge was lost.
+
+## 2026-11-01: Jump and grind input buffers (M1-02)
+
+- Decision: a jump press stays live for 0.1 s (`SKATE.jumpBuffer`). A press just before a landing jumps on the first frame on the ground. One press gives one jump.
+- A grind tap stays live for 0.15 s (`GRIND.buffer`). A tap just before a rail comes in range still snaps. A held grind button works as before.
+- A snap onto a rail clears both buffers, so an old press does not fire after the grind.
+- Why: the gamedev cheat sheet audit found that an early press was lost.
+
+## 2026-11-01: Dance cleanup from references (M1-02)
+
+- Swag Surf: the arms are now near shoulder height with the forearms hanging down, as over the shoulders of friends. The knees bend deep, and the body leans side to side. The first version raised the arms in a V, which a video check showed to be wrong.
+- Walk It Out: a stronger twist (about 25 degrees) and a deeper double bounce, from the STEEZY steps.
+- Snap Lean: the arms hang low and the snap is beside the hips, with a shoulder dip. No video was found, so the clip follows the text sources only.
+- The Prep and crisscross: the clap is now low, in front of the chest, with the elbows near the ribs. The old clap raised the arms to shoulder height, which read as a shrug.
+- Bankhead Bounce: no change. The player likes it.
+
+## 2026-11-01: Walk It Out and Swag Surf rekeyed from video lessons (M1-02)
+
+- Walk It Out: a wide, low stance. Both knees turn to one side, then to the other, on a double bounce. The fists stay at the chest. The source is the Howcast lesson by Randy Connor.
+- Swag Surf: one side per beat. She stands up with the arms up, sweeps to the side, then drops and bends forward with the hands near the knees. The source is the HAS Dance University lesson.
+- Why: the player said that the first versions were completely wrong. They came from text only.
+
+## 2026-11-01: The coast is the ATL Ryde from a skate lesson (M1-02)
+
+- Decision: the coast clip is the ATL Ryde step from the Dun Beezy lesson. The skates press out on the downbeat and drag in on the half beat, and one skate ends behind the other. The arms throw down on the downbeat and come up to the chest on the half beat.
+- Why: the player asked for better references for the skate moves. The first ATL ride clip came from text only.
+- Not done: the corner step (out with the right skate, two drags of the left skate). It needs a carve clip that plays on the corners.
+
+## 2026-11-01: The ATL Ryde corner step for the carves (M1-02)
+
+- Decision: the carve clips are the ATL Ryde corner step from the Dun Beezy lesson, 2 beats. In a left turn, the right skate steps out wide, the left skate drags twice behind on its toe, and the right skate comes back in. The body leans into the turn. `carve_right` is the mirror.
+- This replaces the Cross Step clip, which came from a name only, with no source for the mechanics.
+
+## 2026-11-03: Review fixes before the M1-02 merge
+
+- Playwright evidence goes to `e2e/__screenshots__/`. One exception: `e2e/skater-anim.spec.js` writes the clip contact sheet to `assets/skaters/<name>/clips/`, which holds committed review evidence next to the asset. The five model views moved to `e2e/__screenshots__/nia-<view>.png`; the committed `assets/skaters/nia/views/` change only on purpose.
+- The animation layer measures the yaw rate per simulation tick (`measureYawRate`), so a display above 60 Hz no longer flips the clip between coast and a carve on frames with no tick.
+- The Q dance list names the Cross Step (clip `dance_crisscross`), which has a spec in `atl-dance-references.md`.

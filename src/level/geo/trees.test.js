@@ -108,7 +108,11 @@ describe("procedural trees", () => {
     const swapped = withProceduralTrees(props);
     expect(swapped.length).toBe(props.length);
     for (let i = 0; i < props.length; i += 1) {
-      if (isTreeKind(props[i].kind)) expect(swapped[i].kind).toMatch(/^tree:/);
+      if (isTreeKind(props[i].kind)) {
+        expect(swapped[i].kind).toMatch(/^tree:/);
+        // The tree stands on the terrain height of its placement (props.js).
+        expect(swapped[i].y).toBe(props[i].y);
+      }
       else expect(swapped[i]).toBe(props[i]);
     }
     const trees = swapped.filter((p) => p.kind.startsWith("tree:")).slice(0, 40);

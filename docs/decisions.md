@@ -302,3 +302,14 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - LOD: props merge into 50 m tiles, at two levels. A tile within 60 m of the camera shows LOD0, a tile within 200 m shows LOD1, and a tile past 200 m is hidden. `?lod0=<m>` and `?propdist=<m>` change the distances, and `npm run playtest -- --query "..."` passes a query to the page.
 - Why the tiles are small: with 125 m tiles and LOD0 within 75 m or 110 m, the trail playtest ran at a median of 30 FPS, because one near tile put up to 60 detailed trees on screen. With 50 m tiles it ran at 59.5 and 59.9 FPS in two runs.
 - Windows: the facade shader blends each window edge over one pixel (anti-aliasing with `fwidth`). Far windows fade to the mean wall color, so the grid does not shimmer. Each window has a sill, and a wide window has a center mullion.
+
+## 2026-11-02: A second playable skater, and the pipelines compared (M1-10, #42)
+
+- Scope change: version 1 had one skater in the concept. William asked for more playable characters, so M1 now has two: Nia "Sway" Ellis (West End) and Marcus "Tempo" Reid (Old Fourth Ward). Each new skater adds art cost and a skater review, so a third skater needs a new issue.
+- Marcus: an original character, a middle-school band teacher and jam skater. The dossier is `docs/characters/marcus-tempo-reid.md`. Teal and navy are a contrast to the peach and forest of Nia.
+- Pipeline: A (Tripo Studio, then `scripts/blender/skater_build.py`). Pipeline B (img2character) cannot retarget to the M1-02 Mixamo clips and does not write a GLB, so it was read from source and not installed. The comparison is `docs/characters/pipeline-comparison-m1-10.md`.
+- Tripo Agentic Canvas was not available on the account (beta for Max and Team users first). The 3D Workspace made Marcus with the Nia settings, for 115 Tripo credits.
+- Shared clips: both skaters use the same 24 clips and the same clip table. `nia_clips.py` takes `SKATER_CFG` (armature, mesh, rest feet), so one script keys every Mixamo skater. A move set for each skater is out of scope.
+- Skater select: a row of buttons at the top right of the shell (`src/ui/skater-select.js`). A click loads the page again with `?skater=<id>` and keeps the other query values. An unknown value gives Nia. The buttons take no keyboard focus, so Space and the arrows stay with the game.
+- Tests: the GLB tests, the five views, the contact sheets, and the T-pose gate run for each skater.
+- Political rule: real Atlanta skaters must review both skaters and the move set before release.

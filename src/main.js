@@ -11,6 +11,7 @@ import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkaterEnv } from "./sim/skate/skater.js";
 import { createRun, stepRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
+import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
 import { BeatClock } from "./audio/beat-clock.js";
 import { loadLevel } from "./level/levels.js";
 import { createLevelEnv } from "./level/ground.js";
@@ -94,9 +95,10 @@ if (geo) {
   scene.add(blob);
 }
 
-// The GLB skater replaces the capsule when it loads. ?skater=capsule keeps
-// the capsule.
-const skaterName = params.get("skater") ?? "nia";
+// The GLB skater replaces the capsule when it loads. ?skater=<id> picks the
+// skater (src/ui/skater-select.js), and ?skater=capsule keeps the capsule.
+const skaterName = resolveSkater(params.get("skater"));
+createSkaterSelect(document.body, skaterName);
 const skaterModel = { name: skaterName, loaded: false, error: null };
 if (skaterName !== "capsule") {
   loadSkaterModel(skaterName)

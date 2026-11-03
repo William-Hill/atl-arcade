@@ -7,6 +7,7 @@ import dracoWasmUrl from "three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?
 // The shipped skater models. Vite bundles each GLB as an asset.
 export const SKATER_MODELS = {
   nia: new URL("../../assets/skaters/nia/skater.glb", import.meta.url).href,
+  marcus: new URL("../../assets/skaters/marcus/skater.glb", import.meta.url).href,
 };
 
 // The GLB faces +z (the glTF convention). The controller faces +x at yaw 0,

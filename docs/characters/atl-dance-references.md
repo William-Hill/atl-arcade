@@ -123,11 +123,11 @@ Other sources describe ATL style as "swaggy, ryding" with leg crosses, claps, an
 
 **Animator spec (1 bar loop).**
 - Double bounce: knees dip on each beat and each "&".
-- Beat 1: twist both feet, both knees, and the Hips about 30 degrees to the right. RightArm shoots straight out to the right side at shoulder height. LeftForeArm folds near the chest.
+- Beat 1: twist both feet, both knees, and the Hips about 30 degrees to the right. Both forearms stay level in front of the chest with closed fists; the RightForeArm pushes out a small amount to the right (the video check: no straight arm out to the side).
 - Beat 2: hold the right twist. Bounce.
-- Beat 3: twist to the left. LeftArm shoots out. RightArm circles back to the chest.
+- Beat 3: twist to the left. The LeftForeArm pushes out a small amount; the RightForeArm comes back level in front of the chest.
 - Beat 4: hold the left twist. Bounce.
-- Head: faces the same way as the extended arm.
+- Head: faces the way of the twist.
 
 **Skates.** The foot twist needs grip. Do it on toe stops (heels up, the toe stops pivot), or do it in a slow glide where the skates turn toward each side in small heel swivels. On rolling wheels, keep the twist small (about 15 degrees).
 
@@ -145,7 +145,7 @@ Other sources describe ATL style as "swaggy, ryding" with leg crosses, claps, an
 
 **BPM.** Estimate 70 to 80. Not verified.
 
-**Animator spec (2 bars, solo version).**
+**Animator spec (2 bars, solo version).** The video checks above supersede the arm and sway lines below: the shipped clip keeps the arms near shoulder height with the forearms hanging down (first pass), and a later pass can add the per-count turn of 30 to 45 degrees, the forward drop, and the infinity-sign hand trace (second pass).
 - Arms: both arms up and out at about 45 degrees, elbows soft, as if over the shoulders of friends. Or one arm up and one arm out.
 - Beats 1 and 2: Hips and Spine sway to the left. Weight goes on the LeftFoot. Knees dip on beat 2.
 - Beats 3 and 4: sway to the right. Dip on beat 4.

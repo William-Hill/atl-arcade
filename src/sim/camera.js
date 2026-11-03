@@ -106,14 +106,19 @@ export function cameraGoal(skater, yaw, k = CAMERA, look = NO_LOOK) {
   } else {
     const hv = heading(yaw + look.yaw);
     const range = Math.hypot(dist, k.height);
-    const angle = Math.atan2(k.height, dist) + look.pitch;
+    // Never below the skater's horizon: a full look down keeps the camera
+    // at the skater's height, not under the ground.
+    const angle = Math.max(0, Math.atan2(k.height, dist) + look.pitch);
     const back = range * Math.cos(angle);
     position = [p[0] - hv[0] * back, p[1] + range * Math.sin(angle), p[2] - hv[2] * back];
   }
   const v = skater.velocity ?? [0, 0, 0];
   const forward = Math.max(0, v[0] * h[0] + v[2] * h[2]);
   const ahead = k.lookAhead * Math.min(forward / SKATE.maxSpeed, 1);
-  const lookAt = [p[0] + h[0] * ahead, p[1] + k.lookHeight, p[2] + h[2] * ahead];
+  // The look-ahead leads along the orbit heading (the skater heading plus the
+  // look yaw), so a look to the side keeps the skater in the middle.
+  const lead = look.yaw === 0 ? h : heading(yaw + look.yaw);
+  const lookAt = [p[0] + lead[0] * ahead, p[1] + k.lookHeight, p[2] + lead[2] * ahead];
   return { position, lookAt, distance: dist };
 }
 

@@ -11,17 +11,21 @@ function collectErrors(page) {
   return errors;
 }
 
-test("every Nia clip renders as a contact sheet", async ({ page }) => {
+// Every playable skater uses the same clip set and the same T-pose gate.
+const SKATERS = ["nia", "marcus"];
+
+for (const name of SKATERS) {
+test(`every ${name} clip renders as a contact sheet`, async ({ page }) => {
   const errors = collectErrors(page);
   await page.setViewportSize({ width: 1200, height: 360 });
-  await page.goto("/skater.html?skater=nia");
+  await page.goto(`/skater.html?skater=${name}`);
   await page.waitForFunction(() => window.__skater && (window.__skater.ready || window.__skater.error), null, { timeout: 30000 });
   const names = await page.evaluate(() => window.__skater.clips);
   expect([...names].sort()).toEqual(Object.keys(CLIPS).sort());
-  for (const name of names) {
-    const info = await page.evaluate((n) => window.__skater.sheet(n), name);
+  for (const clip of names) {
+    const info = await page.evaluate((n) => window.__skater.sheet(n), clip);
     expect(info.tracks).toBeGreaterThan(5);
-    await page.screenshot({ path: `assets/skaters/nia/clips/${name}.png` });
+    await page.screenshot({ path: `assets/skaters/${name}/clips/${clip}.png` });
   }
   expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
 });
@@ -29,10 +33,10 @@ test("every Nia clip renders as a contact sheet", async ({ page }) => {
 // The pixel check: a silhouette of the skater alone, from a camera in front of
 // it, is compared with the silhouette of the bind pose (the T-pose). A T-pose
 // frame has an IoU near 1.
-test("the scripted sessions show no T-pose frame", async ({ page }) => {
+test(`the scripted sessions show no ${name} T-pose frame`, async ({ page }) => {
   test.setTimeout(120000);
   const errors = collectErrors(page);
-  await page.goto("/?mute=1");
+  await page.goto(`/?mute=1&skater=${name}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
   const tpose = await page.evaluate(() => window.__atl.skaterModel.tposeSilhouette());
   const tposePixels = tpose.reduce((a, b) => a + b, 0);
@@ -83,12 +87,12 @@ test("the scripted sessions show no T-pose frame", async ({ page }) => {
       }
       report.push({ session: session.id, i, clip: s.clip, iou: inter / union, pixels });
     }
-    await page.screenshot({ path: `e2e/__screenshots__/skater-anim-${session.id}.png` });
+    await page.screenshot({ path: `e2e/__screenshots__/skater-anim-${name}-${session.id}.png` });
   }
 
   const clipsSeen = [...new Set(report.map((r) => r.clip))].sort();
   const worst = report.reduce((a, b) => (b.iou > a.iou ? b : a));
-  console.log(`samples ${report.length}, clips seen: ${clipsSeen.join(", ")}, worst IoU ${worst.iou.toFixed(3)} (${worst.clip})`);
+  console.log(`${name}: samples ${report.length}, clips seen: ${clipsSeen.join(", ")}, worst IoU ${worst.iou.toFixed(3)} (${worst.clip})`);
   if (process.env.ANIM_DEBUG) console.log(report.map((r) => `${r.session}#${r.i} ${r.clip} ${r.iou.toFixed(2)}`).join("\n"));
   for (const r of report) {
     expect(r.pixels, `empty mask at ${r.session} #${r.i}`).toBeGreaterThan(100);
@@ -97,6 +101,7 @@ test("the scripted sessions show no T-pose frame", async ({ page }) => {
   expect(clipsSeen).toEqual(expect.arrayContaining(["push", "coast", "carve_left", "grind_frontside", "jump", "land", "bail", "air_mute"]));
   expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
 });
+}
 
 test("the switch button turns the skater to ride backward", async ({ page }) => {
   test.setTimeout(60000);

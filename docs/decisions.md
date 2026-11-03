@@ -570,6 +570,17 @@ Not verified: no person played the new clips; real skaters did not review the mo
   - SwiftShader, Pixel 7 profile, no CPU throttle, load average 12–14: low 27.5 FPS (pixel ratio 2), phone 50.3 FPS (pixel ratio 1.5), high 1.9 FPS.
 - Not verified: FPS on a real phone GPU. The acceptance target (median over 40 FPS on a mid-range phone) needs a real device.
 
+## 2026-11-03: Touch controls for phones (#71)
+
+- Scheme: a floating stick under the left thumb and four buttons under the right thumb. The stick steers left and right, pushes when up, and brakes when down. The buttons are JUMP (tap), GRIND (hold), GROOVE (style1), and SPIN (style2). A drag on the open part of the screen turns the camera.
+- Why: the scheme maps onto the current controller input shape, so the simulation does not change. Auto-push was the other choice. It changes the push feel and needs a playtest first, so it waits for a human playtest on a phone.
+- Code: `src/input/touch-map.js` is pure, with Vitest tests. `src/input/touch.js` is the overlay. It keeps the held state per pointer, so two thumbs work at the same time. `createInput({ touch })` merges the touch input with the keyboard and the gamepad, and `input.source` says "touch" while a thumb is down.
+- When: the overlay shows on a touch screen (`maxTouchPoints > 0` or `(pointer: coarse)`). `?touch=1` forces it on, and `?touch=0` turns it off. On a touch screen the keyboard help is hidden, because the stick sits there.
+- Sizes: JUMP is 88 px, GRIND 76 px, and the dance buttons 64 px. The stick base is 128 px. All stay inside the safe area (`viewport-fit=cover` and `env(safe-area-inset-*)`).
+- Switch (R on the keyboard) has no touch button yet.
+- Tests: `e2e/touch.spec.js` drives real touch events through CDP on the iPhone 15 and Pixel 7 profiles in Chromium. Touch only, the skater pushes, steers, grinds the straight rail, and jumps. `E2E_PORT` sets the e2e port, so two checkouts can run the suite at the same time.
+- Not verified: a real phone, iOS Safari (WebKit is not installed), and the feel. A human playtest on a phone must tune `TOUCH` in `src/input/touch-map.js`.
+
 ## 2026-11-03: The skater slides along a wall (#58)
 
 - Decision (the project owner, 2026-11-03): on a wall hit, the skater slides along the wall. A head-on hit still stops the skater (a bonk). This applies on the ground and in the air.
@@ -603,3 +614,15 @@ Not verified: no person played the new clips; real skaters did not review the mo
   - With the phone skater (1024 px), load average about 32: first game frame 5,527–5,777 ms, skater 5,658–5,878 ms, 4.00 MB.
 - The 4 s target is not met. The marks show the path: `buildGeoMeshes` takes about 2.8 s of main-thread CPU at the 4x throttle, and the physics then waits about 1.1 s for the WASM compile. Next step: build the level meshes at build time or in a worker (#98).
 - Phone skater: `assets/skaters/<name>/skater-1024.glb` has a 1024 px base color in place of 2048 px, with the same mesh, rig, and clips (William approved the `npx @gltf-transform/cli@4.1.1` step). Nia goes from 2,735,736 to 1,598,396 bytes, and Marcus from 2,071,416 to 1,493,828 bytes. A phone screen (the `isPhone()` test of the phone tier) or `?quality=phone` loads it, and `?quality=high` keeps 2048 px. The resize decoded the Draco meshes, so a second step compressed them again with the M1-01 quantization. The provenance files record both commands.
+
+## 2026-11-03: The toon material keeps the face decal of Nia
+
+- Problem: `toonSkater()` replaced the face decal material that `attachFace()` adds in `loadSkaterModel()`. The shader key went from `skater-face` to `skater-toon-rim`, so the decal eyes and mouth did not show with `?toon=1` (the default).
+- Decision: `toonMaterial()` keeps the `onBeforeCompile` hook of the source material. The source hook runs first, then the rim hook. The shader key is `skater-face+skater-toon-rim`. A material with no hook keeps the key `skater-toon-rim`.
+- Why a chain and not a new order: `attachFace()` runs in the loader and returns the `face.set()` handle. A chain keeps the loader and `toonSkater()` as they are, and it works for each future hook on a GLB material.
+- The decal writes `diffuseColor` at `map_fragment`, and the rim reads it at `emissivemap_fragment`. Thus the rim also lights the decal colors. The toon shader has no roughness or metalness chunks, so those two decal lines do nothing there. The normal line works, because the toon material keeps `normalMap` (#60).
+- Test hooks: `window.__atl.skaterModel.holdFace(eyes, mouth)` holds one face state, `freezePose(true)` stops the clips, and `materialKey` gives the shader key. The Playwright test `e2e/skater-face.spec.js` stops the idle clip, because the clip moves the head and changes the pixels with no decal.
+- Evidence: `reports/toon-face/`.
+- Review fix: `KEPT` also has `depthWrite`. For glTF alpha blend, GLTFLoader sets `transparent: true` and `depthWrite: false`, and the toon material now keeps both.
+- Review fix: `toonSkater()` adds no outline hull to a skinned mesh with a transparent material, because the opaque hull shows through the mesh. Nia and Marcus have only opaque materials, so their hulls do not change.
+- Review fix: the chained hook calls the source hook with the source material as `this`, so a hook that reads `this.userData` keeps its state. The rim state stays in `userData.rim` of the toon material.

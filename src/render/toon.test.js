@@ -1,6 +1,7 @@
 import * as THREE from "three";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { HALFTONE, halftoneRadius } from "./post.js";
+import { attachFace } from "./skater-face.js";
 import { KEPT, TOON, outlineWidth, rampData, toonMaterial, toonSkater } from "./toon.js";
 
 // A small skinned box on a skeleton, with a GLB-like material.
@@ -31,15 +32,18 @@ function fakeSkater() {
 
 // A two-mesh GLB stand-in: a body and separate skates on one skeleton, and a
 // rigid (not skinned) badge. The skates material uses every KEPT property.
-function twoMeshSkater() {
+// With `opaque`, the skates material has no transparency.
+function twoMeshSkater({ opaque = false } = {}) {
   const s = fakeSkater();
   const skeleton = s.skinnedMesh.skeleton;
   const textures = { emissiveMap: new THREE.Texture(), normalMap: new THREE.Texture() };
   const skatesMaterial = new THREE.MeshStandardMaterial({
     name: "skates",
     color: 0x2266aa,
-    opacity: 0.8,
-    transparent: true,
+    opacity: opaque ? 1 : 0.8,
+    transparent: !opaque,
+    // GLTFLoader sets depthWrite false for alpha blend.
+    depthWrite: opaque,
     vertexColors: true,
     emissive: 0x331100,
     emissiveIntensity: 2,
@@ -112,6 +116,7 @@ describe("the toon skater with two skinned meshes", () => {
     expect(m.color.getHex()).toBe(0x2266aa);
     expect(m.opacity).toBeCloseTo(0.8);
     expect(m.transparent).toBe(true);
+    expect(m.depthWrite).toBe(false);
     expect(m.vertexColors).toBe(true);
     expect(m.emissive.getHex()).toBe(0x331100);
     expect(m.emissiveIntensity).toBe(2);
@@ -135,8 +140,8 @@ describe("the toon skater with two skinned meshes", () => {
     for (const key of KEPT) expect(key in m, key).toBe(true);
   });
 
-  it("builds one outline hull for each skinned mesh, on its geometry and skeleton", () => {
-    const s = twoMeshSkater();
+  it("builds one outline hull for each opaque skinned mesh, on its geometry and skeleton", () => {
+    const s = twoMeshSkater({ opaque: true });
     const hulls = toonSkater(s);
     expect(hulls.length).toBe(2);
     const sources = [s.skinnedMesh, s.skates];
@@ -154,6 +159,81 @@ describe("the toon skater with two skinned meshes", () => {
     // The rigid badge gets a toon material and no hull.
     expect(s.badge.material.isMeshToonMaterial).toBe(true);
     expect(hulls.some((h) => h.geometry === s.badge.geometry)).toBe(false);
+  });
+
+  it("builds no outline hull for the transparent skates", () => {
+    const s = twoMeshSkater();
+    const hulls = toonSkater(s);
+    expect(hulls.length).toBe(1);
+    expect(hulls[0].userData.outlineOf).toBe(s.skinnedMesh);
+    expect(s.skates.parent.children.some((c) => c.userData.outlineOf === s.skates)).toBe(false);
+    // The transparent skates keep the toon material.
+    expect(s.skates.material.isMeshToonMaterial).toBe(true);
+    expect(s.skates.material.depthWrite).toBe(false);
+  });
+
+  it("keeps the face decal and adds the rim on the toon skater material", async () => {
+    // attachFace() loads two decal atlases. Node has no image loader.
+    const load = vi.spyOn(THREE.TextureLoader.prototype, "loadAsync").mockImplementation(async () => new THREE.Texture());
+    const s = fakeSkater();
+    s.skinnedMesh.material.normalMap = new THREE.Texture();
+    const face = await attachFace(s.skinnedMesh, "nia");
+    load.mockRestore();
+    toonSkater(s);
+    const mat = s.skinnedMesh.material;
+    expect(mat.isMeshToonMaterial).toBe(true);
+    expect(mat.normalMap).not.toBeNull();
+    expect(mat.customProgramCacheKey()).toContain("skater-face");
+    expect(mat.customProgramCacheKey()).toContain("skater-toon-rim");
+
+    // Compile the toon shader source with the chained hooks.
+    const lib = THREE.ShaderLib.toon;
+    const shader = { uniforms: THREE.UniformsUtils.clone(lib.uniforms), vertexShader: lib.vertexShader, fragmentShader: lib.fragmentShader };
+    mat.onBeforeCompile(shader, null);
+    for (const u of ["uFaceEyes", "uFaceMouth", "uFaceEyeRect", "uFaceMouthRect", "uFaceCells", "uFaceState", "uRimColor", "uRim"]) {
+      expect(shader.uniforms[u], u).toBeDefined();
+    }
+    expect(shader.vertexShader).toContain("vFacePos = position;");
+    expect(shader.fragmentShader).toContain("faceDecal(uFaceEyes");
+    expect(shader.fragmentShader).toContain("normalize(mix(normal, nonPerturbedNormal, faceA))");
+    expect(shader.fragmentShader).toContain("uRimColor * uRim.x * rimBand");
+    // The decal comes before the rim, so the rim lights the decal color too.
+    expect(shader.fragmentShader.indexOf("faceDecal(uFaceEyes")).toBeLessThan(shader.fragmentShader.indexOf("rimBand"));
+
+    // face.set() moves the uniform that the compiled shader reads.
+    face.set("closed", "smile");
+    expect(shader.uniforms.uFaceState.value.x).toBeGreaterThan(0);
+    expect(shader.uniforms.uFaceState.value.y).toBeGreaterThan(0);
+  });
+
+  it("runs the source hook with the source material as the receiver", () => {
+    const source = new THREE.MeshStandardMaterial();
+    source.userData.tint = "vec3(1.0)";
+    let receiver = null;
+    const renderer = {};
+    let args = null;
+    source.onBeforeCompile = function (shader, r) {
+      receiver = this;
+      args = [shader, r];
+      shader.fragmentShader += `// tint ${this.userData.tint}`;
+    };
+    const m = toonMaterial(source);
+    const lib = THREE.ShaderLib.toon;
+    const shader = { uniforms: THREE.UniformsUtils.clone(lib.uniforms), vertexShader: lib.vertexShader, fragmentShader: lib.fragmentShader };
+    m.onBeforeCompile(shader, renderer);
+    expect(receiver).toBe(source);
+    expect(args[0]).toBe(shader);
+    expect(args[1]).toBe(renderer);
+    expect(shader.fragmentShader).toContain("// tint vec3(1.0)");
+    // The rim stays on the new material.
+    expect(m.userData.rim).toBeDefined();
+    expect(source.userData.rim).toBeUndefined();
+    expect(shader.uniforms.uRim).toBeDefined();
+  });
+
+  it("keeps the rim alone on a material with no hook", () => {
+    const m = toonMaterial(new THREE.MeshStandardMaterial());
+    expect(m.customProgramCacheKey()).toBe("skater-toon-rim");
   });
 });
 

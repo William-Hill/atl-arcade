@@ -59,3 +59,57 @@ test("in the game Nia smiles while she stands and blinks", async ({ page }) => {
   expect(eyes.has("open")).toBe(true);
   expect(eyes.has("closed") || eyes.has("half")).toBe(true);
 });
+
+// The toon material (?toon=1, the default) must keep the face decal (#60).
+// A fixed camera looks at Nia's face. Each held face state must change the
+// pixels of the head.
+test("in the game the toon skater keeps the face decal", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", (err) => errors.push(String(err)));
+  await page.goto("/?skater=nia&mute=1&view=fixed");
+  await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
+  const key = await page.evaluate(() => window.__atl.skaterModel.materialKey);
+  expect(key).toContain("skater-face");
+  expect(key).toContain("skater-toon-rim");
+
+  // The model faces the yaw direction: +x at yaw 0, so forward is (cos, -sin).
+  await page.evaluate(() => {
+    const a = window.__atl;
+    const [x, y, z] = a.skater.position;
+    const yaw = a.skaterRotation.y;
+    const fx = Math.cos(yaw);
+    const fz = -Math.sin(yaw);
+    const h = y + 1.44;
+    a.setFixedCamera(x + fx * 0.55, h, z + fz * 0.55, x, h, z);
+  });
+  // The idle clip moves the head. Stop it, so that only the face changes.
+  await page.evaluate(() => window.__atl.skaterModel.freezePose(true));
+  const head = { x: 440, y: 160, width: 400, height: 400 };
+  const states = [
+    ["open", "neutral"],
+    ["closed", "smile"],
+    ["happy", "open"],
+    ["open", "neutral"],
+  ];
+  const shots = {};
+  for (const [e, m] of states) {
+    await page.evaluate(([a, b]) => window.__atl.skaterModel.holdFace(a, b), [e, m]);
+    await page.waitForFunction(([a, b]) => {
+      const f = window.__atl.skaterModel.face;
+      return f && f.eyes === a && f.mouth === b;
+    }, [e, m]);
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `reports/toon-face/game-${e}-${m}.png` });
+    const name = shots[`${e}-${m}`] ? `${e}-${m}-again` : `${e}-${m}`;
+    shots[name] = await page.screenshot({ clip: head });
+  }
+  await page.evaluate(() => {
+    window.__atl.skaterModel.holdFace();
+    window.__atl.skaterModel.freezePose(false);
+  });
+  // The control: the same state gives the same pixels.
+  expect(shots["open-neutral-again"].equals(shots["open-neutral"])).toBe(true);
+  expect(shots["closed-smile"].equals(shots["open-neutral"])).toBe(false);
+  expect(shots["happy-open"].equals(shots["closed-smile"])).toBe(false);
+  expect(errors, `page errors: ${errors.join(" | ")}`).toEqual([]);
+});

@@ -83,7 +83,12 @@ export function toonMaterial(source) {
   }
   const rim = TOON.rim;
   mat.userData.rim = { color: new THREE.Color(...rim.color), strength: rim.strength, power: rim.power };
-  mat.onBeforeCompile = (shader) => {
+  // A hook on the source material (the face decal of attachFace()) stays:
+  // it runs first, then the rim. The rim lights the decal color too.
+  const sourceHook = source.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile ? source.onBeforeCompile : null;
+  const sourceKey = sourceHook && source.customProgramCacheKey ? source.customProgramCacheKey() : null;
+  mat.onBeforeCompile = (shader, renderer) => {
+    if (sourceHook) sourceHook.call(mat, shader, renderer);
     shader.uniforms.uRimColor = { value: mat.userData.rim.color };
     shader.uniforms.uRim = { value: new THREE.Vector2(rim.strength, rim.power) };
     shader.fragmentShader = shader.fragmentShader
@@ -99,7 +104,8 @@ export function toonMaterial(source) {
 }`,
       );
   };
-  mat.customProgramCacheKey = () => "skater-toon-rim";
+  const key = sourceKey ? `${sourceKey}+skater-toon-rim` : "skater-toon-rim";
+  mat.customProgramCacheKey = () => key;
   return mat;
 }
 

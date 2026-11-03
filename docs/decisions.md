@@ -512,3 +512,12 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - `toonSkater()` builds one outline hull for each skinned mesh and returns the list of hulls. A skater with separate skates or hair gets an outline on each part.
 - Nia and Marcus each have one skinned mesh with a normal map. The toon material dropped the normal map before; now it keeps it. The change in the screenshots is small: on the BeltLine, 91 pixels (Nia) and 29 pixels (Marcus) of 42,000 in the skater area changed by more than 16 levels. Two runs of the same code differ by 5 to 16 pixels there.
 - Known problem, not fixed here: `toonSkater()` replaces the face decal material of Nia (`attachFace()` in `loadSkaterModel()`), so the decal eyes and mouth do not show with `?toon=1`. This was true before this change.
+
+## 2026-11-03: The toon material keeps the face decal of Nia
+
+- Problem: `toonSkater()` replaced the face decal material that `attachFace()` adds in `loadSkaterModel()`. The shader key went from `skater-face` to `skater-toon-rim`, so the decal eyes and mouth did not show with `?toon=1` (the default).
+- Decision: `toonMaterial()` keeps the `onBeforeCompile` hook of the source material. The source hook runs first, then the rim hook. The shader key is `skater-face+skater-toon-rim`. A material with no hook keeps the key `skater-toon-rim`.
+- Why a chain and not a new order: `attachFace()` runs in the loader and returns the `face.set()` handle. A chain keeps the loader and `toonSkater()` as they are, and it works for each future hook on a GLB material.
+- The decal writes `diffuseColor` at `map_fragment`, and the rim reads it at `emissivemap_fragment`. Thus the rim also lights the decal colors. The toon shader has no roughness or metalness chunks, so those two decal lines do nothing there. The normal line works, because the toon material keeps `normalMap` (#60).
+- Test hooks: `window.__atl.skaterModel.holdFace(eyes, mouth)` holds one face state, `freezePose(true)` stops the clips, and `materialKey` gives the shader key. The Playwright test `e2e/skater-face.spec.js` stops the idle clip, because the clip moves the head and changes the pixels with no decal.
+- Evidence: `reports/toon-face/`.

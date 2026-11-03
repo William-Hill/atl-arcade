@@ -1,6 +1,7 @@
 import * as THREE from "three";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { HALFTONE, halftoneRadius } from "./post.js";
+import { attachFace } from "./skater-face.js";
 import { KEPT, TOON, outlineWidth, rampData, toonMaterial, toonSkater } from "./toon.js";
 
 // A small skinned box on a skeleton, with a GLB-like material.
@@ -154,6 +155,45 @@ describe("the toon skater with two skinned meshes", () => {
     // The rigid badge gets a toon material and no hull.
     expect(s.badge.material.isMeshToonMaterial).toBe(true);
     expect(hulls.some((h) => h.geometry === s.badge.geometry)).toBe(false);
+  });
+
+  it("keeps the face decal and adds the rim on the toon skater material", async () => {
+    // attachFace() loads two decal atlases. Node has no image loader.
+    const load = vi.spyOn(THREE.TextureLoader.prototype, "loadAsync").mockImplementation(async () => new THREE.Texture());
+    const s = fakeSkater();
+    s.skinnedMesh.material.normalMap = new THREE.Texture();
+    const face = await attachFace(s.skinnedMesh, "nia");
+    load.mockRestore();
+    toonSkater(s);
+    const mat = s.skinnedMesh.material;
+    expect(mat.isMeshToonMaterial).toBe(true);
+    expect(mat.normalMap).not.toBeNull();
+    expect(mat.customProgramCacheKey()).toContain("skater-face");
+    expect(mat.customProgramCacheKey()).toContain("skater-toon-rim");
+
+    // Compile the toon shader source with the chained hooks.
+    const lib = THREE.ShaderLib.toon;
+    const shader = { uniforms: THREE.UniformsUtils.clone(lib.uniforms), vertexShader: lib.vertexShader, fragmentShader: lib.fragmentShader };
+    mat.onBeforeCompile(shader, null);
+    for (const u of ["uFaceEyes", "uFaceMouth", "uFaceEyeRect", "uFaceMouthRect", "uFaceCells", "uFaceState", "uRimColor", "uRim"]) {
+      expect(shader.uniforms[u], u).toBeDefined();
+    }
+    expect(shader.vertexShader).toContain("vFacePos = position;");
+    expect(shader.fragmentShader).toContain("faceDecal(uFaceEyes");
+    expect(shader.fragmentShader).toContain("normalize(mix(normal, nonPerturbedNormal, faceA))");
+    expect(shader.fragmentShader).toContain("uRimColor * uRim.x * rimBand");
+    // The decal comes before the rim, so the rim lights the decal color too.
+    expect(shader.fragmentShader.indexOf("faceDecal(uFaceEyes")).toBeLessThan(shader.fragmentShader.indexOf("rimBand"));
+
+    // face.set() moves the uniform that the compiled shader reads.
+    face.set("closed", "smile");
+    expect(shader.uniforms.uFaceState.value.x).toBeGreaterThan(0);
+    expect(shader.uniforms.uFaceState.value.y).toBeGreaterThan(0);
+  });
+
+  it("keeps the rim alone on a material with no hook", () => {
+    const m = toonMaterial(new THREE.MeshStandardMaterial());
+    expect(m.customProgramCacheKey()).toBe("skater-toon-rim");
   });
 });
 

@@ -27,6 +27,13 @@ Every dataset that the game uses is listed here, with its license and the attrib
 | Overture Maps buildings (`theme=buildings`) | ODbL 1.0 for the OSM part, CDLA Permissive 2.0 for other parts | Overture has many more building heights than OSM. A fetch needs GeoParquet from cloud storage (DuckDB or the `overturemaps` CLI), and neither is on this machine. A follow-up can add it as a second source for heights. |
 | City of Atlanta open data, building footprints | Check the license on the dataset page before use | The issue asks for a cross-check "when available". This task did not do the cross-check. |
 
+## Art made for this project (not datasets)
+
+| Asset | Source | License |
+|---|---|---|
+| Street kit (`assets/kit/street-kit.glb`) | Built from Blender primitives by `scripts/blender/street_kit.py`. See `assets/kit/provenance.json`. | Original work for this project |
+| Mural designs | Drawn in code from a fixed seed (`src/render/murals.js`) | Original work for this project |
+
 ## Code libraries (not datasets)
 
 These are not datasets. They are here so that the license list is in one place.

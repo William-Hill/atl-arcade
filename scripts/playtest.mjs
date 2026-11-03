@@ -6,6 +6,7 @@
 //   npm run playtest
 //   npm run playtest -- --gate 55 --port 5182
 //   npm run playtest -- --level beltline-eastside   (one 40 s ride on the trail)
+//   npm run playtest -- --level beltline-eastside --query "props=0"
 
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -23,6 +24,8 @@ const argValue = (name, fallback) => {
 const GATE_FPS = Number(argValue("--gate", 55));
 const PORT = Number(argValue("--port", 5182));
 const LEVEL = String(argValue("--level", "greybox"));
+// Extra URL query for the page, for example "lod0=60&propdist=180".
+const QUERY = String(argValue("--query", ""));
 const ROOT = resolve(import.meta.dirname, "..");
 
 // A geodata level gets one session: a ride along the trail, planned with
@@ -74,7 +77,7 @@ try {
       if (msg.type() === "error") errors.push(msg.text());
     });
 
-    await page.goto(`http://localhost:${PORT}/?mute=1${LEVEL === "greybox" ? "" : `&level=${LEVEL}`}`);
+    await page.goto(`http://localhost:${PORT}/?mute=1${LEVEL === "greybox" ? "" : `&level=${LEVEL}`}${QUERY ? `&${QUERY}` : ""}`);
     await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 10, null, { timeout: 30000 });
     await page.evaluate(() => window.__atl.beat.start());
     await page.waitForTimeout(300);
@@ -200,6 +203,7 @@ const report = {
   date: date.toISOString(),
   machine: { platform: process.platform, arch: process.arch, node: process.version, renderer: "headless Chromium, SwiftShader" },
   level: LEVEL,
+  query: QUERY,
   gate: { medianFpsAtLeast: GATE_FPS, passed },
   totals,
   sessions: results,

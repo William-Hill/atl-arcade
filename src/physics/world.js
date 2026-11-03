@@ -59,6 +59,8 @@ export function createPhysicsWorld(R, level, { geoMeshes = null } = {}) {
 
   if (isGeoLevel(level)) {
     for (const { material, tile, mesh } of geoMeshes ?? buildGeoMeshes(level)) {
+      // Murals sit 8 cm off a wall that already has a collider.
+      if (material === "mural") continue;
       const group = collisionGroups(material === "building" ? GROUP.wall : GROUP.ground);
       const positions = mesh.positions instanceof Float32Array ? mesh.positions : new Float32Array(mesh.positions);
       const indices = mesh.indices instanceof Uint32Array ? mesh.indices : new Uint32Array(mesh.indices);

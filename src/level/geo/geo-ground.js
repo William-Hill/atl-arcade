@@ -62,6 +62,7 @@ export function geoShapes(level) {
 }
 
 function shapeBox(s) {
+  if (s.c) return { minX: s.c[0] - s.r, maxX: s.c[0] + s.r, minZ: s.c[1] - s.r, maxZ: s.c[1] + s.r };
   if (s.rings) {
     let minX = Infinity;
     let maxX = -Infinity;
@@ -84,12 +85,15 @@ function shapeBox(s) {
 }
 
 function contains(s, x, z) {
+  if (s.c) return Math.hypot(x - s.c[0], z - s.c[1]) <= s.r;
   if (s.rings) return pointInRings(x, z, s.rings);
   return distanceToSegment(x, z, s.a[0], s.a[1], s.b[0], s.b[1]) <= s.r;
 }
 
-export function createGeoGroundSampler(level, cell = GEO_CELL) {
-  const shapes = geoShapes(level);
+// `obstacles` are solid circles { id, c: [x, z], r, top }, for example the
+// street props (src/level/geo/props.js).
+export function createGeoGroundSampler(level, cell = GEO_CELL, { obstacles = [] } = {}) {
+  const shapes = [...geoShapes(level), ...obstacles];
   const grid = new Map();
   for (const s of shapes) {
     const box = shapeBox(s);

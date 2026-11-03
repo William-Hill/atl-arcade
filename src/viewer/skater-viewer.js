@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createRenderer, fitToWindow } from "../render/renderer.js";
 import { loadSkaterModel } from "../render/skater-model.js";
+import { EYES, MOUTHS } from "../render/face-anim.js";
 
 // Test page for a skater model: skater.html?skater=nia&view=front.
 // The model faces +x, as in the game. +z is the skater's right.
@@ -12,10 +13,12 @@ const VIEWS = {
   right: [0, 1],
   "three-quarter": [Math.SQRT1_2, -Math.SQRT1_2],
 };
-const DISTANCE = 3.2;
+// Until the model loads: a 1.7 m skater centered at hip height.
 const TARGET = new THREE.Vector3(0, 0.85, 0);
 // The face close-up: ?view=face. The face center is about 1.44 m up.
 const FACE_TARGET = new THREE.Vector3(0, 1.44, 0);
+let radius = 0.95;
+let currentView = "three-quarter";
 
 const params = new URLSearchParams(window.location.search);
 const canvas = document.getElementById("stage");
@@ -37,8 +40,17 @@ const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 50);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(TARGET);
 
+// The camera distance at which a sphere of `radius` fills the narrower of the
+// vertical and horizontal fields of view, with a 10% margin.
+export function fitDistance(radius, vfovDeg, aspect) {
+  const vHalf = THREE.MathUtils.degToRad(vfovDeg) / 2;
+  const hHalf = Math.atan(Math.tan(vHalf) * aspect);
+  return (radius * 1.1) / Math.sin(Math.min(vHalf, hHalf));
+}
+
 function setView(name) {
   if (name === "face") {
+    currentView = name;
     camera.position.set(0.55, FACE_TARGET.y + 0.02, 0);
     controls.target.copy(FACE_TARGET);
     controls.update();
@@ -48,13 +60,18 @@ function setView(name) {
   controls.target.copy(TARGET);
   const dir = VIEWS[name];
   if (!dir) throw new Error(`Unknown view: ${name}`);
-  camera.position.set(TARGET.x + dir[0] * DISTANCE, TARGET.y + 0.2, TARGET.z + dir[1] * DISTANCE);
+  currentView = name;
+  const d = fitDistance(radius, camera.fov, camera.aspect);
+  camera.position.set(TARGET.x + dir[0] * d, TARGET.y + 0.2, TARGET.z + dir[1] * d);
   controls.update();
   renderer.render(scene, camera);
 }
 
 fitToWindow(renderer, camera);
-window.addEventListener("resize", () => fitToWindow(renderer, camera));
+window.addEventListener("resize", () => {
+  fitToWindow(renderer, camera);
+  setView(currentView);
+});
 
 let paused = false;
 let mixer = null;
@@ -122,10 +139,16 @@ try {
   face = model.face;
   if (face && params.get("face")) {
     const [eyes, mouth] = params.get("face").split(",");
-    face.set(eyes ?? "open", mouth ?? "neutral");
+    // An unknown state name only warns: the viewer still loads.
+    if (EYES.includes(eyes ?? "open") && MOUTHS.includes(mouth ?? "neutral")) face.set(eyes ?? "open", mouth ?? "neutral");
+    else console.warn(`Unknown face ${params.get("face")}: eyes are ${EYES.join("/")}, mouths are ${MOUTHS.join("/")}`);
   }
   mixer = new THREE.AnimationMixer(model.root);
   const box = new THREE.Box3().setFromObject(model.root, true);
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  TARGET.copy(sphere.center);
+  radius = sphere.radius;
+  controls.target.copy(TARGET);
   state.info = {
     triangles: model.skinnedMesh.geometry.index.count / 3,
     bones: model.skinnedMesh.skeleton.bones.length,

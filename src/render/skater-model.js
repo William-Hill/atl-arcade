@@ -48,6 +48,13 @@ export async function loadSkaterModel(name = "nia") {
     if (o.isMesh) o.castShadow = true;
   });
   if (!skinnedMesh) throw new Error(`Skater model ${name} has no skinned mesh`);
-  const face = await attachFace(skinnedMesh, name);
+  // The face decals are a bonus: if one fails to load, keep the model with
+  // its painted face rather than drop to the capsule.
+  let face = null;
+  try {
+    face = await attachFace(skinnedMesh, name);
+  } catch (err) {
+    console.warn(`Skater ${name}: no face decals (${err?.message ?? err})`);
+  }
   return { root: wrapModel(gltf.scene), skinnedMesh, animations: gltf.animations, face };
 }

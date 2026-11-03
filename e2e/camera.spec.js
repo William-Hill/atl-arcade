@@ -14,6 +14,19 @@ const LAP = [
   { frames: 40, input: {} },
 ];
 
+// The game runs at most 5 simulation ticks per render frame (maxStepsPerFrame
+// in src/sim/fixed-step.js). A slow frame loop gives fewer frames and more
+// ticks per frame. These tests sample every frame and check ticks, not frame
+// counts, so they pass at a high machine load (see docs/decisions.md).
+const MAX_TICKS_PER_FRAME = 5;
+
+// The largest number of ticks between two samples that follow each other.
+function maxTickGap(samples) {
+  let gap = 0;
+  for (let i = 1; i < samples.length; i += 1) gap = Math.max(gap, samples[i].tick - samples[i - 1].tick);
+  return gap;
+}
+
 function collectErrors(page) {
   const errors = [];
   page.on("pageerror", (err) => errors.push(String(err)));
@@ -30,14 +43,19 @@ test("the follow camera keeps the skater on screen for a whole lap", async ({ pa
   expect(await page.evaluate(() => window.__atl.view)).toBe("follow");
 
   const result = await page.evaluate(async (script) => {
-    window.__atl.recorder.start(10);
+    window.__atl.recorder.start(1);
     const end = await window.__atl.runScript(script);
     const samples = window.__atl.recorder.stop();
     return { end, samples };
   }, LAP);
 
-  expect(result.end.tick).toBe(LAP.reduce((n, e) => n + e.frames, 0));
-  expect(result.samples.length).toBeGreaterThan(20);
+  const lapTicks = LAP.reduce((n, e) => n + e.frames, 0);
+  expect(result.end.tick).toBe(lapTicks);
+  // The samples cover the whole lap: one sample each frame, no hole.
+  const { samples } = result;
+  expect(samples.length).toBeGreaterThan(20);
+  expect(maxTickGap(samples)).toBeLessThanOrEqual(MAX_TICKS_PER_FRAME);
+  expect(samples[samples.length - 1].tick - samples[0].tick).toBeGreaterThanOrEqual(lapTicks - 2 * MAX_TICKS_PER_FRAME);
   const offscreen = result.samples.filter((s) => Math.abs(s.x) > 1 || Math.abs(s.y) > 1 || s.z > 1);
   expect(offscreen, `off-screen samples: ${JSON.stringify(offscreen.slice(0, 5))}`).toEqual([]);
 
@@ -79,13 +97,17 @@ test("the follow camera rides the quarter pipe without snapping or flipping", as
 
   // Push east into the 3 m quarter pipe, launch off the lip, roll back down.
   const samples = await page.evaluate(async () => {
-    window.__atl.recorder.start(2);
+    window.__atl.recorder.start(1);
     await window.__atl.runScript([{ frames: 150, input: { push: true } }, { frames: 300, input: {} }], { position: [8, 0, 0], yaw: 0 });
     return window.__atl.recorder.stop();
   });
 
+  expect(maxTickGap(samples)).toBeLessThanOrEqual(MAX_TICKS_PER_FRAME);
   const onRamp = samples.filter((s) => s.skater[0] > 25);
-  expect(onRamp.length).toBeGreaterThan(20);
+  // The skater is on the ramp for about 95 ticks. Check ticks, not samples:
+  // the count of on-ramp samples falls when the frames are slow.
+  expect(onRamp.length).toBeGreaterThan(0);
+  expect(onRamp[onRamp.length - 1].tick - onRamp[0].tick).toBeGreaterThanOrEqual(80);
   const offscreen = samples.filter((s) => Math.abs(s.x) > 1 || Math.abs(s.y) > 1 || s.z > 1);
   expect(offscreen, `off-screen samples: ${JSON.stringify(offscreen.slice(0, 3))}`).toEqual([]);
 
@@ -94,12 +116,14 @@ test("the follow camera rides the quarter pipe without snapping or flipping", as
   for (let i = 1; i < samples.length; i += 1) {
     const a = samples[i - 1].camera;
     const b = samples[i].camera;
-    const frames = Math.max(1, samples[i].frame - samples[i - 1].frame);
-    maxJump = Math.max(maxJump, Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) / frames);
+    // Per tick, not per frame: a slow frame carries up to 5 ticks of motion.
+    const ticks = Math.max(1, samples[i].tick - samples[i - 1].tick);
+    maxJump = Math.max(maxJump, Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) / ticks);
     const s = samples[i].skater;
     minDistance = Math.min(minDistance, Math.hypot(b[0] - s[0], b[1] - s[1], b[2] - s[2]));
   }
-  // Before the fix the camera jumped 12 m in one frame and came within 1.2 m.
+  // Before the fix the camera jumped 12 m in one frame (1 tick) and came
+  // within 1.2 m.
   expect(maxJump).toBeLessThan(1);
   expect(minDistance).toBeGreaterThan(4);
   // While the skater is on the ramp the camera stays on the street side.

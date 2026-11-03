@@ -431,6 +431,19 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - When to do it: when the textures and models pass a size budget, for example more ground scans or more landmarks. Use gltf-transform with ETC1S for color maps and UASTC for normal maps, and `KTX2Loader` with the basis transcoder in `three/examples/jsm/libs/basis/`.
 - Decided by William on 2026-11-02.
 
+## 2026-11-02: Facade depth: window sills and storefront piers (BeltLine level)
+
+- Why: the building walls are flat boxes, and the windows are only paint in the facade shader. Real ledges catch the light and give the wall depth. William picked "facade depth" on 2026-11-02.
+- What: `src/level/geo/facade-kit.js` (`wallDepth`, `wallBox`), pure, with Vitest tests.
+  - A sill under each upper-floor window: 0.12 m out, 0.1 m tall, in the trim color. It uses the same bays and floors as `extrudeFootprint()`, so each sill is under a window that the shader paints. The ground floor of a storefront style, the glass office, and the parking deck get no sills. A wall shorter than 1.5 m gets no sills.
+  - A pier at each bay line of the ground floor of a storefront style with 2 floors or more: 0.36 m wide, 0.16 m out, from the ground to the belt course.
+  - BeltLine level, on the PR #50 terrain and heights: 76,841 sills and 10,749 piers, about 854,000 triangles in all. Each part stands on the building span (`buildingSpan()` in `src/level/geo/terrain.js`), the same as the walls.
+- Draw distance: the sills and the piers go in 412 depth tiles of 50 m (`DEPTH_TILE`), not in the building tiles. The view shows a depth tile only when the camera is under 120 m from its center (`DEPTH_DISTANCE`). At 120 m a sill is about one pixel tall. The near depth triangles: 9,264 to 21,318 at the three test views (`reports/facade-depth/`, measured before the rebase onto the terrain). After the rebase, the worst point of a 25 m grid over the level has 67,142; a test keeps it under 150,000.
+- Ink: a sill is under 2 px tall at 30 m. With flat normals, the ink pass drew a crease on both of its edges, and the sill showed as a dashed black line. The sills now have soft shading normals: the top tilts 40 degrees up from the wall normal and the ends tilt 32 degrees. That is under the ink crease angle (about 49 degrees), so a sill gets no ink. The piers keep flat normals and get ink.
+- High tier only, as the rest of the kit. `?depth=0` turns it off for an A/B check. The low tier does not build the kit, so the low tier gate cannot change, and it was not run again for this change.
+- Render only: the physics keeps the plain boxes.
+- Not done: recessed storefront glass (the wall boxes cannot have holes), and parapet changes (the parapet and the coping exist already).
+
 
 ## 2026-11-02: A second playable skater, and the pipelines compared (M1-10, #42)
 

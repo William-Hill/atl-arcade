@@ -34,6 +34,15 @@ describe("push", () => {
     expect(gain[mid]).toBeGreaterThan(gain[22] * 3);
   });
 
+  it("sets pushing while the button is held on the ground, and clears it on release", () => {
+    const s = runScript(createSkateState(), [{ frames: 30, input: { push: true } }]).state;
+    expect(s.pushing).toBe(true);
+    const after = stepSkate(s, {}, DT);
+    expect(after.pushing).toBe(false);
+    expect(after.pushCooldown).toBeGreaterThan(0);
+    expect(createSkateState().pushing).toBe(false);
+  });
+
   it("stops the thrust when the button is released", () => {
     const s = runScript(createSkateState(), [{ frames: 60, input: { push: true } }]).state;
     const after = stepSkate(s, {}, DT);

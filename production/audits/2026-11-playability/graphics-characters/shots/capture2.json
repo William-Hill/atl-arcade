@@ -1,0 +1,764 @@
+{
+  "date": "2026-11-03T17:51:31.986Z",
+  "base": "http://localhost:5175",
+  "rows": [
+    {
+      "name": "high-desk-npc-dogWalker",
+      "quality": "high",
+      "npc": {
+        "id": 20,
+        "type": "dogWalker",
+        "kind": "trail",
+        "x": 335.7060492490573,
+        "y": 0.07,
+        "z": -3.1147147250364418,
+        "lean": 0
+      },
+      "inView": 14
+    },
+    {
+      "name": "high-desk-npc-jogger",
+      "quality": "high",
+      "npc": {
+        "id": 8,
+        "type": "jogger",
+        "kind": "trail",
+        "x": 334.72209285963305,
+        "y": 0.07,
+        "z": 27.52026586363402,
+        "lean": 0
+      },
+      "inView": 16
+    },
+    {
+      "name": "high-desk-npc-walker",
+      "quality": "high",
+      "npc": {
+        "id": 31,
+        "type": "walker",
+        "kind": "path",
+        "x": 280.02443062272545,
+        "y": 0.05,
+        "z": -11.42649913436099,
+        "lean": 0
+      },
+      "inView": 4
+    },
+    {
+      "name": "high-phone-npc-dogWalker",
+      "quality": "high",
+      "npc": {
+        "id": 20,
+        "type": "dogWalker",
+        "kind": "trail",
+        "x": 335.7060492490573,
+        "y": 0.07,
+        "z": -3.1147147250364418,
+        "lean": 0
+      },
+      "inView": 1
+    },
+    {
+      "name": "high-phone-npc-jogger",
+      "quality": "high",
+      "npc": {
+        "id": 8,
+        "type": "jogger",
+        "kind": "trail",
+        "x": 334.72377717340015,
+        "y": 0.07,
+        "z": 28.060825313276073,
+        "lean": 0
+      },
+      "inView": 3
+    },
+    {
+      "name": "low-desk-npc-dogWalker",
+      "quality": "low",
+      "npc": {
+        "id": 20,
+        "type": "dogWalker",
+        "kind": "trail",
+        "x": 335.6033911389152,
+        "y": 0.07,
+        "z": -2.159204622944972,
+        "lean": 0
+      },
+      "inView": 12
+    },
+    {
+      "name": "low-desk-npc-jogger",
+      "quality": "low",
+      "npc": {
+        "id": 8,
+        "type": "jogger",
+        "kind": "trail",
+        "x": 334.7323671736126,
+        "y": 0.07,
+        "z": 30.817678506450626,
+        "lean": 0
+      },
+      "inView": 15
+    },
+    {
+      "name": "low-desk-npc-walker",
+      "quality": "low",
+      "npc": {
+        "id": 31,
+        "type": "walker",
+        "kind": "path",
+        "x": 279.0324724050685,
+        "y": 0.05,
+        "z": -11.253453656992312,
+        "lean": 0
+      },
+      "inView": 2
+    },
+    {
+      "name": "low-phone-npc-dogWalker",
+      "quality": "low",
+      "npc": {
+        "id": 20,
+        "type": "dogWalker",
+        "kind": "trail",
+        "x": 335.60188146082487,
+        "y": 0.07,
+        "z": -2.14515300379659,
+        "lean": 0
+      },
+      "inView": 1
+    },
+    {
+      "name": "low-phone-npc-jogger",
+      "quality": "low",
+      "npc": {
+        "id": 8,
+        "type": "jogger",
+        "kind": "trail",
+        "x": 334.7325356049893,
+        "y": 0.07,
+        "z": 30.87173445141483,
+        "lean": 0
+      },
+      "inView": 3
+    },
+    {
+      "name": "murals",
+      "count": 39,
+      "distinctCells": 13
+    },
+    {
+      "name": "high-desk-mural-0",
+      "mural": "r4314932",
+      "cell": 10
+    },
+    {
+      "name": "high-phone-mural-0",
+      "mural": "r4314932",
+      "cell": 10
+    },
+    {
+      "name": "low-desk-mural-0",
+      "mural": "r4314932",
+      "cell": 10
+    },
+    {
+      "name": "low-phone-mural-0",
+      "mural": "r4314932",
+      "cell": 10
+    },
+    {
+      "name": "high-desk-mural-1",
+      "mural": "w185605331",
+      "cell": 3
+    },
+    {
+      "name": "low-desk-mural-1",
+      "mural": "w185605331",
+      "cell": 3
+    },
+    {
+      "name": "high-desk-mural-2",
+      "mural": "w211061638",
+      "cell": 11
+    },
+    {
+      "name": "high-desk-mural-3",
+      "mural": "w211062188",
+      "cell": 2
+    },
+    {
+      "name": "high-desk-mural-4",
+      "mural": "w330647646",
+      "cell": 2
+    },
+    {
+      "name": "face-decal-check",
+      "faceObject": true,
+      "before": {
+        "type": "MeshStandardMaterial",
+        "key": "skater-face",
+        "normalMap": true,
+        "roughnessMap": true
+      },
+      "after": {
+        "type": "MeshToonMaterial",
+        "key": "skater-toon-rim",
+        "normalMap": false,
+        "map": true
+      },
+      "skinnedMeshesAfterToon": 2
+    },
+    {
+      "name": "viewer-nia-three-quarter",
+      "viewer": {
+        "ready": true,
+        "error": null,
+        "views": [
+          "front",
+          "back",
+          "left",
+          "right",
+          "three-quarter",
+          "face"
+        ],
+        "clips": [
+          "air_japan",
+          "air_liukang",
+          "air_mute",
+          "bail",
+          "carve_left",
+          "carve_right",
+          "coast",
+          "dance_bankhead",
+          "dance_crisscross",
+          "dance_prep",
+          "dance_sitspin",
+          "dance_snaplean",
+          "dance_spin",
+          "dance_swagsurf",
+          "dance_walkitout",
+          "grind_frontside",
+          "grind_soul",
+          "grind_unity",
+          "idle",
+          "jump",
+          "land",
+          "manual",
+          "push",
+          "ride_back"
+        ],
+        "info": {
+          "triangles": 17896,
+          "bones": 65,
+          "skinned": true,
+          "animations": 24,
+          "face": true,
+          "meshMin": [
+            -0.8267068266868591,
+            -2.1154482965357602e-7,
+            -0.15802232921123505
+          ],
+          "meshMax": [
+            0.8267070055007935,
+            1.6999890804290771,
+            0.15802261233329773
+          ],
+          "min": [
+            -0.15802236345555606,
+            -3.6505874931453094e-7,
+            -0.826691705855269
+          ],
+          "max": [
+            0.15804722264978488,
+            1.6999886529729518,
+            0.8267065762924237
+          ]
+        }
+      }
+    },
+    {
+      "name": "viewer-nia-front",
+      "viewer": {
+        "ready": true,
+        "error": null,
+        "views": [
+          "front",
+          "back",
+          "left",
+          "right",
+          "three-quarter",
+          "face"
+        ],
+        "clips": [
+          "air_japan",
+          "air_liukang",
+          "air_mute",
+          "bail",
+          "carve_left",
+          "carve_right",
+          "coast",
+          "dance_bankhead",
+          "dance_crisscross",
+          "dance_prep",
+          "dance_sitspin",
+          "dance_snaplean",
+          "dance_spin",
+          "dance_swagsurf",
+          "dance_walkitout",
+          "grind_frontside",
+          "grind_soul",
+          "grind_unity",
+          "idle",
+          "jump",
+          "land",
+          "manual",
+          "push",
+          "ride_back"
+        ],
+        "info": {
+          "triangles": 17896,
+          "bones": 65,
+          "skinned": true,
+          "animations": 24,
+          "face": true,
+          "meshMin": [
+            -0.8267068266868591,
+            -2.1154482965357602e-7,
+            -0.15802232921123505
+          ],
+          "meshMax": [
+            0.8267070055007935,
+            1.6999890804290771,
+            0.15802261233329773
+          ],
+          "min": [
+            -0.15802236345555606,
+            -3.6505874931453094e-7,
+            -0.826691705855269
+          ],
+          "max": [
+            0.15804722264978488,
+            1.6999886529729518,
+            0.8267065762924237
+          ]
+        }
+      }
+    },
+    {
+      "name": "viewer-nia-back",
+      "viewer": {
+        "ready": true,
+        "error": null,
+        "views": [
+          "front",
+          "back",
+          "left",
+          "right",
+          "three-quarter",
+          "face"
+        ],
+        "clips": [
+          "air_japan",
+          "air_liukang",
+          "air_mute",
+          "bail",
+          "carve_left",
+          "carve_right",
+          "coast",
+          "dance_bankhead",
+          "dance_crisscross",
+          "dance_prep",
+          "dance_sitspin",
+          "dance_snaplean",
+          "dance_spin",
+          "dance_swagsurf",
+          "dance_walkitout",
+          "grind_frontside",
+          "grind_soul",
+          "grind_unity",
+          "idle",
+          "jump",
+          "land",
+          "manual",
+          "push",
+          "ride_back"
+        ],
+        "info": {
+          "triangles": 17896,
+          "bones": 65,
+          "skinned": true,
+          "animations": 24,
+          "face": true,
+          "meshMin": [
+            -0.8267068266868591,
+            -2.1154482965357602e-7,
+            -0.15802232921123505
+          ],
+          "meshMax": [
+            0.8267070055007935,
+            1.6999890804290771,
+            0.15802261233329773
+          ],
+          "min": [
+            -0.15802236345555606,
+            -3.6505874931453094e-7,
+            -0.826691705855269
+          ],
+          "max": [
+            0.15804722264978488,
+            1.6999886529729518,
+            0.8267065762924237
+          ]
+        }
+      }
+    },
+    {
+      "name": "viewer-nia-face",
+      "viewer": {
+        "ready": true,
+        "error": null,
+        "views": [
+          "front",
+          "back",
+          "left",
+          "right",
+          "three-quarter",
+          "face"
+        ],
+        "clips": [
+          "air_japan",
+          "air_liukang",
+          "air_mute",
+          "bail",
+          "carve_left",
+          "carve_right",
+          "coast",
+          "dance_bankhead",
+          "dance_crisscross",
+          "dance_prep",
+          "dance_sitspin",
+          "dance_snaplean",
+          "dance_spin",
+          "dance_swagsurf",
+          "dance_walkitout",
+          "grind_frontside",
+          "grind_soul",
+          "grind_unity",
+          "idle",
+          "jump",
+          "land",
+          "manual",
+          "push",
+          "ride_back"
+        ],
+        "info": {
+          "triangles": 17896,
+          "bones": 65,
+          "skinned": true,
+          "animations": 24,
+          "face": true,
+          "meshMin": [
+            -0.8267068266868591,
+            -2.1154482965357602e-7,
+            -0.15802232921123505
+          ],
+          "meshMax": [
+            0.8267070055007935,
+            1.6999890804290771,
+            0.15802261233329773
+          ],
+          "min": [
+            -0.15802236345555606,
+            -3.6505874931453094e-7,
+            -0.826691705855269
+          ],
+          "max": [
+            0.15804722264978488,
+            1.6999886529729518,
+            0.8267065762924237
+          ]
+        }
+      }
+    },
+    {
+      "name": "viewer-marcus-three-quarter",
+      "viewer": {
+        "ready": true,
+        "error": null,
+        "views": [
+          "front",
+          "back",
+          "left",
+          "right",
+          "three-quarter",
+          "face"
+        ],
+        "clips": [
+          "air_japan",
+          "air_liukang",
+          "air_mute",
+          "bail",
+          "carve_left",
+          "carve_right",
+          "coast",
+          "dance_bankhead",
+          "dance_crisscross",
+          "dance_prep",
+          "dance_sitspin",
+          "dance_snaplean",
+          "dance_spin",
+          "dance_swagsurf",
+          "dance_walkitout",
+          "grind_frontside",
+          "grind_soul",
+          "grind_unity",
+          "idle",
+          "jump",
+          "land",
+          "manual",
+          "push",
+          "ride_back"
+        ],
+        "info": {
+          "triangles": 17006,
+          "bones": 65,
+          "skinned": true,
+          "animations": 24,
+          "face": false,
+          "meshMin": [
+            -0.8900001645088196,
+            -5.877929254438641e-8,
+            -0.17590999603271484
+          ],
+          "meshMax": [
+            0.8900002241134644,
+            1.7799999713897705,
+            0.17591001093387604
+          ],
+          "min": [
+            -0.17590996386173355,
+            -9.510695215347119e-8,
+            -0.8900002697629907
+          ],
+          "max": [
+            0.17589622770693203,
+            1.780000142807103,
+            0.8900002246311671
+          ]
+        }
+      }
+    },
+    {
+      "name": "viewer-marcus-front",
+      "viewer": {
+        "ready": true,
+        "error": null,
+        "views": [
+          "front",
+          "back",
+          "left",
+          "right",
+          "three-quarter",
+          "face"
+        ],
+        "clips": [
+          "air_japan",
+          "air_liukang",
+          "air_mute",
+          "bail",
+          "carve_left",
+          "carve_right",
+          "coast",
+          "dance_bankhead",
+          "dance_crisscross",
+          "dance_prep",
+          "dance_sitspin",
+          "dance_snaplean",
+          "dance_spin",
+          "dance_swagsurf",
+          "dance_walkitout",
+          "grind_frontside",
+          "grind_soul",
+          "grind_unity",
+          "idle",
+          "jump",
+          "land",
+          "manual",
+          "push",
+          "ride_back"
+        ],
+        "info": {
+          "triangles": 17006,
+          "bones": 65,
+          "skinned": true,
+          "animations": 24,
+          "face": false,
+          "meshMin": [
+            -0.8900001645088196,
+            -5.877929254438641e-8,
+            -0.17590999603271484
+          ],
+          "meshMax": [
+            0.8900002241134644,
+            1.7799999713897705,
+            0.17591001093387604
+          ],
+          "min": [
+            -0.17590996386173355,
+            -9.510695215347119e-8,
+            -0.8900002697629907
+          ],
+          "max": [
+            0.17589622770693203,
+            1.780000142807103,
+            0.8900002246311671
+          ]
+        }
+      }
+    },
+    {
+      "name": "viewer-marcus-back",
+      "viewer": {
+        "ready": true,
+        "error": null,
+        "views": [
+          "front",
+          "back",
+          "left",
+          "right",
+          "three-quarter",
+          "face"
+        ],
+        "clips": [
+          "air_japan",
+          "air_liukang",
+          "air_mute",
+          "bail",
+          "carve_left",
+          "carve_right",
+          "coast",
+          "dance_bankhead",
+          "dance_crisscross",
+          "dance_prep",
+          "dance_sitspin",
+          "dance_snaplean",
+          "dance_spin",
+          "dance_swagsurf",
+          "dance_walkitout",
+          "grind_frontside",
+          "grind_soul",
+          "grind_unity",
+          "idle",
+          "jump",
+          "land",
+          "manual",
+          "push",
+          "ride_back"
+        ],
+        "info": {
+          "triangles": 17006,
+          "bones": 65,
+          "skinned": true,
+          "animations": 24,
+          "face": false,
+          "meshMin": [
+            -0.8900001645088196,
+            -5.877929254438641e-8,
+            -0.17590999603271484
+          ],
+          "meshMax": [
+            0.8900002241134644,
+            1.7799999713897705,
+            0.17591001093387604
+          ],
+          "min": [
+            -0.17590996386173355,
+            -9.510695215347119e-8,
+            -0.8900002697629907
+          ],
+          "max": [
+            0.17589622770693203,
+            1.780000142807103,
+            0.8900002246311671
+          ]
+        }
+      }
+    },
+    {
+      "name": "viewer-marcus-face",
+      "viewer": {
+        "ready": true,
+        "error": null,
+        "views": [
+          "front",
+          "back",
+          "left",
+          "right",
+          "three-quarter",
+          "face"
+        ],
+        "clips": [
+          "air_japan",
+          "air_liukang",
+          "air_mute",
+          "bail",
+          "carve_left",
+          "carve_right",
+          "coast",
+          "dance_bankhead",
+          "dance_crisscross",
+          "dance_prep",
+          "dance_sitspin",
+          "dance_snaplean",
+          "dance_spin",
+          "dance_swagsurf",
+          "dance_walkitout",
+          "grind_frontside",
+          "grind_soul",
+          "grind_unity",
+          "idle",
+          "jump",
+          "land",
+          "manual",
+          "push",
+          "ride_back"
+        ],
+        "info": {
+          "triangles": 17006,
+          "bones": 65,
+          "skinned": true,
+          "animations": 24,
+          "face": false,
+          "meshMin": [
+            -0.8900001645088196,
+            -5.877929254438641e-8,
+            -0.17590999603271484
+          ],
+          "meshMax": [
+            0.8900002241134644,
+            1.7799999713897705,
+            0.17591001093387604
+          ],
+          "min": [
+            -0.17590996386173355,
+            -9.510695215347119e-8,
+            -0.8900002697629907
+          ],
+          "max": [
+            0.17589622770693203,
+            1.780000142807103,
+            0.8900002246311671
+          ]
+        }
+      }
+    },
+    {
+      "name": "high-phone-spawn-toon1"
+    },
+    {
+      "name": "high-phone-spawn-toon0"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "device": "Pixel 7",
+    "cpuThrottle": 1,
+    "network": "9 Mbps / 1.5 Mbps / 60 ms",
+    "firstContentfulPaintMs": 160,
+    "timeToFirstGameFrameMs": 3214,
+    "lastNetworkActivityMs": 7866,
+    "skaterReady": true,
+    "requests": 31,
+    "transferMB": 6.93,
+    "top5": [
+      {
+        "url": "/assets/skater-gcdBmVQ_.glb",
+        "type": "Fetch",
+        "kB": 2672
+      },
+      {
+        "url": "/assets/main-CW4kNWyn.js",
+        "type": "Script",
+        "kB": 1687
+      },
+      {
+        "url": "/assets/color-D3UcKDw3.jpg",
+        "type": "Image",
+        "kB": 422
+      },
+      {
+        "url": "/assets/color-Cdbt2_I1.jpg",
+        "type": "Image",
+        "kB": 392
+      },
+      {
+        "url": "/assets/color-BdcKY0pu.jpg",
+        "type": "Image",
+        "kB": 280
+      }
+    ],
+    "quality": "high",
+    "load": "12:22  up 16 days,  1:06, 7 users, load averages: 40.28 48.34 43.16"
+  },
+  {
+    "device": "Pixel 7",
+    "cpuThrottle": 4,
+    "network": "9 Mbps / 1.5 Mbps / 60 ms",
+    "firstContentfulPaintMs": 172,
+    "timeToFirstGameFrameMs": 6625,
+    "lastNetworkActivityMs": 10737,
+    "skaterReady": true,
+    "requests": 31,
+    "transferMB": 6.93,
+    "top5": [
+      {
+        "url": "/assets/skater-gcdBmVQ_.glb",
+        "type": "Fetch",
+        "kB": 2672
+      },
+      {
+        "url": "/assets/main-CW4kNWyn.js",
+        "type": "Script",
+        "kB": 1687
+      },
+      {
+        "url": "/assets/color-D3UcKDw3.jpg",
+        "type": "Image",
+        "kB": 422
+      },
+      {
+        "url": "/assets/color-Cdbt2_I1.jpg",
+        "type": "Image",
+        "kB": 392
+      },
+      {
+        "url": "/assets/color-BdcKY0pu.jpg",
+        "type": "Image",
+        "kB": 280
+      }
+    ],
+    "quality": "high",
+    "load": "12:22  up 16 days,  1:06, 7 users, load averages: 36.74 47.17 42.83"
+  }
+]

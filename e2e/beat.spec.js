@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
+import { loadavg } from "node:os";
 import { expect, test } from "@playwright/test";
 import { GRIND } from "../src/sim/skate/constants.js";
 
@@ -53,7 +54,9 @@ async function measureTaps(page, count, pauseRender) {
   );
 }
 
-test("32 taps aligned to the audio clock judge within 5 ms mean and under 5 ms sd", async ({ page }) => {
+// The @beat-timing tag puts this test in its own Playwright project, which
+// runs after the other tests with one retry (playwright.config.js, #63).
+test("32 taps aligned to the audio clock judge within 5 ms mean and under 5 ms sd @beat-timing", async ({ page }, testInfo) => {
   test.setTimeout(120000); // two runs of 32 beats at 100 BPM is about 40 s
   const errors = [];
   page.on("pageerror", (err) => errors.push(String(err)));
@@ -62,12 +65,18 @@ test("32 taps aligned to the audio clock judge within 5 ms mean and under 5 ms s
   // With the software renderer running, every timer lands a frame late, so
   // the headline measurement pauses rendering. The render-on numbers are
   // recorded next to it for honesty.
+  const loadBefore = loadavg();
   const paused = await measureTaps(page, 32, true);
   expect(paused.error).toBeUndefined();
   const rendering = await measureTaps(page, 32, false);
 
+  const loadAfter = loadavg();
+  const round = (a) => a.map((x) => Number(x.toFixed(2)));
   const report = {
     date: new Date().toISOString(),
+    attempt: testInfo.retry + 1,
+    // The 1, 5, and 15 minute load averages (os.loadavg). On Windows they are 0.
+    loadAverage: { before: round(loadBefore), after: round(loadAfter) },
     taps: 32,
     bpm: paused.bpm,
     outputLatencyMs: Number(paused.latencyMs.toFixed(2)),
@@ -76,6 +85,9 @@ test("32 taps aligned to the audio clock judge within 5 ms mean and under 5 ms s
   };
   mkdirSync("reports", { recursive: true });
   writeFileSync("reports/m0-07-beat-alignment.json", `${JSON.stringify(report, null, 2)}\n`);
+  // A retry writes over the file, so each attempt is also attached to the test result.
+  await testInfo.attach(`beat-alignment-attempt-${report.attempt}.json`, { body: JSON.stringify(report, null, 2), contentType: "application/json" });
+  console.log(`beat alignment: attempt ${report.attempt}, load average ${report.loadAverage.before[0]} before, ${report.loadAverage.after[0]} after`);
   console.log(`beat alignment (render paused): mean ${report.renderPaused.meanMs} ms, sd ${report.renderPaused.sdMs} ms, ${paused.within60}/32 within 60 ms`);
   console.log(`beat alignment (render on): mean ${report.renderOn.meanMs} ms, sd ${report.renderOn.sdMs} ms, ${rendering.within60}/32 within 60 ms`);
 

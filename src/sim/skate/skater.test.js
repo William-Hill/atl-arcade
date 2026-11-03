@@ -63,6 +63,16 @@ describe("grind buffer", () => {
     expect(tapAt(n - 4)).toBe(true);
   });
 
+  it("clears pushing on the rail, also with push held (#61)", () => {
+    let s = start();
+    for (let i = 0; i < 400 && !s.justSnapped; i += 1) s = stepSkater(s, { push: true, grind: true }, 1 / 60, env, skaterEnv);
+    expect(s.state).toBe("grind");
+    expect(s.pushing).toBe(false);
+    s = stepSkater(s, { push: true, grind: true }, 1 / 60, env, skaterEnv);
+    expect(s.state).toBe("grind");
+    expect(s.pushing).toBe(false);
+  });
+
   it("does not snap on a tap made too early", () => {
     const n = snapFrame();
     expect(tapAt(n - Math.ceil(GRIND.buffer * 60) - 5)).toBe(false);

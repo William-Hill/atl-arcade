@@ -1,6 +1,6 @@
 // Builds one real Atlanta block from OpenStreetMap into a level file.
 //
-//   node scripts/build-block.mjs --bbox 33.7560,-84.3680,33.7735,-84.3615 --out levels/beltline-eastside/
+//   node scripts/build-block.mjs --bbox 33.7560,-84.3685,33.7735,-84.3580 --out levels/beltline-eastside/
 //
 // Options:
 //   --bbox south,west,north,east   degrees (the Overpass order). Required.

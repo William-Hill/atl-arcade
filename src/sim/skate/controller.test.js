@@ -162,6 +162,13 @@ describe("on the greybox", () => {
     expect(state.bonked || state.speed === 0).toBe(true);
   });
 
+  it("rolls up the greybox stairs at cruising speed without a bonk", () => {
+    // Two 0.17 m treads in reach of the probe are two steps, not a wall.
+    const { state } = runScript(roll(10, Math.PI, [-20.3, 0.15, 10]), [{ frames: 12 }], { env: greybox });
+    expect(state.bonked).toBe(false);
+    expect(state.speed).toBeGreaterThan(5);
+  });
+
   it("stops at a ledge side instead of rolling through it", () => {
     const yawNorth = Math.PI / 2;
     const { state } = runScript(roll(4, yawNorth, [-12, 0.15, -6]), [{ frames: 60 }], { env: greybox });

@@ -202,7 +202,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       for (const obj of propTiles) {
         const [cx, cz] = obj.userData.center;
         const d = Math.hypot(cx - cameraPosition.x, cz - cameraPosition.z);
-        obj.visible = obj.userData.lod === 0 ? d < lod0Distance : d >= lod0Distance && d < drawDistance;
+        // drawDistance gates both levels: LOD0 below lod0Distance, LOD1 from there.
+        obj.visible = d < drawDistance && (obj.userData.lod === 0 ? d < lod0Distance : d >= lod0Distance);
         if (obj.visible && obj.userData.lod === 0) lod0 += 1;
       }
       props.lod0Tiles = lod0;

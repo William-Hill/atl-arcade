@@ -16,6 +16,8 @@ const VIEWS = {
 const TARGET = new THREE.Vector3(0, 0.85, 0);
 let radius = 0.95;
 let currentView = "three-quarter";
+// True once the user rotates or zooms: a resize then keeps their camera.
+let userMoved = false;
 
 const params = new URLSearchParams(window.location.search);
 const canvas = document.getElementById("stage");
@@ -36,6 +38,9 @@ scene.add(ground);
 const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 50);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.copy(TARGET);
+controls.addEventListener("start", () => {
+  userMoved = true;
+});
 
 // The camera distance at which a sphere of `radius` fills the narrower of the
 // vertical and horizontal fields of view, with a 10% margin.
@@ -49,6 +54,7 @@ function setView(name) {
   const dir = VIEWS[name];
   if (!dir) throw new Error(`Unknown view: ${name}`);
   currentView = name;
+  userMoved = false;
   const d = fitDistance(radius, camera.fov, camera.aspect);
   camera.position.set(TARGET.x + dir[0] * d, TARGET.y + 0.2, TARGET.z + dir[1] * d);
   controls.update();
@@ -57,8 +63,10 @@ function setView(name) {
 
 fitToWindow(renderer, camera);
 window.addEventListener("resize", () => {
+  // fitToWindow updates the aspect and the projection. Fit the named view
+  // again only while the user has not moved the camera.
   fitToWindow(renderer, camera);
-  setView(currentView);
+  if (!userMoved) setView(currentView);
 });
 
 let paused = false;

@@ -132,6 +132,8 @@ test("the follow camera rides the quarter pipe without snapping or flipping", as
 });
 
 test("a mouse drag turns the follow camera, and it goes back behind the skater", async ({ page }) => {
+  // The waits for the skater model (60 s) and a still camera (6 s) are longer than the default 30 s.
+  test.setTimeout(90000);
   const errors = collectErrors(page);
   await page.goto("/");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });

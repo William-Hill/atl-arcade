@@ -18,7 +18,7 @@
 // planned host, M2-06) does (https://vercel.com/docs/compression lists
 // application/wasm). So this script gzips the .wasm files too.
 
-import { execFileSync } from "node:child_process";
+import { loadavg } from "node:os";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { dirname, resolve, sep } from "node:path";
@@ -113,7 +113,7 @@ try {
     requests: files.length,
     transferMB: +(total / 1048576).toFixed(2),
     top5: [...files].sort((a, b) => b.bytes - a.bytes).slice(0, 5).map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024) })),
-    loadAverage: execFileSync("uptime").toString().trim().split("averages: ")[1],
+    loadAverage: loadavg().map((n) => +n.toFixed(2)).join(" "),
   };
   await ctx.close();
 } finally {

@@ -18,16 +18,27 @@ const FILE = /@dimforge[\\/]rapier3d-compat[\\/]dist[\\/]rapier\.mjs$/;
 const INLINE = /[A-Za-z_$][\w$]*\.toByteArray\("AGFzbQ[A-Za-z0-9+/=]+"\)(?:\.buffer)?/g;
 
 export function rapierWasmFile() {
+  let build = false;
+  let transformed = false;
   return {
     name: "rapier-wasm-file",
     enforce: "pre",
+    configResolved(config) {
+      build = config.command === "build";
+    },
     transform(code, id) {
       if (!FILE.test(id.split("?")[0])) return null;
+      transformed = true;
       const hits = code.match(INLINE);
       if (!hits || hits.length !== 1) {
         this.error(`rapier-wasm-file: expected 1 inline WASM in ${id}, found ${hits ? hits.length : 0}. Check the Rapier version.`);
       }
       return { code: code.replace(INLINE, 'new URL("./rapier_wasm3d_bg.wasm", import.meta.url)'), map: null };
+    },
+    // A production build must transform Rapier. If a new Rapier version
+    // moves its entry file, the build stops instead of shipping the inline WASM.
+    buildEnd(error) {
+      if (build && !error && !transformed) this.error("rapier-wasm-file: the Rapier module was not transformed. Check the Rapier version and the FILE pattern.");
     },
   };
 }

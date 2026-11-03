@@ -581,3 +581,12 @@ window.__atl = {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
   },
 };
+
+// Autopilot (an automated playtest agent) connects only in a dev build
+// (npm run dev) with ?autopilot=1. A production build has no bridge: Vite
+// removes this branch, so a link cannot connect a player's page to a port.
+if (import.meta.env.DEV && params.get("autopilot") === "1") {
+  import("./autopilot/connect.js").then(({ connectAutopilot }) =>
+    connectAutopilot({ params, scene, camera, canvas, renderer, atl: window.__atl, level, skaterObject: skaterView.group, threeRevision: THREE.REVISION }),
+  );
+}

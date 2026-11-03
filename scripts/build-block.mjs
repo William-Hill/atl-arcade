@@ -144,16 +144,30 @@ export function parseHeight(text) {
 // 2.5 m keeps them from a flat, slab look.
 const MIN_OVERTURE_HEIGHT = 2.5;
 
-// The order: the OSM height tag, the OSM levels tag, the Overture height
-// (raw/overture.json, from scripts/overture-heights.py), the Overture floor
-// count, and last a default for the building type.
-export function buildingHeight(tags, overture = null) {
+// Overture estimates some small buildings far too tall (51 houses over 20 m
+// on the BeltLine level, the highest 37.1 m). An Overture height for these
+// OSM types is capped. A real tall house has an OSM height or levels tag.
+export const OVERTURE_CAP = { house: 12, detached: 12, semidetached_house: 12, bungalow: 10, terrace: 14, garage: 6, garages: 6, shed: 5, carport: 5, hut: 5 };
+
+// The order: a value in the level heights.json (with a source), the OSM
+// height tag, the OSM levels tag, the Overture height (raw/overture.json,
+// from scripts/overture-heights.py, capped by OVERTURE_CAP), the Overture
+// floor count, and last a default for the building type.
+export function buildingHeight(tags, overture = null, override = null) {
+  if (override?.height > 0) return { height: override.height, source: "override" };
   const h = parseHeight(tags.height);
   if (h && h > 0) return { height: h, source: "height" };
   const levels = Number(tags["building:levels"]);
   if (Number.isFinite(levels) && levels > 0) return { height: levels * LEVEL_HEIGHT + 1, source: "levels" };
-  if (overture?.height > 0) return { height: Math.max(overture.height, MIN_OVERTURE_HEIGHT), source: "overture" };
-  if (overture?.floors > 0) return { height: overture.floors * LEVEL_HEIGHT + 1, source: "overture" };
+  const cap = OVERTURE_CAP[tags.building] ?? Infinity;
+  if (overture?.height > 0) {
+    const raw = Math.max(overture.height, MIN_OVERTURE_HEIGHT);
+    return raw > cap ? { height: cap, source: "overture-capped" } : { height: raw, source: "overture" };
+  }
+  if (overture?.floors > 0) {
+    const raw = overture.floors * LEVEL_HEIGHT + 1;
+    return raw > cap ? { height: cap, source: "overture-capped" } : { height: raw, source: "overture" };
+  }
   const t = tags.building;
   return { height: DEFAULT_HEIGHT[t] ?? FALLBACK_HEIGHT, source: "default" };
 }
@@ -277,7 +291,8 @@ function inBox([x, z], box) {
 // call it on a small fixture.
 // `overture` maps an OSM id ("w123") to { height, floors } (raw/overture.json).
 // `terrain` is the grid from raw/terrain.json (scripts/terrain-dem.py).
-export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null }) {
+// `heights` maps an OSM id to { height, source } (the level heights.json).
+export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null }) {
   const origin = bboxCenter(bbox);
   const proj = createProjection(origin);
   const project = (g) => g.map(({ lat, lon }) => proj.toLocal(lat, lon).map(round));
@@ -288,7 +303,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
   const buildings = [];
   const strips = [];
   const areas = [];
-  const counts = { height: 0, levels: 0, overture: 0, default: 0 };
+  const counts = { override: 0, height: 0, levels: 0, overture: 0, "overture-capped": 0, default: 0 };
 
   function addPolygon(target, id, outerRings, innerRings, extra) {
     for (const [i, outerRaw] of outerRings.entries()) {
@@ -317,7 +332,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
         inners = joinRings(ways("inner"));
       }
       if (isBuilding) {
-        const { height, source } = buildingHeight(tags, overture?.[id]);
+        const { height, source } = buildingHeight(tags, overture?.[id], heights?.[id]);
         const before = buildings.length;
         const extra = { height: round(height), heightSource: source };
         if (tags.name) extra.name = tags.name;
@@ -484,7 +499,11 @@ async function main() {
   const terrainFile = resolve(rawDir, "terrain.json");
   const terrain = existsSync(terrainFile) ? JSON.parse(readFileSync(terrainFile, "utf8")).terrain : null;
   if (terrain) console.log(`build-block: terrain ${terrain.cols} x ${terrain.rows} from ${terrainFile}`);
-  const level = buildLevel(raw, { bbox, name, title, overture, terrain });
+  // Height overrides with sources (levels/<name>/heights.json), when present.
+  const heightsFile = resolve(outDir, "heights.json");
+  const heights = existsSync(heightsFile) ? JSON.parse(readFileSync(heightsFile, "utf8")).heights : null;
+  if (heights) console.log(`build-block: ${Object.keys(heights).length} height overrides from ${heightsFile}`);
+  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights });
   const outFile = resolve(outDir, "level.json");
   writeFileSync(outFile, `${JSON.stringify(level)}\n`);
   console.log(`build-block: wrote ${outFile}`);

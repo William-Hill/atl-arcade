@@ -113,6 +113,26 @@ export function terrainOf(level) {
   return t;
 }
 
+const coarse = new WeakMap();
+// The level terrain with every `step`-th node (for a far level of detail).
+// The same function on the shared nodes; between them it is coarser.
+export function coarseTerrainOf(level, step = 2) {
+  const t = terrainOf(level);
+  if (t.flat || step <= 1) return t;
+  let m = coarse.get(level);
+  if (!m) coarse.set(level, (m = new Map()));
+  if (!m.has(step)) {
+    const g = level.terrain;
+    const h = decode(g.data, g.cols * g.rows);
+    const cols = Math.ceil((g.cols - 1) / step) + 1;
+    const rows = Math.ceil((g.rows - 1) / step) + 1;
+    const heights = new Float32Array(cols * rows);
+    for (let j = 0; j < rows; j += 1) for (let i = 0; i < cols; i += 1) heights[j * cols + i] = h[Math.min(g.rows - 1, j * step) * g.cols + Math.min(g.cols - 1, i * step)];
+    m.set(step, createTerrain({ cell: g.cell * step, x0: g.x0, z0: g.z0, cols, rows, heights }));
+  }
+  return m.get(step);
+}
+
 const spans = new WeakMap();
 // Where a building stands: its walls go from `base` (under the lowest
 // footprint corner, so no wall floats on a slope) to `top` (its data height

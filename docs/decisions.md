@@ -405,3 +405,10 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Speed, high tier (M4 Max, ANGLE Metal, 1280 x 720): 290 FPS at the spawn, 321 FPS at Ponce City Market, 302 FPS at North Ave (were 353, 390, 394).
 - Speed, low tier: **slower**. Back to back on this machine (load average 11 to 17), `npm run playtest:beltline` gave the base 30 FPS median over about 1,550 frames, and the terrain 20 FPS median over 690 to 796 frames. SwiftShader draws 145,707 triangles a frame at the spawn (39.8 ms). The gate was at FAIL before this change too.
 - Not done: a terrain LOD for the low tier; the bridge piers; the 725 Ponce footprint overlap.
+- Low tier terrain LOD (William picked "Terrain LOD"): a surface tile more than 60 m from the camera shows a drape on a 16 m terrain (`coarseTerrainOf`, `?farterrain=0` turns it off). The physics keeps the exact tiles. SwiftShader at the spawn: 90,103 triangles and 29.6 ms a frame (145,707 and 40.2 ms without it). Gate: median 30 FPS (average 25.8 FPS, 1,090 frames); base median 30 FPS (average about 39 FPS, about 1,550 frames). FAIL, as before this change.
+
+## 2026-11-02: Building height fixes (BeltLine level)
+
+- Why: the stage accuracy research (PR #48) found 51 houses over 20 m from Overture, and towers next to Ponce City Market that were too short. William picked "Height fixes".
+- Cap: an Overture height over `OVERTURE_CAP` for its OSM type is capped (house 12 m, bungalow 10 m, terrace 14 m, garage 6 m, shed 5 m). An OSM height or levels tag is not capped. 98 buildings are capped; no house is now over 20 m.
+- Overrides: `levels/beltline-eastside/heights.json` has a height and a source URL for 4 buildings: Signal House (21 stories, 68.2 m), Overline Residences (18 stories, 58.6 m), the Kroger store under 725 Ponce (7 m), and 619 Ponce (4 stories, 17.8 m). The story counts come from the PR #48 research; I did not check the sources again.

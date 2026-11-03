@@ -25,6 +25,10 @@ describe("build-block tags", () => {
   it("uses the Overture height after the OSM tags and before the default", () => {
     expect(buildingHeight({ building: "yes", height: "50" }, { height: 20 })).toEqual({ height: 50, source: "height" });
     expect(buildingHeight({ building: "house" }, { height: 9.4 })).toEqual({ height: 9.4, source: "overture" });
+    // An Overture house over the cap is capped; a tag or an override wins over the cap.
+    expect(buildingHeight({ building: "house" }, { height: 37.1 })).toEqual({ height: 12, source: "overture-capped" });
+    expect(buildingHeight({ building: "house", height: "30" }, { height: 37.1 })).toEqual({ height: 30, source: "height" });
+    expect(buildingHeight({ building: "yes" }, { height: 27.7 }, { height: 68.2 })).toEqual({ height: 68.2, source: "override" });
     expect(buildingHeight({ building: "shed" }, { height: 1.8 })).toEqual({ height: 2.5, source: "overture" });
     expect(buildingHeight({ building: "yes" }, { height: null, floors: 3 })).toEqual({ height: 3 * 3.2 + 1, source: "overture" });
     expect(buildingHeight({ building: "house" }, { height: null, floors: null })).toEqual({ height: 7, source: "default" });
@@ -106,6 +110,8 @@ describe("build-block offline run", () => {
   it("rebuilds the committed level from the cached fetch with no network, byte for byte", () => {
     const out = mkdtempSync(join(tmpdir(), "build-block-"));
     cpSync(resolve(ROOT, "levels/beltline-eastside/raw"), join(out, "raw"), { recursive: true });
+    // The height overrides (with sources) are an input too.
+    cpSync(resolve(ROOT, "levels/beltline-eastside/heights.json"), join(out, "heights.json"));
     const log = execFileSync(
       process.execPath,
       ["scripts/build-block.mjs", "--bbox", "33.7560,-84.3685,33.7735,-84.3580", "--out", out, "--name", "beltline-eastside", "--title", "BeltLine Eastside Trail: Ponce City Market to Krog Street Market", "--offline"],

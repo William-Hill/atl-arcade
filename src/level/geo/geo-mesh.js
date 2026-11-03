@@ -8,7 +8,7 @@
 import { FACE, extrudeFootprint, flatPolygon, mergeMeshes, orientRing, placeTemplate, stripMesh } from "./extrude.js";
 import { createGeoGroundSampler, surfaceTop } from "./geo-ground.js";
 import { STYLES, STYLE_INDEX, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
-import { BRIDGE, bridgeDeck, buildingSpan, drapeMesh, liftMesh, terrainOf } from "./terrain.js";
+import { BRIDGE, bridgeDeck, buildingSpan, coarseTerrainOf, drapeMesh, liftMesh, terrainOf } from "./terrain.js";
 
 export const GEO_TILE = 125; // m. Small enough that the camera culls most of the draped terrain.
 export const PROP_TILE = 50; // m. Small, so only near props get full detail.
@@ -322,7 +322,10 @@ export function buildPropMeshes(props, templates) {
 
 // Returns [{ material, tile, mesh }] with each mesh merged. With
 // `detail: false` the buildings are plain boxes (the M1-03 look).
-export function buildGeoMeshes(level, { detail = true } = {}) {
+// `terrainStep` > 1 drapes on a coarser terrain (a far level of detail for
+// the render only), and `surfacesOnly` leaves out everything but the flat
+// surfaces.
+export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfacesOnly = false } = {}) {
   const parts = new Map();
   function add(material, item, mesh) {
     const [x, z] = firstPoint(item);
@@ -337,7 +340,8 @@ export function buildGeoMeshes(level, { detail = true } = {}) {
   const terrain = terrainOf(level);
   // A flat surface follows the terrain: drapeMesh() cuts it on the terrain
   // triangles, so the surface offsets (a few cm) hold everywhere.
-  const drape = (m) => drapeMesh(m, terrain);
+  const drapeOn = coarseTerrainOf(level, terrainStep);
+  const drape = (m) => drapeMesh(m, drapeOn);
   for (let x0 = Math.floor(minX / GEO_TILE) * GEO_TILE; x0 < maxX; x0 += GEO_TILE) {
     for (let z0 = Math.floor(minZ / GEO_TILE) * GEO_TILE; z0 < maxZ; z0 += GEO_TILE) {
       const ax = Math.max(x0, minX);
@@ -362,13 +366,15 @@ export function buildGeoMeshes(level, { detail = true } = {}) {
     if (s.bridge && !terrain.flat) {
       const { deck, structure } = bridgeMeshes(level, s);
       add("surface", s, deck);
-      add("building", s, structure);
+      if (!surfacesOnly) add("building", s, structure);
       continue;
     }
     add("surface", s, drape(stripMesh(s.points, s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind] })));
   }
 
-  if (detail) {
+  if (surfacesOnly) {
+    // Only the surfaces (a far level of detail): no buildings, murals, or bridges.
+  } else if (detail) {
     const stripKind = new Map((level.strips ?? []).map((s) => [s.id, s.kind]));
     const sample = createGeoGroundSampler(level);
     const isStreet = (x, z) => STREET_KINDS.has(stripKind.get(sample(x, z)?.id));

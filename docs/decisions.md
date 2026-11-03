@@ -566,3 +566,23 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Switch (R on the keyboard) has no touch button yet.
 - Tests: `e2e/touch.spec.js` drives real touch events through CDP on the iPhone 15 and Pixel 7 profiles in Chromium. Touch only, the skater pushes, steers, grinds the straight rail, and jumps. `E2E_PORT` sets the e2e port, so two checkouts can run the suite at the same time.
 - Not verified: a real phone, iOS Safari (WebKit is not installed), and the feel. A human playtest on a phone must tune `TOUCH` in `src/input/touch-map.js`.
+
+## 2026-11-03: The skater slides along a wall (#58)
+
+- Decision (the project owner, 2026-11-03): on a wall hit, the skater slides along the wall. A head-on hit still stops the skater (a bonk). This applies on the ground and in the air.
+- Contact: a ring of 16 probes around the next position finds the side of a wall. The ring radius is `SKATE.bodyRadius / cos(π/16)` (0.306 m), so the polygon of probes contains the full body circle (0.30 m). The old probe looked only ahead (0 and ±35°), so on a shallow approach the body went up to 0.10 m into the radius before the probe saw the wall. On a ramp the ring is off, as the old probe was.
+- Normal: 16 rays from the current position find the wall edge by bisection (10 steps). The rays reach 1.3 body radii plus the step, so the rays next to the nearest one also hit at a crawl. With a reach of 1 body radius, the heading after a slide was up to 0.19 rad off the wall line. The nearest edge point gives the side of the wall. When the two rays next to it also hit, the line through their edge points gives the horizontal normal, which is exact for a straight wall. At a corner the nearest point gives the normal.
+- Response: the approach angle is the angle between the travel direction and the wall face. Above `wallBonkAngle` the skater bonks. Under it, the velocity goes onto the wall plane: the skater keeps the along-wall part, and the heading turns parallel to the wall. The scrub takes a share of that speed that grows with the approach angle, up to `1 - wallSlideKeep` just under `wallBonkAngle`. A graze keeps all of it.
+- Clearance: after a slide the skater is pushed out to the ring radius + 1 mm from the wall edge line. If the slide position is not clear (a second wall or a step up), the skater bonks. A slide off an edge goes into the air, as a roll off an edge does.
+- Slope: the slide moves the skater horizontally. The speed keeps its ratio to the horizontal velocity, so a slide on a slope does not lose the slope part of the speed. Thus the body never goes into a wall. A head-on approach still stops one body radius short.
+- New constants in `src/sim/skate/constants.js`:
+
+| Constant | Typical | Min | Max | Meaning |
+|---|---|---|---|---|
+| `wallBonkAngle` | 1.05 rad (60°) | 0.7 | 1.4 | approach angle above which a hit is head-on (a bonk) |
+| `wallSlideKeep` | 0.8 | 0.5 | 1 | fraction of the along-wall speed kept just under `wallBonkAngle` |
+
+- Measured on the greybox at 8 m/s: a 0.1 rad approach keeps 6.09 of 6.31 m/s, and the minimum clearance is 0.316 m. A 0.6 rad approach keeps 4.97 of 6.96 m/s. A 1.0 rad approach keeps 3.17 of 7.33 m/s. A 1.1 rad approach bonks.
+- Cost: on the BeltLine level the ring and the slide take about 16 ground samples per tick (25 ms for 1200 ticks in Node).
+- State: `wallSlide` is true on a tick where the skater slid. The controller stays pure and deterministic.
+- Not done: real skaters have not reviewed the feel of the slide (AGENTS.md). The two constants are first guesses.

@@ -758,3 +758,19 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Result: 95 signs before, 88 after. 24 old corner pairs went and 17 new pairs came. Examples: "Brickworks Cir / Closed Lake Ave" and "Closed Lake Ave / West Ashland Ave NE" became one sign "Brickworks Cir NE / West Ashland Ave NE". The false corner "Ralph McGill Blvd / Ralph McGill Blvd NE" became "Ralph McGill Blvd NE / Fortune St NE". "Austin Ave NE / Elizabeth St NE" became "Elizabeth St NE / Lake Ave NE".
 - Test: `scripts/street-names.test.js` checks every sign name of the level against the city labels. Only a name in `REVIEWED` can differ. It also checks each rule on small fixtures. The byte-for-byte rebuild test in `scripts/build-block.test.js` covers the new raw file.
 - Not done: the sign blades are still too small to read on a phone (GEO-5, #24).
+
+## 2026-11-03: Goals, the run timer, and the results screen (#15)
+
+- A run lasts 2:30 of sim time (`RUN_TIME = 150`). The clock counts fixed-step ticks, not wall time, so a slow frame does not shorten the run.
+- When the time is out, an open combo can finish. The run ends when the combo banks or bails, or 10 s after the time (`overtime`). This is the THPS rule: the last combo counts.
+- After the end the skater gets no input and rolls to a stop. The results screen shows. Enter or "Skate again" starts a new run. `resetSkater()` and `runScript()` also start a new run, so the old tests keep a full clock.
+- `?run=free` turns the timer and the goals off.
+- The goal module is `src/sim/skate/goals.js`. It is pure and reads the run. It does not change the score, the repeat decay, or the multiplier cap of #75.
+- The goals are data per level: `src/level/goals.js` for the greybox, and `levels/beltline-eastside/goals.json` for the Beltline. The level build does not write `goals.json`. Each level has 5 goals: a score target, a combo target (one banked combo), 3 fact cards, and 2 named gaps.
+- The medal comes from the score only: bronze, silver, and gold thresholds in the goal data. `computeResults(json, def)` makes the medal and the goal list from the run JSON only (`goalsJson`). The Playwright test compares the screen with that function.
+- A named gap is a circle zone in x and z. The skater must be in the air inside the zone, then land with no bail, after 0.2 s of air or more (the same minimum as a scored hop). Optional `from` limits the take-off kind. Optional `landing` is a second zone for the landing point.
+- Greybox gaps: "Plaza Stair Gap" (over the 4 stairs, land on the sidewalk past them) and "Quarter Pipe Air" (air off the ramp). Beltline gaps: "Freedom Parkway Underpass Hop" and "Stone Mountain Trail Bridge Hop". Both are hops on the trail under the real bridges (OSM strips with `bridge: true`). The Beltline level has no rails yet, so a gap there is a hop.
+- Fact cards: the goal module reads only a count. `main.js` keeps a set of card ids. The fact cards of #17 must call `collectFactCard(id)` in `main.js` (also `window.__atl.goals.collectCard(id)`). A second call with the same id counts once. Card content and placement are for #17.
+- The results panel sits under the minimap (z-index 4 under 5) and leaves the minimap column free: 212 px on the right on a wide screen, 146 px on each side on a compact landscape screen, and 212 px at the top on a phone in portrait. The touch controls hide while the panel shows. The replay button is 48 px high.
+- The HUD timer sits next to the score on its own pill. It turns yellow for the last 10 s.
+- The targets and the medal scores are first guesses. Nobody played them for balance, and real skaters have not reviewed the goals.

@@ -3,6 +3,7 @@
 // from the run state. The simulation never sees this.
 
 import { comboString, comboValue } from "../sim/skate/combo.js";
+import { formatClock } from "../sim/skate/goals.js";
 import { startHint } from "./layout.js";
 
 function el(tag, className, parent) {
@@ -15,8 +16,13 @@ function el(tag, className, parent) {
 // `touch` is true when the touch controls show: the hints name a tap.
 export function createHud(root, { touch = false } = {}) {
   root.innerHTML = "";
-  const score = el("div", "hud-score", root);
+  // The score and the run timer (M1-05) share the top line.
+  const top = el("div", "hud-top", root);
+  const score = el("div", "hud-score", top);
   score.id = "hud-score";
+  const timer = el("div", "hud-timer", top);
+  timer.id = "hud-timer";
+  timer.hidden = true;
   const combo = el("div", "hud-combo", root);
   combo.id = "hud-combo";
   const pending = el("div", "hud-pending", root);
@@ -46,8 +52,14 @@ export function createHud(root, { touch = false } = {}) {
   let seenSeq = 0;
 
   return {
-    update(run, nowMs = performance.now(), beatPhase = null) {
+    // `goals` is the goal state (src/sim/skate/goals.js), or null for free skate.
+    update(run, nowMs = performance.now(), beatPhase = null, goals = null) {
       const c = run.combo;
+      timer.hidden = !goals;
+      if (goals) {
+        timer.textContent = formatClock(goals.timeLeft);
+        timer.dataset.low = goals.timeLeft <= 10 ? "1" : "0";
+      }
       score.textContent = c.score.toLocaleString("en-US");
       if (c.active) {
         combo.textContent = comboString(c);
@@ -94,6 +106,6 @@ export function createHud(root, { touch = false } = {}) {
         pulse.style.transform = `scale(${1 + 0.6 * fade * fade})`;
       }
     },
-    elements: { score, combo, pending, tag, pulse, styleFill, balanceWrap, balanceDot },
+    elements: { score, timer, combo, pending, tag, pulse, styleFill, balanceWrap, balanceDot },
   };
 }

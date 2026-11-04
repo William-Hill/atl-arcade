@@ -17,7 +17,7 @@ export const ASSETS = {
   },
   bus: {
     polycount: 14000,
-    prompt: `Realistic long 40-foot low-floor American city transit bus, mid-2010s design, very long low rectangular body about four times longer than tall, flat front with a large one-piece windshield, seven large dark side windows in a row, front door and middle door on the right side, three-quarter roof pod for air conditioning, white body with a blue and orange stripe, black tires, blank destination sign, ${NO_BRAND}`,
+    prompt: `Realistic 40-foot low-floor American city transit bus, mid-2010s design, long flat-sided box body, length about four times its height and about five times its width, exactly two axles: one front axle just behind the front door and one rear axle, single round black tires with plain steel hubs fully visible in open wheel arches, large flat front windshield, a row of large dark side windows, front door and middle door on the right side, low flat roof with a small air-conditioning pod, white body with one blue stripe and one orange stripe, blank destination sign, ${NO_BRAND}`,
     texture: `White painted bus body, blue and orange horizontal stripes, dark tinted windows, black rubber tires, gray hubs, black bumpers, blank dark destination sign, ${NO_BRAND}`,
   },
   pickup: {

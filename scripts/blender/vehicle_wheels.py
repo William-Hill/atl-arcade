@@ -68,15 +68,29 @@ all_bands = list(bands())
 radii = [0.22 + 0.002 * i for i in range(220)]  # tire radius 0.22-0.66 m
 r = max(radii, key=lambda r: sum(len(on_circle(band, yc, r)) for yc, _, band in all_bands))
 # A low skirt or bumper also touches the ground; keep only axles with a real tire on them.
-hits = {yc: sum(len(on_circle(band, y, r)) for y, _, band in all_bands if y == yc) for yc in axles}
-axles = [yc for yc in axles if hits[yc] > 0.3 * max(hits.values())]
+# An axle whose tire hides partly behind a skirt fits the shared radius badly; it gets
+# its own best radius when that circle still has a real tire on it.
+def axle_hits(yc, rr):
+    return sum(len(on_circle(band, y, rr)) for y, _, band in all_bands if y == yc)
+
+
+hits = {yc: axle_hits(yc, r) for yc in axles}
+top = max(hits.values())
+radius = {}
+for yc in axles:
+    own = max(radii, key=lambda rr: axle_hits(yc, rr))
+    if hits[yc] > 0.3 * top:
+        radius[yc] = r
+    elif axle_hits(yc, own) > 0.2 * top:
+        radius[yc] = own
+axles = [yc for yc in axles if yc in radius]
 all_bands = [b for b in all_bands if b[0] in axles]
-print("AXLES kept", [round(a, 3) for a in axles], "r", round(r, 3))
+print("AXLES kept", [(round(a, 3), round(radius[a], 3)) for a in axles])
 
 
 def span(band, yc):
     """x span of the tread, trimmed so a fender lip at the same radius does not widen it."""
-    xs = sorted(abs(v.x) for v in on_circle(band, yc, r))
+    xs = sorted(abs(v.x) for v in on_circle(band, yc, radius[yc]))
     return xs[len(xs) // 20], xs[-1 - len(xs) // 50]
 
 
@@ -86,6 +100,7 @@ bm.faces.ensure_lookup_table()
 wheels = []
 taken = set()
 for (yc, side, band), i in zip(all_bands, [i for i in range(len(axles)) for _ in (0, 1)]):
+    r = radius[yc]
     sname = "L" if side < 0 else "R"
     xin, xout = span(band, yc)
     zc = lo.z + r

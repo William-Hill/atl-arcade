@@ -96,7 +96,7 @@
       }
     },
     "bus.glb": {
-      "prompt": "Realistic long 40-foot low-floor American city transit bus, mid-2010s design, very long low rectangular body about four times longer than tall, flat front with a large one-piece windshield, seven large dark side windows in a row, front door and middle door on the right side, three-quarter roof pod for air conditioning, white body with a blue and orange stripe, black tires, blank destination sign, no logos, no badges, no text, no lettering, no branding",
+      "prompt": "Realistic 40-foot low-floor American city transit bus, mid-2010s design, long flat-sided box body, length about four times its height and about five times its width, exactly two axles: one front axle just behind the front door and one rear axle, single round black tires with plain steel hubs fully visible in open wheel arches, large flat front windshield, a row of large dark side windows, front door and middle door on the right side, low flat roof with a small air-conditioning pod, white body with one blue stripe and one orange stripe, blank destination sign, no logos, no badges, no text, no lettering, no branding",
       "texture_prompt": "White painted bus body, blue and orange horizontal stripes, dark tinted windows, black rubber tires, gray hubs, black bumpers, blank dark destination sign, no logos, no badges, no text, no lettering, no branding",
       "meshy": {
         "model_type": "smart-topology",
@@ -105,40 +105,90 @@
         "target_polycount": 14000,
         "enable_pbr": true,
         "texture_resolution": "2k",
-        "preview_task_id": "01a1a7c0-b525-7447-aab2-2ee07a63b4d1",
-        "refine_task_id": "01a1a7c1-6c64-7603-8942-6c617190ea20",
-        "seed": 24962006
+        "preview_task_id": "01a1a7dc-7890-7417-9b87-dbb69c5e8d69",
+        "refine_task_id": "01a1a7dc-f54a-7263-98fc-9ca3fd79178c",
+        "seed": 2672848977
       },
       "credits": 15,
-      "generated_at": "2026-11-04T18:11:03.301Z",
-      "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bus-v2.glb <out> 12",
-      "triangles": 13791,
-      "triangles_from_meshy": 13804,
-      "bytes": 752464,
+      "generated_at": "2026-11-04T18:41:13.704Z",
+      "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bus3/bus.glb <out> 12",
+      "triangles": 14016,
+      "triangles_from_meshy": 14023,
+      "bytes": 619072,
       "bounds_m": {
         "x": [
-          -1.831,
-          1.831
+          -1.542,
+          1.542
         ],
         "y": [
           0.0,
-          3.988
+          3.478
         ],
         "z": [
           -6.0,
           6.0
         ]
       },
-      "scale_applied": 12.5837,
+      "scale_applied": 12.629,
       "removed_parts": {
         "speck": {
-          "parts": 2,
-          "faces": 2
+          "parts": 1,
+          "faces": 1
         }
       },
       "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
-      "note": "Second generation. The first (preview 01a1a7b6-7fbc-734a-a40b-e6f11538448f, 15 credits, prompt without proportions) came out as a stubby coach and was discarded. This one is still taller and wider than CAR_SIZE.bus (about 4.0 m high, 3.7 m wide with mirrors, at 12 m long).",
-      "rejected_attempt_credits": 15
+      "blender_wheels": "blender -b -P scripts/blender/vehicle_wheels.py -- <street_props output> <out>",
+      "rig": {
+        "nodes": "body > steer_FL > wheel_FL, body > steer_FR > wheel_FR, body > wheel_RL, body > wheel_RR",
+        "usage": "rotate steer_* about y to steer; spin wheel_* about local x (positive rolls forward, toward +z)",
+        "animation": "wheels_roll: one wheel turn per second, linear, loopable",
+        "body_triangles": 10507,
+        "wheels": {
+          "wheel_FL": {
+            "triangles": 638,
+            "radius_m": 0.416,
+            "width_m": 0.586,
+            "center_m": [
+              -0.953,
+              0.416,
+              3.931
+            ]
+          },
+          "wheel_FR": {
+            "triangles": 651,
+            "radius_m": 0.416,
+            "width_m": 0.327,
+            "center_m": [
+              1.033,
+              0.416,
+              3.931
+            ]
+          },
+          "wheel_RL": {
+            "triangles": 1094,
+            "radius_m": 0.476,
+            "width_m": 0.308,
+            "center_m": [
+              -1.128,
+              0.476,
+              -2.55
+            ]
+          },
+          "wheel_RR": {
+            "triangles": 1126,
+            "radius_m": 0.476,
+            "width_m": 0.308,
+            "center_m": [
+              1.091,
+              0.476,
+              -2.55
+            ]
+          }
+        },
+        "note": "The front tires sit partly behind the front skirt, so the front axle fits its own radius (0.416 m) and the rear the shared one (0.476 m)."
+      },
+      "note": "Third generation, two axles. 3.08 m wide with mirrors (about 2.6 m body) and 3.49 m high at 12 m long; CAR_SIZE.bus is 2.55 x 3.1. Earlier attempts (preview 01a1a7b6-7fbc-734a-a40b-e6f11538448f: a stubby coach; preview 01a1a7c0-b525-7447-aab2-2ee07a63b4d1: a tandem-axle coach, 4.0 m high) were discarded.",
+      "rejected_attempt_credits": 30
     },
     "pickup.glb": {
       "prompt": "Realistic mid-2010s full-size crew cab pickup truck, generic unbranded design, dark red paint, empty open truck bed, black grille, tinted windows, black tires with steel wheels, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
@@ -228,5 +278,5 @@
       }
     }
   },
-  "credits": "60 Meshy credits (5 per preview + 10 per refine)"
+  "credits": "75 Meshy credits (5 per preview + 10 per refine): 45 for the three vehicles here and 30 for two discarded bus attempts"
 }

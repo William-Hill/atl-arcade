@@ -497,6 +497,9 @@ window.__atl = {
     },
     signs: streetSigns ? { count: streetSigns.count, names: streetSigns.names } : null,
     kit: geo ? levelView.kit : null,
+    get terrainLod() {
+      return geo && levelView.terrainLod ? { ...levelView.terrainLod } : null;
+    },
     get facadeDepth() {
       return geo && levelView.facadeDepth ? { ...levelView.facadeDepth } : null;
     },

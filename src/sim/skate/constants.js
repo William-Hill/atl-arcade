@@ -132,7 +132,7 @@ export const styleDuration = (move, bpm = BEAT.bpm) => (move.beats * 60) / bpm;
 export const COMBO = {
   linkWindow: 0.8, // s after a move ends, rolling on flat, before the combo banks. min 0.3 / typical 0.8 / max 1.5.
   grindBase: 100, // points per grind. min 50 / typical 100 / max 200.
-  grindPerSecond: 60, // extra points per second on the rail. min 20 / typical 60 / max 120.
+  grindPerSecond: 300, // extra points per second on the rail. Keep it above the best dance rate (spin: 160 points in 0.6 s = 267/s), so a grind earns more per second than any dance (#75). min 280 / typical 300 / max 400.
   hopPoints: 50, // points for a jump that lands. min 20 / typical 50 / max 100.
   vertAirPoints: 200, // points for air off the quarter pipe. min 100 / typical 200 / max 400.
   manualPoints: 80, // points per manual (no input bound in M0). min 40 / typical 80 / max 150.
@@ -140,6 +140,12 @@ export const COMBO = {
   styleGain: 0.25, // style meter fill per dance move (meter is 0..1). min 0.1 / typical 0.25 / max 0.5.
   bailStyleLoss: 0.5, // style meter lost on a bail. min 0 / typical 0.5 / max 1.
   beatBonus: 1.5, // multiplier for a move landed on the beat (M0-07). min 1 / typical 1.5 / max 2.
+  // Repeat decay (#75). Entry n is the fraction of the points that the
+  // n-th repeat of the same move name in one combo earns (entry 0 = the first use).
+  // A repeat past the end of the list earns 0 points and adds no link to the multiplier.
+  // Each entry: min 0 / typical 1, 0.5, 0.25 / max 1. Keep the list short (2 to 4 entries).
+  repeatDecay: [1, 0.5, 0.25],
+  maxMultiplier: 10, // cap on the combo multiplier (#75). min 5 / typical 10 / max 20.
 };
 
 // Beat clock and the on-beat bonus. The beat never gates input.

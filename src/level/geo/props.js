@@ -17,6 +17,9 @@
 //   each 180 m.
 // - Sidewalks: a tree each 16 m and a lamp each 36 m, 1.8 m and 0.5 m past
 //   the edge, on the side that is open ground.
+// - Medians (#138): a street tree each 18 m on a median of a divided road
+//   that is 2.4 m wide or more (medians.js). Only these trees stand on a
+//   median.
 // - Trees (issue #137): each row tree gets a species from its setting (the
 //   trail or a street), and the canopy trees of the City of Atlanta canopy
 //   raster go after all the other props. The rules are in
@@ -38,6 +41,7 @@ import { createGeoGroundSampler } from "./geo-ground.js";
 import { STYLES, chooseStyle, hash32, seededRandom } from "./styles.js";
 import { cornerSpots, shortName, streetIntersections } from "./signs.js";
 import { buildingSpan, terrainOf } from "./terrain.js";
+import { medianSpots, medianStrips } from "./medians.js";
 import { TREE_KIND as TREE_KIND_OF, canopyCandidates, clearanceIds, decodeCanopy, fitTree, pickSpecies } from "./tree-placement.js";
 
 // Solid size of each prop for the ground sampler: radius and height in m.
@@ -233,12 +237,12 @@ export function streetProps(level, sample, fronts = null, report = null) {
     return false;
   }
   let why = null;
-  function put(kind, x, z, yaw = 0, scale = 1, extra = null) {
+  function put(kind, x, z, yaw = 0, scale = 1, extra = null, open = null) {
     const solid = PROP_SOLID[kind];
     const r = solid ? solid.r + 0.3 : 0.5;
     why = null;
     if (!free(x, z)) why = "gap";
-    else if (!isOpen(sample, x, z, r, kind === "street_sign" ? signIds : areaIds)) why = "surface";
+    else if (!isOpen(sample, x, z, r, open ?? (kind === "street_sign" ? signIds : areaIds))) why = "surface";
     else if (kind !== "street_sign" && onWalk(x, z, r)) why = "walk";
     if (why) return false;
     const k = key(x, z);
@@ -341,6 +345,15 @@ export function streetProps(level, sample, fronts = null, report = null) {
   // The planters go next, so a tree never takes the place of a planter.
   for (const { b, style, front } of shops) {
     for (const s of planterSpots(b, style, front)) put("planter", s.x, s.z, s.yaw, PLANTER.scale);
+  }
+
+  // The median trees (medians.js, #138): a street tree on each spot of a
+  // wide median of a divided road. A median is open ground for them.
+  const medians = medianStrips(level);
+  const medianIds = new Set([...areaIds, ...medians.map((m) => m.id)]);
+  for (const m of medianSpots(level, medians)) {
+    const rand = seededRandom(hash32(`median:${m.x},${m.z}`));
+    rowTree(put(rand() < 0.7 ? "tree_round" : "tree_tall", m.x, m.z, rand() * Math.PI * 2, 0.85 + rand() * 0.3, { median: m.median }, medianIds), "street");
   }
 
   const strips = (level.strips ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));

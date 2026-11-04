@@ -81,7 +81,7 @@ performance.mark("atl:level");
 loader.step("level");
 const geo = isGeoLevel(level);
 const env = createLevelEnv(level, { props: params.get("props") !== "0" });
-const skaterEnv = createSkaterEnv(level);
+const skaterEnv = createSkaterEnv(level, env.grindables);
 
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
@@ -824,6 +824,8 @@ window.__atl = {
     // The ground under (x, z), from the pure sampler. With `y`, a bridge
     // high over y is left out (the skater is under it).
     sample: (x, z, y) => env.sampleGround(x, z, y),
+    // The grindables by kind (#136: the OSM benches and the curbs are ledges).
+    grindables: skaterEnv.grindables.reduce((acc, g) => ({ ...acc, [g.id.split(":").slice(0, 2).join(":")]: (acc[g.id.split(":").slice(0, 2).join(":")] ?? 0) + 1 }), {}),
   },
   physics: {
     colliderCount: physics.colliderCount,

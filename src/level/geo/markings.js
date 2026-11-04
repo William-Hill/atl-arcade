@@ -4,7 +4,18 @@
 //   secondary, tertiary), as on Ponce de Leon Ave, North Ave, and Ralph
 //   McGill Blvd. Residential streets have no center line, as in Atlanta.
 // - Dashed white lane lines (3 m dash, 9 m gap) on a main street with 2 or
-//   more lanes in one direction. A lane is 3.4 m wide.
+//   more lanes in one direction. With the OSM lane tags (`lanes`,
+//   `lanesForward`, `lanesBackward`, #138) the lane count comes from the
+//   tags and a lane is at most 3.6 m wide; the room that is left is a
+//   shoulder outside the edge lines. With no tag, a lane is 3.4 m wide and
+//   the lanes fill the street (laneLineOffsets()).
+// - White turn arrows in each lane before an intersection, from the OSM
+//   `turnLanes` (turn:lanes) tags.
+// - A green bike lane (1.5 m) inside the curb band on each side with an
+//   OSM cycleway lane.
+// - Small decals on the main and residential streets: manhole covers,
+//   storm drains at the curb before each intersection, and asphalt
+//   patches. They are seeded by the strip id, so each load is the same.
 // - A white edge line on each side of the main streets and the residential
 //   streets, 0.3 m in from the curb band.
 // - A light concrete curb band (the sidewalk color, 0.3 m wide) on the two
@@ -37,40 +48,35 @@
 // lines are in `deck`, at their final height: the view must not drape them
 // again. A deck gets no lane lines, edge lines, or curb band.
 
-import { streetIntersections } from "./signs.js";
 import { GEO_TILE, SURFACE_COLORS } from "./geo-mesh.js";
 import { approachTrims, bridgeLayout, densify, trimPolyline } from "./bridges.js";
 import { mergeMeshes } from "./extrude.js";
+import { hash32, seededRandom } from "./styles.js";
+import { EDGE, MAIN, MARKING_SIZES, crosswalksOf, edgeLineOffset, laneLayout, laneLineOffsets, medianSide } from "./lanes.js";
+
+export { MARKING_SIZES, edgeLineOffset, laneLayout, laneLineOffsets, medianSide };
 import { bridgeDeck, drapeMesh, terrainOf } from "./terrain.js";
 
 export const MARKING_COLORS = {
   yellow: [0.96, 0.74, 0.16],
   white: [0.94, 0.94, 0.9],
+  // The decals: a bike lane, cast iron (manhole covers and drain grates),
+  // and two asphalt patch tones (geo-mesh.js SURFACE_COLORS).
+  bike: SURFACE_COLORS.bike,
+  iron: SURFACE_COLORS.iron,
+  patchDark: SURFACE_COLORS.patchDark,
+  patchLight: SURFACE_COLORS.patchLight,
   // The curb band. It is a little lighter than the sidewalk color, so the
   // band and the sidewalk keep a seam where they touch.
   curb: SURFACE_COLORS.sidewalk.map((c) => Math.min(1, c * 1.06)),
 };
 const LIFT = 0.02; // m over the street top (the paint)
 const CURB_LIFT = 0.012; // m over the street top (under the paint, so a line on a curb band does not flicker)
-const MAIN = new Set(["trunk", "primary", "secondary", "tertiary"]);
-const EDGE = new Set([...MAIN, "residential"]);
+const PATCH_LIFT = 0.007; // m over the street top (over the junction patch, under the curb band)
+const IRON_LIFT = 0.016; // m over the street top (over the curb band, under the paint)
 const LINE_W = 0.11;
 const LINE_GAP = 0.11;
 const CLEAR = 2; // m past the cross street edge
-export const MARKING_SIZES = {
-  lane: 3.4, // m, the width of one lane
-  laneLine: 0.11,
-  dash: 3, // m (US practice: 10 ft dash, 30 ft gap)
-  dashGap: 9,
-  edgeLine: 0.12,
-  edgeInset: 0.3, // m from the inner side of the curb band to the edge line
-  curb: 0.3, // m, the width of the curb band
-  curbClear: 0.5, // m past the cross street edge
-  stopDepth: 0.45, // m along the street
-  stopGap: 1.0, // m from the crosswalk to the stop bar
-  crossDepth: 2.4, // m along the street (one crosswalk bar)
-  crossOut: 1.8, // m from the cross street edge to the crosswalk center
-};
 const S = MARKING_SIZES;
 const MITER_MAX = 2; // the longest miter, in line widths
 
@@ -90,6 +96,59 @@ function rect(mesh, cx, cz, y, dx, dz, along, across, color) {
   const nx = (-dz * across) / 2;
   const nz = (dx * across) / 2;
   quad(mesh, [cx - ax - nx, y, cz - az - nz], [cx + ax - nx, y, cz + az - nz], [cx + ax + nx, y, cz + az + nz], [cx - ax + nx, y, cz - az + nz], color);
+}
+
+// A flat convex polygon (in (x, z)) at height y, as quads of a fan. A
+// triangle is a quad with its last corner twice. The corners go the same
+// way round as in rect().
+function poly(mesh, pts, y, color) {
+  let area = 0;
+  for (let i = 0; i < pts.length; i += 1) {
+    const [ax, az] = pts[i];
+    const [bx, bz] = pts[(i + 1) % pts.length];
+    area += ax * bz - bx * az;
+  }
+  const p = area < 0 ? pts.slice().reverse() : pts;
+  for (let i = 1; i < p.length - 1; i += 2) {
+    const d = p[Math.min(i + 2, p.length - 1)];
+    quad(mesh, [p[0][0], y, p[0][1]], [p[i][0], y, p[i][1]], [p[i + 1][0], y, p[i + 1][1]], [d[0], y, d[1]], color);
+  }
+}
+
+// The parts of a turn arrow, as convex polygons in a local frame: `a` m
+// along the travel direction from the arrow tail, `b` m to the left of it.
+// `turns` is one lane of an OSM turn:lanes value ("left;through").
+export function arrowShapes(turns) {
+  const set = new Set(
+    turns
+      .split(";")
+      .map((t) => t.trim())
+      .map((t) => (t === "slight_left" || t === "sharp_left" ? "left" : t === "slight_right" || t === "sharp_right" ? "right" : t)),
+  );
+  const out = [];
+  const w = 0.09; // half the shaft width
+  const through = set.has("through");
+  const sides = ["left", "right"].filter((t) => set.has(t));
+  if (!through && sides.length === 0) return out;
+  const top = through ? 2.6 : 2.2;
+  out.push([[0, -w], [top, -w], [top, w], [0, w]]);
+  if (through) out.push([[2.6, -0.32], [3.4, 0], [2.6, 0.32]]);
+  for (const t of sides) {
+    const k = t === "left" ? 1 : -1;
+    // An elbow out to the side at 1.6 m, then a head that points to the side.
+    out.push([[1.6, 0], [1.6 + 2 * w, 0], [1.6 + 2 * w, 0.62 * k], [1.6, 0.62 * k]]);
+    out.push([[1.25, 0.62 * k], [1.6 + w, 1.3 * k], [1.95 + 2 * w, 0.62 * k]]);
+  }
+  return out;
+}
+
+// The lane centers in the travel order (left to right) for each direction.
+function laneCenters(L, dir) {
+  const c = L.center ?? L.edges[0] - S.edgeLine / 2;
+  const out = [];
+  if (dir > 0) for (let k = 0; k < L.forward; k += 1) out.push(c + (k + 0.5) * L.lane);
+  else for (let k = 0; k < L.backward; k += 1) out.push(c - (k + 0.5) * L.lane);
+  return out;
 }
 
 // The unit direction and the left normal of each segment, and the distance
@@ -231,74 +290,6 @@ function line(mesh, points, y, offset, width, cuts, color, { dash = null, ends =
   for (const [s0, s1] of ranges) band(mesh, pl, s0, s1, y, offset, width, color, ends);
 }
 
-// The lane lines of a street: the offsets (to the left of the strip
-// direction) of the white dashed lines. A two-way street has
-// floor(width / lane) lanes, split in two halves by the center line.
-export function laneLineOffsets(s) {
-  // `s.oneway` is the oneway tag, or a half of a divided road.
-  const lanes = Math.floor(s.width / S.lane);
-  const out = [];
-  if (s.oneway) {
-    for (let k = 1; k < lanes; k += 1) out.push(-s.width / 2 + (k * s.width) / lanes);
-    return out;
-  }
-  const perSide = Math.floor(lanes / 2);
-  for (let k = 1; k < perSide; k += 1) for (const side of [1, -1]) out.push((side * k * s.width) / 2 / perSide);
-  return out;
-}
-
-// The side of the median of a divided road: +1 when a parallel strip of
-// the same name is on the normal side (-dz, dx) of the strip, -1 when it is
-// on the other side, 0 when the strip is not one half of a divided road.
-// A strip is one half when 30 % or more of its length runs beside a
-// parallel strip (directions within 25 degrees) with a gap of 12 m or less.
-export function medianSide(s, strips) {
-  if (!MAIN.has(s.highway) || !s.name) return 0;
-  const twins = strips.filter((o) => o.id !== s.id && o.name === s.name && MAIN.has(o.highway));
-  let total = 0;
-  let beside = 0;
-  let side = 0;
-  for (let i = 0; i < s.points.length - 1; i += 1) {
-    const [ax, az] = s.points[i];
-    const dx = s.points[i + 1][0] - ax;
-    const dz = s.points[i + 1][1] - az;
-    const len = Math.hypot(dx, dz);
-    if (len < 0.05) continue;
-    total += len;
-    for (const f of [0.25, 0.5, 0.75]) {
-      const mx = ax + dx * f;
-      const mz = az + dz * f;
-      let hit = false;
-      for (const o of twins) {
-        for (let j = 0; j < o.points.length - 1; j += 1) {
-          const [cx, cz] = o.points[j];
-          const vx = o.points[j + 1][0] - cx;
-          const vz = o.points[j + 1][1] - cz;
-          const vl = vx * vx + vz * vz;
-          if (vl < 1e-4) continue;
-          const t = ((mx - cx) * vx + (mz - cz) * vz) / vl;
-          if (t < 0 || t > 1) continue;
-          const px = cx + vx * t - mx;
-          const pz = cz + vz * t - mz;
-          const gap = Math.hypot(px, pz) - (s.width + o.width) / 2;
-          if (gap < -1.5 || gap > 12) continue;
-          if (Math.abs(dx * vx + dz * vz) / (len * Math.sqrt(vl)) < 0.9) continue;
-          hit = true;
-          side += Math.sign(-dz * px + dx * pz);
-        }
-      }
-      if (hit) beside += len / 3;
-    }
-  }
-  if (total === 0 || beside / total < 0.3 || side === 0) return 0;
-  return Math.sign(side);
-}
-
-// The offset of the edge line center from the street centerline.
-export function edgeLineOffset(width) {
-  return width / 2 - S.curb - S.edgeInset - S.edgeLine / 2;
-}
-
 export function roadMarkings(level) {
   const mesh = { positions: [], indices: [], colors: [] };
   // The lines on bridge decks: [{ tile, meshes }] at their final height.
@@ -327,29 +318,8 @@ export function roadMarkings(level) {
   }
 
   // The crosswalks: one for each street arm at each intersection of two
-  // named streets, past the cross street.
-  const crosswalks = [];
-  for (const ix of streetIntersections(level)) {
-    // The intersection names are the sign names (the city name when the
-    // build has one, #78), so match on the same name. Use only the strips
-    // through this node, so a wider part of the same street far away does
-    // not move the crosswalk. If no strip has the node, use all strips with
-    // the name.
-    const named = (name) => streets.filter((s) => (s.signName ?? s.name) === name);
-    const stripsOf = (name) => {
-      const all = named(name);
-      const here = all.filter((s) => s.points.some(([x, z]) => x === ix.x && z === ix.z));
-      return here.length ? here : all;
-    };
-    const widthOf = (name) => Math.max(...stripsOf(name).map((s) => s.width));
-    for (let k = 0; k < 2; k += 1) {
-      const [dx, dz] = ix.dirs[k];
-      const w = widthOf(ix.names[k]);
-      const crossHalf = widthOf(ix.names[1 - k]) / 2;
-      const oneway = stripsOf(ix.names[k]).some(isOneway);
-      for (const dir of [1, -1]) crosswalks.push({ x: ix.x, z: ix.z, name: ix.names[k], dx: dx * dir, dz: dz * dir, w, crossHalf, oneway });
-    }
-  }
+  // named streets, past the cross street (lanes.js crosswalksOf()).
+  const crosswalks = crosswalksOf(level, streets, isOneway);
   // The crosswalk distance from the node, and the far side of the stop bar.
   const crossAt = (c) => c.crossHalf + S.crossOut;
   const stopEnd = (c) => crossAt(c) + S.crossDepth / 2 + S.stopGap + S.stopDepth;
@@ -381,6 +351,10 @@ export function roadMarkings(level) {
   // the curb band and the edge line join it with no gap.
   const endsOf = (s) => {
     const dirAt = (end) => {
+      // An end that a bridge deck covers stops at the deck joint, not at the
+      // node: it gets a square end, not the miter of the joint.
+      const tr = trims.get(s.id);
+      if ((end === 0 ? tr?.start : tr?.end) > 0) return null;
       const p = end === 0 ? s.points[0] : s.points[s.points.length - 1];
       const n = nodes.get(`${p[0]},${p[1]}`);
       const others = [...n.strips.values()].filter((o) => o.id !== s.id);
@@ -424,17 +398,92 @@ export function roadMarkings(level) {
     const pts = trimPolyline(s.points, trims.get(s.id));
     if (!pts) continue;
     const ends = endsOf(s);
-    if (center) for (const side of [1, -1]) line(mesh, pts, y, side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, lineCuts, MARKING_COLORS.yellow);
+    const L = laneLayout(s, oneway);
+    if (center) for (const side of [1, -1]) line(mesh, pts, y, (L.center ?? 0) + side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, lineCuts, MARKING_COLORS.yellow);
     if (MAIN.has(s.highway)) {
-      for (const o of laneLineOffsets({ width: s.width, oneway })) line(mesh, pts, y, o, S.laneLine, lineCuts, MARKING_COLORS.white, { dash: [S.dash, S.dashGap] });
+      for (const o of L.lines) line(mesh, pts, y, o, S.laneLine, lineCuts, MARKING_COLORS.white, { dash: [S.dash, S.dashGap] });
     }
     if (EDGE.has(s.highway) && edgeLineOffset(s.width) > S.lane / 2) {
       // On a divided road the edge line on the median side is yellow.
-      for (const side of [1, -1]) line(mesh, pts, y, side * edgeLineOffset(s.width), S.edgeLine, lineCuts, side === median.get(s.id) ? MARKING_COLORS.yellow : MARKING_COLORS.white, { ends });
+      for (const [k, side] of [[0, -1], [1, 1]]) line(mesh, pts, y, L.edges[k], S.edgeLine, lineCuts, side === median.get(s.id) ? MARKING_COLORS.yellow : MARKING_COLORS.white, { ends });
     }
+    for (const b of L.bikes) line(mesh, pts, yCurb + 0.002, b.offset, b.width, lineCuts, MARKING_COLORS.bike, { ends });
     if (s.highway !== "service") {
       const curbCuts = cutsOf(s, "curb");
       for (const side of [1, -1]) line(mesh, pts, yCurb, side * (s.width / 2 - S.curb / 2), S.curb, curbCuts, MARKING_COLORS.curb, { ends });
+    }
+    const pl = polyline(pts);
+    if (pl.dirs.length === 0) continue;
+    const cutAt = (p) => lineCuts.find((c) => c.x === p[0] && c.z === p[1])?.r ?? null;
+    // Turn arrows before an intersection: the forward lanes at the strip
+    // end, the backward lanes at the strip start.
+    if (MAIN.has(s.highway) || s.turnLanes) {
+      for (const [dir, tag, endPoint] of [
+        [1, s.turnLanes, s.points[s.points.length - 1]],
+        [-1, s.turnLanesBackward, s.points[0]],
+      ]) {
+        if (!tag || pts[dir > 0 ? pts.length - 1 : 0] !== endPoint) continue;
+        const r = cutAt(endPoint);
+        if (r === null) continue;
+        const head = r + S.arrowBack;
+        const tail = head + 3.4;
+        const other = cutAt(dir > 0 ? s.points[0] : s.points[s.points.length - 1]) ?? 0;
+        if (pl.length - tail < other + 1) continue;
+        const sTail = dir > 0 ? pl.length - tail : tail;
+        const at = pointAt(pl, sTail);
+        const [dx, dz] = pl.dirs[at.i];
+        const t = [dx * dir, dz * dir];
+        const centers = laneCenters(L, dir);
+        const turns = tag.split("|");
+        for (let k = 0; k < Math.min(turns.length, centers.length); k += 1) {
+          const bx = at.x - dz * centers[k];
+          const bz = at.z + dx * centers[k];
+          for (const shape of arrowShapes(turns[k])) poly(mesh, shape.map(([a, b]) => [bx + t[0] * a + t[1] * b, bz + t[1] * a - t[0] * b]), y, MARKING_COLORS.white);
+        }
+      }
+    }
+    // The decals: manholes, asphalt patches, and storm drains.
+    if (EDGE.has(s.highway)) {
+      const rand = seededRandom(hash32(`${s.id}:decals`));
+      const kept = keptRanges(pl, lineCuts);
+      const inKept = (v, m) => kept.some(([a, b]) => v - m >= a && v + m <= b);
+      const inner = s.width / 2 - S.curb - 1;
+      const place = (v, o) => {
+        const p = pointAt(pl, v);
+        const [dx, dz] = pl.dirs[p.i];
+        return { x: p.x - dz * o, z: p.z + dx * o, dx, dz };
+      };
+      for (let v = rand() * S.manholeEvery; v < pl.length; v += S.manholeEvery * (0.6 + 0.8 * rand())) {
+        const o = (rand() * 2 - 1) * inner * 0.6;
+        if (!inKept(v, 0.5)) continue;
+        const c = place(v, o);
+        const ring = [];
+        for (let k = 0; k < 8; k += 1) ring.push([c.x + Math.cos((k * Math.PI) / 4) * 0.33, c.z + Math.sin((k * Math.PI) / 4) * 0.33]);
+        poly(mesh, ring, streetTop + IRON_LIFT, MARKING_COLORS.iron);
+      }
+      for (let v = rand() * S.patchEvery; v < pl.length; v += S.patchEvery * (0.6 + 0.8 * rand())) {
+        const along = 1.2 + rand() * 2;
+        const across = 0.9 + rand() * 1.4;
+        const o = (rand() * 2 - 1) * Math.max(0, inner - across / 2);
+        const color = rand() < 0.5 ? MARKING_COLORS.patchDark : MARKING_COLORS.patchLight;
+        if (!inKept(v, along / 2)) continue;
+        const c = place(v, o);
+        rect(mesh, c.x, c.z, streetTop + PATCH_LIFT, c.dx, c.dz, along, across, color);
+      }
+      if (s.highway !== "service") {
+        const curbCuts = cutsOf(s, "curb");
+        for (const [end, p] of [[0, s.points[0]], [1, s.points[s.points.length - 1]]]) {
+          if (pts[end ? pts.length - 1 : 0] !== p) continue;
+          const r = curbCuts.find((c) => c.x === p[0] && c.z === p[1])?.r;
+          if (r === undefined) continue;
+          const v = end ? pl.length - r - 0.8 : r + 0.8;
+          if (v < 1 || v > pl.length - 1) continue;
+          for (const side of [1, -1]) {
+            const c = place(v, side * (s.width / 2 - S.curb - 0.22));
+            rect(mesh, c.x, c.z, streetTop + IRON_LIFT, c.dx, c.dz, 0.9, 0.4, MARKING_COLORS.iron);
+          }
+        }
+      }
     }
   }
 

@@ -7,6 +7,7 @@
 import { rampSurface } from "./ramp.js";
 import { createGeoGroundSampler, GEO_CELL } from "./geo/geo-ground.js";
 import { levelProps, propObstacles } from "./geo/props.js";
+import { benchLedges, curbLedges } from "./geo/grindables.js";
 
 export function createGroundSampler(level) {
   const boxes = level.objects.filter((o) => o.size && o.kind !== "rail");
@@ -30,15 +31,24 @@ export function createGroundSampler(level) {
 }
 
 // Everything the skate controller needs from a level: the ground sampler,
-// the bounds, and the spawn point for an out-of-bounds respawn.
+// the bounds, the spawn point for an out-of-bounds respawn, and on a
+// geodata level the grindables of the sidewalks (benches and curbs, for
+// createSkaterEnv()).
 // A geodata level (format "geo-level/1") uses the polygon and strip sampler,
 // with the street props as solid obstacles. `props` lists the placements
 // for the render. `{ props: false }` leaves the props out (the M1-03 level).
 export function createLevelEnv(level, { props = true } = {}) {
   const geo = typeof level.format === "string" && level.format.startsWith("geo-level/");
-  if (!geo) return { sampleGround: createGroundSampler(level), bounds: level.bounds, spawn: level.spawn, props: [] };
+  if (!geo) return { sampleGround: createGroundSampler(level), bounds: level.bounds, spawn: level.spawn, props: [], grindables: [] };
   const placed = props ? levelProps(level) : [];
   const obstacles = propObstacles(placed.filter((p) => !p.roof));
   const sampleGround = createGeoGroundSampler(level, GEO_CELL, { obstacles });
-  return { sampleGround, bounds: level.bounds, spawn: level.spawn, props: placed };
+  // The skate features (#136): the OSM benches and the curbs are ledges.
+  const streetIds = new Set((level.strips ?? []).filter((s) => s.kind === "street").map((s) => s.id));
+  const isStreet = (x, z) => {
+    const id = sampleGround(x, z)?.id;
+    return streetIds.has(id) || Boolean(id?.startsWith("junction:"));
+  };
+  const grindables = [...benchLedges(level, placed), ...curbLedges(level, isStreet)];
+  return { sampleGround, bounds: level.bounds, spawn: level.spawn, props: placed, grindables };
 }

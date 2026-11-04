@@ -26,6 +26,9 @@ export function findSnap(grindables, skater, k = GRIND) {
   const h = heading(skater.yaw);
   let best = null;
   for (const g of grindables) {
+    // A grindable with a ground box (a geodata ledge) is skipped at once
+    // when the skater is far from it.
+    if (g.box && (p[0] < g.box.minX - k.snapRadius || p[0] > g.box.maxX + k.snapRadius || p[2] < g.box.minZ - k.snapRadius || p[2] > g.box.maxZ + k.snapRadius)) continue;
     const near = nearestOnPolyline(g.points, [p[0], p[1], p[2]]);
     const dx = near.point[0] - p[0];
     const dz = near.point[2] - p[2];

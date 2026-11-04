@@ -221,8 +221,12 @@ describe("bridge joints on the BeltLine level", () => {
     for (const t of roadMarkings(LEVEL)) {
       for (const part of t.deck ? [drapeMesh(t.mesh, terrain), t.deck] : [drapeMesh(t.mesh, terrain)]) for (const v of part.positions) m.positions.push(v);
     }
-    const parkway = layouts.get("w156324725");
-    for (const k of [0, 1]) {
+    // The Parkway carriageways are one way (OSM oneway=yes, #138), with no
+    // center line, so the test uses the Highland Ave NE bridge (two way).
+    // Its east end is 2 m from the Corley St NE junction, where the lines
+    // stop, so the test uses the west joint only.
+    const parkway = layouts.get("w41545424");
+    for (const k of [0]) {
       const J = k ? parkway.points[parkway.points.length - 1] : parkway.points[0];
       // Yellow line vertices within 0.5 m of each side of the joint, on the line.
       let before = 0;

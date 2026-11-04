@@ -61,7 +61,8 @@ describe("prop placement", () => {
     const sidewalkIds = new Set(LEVEL.strips.filter((s) => s.kind === "sidewalk").map((s) => s.id));
     for (const p of props) {
       const g = sample(p.x, p.z);
-      const open = g.id === "ground" || areaIds.has(g.id) || (p.kind === "street_sign" && sidewalkIds.has(g.id));
+      // A median tree stands on its median (medians.js, #138).
+      const open = g.id === "ground" || areaIds.has(g.id) || (p.kind === "street_sign" && sidewalkIds.has(g.id)) || (p.median !== undefined && g.id === p.median);
       expect(open, `${p.kind} at ${p.x},${p.z} is on ${g.id}`).toBe(true);
     }
     const sorted = props.slice().sort((a, b) => a.x - b.x);
@@ -88,7 +89,7 @@ describe("prop placement", () => {
 
   it("makes the street props solid in the level env, and keeps the trail clear", () => {
     const env = createLevelEnv(LEVEL);
-    const tree = env.props.find((p) => p.kind === "tree_round");
+    const tree = env.props.find((p) => p.kind === "tree_round" && !p.median);
     const g = env.sampleGround(tree.x, tree.z);
     const ground = terrainOf(LEVEL).height(tree.x, tree.z);
     expect(g.height).toBeCloseTo(ground + PROP_SOLID.tree_round.h, 6);

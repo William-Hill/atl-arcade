@@ -244,6 +244,45 @@ export function classifyWay(tags) {
   return null;
 }
 
+// The lane tags of a street way (#138), for the road markings
+// (src/level/geo/markings.js): the lane count, the lanes in each direction,
+// one way, the turn lanes (as the OSM value, "left|through;right"), and the
+// sides with a painted bike lane ("left", "right", or "both").
+// A tag that is not there gives no field.
+export function laneTags(tags) {
+  const out = {};
+  const count = (v) => {
+    const n = Number(v);
+    return Number.isInteger(n) && n > 0 ? n : null;
+  };
+  if (count(tags.lanes)) out.lanes = count(tags.lanes);
+  if (count(tags["lanes:forward"])) out.lanesForward = count(tags["lanes:forward"]);
+  if (count(tags["lanes:backward"])) out.lanesBackward = count(tags["lanes:backward"]);
+  if (tags.oneway === "yes") out.oneway = true;
+  const forward = tags["turn:lanes"] ?? tags["turn:lanes:forward"];
+  if (forward) out.turnLanes = forward;
+  if (tags["turn:lanes:backward"]) out.turnLanesBackward = tags["turn:lanes:backward"];
+  const lane = (v) => v === "lane" || v === "track";
+  let left = lane(tags["cycleway:left"]) || lane(tags["cycleway:both"]) || lane(tags.cycleway);
+  let right = lane(tags["cycleway:right"]) || lane(tags["cycleway:both"]) || lane(tags.cycleway);
+  // On a one-way street, "cycleway=lane" is on the right side only.
+  if (out.oneway && lane(tags.cycleway) && !lane(tags["cycleway:left"]) && !lane(tags["cycleway:both"])) left = false;
+  if (left && right) out.cycleway = "both";
+  else if (left) out.cycleway = "left";
+  else if (right) out.cycleway = "right";
+  return out;
+}
+
+// A crossing of a footway over a street (#136): { id, points, marked }.
+// `marked` is true when the crossing has paint (crossing=marked, zebra,
+// or crossing:markings other than "no" or "surface").
+export function crossingOf(tags) {
+  if (!((tags.highway === "footway" && tags.footway === "crossing") || (tags.highway === "cycleway" && tags.cycleway === "crossing"))) return null;
+  const m = tags["crossing:markings"];
+  const marked = m ? m !== "no" && m !== "surface" : tags.crossing === "marked" || tags.crossing === "zebra";
+  return { marked };
+}
+
 const round = (n) => Math.round(n * 100) / 100 + 0; // + 0 turns -0 into 0.
 
 // Clips a polyline to a rectangle. Returns a list of polylines.
@@ -360,6 +399,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
   const buildings = [];
   const strips = [];
   const areas = [];
+  const crossings = [];
   const counts = { override: 0, height: 0, levels: 0, overture: 0, "overture-capped": 0, default: 0 };
 
   function addPolygon(target, id, outerRings, innerRings, extra) {
@@ -386,6 +426,10 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       continue;
     }
     if (e.type !== "way" || !e.geometry) continue;
+    const crossing = crossingOf(tags);
+    if (crossing) {
+      for (const [i, points] of clipPolyline(project(e.geometry), box).entries()) crossings.push({ id: i ? `${id}-${i}` : id, points, marked: crossing.marked });
+    }
     const cls = classifyWay(tags);
     if (!cls) continue;
     const pieces = clipPolyline(project(e.geometry), box);
@@ -393,6 +437,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       const item = { id: pieces.length > 1 ? `${id}-${i}` : id, kind: cls.kind, width: round(cls.width), points };
       if (tags.name) item.name = tags.name;
       if (tags.highway) item.highway = tags.highway;
+      if (cls.kind === "street") Object.assign(item, laneTags(tags));
       // A bridge deck runs from the ground at one end to the ground at the
       // other (src/level/geo/terrain.js), over the ways under it.
       if (tags.bridge && tags.bridge !== "no") {
@@ -464,6 +509,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
   buildings.sort(byId);
   strips.sort(byId);
   areas.sort(byId);
+  crossings.sort(byId);
 
   // Raise the bridge approaches that the grid smooths (src/level/geo/terrain.js).
   let embankments = [];
@@ -500,10 +546,13 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       ...(cityStreets ? { streetNames: nameCounts } : {}),
       strips: Object.fromEntries(["street", "sidewalk", "path", "trail"].map((k) => [k, strips.filter((s) => s.kind === k).length])),
       areas: areas.length,
+      crossings: crossings.length,
     },
     buildings,
     strips,
     areas,
+    // The footway crossings over the streets (#136): the curb ramps go at their ends.
+    crossings,
     // Greybox-style objects (rails, ledges, ramps). Empty until M1-04.
     objects: [],
   };

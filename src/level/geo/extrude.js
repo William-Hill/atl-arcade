@@ -129,8 +129,8 @@ function walls(m, ring, y0, y1, color, facade = null) {
 // A building: walls from `base` to `top` and a flat roof. The roof can have
 // its own color.
 //
-// With `facade` ({ style, bay, floorHeight, parapet, corniceColor }) the
-// mesh gets the facade attribute: the walls count bays and floors for the
+// With `facade` ({ style, bay, floorHeight, floors, parapet, corniceColor })
+// the mesh gets the facade attribute: the walls count bays and floors for the
 // window shader, and a parapet of `parapet` meters rises above the roof
 // with its outer face marked as cornice and an inner face.
 //
@@ -143,7 +143,7 @@ export function extrudeFootprint({ outer, holes = [], base = 0, top }, { color =
   if (o.length < 3 || !(top > base)) return m;
   const hs = holes.map((h) => orient(h, true)).filter((h) => h.length >= 3);
   if (facade) {
-    const floors = Math.max(1, Math.round((top - base) / facade.floorHeight));
+    const floors = facade.floors ?? Math.max(1, Math.round((top - base) / facade.floorHeight));
     const wall = { style: facade.style, bay: facade.bay, floors, kind: FACE.wall };
     walls(m, o, base, top, color, wall);
     for (const h of hs) walls(m, h, base, top, color, wall);

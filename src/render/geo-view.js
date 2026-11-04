@@ -5,6 +5,8 @@ import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
 import { storefrontAprons } from "../level/geo/aprons.js";
 import { facadeKit, frontEdges } from "../level/geo/facade-kit.js";
+import { shopSigns } from "../level/geo/shop-signs.js";
+import { createShopSigns } from "./shop-signs-view.js";
 import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
@@ -79,6 +81,11 @@ export function geoGeometry(mesh) {
   geom.computeBoundingSphere();
   return geom;
 }
+
+// The window reveal shadow (createFacadeMaterial()): the width in meters of
+// the shadow band under the window head and along each jamb, and how much
+// each band darkens the glass.
+export const REVEAL = { head: 0.16, jamb: 0.07, headShade: 0.5, jambShade: 0.28 };
 
 // The facade shader: a toon material that draws windows, storefronts, and
 // cornices from the facade attribute (see src/level/geo/extrude.js). The
@@ -325,6 +332,22 @@ vec3 roomColor(float h) {
       glass = col;
     }
     #endif
+    // The window reveal (issue #135): the glass sits back in the wall, so
+    // the head casts a shadow band on the top of the glass and each jamb a
+    // thinner band on its side. The bands are in meters, so a tall shop
+    // window and a small house window get the same reveal.
+    {
+      vec2 m = uStyleM[st];
+      float cyR = shop ? SHOP_CY : 0.55;
+      // The distance in meters from the glass point to the head and to the
+      // nearest jamb.
+      float toHead = (cyR + win.y * 0.5 - cell.y) * m.y;
+      float toJamb = (win.x * 0.5 - abs(cell.x - 0.5)) * m.x;
+      vec2 aam = aa * m;
+      float head = 1.0 - smoothstep(${REVEAL.head.toFixed(3)} - aam.y, ${REVEAL.head.toFixed(3)} + aam.y, toHead);
+      float jamb = 1.0 - smoothstep(${REVEAL.jamb.toFixed(3)} - aam.x, ${REVEAL.jamb.toFixed(3)} + aam.x, toJamb);
+      glass *= 1.0 - ${REVEAL.headShade.toFixed(3)} * head - ${REVEAL.jambShade.toFixed(3)} * jamb * (1.0 - head);
+    }
     // Brick detail: the scan over its mean, kept in a safe range. The far
     // fade below turns it off where a brick is under a pixel.
     float far0 = smoothstep(0.25, 0.6, max(aa.x, aa.y));
@@ -409,7 +432,7 @@ roughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);`,
 #endif`,
       );
   };
-  mat.customProgramCacheKey = () => `facade-v8${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}${detail ? "-detail" : ""}`;
+  mat.customProgramCacheKey = () => `facade-v9${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}${detail ? "-detail" : ""}`;
   return mat;
 }
 
@@ -847,6 +870,9 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     depthTiles.push(obj);
   }
   const facadeDepth = { tiles: depthTiles.length, near: 0, nearTriangles: 0 };
+  // The shop name boards from the OSM shop and amenity tags (issue #135).
+  const signs = kit ? createShopSigns(shopSigns(level, fronts), (params) => litMaterial(look, params, { gradientMap, roughness: 0.7, envLight: ENV_LIGHT.props })) : null;
+  if (signs) root.add(signs.group);
 
   // Kit props load after the level shows. All props are one batch (one
   // draw call); update() picks the LOD of each prop.
@@ -878,6 +904,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     // from the camera to the nearest far tile (Infinity with none).
     terrainLod,
     facadeDepth,
+    shopSigns: signs ? { count: signs.count, names: signs.names } : { count: 0, names: [] },
     addProps,
     // Shows each prop at one level of detail by its distance from the
     // camera, and hides the far props and depth tiles.
@@ -909,6 +936,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       }
       facadeDepth.near = near;
       facadeDepth.nearTriangles = nearTriangles;
+      if (signs) signs.update(cameraPosition);
       if (propBatch) {
         propBatch.update(cameraPosition);
         props.drawn = propBatch.info.drawn;

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createGeoGroundSampler } from "../src/level/geo/geo-ground.js";
-import { buildingHeight, buildLevel, classifyWay, clipOffCorridor, clipPolyline, furnitureQuery, hasGroundWalls, joinRings, overpassQuery, parseHeight, trailCorridor } from "./build-block.mjs";
+import { buildingHeight, buildingTags, buildLevel, classifyWay, clipOffCorridor, clipPolyline, furnitureQuery, hasGroundWalls, joinRings, overpassQuery, parseHeight, trailCorridor } from "./build-block.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const BBOX = { south: 33.756, west: -84.3685, north: 33.7735, east: -84.358 };
@@ -232,3 +232,20 @@ describe("build-block offline run", () => {
     expect(readFileSync(join(out, "level.json"), "utf8")).toBe(readFileSync(resolve(ROOT, "levels/beltline-eastside/level.json"), "utf8"));
   });
 });
+
+// Issue #135: the OSM tags that the facade kit reads.
+describe("build-block building tags (#135)", () => {
+  it("keeps the levels, the roof shape, the material, and the use", () => {
+    expect(buildingTags({ building: "yes", "building:levels": "3", "roof:shape": "gabled", "building:material": "brick", shop: "gift", name: "The Collective" })).toEqual({
+      levels: 3,
+      roofShape: "gabled",
+      material: "brick",
+      use: { key: "shop", value: "gift", name: "The Collective" },
+    });
+    expect(buildingTags({ building: "yes", amenity: "parking" })).toEqual({ use: { key: "amenity", value: "parking" } });
+    // A level count that is not a whole number is left out.
+    expect(buildingTags({ building: "yes", "building:levels": "2.5" })).toEqual({});
+    expect(buildingTags({ building: "yes" })).toEqual({});
+  });
+});
+

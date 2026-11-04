@@ -1,0 +1,8 @@
+{
+  "look": "pbr",
+  "streets": {
+    "o4w-houses": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&cam=-315.6,1.7,692.4,-328.6,2.2,679.4",
+    "venkmans": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&cam=34.6,1.7,-210.2,15.1,3.2,-215.7",
+    "new-realm": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&cam=133,1.7,-455,113.7,3.2,-461.1"
+  }
+}

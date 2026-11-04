@@ -28,7 +28,7 @@ import { pathToFileURL } from "node:url";
 import polygonClipping from "polygon-clipping";
 import { bboxCenter, createProjection, parseBbox } from "../src/level/geo/projection.js";
 import { cleanRing, signedArea } from "../src/level/geo/extrude.js";
-import { decodeHeights, encodeHeights, gradeBridgeEnds, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
+import { decodeHeights, encodeHeights, gradeBridgeEnds, gradeFootprints, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
 import { shortName } from "../src/level/geo/signs.js";
 import { createStreetNamer } from "./street-names.mjs";
 
@@ -435,6 +435,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       const extra = { height: round(height), heightSource: source };
       if (tags.name) extra.name = tags.name;
       if (tags.building !== "yes") extra.type = tags.building;
+      Object.assign(extra, buildingTags(tags));
       const items = [];
       addPolygon(items, id, outers, inners, extra);
       for (const item of items) {
@@ -468,8 +469,11 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
   // Raise the bridge approaches that the grid smooths (src/level/geo/terrain.js).
   let embankments = [];
   if (terrain) {
-    // First a rail grade on the trail, then the embankments at the bridge ends.
-    const graded = gradeTrail({ ...terrain, heights: decodeHeights(terrain.data, terrain.cols * terrain.rows) }, strips).heights;
+    // First a rail grade on the trail, then a pad under each building on a
+    // slope (#135; it keeps the trail band), then the embankments at the
+    // bridge ends.
+    const railed = gradeTrail({ ...terrain, heights: decodeHeights(terrain.data, terrain.cols * terrain.rows) }, strips).heights;
+    const graded = gradeFootprints({ ...terrain, heights: railed }, buildings, strips).heights;
     const r = raiseEmbankments({ ...terrain, heights: graded }, strips);
     embankments = r.changes;
     // Last, the ground at the bridge joints goes on the deck line (#131).
@@ -518,6 +522,21 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     level.stats.embankments = embankments.length;
   }
   return level;
+}
+
+// The OSM tags that the facade kit reads (issue #135): the floor count, the
+// roof shape, the wall material, and the shop or the amenity in the
+// building with its name. The game filters the shop names
+// (src/level/geo/shop-signs.js); the level keeps the OSM values.
+export function buildingTags(tags) {
+  const out = {};
+  const levels = Number(tags["building:levels"]);
+  if (Number.isInteger(levels) && levels > 0) out.levels = levels;
+  if (tags["roof:shape"]) out.roofShape = tags["roof:shape"];
+  if (tags["building:material"]) out.material = tags["building:material"];
+  const use = tags.shop ? { key: "shop", value: tags.shop } : tags.amenity ? { key: "amenity", value: tags.amenity } : null;
+  if (use) out.use = tags.name ? { ...use, name: tags.name } : use;
+  return out;
 }
 
 // OSM footprints with no walls down to the ground (issue #57): a roof is an

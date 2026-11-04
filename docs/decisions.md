@@ -1059,3 +1059,30 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The footway spur `w1118177210` goes from the footway deck (9.5 m) to the ground (4.8 m) in 10 m, as in the OSM data: a 47% ramp.
 - The ground sampler is about 1.4 times slower (deck heights now read the terrain).
 - Not checked: the low tier far terrain at the bridge ends.
+
+## 2026-11-04: More detailed buildings: porches, shop boards, roof gear, lintels (#135)
+
+### Decisions
+
+- The level keeps 4 more OSM building tags (`buildingTags()` in `scripts/build-block.mjs`): `levels` (building:levels), `roofShape` (roof:shape), `material` (building:material), and `use` ({ key, value, name } from shop or amenity). The game reads them; the level keeps the OSM values.
+- `floorCount()` (`src/level/geo/styles.js`): the OSM level count sets the floors of the facade shader and the kit when it gives a floor height of 2.6 to 6.5 m. `roofForm()`: the OSM roof shape comes first (flat or a gable shape), else a house gets a gable. An untyped brick building gets a brick style.
+- Porches (`housePorch()`, `houseFronts()` in `src/level/geo/facade-kit.js`): a house whose front wall has a way within 30 m gets a porch on its door bay: a deck on a skirt, knee walls with a trim cap, 4 posts, a beam, a shed roof under the eave and the second floor sills, a stair down to the terrain in front, and a painted door. The porch, its stair, and its roof overhang stay 0.5 m or more from every way (street, sidewalk, path, trail) and every other building (`wallClear()`). When the full stair does not fit, the stair gets fewer steps. A wall with a mural gets no porch. 219 of 788 houses get a porch. The porches are in the depth tiles, so they show only within 120 m.
+- Shop boards (`src/level/geo/shop-signs.js`, `src/render/shop-signs-view.js`): a building with a named use from the `SHOP_USES` list gets one board with the name, on the door bay of its front wall, on the line of the sign band. `NAME_DENY` keeps names off that do not show the city at its best. 7 BeltLine buildings get a board. The round 0 art direction forbids text on the blank boards; these boards are a different part, and they show only real OSM names.
+- Roofs: solar rows (`roofPlan()` kind "solar", `roofSolar()`) on the flat roofs of 5 styles, with their own seed, so the other roof parts do not move. One frame and one face for each 2 m panel keep the main kit tiles at 53,866 triangles (budget 60,000). The industrial sheds get the water tower rate 0.5.
+- Lintels: on the top floor of a low building the lintel went into the cornice, so `wallDepth()` left it out. Now it gets lower and stays under the bed molding (at least 0.1 m high). Lintels 1,872 to 3,298; heads 50,777 to 59,277.
+- Window reveal: the facade shader darkens a 0.16 m band under the window head and a 0.07 m band at each jamb (`REVEAL` in `src/render/geo-view.js`).
+- Plinths: `gradeFootprints()` (`src/level/geo/terrain.js`, build step after `gradeTrail()`) puts a pad under each building with a drop of 1 m or more along its walls. A node moves 2.5 m or less. Nodes within 1.5 m of a way and within 10.5 m of the trail keep their height. Plinth (base minus foot): median 1.80 to 1.24 m, over 3 m 146 to 49 buildings. Max change on the trail 0.03 m, on streets p90 0.14 m, on sidewalks p90 0.52 m (the 8 m grid tilts a sidewalk between nodes).
+- NPC check: a first version graded before the trail grade and moved the trail by up to 0.44 m. Two NPC skater tests failed (a wall bonk). With the trail band kept, they pass with no NPC change.
+
+### Evidence
+
+- Vitest: new tests in `facade-kit.test.js` (porch span, clear depth, porch placement, porches off every way and building on the BeltLine level, solar rows, level counts), `styles.test.js`, `terrain.test.js` (gradeFootprints), `roof-plan.test.js` (solar), `shop-signs.test.js`, `shop-signs-view.test.js`, and `scripts/build-block.test.js` (buildingTags). The mural test covers the porches.
+- Budgets (pure kit, `facadeKit()`): main tiles 51,144 to 53,866 triangles; worst near sum of the depth tiles 101,058 to 107,954 (limit 150,000).
+- Before and after: lab PNGs for brick-loft, storefront, and craftsman-house in `reports/lab/<style>-135-{before,after}/`, and 3 streets in `reports/streets/135-{before,after}/` (`e2e/streets.spec.js`). Judge report: `docs/art-loop/reports/brick-loft-r3-judge.md` (the engineer wrote it; not an independent judge).
+- The phone tier has no facade kit (`tier.detail` is false), so the porches, the boards, and the solar rows add no triangles there.
+
+### Limits
+
+- Not verified: the 55 FPS median on the harness. `npm run playtest:beltline` gave a median of 20 FPS (FAIL) at a load average of 37 from other sessions (`reports/playtest-beltline-eastside-2026-11-04-22-47-50.json`). Measure it again on a quiet machine. The phone tier adds no triangles (see Evidence).
+- The planters stay small at 25 m: `PLANTER` is in `src/level/geo/props.js`, which the roads session owns.
+- The porches and the boards have no colliders, like the rest of the kit.

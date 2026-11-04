@@ -68,6 +68,10 @@ export const FURNITURE_SHIFT = 3;
 
 // The ways a mapped prop turns to.
 const FACE_KINDS = new Set(["trail", "path", "sidewalk"]);
+// The paved ways a mapped prop moves off. A street is in this list, so a
+// point on a street moves away from the street, not away from the sidewalk
+// beside it (deeper into the street).
+const PAVED_KINDS = new Set(["trail", "path", "sidewalk", "street"]);
 
 // The nearest point on the ways of `kinds` to (x, z):
 // { x, z, d, dx, dz } with (dx, dz) the way direction there, or null.
@@ -86,7 +90,7 @@ export function nearestWay(strips, x, z, kinds = FACE_KINDS) {
       const d = Math.hypot(px - x, pz - z);
       if (!best || d < best.d) {
         const len = Math.sqrt(len2);
-        best = { x: px, z: pz, d, dx: (bx - ax) / len, dz: (bz - az) / len, half: s.width / 2 };
+        best = { x: px, z: pz, d, dx: (bx - ax) / len, dz: (bz - az) / len };
       }
     }
   }
@@ -228,15 +232,16 @@ export function streetProps(level, sample, report = null) {
     // Each bench with a back rest is the painted bench (it has a back).
     const kind = f.kind === "bench" && f.tags?.backrest === "yes" ? "bench_painted" : base;
     const way = nearestWay(level.strips, f.x, f.z);
-    // Away from the way: the first try is the OSM point.
+    // Away from the nearest paved way: the first try is the OSM point.
+    const paved = nearestWay(level.strips, f.x, f.z, PAVED_KINDS);
     let ax = 0;
     let az = 0;
-    if (way && way.d > 1e-3) {
-      ax = (f.x - way.x) / way.d;
-      az = (f.z - way.z) / way.d;
-    } else if (way) {
-      ax = -way.dz;
-      az = way.dx;
+    if (paved && paved.d > 1e-3) {
+      ax = (f.x - paved.x) / paved.d;
+      az = (f.z - paved.z) / paved.d;
+    } else if (paved) {
+      ax = -paved.dz;
+      az = paved.dx;
     }
     let p = null;
     let firstWhy = null;

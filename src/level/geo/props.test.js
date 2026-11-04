@@ -152,6 +152,21 @@ describe("prop placement", () => {
     expect(plain.some((p) => p.osm)).toBe(false);
   });
 
+  it("moves a mapped point off a street to the near street edge, not toward the far path", () => {
+    // A street at x = 0 (6 m wide) and a path 20 m to the west. The rack is
+    // on the street, 1 m from its west edge. It must move west, off the
+    // street, and not east across the street (away from the path).
+    const street = { id: "s", kind: "street", width: 6, points: [[0, -100], [0, 100]] };
+    const path = { id: "p", kind: "path", width: 2, points: [[-20, -100], [-20, 100]] };
+    const base = { surfaces: LEVEL.surfaces, bounds: { minX: -200, maxX: 200, minZ: -200, maxZ: 200 }, strips: [street, path], areas: [], buildings: [] };
+    const s = createGeoGroundSampler(base);
+    const report = {};
+    const ps = streetProps({ ...base, furniture: [{ id: "n9", kind: "bicycle_parking", x: -2, z: 0 }] }, s, report);
+    const rack = ps.find((p) => p.osm === "n9");
+    expect(rack, JSON.stringify(report.refusedPoints)).toBeTruthy();
+    expect(rack.x).toBeLessThan(-3);
+  });
+
   it("turns templates the same way as the skater yaw", () => {
     // forward(yaw) = (cos yaw, -sin yaw).
     const y = yawToward(0, -1);

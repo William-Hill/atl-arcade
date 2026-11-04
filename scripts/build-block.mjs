@@ -700,9 +700,16 @@ async function main() {
   const raw = await cachedOverpass(rawFile, metaFile, query, bbox, args);
   // The street furniture: its own query and cache. --refresh-furniture
   // fetches only the furniture again.
+  // With --offline and no furniture cache, the level builds with no
+  // furniture, as before the furniture query.
   const furnitureArgs = { ...args, refresh: args.refresh || args["refresh-furniture"] };
-  const furniture = await cachedOverpass(resolve(rawDir, "street-furniture.json"), resolve(rawDir, "street-furniture-fetch.json"), furnitureQuery(bbox), bbox, furnitureArgs);
-  console.log(`build-block: ${furniture.elements.length} street furniture points`);
+  const furnitureFile = resolve(rawDir, "street-furniture.json");
+  let furniture = null;
+  if (args.offline && !existsSync(furnitureFile)) console.log(`build-block: --offline and no ${furnitureFile}; no street furniture`);
+  else {
+    furniture = await cachedOverpass(furnitureFile, resolve(rawDir, "street-furniture-fetch.json"), furnitureQuery(bbox), bbox, furnitureArgs);
+    console.log(`build-block: ${furniture.elements.length} street furniture points`);
+  }
 
   // Building heights from Overture (scripts/overture-heights.py), when present.
   const overtureFile = resolve(rawDir, "overture.json");

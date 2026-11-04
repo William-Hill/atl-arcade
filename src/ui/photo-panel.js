@@ -51,6 +51,7 @@ const MOVE_KEYS = {
   up: [["KeyE", "Space"], ["KeyQ", "KeyC"]],
 };
 const FAST_KEYS = ["ShiftLeft", "ShiftRight"];
+const CAMERA_KEYS = new Set([...Object.values(MOVE_KEYS).flat(2), ...FAST_KEYS]);
 
 function el(tag, parent, props = {}) {
   const node = document.createElement(tag);
@@ -62,7 +63,7 @@ function el(tag, parent, props = {}) {
 // camera: the Three.js camera. tiltShift: a function that returns the pass
 // from addTiltShift(), or null when the chain has no blur (the low and
 // phone tiers, or after a governor step). render(): draws one frame. sampleLook(dt): { yaw, pitch }
-// in rad, or null. floor(x, z): the ground height, or null. onChange(open).
+// in rad, or null. floor(x, z, y): the ground height below the height y, or null. onChange(open).
 export function createPhotoPanel({ root = document.body, canvas, camera, tiltShift = () => null, render, sampleLook = () => null, floor = null, onChange = () => {} }) {
   if (!document.getElementById("photo-mode-style")) el("style", document.head, { id: "photo-mode-style", textContent: STYLE });
 
@@ -202,9 +203,16 @@ export function createPhotoPanel({ root = document.body, canvas, camera, tiltShi
       setParams({ strength: nudgeStrength(state, e.code === "Equal" ? 1 : -1).strength });
       return;
     }
-    if (!typing(e)) keys.add(e.code);
+    if (typing(e)) return;
+    keys.add(e.code);
+    // Space must not push a focused button, and the arrows must not scroll the page.
+    if (CAMERA_KEYS.has(e.code)) e.preventDefault();
   };
-  const onKeyUp = (e) => keys.delete(e.code);
+  const onKeyUp = (e) => {
+    keys.delete(e.code);
+    // A button activates on the Space key up, so cancel the key up too.
+    if (state.open && CAMERA_KEYS.has(e.code) && !typing(e) && !(e.ctrlKey || e.metaKey || e.altKey)) e.preventDefault();
+  };
   const onBlur = () => keys.clear();
   const onWheel = (e) => {
     if (!state.open || !tiltShift()) return;

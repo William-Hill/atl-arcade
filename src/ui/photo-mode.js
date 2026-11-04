@@ -92,7 +92,7 @@ export function stepFreeCam(state, { forward = 0, right = 0, up = 0, fast = fals
     y = a[1] + dy * s;
     z = a[2] + dz * s;
   }
-  const g = floor ? floor(x, z) : null;
+  const g = floor ? floor(x, z, y) : null;
   if (Number.isFinite(g)) y = Math.max(y, g + k.minHeight);
   return { ...state, camera: { position: [x, y, z], yaw, pitch } };
 }

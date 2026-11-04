@@ -355,9 +355,11 @@ const photo = createPhotoPanel({
   tiltShift: () => tiltShift,
   render: draw,
   sampleLook: (dt) => mapLook(photoLook.sample(), dt),
-  floor: (x, z) => env.sampleGround(x, z)?.height ?? null,
+  // The camera height selects the floor below the camera, not a bridge deck above it.
+  floor: (x, z, y) => env.sampleGround(x, z, y)?.height ?? null,
   onChange: (open) => {
     if (controls) controls.enabled = !open;
+    input.reset();
   },
 });
 

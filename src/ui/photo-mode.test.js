@@ -86,6 +86,16 @@ describe("free camera", () => {
     for (let i = 0; i < 50; i += 1) s = stepFreeCam(s, { up: -1 }, 0.1, () => 2);
     expect(s.camera.position[1]).toBeCloseTo(2 + FREE_CAM.minHeight, 10);
   });
+
+  it("gives the camera height to the floor sampler", () => {
+    const heights = [];
+    stepFreeCam(open(), { up: 1 }, 0.1, (x, z, y) => {
+      heights.push(y);
+      return 0;
+    });
+    expect(heights).toHaveLength(1);
+    expect(Number.isFinite(heights[0])).toBe(true);
+  });
 });
 
 describe("photo file name", () => {

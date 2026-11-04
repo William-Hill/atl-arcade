@@ -883,3 +883,35 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Format: a Poly Haven model becomes a toon prop in the format of `assets/kit/street-kit.glb`: vertex colors (COLOR_0), no textures, no materials. The texture gives a few flat colors (k-means), with the brightness range of the kit palette. This keeps the cel look and keeps the files small.
 - First prop: `assets/props/painted_wooden_bench/painted_wooden_bench.glb`, 630 triangles, 30,804 bytes. `loadKitTemplates()` loads it. No Draco, because the kit loader has no Draco decoder.
 - Not done: the bench is not in a level, and it has no LOD1. The Blender MCP add-on is at protocol 7 (the server expects 15), so its Poly Haven import is off. The models came from the Poly Haven API.
+
+## 2026-11-04: Bridge decks meet their roads (#131)
+
+### Root causes
+
+- The terrain grid is 8 m, not 4 m. A deck end cannot meet the road at the OSM end: the ground there ramps down into the cut under the bridge. The deck end also used the ground height at its center point only. The deck is level across, and the approach road drapes on a ground with a cross slope, so the corners had steps up to 2.87 m (Parkway, (393.8, -43.3)).
+- Under the decks the ground was up to 1.49 m above the deck (Parkway), and the slab was straight across a deck that sat on the ground.
+- The deck end was square to the deck and the road end was square to the road (up to 10 degrees apart), so wedges of grass showed. The deck had no miter at a turn.
+- A sidewalk deck next to a road deck had its own height line, up to 3.9 m lower (Highland Ave NE, south side). The two Parkway carriageways had lines up to 0.8 m apart, side by side.
+- The parapets stopped in the road with no end, and the road parapets stood inside the sidewalk decks.
+- The markings on a deck were draped on the ground, not on the deck.
+
+### Decisions
+
+- `src/level/geo/bridges.js` (new, pure): each deck goes on past its OSM end along the approach road to a joint J, up to 12 m (one grid diagonal). The run-on stops where the approach bends more than 20 degrees. The approach road mesh stops at J. A deck alongside a wider deck in parallel (a sidewalk, or the second carriageway) is hosted: it uses the line of its host. Ribbons are mitered. `project()` measures along a polyline between miter lines, so the height has no jump on the inside of a turn.
+- `bridgeDeck()`: on the span, the line from the ground at J0 to the ground at J1, with the arch. On a run-on the deck blends from that line to the ground on the joint edge. So at J the deck is on the ground, the same as the road. The deck never goes under the ground. A free end on another deck (the footway spur at Ponce City Market) starts at that deck height.
+- `gradeBridgeEnds()` (build step, after `raiseEmbankments()`, run twice): the ground goes on the deck line, level across the road, within one grid diagonal of each joint, and blends back over 24 m. Under each span the ground stays 5 cm under the deck line. Near a way that passes under a deck the grade does not raise the ground, so no arch grows from a fill.
+- The deck top is one drape on the deck height. The slab is on the straight line, 5 cm under the deck top. Each parapet ends at an end post and a 4 m wing wall that turns 30 degrees out and goes down into the ground. A parapet side inside another deck or in an at-grade way at the deck height gets no parapet. A joint disk fills the wedge at each joint and where two roads of one kind meet end to end within 40 m of a bridge.
+- The deck markings follow the deck (`roadMarkings()` returns them in `deck`, not draped again).
+
+### Evidence
+
+- `src/level/geo/bridges.test.js` (13 tests): deck end on the ground at each of the joints within 2 cm, the deck mesh edge at J on the ground, no terrain over any deck from joint to joint, wing walls off the road, center lines across the Parkway joints, and 2 skater rolls at 3 offsets across each joint with no bonk and no fall.
+- `e2e/bridges.spec.js`: high-tier pictures of 17 bridge ends, in `reports/bridges/before/` (origin/main) and `reports/bridges/after/`.
+- The high tier loads to 5 frames in 8.2 s headless. Vitest: 565 tests pass.
+
+### Limits
+
+- Where the run-on of one deck meets the graded band of another (the Highland and Randolph corner, the Parkway west end with the Stone Mountain Trail), the deck rides the ground for a few meters. The height is continuous, but the grade has a crease of up to about 10 cm.
+- The footway spur `w1118177210` goes from the footway deck (9.5 m) to the ground (4.8 m) in 10 m, as in the OSM data: a 47% ramp.
+- The ground sampler is about 1.4 times slower (deck heights now read the terrain).
+- Not checked: the low tier far terrain at the bridge ends.

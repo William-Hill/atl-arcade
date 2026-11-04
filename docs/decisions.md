@@ -834,3 +834,10 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Fix: `widthOf()` in `src/level/geo/markings.js` matches `signName ?? name`. `drapeMesh()` in `src/level/geo/terrain.js` skips a triangle with a position that is not finite, so one bad triangle cannot stop the load.
 - Measured: the BeltLine markings have 8476 triangles again (3192 with the defect). The high tier loads to 5 frames in 10.4 s in headless Chromium (before: no load in 105 s).
 - Tests: `src/level/geo/markings.test.js` checks that each marking position and tile is finite on the real level, and that a street with a city name different from its OSM name gets finite crosswalks. Both tests fail without the fix.
+
+## 2026-11-03: Poly Haven props
+
+- Source: Poly Haven (https://polyhaven.com) has CC0 models, textures, and HDRIs. `docs/assets/polyhaven-shortlist.md` lists the assets that fit the game, the gaps (no cone, bollard, ramp, rail, or sign), and the assets that the political rules keep out.
+- Format: a Poly Haven model becomes a toon prop in the format of `assets/kit/street-kit.glb`: vertex colors (COLOR_0), no textures, no materials. The texture gives a few flat colors (k-means), with the brightness range of the kit palette. This keeps the cel look and keeps the files small.
+- First prop: `assets/props/painted_wooden_bench/painted_wooden_bench.glb`, 630 triangles, 30,804 bytes. `loadKitTemplates()` loads it. No Draco, because the kit loader has no Draco decoder.
+- Not done: the bench is not in a level, and it has no LOD1. The Blender MCP add-on is at protocol 7 (the server expects 15), so its Poly Haven import is off. The models came from the Poly Haven API.

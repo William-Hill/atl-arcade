@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { placeTemplate } from "../level/geo/extrude.js";
-import { createPropBatch, placementMatrix, propLodFor } from "./prop-batch.js";
+import { createPropBatch, fadeLodsFor, placementMatrix, propLodFor } from "./prop-batch.js";
 
 const box = (size, color) => ({
   positions: [0, 0, 0, size, 0, 0, size, size, 0, 0, size, 1],
@@ -76,5 +76,39 @@ describe("createPropBatch", () => {
     batch.update({ x: 100, z: 0 });
     expect(batch.mesh.getGeometryIdAt(0)).toBe(near);
     expect(batch.mesh.getVisibleAt(0)).toBe(true);
+  });
+
+  it("gives a fading kind a near and a far instance, both shown over the fade band", () => {
+    const fade = { band: 10, kinds: ["bench", "lamp"] };
+    const batch = createPropBatch(placements, templates, material, { lod0Distance: 60, drawDistance: 200, fade });
+    // The lamp has no LOD1, so it does not fade: 2 benches x 2 + 1 lamp.
+    expect(batch.mesh.instanceCount).toBe(5);
+    expect(batch.info.instances).toBe(3);
+    batch.update({ x: -45, z: 0 });
+    expect(batch.info).toMatchObject({ drawn: 2, lod0: 1, fading: 0 });
+    batch.update({ x: -55, z: 0 });
+    // The bench at x 0 is 55 m away: in the band, both shapes.
+    expect(batch.info.fading).toBe(1);
+    expect(batch.mesh.getVisibleAt(0)).toBe(true);
+    expect(batch.mesh.getVisibleAt(1)).toBe(true);
+    batch.update({ x: 150, z: 0 });
+    expect(batch.mesh.getVisibleAt(0)).toBe(false);
+    expect(batch.mesh.getVisibleAt(1)).toBe(true);
+  });
+
+  it("colors each placement by tint()", () => {
+    const batch = createPropBatch(placements, templates, material, { lod0Distance: 60, drawDistance: 200, tint: (p) => (p.x === 100 ? [0.5, 1, 1] : null) });
+    const c = new THREE.Color();
+    expect(batch.mesh.getColorAt(1, c).r).toBeCloseTo(0.5);
+    expect(batch.mesh.getColorAt(0, c).r).toBeCloseTo(1);
+  });
+});
+
+describe("fadeLodsFor", () => {
+  it("shows the near shape under the LOD distance and the far one from the band start", () => {
+    expect(fadeLodsFor(10, 60, 200, 10)).toEqual([true, false]);
+    expect(fadeLodsFor(55, 60, 200, 10)).toEqual([true, true]);
+    expect(fadeLodsFor(60, 60, 200, 10)).toEqual([false, true]);
+    expect(fadeLodsFor(200, 60, 200, 10)).toEqual([false, false]);
   });
 });

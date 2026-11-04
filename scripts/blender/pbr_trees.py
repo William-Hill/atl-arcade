@@ -2,11 +2,13 @@
 
     blender -b -P scripts/blender/pbr_trees.py -- OUT_DIR [--species oak,pine] [--render]
 
-Each species becomes OUT_DIR/<species>.glb with nodes tree_<species>_<v> (LOD0) and
-tree_<species>_<v>_lod1 (GLTFLoader drops ":" from node names; geo-view maps them to
-the treeKindFor() names) for v in 0..2. LOD0: a branching trunk (tapered tubes with a
-tiling bark texture) and leaf cards (alpha-masked leaf-cluster texture, two
-sided). Nodes are tree_<species>_<v> (GLTFLoader drops ":" from names; geo-view maps them to treeKindFor names). LOD1: the trunk plus 3 crossed crown cards. Textures are painted here
+Each species becomes OUT_DIR/<species>.glb with nodes tree_<species>_<v> for v in
+0..2 (GLTFLoader drops ":" from node names; geo-view maps them to the treeKindFor()
+names). Each is a branching trunk (tapered tubes with a root flare, moss on oak,
+maple and dogwood) and leaf cards (two sided). The far shapes are impostors drawn
+in the browser (src/render/tree-impostors.js). _LEAF is [u, v, code]: on a card
+the code is the leaf shape (src/render/leaf-cut.js LEAF_SHAPES) plus the seed; on
+bark it is -1 - the bark kind. Textures are painted here
 from seeded noise (no photos, no third-party art) and shared by all species:
 bark (color + normal), and a leaf atlas (color with alpha + normal).
 COLOR_0.r is the wind sway weight (0 at the trunk base, 1 at the crown edge);
@@ -201,7 +203,8 @@ class Mesh:
         self.sway = self.bm.verts.layers.float.new("_SWAY")
         self.leaf = self.bm.verts.layers.float_vector.new("_LEAF")
         self.normals = []
-        self.bark = lambda z: (*[x * min(1.0, 0.8 + 0.08 * z) for x in lin(BARK_SRGB)], 1)  # bark, a little darker at the base
+        self.bark = lambda p, radial: (*[x * min(1.0, 0.8 + 0.08 * p.z) for x in lin(BARK_SRGB)], 1)  # bark, a little darker at the base
+        self.bark_code = -1.0
 
     def face(self, verts, uvs, cols, mat, sway=None, seed=0.0, normals=None):
         vs = [self.bm.verts.new(v) for v in verts]
@@ -216,8 +219,9 @@ class Mesh:
         return f
 
 
-def tube(M, pts, radii, sway, segs, mat):
-    """A tapered tube along pts; bark UVs tile ~1 m per v, around = 1."""
+def tube(M, pts, radii, sway, segs, mat, lobes=None):
+    """A tapered tube along pts; bark UVs tile ~1 m per v, around = 1. lobes[i]
+    swells ring i into 5 root buttresses (the root flare)."""
     rings = []
     vlen = 0.0
     for i, p in enumerate(pts):
@@ -226,12 +230,18 @@ def tube(M, pts, radii, sway, segs, mat):
         b = d.cross(a)
         if i:
             vlen += (p - pts[i - 1]).length
-        rings.append(([p + (a * math.cos(2 * math.pi * k / segs) + b * math.sin(2 * math.pi * k / segs)) * radii[i] for k in range(segs + 1)], vlen / max(0.6, radii[0] * 6), sway[i]))
+        ring = []
+        for k in range(segs + 1):
+            ang = 2 * math.pi * k / segs
+            radial = a * math.cos(ang) + b * math.sin(ang)
+            r = radii[i] * (1 + (lobes[i] if lobes else 0) * max(0.0, math.cos(5 * ang)) ** 2)
+            ring.append((p + radial * r, radial))
+        rings.append((ring, vlen / max(0.6, radii[0] * 6), sway[i]))
     for (r0, v0, s0), (r1, v1, s1) in zip(rings, rings[1:]):
         for k in range(segs):
-            c0, c1 = M.bark(r0[k].z), M.bark(r1[k].z)
-            M.face([r0[k], r0[k + 1], r1[k + 1], r1[k]], [(k / segs, v0), ((k + 1) / segs, v0), ((k + 1) / segs, v1), (k / segs, v1)],
-                   [c0, c0, c1, c1], mat, sway=[s0, s0, s1, s1])
+            q = [r0[k], r0[k + 1], r1[k + 1], r1[k]]
+            M.face([x[0] for x in q], [(k / segs, v0), ((k + 1) / segs, v0), ((k + 1) / segs, v1), (k / segs, v1)],
+                   [M.bark(*x) for x in q], mat, sway=[s0, s0, s1, s1], seed=M.bark_code)
 
 
 def grow(sp, rng):
@@ -278,12 +288,28 @@ def lin(c):
 
 LEAF_SRGB = {"oak": (0.5, 0.76, 0.3), "pine": (0.34, 0.58, 0.36), "magnolia": (0.28, 0.54, 0.3), "myrtle": (0.48, 0.72, 0.34), "dogwood": (0.44, 0.68, 0.32), "street": (0.46, 0.7, 0.3)}
 BARK_SRGB = (0.5, 0.42, 0.35)
+# The leaf shape and bark kind codes of src/render/leaf-cut.js (LEAF_SHAPE_OF,
+# BARK_KIND_OF), the bark color, and moss at the foot of the trunk.
+LEAF_SHAPE = {"oak": 1, "pine": 2, "magnolia": 3, "myrtle": 4, "dogwood": 5, "street": 6}
+BARK_KIND = {"oak": 0, "pine": 1, "magnolia": 2, "myrtle": 2, "dogwood": 0, "street": 0}
+BARK_OF = {"pine": (0.5, 0.36, 0.28), "magnolia": (0.54, 0.52, 0.47), "myrtle": (0.68, 0.53, 0.42)}
+MOSS = {"oak", "street", "dogwood"}
+MOSS_SRGB = (0.36, 0.44, 0.2)
 
 
 def crown_occlusion(p, sp):
     cy, hw, hh = sp["crown"]
     q = Vector((p.x / hw, p.y / hw, (p.z - cy) / hh))
-    return max(0.35, min(1.0, 0.35 + 0.75 * q.length))
+    return max(0.5, min(1.0, 0.5 + 0.6 * q.length))
+
+
+def crown_normal(p, sp):
+    """The normal of the crown as one volume at p: out from a point under the
+    crown center, bent up toward the sky, so the inside of a crown is not
+    lit as a back face."""
+    cy, hw, hh = sp["crown"]
+    out = Vector(((p.x) / hw, (p.y) / hw, (p.z - (cy - hh * 0.3)) / hh)).normalized()
+    return (out + Vector((0, 0, 0.45))).normalized()
 
 
 def finish_normals(me, normals):
@@ -303,12 +329,32 @@ def build_tree(name, sp, seed, mats):
     branches, anchors = grow(sp, rng)
     cy, hw, hh = sp["crown"]
     top_h = cy + hh
+    barkc = lin(BARK_OF.get(sp["name"], BARK_SRGB))
+    mossc = lin(MOSS_SRGB)
+    moss = sp["name"] in MOSS
+
+    def bark(p, radial):
+        c = [x * min(1.0, 0.8 + 0.08 * p.z) for x in barkc]
+        if moss and p.z < 1.0:
+            # Moss on the shaded (north, -y) foot of the trunk.
+            m = (1 - p.z / 1.0) * max(0.0, -radial.y * 0.8 + 0.3)
+            c = [x + (y - x) * min(1.0, m) for x, y in zip(c, mossc)]
+        return (*c, 1)
+
+    M.bark = bark
+    M.bark_code = -1.0 - BARK_KIND[sp["name"]]
     for pts, radii, depth in branches:
         segs = 8 if depth == 0 else (5 if depth == 1 else 3)
         if radii[0] < 0.012:
             continue
+        lobes = None
+        if depth == 0:
+            # The root flare: a wide lobed foot, half a meter up into the trunk.
+            pts = [pts[0], pts[0].lerp(pts[1], 0.3)] + pts[1:]
+            radii = [radii[0] * 1.6, radii[0] * 1.15] + radii[1:]
+            lobes = [0.4, 0.15] + [0] * (len(pts) - 2)
         sway = [min(1, max(0, (p.z / top_h) ** 2 * 0.6 + 0.4 * depth / 3)) for p in pts]
-        tube(M, pts, radii, sway, segs, 0)
+        tube(M, pts, radii, sway, segs, 0, lobes)
     # The crown core: low icospheres at a few branch tips, shaded like the cards.
     core = bmesh.new()
     tips = anchors[:: max(1, len(anchors) // sp.get("cores", 7))][: sp.get("cores", 7)]
@@ -318,9 +364,9 @@ def build_tree(name, sp, seed, mats):
         bmesh.ops.create_icosphere(core, subdivisions=2, radius=1.0, matrix=Matrix.Translation(c0) @ Matrix.Diagonal((hw * 0.34, hw * 0.34, hh * 0.4, 1)))
     for f in core.faces:
         vs = [v.co.copy() for v in f.verts]
-        k = 0.72 * rng.uniform(0.9, 1.05)
+        k = 0.85 * rng.uniform(0.9, 1.05)
         col = (*[x * k for x in lin(sp["leafc"])], 1)
-        nrm = [(q - Vector((0, 0, cy - hh * 0.3))).normalized() for q in vs]
+        nrm = [crown_normal(q, sp) for q in vs]
         M.face(vs, [(0, 0)] * len(vs), [col] * len(vs), 1, sway=[0.6] * len(vs), normals=nrm)
     core.free()
     # Leaf cards around the anchors, inside the crown ellipsoid.
@@ -345,8 +391,8 @@ def build_tree(name, sp, seed, mats):
         col = (*[x * k for x in lin(sp["bloom"] if bloom else sp["leafc"])], 1)
         quad = [c - a - b, c + a - b, c + a + b, c - a + b]
         # The card normals point out of the crown, so the cards shade as one volume.
-        nrm = [(q - Vector((0, 0, cy - hh * 0.3))).normalized() for q in quad]
-        M.face(quad, [(0, 0), (1, 0), (1, 1), (0, 1)], [col] * 4, 1, sway=[sw] * 4, seed=rng.uniform(0.05, 1.0), normals=nrm)
+        nrm = [crown_normal(q, sp) for q in quad]
+        M.face(quad, [(0, 0), (1, 0), (1, 1), (0, 1)], [col] * 4, 1, sway=[sw] * 4, seed=LEAF_SHAPE[sp["name"]] + rng.uniform(0.05, 0.95), normals=nrm)
     me = bpy.data.meshes.new(name)
     M.bm.to_mesh(me)
     M.bm.free()
@@ -360,37 +406,6 @@ def build_tree(name, sp, seed, mats):
     return obj, (len(me.polygons), sum(len(p.vertices) - 2 for p in me.polygons))
 
 
-def build_lod1(name, sp, seed, mats):
-    rng = random.Random(seed)
-    M = Mesh()
-    th, tr = sp["trunk"]
-    cy, hw, hh = sp["crown"]
-    tube(M, [Vector((0, 0, 0)), Vector((0, 0, cy))], [tr, tr * 0.5], [0, 0.4], 4, 0)
-    u0 = 0.5 if sp.get("needles") else 0.0
-    for k in range(3):
-        ang = math.pi * k / 3 + rng.uniform(-0.1, 0.1)
-        a = Vector((math.cos(ang), math.sin(ang), 0)) * hw * 1.05
-        b = Vector((0, 0, hh * 1.1))
-        c = Vector((0, 0, cy))
-        for side in (0, 1):  # 2x2 tiles of the cluster texture per card
-            for row in (0, 1):
-                o = c + a * (side - 0.5) + b * (row - 0.5)
-                qa, qb = a * 0.5, b * 0.5
-                pts = [o - qa - qb, o + qa - qb, o + qa + qb, o - qa + qb]
-                col = (*[x * 0.8 for x in lin(sp["leafc"])], 1)
-                nrm = [(q - Vector((0, 0, cy - hh * 0.3))).normalized() for q in pts]
-                M.face(pts, [(0, 0), (1, 0), (1, 1), (0, 1)], [col] * 4, 1, sway=[0.8] * 4, normals=nrm)
-    me = bpy.data.meshes.new(name)
-    M.bm.to_mesh(me)
-    M.bm.free()
-    finish_normals(me, M.normals)
-    for m in mats:
-        me.materials.append(m)
-    obj = bpy.data.objects.new(name, me)
-    bpy.context.scene.collection.objects.link(obj)
-    return obj, sum(len(p.vertices) - 2 for p in me.polygons)
-
-
 # ---------- main --------------------------------------------------------------
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bark_c, bark_n = bark_textures()
@@ -398,6 +413,7 @@ leaf_c, leaf_n = leaf_textures()
 stats = {}
 for species, sp in SPECIES.items():
     sp["leafc"] = LEAF_SRGB[species]
+    sp["name"] = species
     for o in list(bpy.data.objects):
         bpy.data.objects.remove(o, do_unlink=True)
     bark = material(f"{species}_bark", bark_c, bark_n, 0.92)
@@ -406,9 +422,8 @@ for species, sp in SPECIES.items():
     for v in range(VARIANTS):
         seed = sum(ord(ch) * 131 ** i for i, ch in enumerate(f"{species}:{v}")) & 0xFFFFFFFF
         o0, (_, t0) = build_tree(f"tree_{species}_{v}", sp, seed, [bark, leaf])
-        o1, t1 = build_lod1(f"tree_{species}_{v}_lod1", sp, seed, [bark, leaf])
-        o1.location.x = o0.location.x = 0
-        stats[species][v] = {"lod0_triangles": t0, "lod1_triangles": t1}
+        o0.location.x = 0
+        stats[species][v] = {"lod0_triangles": t0}
     path = os.path.join(OUT, f"{species}.glb")
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_yup=True, export_apply=True,
                               export_vertex_color="ACTIVE", export_all_vertex_colors=False,

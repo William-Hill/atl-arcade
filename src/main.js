@@ -221,7 +221,7 @@ if (landmarks) {
 // shows. ?props=0 leaves it out.
 if (geo && params.get("props") !== "0") {
   loadPropTemplates({ glbTrees: look === "pbr" && params.get("glbtrees") !== "0" })
-    .then((templates) => levelView.addProps(env.props, templates))
+    .then((templates) => levelView.addProps(env.props, templates, { renderer: params.get("impostors") !== "0" ? renderer : null }))
     .catch((err) => {
       levelView.props.error = String(err);
       console.error(err);
@@ -689,6 +689,10 @@ requestAnimationFrame(frame);
 
 // Read by the Playwright tests.
 window.__atl = {
+  // The far tree impostors (tree-impostors.js): atlas bytes, bake time, kinds.
+  get trees() {
+    return geo && levelView.treeCost ? { ...levelView.treeCost } : null;
+  },
   shell: "skate-atl",
   ready: true,
   quality,

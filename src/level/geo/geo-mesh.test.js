@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { buildGeoMeshes, buildingColor, buildPropMeshes, GEO_MATERIALS, GEO_TILE, muralWalls, PROP_TILE } from "./geo-mesh.js";
+import { boundsDistance, buildGeoMeshes, buildingColor, buildPropMeshes, GEO_MATERIALS, GEO_TILE, meshBounds, muralWalls, PROP_TILE } from "./geo-mesh.js";
 import { FACE } from "./extrude.js";
 import { STYLES } from "./styles.js";
 import { buildingSpan } from "./terrain.js";
@@ -97,5 +97,34 @@ describe("level detail", () => {
     const second = lod0.find((t) => t.tile === "0,0").mesh.positions;
     expect(second[9 + 3]).toBeCloseTo(2, 6);
     expect(second[9 + 5]).toBeCloseTo(1, 6);
+  });
+});
+
+describe("the bounds of the far terrain tiles (#87)", () => {
+  const far = buildGeoMeshes(LEVEL, { terrainStep: 2, surfacesOnly: true });
+  const [sx, , sz] = LEVEL.spawn.position;
+
+  it("gives a bounds distance no larger than the distance to any vertex", () => {
+    for (const { mesh } of far) {
+      const d = boundsDistance(meshBounds(mesh), sx, sz);
+      const p = mesh.positions;
+      for (let i = 0; i < p.length; i += 3) expect(Math.hypot(p[i] - sx, p[i + 2] - sz)).toBeGreaterThanOrEqual(d - 1e-6);
+    }
+  });
+
+  it("finds the trail of tile 1,-3 under the spawn, 264 m from its tile square", () => {
+    // Tile 1,-3 is 264 m from the spawn by its square, but its trail strip
+    // runs under the spawn. The old square test showed the coarse drape there.
+    const tile = far.find((t) => t.tile === "1,-3");
+    expect(tile).toBeDefined();
+    const [ix, iz] = [1, -3];
+    const square = { minX: ix * GEO_TILE, maxX: (ix + 1) * GEO_TILE, minZ: iz * GEO_TILE, maxZ: (iz + 1) * GEO_TILE };
+    expect(boundsDistance(square, sx, sz)).toBeGreaterThan(60);
+    expect(boundsDistance(meshBounds(tile.mesh), sx, sz)).toBe(0);
+  });
+
+  it("keeps more than half of the tiles far from the spawn", () => {
+    const farCount = far.filter(({ mesh }) => boundsDistance(meshBounds(mesh), sx, sz) > 60).length;
+    expect(farCount).toBeGreaterThan(far.length / 2);
   });
 });

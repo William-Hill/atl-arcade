@@ -315,7 +315,7 @@ def build_tree(name, sp, seed, mats):
     for tip in tips:
         q = Vector((tip.x / hw, tip.y / hw, (tip.z - cy) / hh))
         c0 = Vector((0, 0, cy)) + (tip - Vector((0, 0, cy))) * 0.7
-        bmesh.ops.create_icosphere(core, subdivisions=1, radius=1.0, matrix=Matrix.Translation(c0) @ Matrix.Diagonal((hw * 0.42, hw * 0.42, hh * 0.5, 1)))
+        bmesh.ops.create_icosphere(core, subdivisions=2, radius=1.0, matrix=Matrix.Translation(c0) @ Matrix.Diagonal((hw * 0.34, hw * 0.34, hh * 0.4, 1)))
     for f in core.faces:
         vs = [v.co.copy() for v in f.verts]
         k = 0.72 * rng.uniform(0.9, 1.05)

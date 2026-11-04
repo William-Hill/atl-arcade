@@ -9,42 +9,42 @@
   "format": "GLB, Draco, no materials or textures. COLOR_0 linear vertex color (bark, leaf color with baked crown occlusion), _SWAY (wind weight) and _LEAF ([u, v, seed]; the leaf cut in src/render/leaf-cut.js) custom attributes, crown-facing normals on the leaf cards.",
   "files": {
     "oak.glb": {
-      "bytes": 162416,
-      "lod0_triangles": 2556,
+      "bytes": 195440,
+      "lod0_triangles": 2976,
       "lod1_triangles": 32,
       "variants": 3
     },
     "pine.glb": {
-      "bytes": 105080,
-      "lod0_triangles": 1620,
+      "bytes": 134000,
+      "lod0_triangles": 2040,
       "lod1_triangles": 32,
       "variants": 3
     },
     "magnolia.glb": {
-      "bytes": 165448,
-      "lod0_triangles": 2732,
+      "bytes": 197724,
+      "lod0_triangles": 3152,
       "lod1_triangles": 32,
       "variants": 3
     },
     "myrtle.glb": {
-      "bytes": 131328,
-      "lod0_triangles": 2036,
+      "bytes": 163436,
+      "lod0_triangles": 2456,
       "lod1_triangles": 32,
       "variants": 3
     },
     "dogwood.glb": {
-      "bytes": 137308,
-      "lod0_triangles": 2196,
+      "bytes": 169764,
+      "lod0_triangles": 2616,
       "lod1_triangles": 32,
       "variants": 3
     },
     "street.glb": {
-      "bytes": 143604,
-      "lod0_triangles": 2316,
+      "bytes": 175596,
+      "lod0_triangles": 2736,
       "lod1_triangles": 32,
       "variants": 3
     }
   },
   "nodes": "tree_<species>_<variant> (LOD0) and tree_<species>_<variant>_lod1; GLTFLoader drops ':' so geo-view glbTreeTemplates() maps them to tree:<species>:<variant>. The game uses the GLB LOD0 only and keeps the procedural LOD1 crown cards.",
-  "total_bytes": 845184
+  "total_bytes": 1035960
 }

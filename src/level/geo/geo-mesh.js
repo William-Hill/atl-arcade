@@ -10,6 +10,7 @@ import { createGeoGroundSampler, surfaceTop } from "./geo-ground.js";
 import { BELT, STYLES, STYLE_INDEX, awningHeight, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
 import { BRIDGE, bridgeDeck, buildingSpan, coarseTerrainOf, drapeMesh, liftMesh, parapetBlocked, terrainOf } from "./terrain.js";
 import { approachTrims, bridgeLayout, bridgeLayouts, densify, parapetRuns, ribbonEdges, slicePolyline, trimPolyline } from "./bridges.js";
+import { claimedIds } from "./landmarks.js";
 
 export const GEO_TILE = 125; // m. Small enough that the camera culls most of the draped terrain.
 export const PROP_TILE = 50; // m. Small, so only near props get full detail.
@@ -598,21 +599,27 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     // Only the surfaces (a far level of detail): no buildings, murals, or bridges.
   } else if (detail) {
     const isStreet = streetTest(level);
+    // A landmark with `claim: true` replaces its building's extrusion; the
+    // mesh still merges as "claimed", so the physics keeps its collider
+    // and the render skips it (geo-view.js).
+    const claimed = claimedIds(level);
     for (const b of level.buildings ?? []) {
       const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
       const color = wallColor(style, b.id);
       const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, parapet: style.parapet, corniceColor: style.trim };
       const span = buildingSpan(level, b);
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: roofColorOf(style, color), facade }));
+      const bucket = claimed.has(b.id) ? "claimed" : "building";
+      add(bucket, b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: roofColorOf(style, color), facade }));
       const aw = awningsFor(b, style, isStreet);
-      if (aw.indices.length) add("building", b, span.base ? liftMesh(aw, () => span.base) : aw);
+      if (aw.indices.length) add(bucket, b, span.base ? liftMesh(aw, () => span.base) : aw);
     }
     for (const m of muralWalls(level)) add("mural", { points: [m.a] }, muralMesh(m));
   } else {
+    const claimed = claimedIds(level);
     for (const b of level.buildings ?? []) {
       const color = buildingColor(b.id);
       const span = buildingSpan(level, b);
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: tint(color, 0.35) }));
+      add(claimed.has(b.id) ? "claimed" : "building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: tint(color, 0.35) }));
     }
   }
 

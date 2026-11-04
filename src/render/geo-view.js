@@ -655,6 +655,9 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const kitParts = kit ? facadeKit(level, fronts) : { tiles: [], depthTiles: [], counts: {} };
   const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));
   for (const { material, tile, mesh } of meshes) {
+    // A "claimed" mesh is the footprint of a landmark with claim: true —
+    // the landmark model draws it; physics still sees the collider.
+    if (material === "claimed") continue;
     const extra = material === "surface" ? markingTiles.get(tile) : material === "building" ? kitTiles.get(tile) : null;
     if (extra && material === "surface") markingTiles.delete(tile);
     if (extra && material === "building") kitTiles.delete(tile);

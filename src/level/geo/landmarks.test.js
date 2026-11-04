@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { LANDMARKS, edgeAnchor, frontClear, interiorPoint, landmarkPlacements, wallPoint } from "./landmarks.js";
+import { LANDMARKS, claimedIds, edgeAnchor, frontClear, interiorPoint, landmarkPlacements, wallPoint } from "./landmarks.js";
 import { pointInRings } from "./geo-ground.js";
 import { buildingSpan, terrainOf } from "./terrain.js";
 
@@ -87,5 +87,16 @@ describe("landmark placement", () => {
 
   it("skips a landmark whose building is not in the level", () => {
     expect(landmarkPlacements({ buildings: [] })).toEqual([]);
+  });
+});
+
+describe("footprint claims", () => {
+  it("claims the buildings of landmarks with claim: true", () => {
+    const level = { buildings: [{ id: "b1", name: "Ponce City Market", outer: [[0, 0], [1, 0], [1, 1]] }, { id: "b2", name: "Elsewhere", outer: [[0, 0], [1, 0], [1, 1]] }] };
+    expect([...claimedIds(level, [{ buildingName: "Ponce City Market", claim: true }])]).toEqual(["b1"]);
+    expect(claimedIds(level, [{ buildingName: "Ponce City Market" }]).size).toBe(0);
+    // The real level claims nothing today: the PCM tower and the Krog
+    // front are add-ons, not replacements.
+    expect(claimedIds(LEVEL ?? level).size).toBe(0);
   });
 });

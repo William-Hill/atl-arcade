@@ -43,7 +43,7 @@ import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
 import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
-import { createNpcSkatersView } from "./render/npc-skaters-view.js";
+import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
 import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
 import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
 import { createFactCardsView } from "./render/fact-cards-view.js";
@@ -225,7 +225,7 @@ scene.add(skaterView.group);
 const skatersOn = params.get("skaters") === "1" || (geo && params.get("skaters") !== "0");
 let npcSkaters = skatersOn ? createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] }) : null;
 const npcBytes = (model) => (model === skaterName ? skaterBytes : fetchSkaterModel(model, null, { small: smallSkater }));
-const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model) => cloneSkaterModel(model, npcBytes(model)), toon: params.get("toon") !== "0" }) : null;
+const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model) => cloneSkaterModel(model, npcBytes(model)), toon: params.get("toon") !== "0", draw: NPC_DRAW[quality] ?? NPC_DRAW.low }) : null;
 if (npcSkatersView) scene.add(npcSkatersView.group);
 
 // A blob shadow under the skater for a level with no shadow map.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OUTFITS, inOutfitBand, rgbToHsv } from "./npc-skaters-view.js";
+import { NPC_DRAW, OUTFITS, inOutfitBand, pickDrawn, rgbToHsv } from "./npc-skaters-view.js";
 import { BELTLINE_SKATERS, GREYBOX_SKATERS } from "../sim/npc/skaters.js";
 
 // Colors read from the turnaround renders in assets/skaters/*/views/front.png (sRGB, 0..1).
@@ -38,5 +38,17 @@ describe("NPC skater outfits", () => {
       expect(OUTFITS[spec.outfit], spec.id).toBeTruthy();
       expect(OUTFITS[spec.outfit].model).toBe(spec.model);
     }
+  });
+
+  it("draws only the nearest NPCs within the tier distance", () => {
+    const items = [
+      { id: "a", d: 30 },
+      { id: "b", d: 10 },
+      { id: "c", d: 44 },
+      { id: "d", d: 60 },
+    ];
+    expect([...pickDrawn(items, NPC_DRAW.low)].sort()).toEqual(["a", "b"]);
+    expect([...pickDrawn(items, NPC_DRAW.high)].sort()).toEqual(["a", "b", "c", "d"]);
+    expect(pickDrawn(items, { distance: 5, max: 5 }).size).toBe(0);
   });
 });

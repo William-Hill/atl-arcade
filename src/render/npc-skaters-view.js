@@ -22,10 +22,27 @@ export const OUTFITS = {
   berry: { model: "marcus", band: [150, 250], shift: 130, sat: 1.1, minSat: 0.2 },
 };
 
-// The NPC models are hidden beyond this distance from the camera (m). The
-// fog hides the city from about 220 m, and a skater is a few pixels tall
-// past 90 m.
-export const NPC_DRAW_DISTANCE = 90;
+// The NPC models are hidden beyond this distance from the camera (m), and
+// only the `max` nearest ones draw. A skinned NPC and its hull cost about
+// 36 K skinned vertices, which is slow on a software GPU, so the low and
+// phone tiers draw fewer.
+export const NPC_DRAW = {
+  high: { distance: 90, max: 5 },
+  low: { distance: 45, max: 2 },
+  phone: { distance: 45, max: 2 },
+};
+
+// Pure: the ids of the NPCs to draw: the `max` nearest within `distance`
+// of the eye. `items` is a list of { id, d } (the distance to the eye).
+export function pickDrawn(items, { distance, max }) {
+  return new Set(
+    items
+      .filter((i) => i.d < distance)
+      .sort((a, b) => a.d - b.d)
+      .slice(0, max)
+      .map((i) => i.id),
+  );
+}
 
 // Pure: RGB (0..1) to HSV, with the hue in degrees. The shader does the same.
 export function rgbToHsv([r, g, b]) {
@@ -107,7 +124,7 @@ export function dressNpc(loaded, outfit, { toon = true } = {}) {
 
 // The view. `state` is from createNpcSkaters(). `load(model)` returns a
 // promise of a cloned skater (cloneSkaterModel()).
-export function createNpcSkatersView(state, { load, toon = true, drawDistance = NPC_DRAW_DISTANCE } = {}) {
+export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW.high } = {}) {
   const group = new THREE.Group();
   group.name = "npc-skaters";
   const views = new Map();
@@ -147,7 +164,7 @@ export function createNpcSkatersView(state, { load, toon = true, drawDistance = 
     get drawn() {
       return drawn;
     },
-    // Two draw calls for each NPC on screen: the skin and the ink hull.
+    // Two draw calls for each NPC drawn: the skin and the ink hull.
     get drawCalls() {
       return drawn * (toon ? 2 : 1);
     },
@@ -160,12 +177,13 @@ export function createNpcSkatersView(state, { load, toon = true, drawDistance = 
     // dt: the frame time. beat: { time, bpm } or null. eye: the camera position.
     sync(next, dt, beat, eye) {
       drawn = 0;
+      const ready = next.npcs.filter((n) => views.get(n.id)?.ready);
+      const dist = (p) => (eye ? Math.hypot(p[0] - eye.x, p[1] - eye.y, p[2] - eye.z) : 0);
+      const pick = pickDrawn(ready.map((n) => ({ id: n.id, d: dist(n.skater.position) })), draw);
       for (const npc of next.npcs) {
         const entry = views.get(npc.id);
         if (!entry) continue;
-        const p = npc.skater.position;
-        const near = !eye || Math.hypot(p[0] - eye.x, p[1] - eye.y, p[2] - eye.z) < drawDistance;
-        entry.view.group.visible = entry.ready && near;
+        entry.view.group.visible = pick.has(npc.id);
         if (!entry.view.group.visible) continue;
         drawn += 1;
         entry.view.sync(npc.skater, dt, beat);

@@ -33,7 +33,7 @@ export function comboMove(c, { move, name, points, onBeat = false, beat = null }
   const repeat = c.links.reduce((n, l) => (l.name === name ? n + 1 : n), 0);
   const decay = k.repeatDecay[repeat] ?? 0;
   const earned = Math.round(points * bonus * decay);
-  const links = [...c.links, { move, name, points: earned, onBeat, beat, repeat, scores: decay > 0 }];
+  const links = [...c.links, { move, name, points: earned, onBeat, beat, repeat, scores: earned > 0 }];
   const style = move === "style" ? Math.min(1, c.style + k.styleGain) : c.style;
   return {
     ...c,

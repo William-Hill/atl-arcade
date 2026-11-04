@@ -69,6 +69,14 @@ describe("repeat decay", () => {
     expect(c.multiplier).toBe(3);
   });
 
+  it("adds no multiplier link when the decayed points round to 0", () => {
+    const k = { ...COMBO, repeatDecay: [1, 0.001] };
+    const tick = { move: "air", name: "Tick", points: 50 };
+    const c = comboMove(comboMove(createCombo(), tick, k), tick, k);
+    expect(c.links[1].points).toBe(0);
+    expect(c.multiplier).toBe(1);
+  });
+
   it("resets in a new combo", () => {
     const hop = { move: "air", name: "Hop", points: 100 };
     const a = comboMove(comboMove(createCombo(), hop), hop);

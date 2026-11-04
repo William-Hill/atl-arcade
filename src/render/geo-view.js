@@ -385,15 +385,35 @@ function addMesh(root, byId, name, geometry, material, { castShadow = false } = 
   return obj;
 }
 
-// The kit templates and the extra props. Each extra GLB has one mesh, and
-// its template gets the kind name of EXTRA_PROP_URLS.
+// The kit prop that stands in for an extra prop that did not load, so that
+// its solid obstacle (src/level/geo/props.js) is never invisible.
+export const EXTRA_PROP_FALLBACK = { bench_painted: "bench" };
+
+// Pure: adds the extra templates to the kit templates. `results` has one
+// { status, value | reason } (Promise.allSettled) for each kind. An extra GLB
+// must have exactly one mesh. A kind that failed gets its fallback kit
+// template. Returns the list of problems as text.
+export function addExtraTemplates(kit, kinds, results, fallback = EXTRA_PROP_FALLBACK) {
+  const problems = [];
+  kinds.forEach((kind, i) => {
+    const r = results[i];
+    const found = r.status === "fulfilled" ? Object.values(r.value) : [];
+    if (found.length === 1) {
+      kit[kind] = found[0];
+      return;
+    }
+    problems.push(r.status === "fulfilled" ? `${kind}: ${found.length} meshes, expected 1` : `${kind}: ${r.reason}`);
+    if (kit[fallback[kind]]) kit[kind] = kit[fallback[kind]];
+  });
+  return problems;
+}
+
+// The kit templates and the extra props. A failed extra GLB does not stop
+// the kit: the kind gets its fallback kit template.
 export async function loadPropTemplates() {
   const kinds = Object.keys(EXTRA_PROP_URLS);
-  const [kit, ...extras] = await Promise.all([loadKitTemplates(), ...kinds.map((k) => loadKitTemplates(EXTRA_PROP_URLS[k]))]);
-  kinds.forEach((kind, i) => {
-    const [template] = Object.values(extras[i]);
-    if (template) kit[kind] = template;
-  });
+  const [kit, results] = await Promise.all([loadKitTemplates(), Promise.allSettled(kinds.map((k) => loadKitTemplates(EXTRA_PROP_URLS[k])))]);
+  for (const problem of addExtraTemplates(kit, kinds, results)) console.warn(`extra prop: ${problem}`);
   return kit;
 }
 

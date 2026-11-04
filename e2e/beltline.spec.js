@@ -153,7 +153,7 @@ test("Nia skates north on the Eastside Trail and the run matches the pure contro
 const VIEWS = [
   { name: "ponce-city-market", cam: [-60, 14, -700, -218, 18, -874] },
   { name: "ponce-city-market-tower", cam: [-120, 70, -760, -219, 48, -915] },
-  { name: "krog-street-market-front", cam: [-12, 3, 866, -48, 7, 849] },
+  { name: "krog-street-market-front", cam: [-14, 3, 862, -49, 7, 857] },
   { name: "fourth-ward-park", cam: [380, 40, 120, 200, 0, -150], query: "fog=0" },
   { name: "krog-street-market", cam: [-20, 18, 760, -72, 4, 850] },
   { name: "overview", cam: [900, 900, 1100, 0, 0, 0], query: "fog=0" },

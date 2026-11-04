@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { edgeAnchor, interiorPoint, landmarkPlacements, wallPoint } from "./landmarks.js";
+import { LANDMARKS, edgeAnchor, frontClear, interiorPoint, landmarkPlacements, wallPoint } from "./landmarks.js";
 import { pointInRings } from "./geo-ground.js";
 import { buildingSpan, terrainOf } from "./terrain.js";
 
@@ -15,11 +15,25 @@ describe("landmark placement", () => {
       expect(pointInRings(p.x, p.z, [b.outer, ...(b.holes ?? [])])).toBe(true);
       expect(p.y).toBe(buildingSpan(LEVEL, b).top);
     }
-    // The tower is north of the interior anchor (-z), the sign east (+x).
-    const [cx, cz] = interiorPoint(b);
+    // The tower is north of the interior anchor (-z).
+    const [, cz] = interiorPoint(b);
     expect(pcm.model.z).toBeLessThan(cz);
-    expect(pcm.sign.x).toBeGreaterThan(cx);
-    expect(Math.sin(pcm.sign.yaw)).toBeCloseTo(1, 6);
+  });
+
+  it("puts the Ponce City Market sign west of the tower, facing south (issue #79)", () => {
+    const pcm = landmarkPlacements(LEVEL).find((p) => p.id === "ponce-city-market");
+    const b = LEVEL.buildings.find((x) => x.id === pcm.building);
+    const rings = [b.outer, ...(b.holes ?? [])];
+    // Next to the tower: west of it, within 60 m, and a little south.
+    expect(pcm.sign.x).toBeLessThan(pcm.model.x - 20);
+    expect(Math.hypot(pcm.sign.x - pcm.model.x, pcm.sign.z - pcm.model.z)).toBeLessThan(60);
+    expect(pcm.sign.z).toBeGreaterThan(pcm.model.z);
+    // The front (+z) faces south (+z).
+    expect(Math.cos(pcm.sign.yaw)).toBeCloseTo(1, 6);
+    // The whole sign stands on the roof, with 2 m of roof in front of it.
+    for (const dx of [-pcm.sign.width / 2, 0, pcm.sign.width / 2]) {
+      for (const dz of [-1, 0, 2]) expect(pointInRings(pcm.sign.x + dx, pcm.sign.z + dz, rings)).toBe(true);
+    }
   });
 
   it("puts the Krog Street Market front on the east wall, facing east, on the ground", () => {
@@ -30,9 +44,30 @@ describe("landmark placement", () => {
     // On the wall: inside now, outside 1 m farther east.
     expect(pointInRings(krog.model.x, krog.model.z, rings)).toBe(true);
     expect(pointInRings(krog.model.x + 1, krog.model.z, rings)).toBe(false);
-    // The model front (+z) turns to +x.
-    expect(Math.sin(krog.model.yaw)).toBeCloseTo(1, 6);
+    // The model front (+z) turns to +x, square to the wall (the wall is not
+    // exactly north-south).
+    expect(Math.sin(krog.model.yaw)).toBeGreaterThan(0.98);
     expect(krog.sign).toBeUndefined();
+  });
+
+  it("keeps every building box out of the Krog Street Market letters (issue #79)", () => {
+    const krog = landmarkPlacements(LEVEL).find((p) => p.id === "krog-street-market");
+    const front = LANDMARKS.find((l) => l.id === "krog-street-market").model.front;
+    expect(frontClear(LEVEL, krog.model, front)).toBe(true);
+    // Each letter card (baked template) is out of every building box, end to end.
+    const t = JSON.parse(readFileSync(new URL("../../../assets/landmarks/krog-street-market-front.json", import.meta.url), "utf8"));
+    expect(t.cards.map((c) => c.text).join(" ")).toBe("KROG STREET MARKET");
+    const c = Math.cos(krog.model.yaw);
+    const s = Math.sin(krog.model.yaw);
+    for (const card of t.cards) {
+      const [px, , pz] = card.position;
+      for (let k = 0; k <= 10; k += 1) {
+        const lx = px - card.width / 2 + (card.width * k) / 10;
+        const x = krog.model.x + lx * c + pz * s;
+        const z = krog.model.z - lx * s + pz * c;
+        for (const b of LEVEL.buildings) expect(pointInRings(x, z, [b.outer, ...(b.holes ?? [])]), `${card.text} in ${b.id}`).toBe(false);
+      }
+    }
   });
 
   it("finds the wall point of a square", () => {

@@ -224,7 +224,18 @@ scene.add(skaterView.group);
 // once: the player and the NPCs share the parse.
 const skatersOn = params.get("skaters") === "1" || (geo && params.get("skaters") !== "0");
 let npcSkaters = skatersOn ? createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] }) : null;
-const npcBytes = (model) => (model === skaterName ? skaterBytes : fetchSkaterModel(model, null, { small: smallSkater }));
+// One download for each model: the NPCs of one model share the bytes.
+const npcByteCache = new Map();
+const npcBytes = (model) => {
+  if (model === skaterName) return skaterBytes;
+  if (!npcByteCache.has(model)) {
+    const bytes = fetchSkaterModel(model, null, { small: smallSkater });
+    // A failed download is reported where the model loads, not here.
+    bytes.catch(() => {});
+    npcByteCache.set(model, bytes);
+  }
+  return npcByteCache.get(model);
+};
 const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model) => cloneSkaterModel(model, npcBytes(model)), toon: params.get("toon") !== "0", draw: NPC_DRAW[quality] ?? NPC_DRAW.low }) : null;
 if (npcSkatersView) scene.add(npcSkatersView.group);
 

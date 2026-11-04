@@ -9,6 +9,10 @@
 //   each 180 m.
 // - Sidewalks: a tree each 16 m and a lamp each 36 m, 1.8 m and 0.5 m past
 //   the edge, on the side that is open ground.
+// - Trees (issue #137): each row tree gets a species from its setting (the
+//   trail or a street), and the canopy trees of the City of Atlanta canopy
+//   raster go after all the other props. The rules are in
+//   src/level/geo/tree-placement.js.
 // - A prop goes only on open ground or a park: never on a street, sidewalk,
 //   path, the trail, or in a building. No two props are closer than 2.5 m.
 // - Roofs: roof units by roof area, and water towers on brick lofts and
@@ -23,6 +27,7 @@ import { createGeoGroundSampler, pointInRings } from "./geo-ground.js";
 import { STYLES, chooseStyle, hash32, seededRandom } from "./styles.js";
 import { cornerSpots, shortName, streetIntersections } from "./signs.js";
 import { buildingSpan, terrainOf } from "./terrain.js";
+import { TREE_KIND as TREE_KIND_OF, canopyCandidates, clearanceIds, decodeCanopy, fitTree, pickSpecies } from "./tree-placement.js";
 
 // Solid size of each prop for the ground sampler: radius and height in m.
 // Every height is over SKATE.maxStep, so a prop stops the skater.
@@ -83,7 +88,8 @@ function isOpen(sample, x, z, r, openIds) {
 }
 
 // Returns [{ kind, x, y, z, yaw }]. `sample` is the ground sampler of the
-// level without props.
+// level without props. A tree also has a `species`. `level.canopy` (the
+// canopy grid, src/level/levels.js) adds the canopy trees.
 export function streetProps(level, sample) {
   const areaIds = new Set((level.areas ?? []).map((a) => a.id));
   // A sign may also stand on a sidewalk.
@@ -111,7 +117,25 @@ export function streetProps(level, sample) {
     if (scale !== 1) p.scale = Math.round(scale * 100) / 100;
     if (extra) Object.assign(p, extra);
     out.push(p);
-    return true;
+    return p;
+  }
+  // A row tree keeps its spot, so the lamps, benches, and bins stay where
+  // they were. Its species, its kind, and its scale change. A row tree with
+  // no clear fit is left out, but its spot stays taken.
+  const ids = clearanceIds(level);
+  const dropped = new Set();
+  function rowTree(p, setting) {
+    if (!p) return;
+    const species = pickSpecies(setting, `row:${p.x},${p.z}`);
+    const fit = fitTree(sample, ids, species, TREE_KIND_OF[species], p.x, p.z, p.scale ?? 1);
+    if (!fit) {
+      dropped.add(p);
+      return;
+    }
+    p.species = fit.species;
+    p.kind = TREE_KIND_OF[fit.species];
+    if (fit.scale !== 1) p.scale = fit.scale;
+    else delete p.scale;
   }
 
   // The blades point along the streets: yaws[i] turns the blade (+x) along
@@ -133,7 +157,7 @@ export function streetProps(level, sample) {
           const nx = -dz * side;
           const nz = dx * side;
           const d = half + 2.5 + rand() * 1.5;
-          put(rand() < 0.6 ? "tree_round" : "tree_tall", x + nx * d, z + nz * d, rand() * Math.PI * 2, 0.85 + rand() * 0.35);
+          rowTree(put(rand() < 0.6 ? "tree_round" : "tree_tall", x + nx * d, z + nz * d, rand() * Math.PI * 2, 0.85 + rand() * 0.35), "trail");
         }
       });
       along(s.points, 24, 3, (x, z, dx, dz, i) => {
@@ -162,7 +186,11 @@ export function streetProps(level, sample) {
       along(s.points, 16, 8, (x, z, dx, dz) => {
         for (const side of [1, -1]) {
           const d = half + 1.8;
-          if (put(rand() < 0.7 ? "tree_round" : "tree_tall", x - dz * side * d, z + dx * side * d, rand() * Math.PI * 2, 0.85 + rand() * 0.35)) break;
+          const p = put(rand() < 0.7 ? "tree_round" : "tree_tall", x - dz * side * d, z + dx * side * d, rand() * Math.PI * 2, 0.85 + rand() * 0.35);
+          if (p) {
+            rowTree(p, "street");
+            break;
+          }
         }
       });
       along(s.points, 36, 18, (x, z, dx, dz) => {
@@ -175,7 +203,14 @@ export function streetProps(level, sample) {
       });
     }
   }
-  return out;
+
+  // The canopy trees, after every other street prop.
+  for (const c of canopyCandidates(level, decodeCanopy(level.canopy))) {
+    const fit = fitTree(sample, ids, c.species, c.kind, c.x, c.z, c.scale);
+    if (!fit) continue;
+    put(TREE_KIND_OF[fit.species] ?? c.kind, c.x, c.z, c.yaw, fit.scale, { species: fit.species, canopy: true });
+  }
+  return dropped.size ? out.filter((p) => !dropped.has(p)) : out;
 }
 
 // Roof props for one building: [{ kind, x, y, z, yaw }].

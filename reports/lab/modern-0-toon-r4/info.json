@@ -1,0 +1,13 @@
+{
+  "kind": "modern-apartment",
+  "pick": 0,
+  "look": "toon",
+  "views": {
+    "street": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=toon&lab=building&kind=modern-apartment&pick=0&labview=street"
+  },
+  "building": {
+    "id": "w270468459",
+    "name": null,
+    "height": 14.4
+  }
+}

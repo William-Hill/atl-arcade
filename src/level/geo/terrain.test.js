@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BRIDGE_CLEARANCE, bridgeDeck, bridgeMiddle, createTerrain, decodeHeights, drapeMesh, encodeHeights, gradeTrail, raiseEmbankments, terrainOf } from "./terrain.js";
+import { BRIDGE_CLEARANCE, PLINTH_DEPTH, bridgeDeck, buildingSpan, bridgeMiddle, createTerrain, decodeHeights, drapeMesh, encodeHeights, gradeTrail, raiseEmbankments, terrainOf } from "./terrain.js";
 import { flatPolygon, stripMesh } from "./extrude.js";
 import { createGeoGroundSampler } from "./geo-ground.js";
 import { createSkateState, stepSkate } from "../../sim/skate/controller.js";
@@ -177,5 +177,44 @@ describe("terrain on the BeltLine level", () => {
     };
     // The same roll friction both ways; the grade (20 m/s^2 x 5%) makes 1 m/s^2 of difference each way.
     expect(run(0) - run(Math.PI)).toBeGreaterThan(1.5);
+  });
+});
+
+describe("buildingSpan on a slope", () => {
+  const level = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../levels/beltline-eastside/level.json"), "utf8"));
+  const t = terrainOf(level);
+  const along = (ring, step = 1) => {
+    const pts = [];
+    for (let i = 0; i < ring.length; i += 1) {
+      const [px, pz] = ring[i];
+      const [qx, qz] = ring[(i + 1) % ring.length];
+      const n = Math.max(1, Math.ceil(Math.hypot(qx - px, qz - pz) / step));
+      for (let k = 0; k < n; k += 1) pts.push([px + ((qx - px) * k) / n, pz + ((qz - pz) * k) / n]);
+    }
+    return pts;
+  };
+
+  it("keeps the ground floor over the ground along every wall", () => {
+    let worst = Infinity;
+    for (const b of level.buildings) {
+      const s = buildingSpan(level, b);
+      for (const [x, z] of along(b.outer)) worst = Math.min(worst, s.base - t.height(x, z));
+    }
+    // The terrain is linear between the 2 m samples; 1 m samples see at
+    // most a few cm more.
+    expect(worst).toBeGreaterThan(-0.15);
+  });
+
+  it("puts the plinth foot under the ground along every wall", () => {
+    for (const b of level.buildings) {
+      const s = buildingSpan(level, b);
+      for (const [x, z] of along(b.outer)) expect(s.foot).toBeLessThan(t.height(x, z) - PLINTH_DEPTH + 0.15);
+      expect(s.top - s.base).toBeCloseTo(b.height, 6);
+    }
+  });
+
+  it("is flat with no plinth on a level with no terrain", () => {
+    const s = buildingSpan({ buildings: [] }, { id: "a", height: 9, outer: [[0, 0], [10, 0], [10, 10]] });
+    expect(s).toEqual({ foot: 0, base: 0, ground: 0, top: 9 });
   });
 });

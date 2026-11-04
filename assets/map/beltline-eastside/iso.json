@@ -1,0 +1,17 @@
+{
+  "level": "beltline-eastside",
+  "look": "pbr",
+  "yaw": 45,
+  "pitch": 30,
+  "mpp": 0.5,
+  "tile": 256,
+  "a0": -1031.5,
+  "b1": 590.5,
+  "cols": 17,
+  "rows": 9,
+  "width": 4352,
+  "height": 2304,
+  "levels": 4,
+  "format": "jpg",
+  "baked": "2026-11-04"
+}

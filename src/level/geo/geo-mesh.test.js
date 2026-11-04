@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { boundsDistance, buildGeoMeshes, buildingColor, buildPropMeshes, GEO_MATERIALS, GEO_TILE, meshBounds, muralWalls, PROP_TILE } from "./geo-mesh.js";
-import { FACE } from "./extrude.js";
-import { STYLES } from "./styles.js";
+import { AWNING_COLORS, awningsFor, boundsDistance, buildGeoMeshes, buildingColor, buildPropMeshes, GEO_MATERIALS, GEO_TILE, meshBounds, muralWalls, PROP_TILE, roofColorOf, streetTest, streetWalls } from "./geo-mesh.js";
+import { FACE, orientRing } from "./extrude.js";
+import { STYLES, STYLE_INDEX, chooseStyle } from "./styles.js";
 import { buildingSpan } from "./terrain.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
@@ -126,5 +126,52 @@ describe("the bounds of the far terrain tiles (#87)", () => {
   it("keeps more than half of the tiles far from the spawn", () => {
     const farCount = far.filter(({ mesh }) => boundsDistance(meshBounds(mesh), sx, sz) > 60).length;
     expect(farCount).toBeGreaterThan(far.length / 2);
+  });
+});
+
+describe("the roofs and the street walls of the brick styles", () => {
+  it("gives a brick loft a dark gray roof, and the other styles a light tint of the wall", () => {
+    const loft = STYLES[STYLE_INDEX["brick-loft"]];
+    expect(roofColorOf(loft, loft.walls[0])).toEqual([0.3, 0.3, 0.31]);
+    const stucco = STYLES[STYLE_INDEX["stucco-apartment"]];
+    const r = roofColorOf(stucco, [0.5, 0.5, 0.5]);
+    for (const v of r) expect(v).toBeCloseTo(0.725);
+  });
+
+  it("colors the roof vertices of every brick loft on the BeltLine level 0.30, 0.30, 0.31", () => {
+    const meshes = buildGeoMeshes(LEVEL);
+    const si = STYLE_INDEX["brick-loft"];
+    let roofs = 0;
+    for (const { material, mesh } of meshes) {
+      if (material !== "building") continue;
+      for (let i = 0; i < mesh.facade.length / 4; i += 1) {
+        if (mesh.facade[i * 4] !== si || mesh.facade[i * 4 + 3] !== FACE.roof) continue;
+        const c = [mesh.colors[i * 3], mesh.colors[i * 3 + 1], mesh.colors[i * 3 + 2]];
+        // The awnings also have the roof face kind (and style 0); they keep their colors.
+        if (AWNING_COLORS.some((a) => a.every((v, k) => Math.abs(v - c[k]) < 1e-6))) continue;
+        expect(c[0]).toBeCloseTo(0.3, 6);
+        expect(c[1]).toBeCloseTo(0.3, 6);
+        expect(c[2]).toBeCloseTo(0.31, 6);
+        roofs += 1;
+      }
+    }
+    expect(roofs).toBeGreaterThan(39 * 3);
+  });
+
+  it("finds the walls that face a street", () => {
+    const ring = orientRing([[0, 0], [27.1, 0], [27.1, 8.7], [0, 8.7]], false);
+    expect(streetWalls(ring, () => false)).toEqual([]);
+    expect(streetWalls(ring, () => true).length).toBe(4);
+    const east = streetWalls(ring, (x) => x > 29);
+    expect(east.length).toBe(1);
+    expect(ring[east[0]][0]).toBeCloseTo(27.1);
+  });
+
+  it("keeps the street awnings of the BeltLine level as they were before streetWalls()", () => {
+    // 3,184 vertices: the count before the refactor to streetWalls().
+    const isStreet = streetTest(LEVEL);
+    let vertices = 0;
+    for (const b of LEVEL.buildings) vertices += awningsFor(b, STYLES[STYLE_INDEX[chooseStyle(b)]], isStreet).positions.length / 3;
+    expect(vertices).toBe(3184);
   });
 });

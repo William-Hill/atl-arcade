@@ -1,0 +1,15 @@
+{
+  "kind": "brick-loft",
+  "pick": 0,
+  "look": "pbr",
+  "views": {
+    "street": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=brick-loft&pick=0&labview=street",
+    "corner": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=brick-loft&pick=0&labview=corner",
+    "mid": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=brick-loft&pick=0&labview=mid"
+  },
+  "building": {
+    "id": "w270469054",
+    "name": null,
+    "height": 9.7
+  }
+}

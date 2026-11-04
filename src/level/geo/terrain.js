@@ -136,26 +136,63 @@ export function coarseTerrainOf(level, step = 2) {
 }
 
 const spans = new WeakMap();
-// Where a building stands: its walls go from `base` (under the lowest
-// footprint corner, so no wall floats on a slope) to `top` (its data height
-// over the mean ground of its corners).
+// The plinth of a building goes this far (m) under its lowest ground, so no
+// wall floats on a slope.
+export const PLINTH_DEPTH = 0.5;
+// The step (m) of the ground samples along the walls and under the footprint.
+const SPAN_STEP = 2;
+
+function insideRing(x, z, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+    const [xi, zi] = ring[i];
+    const [xj, zj] = ring[j];
+    if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+// Where a building stands. The ground floor starts at `base`: the highest
+// ground along the walls and under the footprint, so the ground never
+// covers the ground floor or a shop window. A plinth fills the walls from
+// `foot` (PLINTH_DEPTH under the lowest ground along the walls) up to
+// `base`; on a slope it shows on the low side, as on a real building.
+// `top` is the data height over `base`. `ground` is the same as `base`.
 export function buildingSpan(level, b) {
   let m = spans.get(level);
   if (!m) spans.set(level, (m = new Map()));
   let s = m.get(b.id);
   if (s) return s;
   const t = terrainOf(level);
-  if (t.flat) s = { base: 0, ground: 0, top: b.height };
+  if (t.flat) s = { foot: 0, base: 0, ground: 0, top: b.height };
   else {
     let lo = Infinity;
-    let sum = 0;
-    for (const [x, z] of b.outer) {
-      const h = t.height(x, z);
-      lo = Math.min(lo, h);
-      sum += h;
+    let hi = -Infinity;
+    const ring = b.outer;
+    for (let i = 0; i < ring.length; i += 1) {
+      const [px, pz] = ring[i];
+      const [qx, qz] = ring[(i + 1) % ring.length];
+      const n = Math.max(1, Math.ceil(Math.hypot(qx - px, qz - pz) / SPAN_STEP));
+      for (let k = 0; k < n; k += 1) {
+        const h = t.height(px + ((qx - px) * k) / n, pz + ((qz - pz) * k) / n);
+        lo = Math.min(lo, h);
+        hi = Math.max(hi, h);
+      }
     }
-    const ground = sum / b.outer.length;
-    s = { base: lo - 0.5, ground, top: ground + b.height };
+    let x0 = Infinity;
+    let z0 = Infinity;
+    let x1 = -Infinity;
+    let z1 = -Infinity;
+    for (const [x, z] of ring) {
+      x0 = Math.min(x0, x);
+      z0 = Math.min(z0, z);
+      x1 = Math.max(x1, x);
+      z1 = Math.max(z1, z);
+    }
+    for (let x = x0 + SPAN_STEP / 2; x < x1; x += SPAN_STEP) {
+      for (let z = z0 + SPAN_STEP / 2; z < z1; z += SPAN_STEP) if (insideRing(x, z, ring)) hi = Math.max(hi, t.height(x, z));
+    }
+    s = { foot: lo - PLINTH_DEPTH, base: hi, ground: hi, top: hi + b.height };
   }
   m.set(b.id, s);
   return s;

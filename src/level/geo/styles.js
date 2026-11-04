@@ -20,6 +20,15 @@ export const STYLES = [
     storefront: true,
     awnings: 0.3,
     roof: { water_tower: 0.6, roof_unit: 1 / 400 },
+    // The flat roof: a dark gray membrane, darker than the coping, so the
+    // coping reads as a light line from above.
+    roofColor: [0.3, 0.3, 0.31],
+    // The crown (facade-kit.js crownKit()): a raised center parapet `step`
+    // meters over the parapet, and a stair bulkhead box on the roof
+    // ([along, across, height] in meters).
+    crown: { step: 1.6, bulkhead: [3.0, 3.6, 2.8] },
+    // Painted steel window frames: a mid sage, not darker than the brick.
+    frame: [0.2, 0.3, 0.24],
   },
   {
     id: "brick-warehouse",
@@ -35,6 +44,9 @@ export const STYLES = [
     storefront: true,
     awnings: 0.2,
     roof: { water_tower: 0.25, roof_unit: 1 / 500 },
+    roofColor: [0.32, 0.31, 0.3],
+    crown: { step: 1.6, bulkhead: [3.0, 3.6, 2.8] },
+    frame: [0.2, 0.3, 0.24],
   },
   {
     id: "stucco-apartment",
@@ -189,6 +201,15 @@ export const STYLES = [
 // The belt course of the facade kit: a ledge over the ground floor of a
 // storefront style. The murals (geo-mesh.js) start above it.
 export const BELT = { out: 0.18, height: 0.28 };
+
+// The painted sign bands over the shop windows (facade-kit.js shopFront()):
+// one color for each building. The boards on them have no text.
+export const SIGN_COLORS = [
+  [0.06, 0.22, 0.13], // deep green
+  [0.05, 0.09, 0.22], // navy
+  [0.32, 0.05, 0.04], // oxblood
+  [0.62, 0.42, 0.07], // mustard
+];
 
 // The height of the storefront awnings over the wall base (geo-mesh.js).
 export function awningHeight(style) {

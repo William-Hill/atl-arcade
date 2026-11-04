@@ -3,13 +3,17 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SURFACE_COLORS, boundsDistance, buildGeoMeshes, meshBounds, unionBounds } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
-import { facadeKit } from "../level/geo/facade-kit.js";
+import { storefrontAprons } from "../level/geo/aprons.js";
+import { facadeKit, frontEdges } from "../level/geo/facade-kit.js";
 import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
 import { createMuralAtlas } from "./murals.js";
 import { createPropBatch } from "./prop-batch.js";
+import { BRICK_TONE, DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, FRAME_ROUGHNESS, GROUND_ALBEDO, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
+import { createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
+import stoneInfo from "../../assets/landmarks/textures/trim/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
 import concreteInfo from "../../assets/ground/concrete/set.json";
 import trailInfo from "../../assets/ground/trail/set.json";
@@ -24,6 +28,14 @@ const EXTRA_PROP_URLS = {
 // The CC0 brick scan (scripts/landmark-textures.py), shared with the
 // landmarks, so the buildings and the landmarks show the same brick.
 const BRICK_URL = new URL("../../assets/landmarks/textures/brick/color.jpg", import.meta.url).href;
+// The normal and roughness maps of the brick scan and of a CC0 plaster
+// scan (beige_wall_001), for the relief of the walls in the pbr look.
+const WALL_DETAIL_URLS = {
+  brickNor: new URL("../../assets/landmarks/textures/brick/normal.jpg", import.meta.url).href,
+  brickRough: new URL("../../assets/landmarks/textures/brick/rough.jpg", import.meta.url).href,
+  stoneNor: new URL("../../assets/landmarks/textures/trim/normal.jpg", import.meta.url).href,
+  stoneRough: new URL("../../assets/landmarks/textures/trim/rough.jpg", import.meta.url).href,
+};
 // Prop distances from the camera to each prop (m). Under
 // PROP_LOD0_DISTANCE a prop shows its detailed shape, under
 // PROP_DRAW_DISTANCE its simple shape, and past that nothing.
@@ -80,9 +92,20 @@ export function geoGeometry(mesh) {
 // (interior mapping): the view ray goes through a window reveal and hits the
 // walls, the floor, or the ceiling of a box room. The room has depth and
 // parallax, at no geometry cost.
-export function createFacadeMaterial(gradientMap, { brickMap = null, interiors = false } = {}) {
-  const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
-  if (interiors) mat.defines = { INTERIOR: 1 };
+//
+// In the pbr look (src/render/look.js) the glass is smooth, so it reflects
+// the sky environment map, and the wall is rough. The base of each wall gets
+// a ground-contact darkening (WALL_AO), and the fake sky reflection of the
+// interior glass is weaker, because the environment map gives a real one.
+// With `detailMaps` (loadWallDetail()) the pbr look also gets the relief of
+// the scans: the brick courses and the mortar joints on a brick wall, a
+// plaster grain on the other walls and on the stone sills, lintels, and kick
+// plates, and the roughness of each. A painted steel frame is semi-gloss.
+export function createFacadeMaterial(gradientMap, { brickMap = null, interiors = false, look = "toon", detailMaps = null } = {}) {
+  const pbr = look === "pbr";
+  const detail = pbr && detailMaps !== null;
+  const mat = litMaterial(look, { vertexColors: true }, { gradientMap, roughness: ROUGHNESS.wall, envLight: ENV_LIGHT.wall });
+  mat.defines = { ...(interiors ? { INTERIOR: 1 } : {}), ...(pbr ? { PBR_LOOK: 1 } : {}), ...(detail ? { DETAIL: 1 } : {}) };
   const n = STYLES.length;
   // styleA: window width and height (cell fractions), storefront, brick.
   const styleA = STYLES.map((s) => new THREE.Vector4(s.window[0], s.window[1], s.storefront ? 1 : 0, s.brick ? 1 : 0));
@@ -92,15 +115,24 @@ export function createFacadeMaterial(gradientMap, { brickMap = null, interiors =
   const brickMean = new THREE.Color(brickInfo.targetHex);
   const glass = STYLES.map((s) => new THREE.Vector3(...s.glass));
   const trim = STYLES.map((s) => new THREE.Vector3(...s.trim));
+  // The window frames: the style frame color (painted steel), or the trim.
+  const frameCol = STYLES.map((s) => new THREE.Vector3(...(s.frame ?? s.trim)));
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uStyleA = { value: styleA };
     shader.uniforms.uGlass = { value: glass };
     shader.uniforms.uTrim = { value: trim };
+    shader.uniforms.uFrame = { value: frameCol };
     shader.uniforms.uStyleM = { value: styleM };
     shader.uniforms.uBrick = { value: brickMap };
     shader.uniforms.uBrickMean = { value: new THREE.Vector3(brickMean.r, brickMean.g, brickMean.b) };
     shader.uniforms.uBrickTile = { value: brickInfo.tileMeters };
     shader.uniforms.uBrickOn = { value: brickMap ? 1 : 0 };
+    if (detail) {
+      shader.uniforms.uBrickNor = { value: detailMaps.brickNor };
+      shader.uniforms.uBrickRough = { value: detailMaps.brickRough };
+      shader.uniforms.uStoneNor = { value: detailMaps.stoneNor };
+      shader.uniforms.uStoneRough = { value: detailMaps.stoneRough };
+    }
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;\nflat varying vec3 vWallSeed;")
       .replace(
@@ -120,11 +152,34 @@ flat varying vec3 vWallSeed;
 uniform vec4 uStyleA[${n}];
 uniform vec3 uGlass[${n}];
 uniform vec3 uTrim[${n}];
+uniform vec3 uFrame[${n}];
 uniform vec2 uStyleM[${n}];
 uniform sampler2D uBrick;
 uniform vec3 uBrickMean;
 uniform float uBrickTile;
 uniform float uBrickOn;
+// The glass mask for the roughness (pbr look): 1 on a near window pixel,
+// and the glass roughness of that window.
+float facadeGlass = 0.0;
+float facadeGlassRough = ${ROUGHNESS.glass.toFixed(3)};
+float facadeHash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+#ifdef DETAIL
+uniform sampler2D uBrickNor;
+uniform sampler2D uBrickRough;
+uniform sampler2D uStoneNor;
+uniform sampler2D uStoneRough;
+// The wall position in meters, and the weight of each surface on a wall
+// pixel: brick, stone or plaster, and the painted frame.
+vec2 facadeM = vec2(0.0);
+float facadeKBrick = 0.0;
+float facadeKStone = 0.0;
+float facadeKFrame = 0.0;
+#define BRICK_TILE ${brickInfo.tileMeters.toFixed(3)}
+#define STONE_TILE ${stoneInfo.tileMeters.toFixed(3)}
+${DETAIL_GLSL}
+#endif
+// The center (cell fraction) of the shop window on the ground floor.
+#define SHOP_CY 0.46
 #ifdef INTERIOR
 float roomHash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
 // Room colors: warm white, beige, pale blue, sage, peach, and a deep teal.
@@ -149,8 +204,9 @@ vec3 roomColor(float h) {
     float level = floor(vFacade.z);
     vec4 a = uStyleA[st];
     bool shop = level < 0.5 && a.z > 0.5;
-    vec2 win = shop ? vec2(0.84, 0.74) : a.xy;
-    vec2 d = abs(cell - vec2(0.5, shop ? 0.42 : 0.55)) * 2.0;
+    // The shop glass ends at 0.13 of the floor: a stone kick plate is under it.
+    vec2 win = shop ? vec2(0.84, 0.66) : a.xy;
+    vec2 d = abs(cell - vec2(0.5, shop ? SHOP_CY : 0.55)) * 2.0;
     // Anti-aliased edges: blend over one screen pixel, not a hard step.
     vec2 aa = max(fwidth(vFacade.yz) * 2.0, vec2(1e-4));
     float inWin = (1.0 - smoothstep(win.x - aa.x, win.x + aa.x, d.x)) * (1.0 - smoothstep(win.y - aa.y, win.y + aa.y, d.y));
@@ -158,11 +214,31 @@ vec3 roomColor(float h) {
     float inFrame = (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(fw.y - aa.y, fw.y + aa.y, d.y));
     float frame = clamp(inFrame - inWin, 0.0, 1.0);
     // A sill under each window, and a center mullion on wide windows.
-    float sillY = (shop ? 0.42 : 0.55) - win.y * 0.5 - 0.05;
+    float sillY = (shop ? SHOP_CY : 0.55) - win.y * 0.5 - 0.05;
     float sill = (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(0.03 - aa.y, 0.03 + aa.y, abs(cell.y - sillY)));
+    // A stone lintel over each upper window of a brick style: a band over
+    // the frame top, a little wider than the frame.
+    float lintelY = 0.55 + win.y * 0.5 + 0.035;
+    float lintel = (!shop && a.w > 0.5) ? (1.0 - smoothstep(fw.x + 0.04 - aa.x, fw.x + 0.04 + aa.x, d.x)) * (1.0 - smoothstep(0.03 - aa.y, 0.03 + aa.y, abs(cell.y - lintelY - 0.03))) : 0.0;
+    // The kick plate under the shop glass: from the floor to the frame
+    // bottom, as wide as the frame.
+    float kick = shop ? (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(SHOP_CY - fw.y * 0.5 - aa.y, SHOP_CY - fw.y * 0.5 + aa.y, cell.y)) : 0.0;
     float mull = win.x > 0.5 ? (1.0 - smoothstep(0.025 - aa.x, 0.025 + aa.x, abs(cell.x - 0.5))) * inWin : 0.0;
     vec3 glass = uGlass[st] + vec3(0.18 * cell.y) + vec3(0.12) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
+    #ifdef PBR_LOOK
+    // Each window pane is a little different: its tint and how sharp its
+    // reflection is. A real facade reads as a patchwork, not a grid.
+    float paneH = facadeHash(vec3(floor(vFacade.yz), float(st) * 7.0 + vFacade.x));
+    glass *= 0.82 + 0.36 * paneH;
+    facadeGlassRough = mix(0.03, 0.28, fract(paneH * 7.31));
+    #endif
     vec3 wallCol = diffuseColor.rgb;
+    // The brick tone of the wall face (look.js brickTone()): one value for
+    // each face, so two faces of a building do not have the same tone.
+    if (a.w > 0.5) {
+      float tk = 2.0 * facadeHash(vWallSeed + float(st)) - 1.0;
+      wallCol *= vec3(1.0) + tk * vec3(${(BRICK_TONE.value + BRICK_TONE.warm).toFixed(3)}, ${BRICK_TONE.value.toFixed(3)}, ${(BRICK_TONE.value - BRICK_TONE.warm).toFixed(3)});
+    }
     #ifdef INTERIOR
     vec3 roomGlow = vec3(0.0);
     {
@@ -182,11 +258,14 @@ vec3 roomColor(float h) {
       float reveal = 0.22;
       vec3 p = vec3(cell.x * m.x, cell.y * m.y, 0.0);
       // The window opening, in meters, and the ray at the glass plane.
-      float cy = shop ? 0.42 : 0.55;
+      float cy = shop ? SHOP_CY : 0.55;
       vec2 o0 = vec2(0.5 - win.x * 0.5, cy - win.y * 0.5) * m;
       vec2 o1 = vec2(0.5 + win.x * 0.5, cy + win.y * 0.5) * m;
       vec3 q = p + r * (reveal / r.z);
-      vec3 rid = vec3(floor(vFacade.yz), float(st) + dot(wallCol, vec3(7.0, 13.0, 3.0)) + dot(vWallSeed, vec3(5.0, 9.0, 0.37)));
+      // The wall color in steps of 1/32: an interpolated vertex color differs
+      // a little from pixel to pixel, and the hash made each pixel a
+      // different room (a speckle on the glass).
+      vec3 rid = vec3(floor(vFacade.yz), float(st) + dot(floor(wallCol * 32.0 + 0.5), vec3(7.0, 13.0, 3.0)) + dot(vWallSeed, vec3(5.0, 9.0, 0.37)));
       float h0 = roomHash(rid);
       float h1 = roomHash(rid + 17.3);
       float h2 = roomHash(rid + 41.9);
@@ -236,6 +315,9 @@ vec3 roomColor(float h) {
         roomGlow = lit ? col * (shop ? 0.24 : 0.2) : vec3(0.0);
         // The glass: a tint and a sky reflection that grows at a low angle.
         float fres = 0.1 + 0.55 * pow(1.0 - r.z, 3.0);
+        #ifdef PBR_LOOK
+        fres *= 0.35;
+        #endif
         vec3 sky = mix(vec3(0.75, 0.87, 1.0), uGlass[st] + vec3(0.25), 0.4);
         col = mix(col * mix(vec3(1.0), uGlass[st] * 2.2, 0.25), sky, fres);
         col += vec3(0.08) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
@@ -249,33 +331,120 @@ vec3 roomColor(float h) {
     // Sample outside the branch, so the mipmap level stays correct.
     vec3 detail = clamp(texture2D(uBrick, vFacade.yz * uStyleM[st] / uBrickTile).rgb / uBrickMean, 0.35, 2.2);
     if (uBrickOn > 0.5 && a.w > 0.5) wallCol *= mix(detail, vec3(1.0), far0);
-    vec3 col = mix(wallCol, uTrim[st], max(frame, sill) * 0.85);
+    // The frame is painted steel; the sill, the lintel, and the kick plate
+    // are cast stone.
+    vec3 col = mix(wallCol, uFrame[st], frame * 0.85);
+    col = mix(col, uTrim[st], max(sill, lintel) * 0.85);
+    col = mix(col, uTrim[st] * 0.85, kick);
+    #ifdef PBR_LOOK
+    // A floor band at each slab, above the ground floor: a thin line a little
+    // darker than the wall, so a tall building shows its floors.
+    float slab = level > 0.5 ? 1.0 - smoothstep(0.035, 0.035 + aa.y, cell.y) : 0.0;
+    col *= 1.0 - 0.22 * slab;
+    #endif
     col = mix(col, glass, inWin);
-    col = mix(col, uTrim[st], mull * 0.9);
+    col = mix(col, uFrame[st], mull * 0.9);
     // Far away a window cell is under a few pixels: fade to the mean color,
     // so the grid does not shimmer.
     float far = far0;
-    vec3 mean = mix(wallCol, uGlass[st] + vec3(0.09), win.x * win.y * 0.9);
+    // The trim area is in the mean, so the near and the far colors match.
+    vec3 mean = mix(mix(wallCol, uTrim[st], 0.08), uGlass[st] + vec3(0.09), win.x * win.y * 0.9);
     diffuseColor.rgb = mix(col, mean, far);
+    facadeGlass = inWin * (1.0 - far);
+    #ifdef DETAIL
+    {
+      float stonePart = clamp(max(max(sill, lintel), kick), 0.0, 1.0);
+      float wallPart = (1.0 - inFrame) * (1.0 - stonePart);
+      float near = 1.0 - far;
+      facadeM = vFacade.yz * uStyleM[st];
+      facadeKBrick = a.w > 0.5 ? wallPart * near : 0.0;
+      facadeKStone = (a.w > 0.5 ? stonePart : wallPart + stonePart) * near;
+      facadeKFrame = clamp(frame + mull, 0.0, 1.0) * near;
+    }
+    #endif
+    #ifdef PBR_LOOK
+    // Ground contact: darker at the base of the wall (look.js wallOcclusion).
+    diffuseColor.rgb *= ${WALL_AO.base.toFixed(3)} + ${(1 - WALL_AO.base).toFixed(3)} * smoothstep(0.0, ${WALL_AO.floors.toFixed(3)}, vFacade.z);
+    #endif
     #ifdef INTERIOR
     totalEmissiveRadiance += roomGlow * inWin * (1.0 - far);
     #endif
   }
 }`,
+      )
+      .replace(
+        "#include <roughnessmap_fragment>",
+        `#include <roughnessmap_fragment>
+#ifdef DETAIL
+{
+  // Sample at the top level, so the mipmap level is correct.
+  float rb = texture2D(uBrickRough, facadeM / BRICK_TILE).r;
+  float rs = texture2D(uStoneRough, facadeM / STONE_TILE).r;
+  roughnessFactor = mix(roughnessFactor, rb, facadeKBrick);
+  roughnessFactor = mix(roughnessFactor, rs, facadeKStone);
+  roughnessFactor = mix(roughnessFactor, ${FRAME_ROUGHNESS.toFixed(3)}, facadeKFrame);
+}
+#endif
+roughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);`,
+      )
+      .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+#ifdef DETAIL
+{
+  // The wall frame in view space: tu along the wall (the way the wall meters
+  // grow), tv up.
+  vec3 P = -vViewPosition;
+  vec3 tv = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+  vec3 tu = cross(tv, normal);
+  float su = dot(dFdx(P), tu) * dFdx(facadeM.x) + dot(dFdy(P), tu) * dFdy(facadeM.x);
+  tu = su < 0.0 ? -tu : tu;
+  vec3 nb = texture2D(uBrickNor, facadeM / BRICK_TILE).rgb - vec3(0.5, 0.5, 1.0);
+  vec3 ns = texture2D(uStoneNor, facadeM / STONE_TILE).rgb - vec3(0.5, 0.5, 1.0);
+  nb.xy *= ${DETAIL_NORMAL.brick.toFixed(3)};
+  ns.xy *= ${DETAIL_NORMAL.stone.toFixed(3)};
+  vec3 s = vec3(0.5, 0.5, 1.0) + nb * facadeKBrick + ns * facadeKStone;
+  if (facadeKBrick + facadeKStone > 0.0) normal = detailNormal(normal, tu, tv, s, 1.0);
+}
+#endif`,
       );
   };
-  mat.customProgramCacheKey = () => `facade-v5${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}`;
+  mat.customProgramCacheKey = () => `facade-v8${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}${detail ? "-detail" : ""}`;
   return mat;
 }
 
 // The ground scans (scripts/ground-textures.py, CC0). One static URL per
 // file, so Vite bundles each map.
+// The normal and roughness maps are for the pbr look only.
 const GROUND = [
-  { info: asphaltInfo, url: new URL("../../assets/ground/asphalt/color.jpg", import.meta.url).href },
-  { info: concreteInfo, url: new URL("../../assets/ground/concrete/color.jpg", import.meta.url).href },
-  { info: trailInfo, url: new URL("../../assets/ground/trail/color.jpg", import.meta.url).href },
-  { info: grassInfo, url: new URL("../../assets/ground/grass/color.jpg", import.meta.url).href },
+  {
+    info: asphaltInfo,
+    url: new URL("../../assets/ground/asphalt/color.jpg", import.meta.url).href,
+    nor: new URL("../../assets/ground/asphalt/normal.jpg", import.meta.url).href,
+    rough: new URL("../../assets/ground/asphalt/rough.jpg", import.meta.url).href,
+  },
+  {
+    info: concreteInfo,
+    url: new URL("../../assets/ground/concrete/color.jpg", import.meta.url).href,
+    nor: new URL("../../assets/ground/concrete/normal.jpg", import.meta.url).href,
+    rough: new URL("../../assets/ground/concrete/rough.jpg", import.meta.url).href,
+  },
+  {
+    info: trailInfo,
+    url: new URL("../../assets/ground/trail/color.jpg", import.meta.url).href,
+    nor: new URL("../../assets/ground/trail/normal.jpg", import.meta.url).href,
+    rough: new URL("../../assets/ground/trail/rough.jpg", import.meta.url).href,
+  },
+  {
+    info: grassInfo,
+    url: new URL("../../assets/ground/grass/color.jpg", import.meta.url).href,
+    nor: new URL("../../assets/ground/grass/normal.jpg", import.meta.url).href,
+    rough: new URL("../../assets/ground/grass/rough.jpg", import.meta.url).href,
+  },
 ];
+// The lowest ground roughness from a map. A smoother ground reflects the
+// bright sky at a low angle and gives a white haze (look.js ENV_LIGHT).
+const GROUND_MIN_ROUGHNESS = 0.75;
 // Surface kind -> ground set (index in GROUND) and detail strength.
 const GROUND_OF = {
   ground: [3, 0.6],
@@ -291,9 +460,15 @@ const GROUND_OF = {
 // meters. The detail is the scan over its mean color, so the palette stays.
 // A second, rotated, larger sample breaks the tile repeat. The detail fades
 // out with distance, where a tile is under a few pixels.
-export function createSurfaceMaterial(gradientMap, { maps = null } = {}) {
-  const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
+//
+// With `detailMaps` (loadGroundDetail(), the pbr look) the ground also gets
+// the relief and the roughness of each scan: the asphalt grain, the slab
+// joints, and the grass blades catch the sun.
+export function createSurfaceMaterial(gradientMap, { maps = null, look = "toon", detailMaps = null } = {}) {
+  const mat = litMaterial(look, { vertexColors: true }, { gradientMap, roughness: ROUGHNESS.ground, envLight: ENV_LIGHT.ground });
   if (!maps) return mat;
+  const detail = look === "pbr" && detailMaps !== null;
+  if (detail) mat.defines = { DETAIL: 1 };
   const kinds = Object.keys(GROUND_OF);
   const kindColor = kinds.map((k) => new THREE.Vector3(...SURFACE_COLORS[k]));
   const kindSet = kinds.map((k) => GROUND_OF[k][0]);
@@ -307,6 +482,12 @@ export function createSurfaceMaterial(gradientMap, { maps = null } = {}) {
     shader.uniforms.uKindColor = { value: kindColor };
     shader.uniforms.uKindSet = { value: kindSet };
     shader.uniforms.uKindStrength = { value: kindStrength };
+    if (detail) {
+      GROUND.forEach((_, i) => {
+        shader.uniforms[`uGroundNor${i}`] = { value: detailMaps.nor[i] };
+        shader.uniforms[`uGroundRough${i}`] = { value: detailMaps.rough[i] };
+      });
+    }
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec2 vGroundXZ;")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGroundXZ = (modelMatrix * vec4(transformed, 1.0)).xz;");
@@ -320,6 +501,13 @@ ${decl}
 uniform vec3 uKindColor[${kinds.length}];
 uniform float uKindSet[${kinds.length}];
 uniform float uKindStrength[${kinds.length}];
+#ifdef DETAIL
+${GROUND.map((_, i) => `uniform sampler2D uGroundNor${i};\nuniform sampler2D uGroundRough${i};`).join("\n")}
+// The ground set of this pixel and the weight of its detail.
+float groundSet = -1.0;
+float groundK = 0.0;
+${DETAIL_GLSL}
+#endif
 vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   vec3 a = texture2D(t, xz / tile).rgb / mean;
   vec2 r = mat2(0.8, -0.6, 0.6, 0.8) * xz;
@@ -344,11 +532,48 @@ vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   vec3 d3 = groundDetail(uGround3, uGroundMean3, uGroundTile3, vGroundXZ);
   vec3 det = set < -0.5 ? vec3(1.0) : set < 0.5 ? d0 : set < 1.5 ? d1 : set < 2.5 ? d2 : d3;
   float fade = 1.0 - smoothstep(90.0, 280.0, length(vViewPosition));
+  // The scans are sampled in world x and z, so a vertical face (a curb side)
+  // gets streaks. Only a face that points up gets the detail.
+  fade *= smoothstep(0.5, 0.85, dot(normalize(vNormal), normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz)));
   diffuseColor.rgb *= mix(vec3(1.0), det, strength * fade);
+  #ifdef DETAIL
+  groundSet = set;
+  groundK = strength * fade;
+  diffuseColor.rgb *= set < -0.5 ? vec3(1.0) : set < 0.5 ? vec3(${GROUND_ALBEDO[0].map((c) => c.toFixed(3)).join(", ")}) : set < 1.5 ? vec3(${GROUND_ALBEDO[1].map((c) => c.toFixed(3)).join(", ")}) : set < 2.5 ? vec3(${GROUND_ALBEDO[2].map((c) => c.toFixed(3)).join(", ")}) : vec3(${GROUND_ALBEDO[3].map((c) => c.toFixed(3)).join(", ")});
+  #endif
 }`,
+      )
+      .replace(
+        "#include <roughnessmap_fragment>",
+        `#include <roughnessmap_fragment>
+#ifdef DETAIL
+{
+  // Sample every set at the top level, so the mipmap level is correct.
+${GROUND.map((_, i) => `  float r${i} = texture2D(uGroundRough${i}, vGroundXZ / uGroundTile${i}).r;`).join("\n")}
+  float rg = groundSet < -0.5 ? roughnessFactor : groundSet < 0.5 ? r0 : groundSet < 1.5 ? r1 : groundSet < 2.5 ? r2 : r3;
+  roughnessFactor = mix(roughnessFactor, max(rg, ${GROUND_MIN_ROUGHNESS.toFixed(3)}), groundK);
+}
+#endif`,
+      )
+      .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+#ifdef DETAIL
+{
+${GROUND.map((_, i) => `  vec3 n${i} = texture2D(uGroundNor${i}, vGroundXZ / uGroundTile${i}).rgb;`).join("\n")}
+  vec3 sn = groundSet < -0.5 ? vec3(0.5, 0.5, 1.0) : groundSet < 0.5 ? n0 : groundSet < 1.5 ? n1 : groundSet < 2.5 ? n2 : n3;
+  float kn = groundSet < 0.5 ? ${DETAIL_NORMAL.ground[0].toFixed(3)} : groundSet < 1.5 ? ${DETAIL_NORMAL.ground[1].toFixed(3)} : groundSet < 2.5 ? ${DETAIL_NORMAL.ground[2].toFixed(3)} : ${DETAIL_NORMAL.ground[3].toFixed(3)};
+  vec3 d = (sn - vec3(0.5, 0.5, 1.0)) * groundK;
+  d.xy *= kn;
+  // The map u grows along world x and v along world z (vGroundXZ).
+  vec3 tu = (viewMatrix * vec4(1.0, 0.0, 0.0, 0.0)).xyz;
+  vec3 tv = (viewMatrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz;
+  if (groundK > 0.0) normal = detailNormal(normal, tu, tv, vec3(0.5, 0.5, 1.0) + d, 1.0);
+}
+#endif`,
       );
   };
-  mat.customProgramCacheKey = () => "surface-v1-ground";
+  mat.customProgramCacheKey = () => `surface-v2-ground-${look}${detail ? "-detail" : ""}`;
   return mat;
 }
 
@@ -363,6 +588,19 @@ function loadGroundMaps() {
   });
 }
 
+// The ground normal and roughness maps of the pbr look, in the order of
+// GROUND. The maps hold data, so they stay in linear space.
+function loadGroundDetail() {
+  const load = (url) => {
+    const t = new THREE.TextureLoader().load(url);
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = 8;
+    return t;
+  };
+  return { nor: GROUND.map((g) => load(g.nor)), rough: GROUND.map((g) => load(g.rough)) };
+}
+
 // The brick scan for the facade shader. It tiles by the shader's own meter
 // coordinates, so it needs only repeat wrap and mipmaps.
 function loadBrickMap() {
@@ -372,6 +610,20 @@ function loadBrickMap() {
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 8;
   return t;
+}
+
+// The wall detail maps of the pbr look (createFacadeMaterial()). The maps
+// hold data, not colors, so they stay in linear space.
+function loadWallDetail() {
+  const maps = {};
+  for (const [name, url] of Object.entries(WALL_DETAIL_URLS)) {
+    const t = new THREE.TextureLoader().load(url);
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.RepeatWrapping;
+    t.anisotropy = 8;
+    maps[name] = t;
+  }
+  return maps;
 }
 
 function addMesh(root, byId, name, geometry, material, { castShadow = false } = {}) {
@@ -464,18 +716,26 @@ export async function loadKitTemplates(url = KIT_URL) {
   return templates;
 }
 
-// The prop material: the soft toon ramp, and wind on the tree crowns. The
-// vertex shader moves each vertex by its sway weight (0 for trunks and kit
-// props), with a phase from the world position, so near trees do not move
-// as one. The shadow map does not get the wind; the move is under 0.3 m.
-// In the prop batch (src/render/prop-batch.js) the position is in the
-// template space: the batching matrix gives the world position, and its
-// inverse turns the world wind move into the template space.
-function createPropMaterial({ wind = true } = {}) {
-  const material = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp({ soft: true }) });
+// The prop material: the soft toon ramp (or pbr), wind on the tree crowns,
+// and, with `leaves`, the leaf cut on the tree cards. The vertex shader
+// moves each vertex by its sway weight (0 for trunks and kit props), with a
+// phase from the world position, so near trees do not move as one. The
+// shadow map does not get the wind; the move is under 0.3 m. In the prop
+// batch (src/render/prop-batch.js) the position is in the template space:
+// the batching matrix gives the world position, and its inverse turns the
+// world wind move into the template space.
+function createPropMaterial({ wind = true, look = "toon", leaves = false } = {}) {
+  const material = litMaterial(look, { vertexColors: true }, { gradientMap: toonRamp({ soft: true }), roughness: ROUGHNESS.props, envLight: ENV_LIGHT.props });
+  // A card is a single quad: both sides must draw.
+  if (leaves) material.side = THREE.DoubleSide;
   const time = { value: 0 };
-  if (wind) {
+  if (wind || leaves) {
     material.onBeforeCompile = (shader) => {
+      if (leaves) {
+        patchLeafVertex(shader);
+        patchLeafFragment(shader);
+      }
+      if (!wind) return;
       shader.uniforms.uWindTime = time;
       shader.vertexShader = shader.vertexShader
         .replace("#include <common>", "#include <common>\nattribute float sway;\nuniform float uWindTime;")
@@ -500,7 +760,7 @@ function createPropMaterial({ wind = true } = {}) {
           ].join("\n"),
         );
     };
-    material.customProgramCacheKey = () => "geo-props-wind";
+    material.customProgramCacheKey = () => `geo-props${wind ? "-wind" : ""}${leaves ? "-leaves" : ""}-${look}`;
   }
   return { material, time };
 }
@@ -508,32 +768,46 @@ function createPropMaterial({ wind = true } = {}) {
 // `groundDetail: false` keeps the flat art colors on the ground.
 // `trees: false` keeps the two street kit trees (for an A/B check).
 // `season` sets the tree colors: "spring", "summer" (the default), or "fall".
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer" } = {}) {
+// `aprons: false` leaves out the concrete aprons of the shops (aprons.js).
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, look = "toon", season = "summer" } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
   let muralMap = null;
   const materials = {
-    surface: createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null }),
-    building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors }),
+    surface: createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null, look, detailMaps: groundDetail && look === "pbr" ? loadGroundDetail() : null }),
+    building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors, look, detailMaps: look === "pbr" ? loadWallDetail() : null }),
     props: null,
     get mural() {
-      if (!muralMap) muralMap = new THREE.MeshToonMaterial({ map: createMuralAtlas(), gradientMap });
+      if (!muralMap) muralMap = litMaterial(look, { map: createMuralAtlas() }, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural });
       return muralMap;
     },
   };
-  const propMaterial = createPropMaterial({ wind });
+  // The leaf cards on the trees come with the pbr look (look.js).
+  const leaves = trees && look === "pbr";
+  const propMaterial = createPropMaterial({ wind, look, leaves });
   materials.props = propMaterial.material;
   const byId = new Map();
   // Road markings join the render copy of their surface tile (no extra
   // draw call). The shared meshes, which the physics reads, stay as they are.
   // The markings follow the terrain like the streets (terrain.js).
   const terrain = terrainOf(level);
-  // The lines on a bridge deck come at their final height (no drape).
-  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, t.deck ? mergeMeshes([drapeMesh(t.mesh, terrain), t.deck]) : drapeMesh(t.mesh, terrain)]) : []);
+  // The concrete aprons around the storefront buildings (aprons.js) join
+  // the surface tiles in the same way. The kit and the aprons share the
+  // front walls.
+  const fronts = kit || aprons ? frontEdges(level) : null;
+  const groundExtras = new Map();
+  for (const t of [...(markings ? roadMarkings(level) : []), ...(aprons ? storefrontAprons(level, fronts) : [])]) {
+    const list = groundExtras.get(t.tile) ?? [];
+    list.push(drapeMesh(t.mesh, terrain));
+    // The lines on a bridge deck come at their final height (no drape).
+    if (t.deck) list.push(t.deck);
+    groundExtras.set(t.tile, list);
+  }
+  const markingTiles = new Map([...groundExtras].map(([tile, list]) => [tile, list.length > 1 ? mergeMeshes(list) : list[0]]));
   // The facade kit (cornices, copings, belt courses, house roofs) joins the
   // render copy of its building tile in the same way.
-  const kitParts = kit ? facadeKit(level) : { tiles: [], depthTiles: [], counts: {} };
+  const kitParts = kit ? facadeKit(level, fronts) : { tiles: [], depthTiles: [], counts: {} };
   const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));
   for (const { material, tile, mesh } of meshes) {
     const extra = material === "surface" ? markingTiles.get(tile) : material === "building" ? kitTiles.get(tile) : null;
@@ -580,9 +854,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null };
   function addProps(placements, templates) {
     // The procedural trees take the place of the two kit trees.
-    const all = trees ? { ...templates, ...treeTemplates({ season }) } : templates;
+    const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves }) } : templates;
     const placed = trees ? withProceduralTrees(placements) : placements;
     propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance });
+    if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial();
     root.add(propBatch.mesh);
     byId.set("props", propBatch.mesh);
     props.count = placements.length;
@@ -647,11 +922,14 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
 // shadow map cannot cover 2 km at a useful resolution. The shell turns the
 // shadow map off on a geodata level for speed; the light keeps the setup
 // for a faster machine.
-export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048 } = {}) {
+export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048, look = "toon" } = {}) {
   const group = new THREE.Group();
-  group.add(new THREE.HemisphereLight(0xcfe8ff, 0x5a6a48, 0.7));
-  const sun = new THREE.DirectionalLight(0xfff1d6, 1.5);
-  const offset = new THREE.Vector3(30, 50, 20);
+  const L = LOOKS[look];
+  group.add(new THREE.HemisphereLight(L.hemisphereSky, L.hemisphereGround, L.hemisphere));
+  const sun = new THREE.DirectionalLight(L.sunColor, L.sun);
+  // The offset keeps about the old distance (62 m), so the shadow camera
+  // (near 1, far 200) still holds the shadow box.
+  const offset = new THREE.Vector3(...L.sunOffset).setLength(62);
   sun.position.copy(offset);
   sun.castShadow = true;
   sun.shadow.mapSize.set(shadowMapSize, shadowMapSize);

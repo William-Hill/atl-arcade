@@ -1,0 +1,492 @@
+// The full map: a large map of the whole level over the game, as in an
+// open-world game. It opens at the overview of the level. The player drags
+// to pan and uses the wheel, a pinch, or the buttons to zoom. It shows the
+// footprints, the streets and their names, the trail, the parks, the
+// landmarks, and the skater. A click or a tap on a landmark or a park shows
+// its name. The game stops while the map is open (src/main.js).
+//
+// Keys: M or Escape closes it. The arrow keys or W A S D pan. + and - zoom.
+// C centers the map on the skater. The math is in src/ui/fullmap-math.js.
+//
+// Two layers: the plan (the minimap drawing, src/ui/minimap.js
+// drawMapBase(), at a higher resolution, made the first time the map opens)
+// and the isometric map (the baked tiles of src/ui/iso-tiles.js), when the
+// level has a bake. V or the layer button changes the layer. Each layer has
+// its own map space: the plan uses world x and z, the isometric map uses
+// the image plane (src/level/geo/iso-map.js). The icons, the names, and the
+// skater are projected into the map space of the layer.
+
+import { COLORS, drawArrow, drawIcon, drawMapBase } from "./minimap.js";
+import { mapFrame } from "./minimap-math.js";
+import { FULLMAP, baseTransform, clampView, fitView, isoBounds, isoLevelFor, labelFits, nearestIcon, panBy, screenToWorld, streetLabelSpots, visibleTiles, worldToScreen, zoomAt } from "./fullmap-math.js";
+import { isoBasis, isoProject, isoUnproject } from "../level/geo/iso-map.js";
+
+// The sky color of the baked isometric map, around the level.
+const ISO_BACKGROUND = "#b6dbf2";
+
+function el(tag, className, parent, text) {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function rectsOverlap(a, b) {
+  return a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+}
+
+// `icons` are the minimap icons (minimap-math.js mapLandmarks()).
+// `onChange(open)` is called when the map opens or closes. `canOpen()` is
+// false while another screen (photo mode) is open. `iso` is the bake of the
+// level (src/ui/iso-tiles.js isoTilesFor()) or null. `groundAt(x, z)` is the
+// ground height, to place the icons on the isometric map.
+// `onTravel(x, z)` turns on fast travel (a debug and play-test aid): a click
+// picks a place or an icon, and "Travel here" or T moves the skater there.
+// Null turns it off.
+export function createFullMap(parent, level, { icons, onChange = () => {}, canOpen = () => true, iso = null, groundAt = () => 0, onTravel = null } = {}) {
+  const bounds = level.bounds;
+  const spots = streetLabelSpots(level.strips);
+  const state = { open: false, view: null, draws: 0, selected: null, layer: iso ? "iso" : "plan", target: null, travel: Boolean(onTravel) };
+  const basis = iso ? isoBasis(iso.info.yaw, iso.info.pitch) : null;
+  // The map space point of a world point, for the current layer.
+  function toMap(x, y, z) {
+    if (state.layer !== "iso") return [x, z];
+    const [a, b] = isoProject(basis, x, y, z);
+    return [a, -b];
+  }
+  // The world point [x, z] of a map space point, on the ground.
+  function toWorld(mx, mz) {
+    if (state.layer !== "iso") return [mx, mz];
+    const p = isoUnproject(basis, mx, -mz, groundAt);
+    return [p[0], p[2]];
+  }
+  const mapBounds = () => (state.layer === "iso" ? isoBounds(iso.info) : bounds);
+  // The loaded tile images, by URL. A tile draws when its image is ready.
+  const images = new Map();
+  function tileImage(url) {
+    let img = images.get(url);
+    if (!img) {
+      img = new Image();
+      img.decoding = "async";
+      img.onload = () => {
+        dirty = true;
+      };
+      img.src = url;
+      images.set(url, img);
+    }
+    return img.complete && img.naturalWidth > 0 ? img : null;
+  }
+  let base = null;
+  let frame = null;
+  let skater = null;
+  let dirty = true;
+
+  const root = el("div", "fullmap", null);
+  root.id = "fullmap";
+  root.hidden = true;
+  root.setAttribute("role", "dialog");
+  root.setAttribute("aria-modal", "true");
+  root.setAttribute("aria-label", `Map of ${level.title ?? level.name}`);
+  const canvas = el("canvas", "fullmap-canvas", root);
+  canvas.setAttribute("role", "img");
+  const head = el("div", "fullmap-head", root);
+  el("div", "fullmap-title", head, level.title ?? level.name);
+  el("div", "fullmap-hint", head, `Drag to move · wheel or pinch to zoom · C: center${iso ? " · V: 2D or 3D" : ""}${onTravel ? " · click, then T: travel" : ""} · M: close`);
+  const closeBtn = el("button", "fullmap-close", head, "×");
+  closeBtn.type = "button";
+  closeBtn.setAttribute("aria-label", "Close the map (M or Escape)");
+  const tools = el("div", "fullmap-tools", root);
+  const zoomIn = el("button", "fullmap-zoom-in", tools, "+");
+  const zoomOut = el("button", "fullmap-zoom-out", tools, "−");
+  const center = el("button", "fullmap-center", tools, "◎");
+  const layerBtn = iso ? el("button", "fullmap-layer", tools, "") : null;
+  if (layerBtn) layerBtn.type = "button";
+  zoomIn.setAttribute("aria-label", "Zoom in (+ key)");
+  zoomOut.setAttribute("aria-label", "Zoom out (- key)");
+  center.setAttribute("aria-label", "Center on the skater (C key)");
+  for (const b of [zoomIn, zoomOut, center]) b.type = "button";
+  const info = el("div", "fullmap-info", root);
+  info.hidden = true;
+  const infoText = el("span", "fullmap-info-text", info);
+  infoText.setAttribute("aria-live", "polite");
+  const travelBtn = onTravel ? el("button", "fullmap-travel", info, "Travel here (T)") : null;
+  if (travelBtn) travelBtn.type = "button";
+  const legend = el("div", "fullmap-legend", root);
+  for (const [cls, text] of [
+    ["you", "You"],
+    ["landmark", "Landmark"],
+    ["park", "Park"],
+    ["trail", "BeltLine trail"],
+  ]) {
+    const row = el("div", "fullmap-legend-row", legend);
+    el("span", `fullmap-key fullmap-key-${cls}`, row);
+    el("span", null, row, text);
+  }
+  parent.appendChild(root);
+  const ctx = canvas.getContext("2d");
+
+  function size() {
+    return { w: canvas.clientWidth, h: canvas.clientHeight, dpr: Math.min(2, window.devicePixelRatio || 1) };
+  }
+
+  function setView(v) {
+    const { w, h } = size();
+    state.view = clampView(v, mapBounds(), w, h);
+    dirty = true;
+  }
+
+  // `target` is the world point for fast travel: the icon, or a place.
+  function select(icon, target = icon ? { x: icon.x, z: icon.z } : null) {
+    state.selected = icon;
+    state.target = onTravel ? target : null;
+    info.hidden = !icon && !state.target;
+    infoText.textContent = icon ? `${icon.name} · ${icon.kind === "landmark" ? "Landmark" : "Park"}` : state.target ? "This place" : "";
+    dirty = true;
+  }
+
+  function travel() {
+    if (!onTravel || !state.target) return;
+    const { x, z } = state.target;
+    close();
+    onTravel(x, z);
+  }
+
+  function open() {
+    if (state.open || !canOpen()) return;
+    if (!base) {
+      frame = mapFrame(bounds, { pxPerMeter: FULLMAP.pxPerMeter, maxTexture: FULLMAP.maxTexture });
+      base = drawMapBase(level, frame, new Set(icons.filter((i) => i.kind === "landmark").map((i) => i.name)));
+    }
+    state.open = true;
+    root.hidden = false;
+    const { w, h } = size();
+    state.view = fitView(mapBounds(), w, h);
+    select(null);
+    dirty = true;
+    onChange(true);
+    closeBtn.focus({ preventScroll: true });
+  }
+
+  function close() {
+    if (!state.open) return;
+    state.open = false;
+    root.hidden = true;
+    onChange(false);
+  }
+
+  function centerOnSkater() {
+    if (!skater) return;
+    const [x, z] = toMap(...skater.position);
+    setView({ x, z, zoom: Math.max(state.view.zoom, 2) });
+  }
+
+  function syncLayer() {
+    if (!layerBtn) return;
+    layerBtn.textContent = state.layer === "iso" ? "2D" : "3D";
+    layerBtn.setAttribute("aria-label", state.layer === "iso" ? "Show the plan map (V key)" : "Show the 3D map (V key)");
+  }
+  function setLayer(layer) {
+    if (!iso) return;
+    state.layer = layer === "plan" ? "plan" : "iso";
+    syncLayer();
+    if (state.open) {
+      const { w, h } = size();
+      state.view = fitView(mapBounds(), w, h);
+      select(null);
+      dirty = true;
+    }
+  }
+  syncLayer();
+
+  // The icons in the map space of the current layer, on the ground.
+  function mappedIcons() {
+    return icons.map((i) => {
+      const [x, z] = toMap(i.x, groundAt(i.x, i.z), i.z);
+      return { ...i, x, z };
+    });
+  }
+
+  function zoomBy(factor, sx, sy) {
+    const { w, h } = size();
+    setView(zoomAt(state.view, w, h, sx ?? w / 2, sy ?? h / 2, factor));
+  }
+
+  // A tap or a click removes the focus, so a later Space does not press it.
+  const tap = (fn) => (e) => {
+    e.stopPropagation();
+    fn();
+    if (e.detail > 0) e.currentTarget.blur();
+  };
+  closeBtn.addEventListener("click", tap(close));
+  zoomIn.addEventListener("click", tap(() => zoomBy(FULLMAP.step)));
+  zoomOut.addEventListener("click", tap(() => zoomBy(1 / FULLMAP.step)));
+  center.addEventListener("click", tap(centerOnSkater));
+  if (layerBtn) layerBtn.addEventListener("click", tap(() => setLayer(state.layer === "iso" ? "plan" : "iso")));
+  if (travelBtn) travelBtn.addEventListener("click", tap(travel));
+
+  // The keys go to the map only while it is open. The capture phase and
+  // stopImmediatePropagation keep them from the game and from photo mode.
+  const onKey = (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!state.open) {
+      if (e.code === "KeyM" && !e.repeat && canOpen()) {
+        e.preventDefault();
+        open();
+      }
+      return;
+    }
+    const { w, h } = size();
+    const step = Math.min(w, h) * FULLMAP.pan;
+    let used = true;
+    if ((e.code === "KeyM" || e.code === "Escape") && !e.repeat) close();
+    else if (e.code === "ArrowLeft" || e.code === "KeyA") setView(panBy(state.view, step, 0));
+    else if (e.code === "ArrowRight" || e.code === "KeyD") setView(panBy(state.view, -step, 0));
+    else if (e.code === "ArrowUp" || e.code === "KeyW") setView(panBy(state.view, 0, step));
+    else if (e.code === "ArrowDown" || e.code === "KeyS") setView(panBy(state.view, 0, -step));
+    else if (e.code === "Equal" || e.code === "NumpadAdd") zoomBy(FULLMAP.step);
+    else if (e.code === "Minus" || e.code === "NumpadSubtract") zoomBy(1 / FULLMAP.step);
+    else if (e.code === "KeyC") centerOnSkater();
+    else if (e.code === "KeyV" && !e.repeat) setLayer(state.layer === "iso" ? "plan" : "iso");
+    else if (e.code === "KeyT" && !e.repeat && state.target) travel();
+    else if (e.code === "Tab") used = false;
+    if (used) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  };
+  window.addEventListener("keydown", onKey, true);
+  // Key releases also stay in the map, so the game does not see a release
+  // without a press.
+  const onKeyUp = (e) => {
+    if (state.open && e.code !== "Tab") e.stopImmediatePropagation();
+  };
+  window.addEventListener("keyup", onKeyUp, true);
+
+  canvas.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault();
+      const r = canvas.getBoundingClientRect();
+      zoomBy(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top);
+    },
+    { passive: false },
+  );
+
+  // Pointers: one pointer drags, two pointers pinch. A short press with no
+  // drag is a click: it selects the nearest icon.
+  const pointers = new Map();
+  let moved = 0;
+  canvas.addEventListener("pointerdown", (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    moved = 0;
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    const p = pointers.get(e.pointerId);
+    if (!p) return;
+    const r = canvas.getBoundingClientRect();
+    if (pointers.size === 1) {
+      const dx = e.clientX - p.x;
+      const dy = e.clientY - p.y;
+      moved += Math.abs(dx) + Math.abs(dy);
+      setView(panBy(state.view, dx, dy));
+    } else if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const other = a === p ? b : a;
+      const before = Math.hypot(p.x - other.x, p.y - other.y);
+      const after = Math.hypot(e.clientX - other.x, e.clientY - other.y);
+      moved += Math.abs(after - before);
+      if (before > 0) zoomBy(after / before, (e.clientX + other.x) / 2 - r.left, (e.clientY + other.y) / 2 - r.top);
+    }
+    p.x = e.clientX;
+    p.y = e.clientY;
+  });
+  const up = (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (pointers.size === 0 && moved < 6 && e.type === "pointerup") {
+      const r = canvas.getBoundingClientRect();
+      const { w, h } = size();
+      const [x, z] = screenToWorld(state.view, w, h, e.clientX - r.left, e.clientY - r.top);
+      const hit = nearestIcon(mappedIcons(), x, z, 18 / state.view.zoom);
+      if (hit) select(icons.find((i) => i.id === hit.id));
+      else {
+        const [wx, wz] = toWorld(x, z);
+        select(null, { x: wx, z: wz });
+      }
+    }
+  };
+  canvas.addEventListener("pointerup", up);
+  canvas.addEventListener("pointercancel", up);
+
+  window.addEventListener("resize", () => {
+    if (state.open) setView(state.view);
+  });
+
+  function fit() {
+    const { w, h, dpr } = size();
+    const pw = Math.max(1, Math.round(w * dpr));
+    const ph = Math.max(1, Math.round(h * dpr));
+    if (canvas.width !== pw || canvas.height !== ph) {
+      canvas.width = pw;
+      canvas.height = ph;
+      dirty = true;
+    }
+    return { w, h, dpr };
+  }
+
+  function draw() {
+    const { w, h, dpr } = fit();
+    const view = state.view;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = state.layer === "iso" ? ISO_BACKGROUND : COLORS.ground;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (state.layer === "iso") {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      // The coarsest level first, so no hole shows while a finer tile loads.
+      const info = iso.info;
+      const fine = isoLevelFor(view.zoom, info);
+      for (const lvl of fine === info.levels - 1 ? [fine] : [info.levels - 1, fine]) {
+        for (const t of visibleTiles(view, w, h, info, lvl)) {
+          const img = tileImage(iso.url(lvl, t.col, t.row));
+          // A half pixel more on each side hides the hairline between tiles.
+          if (img) ctx.drawImage(img, t.x - 0.5, t.y - 0.5, t.size + 1, t.size + 1);
+        }
+      }
+    } else {
+      ctx.setTransform(...baseTransform(frame, view, canvas.width, canvas.height, dpr));
+      // Sharp pixels when the base image is magnified a lot, smooth otherwise.
+      ctx.imageSmoothingEnabled = view.zoom / frame.scale < 2.5;
+      ctx.drawImage(base, 0, 0);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // The screen point of a world point.
+    const screenOf = (x, y, z) => worldToScreen(view, w, h, ...toMap(x, y, z));
+
+    // The street names, longest street first, with no overlap.
+    const placed = [];
+    ctx.font = "600 12px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    for (const s of spots) {
+      const tw = ctx.measureText(s.name).width;
+      if (!labelFits(s, view.zoom, tw)) continue;
+      const gy = groundAt(s.x, s.z);
+      const [sx, sy] = screenOf(s.x, gy, s.z);
+      // The street direction on the screen, upright.
+      const [ex, ey] = screenOf(s.x + Math.cos(s.angle) * 10, gy, s.z + Math.sin(s.angle) * 10);
+      let angle = Math.atan2(ey - sy, ex - sx);
+      if (angle > Math.PI / 2) angle -= Math.PI;
+      if (angle < -Math.PI / 2) angle += Math.PI;
+      if (sx < -tw || sx > w + tw || sy < -20 || sy > h + 20) continue;
+      const hw = (Math.abs(Math.cos(angle)) * tw) / 2 + 8;
+      const hh = (Math.abs(Math.sin(angle)) * tw) / 2 + 8;
+      const rect = { x0: sx - hw, x1: sx + hw, y0: sy - hh, y1: sy + hh };
+      if (placed.some((r) => rectsOverlap(r, rect))) continue;
+      placed.push(rect);
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(angle);
+      ctx.strokeStyle = COLORS.ink;
+      ctx.lineWidth = 3;
+      ctx.strokeText(s.name, 0, 0);
+      ctx.fillStyle = COLORS.paper;
+      ctx.fillText(s.name, 0, 0);
+      ctx.restore();
+    }
+
+    // The icons, with the full name of each landmark beside it.
+    const s = 1.3;
+    for (const icon of icons) {
+      const [ix, iy] = screenOf(icon.x, groundAt(icon.x, icon.z), icon.z);
+      if (ix < -40 || ix > w + 40 || iy < -40 || iy > h + 40) continue;
+      drawIcon(ctx, icon, ix, iy, s);
+      const chosen = state.selected && icon.id === state.selected.id;
+      if (icon.kind === "landmark" || chosen) {
+        ctx.font = "700 13px system-ui, sans-serif";
+        ctx.textAlign = "left";
+        ctx.strokeStyle = COLORS.ink;
+        ctx.lineWidth = 3.5;
+        ctx.strokeText(icon.name, ix + 17, iy);
+        ctx.fillStyle = icon.kind === "landmark" ? COLORS.landmarkBuilding : "#7ef0a0";
+        ctx.fillText(icon.name, ix + 17, iy);
+      }
+      if (chosen) {
+        ctx.strokeStyle = COLORS.paper;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(ix, iy, 19, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    // The fast travel target, when it is a place and not an icon.
+    if (state.target && !state.selected) {
+      const [tx, ty] = screenOf(state.target.x, groundAt(state.target.x, state.target.z), state.target.z);
+      ctx.strokeStyle = COLORS.ink;
+      ctx.lineWidth = 6;
+      for (const sw of [6, 3]) {
+        ctx.lineWidth = sw;
+        ctx.strokeStyle = sw === 6 ? COLORS.ink : COLORS.trail;
+        ctx.beginPath();
+        ctx.moveTo(tx - 9, ty - 9);
+        ctx.lineTo(tx + 9, ty + 9);
+        ctx.moveTo(tx + 9, ty - 9);
+        ctx.lineTo(tx - 9, ty + 9);
+        ctx.stroke();
+      }
+    }
+
+    if (skater) {
+      const [ax, ay] = screenOf(...skater.position);
+      // The heading on the screen: the skater forward direction is
+      // (cos yaw, -sin yaw) in x and z (src/sim/skate/controller.js).
+      const [hx, hy] = screenOf(skater.position[0] + Math.cos(skater.yaw) * 5, skater.position[1], skater.position[2] - Math.sin(skater.yaw) * 5);
+      const heading = Math.atan2(hx - ax, -(hy - ay));
+      // A ring around the arrow, so the player finds it at the overview.
+      ctx.strokeStyle = COLORS.trail;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(ax, ay, 20, 0, Math.PI * 2);
+      ctx.stroke();
+      drawArrow(ctx, ax, ay, heading, 1.4);
+    }
+    canvas.setAttribute("aria-label", `Map of ${level.title ?? level.name}. Landmarks: ${icons.filter((i) => i.kind === "landmark").map((i) => i.name).join(", ")}.`);
+    state.draws += 1;
+  }
+
+  return {
+    root,
+    canvas,
+    state,
+    get isOpen() {
+      return state.open;
+    },
+    open,
+    close,
+    toggle: () => (state.open ? close() : open()),
+    setView,
+    setLayer,
+    select,
+    travel,
+    // Called once per frame with the skater state. Draws only when open and
+    // when something changed.
+    update(s) {
+      skater = s;
+      if (!state.open) return;
+      const { w, h } = size();
+      if (state.view && (canvas.width !== Math.round(w * Math.min(2, window.devicePixelRatio || 1)) || dirty)) {
+        dirty = false;
+        draw();
+      }
+    },
+    dispose() {
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("keyup", onKeyUp, true);
+      root.remove();
+    },
+  };
+}

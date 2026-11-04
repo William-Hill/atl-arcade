@@ -1,0 +1,15 @@
+{
+  "kind": "modern-apartment",
+  "pick": 0,
+  "look": "pbr",
+  "views": {
+    "facade": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=modern-apartment&pick=0&labview=facade",
+    "street": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=modern-apartment&pick=0&labview=street",
+    "mid": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=modern-apartment&pick=0&labview=mid"
+  },
+  "building": {
+    "id": "w270468459",
+    "name": null,
+    "height": 14.4
+  }
+}

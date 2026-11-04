@@ -30,8 +30,11 @@
 //   sidewalk, as a real sign does. Signs go first, so a tree never takes
 //   the corner.
 
-import { cleanRing, signedArea } from "./extrude.js";
-import { createGeoGroundSampler, pointInRings } from "./geo-ground.js";
+import { orientRing } from "./extrude.js";
+import { doorBay, frontEdges } from "./facade-kit.js";
+import { walkStrip } from "./aprons.js";
+import { roofPlan } from "./roof-plan.js";
+import { createGeoGroundSampler } from "./geo-ground.js";
 import { STYLES, chooseStyle, hash32, seededRandom } from "./styles.js";
 import { cornerSpots, shortName, streetIntersections } from "./signs.js";
 import { buildingSpan, terrainOf } from "./terrain.js";
@@ -49,7 +52,14 @@ export const PROP_SOLID = {
   bin: { r: 0.35, h: 1.05 },
   bike_rack: { r: 0.8, h: 0.85 },
   street_sign: { r: 0.12, h: 3.2 },
+  // The kit planter at PLANTER.scale: 1.2 m square and 0.82 m high. It is a
+  // ledge for the skater.
+  planter: { r: 0.6, h: 0.82 },
 };
+
+// The planters on the front apron of a shop (planterSpots()): the scale of
+// the kit planter, and the distance of its center from the wall (m).
+export const PLANTER = { scale: 0.8, out: 1.0 };
 
 const MIN_GAP = 2.5;
 
@@ -147,13 +157,42 @@ function isOpen(sample, x, z, r, openIds) {
   return true;
 }
 
+// Pure: the planter spots on the front wall of one storefront building:
+// [{ x, z, yaw }]. A planter stands in front of every second inner pier
+// (the bay lines of the facade shader), but not at the two piers of the
+// door bay (facade-kit.js doorBay()). It is square to the wall.
+export function planterSpots(b, style, front) {
+  const ring = orientRing(b.outer, false);
+  if (!front || front.edge < 0 || front.edge >= ring.length) return [];
+  const [px, pz] = ring[front.edge];
+  const [qx, qz] = ring[(front.edge + 1) % ring.length];
+  const len = Math.hypot(qx - px, qz - pz);
+  if (len < 1e-6) return [];
+  const t = [(qx - px) / len, (qz - pz) / len];
+  // The outward normal of an outer ring edge is (-dz, dx).
+  const n = [-t[1], t[0]];
+  const bays = Math.max(1, Math.round(len / style.bay));
+  const bl = len / bays;
+  const door = doorBay(front, bays);
+  const out = [];
+  for (let k = 2; k < bays; k += 2) {
+    if (k === door || k === door + 1) continue;
+    const a = k * bl;
+    out.push({ x: px + t[0] * a + n[0] * PLANTER.out, z: pz + t[1] * a + n[1] * PLANTER.out, yaw: yawToward(t[0], t[1]) });
+  }
+  return out;
+}
+
 // Returns [{ kind, x, y, z, yaw }]. `sample` is the ground sampler of the
 // level without props. A tree also has a `species`, and a mapped prop has
 // its OSM id in `osm`. `level.canopy` (the canopy grid, src/level/levels.js)
-// adds the canopy trees. With a `report` object, report.furniture gets the
-// counts of the mapped points (placed, moved, refused by reason), and
-// report.refusedPoints lists each refused point.
-export function streetProps(level, sample, report = null) {
+// adds the canopy trees. With `fronts` (facade-kit.js frontEdges()), the
+// shops get planters on their front aprons, and no other prop stands on a
+// walk from a shop door to the street (aprons.js walkStrip()). With a
+// `report` object, report.furniture gets the counts of the mapped points
+// (placed, moved, refused by reason), and report.refusedPoints lists each
+// refused point.
+export function streetProps(level, sample, fronts = null, report = null) {
   const areaIds = new Set((level.areas ?? []).map((a) => a.id));
   // A sign may also stand on a sidewalk.
   const signIds = new Set([...areaIds, ...(level.strips ?? []).filter((s) => s.kind === "sidewalk").map((s) => s.id)]);
@@ -170,12 +209,37 @@ export function streetProps(level, sample, report = null) {
     }
     return true;
   }
+  // The walks from the shop doors: { o, t, n, a0, a1, d0, d1 } boxes.
+  const walks = [];
+  const shops = [];
+  if (fronts) {
+    for (const b of (level.buildings ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1))) {
+      const front = fronts.get(b.id);
+      if (!front || !(b.outer?.length >= 3)) continue;
+      const style = STYLES.find((s) => s.id === chooseStyle(b));
+      shops.push({ b, style, front });
+      const w = walkStrip(orientRing(b.outer, false), front, style.bay);
+      if (w) walks.push(w);
+    }
+  }
+  function onWalk(x, z, r) {
+    for (const w of walks) {
+      const dx = x - w.o[0];
+      const dz = z - w.o[1];
+      const a = dx * w.t[0] + dz * w.t[1];
+      const d = dx * w.n[0] + dz * w.n[1];
+      if (a > w.a0 - r && a < w.a1 + r && d > w.d0 - r && d < w.d1 + r) return true;
+    }
+    return false;
+  }
   let why = null;
   function put(kind, x, z, yaw = 0, scale = 1, extra = null) {
     const solid = PROP_SOLID[kind];
+    const r = solid ? solid.r + 0.3 : 0.5;
     why = null;
     if (!free(x, z)) why = "gap";
-    else if (!isOpen(sample, x, z, solid ? solid.r + 0.3 : 0.5, kind === "street_sign" ? signIds : areaIds)) why = "surface";
+    else if (!isOpen(sample, x, z, r, kind === "street_sign" ? signIds : areaIds)) why = "surface";
+    else if (kind !== "street_sign" && onWalk(x, z, r)) why = "walk";
     if (why) return false;
     const k = key(x, z);
     if (!taken.has(k)) taken.set(k, []);
@@ -274,6 +338,11 @@ export function streetProps(level, sample, report = null) {
   }
   const BENCHES = ["bench", "bench_painted"];
 
+  // The planters go next, so a tree never takes the place of a planter.
+  for (const { b, style, front } of shops) {
+    for (const s of planterSpots(b, style, front)) put("planter", s.x, s.z, s.yaw, PLANTER.scale);
+  }
+
   const strips = (level.strips ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));
   for (const s of strips) {
     const half = s.width / 2;
@@ -344,42 +413,14 @@ export function streetProps(level, sample, report = null) {
   return dropped.size ? out.filter((p) => !dropped.has(p)) : out;
 }
 
-// Roof props for one building: [{ kind, x, y, z, yaw }].
+// Roof props for one building: [{ kind, x, y, z, yaw }]. They are the roof
+// units and the water tower of the roof plan (roof-plan.js roofPlan()), so
+// they are square to the walls and clear of the stair bulkhead and the
+// vents of the facade kit.
 export function roofProps(b, style) {
-  const out = [];
-  const ring = cleanRing(b.outer);
-  const area = Math.abs(signedArea(ring));
-  const rings = [ring, ...(b.holes ?? [])];
-  const rand = seededRandom(hash32(`${b.id}:roof`));
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minZ = Infinity;
-  let maxZ = -Infinity;
-  for (const [x, z] of ring) {
-    minX = Math.min(minX, x);
-    maxX = Math.max(maxX, x);
-    minZ = Math.min(minZ, z);
-    maxZ = Math.max(maxZ, z);
-  }
-  function spot(margin) {
-    for (let tries = 0; tries < 20; tries += 1) {
-      const x = minX + rand() * (maxX - minX);
-      const z = minZ + rand() * (maxZ - minZ);
-      const ok = [[0, 0], [margin, 0], [-margin, 0], [0, margin], [0, -margin]].every(([ox, oz]) => pointInRings(x + ox, z + oz, rings));
-      if (ok) return [x, z];
-    }
-    return null;
-  }
-  const units = Math.min(8, Math.floor(area * (style.roof.roof_unit ?? 0)));
-  for (let i = 0; i < units; i += 1) {
-    const p = spot(1.5);
-    if (p) out.push({ kind: "roof_unit", x: p[0], y: b.height, z: p[1], yaw: Math.round(rand() * 4) * (Math.PI / 2) });
-  }
-  if (style.roof.water_tower && area > 300 && rand() < style.roof.water_tower) {
-    const p = spot(2.5);
-    if (p) out.push({ kind: "water_tower", x: p[0], y: b.height, z: p[1], yaw: 0 });
-  }
-  return out;
+  return roofPlan(b, style)
+    .parts.filter((p) => p.kind === "roof_unit" || p.kind === "water_tower")
+    .map((p) => ({ kind: p.kind, x: p.x, y: b.height, z: p.z, yaw: p.yaw }));
 }
 
 // Every roof prop in the level.
@@ -408,6 +449,6 @@ export function propObstacles(props) {
 // A street prop stands on the terrain (y is the terrain height under it).
 export function levelProps(level) {
   const t = terrainOf(level);
-  const street = streetProps(level, createGeoGroundSampler(level)).map((p) => (t.flat ? p : { ...p, y: Math.round(t.height(p.x, p.z) * 100) / 100 }));
+  const street = streetProps(level, createGeoGroundSampler(level), frontEdges(level)).map((p) => (t.flat ? p : { ...p, y: Math.round(t.height(p.x, p.z) * 100) / 100 }));
   return [...street, ...allRoofProps(level)];
 }

@@ -6,7 +6,7 @@ import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
 import { cloneSkaterModel, fetchSkaterModel, loadSkaterModel } from "./render/skater-model.js";
 import { createLoader } from "./ui/loader.js";
-import { toonSkater } from "./render/toon.js";
+import { pbrSkater, toonSkater } from "./render/toon.js";
 import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
@@ -306,7 +306,7 @@ const npcBytes = (model) => {
   }
   return npcByteCache.get(model);
 };
-const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model) => cloneSkaterModel(model, npcBytes(model)), toon: params.get("toon") !== "0", draw: NPC_DRAW[quality] ?? NPC_DRAW.low }) : null;
+const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model) => cloneSkaterModel(model, npcBytes(model)), toon: params.get("toon") !== "0", draw: NPC_DRAW[quality] ?? NPC_DRAW.low, look }) : null;
 if (npcSkatersView) scene.add(npcSkatersView.group);
 
 // A blob shadow under the skater for a level with no shadow map.
@@ -330,7 +330,9 @@ if (skaterName !== "capsule") {
   loadSkaterModel(skaterName, skaterBytes)
     .then((loaded) => {
       loader.step("skater");
-      if (params.get("toon") !== "0") toonSkater(loaded);
+      // The look picks the skater's materials: toon swap + ink hull, or the
+      // pbr env-lit standard materials. ?toon=0 keeps the raw GLB shading.
+      if (params.get("toon") !== "0") (look === "pbr" ? pbrSkater : toonSkater)(loaded);
       skaterView.attachModel(loaded);
       skaterModel.loaded = true;
     })

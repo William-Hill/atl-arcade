@@ -24,7 +24,7 @@ import { createResults } from "./ui/results.js";
 import { createLevelEnv } from "./level/ground.js";
 import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { terrainOf } from "./level/geo/terrain.js";
-import { createGeoLights, createGeoView, loadKitTemplates } from "./render/geo-view.js";
+import { createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
 import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
@@ -174,7 +174,7 @@ if (landmarks) {
 // The street kit (trees, lamps, benches, roof units) loads after the level
 // shows. ?props=0 leaves it out.
 if (geo && params.get("props") !== "0") {
-  loadKitTemplates()
+  loadPropTemplates()
     .then((templates) => levelView.addProps(env.props, templates))
     .catch((err) => {
       levelView.props.error = String(err);

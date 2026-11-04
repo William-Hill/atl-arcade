@@ -16,6 +16,11 @@ import trailInfo from "../../assets/ground/trail/set.json";
 import grassInfo from "../../assets/ground/grass/set.json";
 
 const KIT_URL = new URL("../../assets/kit/street-kit.glb", import.meta.url).href;
+// Props from other sources, in the kit format (one mesh, vertex colors):
+// { kind: GLB URL }. See assets/props/<name>/provenance.json.
+const EXTRA_PROP_URLS = {
+  bench_painted: new URL("../../assets/props/painted_wooden_bench/painted_wooden_bench.glb", import.meta.url).href,
+};
 // The CC0 brick scan (scripts/landmark-textures.py), shared with the
 // landmarks, so the buildings and the landmarks show the same brick.
 const BRICK_URL = new URL("../../assets/landmarks/textures/brick/color.jpg", import.meta.url).href;
@@ -378,6 +383,52 @@ function addMesh(root, byId, name, geometry, material, { castShadow = false } = 
   root.add(obj);
   byId.set(name, obj);
   return obj;
+}
+
+// The kit prop that stands in for an extra prop that did not load, so that
+// its solid obstacle (src/level/geo/props.js) is never invisible.
+export const EXTRA_PROP_FALLBACK = { bench_painted: "bench" };
+
+// Pure: adds the extra templates to the kit templates. `results` has one
+// { status, value | reason } (Promise.allSettled) for each kind. An extra GLB
+// must have exactly one mesh. A kind that failed gets its fallback kit
+// template. Returns the list of problems as text.
+export function addExtraTemplates(kit, kinds, results, fallback = EXTRA_PROP_FALLBACK) {
+  const problems = [];
+  kinds.forEach((kind, i) => {
+    const r = results[i];
+    const found = r.status === "fulfilled" ? Object.values(r.value) : [];
+    if (found.length === 1) {
+      kit[kind] = found[0];
+      return;
+    }
+    problems.push(r.status === "fulfilled" ? `${kind}: ${found.length} meshes, expected 1` : `${kind}: ${r.reason}`);
+    if (kit[fallback[kind]]) kit[kind] = kit[fallback[kind]];
+  });
+  return problems;
+}
+
+// The time limit for one extra prop GLB (ms). A request that takes longer
+// counts as a failure, so it cannot stop the kit props.
+export const EXTRA_PROP_TIMEOUT_MS = 15000;
+
+// Rejects when `promise` does not settle in `ms` milliseconds.
+export function withTimeout(promise, ms, label = "request") {
+  let timer;
+  const limit = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label}: no answer in ${ms} ms`)), ms);
+  });
+  return Promise.race([promise, limit]).finally(() => clearTimeout(timer));
+}
+
+// The kit templates and the extra props. A failed or slow extra GLB does
+// not stop the kit: the kind gets its fallback kit template.
+export async function loadPropTemplates() {
+  const kinds = Object.keys(EXTRA_PROP_URLS);
+  const extras = kinds.map((k) => withTimeout(loadKitTemplates(EXTRA_PROP_URLS[k]), EXTRA_PROP_TIMEOUT_MS, k));
+  const [kit, results] = await Promise.all([loadKitTemplates(), Promise.allSettled(extras)]);
+  for (const problem of addExtraTemplates(kit, kinds, results)) console.warn(`extra prop: ${problem}`);
+  return kit;
 }
 
 // Reads the kit GLB into plain templates: { kind: { positions, indices, colors } }.

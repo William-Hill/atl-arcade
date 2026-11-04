@@ -32,6 +32,7 @@ function boxes(page) {
       ["credit", "#attribution .attr-short"],
       ["nia", '#skater-select button[data-skater="nia"]'],
       ["marcus", '#skater-select button[data-skater="marcus"]'],
+      ["minimap", "#minimap"],
       ["stick", ".touch-stick-base"],
       ["jump", ".touch-jump"],
       ["grind", ".touch-grind"],

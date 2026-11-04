@@ -151,7 +151,37 @@ const InkShader = {
     }`,
 };
 
-export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true }) {
+// The grade pass (pbr look): a light filmic curve, a small saturation
+// lift, and a split tone — cool shadows, warm highlights — instead of the
+// ink lines. The weather tunes `uWarm` per time of day (0 neutral).
+const GradeShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uContrast: { value: 1.06 },
+    uSat: { value: 1.05 },
+    uWarm: { value: 0.0 },
+  },
+  vertexShader: /* glsl */ `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform float uContrast;
+    uniform float uSat;
+    uniform float uWarm;
+    varying vec2 vUv;
+    void main() {
+      vec4 col = texture2D(tDiffuse, vUv);
+      float luma = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
+      col.rgb = (col.rgb - 0.5) * uContrast + 0.5 + luma - luma;
+      col.rgb = mix(vec3(luma), col.rgb, uSat);
+      // Cool shadows, warm highlights; uWarm 0 is neutral.
+      col.rgb += (luma - 0.5) * 2.0 * uWarm * vec3(0.06, 0.0, -0.08);
+      gl_FragColor = col;
+    }`,
+};
+
+export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true, look = "toon" }) {
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
   const composer = new EffectComposer(renderer, target);
@@ -167,29 +197,42 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   gtao.blendIntensity = 0.9;
   composer.addPass(gtao);
 
-  const ink = new ShaderPass(InkShader);
-  ink.uniforms.fadeNear.value = fadeNear;
-  ink.uniforms.fadeFar.value = fadeFar;
-  if (!halftone) ink.uniforms.halftone.value.x = 0;
-  composer.addPass(ink);
+  // The pbr look drops the ink lines and the halftone dots — the Jet Set
+  // Radio effect — and grades instead. The toon look keeps the ink pass.
+  const pbr = look === "pbr";
+  let ink = null;
+  let grade = null;
+  if (pbr) {
+    grade = new ShaderPass(GradeShader);
+    composer.addPass(grade);
+  } else {
+    ink = new ShaderPass(InkShader);
+    ink.uniforms.fadeNear.value = fadeNear;
+    ink.uniforms.fadeFar.value = fadeFar;
+    if (!halftone) ink.uniforms.halftone.value.x = 0;
+    composer.addPass(ink);
+  }
 
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.28, 0.5, 0.92);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
   function sync() {
-    ink.uniforms.tDepth.value = gtao.depthTexture;
-    ink.uniforms.tNormal.value = gtao.normalTexture;
-    ink.uniforms.cameraNear.value = camera.near;
-    ink.uniforms.cameraFar.value = camera.far;
-    ink.uniforms.thickness.value = 1.25 * Math.max(1, renderer.getPixelRatio());
-    if (ink.uniforms.halftone.value.x > 0) ink.uniforms.halftone.value.x = HALFTONE.cell * Math.max(1, renderer.getPixelRatio());
+    if (ink) {
+      ink.uniforms.tDepth.value = gtao.depthTexture;
+      ink.uniforms.tNormal.value = gtao.normalTexture;
+      ink.uniforms.cameraNear.value = camera.near;
+      ink.uniforms.cameraFar.value = camera.far;
+      ink.uniforms.thickness.value = 1.25 * Math.max(1, renderer.getPixelRatio());
+      if (ink.uniforms.halftone.value.x > 0) ink.uniforms.halftone.value.x = HALFTONE.cell * Math.max(1, renderer.getPixelRatio());
+    }
   }
   return {
     kind: "full",
     composer,
     gtao,
     ink,
+    grade,
     bloom,
     render() {
       sync();
@@ -199,7 +242,7 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
       const s = renderer.getDrawingBufferSize(new THREE.Vector2());
       // EffectComposer multiplies by the pixel ratio itself.
       syncComposerSize(composer, renderer, s);
-      ink.uniforms.resolution.value.set(s.x, s.y);
+      if (ink) ink.uniforms.resolution.value.set(s.x, s.y);
     },
     dispose() {
       // The composer also disposes `target`, its first render target.

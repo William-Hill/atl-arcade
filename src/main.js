@@ -379,7 +379,7 @@ if (view === "orbit") {
 // the lite ink pass on the phone tier, none on the low tier.
 // The pbr look has no halftone dots: on glass and in shade they read as speckle
 // (docs/art-loop/reports/brick-loft-r0-judge.md).
-const postOptions = { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: look !== "pbr" && params.get("halftone") !== "0" };
+const postOptions = { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: look !== "pbr" && params.get("halftone") !== "0", look };
 let post = tier.post === "full" ? createPost(renderer, scene, camera, postOptions) : tier.post === "lite" ? createLitePost(renderer, scene, camera, postOptions) : null;
 // Photo mode's tilt-shift blur (src/render/tilt-shift.js): on the full
 // chain only, and off in play.

@@ -1027,3 +1027,11 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Named landmarks now map to real styles through BY_NAME (PCM → brick-warehouse, Krog → brick-market-hall), so the district mechanism cannot restyle the anchors themselves.
 - Verified: styles.test.js (district mix keeps mid-size stock inside its palette; named buildings keep their style) and the full suite still passes.
 - Not done: district labels and storefront name decals (teleoperator's RUSSIAN HILL map labels / real-business signs), the e2e suite, and the FPS gate.
+
+## 2026-11-04: storefront dressing (assets/storefronts)
+
+- Procedural Blender 5.2.3 (`scripts/blender/storefronts.py`) for every piece, no Meshy: signs need exact sizes and UVs on the shared atlas, and the patio props came out clean from primitives, so the 45-credit Meshy cap went unused (0 credits).
+- One shared 1024 JPEG atlas (`storefront-atlas.jpg`) for all sign art, painted with the Chromium 2D canvas from code (original icons and DejaVu lettering); GLBs reference it as an external image, so it downloads once. Props use vertex colors and no textures.
+- Neon, lamp lenses, and bulbs use `sf_neon` with emissive strength 3 to cross the pbr bloom threshold (0.92); light sign backgrounds were darkened so they do not bloom in the pbr sun.
+- Grid: 3.5-4.5 m ground floors, 3-6 m bays, board centered on the kit sign band (`facade-kit.js`), patio on the 3.5 m apron. Details in `docs/storefronts.md`.
+- Invented businesses only (`scripts/assets/storefront-businesses.json`); no real names or logos.

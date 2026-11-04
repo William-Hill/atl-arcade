@@ -1,0 +1,1025 @@
+{
+  "asset": "storefronts",
+  "description": "Storefront dressing for the BeltLine Eastside level (pbr look): sign boards, blade signs, emissive neon signs, menu boards, sandwich boards, cafe barrier banners, patio furniture sets, market umbrellas, and string lights for invented Eastside businesses. No real business names, logos, or artwork.",
+  "generated": "2026-11-04",
+  "tool": {
+    "geometry": "Blender 5.2.3 headless, scripts/blender/storefronts.py (procedural: boxes, swept tubes, extruded outlines; no imported meshes)",
+    "signArt": "scripts/assets/storefront-atlas.mjs: Chromium 2D canvas via Playwright, original vector shapes and lettering drawn in code with system DejaVu fonts (Bitstream Vera license, free to embed in rasterized art); no image model, no photos, no third-party artwork",
+    "export": "glTF 2.0 GLB, KHR_draco_mesh_compression (level 7, position 14 bit, uv 14 bit, normal 10 bit, color 8 bit), KHR_materials_emissive_strength on sf_neon"
+  },
+  "prompt": "none (no generative model). Business names, taglines, colors, and icons are defined in scripts/assets/storefront-businesses.json",
+  "credits": {
+    "meshy": 0,
+    "note": "Meshy was not used: the procedural Blender props met the bar, so the 45-credit cap was untouched."
+  },
+  "license": "Original work for ATL Arcade.",
+  "atlas": {
+    "file": "storefront-atlas.jpg",
+    "size": 1024,
+    "bytes": 330299,
+    "regions": 38,
+    "gpuTextureBytes": 5592405,
+    "layout": "storefront-atlas.json"
+  },
+  "businesses": [
+    {
+      "id": "taqueria",
+      "name": "Taquería Vía Verde",
+      "kind": "taqueria",
+      "concept": "Family taqueria named for the green trail out front; sun-and-taco sign in turquoise and marigold."
+    },
+    {
+      "id": "bbq",
+      "name": "Smokestack Sisters BBQ",
+      "kind": "bbq",
+      "concept": "Two sisters' barbecue joint in an old rail-side warehouse; a brick smokestack curling a smoke ribbon."
+    },
+    {
+      "id": "pizza",
+      "name": "PieLine Pizza Co.",
+      "kind": "pizza",
+      "concept": "Slice shop with a pun on the trail; the slice's crust is drawn as a rail track."
+    },
+    {
+      "id": "coffee",
+      "name": "Railbed Roasters",
+      "kind": "coffee",
+      "concept": "Small-batch roaster on the old rail bed; a steaming cup on two rails."
+    },
+    {
+      "id": "brewery",
+      "name": "Old Spur Brewing Co.",
+      "kind": "brewery",
+      "concept": "Taproom on a former rail spur with a big patio and house-made root beer for the kids; hop cone and spur track."
+    },
+    {
+      "id": "creamery",
+      "name": "Peach Drip Creamery",
+      "kind": "creamery",
+      "concept": "Ice cream parlor famous for Georgia peach; a dripping peach scoop on a waffle cone."
+    },
+    {
+      "id": "books",
+      "name": "Dogwood Page Books",
+      "kind": "books",
+      "concept": "Neighborhood bookshop with a kids' story hour; an open book blooming a dogwood flower."
+    },
+    {
+      "id": "records",
+      "name": "Groove Ward Records",
+      "kind": "records",
+      "concept": "Record shop with a listening bar and Saturday DJ sets; a vinyl record with a sunburst label."
+    },
+    {
+      "id": "skate",
+      "name": "Rollway Skate Supply",
+      "kind": "skate",
+      "concept": "Roller skate shop and rental counter right on the trail (the game's home base); a classic quad skate."
+    },
+    {
+      "id": "bakery",
+      "name": "Honeysuckle Biscuit Co.",
+      "kind": "bakery",
+      "concept": "Southern biscuit bakery; a split biscuit with a honeysuckle bloom."
+    }
+  ],
+  "budget": {
+    "totalBytes": 669363,
+    "gpuTextureBytesShared": 5592405,
+    "note": "Every textured GLB references the one external storefront-atlas.jpg; with a shared texture (one GLTFLoader / cache) the GPU holds one 5.6 MB atlas for all files. Loaded with independent loaders, each textured file decodes its own copy."
+  },
+  "files": {
+    "sign_boards.glb": {
+      "bytes": 91092,
+      "draco": true,
+      "pieces": 20,
+      "lod1": 0,
+      "triangles": {
+        "min": 60,
+        "max": 440,
+        "unique": 5000
+      },
+      "textures": [
+        {
+          "uri": "storefront-atlas.jpg",
+          "size": "1024x1024",
+          "format": "JPEG q0.90",
+          "shared": true
+        }
+      ],
+      "gpuTextureBytes": 5592405,
+      "nodes": {
+        "sign_board_bakery": {
+          "triangles": 252,
+          "size_m": [
+            2.45,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_bakery_wide": {
+          "triangles": 440,
+          "size_m": [
+            3.65,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_bbq": {
+          "triangles": 252,
+          "size_m": [
+            2.45,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_bbq_wide": {
+          "triangles": 440,
+          "size_m": [
+            3.65,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_books": {
+          "triangles": 252,
+          "size_m": [
+            2.45,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_books_wide": {
+          "triangles": 440,
+          "size_m": [
+            3.65,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_brewery": {
+          "triangles": 252,
+          "size_m": [
+            2.45,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_brewery_wide": {
+          "triangles": 440,
+          "size_m": [
+            3.65,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_coffee": {
+          "triangles": 252,
+          "size_m": [
+            2.45,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_coffee_wide": {
+          "triangles": 440,
+          "size_m": [
+            3.65,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_creamery": {
+          "triangles": 60,
+          "size_m": [
+            2.45,
+            0.095,
+            0.65
+          ]
+        },
+        "sign_board_creamery_wide": {
+          "triangles": 152,
+          "size_m": [
+            3.65,
+            0.095,
+            0.65
+          ]
+        },
+        "sign_board_pizza": {
+          "triangles": 60,
+          "size_m": [
+            2.45,
+            0.095,
+            0.65
+          ]
+        },
+        "sign_board_pizza_wide": {
+          "triangles": 152,
+          "size_m": [
+            3.65,
+            0.095,
+            0.65
+          ]
+        },
+        "sign_board_records": {
+          "triangles": 60,
+          "size_m": [
+            2.45,
+            0.095,
+            0.65
+          ]
+        },
+        "sign_board_records_wide": {
+          "triangles": 152,
+          "size_m": [
+            3.65,
+            0.095,
+            0.65
+          ]
+        },
+        "sign_board_skate": {
+          "triangles": 60,
+          "size_m": [
+            2.45,
+            0.095,
+            0.65
+          ]
+        },
+        "sign_board_skate_wide": {
+          "triangles": 152,
+          "size_m": [
+            3.65,
+            0.095,
+            0.65
+          ]
+        },
+        "sign_board_taqueria": {
+          "triangles": 252,
+          "size_m": [
+            2.45,
+            0.475,
+            1.04
+          ]
+        },
+        "sign_board_taqueria_wide": {
+          "triangles": 440,
+          "size_m": [
+            3.65,
+            0.475,
+            1.04
+          ]
+        }
+      }
+    },
+    "blade_signs.glb": {
+      "bytes": 42912,
+      "draco": true,
+      "pieces": 10,
+      "lod1": 0,
+      "triangles": {
+        "min": 204,
+        "max": 300,
+        "unique": 2556
+      },
+      "textures": [
+        {
+          "uri": "storefront-atlas.jpg",
+          "size": "1024x1024",
+          "format": "JPEG q0.90",
+          "shared": true
+        }
+      ],
+      "gpuTextureBytes": 5592405,
+      "nodes": {
+        "blade_sign_bakery": {
+          "triangles": 204,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        },
+        "blade_sign_bbq": {
+          "triangles": 248,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        },
+        "blade_sign_books": {
+          "triangles": 204,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        },
+        "blade_sign_brewery": {
+          "triangles": 248,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        },
+        "blade_sign_coffee": {
+          "triangles": 300,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        },
+        "blade_sign_creamery": {
+          "triangles": 300,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        },
+        "blade_sign_pizza": {
+          "triangles": 204,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        },
+        "blade_sign_records": {
+          "triangles": 300,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        },
+        "blade_sign_skate": {
+          "triangles": 248,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        },
+        "blade_sign_taqueria": {
+          "triangles": 300,
+          "size_m": [
+            0.1,
+            1.015,
+            0.723
+          ]
+        }
+      }
+    },
+    "neon_signs.glb": {
+      "bytes": 21716,
+      "draco": true,
+      "pieces": 8,
+      "lod1": 0,
+      "triangles": {
+        "min": 120,
+        "max": 120,
+        "unique": 960
+      },
+      "textures": [
+        {
+          "uri": "storefront-atlas.jpg",
+          "size": "1024x1024",
+          "format": "JPEG q0.90",
+          "shared": true
+        }
+      ],
+      "gpuTextureBytes": 5592405,
+      "nodes": {
+        "neon_sign_bbq": {
+          "triangles": 120,
+          "size_m": [
+            1.15,
+            0.12,
+            0.55
+          ]
+        },
+        "neon_sign_brewery": {
+          "triangles": 120,
+          "size_m": [
+            1.15,
+            0.12,
+            0.55
+          ]
+        },
+        "neon_sign_coffee": {
+          "triangles": 120,
+          "size_m": [
+            1.15,
+            0.12,
+            0.55
+          ]
+        },
+        "neon_sign_creamery": {
+          "triangles": 120,
+          "size_m": [
+            1.15,
+            0.12,
+            0.55
+          ]
+        },
+        "neon_sign_open": {
+          "triangles": 120,
+          "size_m": [
+            1.15,
+            0.12,
+            0.55
+          ]
+        },
+        "neon_sign_pizza": {
+          "triangles": 120,
+          "size_m": [
+            1.15,
+            0.12,
+            0.55
+          ]
+        },
+        "neon_sign_records": {
+          "triangles": 120,
+          "size_m": [
+            1.15,
+            0.12,
+            0.55
+          ]
+        },
+        "neon_sign_taqueria": {
+          "triangles": 120,
+          "size_m": [
+            1.15,
+            0.12,
+            0.55
+          ]
+        }
+      }
+    },
+    "menu_boards.glb": {
+      "bytes": 29052,
+      "draco": true,
+      "pieces": 6,
+      "lod1": 0,
+      "triangles": {
+        "min": 72,
+        "max": 168,
+        "unique": 816
+      },
+      "textures": [
+        {
+          "uri": "storefront-atlas.jpg",
+          "size": "1024x1024",
+          "format": "JPEG q0.90",
+          "shared": true
+        }
+      ],
+      "gpuTextureBytes": 5592405,
+      "nodes": {
+        "menu_board_bakery": {
+          "triangles": 168,
+          "size_m": [
+            0.7,
+            0.355,
+            1.49
+          ]
+        },
+        "menu_board_bbq": {
+          "triangles": 168,
+          "size_m": [
+            0.7,
+            0.355,
+            1.49
+          ]
+        },
+        "menu_board_coffee": {
+          "triangles": 168,
+          "size_m": [
+            0.7,
+            0.355,
+            1.49
+          ]
+        },
+        "menu_board_creamery": {
+          "triangles": 72,
+          "size_m": [
+            0.7,
+            0.085,
+            1.075
+          ]
+        },
+        "menu_board_pizza": {
+          "triangles": 72,
+          "size_m": [
+            0.7,
+            0.085,
+            1.075
+          ]
+        },
+        "menu_board_taqueria": {
+          "triangles": 168,
+          "size_m": [
+            0.7,
+            0.355,
+            1.49
+          ]
+        }
+      }
+    },
+    "sandwich_boards.glb": {
+      "bytes": 19608,
+      "draco": true,
+      "pieces": 4,
+      "lod1": 0,
+      "triangles": {
+        "min": 120,
+        "max": 120,
+        "unique": 480
+      },
+      "textures": [
+        {
+          "uri": "storefront-atlas.jpg",
+          "size": "1024x1024",
+          "format": "JPEG q0.90",
+          "shared": true
+        }
+      ],
+      "gpuTextureBytes": 5592405,
+      "nodes": {
+        "sandwich_board_books": {
+          "triangles": 120,
+          "size_m": [
+            0.62,
+            0.481,
+            0.995
+          ]
+        },
+        "sandwich_board_coffee": {
+          "triangles": 120,
+          "size_m": [
+            0.62,
+            0.481,
+            0.995
+          ]
+        },
+        "sandwich_board_records": {
+          "triangles": 120,
+          "size_m": [
+            0.62,
+            0.481,
+            0.995
+          ]
+        },
+        "sandwich_board_skate": {
+          "triangles": 120,
+          "size_m": [
+            0.62,
+            0.481,
+            0.995
+          ]
+        }
+      }
+    },
+    "cafe_barriers.glb": {
+      "bytes": 36920,
+      "draco": true,
+      "pieces": 10,
+      "lod1": 0,
+      "triangles": {
+        "min": 208,
+        "max": 208,
+        "unique": 2080
+      },
+      "textures": [
+        {
+          "uri": "storefront-atlas.jpg",
+          "size": "1024x1024",
+          "format": "JPEG q0.90",
+          "shared": true
+        }
+      ],
+      "gpuTextureBytes": 5592405,
+      "nodes": {
+        "cafe_barrier_bakery": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        },
+        "cafe_barrier_bbq": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        },
+        "cafe_barrier_books": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        },
+        "cafe_barrier_brewery": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        },
+        "cafe_barrier_coffee": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        },
+        "cafe_barrier_creamery": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        },
+        "cafe_barrier_pizza": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        },
+        "cafe_barrier_records": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        },
+        "cafe_barrier_skate": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        },
+        "cafe_barrier_taqueria": {
+          "triangles": 208,
+          "size_m": [
+            1.98,
+            0.4,
+            1
+          ]
+        }
+      }
+    },
+    "patio_furniture.glb": {
+      "bytes": 35396,
+      "draco": true,
+      "pieces": 11,
+      "lod1": 8,
+      "triangles": {
+        "min": 116,
+        "max": 788,
+        "unique": 2086
+      },
+      "textures": [],
+      "gpuTextureBytes": 0,
+      "nodes": {
+        "patio_chair_bistro_green": {
+          "triangles": 284,
+          "size_m": [
+            0.415,
+            0.449,
+            0.874
+          ]
+        },
+        "patio_chair_bistro_green_lod1": {
+          "triangles": 78,
+          "size_m": [
+            0.42,
+            0.42,
+            0.87
+          ]
+        },
+        "patio_chair_bistro_red": {
+          "triangles": 284,
+          "size_m": [
+            0.415,
+            0.449,
+            0.874
+          ]
+        },
+        "patio_chair_bistro_red_lod1": {
+          "triangles": 78,
+          "size_m": [
+            0.42,
+            0.42,
+            0.87
+          ]
+        },
+        "patio_chair_bistro_teal": {
+          "triangles": 284,
+          "size_m": [
+            0.415,
+            0.449,
+            0.874
+          ]
+        },
+        "patio_chair_bistro_teal_lod1": {
+          "triangles": 78,
+          "size_m": [
+            0.42,
+            0.42,
+            0.87
+          ]
+        },
+        "patio_chair_slat": {
+          "triangles": 156,
+          "size_m": [
+            0.44,
+            0.435,
+            0.88
+          ]
+        },
+        "patio_chair_slat_lod1": {
+          "triangles": 96,
+          "size_m": [
+            0.44,
+            0.435,
+            0.88
+          ]
+        },
+        "patio_picnic": {
+          "triangles": 156,
+          "size_m": [
+            1.8,
+            1.5,
+            0.777
+          ]
+        },
+        "patio_picnic_lod1": {
+          "triangles": 108,
+          "size_m": [
+            1.8,
+            1.5,
+            0.777
+          ]
+        },
+        "patio_set_bistro_green": {
+          "triangles": 788,
+          "instances": [
+            "patio_chair_bistro_green",
+            "patio_chair_bistro_green",
+            "patio_table_bistro"
+          ]
+        },
+        "patio_set_bistro_red": {
+          "triangles": 788,
+          "instances": [
+            "patio_chair_bistro_red",
+            "patio_chair_bistro_red",
+            "patio_table_bistro"
+          ]
+        },
+        "patio_set_bistro_teal": {
+          "triangles": 788,
+          "instances": [
+            "patio_chair_bistro_teal",
+            "patio_chair_bistro_teal",
+            "patio_table_bistro"
+          ]
+        },
+        "patio_set_four": {
+          "triangles": 740,
+          "instances": [
+            "patio_chair_slat",
+            "patio_chair_slat",
+            "patio_chair_slat",
+            "patio_chair_slat",
+            "patio_table_four"
+          ]
+        },
+        "patio_set_four_lod1": {
+          "triangles": 444,
+          "instances": [
+            "patio_chair_slat_lod1",
+            "patio_chair_slat_lod1",
+            "patio_chair_slat_lod1",
+            "patio_chair_slat_lod1",
+            "patio_table_four_lod1"
+          ]
+        },
+        "patio_table_bistro": {
+          "triangles": 220,
+          "size_m": [
+            0.593,
+            0.593,
+            0.74
+          ]
+        },
+        "patio_table_bistro_lod1": {
+          "triangles": 88,
+          "size_m": [
+            0.6,
+            0.6,
+            0.74
+          ]
+        },
+        "patio_table_four": {
+          "triangles": 116,
+          "size_m": [
+            0.8,
+            0.79,
+            0.75
+          ]
+        },
+        "patio_table_four_lod1": {
+          "triangles": 60,
+          "size_m": [
+            0.8,
+            0.8,
+            0.75
+          ]
+        }
+      }
+    },
+    "patio_umbrellas.glb": {
+      "bytes": 33180,
+      "draco": true,
+      "pieces": 4,
+      "lod1": 4,
+      "triangles": {
+        "min": 224,
+        "max": 224,
+        "unique": 1184
+      },
+      "textures": [],
+      "gpuTextureBytes": 0,
+      "nodes": {
+        "patio_umbrella_marigold": {
+          "triangles": 224,
+          "size_m": [
+            2.4,
+            2.4,
+            2.9
+          ]
+        },
+        "patio_umbrella_marigold_lod1": {
+          "triangles": 72,
+          "size_m": [
+            2.4,
+            2.4,
+            2.9
+          ]
+        },
+        "patio_umbrella_sage": {
+          "triangles": 224,
+          "size_m": [
+            2.4,
+            2.4,
+            2.9
+          ]
+        },
+        "patio_umbrella_sage_lod1": {
+          "triangles": 72,
+          "size_m": [
+            2.4,
+            2.4,
+            2.9
+          ]
+        },
+        "patio_umbrella_teal": {
+          "triangles": 224,
+          "size_m": [
+            2.4,
+            2.4,
+            2.9
+          ]
+        },
+        "patio_umbrella_teal_lod1": {
+          "triangles": 72,
+          "size_m": [
+            2.4,
+            2.4,
+            2.9
+          ]
+        },
+        "patio_umbrella_tomato": {
+          "triangles": 224,
+          "size_m": [
+            2.4,
+            2.4,
+            2.9
+          ]
+        },
+        "patio_umbrella_tomato_lod1": {
+          "triangles": 72,
+          "size_m": [
+            2.4,
+            2.4,
+            2.9
+          ]
+        }
+      }
+    },
+    "string_lights.glb": {
+      "bytes": 29188,
+      "draco": true,
+      "pieces": 4,
+      "lod1": 4,
+      "triangles": {
+        "min": 204,
+        "max": 1704,
+        "unique": 4468
+      },
+      "textures": [
+        {
+          "uri": "storefront-atlas.jpg",
+          "size": "1024x1024",
+          "format": "JPEG q0.90",
+          "shared": true
+        }
+      ],
+      "gpuTextureBytes": 5592405,
+      "nodes": {
+        "string_light_post": {
+          "triangles": 204,
+          "size_m": [
+            0.46,
+            0.58,
+            3.3
+          ]
+        },
+        "string_light_post_lod1": {
+          "triangles": 48,
+          "size_m": [
+            0.46,
+            0.58,
+            3.3
+          ]
+        },
+        "string_lights_4m": {
+          "triangles": 864,
+          "size_m": [
+            4.002,
+            0.061,
+            0.355
+          ]
+        },
+        "string_lights_4m_lod1": {
+          "triangles": 112,
+          "size_m": [
+            4.002,
+            0.07,
+            0.335
+          ]
+        },
+        "string_lights_6m": {
+          "triangles": 1200,
+          "size_m": [
+            6.002,
+            0.061,
+            0.477
+          ]
+        },
+        "string_lights_6m_lod1": {
+          "triangles": 144,
+          "size_m": [
+            6.002,
+            0.07,
+            0.457
+          ]
+        },
+        "string_lights_9m": {
+          "triangles": 1704,
+          "size_m": [
+            9.002,
+            0.061,
+            0.658
+          ]
+        },
+        "string_lights_9m_lod1": {
+          "triangles": 192,
+          "size_m": [
+            9.002,
+            0.07,
+            0.638
+          ]
+        }
+      }
+    }
+  }
+}

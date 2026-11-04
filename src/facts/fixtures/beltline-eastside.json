@@ -1,0 +1,63 @@
+{
+  "eastside-neighborhoods": {
+    "datasetId": "atl-neighborhoods",
+    "rows": [
+      {
+        "NAME": "Poncey-Highland"
+      },
+      {
+        "NAME": "Inman Park"
+      },
+      {
+        "NAME": "Old Fourth Ward"
+      }
+    ],
+    "sources": [
+      {
+        "catalogId": "atl-neighborhoods",
+        "title": "Neighborhoods",
+        "url": "https://gis.atlantaga.gov/dpcd/rest/services/OpenDataService1/FeatureServer/3/query?where=1%3D1&f=json&outSR=4326&inSR=4326&spatialRel=esriSpatialRelIntersects&geometry=-84.36325%2C33.76475&geometryType=esriGeometryPoint&distance=800&units=esriSRUnit_Meter&outFields=NAME&returnGeometry=false&resultOffset=0&resultRecordCount=11",
+        "attribution": "City of Atlanta Department of City Planning",
+        "terms": "Public City of Atlanta GIS service. No license is stated. Cite the City of Atlanta Department of City Planning.",
+        "fetchedAt": "2026-11-04T01:49:56.406Z"
+      }
+    ]
+  },
+  "freedom-park": {
+    "datasetId": "atl-parks",
+    "rows": [
+      {
+        "NAME": "Freedom Park",
+        "GIS_AC": 123.839169631
+      }
+    ],
+    "sources": [
+      {
+        "catalogId": "atl-parks",
+        "title": "Parks",
+        "url": "https://gis.atlantaga.gov/dpcd/rest/services/OpenDataService1/FeatureServer/26/query?where=NAME+%3D+%27Freedom+Park%27&f=json&outSR=4326&outFields=NAME%2CGIS_AC&returnGeometry=false&resultOffset=0&resultRecordCount=2",
+        "attribution": "City of Atlanta Department of City Planning",
+        "terms": "Public City of Atlanta GIS service. No license is stated. Cite the City of Atlanta Department of City Planning.",
+        "fetchedAt": "2026-11-04T01:49:56.571Z"
+      }
+    ]
+  },
+  "marta-rail": {
+    "datasetId": "marta-rail-stations",
+    "rows": [
+      {
+        "STATION": "Inman Park-Reynoldstown"
+      }
+    ],
+    "sources": [
+      {
+        "catalogId": "marta-rail-stations",
+        "title": "MARTA rail stations",
+        "url": "https://gis.atlantaga.gov/dpcd/rest/services/OpenDataService1/FeatureServer/28/query?where=1%3D1&f=json&outSR=4326&inSR=4326&spatialRel=esriSpatialRelIntersects&geometry=-84.36325%2C33.76475&geometryType=esriGeometryPoint&distance=1609&units=esriSRUnit_Meter&outFields=STATION&returnGeometry=false",
+        "attribution": "City of Atlanta Department of City Planning",
+        "terms": "Public City of Atlanta GIS service. No license is stated. Cite the City of Atlanta Department of City Planning.",
+        "fetchedAt": "2026-11-04T01:47:36.690Z"
+      }
+    ]
+  }
+}

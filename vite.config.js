@@ -7,6 +7,9 @@ export default defineConfig({
   // Rapier, so that the .wasm URL stays next to rapier.mjs.
   plugins: [rapierWasmFile()],
   optimizeDeps: { exclude: ["@dimforge/rapier3d-compat"] },
+  // The open-data-atl site sends no CORS header, so the dev server proxies
+  // the fact card calls (M1-07, src/facts/level-facts.js).
+  server: { proxy: { "/oda-api": { target: "https://agenticatl.ai", changeOrigin: true, rewrite: (p) => p.replace(/^\/oda-api/, "") } } },
   build: {
     rollupOptions: {
       input: {

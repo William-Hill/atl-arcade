@@ -772,6 +772,32 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Test: `scripts/street-names.test.js` checks every sign name of the level against the city labels. Only a name in `REVIEWED` can differ. It also checks each rule on small fixtures. The byte-for-byte rebuild test in `scripts/build-block.test.js` covers the new raw file.
 - Not done: the sign blades are still too small to read on a phone (GEO-5, #24).
 
+## 2026-11-03: Fact cards from the open-data-atl API (M1-07, #17)
+
+- Each level can have a `facts.json` next to its `level.json`. The BeltLine level has 3 cards on the Eastside Trail. Each card names a dataset, one `query_dataset` input, and a one-line template. `level.json` does not change, so the byte-for-byte rebuild test does not change.
+- The client is `src/facts/client.js`. It calls `POST /api/tools/query_dataset` on `https://agenticatl.ai`, fills the template from the rows, and runs the content review. The `fetch` function is injected, so Vitest and Node use the same code.
+- Offline fallback: `src/facts/fixtures/beltline-eastside.json` holds the recorded responses. The game shows the fixture text at the first frame. A live text replaces a card text only when the live call works and the text passes the review. The game never waits for the network.
+- The open-data-atl site sends no CORS header. Thus a browser on another origin cannot read the live response. The dev server proxies `/oda-api` to the site. A production build calls the site directly, and the browser blocks the call, so a production build uses the fixture until the site allows the game origin. This is a follow-up for the open-data-atl repository.
+- Playwright uses the fixture: with no `?facts=` parameter, a browser with `navigator.webdriver` set uses the fixture. `?facts=fixture`, `?facts=live`, and `?facts=0` set the mode. The e2e test checks that no request goes to the site.
+- Content review (AGENTS.md political rules), applied in code and by hand:
+  1. The client does not query the crime, pedestrian crash, or traffic counter datasets.
+  2. A card text with a crime, police, danger, decline, or stigma word fails the review.
+  3. A card text is one line of 110 characters or fewer.
+  4. Each card links to its dataset page on the open-data-atl site.
+- The 3 cards, reviewed by hand on 2026-11-03:
+
+  | Card | Text | Dataset |
+  |---|---|---|
+  | eastside-neighborhoods | The Eastside Trail links 3 neighborhoods here: Inman Park, Old Fourth Ward and Poncey-Highland. | atl-neighborhoods |
+  | freedom-park | Freedom Park covers 124 acres of city park land. | atl-parks |
+  | marta-rail | Inman Park-Reynoldstown MARTA rail station is within a mile of the trail. | marta-rail-stations |
+
+- Collection: the skater collects a card within 2.5 m in the ground plane and 4 m in height. A card adds 250 points to the banked score, outside the combo, so a bail does not lose them. The pop-up shows the text for 2 s and does not pause play. The values are in `FACT_CARDS` in `src/sim/fact-cards.js`.
+- Run state: `run.cards.count` is the number of cards collected in this run, and `window.__atl.facts.collected` gives the same number. The goal list (#15) reads it. A new run (`resetSkater`) starts at 0.
+- Layout: a desktop shows the pop-up at the top middle, between the HUD column and the skater select. A phone in portrait shows it under the minimap. A phone in landscape shows it narrow, between the touch stick and the buttons. The e2e test checks for no overlap at 1280x720, 390x844, and 844x390.
+- To record the fixture again, run `node scripts/fetch-facts.mjs`. Then review the printed texts by hand before you commit.
+- The greybox level has no cards, because it is not a real neighborhood.
+
 ## 2026-11-03: Landmark signs and mural words (#79, #80)
 
 Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.

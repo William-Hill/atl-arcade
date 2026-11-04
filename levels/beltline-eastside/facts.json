@@ -1,0 +1,26 @@
+{
+  "note": "Fact cards (M1-07, #17). Each card is one query to the open-data-atl `query_dataset` tool and one line of text. `at` is [x, z] in level meters on the Eastside Trail; the game puts the card on the ground there. A template field is {FIELD} (the first row), {round:FIELD}, {count} (the row count), or {list:FIELD} (the sorted values). Run `node scripts/fetch-facts.mjs` to record the fixture again.",
+  "cards": [
+    {
+      "id": "eastside-neighborhoods",
+      "at": [335.93, 62.15],
+      "dataset": "atl-neighborhoods",
+      "query": { "select": ["NAME"], "near": { "lat": 33.76475, "lon": -84.36325, "radiusMeters": 800 }, "limit": 10 },
+      "template": "The Eastside Trail links {count} neighborhoods here: {list:NAME}."
+    },
+    {
+      "id": "freedom-park",
+      "at": [280.69, 227.13],
+      "dataset": "atl-parks",
+      "query": { "select": ["NAME", "GIS_AC"], "filters": [{ "field": "NAME", "op": "=", "value": "Freedom Park" }], "limit": 1 },
+      "template": "{NAME} covers {round:GIS_AC} acres of city park land."
+    },
+    {
+      "id": "marta-rail",
+      "at": [-99.25, 639.35],
+      "dataset": "marta-rail-stations",
+      "query": { "select": ["STATION"], "near": { "lat": 33.76475, "lon": -84.36325, "radiusMeters": 1609 }, "limit": 10 },
+      "template": "{list:STATION} MARTA rail station is within a mile of the trail."
+    }
+  ]
+}

@@ -758,3 +758,45 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Result: 95 signs before, 88 after. 24 old corner pairs went and 17 new pairs came. Examples: "Brickworks Cir / Closed Lake Ave" and "Closed Lake Ave / West Ashland Ave NE" became one sign "Brickworks Cir NE / West Ashland Ave NE". The false corner "Ralph McGill Blvd / Ralph McGill Blvd NE" became "Ralph McGill Blvd NE / Fortune St NE". "Austin Ave NE / Elizabeth St NE" became "Elizabeth St NE / Lake Ave NE".
 - Test: `scripts/street-names.test.js` checks every sign name of the level against the city labels. Only a name in `REVIEWED` can differ. It also checks each rule on small fixtures. The byte-for-byte rebuild test in `scripts/build-block.test.js` covers the new raw file.
 - Not done: the sign blades are still too small to read on a phone (GEO-5, #24).
+
+## 2026-11-03: Landmark signs and mural words (#79, #80)
+
+Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
+
+### Krog Street Market letters (GEO-3, GFX-4)
+
+- Cause: the north wing of the Krog Street Market footprint (`r5413435`) goes 6 m east of the main east wall. The model stood 5 m south of that wing, so the wing box covered the right half of the "MARKET" card.
+- Fix: a "ground" landmark now has `model.front` (the box in front of the wall that the model fills). `landmarkPlacements()` tries the anchors best first and takes the first one whose front box is out of every building box. The model also turns square to the wall (yaw 1.474 rad, not 1.571 rad), because the east wall is not exactly north-south.
+- Result: the model moved 8 m south, from z = 849.2 to z = 857.2. "KROG STREET MARKET" reads in full.
+- The letters face east, to the parking drive, as in `landmarks/krog-street-market/ref/reference.jpg`. The Eastside Trail is 110 m west, on the other side of the building and Krog Street. Thus the letters read in full from the parking drive, not from the trail. A change of the facing needs a new photo, and is not part of this fix.
+
+### Ponce City Market rooftop sign (GEO-2)
+
+- The sign now stands 45 m west of the tower and 12 m south of it, and faces south. Before, it stood on the east edge and faced east.
+- Sources (Wikimedia Commons). Both photos look north from Historic Fourth Ward Park:
+  1. "Ponce City Market from Historic Fourth Ward Park", Tyler Lahti, 2020, CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Ponce_City_Market_from_Historic_Fourth_Ward_Park.jpg (this is also `landmarks/ponce-city-market/ref/reference.jpg`).
+  2. "View of Ponce City Market across the stormwater detention pond at Historic Fourth Ward Park, December 2015", Marc Merlin, CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:View_of_Ponce_City_Market_across_the_stormwater_detention_pond_at_Historic_Fourth_Ward_Park,_December_2015.jpg
+- A third photo shows the same sign close up: "Ponce City Market large neon sign Midtown, Atlanta, GA", Williamcasey, 2016, CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Ponce_City_Market_large_neon_sign_Midtown,_Atlanta,_GA.jpg. It shows the sign on the roof of a lower wing, over the market entrance. This photo does not show the direction.
+- The repository keeps no copy of photos 2 and 3. The links and the licenses are the record.
+- The offset (45 m, 12 m) is an estimate from the photos, not a survey. The photos show red letters on an open steel frame. The game sign is still yellow letters on a dark panel. That is a different issue.
+
+### Mural words (EDU-2)
+
+- Before, the mural word came from a hash of the building id. 6 of 39 BeltLine murals said "SWEET AUBURN", and "KROG", "PONCE", "INMAN", "O4W", and "OLD 4TH WARD" went on any wall.
+- The level has no neighborhood boundaries, so the game cannot know the neighborhood of a wall. Thus the atlas words now name no neighborhood: "DOGWOOD", "FLOW", "STRIDE", "SUNSHINE", "GOOD VIBES", and "SMOOTH" replace the 6 place words.
+- "ATL" and "A-TOWN" name the city, and "BELTLINE" names the trail. They stay, because every mural is in the city and faces the trail.
+- When the level gets neighborhood boundaries from open-data-atl, a mural can name its own neighborhood.
+- Test: `src/render/murals.test.js` checks the words against a list of the neighborhood names near the trail.
+
+### Facade kit over murals (GFX-5)
+
+- Before, sills, storefront piers, and the belt course went through 35 of the murals.
+- `muralWalls()` now returns the wall index and the span along the wall. `wallDepth()` puts no sill or pier within 0.3 m of a mural.
+- The belt course is one ledge around the building. A cut in that ledge is complex, so on a storefront style the mural now starts above the belt course and the awnings. `BELT` and `awningHeight()` moved to `styles.js`, so the murals and the kit use the same numbers.
+- Test: `facade-kit.test.js` samples every kit triangle near a mural every 0.2 m. No sample can be in the box in front of a mural. The test found 35 murals before the fix and 0 after.
+- Not done: the 39 murals use 13 atlas cells at 256 px (GFX-6).
+
+### Evidence
+
+- `e2e/landmark-signs.spec.js` saves a screenshot of each sign and checks its pixels. The test fails on the old code (no card colors at the "MARKET" end, and the PCM sign edge-on) and passes on the new code.
+- Before and after screenshots: `reports/2026-11-79-80-signs-murals/`.

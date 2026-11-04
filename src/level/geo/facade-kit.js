@@ -21,14 +21,14 @@
 // The faces do not share vertices, so each face gets its own flat normal.
 
 import { FACE, orientRing } from "./extrude.js";
-import { GEO_TILE } from "./geo-mesh.js";
-import { STYLES, STYLE_INDEX, chooseStyle, hash32, wallColor } from "./styles.js";
+import { GEO_TILE, muralWalls } from "./geo-mesh.js";
+import { BELT, STYLES, STYLE_INDEX, chooseStyle, hash32, wallColor } from "./styles.js";
 import { buildingSpan } from "./terrain.js";
 
 export const KIT = {
   cornice: { out: 0.35, height: 0.5, minParapet: 0.5 },
   coping: { out: 0.1, height: 0.14 },
-  belt: { out: 0.18, height: 0.28 },
+  belt: BELT,
   roof: { pitch: (32 * Math.PI) / 180, overhang: 0.45, maxSpan: 16, minFill: 0.72, maxHeight: 12 },
   // A sill is a small box under a window. A wall shorter than minWall
   // gets no sills (OSM rings have many short corner edges).
@@ -44,6 +44,8 @@ const NO_SILLS = new Set(["glass-office", "parking-deck"]);
 // the glass, and an upper-floor window is centered at 0.55 of the floor.
 const FRAME = 0.07;
 const WINDOW_CENTER = 0.55;
+// The clear margin (m) around a mural: no sill or pier goes there.
+const MURAL_CLEAR = 0.3;
 // The square size of the depth tiles, in meters.
 export const DEPTH_TILE = 50;
 const HOUSES = new Set(["craftsman-house", "shotgun-house"]);
@@ -192,7 +194,10 @@ export function wallBox(m, o, t, n, a0, a1, y0, y1, out, color, style, bottom = 
 // The bays and the floors are the same as in extrudeFootprint(), so each
 // sill is under a window of the facade shader. The walls go from `base` to
 // `top` (buildingSpan() in terrain.js). Returns { sill, pier }.
-export function wallDepth(m, ring, top, style, si, base = 0) {
+//
+// `mural` ({ edge, t0, t1, y0, y1 }, muralWalls() in geo-mesh.js) is a
+// mural on wall `edge`: no box goes on the mural or within MURAL_CLEAR of it.
+export function wallDepth(m, ring, top, style, si, base = 0, mural = null) {
   const counts = { sill: 0, pier: 0 };
   const floors = Math.max(1, Math.round((top - base) / style.floorHeight));
   const floorH = (top - base) / floors;
@@ -209,6 +214,7 @@ export function wallDepth(m, ring, top, style, si, base = 0) {
     const n = [-t[1], t[0]];
     const bays = Math.max(1, Math.round(len / style.bay));
     const bl = len / bays;
+    const onMural = mural && mural.edge === i ? (a0, a1, y0, y1) => a1 > mural.t0 - MURAL_CLEAR && a0 < mural.t1 + MURAL_CLEAR && y1 > mural.y0 - MURAL_CLEAR && y0 < mural.y1 + MURAL_CLEAR : () => false;
     if (sills) {
       const half = Math.min(((ww + FRAME) / 2) * bl + KIT.sill.overhang, bl / 2 - 0.02);
       // The ground floor of a storefront style is the shop window: no sill.
@@ -216,6 +222,7 @@ export function wallDepth(m, ring, top, style, si, base = 0) {
         const y = base + (level + WINDOW_CENTER - (wh + FRAME) / 2) * floorH;
         for (let k = 0; k < bays; k += 1) {
           const c = (k + 0.5) * bl;
+          if (onMural(c - half, c + half, y - KIT.sill.height, y)) continue;
           wallBox(m, [px, pz], t, n, c - half, c + half, y - KIT.sill.height, y, KIT.sill.out, style.trim, si, true, true);
           counts.sill += 1;
         }
@@ -227,6 +234,7 @@ export function wallDepth(m, ring, top, style, si, base = 0) {
       const y1 = base + floorH - KIT.belt.height / 2;
       for (let k = 0; k <= bays; k += 1) {
         const c = Math.min(Math.max(k * bl, w), len - w);
+        if (onMural(c - w, c + w, base, y1)) continue;
         wallBox(m, [px, pz], t, n, c - w, c + w, base, y1, KIT.pier.out, style.trim, si, false);
         counts.pier += 1;
       }
@@ -332,7 +340,8 @@ export function gableRoof(m, ring, top, wall, shingle, style) {
 // `span` ({ base, top }, src/level/geo/terrain.js) is where the walls stand;
 // without it the building stands on y = 0. The sills and the piers go into
 // mesh `depth` (by default `m`).
-export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m) {
+// `mural` is the mural of the building, if it has one (see wallDepth()).
+export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null) {
   const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
   const si = STYLE_INDEX[style.id];
   const ring = orientRing(b.outer, false);
@@ -343,7 +352,7 @@ export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m) 
   // the line of the facade floors.
   const floors = Math.max(1, Math.round((top - base) / style.floorHeight));
   const floorH = (top - base) / floors;
-  const d = wallDepth(depth, ring, top, style, si, base);
+  const d = wallDepth(depth, ring, top, style, si, base, mural);
   counts.sill = d.sill;
   counts.pier = d.pier;
   if (HOUSES.has(style.id) && b.height <= KIT.roof.maxHeight) {
@@ -381,6 +390,7 @@ export function facadeKit(level) {
   const depthTiles = new Map();
   const counts = { cornice: 0, coping: 0, belt: 0, roof: 0, sill: 0, pier: 0 };
   const buildings = (level.buildings ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));
+  const murals = new Map(muralWalls(level).map((mw) => [mw.id, mw]));
   for (const b of buildings) {
     const [x, z] = b.outer[0];
     const key = `${Math.floor(x / GEO_TILE)},${Math.floor(z / GEO_TILE)}`;
@@ -389,7 +399,7 @@ export function facadeKit(level) {
     const dkey = `${Math.floor(x / DEPTH_TILE)},${Math.floor(z / DEPTH_TILE)}`;
     let dm = depthTiles.get(dkey);
     if (!dm) depthTiles.set(dkey, (dm = emptyMesh(true)));
-    const c = buildingKit(m, b, buildingSpan(level, b), dm);
+    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null);
     for (const k of Object.keys(counts)) counts[k] += c[k];
   }
   const out = [...tiles.entries()]

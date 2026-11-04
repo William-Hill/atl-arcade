@@ -21,6 +21,10 @@ export function createSky({ radius, sunDirection, clouds = false }) {
       uHorizon: { value: SKY.horizon.clone() },
       uSun: { value: sunDirection.clone().normalize() },
       uTime: { value: 0 },
+      // The weather (src/render/weather-view.js): the cloud coverage and
+      // the storm darkening of the cloud color.
+      uCover: { value: 0.42 },
+      uCloudDark: { value: 0 },
     },
     vertexShader: /* glsl */ `
       varying vec3 vDir;
@@ -34,6 +38,8 @@ export function createSky({ radius, sunDirection, clouds = false }) {
       uniform vec3 uHorizon;
       uniform vec3 uSun;
       uniform float uTime;
+      uniform float uCover;
+      uniform float uCloudDark;
       varying vec3 vDir;
       #ifdef CLOUDS
       float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -65,9 +71,12 @@ export function createSky({ radius, sunDirection, clouds = false }) {
           vec2 uv = d.xz / (d.y + 0.12) * 1.4 + vec2(uTime * 0.004, 0.0);
           float c = fbm(uv);
           float edge = smoothstep(0.02, 0.25, d.y);
-          float body = smoothstep(0.55, 0.58, c) * edge;
-          float shade = smoothstep(0.66, 0.69, c);
-          vec3 cloud = mix(vec3(0.80, 0.86, 0.95), vec3(1.0), shade);
+          // The coverage moves the threshold: a clear day keeps a few small
+          // clouds, an overcast day fills the dome. A storm darkens them.
+          float thr = mix(0.75, 0.32, uCover);
+          float body = smoothstep(thr, thr + 0.08, c) * edge;
+          float shade = smoothstep(thr + 0.12, thr + 0.4, c);
+          vec3 cloud = mix(vec3(0.80, 0.86, 0.95), vec3(1.0), shade) * mix(1.0, 0.5, uCloudDark);
           col = mix(col, cloud, body * 0.95);
         }
         #endif

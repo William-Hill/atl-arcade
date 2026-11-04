@@ -101,6 +101,11 @@ export function createFacadeMaterial(gradientMap, { brickMap = null, interiors =
     shader.uniforms.uBrickMean = { value: new THREE.Vector3(brickMean.r, brickMean.g, brickMean.b) };
     shader.uniforms.uBrickTile = { value: brickInfo.tileMeters };
     shader.uniforms.uBrickOn = { value: brickMap ? 1 : 0 };
+    // The window light factor (src/render/weather-view.js): 0 in the day,
+    // up to 1 at night, more under a dark sky. The material keeps the
+    // uniform so the weather can write it after the shader compiles.
+    shader.uniforms.uLit = { value: 0 };
+    mat.userData.uLit = shader.uniforms.uLit;
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;\nflat varying vec3 vWallSeed;")
       .replace(
@@ -125,8 +130,9 @@ uniform sampler2D uBrick;
 uniform vec3 uBrickMean;
 uniform float uBrickTile;
 uniform float uBrickOn;
-#ifdef INTERIOR
+uniform float uLit;
 float roomHash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+#ifdef INTERIOR
 // Room colors: warm white, beige, pale blue, sage, peach, and a deep teal.
 vec3 roomColor(float h) {
   if (h < 0.22) return vec3(0.95, 0.9, 0.8);
@@ -202,7 +208,9 @@ vec3 roomColor(float h) {
         float t = min(min(tx, ty), tz);
         vec3 h = p + r * t;
         vec3 base = roomColor(h0);
-        bool lit = shop || h1 > 0.3;
+        // More rooms are lit at night (uLit): about half in the day, most
+        // of them after dark.
+        bool lit = shop || h1 > mix(0.45, 0.18, uLit);
         if (shop && (t == tz || t == tx) && h.y > 0.3 && h.y < 2.3) {
           // Shop shelves: rows of goods in bright colors, with dark shelf lines.
           float along = t == tz ? h.x : h.z;
@@ -233,10 +241,15 @@ vec3 roomColor(float h) {
         float slatW = aa.y * 20.0; // aa is 2 fwidth, taken outside the branch
         float slat = mix(step(0.5, fract(cell.y * 40.0)), 0.5, smoothstep(0.35, 0.8, slatW));
         if (!shop && cell.y > cy + win.y * 0.5 - win.y * blind) col = mix(uTrim[st], vec3(0.96, 0.93, 0.86), 0.5) * (0.82 + 0.1 * slat);
-        roomGlow = lit ? col * (shop ? 0.24 : 0.2) : vec3(0.0);
-        // The glass: a tint and a sky reflection that grows at a low angle.
+        // A daylit room is much darker than the facade (the reflection
+        // carries the window); at night the lit room is the light source,
+        // in a warm interior color.
+        roomGlow = lit ? col * mix(0.05, shop ? 1.1 : 0.85, uLit) : vec3(0.0);
+        roomGlow *= mix(vec3(1.0), vec3(1.0, 0.72, 0.42), uLit * 0.8);
+        // The glass: a tint and a sky reflection that grows at a low angle
+        // and dims at night, when the dark sky gives little to reflect.
         float fres = 0.1 + 0.55 * pow(1.0 - r.z, 3.0);
-        vec3 sky = mix(vec3(0.75, 0.87, 1.0), uGlass[st] + vec3(0.25), 0.4);
+        vec3 sky = mix(vec3(0.75, 0.87, 1.0), uGlass[st] + vec3(0.25), 0.4) * mix(1.0, 0.18, uLit);
         col = mix(col * mix(vec3(1.0), uGlass[st] * 2.2, 0.25), sky, fres);
         col += vec3(0.08) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
       }
@@ -260,6 +273,19 @@ vec3 roomColor(float h) {
     #ifdef INTERIOR
     totalEmissiveRadiance += roomGlow * inWin * (1.0 - far);
     #endif
+    // The flat lit window: on the tier with no interior rooms it carries
+    // the whole night look; with rooms it adds a faint lamp in the unlit
+    // ones. A per-window hash picks which windows light and how warm.
+    if (uLit > 0.01) {
+      float wh = roomHash(vec3(floor(vFacade.yz), float(st) + dot(vWallSeed, vec3(5.0, 9.0, 0.37)) + 31.0));
+      float litWin = step(wh, uLit * (shop ? 0.95 : 0.6));
+      vec3 glowC = wh < 0.5 ? vec3(1.0, 0.76, 0.48) : vec3(0.82, 0.88, 1.0);
+      #ifdef INTERIOR
+      totalEmissiveRadiance += glowC * litWin * inWin * (1.0 - far) * uLit * 0.12;
+      #else
+      totalEmissiveRadiance += glowC * litWin * inWin * (1.0 - far) * uLit * 0.55;
+      #endif
+    }
   }
 }`,
       );
@@ -307,6 +333,10 @@ export function createSurfaceMaterial(gradientMap, { maps = null } = {}) {
     shader.uniforms.uKindColor = { value: kindColor };
     shader.uniforms.uKindSet = { value: kindSet };
     shader.uniforms.uKindStrength = { value: kindStrength };
+    // The ground wetness (src/render/weather-view.js): 0 dry, 1 soaked.
+    // Kept on the material so the weather can write it after compile.
+    shader.uniforms.uWet = { value: 0 };
+    mat.userData.uWet = shader.uniforms.uWet;
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec2 vGroundXZ;")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGroundXZ = (modelMatrix * vec4(transformed, 1.0)).xz;");
@@ -320,6 +350,7 @@ ${decl}
 uniform vec3 uKindColor[${kinds.length}];
 uniform float uKindSet[${kinds.length}];
 uniform float uKindStrength[${kinds.length}];
+uniform float uWet;
 vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   vec3 a = texture2D(t, xz / tile).rgb / mean;
   vec2 r = mat2(0.8, -0.6, 0.6, 0.8) * xz;
@@ -345,8 +376,13 @@ vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   vec3 det = set < -0.5 ? vec3(1.0) : set < 0.5 ? d0 : set < 1.5 ? d1 : set < 2.5 ? d2 : d3;
   float fade = 1.0 - smoothstep(90.0, 280.0, length(vViewPosition));
   diffuseColor.rgb *= mix(vec3(1.0), det, strength * fade);
+  // A soaked street is darker; a material that has roughness gets the wet
+  // sheen too (the toon shader has no roughness chunk, so that part only
+  // lands on standard materials).
+  diffuseColor.rgb *= mix(1.0, 0.72, uWet);
 }`,
-      );
+      )
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor *= mix(1.0, 0.3, uWet);");
   };
   mat.customProgramCacheKey = () => "surface-v1-ground";
   return mat;
@@ -592,6 +628,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   return {
     root,
     byId,
+    // The weather handles (src/render/weather-view.js): the facade
+    // material gets uLit (window light) and the surface material gets
+    // uWet (wet ground). The uniforms appear when the shaders compile.
+    weather: { lit: [materials.building], wet: [materials.surface] },
     get meshCount() {
       return meshes.length + (propBatch ? 1 : 0);
     },
@@ -647,7 +687,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
 // for a faster machine.
 export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048 } = {}) {
   const group = new THREE.Group();
-  group.add(new THREE.HemisphereLight(0xcfe8ff, 0x5a6a48, 0.7));
+  const hemi = new THREE.HemisphereLight(0xcfe8ff, 0x5a6a48, 0.7);
+  group.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff1d6, 1.5);
   const offset = new THREE.Vector3(30, 50, 20);
   sun.position.copy(offset);
@@ -667,7 +708,20 @@ export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048 } = {}
   return {
     group,
     sun,
+    hemi,
     sunDirection: offset.clone().normalize(),
+    // The weather (src/render/weather-view.js) sets the sun on the solar
+    // direction at a fixed distance, so the shadow box keeps its size.
+    setSun(dir, color, intensity) {
+      offset.set(dir[0], dir[1], dir[2]).normalize().multiplyScalar(90);
+      if (color) sun.color.copy(color);
+      if (intensity !== undefined) sun.intensity = intensity;
+    },
+    setHemi(skyColor, groundColor, intensity) {
+      if (skyColor) hemi.color.copy(skyColor);
+      if (groundColor) hemi.groundColor.copy(groundColor);
+      if (intensity !== undefined) hemi.intensity = intensity;
+    },
     // Snap to whole meters, so the shadow edges do not shimmer.
     follow(x, z, y = 0) {
       const sx = Math.round(x);

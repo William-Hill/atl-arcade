@@ -30,6 +30,9 @@ import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./ren
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
 import { createLitePost, createPost } from "./render/post.js";
+import { createWeatherView, weatherClock } from "./render/weather-view.js";
+import { createRain } from "./render/rain.js";
+import { ATLANTA } from "./sim/weather.js";
 import { addTiltShift } from "./render/tilt-shift.js";
 import { createPhotoPanel } from "./ui/photo-panel.js";
 import { createStreetSigns } from "./render/street-signs.js";
@@ -153,6 +156,30 @@ const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.ge
 const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0" }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
+
+// The day and season weather (src/sim/weather.js, render/weather-view.js):
+// the sun, the sky, the fog, the windows, and the wet streets follow the
+// date and the time of day at the level's own latitude. ?date=MM-DD and
+// ?time=HH.HH set the clock, ?weather=clear|clouds|rain|storm picks the
+// weather, ?timescale=<s clock / s real> speeds the clock, and ?weather=0
+// turns the system off.
+let weatherView = null;
+let rain = null;
+if (geo && params.get("weather") !== "0") {
+  rain = createRain({ count: quality === "high" ? 1800 : 600 });
+  scene.add(rain.mesh);
+  weatherView = createWeatherView({
+    scene,
+    renderer,
+    geoLights,
+    sky,
+    levelView,
+    fog: { near: GEO_FOG_NEAR, far: GEO_FAR },
+    place: level.origin ?? ATLANTA,
+    clock: weatherClock(params),
+    exposureBase: 1.05,
+  });
+}
 
 // Street name signs at the real intersections (src/level/geo/signs.js).
 // ?signs=0 leaves them out.
@@ -550,6 +577,8 @@ function frame(now) {
   }
   if (levelView.update) levelView.update(camera.position);
   if (sky) sky.update(camera, now / 1000);
+  if (weatherView) weatherView.update(elapsed, camera);
+  if (rain) rain.update(camera, now / 1000, weatherView?.state, renderer.domElement.height);
   if (streetSigns) streetSigns.update(camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
   draw();
@@ -579,6 +608,12 @@ window.__atl = {
   // The render settings now, after any governor step.
   get render() {
     return { quality, pixelRatio: renderer.getPixelRatio(), post: post ? post.kind : null, rung: governor ? governor.rung : null, lastMedianMs: governor ? governor.last : null };
+  },
+  // The day/season weather (src/render/weather-view.js): the kind, the
+  // clock, the sun elevation, and the window/wet/rain factors. Null on the
+  // greybox level or with ?weather=0.
+  get weather() {
+    return weatherView ? weatherView.info() : null;
   },
   // Photo mode (#90): open, close, toggle, set({ center, strength }), save().
   photo: {

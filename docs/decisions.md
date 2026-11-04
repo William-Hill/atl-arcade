@@ -662,6 +662,16 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Game code: no change. `src/main.js` and the recorder stay as they are.
 - Evidence: at a load average of 37 to 39, the old spec failed 4 of 4 runs (17, 19, 14, and 14 samples). At a load average of 120 to 45, the new spec passed 20 of 20 tests with `--repeat-each 5`.
 
+## 2026-11-03: The window rooms keep their look when the camera turns
+
+- Problem: the windows on the BeltLine buildings flickered. The room hash in the facade shader (`src/render/geo-view.js`) used the view-space normal. Thus each camera turn gave a room a new color, light, blind, and furniture.
+- Decision: the vertex shader makes a seed for each wall face from the model-space normal (rounded to 1/8) and the wall plane distance (rounded to 1 m, mod 97). A `flat` varying sends it to the fragment shader, so all pixels of a wall get the same exact value. The seed does not change with the camera.
+- Second change: the blind slats (40 for each floor) fade to their mean where a slat is under about one pixel, so far blinds do not shimmer.
+- Effect: two parallel walls of one building at the same plane distance (rounded) get the same rooms. This is rare and does not flicker.
+- Shader cache key: `facade-v5`.
+- Test: `e2e/window-rooms.spec.js` turns the fixed camera in place by 0.9 degrees and maps each pixel to the first frame. For a pure rotation the mapped pixel sees the same world ray. With the fix, 21 of 53568 pixels changed (0.04%). With the old shader, 2696 of 53568 pixels changed (5.03%), and the test failed. The limit is 0.5%.
+- Not changed: the ink lines on thin far ledges (`src/render/post.js`) can still shimmer a little.
+
 ## 2026-11-03: The far terrain uses the mesh bounds, not the tile square (#87)
 
 - Problem: on the low tier, the coarse far terrain covered Nia to the waist at the BeltLine spawn. With `?farterrain=0` she showed in full.

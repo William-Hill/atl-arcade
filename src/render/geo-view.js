@@ -96,13 +96,21 @@ export function createFacadeMaterial(gradientMap, { brickMap = null, interiors =
     shader.uniforms.uBrickTile = { value: brickInfo.tileMeters };
     shader.uniforms.uBrickOn = { value: brickMap ? 1 : 0 };
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;")
-      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFacade = facade;");
+      .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;\nflat varying vec3 vWallSeed;")
+      .replace(
+        "#include <begin_vertex>",
+        // A seed for each wall face, from the model-space normal and the
+        // wall plane. It does not change with the camera, so a room keeps
+        // its look when the camera turns. All 4 corners of a wall give the
+        // same value, and the flat varying keeps it exact.
+        "#include <begin_vertex>\nvFacade = facade;\nvWallSeed = vec3(floor(normal.xz * 8.0 + 0.5), mod(floor(dot(position.xz, normal.xz) + 0.5), 97.0));",
+      );
     shader.fragmentShader = shader.fragmentShader
       .replace(
         "#include <common>",
         `#include <common>
 varying vec4 vFacade;
+flat varying vec3 vWallSeed;
 uniform vec4 uStyleA[${n}];
 uniform vec3 uGlass[${n}];
 uniform vec3 uTrim[${n}];
@@ -172,7 +180,7 @@ vec3 roomColor(float h) {
       vec2 o0 = vec2(0.5 - win.x * 0.5, cy - win.y * 0.5) * m;
       vec2 o1 = vec2(0.5 + win.x * 0.5, cy + win.y * 0.5) * m;
       vec3 q = p + r * (reveal / r.z);
-      vec3 rid = vec3(floor(vFacade.yz), float(st) + dot(wallCol, vec3(7.0, 13.0, 3.0)) + dot(N, vec3(5.0, 0.0, 9.0)));
+      vec3 rid = vec3(floor(vFacade.yz), float(st) + dot(wallCol, vec3(7.0, 13.0, 3.0)) + dot(vWallSeed, vec3(5.0, 9.0, 0.37)));
       float h0 = roomHash(rid);
       float h1 = roomHash(rid + 17.3);
       float h2 = roomHash(rid + 41.9);
@@ -214,7 +222,11 @@ vec3 roomColor(float h) {
         if (!lit) col *= 0.42;
         // Blinds pulled down from the top in some windows.
         float blind = h2 < 0.35 ? h2 * 1.6 : 0.0;
-        if (!shop && cell.y > cy + win.y * 0.5 - win.y * blind) col = mix(uTrim[st], vec3(0.96, 0.93, 0.86), 0.5) * (0.82 + 0.1 * step(0.5, fract((cell.y) * 40.0)));
+        // The blind slats: 40 for each floor. Where a slat is under about a
+        // pixel, use the mean, so far blinds do not shimmer.
+        float slatW = aa.y * 20.0; // aa is 2 fwidth, taken outside the branch
+        float slat = mix(step(0.5, fract(cell.y * 40.0)), 0.5, smoothstep(0.35, 0.8, slatW));
+        if (!shop && cell.y > cy + win.y * 0.5 - win.y * blind) col = mix(uTrim[st], vec3(0.96, 0.93, 0.86), 0.5) * (0.82 + 0.1 * slat);
         roomGlow = lit ? col * (shop ? 0.24 : 0.2) : vec3(0.0);
         // The glass: a tint and a sky reflection that grows at a low angle.
         float fres = 0.1 + 0.55 * pow(1.0 - r.z, 3.0);
@@ -246,7 +258,7 @@ vec3 roomColor(float h) {
 }`,
       );
   };
-  mat.customProgramCacheKey = () => `facade-v4${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}`;
+  mat.customProgramCacheKey = () => `facade-v5${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}`;
   return mat;
 }
 

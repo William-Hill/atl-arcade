@@ -1027,3 +1027,10 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Named landmarks now map to real styles through BY_NAME (PCM → brick-warehouse, Krog → brick-market-hall), so the district mechanism cannot restyle the anchors themselves.
 - Verified: styles.test.js (district mix keeps mid-size stock inside its palette; named buildings keep their style) and the full suite still passes.
 - Not done: district labels and storefront name decals (teleoperator's RUSSIAN HILL map labels / real-business signs), the e2e suite, and the FPS gate.
+
+## 2026-11-04: epic/assets — Blender facade kit (pbr look)
+
+- `scripts/blender/facade_kit.py` (Blender 5.2.3, headless, no Meshy) builds `assets/facades/facade-kit.glb`: 35 instanceable facade modules + 4 LOD1 nodes in one 400 KB Draco GLB, on **one material** with one procedural trim-sheet atlas (1024 color + 1024 normal + 512 ORM, 12.6 MB GPU with mips, shared). One material keeps a whole tile of modules at one draw call per module type with `InstancedMesh`.
+- Module sizes are the style's own facade-shader window frame at its nominal bay/floor (`window + FRAME` cells, `WINDOW_CENTER = 0.55`), and storefront widths match bays 2.6 / 3.2 / 4.5 minus the 0.36 m pier, so a module covers the shader window instead of fighting it; scaling within ±20–25% covers the other bay lengths.
+- Placement is a pure function, `scripts/assets/facade-kit-placement.js` (`facadePlacements`, with Vitest tests), driven by the existing `frontEdges()` storefront edges from OSM/Overture street lines, `chooseStyle`, and `buildingSpan`. It is **not wired into the game**; the parent session owns that (docs/facade-kit.md lists the steps, including which procedural kit parts to turn off).
+- In-context preview without touching shared files: `scripts/assets/facade-kit-preview.mjs` uses `?kit=0` and the existing `__atl.scene` / `__atl.cameraPosition` debug handles to add the kit as instanced meshes.

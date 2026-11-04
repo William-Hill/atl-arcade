@@ -27,6 +27,8 @@ import polygonClipping from "polygon-clipping";
 import { bboxCenter, createProjection, parseBbox } from "../src/level/geo/projection.js";
 import { cleanRing, signedArea } from "../src/level/geo/extrude.js";
 import { decodeHeights, encodeHeights, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
+import { shortName } from "../src/level/geo/signs.js";
+import { createStreetNamer } from "./street-names.mjs";
 
 const ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
 const USER_AGENT = "atl-arcade-build-block/0.1 (https://github.com/William-Hill/atl-arcade)";
@@ -304,7 +306,10 @@ function inBox([x, z], box) {
 // `sources` maps a level building id to its record in the building source
 // file (data/buildings/<name>.json, issue #88). With `sources`, each height
 // comes from its record, and a building with no record is an error.
-export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, sources = null }) {
+// `cityStreets` is raw/city-streets.json (scripts/city-streets.mjs). With it,
+// the street names come from the City of Atlanta centerlines (issue #78,
+// scripts/street-names.mjs).
+export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, sources = null, cityStreets = null }) {
   const origin = bboxCenter(bbox);
   const proj = createProjection(origin);
   const project = (g) => g.map(({ lat, lon }) => proj.toLocal(lat, lon).map(round));
@@ -355,6 +360,21 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
         item.layer = Number(tags.layer) || 1;
       }
       strips.push(item);
+    }
+  }
+
+  // The sign names from the city centerlines. The strip name stays the OSM name.
+  const nameCounts = { city: 0, reviewed: 0, osm: 0, changed: 0 };
+  if (cityStreets) {
+    const lines = cityStreets.segments.flatMap((seg) => seg.paths.map((p) => ({ label: seg.label, points: p.map(([lon, lat]) => proj.toLocal(lat, lon)) })));
+    const nameOf = createStreetNamer(lines);
+    for (const st of strips) {
+      if (st.kind !== "street" || !st.name) continue;
+      const r = nameOf(st);
+      if (r.signName) st.signName = r.signName;
+      st.nameSource = r.nameSource;
+      nameCounts[r.nameSource] += 1;
+      if (r.signName && r.signName !== shortName(st.name)) nameCounts.changed += 1;
     }
   }
 
@@ -421,7 +441,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     name,
     title,
     format: "geo-level/1",
-    attribution: `Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright${overture ? ". Heights: Overture Maps Foundation" : ""}${terrain ? ". Elevation: USGS 3DEP" : ""}`,
+    attribution: `Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright${overture ? ". Heights: Overture Maps Foundation" : ""}${terrain ? ". Elevation: USGS 3DEP" : ""}${cityStreets ? ". Street names: City of Atlanta Department of City Planning" : ""}`,
     bbox,
     origin,
     axes: "+x east, +y up, +z south; meters from the origin",
@@ -432,6 +452,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       buildings: buildings.length,
       buildingHeights: counts,
       ...(sources ? { buildingSources: `data/buildings/${name}.json` } : {}),
+      ...(cityStreets ? { streetNames: nameCounts } : {}),
       strips: Object.fromEntries(["street", "sidewalk", "path", "trail"].map((k) => [k, strips.filter((s) => s.kind === k).length])),
       areas: areas.length,
     },
@@ -642,7 +663,12 @@ async function main() {
   const sources = existsSync(sourcesFile) ? JSON.parse(readFileSync(sourcesFile, "utf8")).buildings : null;
   if (typeof args.sources === "string" && !sources) throw new Error(`build-block: no building source file at ${sourcesFile}`);
   if (sources) console.log(`build-block: ${Object.keys(sources).length} building records from ${sourcesFile}`);
-  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, sources });
+  // The City of Atlanta street centerlines (scripts/city-streets.mjs), when
+  // present. The street names come from them.
+  const cityStreetsFile = resolve(rawDir, "city-streets.json");
+  const cityStreets = existsSync(cityStreetsFile) ? JSON.parse(readFileSync(cityStreetsFile, "utf8")) : null;
+  if (cityStreets) console.log(`build-block: ${cityStreets.segments.length} city centerline segments from ${cityStreetsFile}`);
+  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, sources, cityStreets });
   const outFile = resolve(outDir, "level.json");
   writeFileSync(outFile, `${JSON.stringify(level)}\n`);
   console.log(`build-block: wrote ${outFile}`);

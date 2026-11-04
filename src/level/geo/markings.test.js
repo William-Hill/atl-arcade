@@ -42,3 +42,30 @@ describe("road markings", () => {
     expect(m.indices.length % 3).toBe(0);
   });
 });
+
+describe("road markings on the real level with city sign names (#78)", () => {
+  it("gives finite positions and a finite tile for each marking", () => {
+    const tiles = roadMarkings(LEVEL);
+    let tris = 0;
+    for (const t of tiles) {
+      expect(t.tile).toMatch(/^-?\d+,-?\d+$/);
+      for (const v of t.mesh.positions) expect(Number.isFinite(v)).toBe(true);
+      tris += t.mesh.indices.length / 3;
+    }
+    // Before the fix, crosswalks at a renamed street went to infinity and
+    // most markings were lost (3192 triangles instead of about 8500).
+    expect(tris).toBeGreaterThan(8000);
+  });
+
+  it("finds the street width by the sign name, not only the OSM name", () => {
+    const strip = (id, name, signName, points, width) => ({ id, kind: "street", highway: "residential", name, signName, nameSource: "city", points, width });
+    const level = {
+      ...LEVEL,
+      strips: [
+        strip("a", "Osm Ave", "City Ave NE", [[-40, 0], [0, 0], [40, 0]], 10),
+        strip("b", "Osm St", "City St NE", [[0, -40], [0, 0], [0, 40]], 12),
+      ],
+    };
+    for (const t of roadMarkings(level)) for (const v of t.mesh.positions) expect(Number.isFinite(v)).toBe(true);
+  });
+});

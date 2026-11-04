@@ -577,7 +577,7 @@ function twoSided(m, a, b, c, d, color, normal, style) {
 // piers stand in front of the band ends, and this keeps the triangle count
 // low (there are about 2,000 bands on the BeltLine level). Returns true
 // when it builds the band.
-function signBay(m, { o, t, n, len }, bays, k, y0, y1, color, style, si, board) {
+function signBay(m, { o, t, n, len }, bays, k, y0, y1, color, style, si, board, boards = null) {
   const g = KIT.sign;
   const bl = len / bays;
   const w = KIT.pier.width / 2;
@@ -591,13 +591,18 @@ function signBay(m, { o, t, n, len }, bays, k, y0, y1, color, style, si, board) 
   quad(m, at(a0, y0, g.out), at(a1, y0, g.out), at(a1, y1, g.out), at(a0, y1, g.out), color, out, si);
   quad(m, at(a0, y1, 0), at(a1, y1, 0), at(a1, y1, g.out), at(a0, y1, g.out), color, [0, 1, 0], si);
   if (!board) return true;
-  // A blank board on the band. It reads as a shop name at 30 m.
+  // A blank board on the band. It reads as a shop name at 30 m; the shop
+  // name decals (render/shop-names.js) draw the name on it.
   const bw = (a1 - a0) * g.boardWidth;
   const bh = (y1 - y0) * g.boardHeight;
   const am = (a0 + a1) / 2;
   const ym = (y0 + y1) / 2;
   const d = g.out + g.boardOut;
   quad(m, at(am - bw / 2, ym - bh / 2, d), at(am + bw / 2, ym - bh / 2, d), at(am + bw / 2, ym + bh / 2, d), at(am - bw / 2, ym + bh / 2, d), style.trim, out, si);
+  if (boards) {
+    const [px, , pz] = at(am, ym, d);
+    boards.push({ x: px, y: ym, z: pz, w: bw, h: bh, nx: n[0], nz: n[1] });
+  }
   return true;
 }
 
@@ -611,7 +616,7 @@ function signBay(m, { o, t, n, len }, bays, k, y0, y1, color, style, si, board) 
 //
 // The kit awnings are render-only. They hang under the sign band, so the
 // band stays in view.
-export function shopFront(m, ring, style, si, base, floorH, front, seed, awningColor = AWNING_COLORS[seed % AWNING_COLORS.length]) {
+export function shopFront(m, ring, style, si, base, floorH, front, seed, awningColor = AWNING_COLORS[seed % AWNING_COLORS.length], boards = null) {
   const counts = { sign: 0, awning: 0 };
   if (!front || front.edge < 0 || front.edge >= ring.length) return counts;
   const { o, t, n, len } = wallOf(ring, front.edge);
@@ -623,13 +628,13 @@ export function shopFront(m, ring, style, si, base, floorH, front, seed, awningC
   const y1 = base + floorH - KIT.belt.height / 2 - g.beltGap;
   const color = SIGN_COLORS[seed % SIGN_COLORS.length];
   const at = (a, y, d) => [o[0] + t[0] * a + n[0] * d, y, o[1] + t[1] * a + n[1] * d];
-  for (let k = 0; k < bays; k += 1) if (signBay(m, wallOf(ring, front.edge), bays, k, y0, y1, color, style, si, k % 2 === 0)) counts.sign += 1;
+  for (let k = 0; k < bays; k += 1) if (signBay(m, wallOf(ring, front.edge), bays, k, y0, y1, color, style, si, k % 2 === 0, boards)) counts.sign += 1;
   // The sign band turns the corner: the bay at the corner of each wrap wall.
   for (const j of front.wraps ?? []) {
     const wj = wallOf(ring, j);
     const bj = Math.max(1, Math.round(wj.len / style.bay));
     const k = j === (front.edge + 1) % ring.length ? 0 : bj - 1;
-    if (signBay(m, wj, bj, k, y0, y1, color, style, si, true)) counts.sign += 1;
+    if (signBay(m, wj, bj, k, y0, y1, color, style, si, true, boards)) counts.sign += 1;
   }
   if (front.street || !(style.awnings > 0)) return counts;
   const aw = KIT.awning;
@@ -662,7 +667,7 @@ export function shopFront(m, ring, style, si, base, floorH, front, seed, awningC
 // `mural` is the mural of the building, if it has one (see wallDepth()).
 // `front` ({ edge, street }, frontEdge()) is the front wall. Without it the
 // building gets no shop front.
-export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null, front = null, level = null) {
+export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null, front = null, level = null, boards = null) {
   const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
   const si = STYLE_INDEX[style.id];
   const ring = orientRing(b.outer, false);
@@ -701,7 +706,7 @@ export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, 
     counts.belt = 1;
     if (front) {
       const awningColor = AWNING_COLORS[hash32(`${b.id}:awning-color`) % AWNING_COLORS.length];
-      const c = shopFront(m, ring, style, si, base, floorH, front, hash32(`${b.id}:shop`), awningColor);
+      const c = shopFront(m, ring, style, si, base, floorH, front, hash32(`${b.id}:shop`), awningColor, boards);
       counts.sign = c.sign;
       counts.awning = c.awning;
     }
@@ -733,7 +738,7 @@ export function frontEdges(level) {
 // Returns { tiles: [{ tile, mesh }], one per building tile; depthTiles:
 // [{ tile, center: [x, z], mesh }], one per DEPTH_TILE square; counts }.
 // `fronts` is the Map of frontEdges(), to share it with the aprons.
-export function facadeKit(level, fronts = frontEdges(level)) {
+export function facadeKit(level, fronts = frontEdges(level), boards = null) {
   const tiles = new Map();
   const depthTiles = new Map();
   const counts = { cornice: 0, coping: 0, belt: 0, roof: 0, sill: 0, pier: 0, crown: 0, bulkhead: 0, sign: 0, awning: 0 };
@@ -748,7 +753,7 @@ export function facadeKit(level, fronts = frontEdges(level)) {
     let dm = depthTiles.get(dkey);
     if (!dm) depthTiles.set(dkey, (dm = emptyMesh(true)));
     const front = fronts.get(b.id) ?? null;
-    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null, front, level);
+    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null, front, level, boards);
     for (const k of Object.keys(counts)) counts[k] += c[k];
   }
   const out = [...tiles.entries()]

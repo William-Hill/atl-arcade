@@ -5,6 +5,7 @@ import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
 import { storefrontAprons } from "../level/geo/aprons.js";
 import { facadeKit, frontEdges } from "../level/geo/facade-kit.js";
+import { shopNamesMesh } from "./shop-names.js";
 import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
@@ -693,7 +694,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const markingTiles = new Map([...groundExtras].map(([tile, list]) => [tile, list.length > 1 ? mergeMeshes(list) : list[0]]));
   // The facade kit (cornices, copings, belt courses, house roofs) joins the
   // render copy of its building tile in the same way.
-  const kitParts = kit ? facadeKit(level, fronts) : { tiles: [], depthTiles: [], counts: {} };
+  const shopBoards = [];
+  const kitParts = kit ? facadeKit(level, fronts, shopBoards) : { tiles: [], depthTiles: [], counts: {} };
   const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));
   for (const { material, tile, mesh } of meshes) {
     // A "claimed" mesh is the footprint of a landmark with claim: true —
@@ -725,6 +727,11 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   }
   const terrainLod = { tiles: terrainLods.length, far: 0, nearestFar: Infinity };
   for (const [tile, mesh] of kitTiles) addMesh(root, byId, `kit-${tile}`, geoGeometry(mesh), materials.building, { castShadow: true });
+
+  // The shop-name decals on the kit's sign boards, and the district names
+  // on the trail (render/shop-names.js): one atlas, one merged mesh.
+  const names = shopBoards.length ? shopNamesMesh(shopBoards, level, look) : null;
+  if (names) root.add(names);
   // The sills and the piers: one mesh per depth tile, hidden far away in
   // update().
   const depthTiles = [];

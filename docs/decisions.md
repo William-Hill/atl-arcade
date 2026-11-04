@@ -556,6 +556,19 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Why: the goal is the official game of the City of Atlanta. Most residents reach a city link from a phone.
 - Evidence and findings: `production/audits/2026-11-playability/REPORT.md`.
 
+## 2026-11-03: Photo mode with a depth tilt-shift blur (#90)
+
+- P or the PHOTO button (bottom right) opens and closes photo mode. Escape also closes it. While it is open, the fixed-step simulation and the skater animation stop, and the HUD hides. The map attribution stays on the screen.
+- A free camera moves in photo mode: WASD or the arrows fly, E and Q go up and down, Shift goes fast, and a drag or the right stick turns it. It stays within 150 m of the place where photo mode opened and 0.4 m over the ground. On close, the follow camera places itself again; a fixed or an orbit camera gets its old pose back.
+- The blur is a `ShaderPass` (`src/render/tilt-shift.js`) after the ink pass and before bloom. It reads the GTAO depth texture that the ink pass reads, so it adds no scene pass. A band (half height 0.08 in UV) stays sharp. Past the band the blur grows over 0.3 in UV, and 60% of it scales with the depth step from the focus depth (the depth at the band center). The blur is a 32-tap golden-angle disc with a radius of up to 14 px times the pixel ratio. A sample adds only as far as its own blur reaches, so the sharp band does not bleed out.
+- The pass is disabled in normal play, and EffectComposer skips a disabled pass, so play has no cost and no blur. `src/render/post.js` does not change: `addTiltShift()` inserts the pass into the composer.
+- The player moves the band with a slider, `[` and `]`, or the mouse wheel, and sets the strength with a slider or `-` and `=`.
+- Save PNG draws one frame and reads the canvas in the same task, so the WebGL buffer still holds the frame (no `preserveDrawingBuffer`). The PNG holds the canvas only, with no HUD. The file name is `skate-atl-YYYYMMDD-HHMMSS.png`: no skater, score, position, or other player data.
+- Low and phone tiers: photo mode, the free camera, and the PNG work; the sliders are disabled and a note says that the blur needs the high tier. The blur goes only on the full post chain (`post.kind === "full"`).
+- The frame-time governor (#72) pauses while photo mode is open: the blur is slow and the game is stopped. If the governor drops the post chain, the blur goes with it.
+- On a touch screen (#71) the PHOTO button moves to the top center, under the map attribution, and the touch controls hide while photo mode is open.
+- The pure parts (band math, state, free camera, file name) are in `src/render/tilt-shift.js` and `src/ui/photo-mode.js` with Vitest tests. The DOM is in `src/ui/photo-panel.js`, with its CSS inside, so `src/shell.css` and `src/ui/hud.js` do not change.
+
 ## 2026-11-03: Phone render tier and the frame-time governor (#72)
 
 - Tier: a new `phone` tier for a touch device whose short screen side is 900 CSS px or less (`isPhone()` in `src/render/quality.js`). A software renderer still gets `low`. `?quality=phone` forces it.
@@ -800,3 +813,24 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 
 - `e2e/landmark-signs.spec.js` saves a screenshot of each sign and checks its pixels. The test fails on the old code (no card colors at the "MARKET" end, and the PCM sign edge-on) and passes on the new code.
 - Before and after screenshots: `reports/2026-11-79-80-signs-murals/`.
+
+## 2026-11-03: All props in one BatchedMesh, with an LOD for each prop (#89)
+
+- Decision: the 3392 BeltLine props (trees, lamps, roof units, benches, bins, water towers) are one `THREE.BatchedMesh` (`src/render/prop-batch.js`). Each prop is one instance. With `WEBGL_multi_draw` the batch is one draw call. Three.js culls each instance against the view and the shadow camera.
+- LOD: each prop picks LOD0 under `PROP_LOD0_DISTANCE` (60 m), LOD1 under `PROP_DRAW_DISTANCE` (200 m), or hidden, by its own distance from the camera. `setGeometryIdAt()` changes the shape. Before, the center of a 50 m tile picked the LOD for all props in the tile.
+- Why not `InstancedMesh`: one instanced mesh for each kind and LOD gives about 34 draw calls (17 kinds), and Three.js culls an instanced mesh as one object, so every instance draws. The merged tiles took 7 to 16 calls. The batch takes 1.
+- Wind: the prop material reads the world position from the batching matrix, and turns the world wind move into the template space with the inverse of the matrix (a yaw and a uniform scale). The trees sway as before.
+- Normals: a kit template with no normals gets its own computed normals. Before, a tile with one such prop computed the normals of every prop in the tile.
+- Unchanged: the colliders (`env.props`), the prop templates, the toon material, and the ink outlines.
+- `__atl.level.props` now gives `instances`, `kinds`, `drawn`, and `lod0`. The `tiles` and `lod0Tiles` fields are gone.
+- Measured (`reports/prop-perf/`, SwiftShader, 3 runs for each build, load average 9 to 27): the draw calls decrease by 6 to 15 (12% to 54%) on the low and phone tiers. The prop triangles decrease by 8% at the spawn and by 65% on the overview camera.
+- Not verified: a decrease of the 90th percentile frame time. The effect is smaller than the run-to-run spread on this harness. Without any props the spawn view still draws 48 calls and 116,816 triangles, so the props are not the main cost of a frame. The phone tier holds a median of 59.9 FPS on all four cameras, before and after. The low tier does not hold 55 FPS at the spawn on either build at this load.
+- High tier (ANGLE Metal, with the local markings hang fix on both builds): the draw calls decrease by 12 to 30 (8% to 32%), because the props also draw into the shadow map. The GPU holds 60 FPS on both builds.
+- Not measured: a real phone GPU.
+
+## 2026-11-03: The road markings match the street width by the sign name (#78 follow-up)
+
+- Problem: after #123 the high tier (`quality=high`) did not load. `streetIntersections()` now gives the city sign names (`signName`), but `roadMarkings()` still found the street width by the OSM `name`. For a renamed street the width was `-Infinity`, so the crosswalk bars went to infinity. `drapeMesh()` then looped over an infinite range of terrain cells. The low tier has no road markings, so the low-tier tests did not find it.
+- Fix: `widthOf()` in `src/level/geo/markings.js` matches `signName ?? name`. `drapeMesh()` in `src/level/geo/terrain.js` skips a triangle with a position that is not finite, so one bad triangle cannot stop the load.
+- Measured: the BeltLine markings have 8476 triangles again (3192 with the defect). The high tier loads to 5 frames in 10.4 s in headless Chromium (before: no load in 105 s).
+- Tests: `src/level/geo/markings.test.js` checks that each marking position and tile is finite on the real level, and that a street with a city name different from its OSM name gets finite crosswalks. Both tests fail without the fix.

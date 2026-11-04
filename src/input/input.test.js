@@ -34,6 +34,16 @@ describe("createInput", () => {
     expect(t.count()).toBe(0);
   });
 
+  it("releases every held key on reset", () => {
+    const t = fakeTarget();
+    const input = createInput({ target: t, getGamepads: () => [] });
+    t.fire("keydown", key("KeyW"));
+    expect(input.sample().push).toBe(true);
+    input.reset();
+    expect(input.sample().push).toBe(false);
+    input.dispose();
+  });
+
   it("uses the gamepad when one is connected and merges it with the keyboard", () => {
     const t = fakeTarget();
     let pads = [];

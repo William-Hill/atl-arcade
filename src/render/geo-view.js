@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { SURFACE_COLORS, boundsDistance, buildGeoMeshes, buildPropMeshes, meshBounds, unionBounds } from "../level/geo/geo-mesh.js";
+import { SURFACE_COLORS, boundsDistance, buildGeoMeshes, meshBounds, unionBounds } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
 import { facadeKit } from "../level/geo/facade-kit.js";
@@ -8,6 +8,7 @@ import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
 import { createMuralAtlas } from "./murals.js";
+import { createPropBatch } from "./prop-batch.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
 import concreteInfo from "../../assets/ground/concrete/set.json";
@@ -18,9 +19,9 @@ const KIT_URL = new URL("../../assets/kit/street-kit.glb", import.meta.url).href
 // The CC0 brick scan (scripts/landmark-textures.py), shared with the
 // landmarks, so the buildings and the landmarks show the same brick.
 const BRICK_URL = new URL("../../assets/landmarks/textures/brick/color.jpg", import.meta.url).href;
-// Prop tile distances from the camera to the tile center (m). Under
-// PROP_LOD0_DISTANCE a tile shows its detailed props, under
-// PROP_DRAW_DISTANCE its simple props, and past that nothing.
+// Prop distances from the camera to each prop (m). Under
+// PROP_LOD0_DISTANCE a prop shows its detailed shape, under
+// PROP_DRAW_DISTANCE its simple shape, and past that nothing.
 export const PROP_LOD0_DISTANCE = 60;
 export const PROP_DRAW_DISTANCE = 200;
 // The distance from the camera to the nearest edge of a surface tile past
@@ -416,6 +417,9 @@ export async function loadKitTemplates(url = KIT_URL) {
 // vertex shader moves each vertex by its sway weight (0 for trunks and kit
 // props), with a phase from the world position, so near trees do not move
 // as one. The shadow map does not get the wind; the move is under 0.3 m.
+// In the prop batch (src/render/prop-batch.js) the position is in the
+// template space: the batching matrix gives the world position, and its
+// inverse turns the world wind move into the template space.
 function createPropMaterial({ wind = true } = {}) {
   const material = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp({ soft: true }) });
   const time = { value: 0 };
@@ -428,9 +432,20 @@ function createPropMaterial({ wind = true } = {}) {
           "#include <begin_vertex>",
           [
             "#include <begin_vertex>",
-            "float windPhase = uWindTime * 1.3 + position.x * 0.17 + position.z * 0.13;",
-            "transformed.x += sway * (0.2 * sin(windPhase) + 0.05 * sin(windPhase * 2.7));",
-            "transformed.z += sway * 0.12 * cos(windPhase * 0.8);",
+            "#ifdef USE_BATCHING",
+            "vec3 windWorld = (batchingMatrix * vec4(position, 1.0)).xyz;",
+            "#else",
+            "vec3 windWorld = position;",
+            "#endif",
+            "float windPhase = uWindTime * 1.3 + windWorld.x * 0.17 + windWorld.z * 0.13;",
+            "vec3 windMove = sway * vec3(0.2 * sin(windPhase) + 0.05 * sin(windPhase * 2.7), 0.0, 0.12 * cos(windPhase * 0.8));",
+            "#ifdef USE_BATCHING",
+            // A yaw and a uniform scale: the inverse is the transpose over the scale squared.
+            "mat3 windBasis = mat3(batchingMatrix);",
+            "transformed += transpose(windBasis) * windMove / dot(windBasis[0], windBasis[0]);",
+            "#else",
+            "transformed += windMove;",
+            "#endif",
           ].join("\n"),
         );
     };
@@ -506,23 +521,20 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   }
   const facadeDepth = { tiles: depthTiles.length, near: 0, nearTriangles: 0 };
 
-  // Kit props load after the level shows. Each prop tile is one merged mesh;
-  // far tiles are hidden in update().
-  const propTiles = [];
-  const props = { count: 0, tiles: 0, loaded: false, error: null };
+  // Kit props load after the level shows. All props are one batch (one
+  // draw call); update() picks the LOD of each prop.
+  let propBatch = null;
+  const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null };
   function addProps(placements, templates) {
     // The procedural trees take the place of the two kit trees.
     const all = trees ? { ...templates, ...treeTemplates() } : templates;
     const placed = trees ? withProceduralTrees(placements) : placements;
-    for (const t of buildPropMeshes(placed, all)) {
-      const obj = addMesh(root, byId, `props-${t.tile}-lod${t.lod}`, geoGeometry(t.mesh), materials.props, { castShadow: true });
-      obj.userData.center = t.center;
-      obj.userData.lod = t.lod;
-      obj.visible = false;
-      propTiles.push(obj);
-    }
+    propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance });
+    root.add(propBatch.mesh);
+    byId.set("props", propBatch.mesh);
     props.count = placements.length;
-    props.tiles = propTiles.length / 2;
+    props.instances = propBatch.info.instances;
+    props.kinds = propBatch.info.kinds;
     props.loaded = true;
   }
 
@@ -530,7 +542,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     root,
     byId,
     get meshCount() {
-      return meshes.length + propTiles.length;
+      return meshes.length + (propBatch ? 1 : 0);
     },
     props,
     kit: kitParts.counts,
@@ -539,8 +551,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     terrainLod,
     facadeDepth,
     addProps,
-    // Shows each prop tile at one level of detail by its distance from the
-    // camera, and hides the far prop and depth tiles.
+    // Shows each prop at one level of detail by its distance from the
+    // camera, and hides the far props and depth tiles.
     update(cameraPosition, seconds = performance.now() / 1000) {
       propMaterial.time.value = seconds;
       let farTiles = 0;
@@ -569,15 +581,11 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       }
       facadeDepth.near = near;
       facadeDepth.nearTriangles = nearTriangles;
-      let lod0 = 0;
-      for (const obj of propTiles) {
-        const [cx, cz] = obj.userData.center;
-        const d = Math.hypot(cx - cameraPosition.x, cz - cameraPosition.z);
-        // drawDistance gates both levels: LOD0 below lod0Distance, LOD1 from there.
-        obj.visible = d < drawDistance && (obj.userData.lod === 0 ? d < lod0Distance : d >= lod0Distance);
-        if (obj.visible && obj.userData.lod === 0) lod0 += 1;
+      if (propBatch) {
+        propBatch.update(cameraPosition);
+        props.drawn = propBatch.info.drawn;
+        props.lod0 = propBatch.info.lod0;
       }
-      props.lod0Tiles = lod0;
     },
   };
 }

@@ -9,32 +9,32 @@
   "format": "GLB, Draco, no materials or textures. COLOR_0 linear vertex color (bark, moss, leaf color with baked crown occlusion), _SWAY (wind weight) and _LEAF custom attributes, crown-facing normals on the leaf cards. _LEAF is [u, v, code]: leaf cards carry the species leaf shape (src/render/leaf-cut.js LEAF_SHAPE_OF), bark carries -1 - bark kind; the shader draws the leaf outline and bark pattern, so no texture is downloaded.",
   "files": {
     "oak.glb": {
-      "bytes": 200104,
+      "bytes": 199476,
       "triangles": 2992,
       "variants": 3
     },
     "pine.glb": {
-      "bytes": 136392,
+      "bytes": 135976,
       "triangles": 2056,
       "variants": 3
     },
     "magnolia.glb": {
-      "bytes": 203276,
+      "bytes": 202584,
       "triangles": 3168,
       "variants": 3
     },
     "myrtle.glb": {
-      "bytes": 172540,
+      "bytes": 172340,
       "triangles": 2504,
       "variants": 3
     },
     "dogwood.glb": {
-      "bytes": 175208,
+      "bytes": 174636,
       "triangles": 2632,
       "variants": 3
     },
     "street.glb": {
-      "bytes": 180468,
+      "bytes": 180004,
       "triangles": 2752,
       "variants": 3
     }

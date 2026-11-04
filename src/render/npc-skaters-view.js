@@ -1,0 +1,175 @@
+import * as THREE from "three";
+import { createSkaterView } from "./skater-view.js";
+import { toonSkater } from "./toon.js";
+
+// Three.js view of the NPC skaters (#134). Each NPC is a clone of a skater
+// GLB (src/render/skater-model.js: one parse for each GLB), with its own
+// skeleton and its own clip mixer, played by the same skater view as the
+// player. Each NPC gets an outfit: a hue shift of the clothes in the base
+// color texture. The toon pass then gives it the same look as the player.
+
+// An outfit moves the texels whose hue is inside `band` (degrees) by
+// `shift` degrees, and scales their saturation by `sat`. Only texels with a
+// saturation of `minSat` or more change, so the skin and the white parts
+// keep their color. Nia: the band holds the green pants and wristband (her
+// jacket and her skin have the same hue, so the jacket keeps its color).
+// Marcus: the band holds the teal jacket, the navy shorts, and the wheels.
+export const OUTFITS = {
+  cobalt: { model: "nia", band: [70, 170], shift: 110, sat: 1.1, minSat: 0.18 },
+  plum: { model: "nia", band: [70, 170], shift: 175, sat: 1.15, minSat: 0.18 },
+  sunset: { model: "marcus", band: [150, 250], shift: 185, sat: 1.1, minSat: 0.2 },
+  lime: { model: "marcus", band: [150, 250], shift: -85, sat: 1.0, minSat: 0.2 },
+  berry: { model: "marcus", band: [150, 250], shift: 130, sat: 1.1, minSat: 0.2 },
+};
+
+// The NPC models are hidden beyond this distance from the camera (m). The
+// fog hides the city from about 220 m, and a skater is a few pixels tall
+// past 90 m.
+export const NPC_DRAW_DISTANCE = 90;
+
+// Pure: RGB (0..1) to HSV, with the hue in degrees. The shader does the same.
+export function rgbToHsv([r, g, b]) {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d > 1e-6) {
+    if (max === r) h = 60 * (((g - b) / d) % 6);
+    else if (max === g) h = 60 * ((b - r) / d + 2);
+    else h = 60 * ((r - g) / d + 4);
+  }
+  if (h < 0) h += 360;
+  return [h, max > 0 ? d / max : 0, max];
+}
+
+// Pure: true when the outfit changes a texel of this color.
+export function inOutfitBand(outfit, rgb) {
+  const [h, s] = rgbToHsv(rgb);
+  return h >= outfit.band[0] && h <= outfit.band[1] && s >= outfit.minSat;
+}
+
+const OUTFIT_GLSL = /* glsl */ `
+uniform vec4 uOutfit; // band start (deg), band end (deg), shift (deg), saturation scale
+uniform float uOutfitMinSat;
+vec3 outfitRgb2hsv(vec3 c) {
+  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  float e = 1.0e-10;
+  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+vec3 outfitHsv2rgb(vec3 c) {
+  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+`;
+
+// A copy of the GLB material with the outfit hook. toonMaterial() keeps
+// the hook and its program key, so the toon pass runs after it.
+export function outfitMaterial(source, outfit) {
+  const mat = source.clone();
+  mat.name = `${source.name ?? "skater"}-${outfit.name ?? "outfit"}`;
+  const band = new THREE.Vector4(outfit.band[0] / 360, outfit.band[1] / 360, outfit.shift / 360, outfit.sat);
+  mat.userData.outfit = band;
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uOutfit = { value: band };
+    shader.uniforms.uOutfitMinSat = { value: outfit.minSat };
+    shader.fragmentShader = shader.fragmentShader.replace("#include <common>", `#include <common>\n${OUTFIT_GLSL}`).replace(
+      "#include <map_fragment>",
+      `#include <map_fragment>
+{
+  // The map is in linear space here; the band test works on the sRGB color.
+  vec3 srgb = pow(max(diffuseColor.rgb, vec3(0.0)), vec3(1.0 / 2.2));
+  vec3 hsv = outfitRgb2hsv(srgb);
+  if (hsv.x >= uOutfit.x && hsv.x <= uOutfit.y && hsv.y >= uOutfitMinSat) {
+    hsv.x = fract(hsv.x + uOutfit.z);
+    hsv.y = clamp(hsv.y * uOutfit.w, 0.0, 1.0);
+    diffuseColor.rgb = pow(outfitHsv2rgb(hsv), vec3(2.2));
+  }
+}`,
+    );
+  };
+  mat.customProgramCacheKey = () => "npc-outfit";
+  return mat;
+}
+
+// Gives a cloned skater (cloneSkaterModel()) an outfit and the toon look.
+// `toon: false` keeps the GLB shading (?toon=0).
+export function dressNpc(loaded, outfit, { toon = true } = {}) {
+  loaded.root.traverse((o) => {
+    if (!o.isMesh) return;
+    o.material = Array.isArray(o.material) ? o.material.map((m) => outfitMaterial(m, outfit)) : outfitMaterial(o.material, outfit);
+  });
+  return toon ? toonSkater(loaded) : [];
+}
+
+// The view. `state` is from createNpcSkaters(). `load(model)` returns a
+// promise of a cloned skater (cloneSkaterModel()).
+export function createNpcSkatersView(state, { load, toon = true, drawDistance = NPC_DRAW_DISTANCE } = {}) {
+  const group = new THREE.Group();
+  group.name = "npc-skaters";
+  const views = new Map();
+  let loaded = 0;
+  let failed = 0;
+  for (const npc of state.npcs) {
+    const view = createSkaterView();
+    view.group.name = `npc-skater-${npc.id}`;
+    // The capsule stays hidden: an NPC shows only with its model.
+    view.group.visible = false;
+    group.add(view.group);
+    const entry = { view, ready: false, outfit: npc.spec.outfit };
+    views.set(npc.id, entry);
+    const outfit = { name: npc.spec.outfit, ...(OUTFITS[npc.spec.outfit] ?? OUTFITS.cobalt) };
+    load(npc.spec.model)
+      .then((model) => {
+        dressNpc(model, outfit, { toon });
+        view.attachModel(model);
+        entry.ready = true;
+        loaded += 1;
+      })
+      .catch((err) => {
+        failed += 1;
+        console.error(`NPC skater ${npc.id}: ${err?.message ?? err}`);
+      });
+  }
+
+  let drawn = 0;
+  return {
+    group,
+    get loaded() {
+      return loaded;
+    },
+    get failed() {
+      return failed;
+    },
+    get drawn() {
+      return drawn;
+    },
+    // Two draw calls for each NPC on screen: the skin and the ink hull.
+    get drawCalls() {
+      return drawn * (toon ? 2 : 1);
+    },
+    clipOf(id) {
+      return views.get(id)?.view.clip ?? null;
+    },
+    visible(id) {
+      return Boolean(views.get(id)?.view.group.visible);
+    },
+    // dt: the frame time. beat: { time, bpm } or null. eye: the camera position.
+    sync(next, dt, beat, eye) {
+      drawn = 0;
+      for (const npc of next.npcs) {
+        const entry = views.get(npc.id);
+        if (!entry) continue;
+        const p = npc.skater.position;
+        const near = !eye || Math.hypot(p[0] - eye.x, p[1] - eye.y, p[2] - eye.z) < drawDistance;
+        entry.view.group.visible = entry.ready && near;
+        if (!entry.view.group.visible) continue;
+        drawn += 1;
+        entry.view.sync(npc.skater, dt, beat);
+      }
+    },
+  };
+}

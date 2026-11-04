@@ -172,10 +172,14 @@ export function createCrowd(level, { seed = 1, mix = DEFAULT_MIX } = {}) {
 
 // Steps the crowd by dt. `nia` is Nia's position [x, y, z] (or null).
 // The NPCs move in order and each move checks the NPCs that moved before
-// it, so no two NPCs overlap after a step.
-export function stepCrowd(crowd, dt, nia = null) {
+// it, so no two NPCs overlap after a step. `others` is an optional list of
+// { x, z, radius, vx, vz }: the NPC skaters (#134). The crowd sees them in
+// the look-ahead, so it slows down behind them and passes them. They are
+// not in the overlap test, so a skater never freezes the crowd.
+export function stepCrowd(crowd, dt, nia = null, others = []) {
   const { lines } = crowd;
   const list = crowd.npcs.map((n) => ({ ...n }));
+  const seen = others.length ? list.concat(others) : list;
   let bumps = crowd.bumps;
   const nx = nia ? nia[0] : 0;
   const nz = nia ? nia[2] : 0;
@@ -192,9 +196,9 @@ export function stepCrowd(crowd, dt, nia = null) {
     // Slower NPCs ahead, and NPCs that come the other way in this lane.
     let blocked = false;
     let oncoming = false;
-    for (let j = 0; j < list.length; j += 1) {
+    for (let j = 0; j < seen.length; j += 1) {
       if (j === i) continue;
-      const o = list[j];
+      const o = seen[j];
       const dx = o.x - n.x;
       const dz = o.z - n.z;
       const along = dx * n.fx + dz * n.fz;

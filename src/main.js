@@ -4,7 +4,7 @@ import { createRenderer, fitToWindow } from "./render/renderer.js";
 import { createLevelLights, createLevelView } from "./render/level-view.js";
 import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
-import { fetchSkaterModel, loadSkaterModel } from "./render/skater-model.js";
+import { cloneSkaterModel, fetchSkaterModel, loadSkaterModel } from "./render/skater-model.js";
 import { createLoader } from "./ui/loader.js";
 import { toonSkater } from "./render/toon.js";
 import { createSilhouette } from "./render/silhouette.js";
@@ -42,6 +42,8 @@ import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
+import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
+import { createNpcSkatersView } from "./render/npc-skaters-view.js";
 import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
 import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
 import { createFactCardsView } from "./render/fact-cards-view.js";
@@ -215,6 +217,16 @@ const factCardSpots = () => facts.cards.map((c) => ({ id: c.id, position: c.posi
 
 const skaterView = createSkaterView();
 scene.add(skaterView.group);
+
+// NPC skaters (#134): other skaters on the trail, on the same controller as
+// the player. On by default on a geodata level; ?skaters=0 turns them off,
+// and ?skaters=1 turns them on for the greybox. Each skater GLB is parsed
+// once: the player and the NPCs share the parse.
+const skatersOn = params.get("skaters") === "1" || (geo && params.get("skaters") !== "0");
+let npcSkaters = skatersOn ? createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] }) : null;
+const npcBytes = (model) => (model === skaterName ? skaterBytes : fetchSkaterModel(model, null, { small: smallSkater }));
+const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model) => cloneSkaterModel(model, npcBytes(model)), toon: params.get("toon") !== "0" }) : null;
+if (npcSkatersView) scene.add(npcSkatersView.group);
 
 // A blob shadow under the skater for a level with no shadow map.
 let blob = null;
@@ -397,7 +409,8 @@ function simulate(dt) {
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
     if (goals.ended) events.push({ tick: run.tick, type: "run-end", ...goalsJson(goals, goalDef) });
   }
-  if (crowd) crowd = stepCrowd(crowd, dt, skater.position);
+  if (crowd) crowd = stepCrowd(crowd, dt, skater.position, npcSkaters ? skaterObstacles(npcSkaters) : []);
+  if (npcSkaters) npcSkaters = stepNpcSkaters(npcSkaters, dt, env, skaterEnv, { player: skater.position, crowd: crowd ? crowd.npcs : [], beat: beat.running ? { time: beat.now(), bpm: beat.bpm } : null });
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
   if (run.banked) {
     events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
@@ -428,6 +441,7 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
     results.hide();
   }
   if (crowd) crowd = createCrowd(level, { seed: npcSeed });
+  if (npcSkaters) npcSkaters = createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] });
   events.length = 0;
   if (follow) follow.reset(skater);
 }
@@ -552,6 +566,7 @@ function frame(now) {
   if (sky) sky.update(camera, now / 1000);
   if (streetSigns) streetSigns.update(camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
+  if (npcSkatersView) npcSkatersView.sync(npcSkaters, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null, camera.position);
   draw();
   frames += 1;
   if (frames === 1) {
@@ -692,6 +707,29 @@ window.__atl = {
             v.project(camera);
             return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
           }).map((n) => n.id);
+        },
+      }
+    : null,
+  // The NPC skaters (#134), or null with ?skaters=0 and on the greybox.
+  skaters: npcSkaters
+    ? {
+        get count() {
+          return npcSkaters.npcs.length;
+        },
+        get loaded() {
+          return npcSkatersView.loaded;
+        },
+        get failed() {
+          return npcSkatersView.failed;
+        },
+        get drawn() {
+          return npcSkatersView.drawn;
+        },
+        get drawCalls() {
+          return npcSkatersView.drawCalls;
+        },
+        get list() {
+          return npcSkaters.npcs.map((n) => ({ id: n.id, model: n.spec.model, outfit: n.spec.outfit, position: [...n.skater.position], state: n.skater.state, speed: n.skater.speed, style: n.skater.style ? n.skater.style.name : null, groundId: n.skater.groundId, clip: npcSkatersView.clipOf(n.id), visible: npcSkatersView.visible(n.id), stats: { ...n.stats } }));
         },
       }
     : null,

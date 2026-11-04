@@ -1,4 +1,4 @@
-// The asset lab capture for the art loop (agents/asset-judge.md).
+// The asset lab capture for the art loop (docs/art-loop/judge.md).
 //
 // It runs only when LAB_KIND is set, so the normal e2e run skips it:
 //

@@ -8,12 +8,14 @@
 //   --name <name>                  the level name. Default: the folder name.
 //   --title <text>                 the display name.
 //   --refresh                      fetch again, even when a cache exists.
+//   --refresh-furniture            fetch only the street furniture again.
 //   --offline                      never fetch; fail when the cache is missing.
 //   --sources <file>               the building source file. Default:
 //                                  data/buildings/<name>.json when it exists.
 //
 // The first run fetches from the Overpass API and writes the raw answer to
-// <out>/raw/overpass.json. Later runs read that file, so the script runs
+// <out>/raw/overpass.json, and the street furniture points to
+// <out>/raw/street-furniture.json. Later runs read those files, so the script runs
 // offline. The output is <out>/level.json: buildings (footprints with
 // heights), strips (streets, sidewalks, paths, the BeltLine trail), and areas
 // (parks), in local meters with the origin at the bbox center.
@@ -113,6 +115,43 @@ export function overpassQuery(b) {
     ");",
     "out body geom;",
   ].join("\n");
+}
+
+// The street furniture points (issue: props at real OSM positions). A
+// separate query and cache (raw/street-furniture.json), so a fetch of the
+// furniture does not fetch the buildings again.
+export const FURNITURE_TAGS = {
+  amenity: ["bench", "waste_basket", "bicycle_parking", "drinking_water"],
+  highway: ["street_lamp"],
+  barrier: ["bollard"],
+};
+
+export function furnitureQuery(b) {
+  const box = `${b.south},${b.west},${b.north},${b.east}`;
+  const lines = Object.entries(FURNITURE_TAGS).map(([k, vs]) => `  node["${k}"~"^(${vs.join("|")})$"](${box});`);
+  return ["[out:json][timeout:60];", "(", ...lines, ");", "out body;"].join("\n");
+}
+
+// The tags that the props use. The other tags stay in the raw file.
+const FURNITURE_KEEP = ["backrest", "material", "colour", "seats", "covered", "bicycle_parking", "capacity", "direction"];
+
+// Turns the raw furniture answer into level points: [{ id, kind, x, z, tags }].
+// `kind` is the OSM value (bench, waste_basket, ...). Points outside the box
+// are left out. Sorted by id.
+export function furniturePoints(raw, proj, box) {
+  const out = [];
+  for (const e of raw?.elements ?? []) {
+    if (e.type !== "node" || !e.tags) continue;
+    const kind = Object.entries(FURNITURE_TAGS).map(([k, vs]) => (vs.includes(e.tags[k]) ? e.tags[k] : null)).find(Boolean);
+    if (!kind) continue;
+    const [x, z] = proj.toLocal(e.lat, e.lon).map(round);
+    if (!inBox([x, z], box)) continue;
+    const item = { id: `n${e.id}`, kind, x, z };
+    const tags = Object.fromEntries(FURNITURE_KEEP.filter((k) => e.tags[k] !== undefined).map((k) => [k, e.tags[k]]));
+    if (Object.keys(tags).length) item.tags = tags;
+    out.push(item);
+  }
+  return out.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
 async function fetchOverpass(query) {
@@ -309,7 +348,8 @@ function inBox([x, z], box) {
 // `cityStreets` is raw/city-streets.json (scripts/city-streets.mjs). With it,
 // the street names come from the City of Atlanta centerlines (issue #78,
 // scripts/street-names.mjs).
-export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, sources = null, cityStreets = null }) {
+// `furniture` is raw/street-furniture.json: the OSM street furniture points.
+export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, sources = null, cityStreets = null, furniture = null }) {
   const origin = bboxCenter(bbox);
   const proj = createProjection(origin);
   const project = (g) => g.map(({ lat, lon }) => proj.toLocal(lat, lon).map(round));
@@ -467,6 +507,11 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     // Greybox-style objects (rails, ledges, ramps). Empty until M1-04.
     objects: [],
   };
+  if (furniture) {
+    // The OSM street furniture points. src/level/geo/props.js puts a prop at each.
+    level.furniture = furniturePoints(furniture, proj, box);
+    level.stats.furniture = Object.fromEntries(Object.values(FURNITURE_TAGS).flat().map((k) => [k, level.furniture.filter((f) => f.kind === k).length]));
+  }
   if (terrain) {
     level.terrain = terrain;
     level.stats.bridges = strips.filter((st) => st.bridge).length;
@@ -600,6 +645,40 @@ export function trailSpawn(strips) {
   return { position: p, yaw: Math.round(Math.atan2(-dz, dx) * 1000) / 1000 };
 }
 
+// Reads the cached Overpass answer when its query matches, or fetches it and
+// writes the answer and its meta file.
+async function cachedOverpass(rawFile, metaFile, query, bbox, args) {
+  if (existsSync(rawFile) && existsSync(metaFile) && !args.refresh) {
+    const meta = JSON.parse(readFileSync(metaFile, "utf8"));
+    if (meta.query === query) {
+      // Valid JSON is not enough: a cut or edited file must have the
+      // elements list, or it counts as a miss.
+      const cached = JSON.parse(readFileSync(rawFile, "utf8"));
+      if (Array.isArray(cached?.elements)) {
+        console.log(`build-block: cache hit ${rawFile} (fetched ${meta.fetchedAt})`);
+        return cached;
+      }
+      console.log(`build-block: ${rawFile} has no elements list; fetch again`);
+    } else console.log(`build-block: the cached query in ${metaFile} differs; fetch again`);
+  }
+  if (args.offline) throw new Error(`build-block: --offline and no matching cache at ${rawFile}`);
+  console.log(`build-block: fetch ${rawFile} from Overpass`);
+  const { json, endpoint } = await fetchOverpass(query);
+  writeFileSync(rawFile, JSON.stringify(json));
+  const meta = {
+    source: "OpenStreetMap via the Overpass API",
+    license: "ODbL 1.0",
+    attribution: "(c) OpenStreetMap contributors",
+    endpoint,
+    fetchedAt: new Date().toISOString(),
+    osmBase: json.osm3s?.timestamp_osm_base ?? null,
+    bbox,
+    query,
+  };
+  writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
+  return json;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   // The value options need a value: "--out" with nothing after it is an error,
@@ -623,31 +702,18 @@ async function main() {
   const query = overpassQuery(bbox);
   mkdirSync(rawDir, { recursive: true });
 
-  let raw = null;
-  if (existsSync(rawFile) && existsSync(metaFile) && !args.refresh) {
-    const meta = JSON.parse(readFileSync(metaFile, "utf8"));
-    if (meta.query === query) {
-      raw = JSON.parse(readFileSync(rawFile, "utf8"));
-      console.log(`build-block: cache hit ${rawFile} (fetched ${meta.fetchedAt})`);
-    } else console.log("build-block: the cached query differs from this bbox; fetch again");
-  }
-  if (!raw) {
-    if (args.offline) throw new Error(`build-block: --offline and no matching cache at ${rawFile}`);
-    console.log("build-block: fetch from Overpass");
-    const { json, endpoint } = await fetchOverpass(query);
-    raw = json;
-    writeFileSync(rawFile, JSON.stringify(raw));
-    const meta = {
-      source: "OpenStreetMap via the Overpass API",
-      license: "ODbL 1.0",
-      attribution: "(c) OpenStreetMap contributors",
-      endpoint,
-      fetchedAt: new Date().toISOString(),
-      osmBase: raw.osm3s?.timestamp_osm_base ?? null,
-      bbox,
-      query,
-    };
-    writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
+  const raw = await cachedOverpass(rawFile, metaFile, query, bbox, args);
+  // The street furniture: its own query and cache. --refresh-furniture
+  // fetches only the furniture again.
+  // With --offline and no furniture cache, the level builds with no
+  // furniture, as before the furniture query.
+  const furnitureArgs = { ...args, refresh: args.refresh || args["refresh-furniture"] };
+  const furnitureFile = resolve(rawDir, "street-furniture.json");
+  let furniture = null;
+  if (args.offline && !existsSync(furnitureFile)) console.log(`build-block: --offline and no ${furnitureFile}; no street furniture`);
+  else {
+    furniture = await cachedOverpass(furnitureFile, resolve(rawDir, "street-furniture-fetch.json"), furnitureQuery(bbox), bbox, furnitureArgs);
+    console.log(`build-block: ${furniture.elements.length} street furniture points`);
   }
 
   // Building heights from Overture (scripts/overture-heights.py), when present.
@@ -673,7 +739,7 @@ async function main() {
   const cityStreetsFile = resolve(rawDir, "city-streets.json");
   const cityStreets = existsSync(cityStreetsFile) ? JSON.parse(readFileSync(cityStreetsFile, "utf8")) : null;
   if (cityStreets) console.log(`build-block: ${cityStreets.segments.length} city centerline segments from ${cityStreetsFile}`);
-  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, sources, cityStreets });
+  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, sources, cityStreets, furniture });
   const outFile = resolve(outDir, "level.json");
   writeFileSync(outFile, `${JSON.stringify(level)}\n`);
   console.log(`build-block: wrote ${outFile}`);

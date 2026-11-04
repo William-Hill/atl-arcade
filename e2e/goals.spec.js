@@ -203,3 +203,16 @@ for (const size of [
     });
   });
 }
+
+// The fact cards on the trail (#17) count for the cards goal (#15).
+test("a fact card on the trail counts for the cards goal", async ({ page }) => {
+  await page.goto("/?mute=1&level=beltline-eastside");
+  await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5 && window.__atl.facts.total > 0, null, { timeout: 60000 });
+  await page.evaluate(() => window.__atl.resetSkater(window.__atl.facts.cards[0].position, 0));
+  await page.waitForFunction(() => window.__atl.facts.collected === 1, null, { timeout: 10000 });
+  await page.waitForFunction(() => window.__atl.goals.state.cards === 1, null, { timeout: 10000 });
+  // The test hook adds the same card again: it still counts once.
+  const id = await page.evaluate(() => window.__atl.facts.cards[0].id);
+  await page.evaluate((id) => window.__atl.goals.collectCard(id), id);
+  await page.waitForFunction(() => window.__atl.goals.state.cards === 1, null, { timeout: 5000 });
+});

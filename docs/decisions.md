@@ -904,3 +904,25 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 
 - In the level: on the trail, each second pair of benches is the painted bench (`bench_painted` in `src/level/geo/props.js`, solid radius 0.65 m). The BeltLine level has 14 kit benches and 13 painted benches. `loadPropTemplates()` in `src/render/geo-view.js` adds the GLB to the kit templates.
 - Not done: the painted bench has no LOD1, so it shows the 630-triangle shape at all distances. The Blender MCP add-on is at protocol 7 (the server expects 15), so its Poly Haven import is off. The models came from the Poly Haven API.
+
+## 2026-11-04: Street furniture at the OpenStreetMap positions
+
+- Decision: the BeltLine level puts a street prop at each bench, waste basket, bicycle parking, and street lamp that OpenStreetMap maps in the box. These props go before the fixed-interval rows. The fixed rows fill only where OSM has nothing near.
+- Source: a second Overpass query in `scripts/build-block.mjs` (`furnitureQuery()`) fetches the nodes with `amenity=bench|waste_basket|bicycle_parking|drinking_water`, `highway=street_lamp`, and `barrier=bollard`. The answer goes to `levels/beltline-eastside/raw/street-furniture.json`, and the query and the time go to `raw/street-furniture-fetch.json`. The fetch of 2026-11-04 (OSM base `2026-11-04T14:19:13Z`) has 57 points: 23 benches (12 with `backrest=yes`), 7 waste baskets, 14 bicycle parking, 5 drinking water, 4 street lamps, and 4 bollards.
+- Why a second query: a change to the main query fetches the buildings again. New OSM buildings then have no record in `data/buildings/beltline-eastside.json`, and the build stops. The second cache keeps the building data as it is. Use `--refresh-furniture` to fetch only the furniture again.
+- Level data: `level.json` has a `furniture` list. Each point has the OSM node id (`n<id>`), the OSM kind, the level `x` and `z`, and the useful tags (`backrest`, `material`, `capacity`, and others). `stats.furniture` has the count for each kind.
+- Kit props (`FURNITURE_PROP` in `src/level/geo/props.js`):
+  - A bench with `backrest=yes` is the Poly Haven painted bench (`bench_painted`). Another bench is the kit bench (`bench`).
+  - A waste basket is a `bin`. A bicycle parking is a `bike_rack`. A street lamp is a `lamp`.
+  - A drinking fountain and a bollard have no kit prop. They get no prop.
+- Turn: a bench front faces the nearest trail, path, or sidewalk. A bike rack turns along that way. A lamp arm reaches toward that way.
+- Rules: the 2.5 m gap and the open-ground rule stay. When the OSM point is on pavement or too near another prop, the prop moves away from the nearest way, 0.5 m at a time, up to 3 m (`FURNITURE_SHIFT`). The street signs go first, then the mapped props, then the fixed rows, then the canopy trees.
+- Fill: the fixed rows put no bench and no bin within 30 m, no trail lamp within 12 m, no sidewalk lamp within 18 m, and no bike rack within 90 m of a mapped prop of the same kind. Each distance is half the spacing of its row.
+- Result on the BeltLine level: 43 of the 57 points are props (10 kit benches, 12 painted benches, 7 bins, 10 bike racks, and 4 lamps). 14 of the 43 moved off the pavement. 14 points are refused:
+  - 9 have no kit prop (5 drinking fountains and 4 bollards).
+  - 4 bicycle parking points are on pavement, and no spot within 3 m is open ground.
+  - 1 bench (`n4879429399`) is less than 2.5 m from another prop.
+- The reason is the reason at the OSM point. `streetProps(level, sample, report)` writes these counts to `report.furniture` and lists each refused point in `report.refusedPoints`.
+- Prop counts with the canopy: before, 27 benches, 16 bins, 0 bike racks, and 696 lamps. After, 49 benches, 20 bins, 10 bike racks, and 700 lamps. The tree count does not change (5450). The fixed bike rack row put no rack on open ground before.
+- Attribution: the furniture is OSM data under the ODbL 1.0. The level attribution does not change.
+- Tests: `src/level/geo/props.test.js` checks that each mapped point is a prop of its kit kind within 3 m of the OSM point, that each bench faces its way, and that the fixed rows leave the mapped spots to OSM. `scripts/build-block.test.js` checks the query and the point data.

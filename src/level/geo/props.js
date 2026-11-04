@@ -2,6 +2,14 @@
 // the same props on every load, in node and in the browser.
 //
 // Placement rules (also in docs/decisions.md):
+// - OSM street furniture (level.furniture, from scripts/build-block.mjs):
+//   a prop goes at each mapped bench, waste basket, bicycle parking, and
+//   street lamp first (FURNITURE_PROP). A bench faces the nearest trail,
+//   path, or sidewalk. When the point is on pavement or too near another
+//   prop, the prop moves away from that way, 0.5 m at a time, up to
+//   FURNITURE_SHIFT m. A drinking fountain and a bollard have no kit prop.
+//   The fixed rules below put no bench, bin, bike rack, or lamp within half
+//   their spacing of a mapped prop of the same kind.
 // - Trail: a tree each 12 m on each side, 2.5 m past the edge; a lamp each
 //   24 m, sides in turn, 0.7 m past the edge; a bench each 60 m, 1.2 m past
 //   the edge and turned to face the trail, with a bin 2.5 m after it (each
@@ -44,6 +52,54 @@ export const PROP_SOLID = {
 };
 
 const MIN_GAP = 2.5;
+
+// The kit prop for each OSM furniture kind. null: no kit prop yet.
+export const FURNITURE_PROP = {
+  bench: "bench",
+  waste_basket: "bin",
+  bicycle_parking: "bike_rack",
+  street_lamp: "lamp",
+  drinking_water: null,
+  bollard: null,
+};
+
+// The largest move off the pavement for a mapped prop, in m.
+export const FURNITURE_SHIFT = 3;
+
+// The ways a mapped prop turns to.
+const FACE_KINDS = new Set(["trail", "path", "sidewalk"]);
+
+// The nearest point on the ways of `kinds` to (x, z):
+// { x, z, d, dx, dz } with (dx, dz) the way direction there, or null.
+export function nearestWay(strips, x, z, kinds = FACE_KINDS) {
+  let best = null;
+  for (const s of strips ?? []) {
+    if (!kinds.has(s.kind)) continue;
+    for (let i = 0; i < s.points.length - 1; i += 1) {
+      const [ax, az] = s.points[i];
+      const [bx, bz] = s.points[i + 1];
+      const len2 = (bx - ax) ** 2 + (bz - az) ** 2;
+      if (len2 < 1e-9) continue;
+      const t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / len2));
+      const px = ax + (bx - ax) * t;
+      const pz = az + (bz - az) * t;
+      const d = Math.hypot(px - x, pz - z);
+      if (!best || d < best.d) {
+        const len = Math.sqrt(len2);
+        best = { x: px, z: pz, d, dx: (bx - ax) / len, dz: (bz - az) / len, half: s.width / 2 };
+      }
+    }
+  }
+  return best;
+}
+
+// The bench yaw: the front (+z) faces the way. On the way center line, the
+// front faces across it.
+function faceYaw(way, x, z) {
+  if (!way) return 0;
+  if (way.d > 1e-3) return yawFrontToward(way.x - x, way.z - z);
+  return yawFrontToward(-way.dz, way.dx);
+}
 
 // The yaw that turns a template's +x toward (vx, vz). Same convention as
 // the skater: forward(yaw) = (cos yaw, -sin yaw).
@@ -88,9 +144,12 @@ function isOpen(sample, x, z, r, openIds) {
 }
 
 // Returns [{ kind, x, y, z, yaw }]. `sample` is the ground sampler of the
-// level without props. A tree also has a `species`. `level.canopy` (the
-// canopy grid, src/level/levels.js) adds the canopy trees.
-export function streetProps(level, sample) {
+// level without props. A tree also has a `species`, and a mapped prop has
+// its OSM id in `osm`. `level.canopy` (the canopy grid, src/level/levels.js)
+// adds the canopy trees. With a `report` object, report.furniture gets the
+// counts of the mapped points (placed, moved, refused by reason), and
+// report.refusedPoints lists each refused point.
+export function streetProps(level, sample, report = null) {
   const areaIds = new Set((level.areas ?? []).map((a) => a.id));
   // A sign may also stand on a sidewalk.
   const signIds = new Set([...areaIds, ...(level.strips ?? []).filter((s) => s.kind === "sidewalk").map((s) => s.id)]);
@@ -107,9 +166,13 @@ export function streetProps(level, sample) {
     }
     return true;
   }
+  let why = null;
   function put(kind, x, z, yaw = 0, scale = 1, extra = null) {
     const solid = PROP_SOLID[kind];
-    if (!free(x, z) || !isOpen(sample, x, z, solid ? solid.r + 0.3 : 0.5, kind === "street_sign" ? signIds : areaIds)) return false;
+    why = null;
+    if (!free(x, z)) why = "gap";
+    else if (!isOpen(sample, x, z, solid ? solid.r + 0.3 : 0.5, kind === "street_sign" ? signIds : areaIds)) why = "surface";
+    if (why) return false;
     const k = key(x, z);
     if (!taken.has(k)) taken.set(k, []);
     taken.get(k).push([x, z]);
@@ -147,6 +210,65 @@ export function streetProps(level, sample) {
     for (const [x, z] of cornerSpots(ix)) if (put("street_sign", x, z, 0, 1, extra)) break;
   }
 
+  // The OSM street furniture, before the fixed rules. `mapped` holds the
+  // placed props by kind, for the "nothing near" test of the fixed rules.
+  const mapped = new Map();
+  const result = { points: 0, placed: 0, moved: 0, refused: {}, byKind: {} };
+  const refuse = (f, reason) => {
+    result.refused[reason] = (result.refused[reason] ?? 0) + 1;
+    if (report) (report.refusedPoints ??= []).push({ id: f.id, kind: f.kind, reason });
+  };
+  for (const f of level.furniture ?? []) {
+    result.points += 1;
+    const base = FURNITURE_PROP[f.kind];
+    if (!base) {
+      refuse(f, "no-kit-prop");
+      continue;
+    }
+    // Each bench with a back rest is the painted bench (it has a back).
+    const kind = f.kind === "bench" && f.tags?.backrest === "yes" ? "bench_painted" : base;
+    const way = nearestWay(level.strips, f.x, f.z);
+    // Away from the way: the first try is the OSM point.
+    let ax = 0;
+    let az = 0;
+    if (way && way.d > 1e-3) {
+      ax = (f.x - way.x) / way.d;
+      az = (f.z - way.z) / way.d;
+    } else if (way) {
+      ax = -way.dz;
+      az = way.dx;
+    }
+    let p = null;
+    let firstWhy = null;
+    for (let shift = 0; shift <= FURNITURE_SHIFT + 1e-9 && !p; shift += 0.5) {
+      const x = f.x + ax * shift;
+      const z = f.z + az * shift;
+      let yaw = 0;
+      if (kind === "bench" || kind === "bench_painted") yaw = faceYaw(nearestWay(level.strips, x, z), x, z);
+      else if (kind === "bike_rack" && way) yaw = yawToward(way.dx, way.dz);
+      else if (kind === "lamp" && way) yaw = yawToward(-ax, -az);
+      p = put(kind, x, z, yaw, 1, { osm: f.id });
+      firstWhy ??= why;
+      if (p && shift > 0) result.moved += 1;
+    }
+    if (!p) {
+      refuse(f, firstWhy);
+      continue;
+    }
+    result.placed += 1;
+    result.byKind[kind] = (result.byKind[kind] ?? 0) + 1;
+    if (!mapped.has(kind)) mapped.set(kind, []);
+    mapped.get(kind).push([p.x, p.z]);
+  }
+  if (report) report.furniture = result;
+  // True when a mapped prop of `kind` is within `r` m: the fixed rule then
+  // leaves the spot to OSM.
+  function mappedNear(kinds, x, z, r) {
+    for (const k of kinds) for (const [mx, mz] of mapped.get(k) ?? []) if (Math.hypot(mx - x, mz - z) < r) return true;
+    return false;
+  }
+  const BENCHES = ["bench", "bench_painted"];
+
   const strips = (level.strips ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));
   for (const s of strips) {
     const half = s.width / 2;
@@ -165,6 +287,7 @@ export function streetProps(level, sample) {
         const nx = -dz * side;
         const nz = dx * side;
         // The lamp arm (+x) reaches over the trail.
+        if (mappedNear(["lamp"], x, z, 12)) return;
         put("lamp", x + nx * (half + 0.7), z + nz * (half + 0.7), yawToward(-nx, -nz));
       });
       along(s.points, 60, 20, (x, z, dx, dz, i) => {
@@ -177,9 +300,11 @@ export function streetProps(level, sample) {
         // come in pairs, one on each side; each second pair is the painted
         // bench.
         const kind = Math.floor(i / 2) % 2 === 1 ? "bench_painted" : "bench";
-        if (put(kind, bx, bz, yawFrontToward(-nx, -nz))) put("bin", bx + dx * 2.5, bz + dz * 2.5, 0);
+        if (mappedNear(BENCHES, bx, bz, 30)) return;
+        if (put(kind, bx, bz, yawFrontToward(-nx, -nz)) && !mappedNear(["bin"], bx, bz, 30)) put("bin", bx + dx * 2.5, bz + dz * 2.5, 0);
       });
       along(s.points, 180, 90, (x, z, dx, dz) => {
+        if (mappedNear(["bike_rack"], x, z, 90)) return;
         put("bike_rack", x + dz * (half + 1.5), z - dx * (half + 1.5), yawToward(dx, dz));
       });
     } else if (s.kind === "sidewalk") {
@@ -194,6 +319,7 @@ export function streetProps(level, sample) {
         }
       });
       along(s.points, 36, 18, (x, z, dx, dz) => {
+        if (mappedNear(["lamp"], x, z, 18)) return;
         for (const side of [1, -1]) {
           const d = half + 0.5;
           const nx = -dz * side;

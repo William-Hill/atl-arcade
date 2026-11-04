@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createGeoGroundSampler } from "./geo-ground.js";
 import { createLevelEnv } from "../ground.js";
-import { levelProps, PROP_SOLID, roofProps, streetProps, yawFrontToward, yawToward } from "./props.js";
+import { FURNITURE_PROP, levelProps, nearestWay, PROP_SOLID, roofProps, streetProps, yawFrontToward, yawToward } from "./props.js";
 import { chooseStyle, hash32, seededRandom, STYLES, wallColor } from "./styles.js";
 import { terrainOf } from "./terrain.js";
 
@@ -90,6 +90,66 @@ describe("prop placement", () => {
     expect(g.height).toBeCloseTo(ground + PROP_SOLID.tree_round.h, 6);
     expect(createLevelEnv(LEVEL, { props: false }).sampleGround(tree.x, tree.z).height).toBeLessThan(ground + 0.1);
     expect(levelProps(LEVEL).length).toBe(env.props.length);
+  });
+
+  it("puts a prop at the OSM street furniture points first", () => {
+    const report = {};
+    const ps = streetProps(LEVEL, sample, report);
+    const f = report.furniture;
+    expect(f.points).toBe(LEVEL.furniture.length);
+    expect(f.placed + Object.values(f.refused).reduce((a, b) => a + b, 0)).toBe(f.points);
+    // Only the kinds with no kit prop, and a few points on pavement, are refused.
+    expect(f.placed).toBeGreaterThanOrEqual(40);
+    const noKit = LEVEL.furniture.filter((p) => !FURNITURE_PROP[p.kind]).length;
+    expect(f.refused["no-kit-prop"]).toBe(noKit);
+    const byId = new Map(LEVEL.furniture.map((p) => [p.id, p]));
+    const placed = ps.filter((p) => p.osm);
+    expect(placed.length).toBe(f.placed);
+    for (const p of placed) {
+      const src = byId.get(p.osm);
+      // The prop is the kit prop of its kind, at most 3 m from the OSM point.
+      expect(p.kind === "bench_painted" ? "bench" : p.kind).toBe(FURNITURE_PROP[src.kind]);
+      expect(Math.hypot(p.x - src.x, p.z - src.z)).toBeLessThanOrEqual(3.01);
+      if (p.kind === "bench" || p.kind === "bench_painted") {
+        // The bench front (+z turned by yaw) faces the nearest way.
+        const w = nearestWay(LEVEL.strips, p.x, p.z);
+        if (w.d > 0.1) expect(Math.sin(p.yaw) * (w.x - p.x) + Math.cos(p.yaw) * (w.z - p.z)).toBeGreaterThan(0);
+        expect(p.kind === "bench_painted").toBe(src.tags?.backrest === "yes");
+      }
+    }
+  });
+
+  it("makes each mapped point a prop in a small level, and the fixed rule fills only where OSM has nothing near", () => {
+    const trail = { id: "t", kind: "trail", width: 4, points: [[0, -200], [0, 200]] };
+    const base = { surfaces: LEVEL.surfaces, bounds: { minX: -300, maxX: 300, minZ: -300, maxZ: 300 }, strips: [trail], areas: [], buildings: [] };
+    const s = createGeoGroundSampler(base);
+    const furniture = [
+      { id: "n1", kind: "bench", x: 4, z: 0, tags: { backrest: "yes" } },
+      { id: "n2", kind: "waste_basket", x: -4, z: 10 },
+      // On the trail: it moves off the trail, away from the center line.
+      { id: "n3", kind: "bicycle_parking", x: 1, z: 40 },
+      { id: "n4", kind: "drinking_water", x: 4, z: 60 },
+    ];
+    const report = {};
+    const ps = streetProps({ ...base, furniture }, s, report);
+    const bench = ps.find((p) => p.osm === "n1");
+    expect(bench).toMatchObject({ kind: "bench_painted", x: 4, z: 0 });
+    // The front faces -x, toward the trail.
+    expect(Math.sin(bench.yaw)).toBeCloseTo(-1, 6);
+    expect(ps.find((p) => p.osm === "n2")).toMatchObject({ kind: "bin", x: -4, z: 10 });
+    const rack = ps.find((p) => p.osm === "n3");
+    expect(rack.kind).toBe("bike_rack");
+    expect(rack.x).toBeGreaterThan(2);
+    expect(report.furniture).toMatchObject({ points: 4, placed: 3, moved: 1, refused: { "no-kit-prop": 1 } });
+    // No fixed-rule bench within 30 m of the mapped bench, or bike rack within 90 m of the mapped rack.
+    for (const p of ps.filter((q) => !q.osm)) {
+      if (p.kind.startsWith("bench")) expect(Math.hypot(p.x - 4, p.z)).toBeGreaterThanOrEqual(30);
+      if (p.kind === "bike_rack") expect(Math.hypot(p.x - rack.x, p.z - rack.z)).toBeGreaterThanOrEqual(90);
+    }
+    // Without the OSM points, the fixed rule puts a bench near z = 0.
+    const plain = streetProps(base, s);
+    expect(plain.some((p) => p.kind.startsWith("bench") && Math.hypot(p.x, p.z) < 30)).toBe(true);
+    expect(plain.some((p) => p.osm)).toBe(false);
   });
 
   it("turns templates the same way as the skater yaw", () => {

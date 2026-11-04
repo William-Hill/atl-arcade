@@ -13,6 +13,7 @@ import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkaterEnv } from "./sim/skate/skater.js";
 import { createRun, stepRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
+import { createMinimap } from "./ui/minimap.js";
 import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
 import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
@@ -294,6 +295,10 @@ const input = createInput({ target: window, touch });
 let run = createRun(level);
 let skater = run.skater;
 const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch) });
+// The minimap (#86) on a geodata level. ?minimap=0 leaves it out, and
+// ?minimap=north or ?minimap=heading sets the mode.
+const minimapParam = params.get("minimap");
+const minimap = geo && minimapParam !== "0" ? createMinimap(document.body, level, { mode: ["north", "heading"].includes(minimapParam) ? minimapParam : undefined }) : null;
 // Simulation events for the tests and the playtest harness.
 const events = [];
 
@@ -432,6 +437,7 @@ function frame(now) {
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
   }
   hud.update(run, now, beat.running ? beat.phase() : null);
+  if (minimap) minimap.update(skater);
   if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
   if (blob) {
     // With the skater height, as the controller samples: under a bridge the
@@ -522,6 +528,17 @@ window.__atl = {
   get skater() {
     return skater;
   },
+  // The minimap (#86), or null on the greybox and with ?minimap=0.
+  minimap: minimap
+    ? {
+        get state() {
+          return { ...minimap.state };
+        },
+        icons: minimap.icons,
+        setMode: minimap.setMode,
+        setHidden: minimap.setHidden,
+      }
+    : null,
   // The crowd (M1-09), or null on the greybox and with ?npcs=0.
   npcs: crowd
     ? {

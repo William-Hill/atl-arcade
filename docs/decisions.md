@@ -672,6 +672,19 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Test: `e2e/window-rooms.spec.js` turns the fixed camera in place by 0.9 degrees and maps each pixel to the first frame. For a pure rotation the mapped pixel sees the same world ray. With the fix, 21 of 53568 pixels changed (0.04%). With the old shader, 2696 of 53568 pixels changed (5.03%), and the test failed. The limit is 0.5%.
 - Not changed: the ink lines on thin far ledges (`src/render/post.js`) can still shimmer a little.
 
+## 2026-11-03: The minimap (#86, #108)
+
+- Decision: the minimap is a 2D canvas, not a second 3D render. `src/ui/minimap.js` draws the level one time to a base image: the park areas, the strips (sidewalk, street, path, and the trail last), and the building footprints. Each frame draws only the base image part around the skater, with a move and a turn, then the landmark icons and the skater arrow.
+- Pure math: `src/ui/minimap-math.js` converts world coordinates to map pixels (`worldToMap`), makes the view transform for north up and heading up (`viewTransform`), and finds the icon points (`mapLandmarks`). Vitest tests it in `src/ui/minimap-math.test.js`.
+- Base image: 1 px per meter, and the largest side is 2048 px or less. The Eastside level gives 971x1946 px. The view shows 240 m across.
+- Draw cost: the map draws again only when the skater moves by 0.25 view pixels or more, or turns, or the mode changes (`needsRedraw`). A still skater gives no draws.
+- Icons: the landmark buildings of `src/level/geo/landmarks.js` get a gold disc with initials ("PCM", "KSM"), and their footprints are gold. Each named park gets a green triangle. The skater is a white arrow. The trail is the widest line (9 m or more). Thus no item shows by color only. The canvas has `role="img"` and an `aria-label` that names the level, the mode, and the icons.
+- Controls: the "N" button and the N key change north up and heading up. In heading up, an "N" mark on the edge shows north. The "×" button and the M key hide the map, and a "Map" button shows it again. The choice stays in `localStorage` (key `atl.minimap`). `?minimap=0` leaves the map out, and `?minimap=north` or `?minimap=heading` sets the mode.
+- Layout: a desktop shows a 180 px map in the bottom right corner. The key help line on the bottom left gets a max width, so the map does not cover it. A touch screen shows the map in the top right corner under the skater select. A compact screen shows it 76 px from the top, with a size of `clamp(72px, 100vh - 268px - safe areas, 120px)`, so it ends above the touch buttons. Every position adds the safe-area inset.
+- Only a geodata level has the map. The greybox has no footprints or trail.
+- Tests: `e2e/minimap.spec.js` checks the trail pixels, the arrow, the icons, the keys, the saved choice, no draws for a still skater, and no overlap with the touch controls, the HUD, the credit, or the skater select at 390x844 and 844x390. `e2e/phone-layout.spec.js` also lists the map in its overlap check. Screenshots: `e2e/__screenshots__/minimap-desktop.png`, `minimap-desktop-close.png`, `minimap-phone-portrait.png`, and `minimap-phone-landscape.png`.
+- FPS: not verified against the 55 FPS gate. At a load average of 15 to 19 (other sessions on the same machine), `npm run playtest:beltline` gave a median of 29.9 FPS with `?minimap=0` and 29.9 FPS with the map. Thus the map adds no measurable cost, but the gate run must be done again on an idle machine. Reports: `reports/playtest-beltline-eastside-2026-11-04-01-11-17.json` (no map) and `reports/playtest-beltline-eastside-2026-11-04-01-12-03.json` (map). In the browser, one map draw took 0.1 ms or less (p95 of 300 draws), and the base image took 3.5 ms one time.
+
 ## 2026-11-03: The far terrain uses the mesh bounds, not the tile square (#87)
 
 - Problem: on the low tier, the coarse far terrain covered Nia to the waist at the BeltLine spawn. With `?farterrain=0` she showed in full.

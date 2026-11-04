@@ -167,6 +167,44 @@ describe("traffic", () => {
   });
 });
 
+describe("a lane that links to its own start", () => {
+  // A divided road with ends far from the level edge: each one-way lane has
+  // no link, so a car goes on at the start of the same lane. A cross street
+  // at x = 0 gives each lane one stop line.
+  const LOOP = {
+    ...TOWN,
+    strips: [
+      { id: "d1a", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[-150, 100], [0, 100]] },
+      { id: "d1b", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[0, 100], [150, 100]] },
+      { id: "d2a", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[150, 120], [0, 120]] },
+      { id: "d2b", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[0, 120], [-150, 120]] },
+      { id: "x1", kind: "street", name: "Cross Street", highway: "residential", width: 8, points: [[0, 80], [0, 100], [0, 120], [0, 140]] },
+    ],
+  };
+
+  it("stops at the stop line again on each lap", () => {
+    const t = createTraffic(LOOP, { streets: [["Divided Parkway"]], perKm: 1 });
+    const lane = t.lanes[0];
+    expect(lane.oneway).toBe(true);
+    expect(lane.next).toBe(lane.id);
+    expect(lane.stops).toHaveLength(1);
+    const car = t.cars.find((c) => c.lane === lane.id);
+    const st = lane.stops[0];
+    let laps = 0;
+    let last = car.s;
+    const stopsPerLap = new Map();
+    for (let i = 0; i < 60 * 240 && laps < 3; i += 1) {
+      stepTraffic(t, DT, null);
+      if (car.s < last - 1) laps += 1;
+      last = car.s;
+      if (car.speed === 0 && Math.abs(car.s + CAR_SIZE[car.kind].length / 2 - st.sStop) < 1) stopsPerLap.set(laps, true);
+    }
+    expect(laps).toBeGreaterThanOrEqual(2);
+    expect(stopsPerLap.get(1)).toBe(true);
+    expect(stopsPerLap.get(2)).toBe(true);
+  });
+});
+
 describe("car height", () => {
   it("eases over a step in the street, never more than maxClimb in one step", () => {
     // A 0.8 m step at x = 0 (a bridge joint).

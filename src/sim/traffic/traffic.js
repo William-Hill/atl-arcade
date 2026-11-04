@@ -342,12 +342,13 @@ function skaterGap(car, skater) {
   return carBodyDistance(car, skater[0], skater[2]);
 }
 
-// Moves a car to arc length s on a lane (the pose and the height). On a
-// new lane the height starts again from the lane.
-function place(state, car, laneId, s) {
+// Moves a car to arc length s on a lane (the pose and the height). After a
+// wrap past the lane end (to the next lane, or to the start of the same
+// lane) the height starts again from the lane.
+function place(state, car, laneId, s, wrapped = false) {
   const lane = state.lanes[laneId];
   const pose = lanePose(lane, s);
-  const same = laneId === car.lane;
+  const same = !wrapped;
   const target = state.heightAt(pose.x, pose.z, same ? car.y : -Infinity, lane);
   car.lane = laneId;
   car.s = s;
@@ -482,7 +483,9 @@ export function stepTraffic(state, dt, skater = null) {
     if (ds > 0) {
       let s = car.s + ds;
       let laneId = car.lane;
-      if (s > lane.length) {
+      // A lane can link to its own start, so a wrap is not a lane change.
+      const wrapped = s > lane.length;
+      if (wrapped) {
         s += lane.nextS - lane.length;
         laneId = lane.next;
         if (car.box >= 0) {
@@ -490,8 +493,8 @@ export function stepTraffic(state, dt, skater = null) {
           car.box = -1;
         }
       }
-      place(state, car, laneId, s);
-      if (laneId !== lane.id) car.next = nextStop(state.lanes[laneId], s + half);
+      place(state, car, laneId, s, wrapped);
+      if (wrapped) car.next = nextStop(state.lanes[laneId], s + half);
     }
 
     // Out of the intersection: free it.

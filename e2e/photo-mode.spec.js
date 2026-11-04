@@ -181,7 +181,9 @@ test("photo mode on the low tier: the button opens it, with no blur", async ({ p
   await open(page, "quality=low&landmarks=0&props=0");
   expect(await page.evaluate(() => window.__atl.quality)).toBe("low");
 
-  await waitFrames(page, 20);
+  // The follow camera moves for approximately 30 frames after the load, so
+  // wait until it stops before the test records its position.
+  await waitFrames(page, 60);
   const followCam = await page.evaluate(() => window.__atl.cameraPosition);
   await page.locator("#photo-toggle").click();
   await waitFrames(page, 2);

@@ -42,14 +42,24 @@ for (const url of FILES) {
     vertices += g.attributes.position.count;
     for (const k of ["map", "normalMap", "metalnessMap", "roughnessMap"]) if (o.material[k]) textures.add(`${k} ${o.material[k].image.width}`);
   });
-  const box = new THREE.Box3().setFromObject(model);
+  const nodes = [];
+  model.traverse((o) => /^(wheel|steer)_/.test(o.name) && nodes.push(o.name));
+  // Rigged vehicles: steer the front wheels and pose the roll clip a sixth of a turn in.
+  model.traverse((o) => o.name.startsWith("steer_") && (o.rotation.y = 0.4));
+  if (gltf.animations.length) {
+    const mixer = new THREE.AnimationMixer(model);
+    for (const clip of gltf.animations) mixer.clipAction(clip).play();
+    mixer.update(1 / 6);
+  }
+  model.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(model, true);
   const size = box.getSize(new THREE.Vector3());
   // Line up along x, side on to the camera, front (+z) turned to the right.
   model.rotation.y = Math.PI / 2;
   model.position.x = x + size.z / 2;
   x += size.z + 1.5;
   scene.add(model);
-  result.files.push({ url, triangles, vertices, size: size.toArray().map((v) => +v.toFixed(3)), minY: +box.min.y.toFixed(3), textures: [...textures], draco: !!gltf.parser.json.extensionsUsed?.includes("KHR_draco_mesh_compression") });
+  result.files.push({ url, triangles, vertices, size: size.toArray().map((v) => +v.toFixed(3)), minY: +box.min.y.toFixed(3), textures: [...textures], nodes, animations: gltf.animations.map((a) => `${a.name} ${a.duration.toFixed(2)}s ${a.tracks.length} tracks`), draco: !!gltf.parser.json.extensionsUsed?.includes("KHR_draco_mesh_compression") });
 }
 const cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 500);
 cam.position.set(x / 2, x * 0.35, x * 0.95);

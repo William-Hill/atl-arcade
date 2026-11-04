@@ -1,9 +1,9 @@
 {
   "date": "2026-11-04",
-  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine), then Blender 4.2.23 LTS headless (scripts/blender/street_props.py): join, weld UV seams, drop floating parts, recalc normals, smooth by angle 30 deg, scale to meters, origin at bottom center, +z forward / +y up, Draco GLB export",
+  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine), then Blender 5.2.3 LTS headless (scripts/blender/street_props.py): join, weld UV seams, drop floating parts, recalc normals, smooth by angle 30 deg, scale to meters, origin at bottom center, +z forward / +y up, Draco GLB export",
   "pipeline": "node scripts/assets/meshy-street-props.mjs (needs MESHY_API_KEY in env; raw downloads go to .meshy-raw/, git-ignored)",
   "license": "Generated with the project owner's Meshy account; usage is governed by Meshy's terms of service for that account.",
-  "format": "GLB, one mesh, POSITION + NORMAL + TEXCOORD_0, PBR material with 3 JPEG textures, KHR_draco_mesh_compression (needs a DRACOLoader, as in src/render/skater-model.js)",
+  "format": "GLB, POSITION + NORMAL + TEXCOORD_0, PBR material with 3 JPEG textures, KHR_draco_mesh_compression (needs a DRACOLoader, as in src/render/skater-model.js). sedan and pickup: body plus 4 wheel meshes and the wheels_roll clip; the rest: one mesh",
   "style": "Realistic mid-2010s Atlanta street, no branding (prompts forbid logos and text)",
   "verify": "node scripts/assets/street-props-check.mjs --out preview.png <glb...> loads the files in headless Chromium with GLTFLoader + DRACOLoader",
   "asset": "Bus stop street furniture set for Skate ATL: shelter, planter, bench.",
@@ -27,7 +27,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bus_shelter.glb <out> 4.0",
       "triangles": 6393,
       "triangles_from_meshy": 6420,
-      "bytes": 435948,
+      "bytes": 459596,
       "bounds_m": {
         "x": [
           -1.308,
@@ -70,7 +70,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/planter.glb <out> 1.2",
       "triangles": 1981,
       "triangles_from_meshy": 2085,
-      "bytes": 324092,
+      "bytes": 332384,
       "bounds_m": {
         "x": [
           -0.596,
@@ -108,7 +108,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bench.glb <out> 1.8",
       "triangles": 3019,
       "triangles_from_meshy": 3019,
-      "bytes": 326268,
+      "bytes": 333012,
       "bounds_m": {
         "x": [
           -0.41,

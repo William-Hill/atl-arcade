@@ -1,9 +1,9 @@
 {
   "date": "2026-11-04",
-  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine), then Blender 4.2.23 LTS headless (scripts/blender/street_props.py): join, weld UV seams, drop floating parts, recalc normals, smooth by angle 30 deg, scale to meters, origin at bottom center, +z forward / +y up, Draco GLB export",
+  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine), then Blender 5.2.3 LTS headless (scripts/blender/street_props.py): join, weld UV seams, drop floating parts, recalc normals, smooth by angle 30 deg, scale to meters, origin at bottom center, +z forward / +y up, Draco GLB export",
   "pipeline": "node scripts/assets/meshy-street-props.mjs (needs MESHY_API_KEY in env; raw downloads go to .meshy-raw/, git-ignored)",
   "license": "Generated with the project owner's Meshy account; usage is governed by Meshy's terms of service for that account.",
-  "format": "GLB, one mesh, POSITION + NORMAL + TEXCOORD_0, PBR material with 3 JPEG textures, KHR_draco_mesh_compression (needs a DRACOLoader, as in src/render/skater-model.js)",
+  "format": "GLB, POSITION + NORMAL + TEXCOORD_0, PBR material with 3 JPEG textures, KHR_draco_mesh_compression (needs a DRACOLoader, as in src/render/skater-model.js). sedan and pickup: body plus 4 wheel meshes and the wheels_roll clip; the rest: one mesh",
   "style": "Realistic mid-2010s Atlanta street, no branding (prompts forbid logos and text)",
   "verify": "node scripts/assets/street-props-check.mjs --out preview.png <glb...> loads the files in headless Chromium with GLTFLoader + DRACOLoader",
   "asset": "Street traffic vehicles for Skate ATL: sedan, bus, pickup. Lengths match CAR_SIZE in src/sim/traffic/traffic.js.",
@@ -27,7 +27,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/sedan.glb <out> 4.6",
       "triangles": 11034,
       "triangles_from_meshy": 11035,
-      "bytes": 579664,
+      "bytes": 607772,
       "bounds_m": {
         "x": [
           -0.984,
@@ -44,7 +44,56 @@
       },
       "scale_applied": 4.8188,
       "removed_parts": {},
-      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG"
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "blender_wheels": "blender -b -P scripts/blender/vehicle_wheels.py -- <street_props output> <out>",
+      "rig": {
+        "nodes": "body > steer_FL > wheel_FL, body > steer_FR > wheel_FR, body > wheel_RL, body > wheel_RR",
+        "usage": "rotate steer_* about y to steer; spin wheel_* about local x (positive rolls forward, toward +z)",
+        "animation": "wheels_roll: one wheel turn per second, linear, loopable",
+        "body_triangles": 9084,
+        "wheels": {
+          "wheel_FL": {
+            "triangles": 453,
+            "radius_m": 0.298,
+            "width_m": 0.176,
+            "center_m": [
+              -0.742,
+              0.298,
+              1.511
+            ]
+          },
+          "wheel_FR": {
+            "triangles": 522,
+            "radius_m": 0.298,
+            "width_m": 0.177,
+            "center_m": [
+              0.759,
+              0.298,
+              1.511
+            ]
+          },
+          "wheel_RL": {
+            "triangles": 466,
+            "radius_m": 0.298,
+            "width_m": 0.176,
+            "center_m": [
+              -0.742,
+              0.298,
+              -1.189
+            ]
+          },
+          "wheel_RR": {
+            "triangles": 509,
+            "radius_m": 0.298,
+            "width_m": 0.177,
+            "center_m": [
+              0.759,
+              0.298,
+              -1.189
+            ]
+          }
+        }
+      }
     },
     "bus.glb": {
       "prompt": "Realistic long 40-foot low-floor American city transit bus, mid-2010s design, very long low rectangular body about four times longer than tall, flat front with a large one-piece windshield, seven large dark side windows in a row, front door and middle door on the right side, three-quarter roof pod for air conditioning, white body with a blue and orange stripe, black tires, blank destination sign, no logos, no badges, no text, no lettering, no branding",
@@ -65,7 +114,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bus-v2.glb <out> 12",
       "triangles": 13791,
       "triangles_from_meshy": 13804,
-      "bytes": 732324,
+      "bytes": 752464,
       "bounds_m": {
         "x": [
           -1.831,
@@ -110,7 +159,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/pickup.glb <out> 5.4",
       "triangles": 10614,
       "triangles_from_meshy": 10616,
-      "bytes": 513180,
+      "bytes": 548472,
       "bounds_m": {
         "x": [
           -1.168,
@@ -127,7 +176,56 @@
       },
       "scale_applied": 5.6338,
       "removed_parts": {},
-      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG"
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "blender_wheels": "blender -b -P scripts/blender/vehicle_wheels.py -- <street_props output> <out>",
+      "rig": {
+        "nodes": "body > steer_FL > wheel_FL, body > steer_FR > wheel_FR, body > wheel_RL, body > wheel_RR",
+        "usage": "rotate steer_* about y to steer; spin wheel_* about local x (positive rolls forward, toward +z)",
+        "animation": "wheels_roll: one wheel turn per second, linear, loopable",
+        "body_triangles": 8153,
+        "wheels": {
+          "wheel_FL": {
+            "triangles": 503,
+            "radius_m": 0.388,
+            "width_m": 0.19,
+            "center_m": [
+              -0.795,
+              0.388,
+              1.689
+            ]
+          },
+          "wheel_FR": {
+            "triangles": 522,
+            "radius_m": 0.388,
+            "width_m": 0.19,
+            "center_m": [
+              0.839,
+              0.388,
+              1.689
+            ]
+          },
+          "wheel_RL": {
+            "triangles": 679,
+            "radius_m": 0.388,
+            "width_m": 0.215,
+            "center_m": [
+              -0.829,
+              0.388,
+              -1.692
+            ]
+          },
+          "wheel_RR": {
+            "triangles": 757,
+            "radius_m": 0.388,
+            "width_m": 0.248,
+            "center_m": [
+              0.884,
+              0.388,
+              -1.692
+            ]
+          }
+        }
+      }
     }
   },
   "credits": "60 Meshy credits (5 per preview + 10 per refine)"

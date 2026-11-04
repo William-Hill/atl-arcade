@@ -556,6 +556,19 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Why: the goal is the official game of the City of Atlanta. Most residents reach a city link from a phone.
 - Evidence and findings: `production/audits/2026-11-playability/REPORT.md`.
 
+## 2026-11-03: Photo mode with a depth tilt-shift blur (#90)
+
+- P or the PHOTO button (bottom right) opens and closes photo mode. Escape also closes it. While it is open, the fixed-step simulation and the skater animation stop, and the HUD hides. The map attribution stays on the screen.
+- A free camera moves in photo mode: WASD or the arrows fly, E and Q go up and down, Shift goes fast, and a drag or the right stick turns it. It stays within 150 m of the place where photo mode opened and 0.4 m over the ground. On close, the follow camera places itself again; a fixed or an orbit camera gets its old pose back.
+- The blur is a `ShaderPass` (`src/render/tilt-shift.js`) after the ink pass and before bloom. It reads the GTAO depth texture that the ink pass reads, so it adds no scene pass. A band (half height 0.08 in UV) stays sharp. Past the band the blur grows over 0.3 in UV, and 60% of it scales with the depth step from the focus depth (the depth at the band center). The blur is a 32-tap golden-angle disc with a radius of up to 14 px times the pixel ratio. A sample adds only as far as its own blur reaches, so the sharp band does not bleed out.
+- The pass is disabled in normal play, and EffectComposer skips a disabled pass, so play has no cost and no blur. `src/render/post.js` does not change: `addTiltShift()` inserts the pass into the composer.
+- The player moves the band with a slider, `[` and `]`, or the mouse wheel, and sets the strength with a slider or `-` and `=`.
+- Save PNG draws one frame and reads the canvas in the same task, so the WebGL buffer still holds the frame (no `preserveDrawingBuffer`). The PNG holds the canvas only, with no HUD. The file name is `skate-atl-YYYYMMDD-HHMMSS.png`: no skater, score, position, or other player data.
+- Low and phone tiers: photo mode, the free camera, and the PNG work; the sliders are disabled and a note says that the blur needs the high tier. The blur goes only on the full post chain (`post.kind === "full"`).
+- The frame-time governor (#72) pauses while photo mode is open: the blur is slow and the game is stopped. If the governor drops the post chain, the blur goes with it.
+- On a touch screen (#71) the PHOTO button moves to the top center, under the map attribution, and the touch controls hide while photo mode is open.
+- The pure parts (band math, state, free camera, file name) are in `src/render/tilt-shift.js` and `src/ui/photo-mode.js` with Vitest tests. The DOM is in `src/ui/photo-panel.js`, with its CSS inside, so `src/shell.css` and `src/ui/hud.js` do not change.
+
 ## 2026-11-03: Phone render tier and the frame-time governor (#72)
 
 - Tier: a new `phone` tier for a touch device whose short screen side is 900 CSS px or less (`isPhone()` in `src/render/quality.js`). A software renderer still gets `low`. `?quality=phone` forces it.
@@ -784,3 +797,66 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Layout: a desktop shows the pop-up at the top middle, between the HUD column and the skater select. A phone in portrait shows it under the minimap. A phone in landscape shows it narrow, between the touch stick and the buttons. The e2e test checks for no overlap at 1280x720, 390x844, and 844x390.
 - To record the fixture again, run `node scripts/fetch-facts.mjs`. Then review the printed texts by hand before you commit.
 - The greybox level has no cards, because it is not a real neighborhood.
+
+## 2026-11-03: Landmark signs and mural words (#79, #80)
+
+Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
+
+### Krog Street Market letters (GEO-3, GFX-4)
+
+- Cause: the north wing of the Krog Street Market footprint (`r5413435`) goes 6 m east of the main east wall. The model stood 5 m south of that wing, so the wing box covered the right half of the "MARKET" card.
+- Fix: a "ground" landmark now has `model.front` (the box in front of the wall that the model fills). `landmarkPlacements()` tries the anchors best first and takes the first one whose front box is out of every building box. The model also turns square to the wall (yaw 1.474 rad, not 1.571 rad), because the east wall is not exactly north-south.
+- Result: the model moved 8 m south, from z = 849.2 to z = 857.2. "KROG STREET MARKET" reads in full.
+- The letters face east, to the parking drive, as in `landmarks/krog-street-market/ref/reference.jpg`. The Eastside Trail is 110 m west, on the other side of the building and Krog Street. Thus the letters read in full from the parking drive, not from the trail. A change of the facing needs a new photo, and is not part of this fix.
+
+### Ponce City Market rooftop sign (GEO-2)
+
+- The sign now stands 45 m west of the tower and 12 m south of it, and faces south. Before, it stood on the east edge and faced east.
+- Sources (Wikimedia Commons). Both photos look north from Historic Fourth Ward Park:
+  1. "Ponce City Market from Historic Fourth Ward Park", Tyler Lahti, 2020, CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Ponce_City_Market_from_Historic_Fourth_Ward_Park.jpg (this is also `landmarks/ponce-city-market/ref/reference.jpg`).
+  2. "View of Ponce City Market across the stormwater detention pond at Historic Fourth Ward Park, December 2015", Marc Merlin, CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:View_of_Ponce_City_Market_across_the_stormwater_detention_pond_at_Historic_Fourth_Ward_Park,_December_2015.jpg
+- A third photo shows the same sign close up: "Ponce City Market large neon sign Midtown, Atlanta, GA", Williamcasey, 2016, CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Ponce_City_Market_large_neon_sign_Midtown,_Atlanta,_GA.jpg. It shows the sign on the roof of a lower wing, over the market entrance. This photo does not show the direction.
+- The repository keeps no copy of photos 2 and 3. The links and the licenses are the record.
+- The offset (45 m, 12 m) is an estimate from the photos, not a survey. The photos show red letters on an open steel frame. The game sign is still yellow letters on a dark panel. That is a different issue.
+
+### Mural words (EDU-2)
+
+- Before, the mural word came from a hash of the building id. 6 of 39 BeltLine murals said "SWEET AUBURN", and "KROG", "PONCE", "INMAN", "O4W", and "OLD 4TH WARD" went on any wall.
+- The level has no neighborhood boundaries, so the game cannot know the neighborhood of a wall. Thus the atlas words now name no neighborhood: "DOGWOOD", "FLOW", "STRIDE", "SUNSHINE", "GOOD VIBES", and "SMOOTH" replace the 6 place words.
+- "ATL" and "A-TOWN" name the city, and "BELTLINE" names the trail. They stay, because every mural is in the city and faces the trail.
+- When the level gets neighborhood boundaries from open-data-atl, a mural can name its own neighborhood.
+- Test: `src/render/murals.test.js` checks the words against a list of the neighborhood names near the trail.
+
+### Facade kit over murals (GFX-5)
+
+- Before, sills, storefront piers, and the belt course went through 35 of the murals.
+- `muralWalls()` now returns the wall index and the span along the wall. `wallDepth()` puts no sill or pier within 0.3 m of a mural.
+- The belt course is one ledge around the building. A cut in that ledge is complex, so on a storefront style the mural now starts above the belt course and the awnings. `BELT` and `awningHeight()` moved to `styles.js`, so the murals and the kit use the same numbers.
+- Test: `facade-kit.test.js` samples every kit triangle near a mural every 0.2 m. No sample can be in the box in front of a mural. The test found 35 murals before the fix and 0 after.
+- Not done: the 39 murals use 13 atlas cells at 256 px (GFX-6).
+
+### Evidence
+
+- `e2e/landmark-signs.spec.js` saves a screenshot of each sign and checks its pixels. The test fails on the old code (no card colors at the "MARKET" end, and the PCM sign edge-on) and passes on the new code.
+- Before and after screenshots: `reports/2026-11-79-80-signs-murals/`.
+
+## 2026-11-03: All props in one BatchedMesh, with an LOD for each prop (#89)
+
+- Decision: the 3392 BeltLine props (trees, lamps, roof units, benches, bins, water towers) are one `THREE.BatchedMesh` (`src/render/prop-batch.js`). Each prop is one instance. With `WEBGL_multi_draw` the batch is one draw call. Three.js culls each instance against the view and the shadow camera.
+- LOD: each prop picks LOD0 under `PROP_LOD0_DISTANCE` (60 m), LOD1 under `PROP_DRAW_DISTANCE` (200 m), or hidden, by its own distance from the camera. `setGeometryIdAt()` changes the shape. Before, the center of a 50 m tile picked the LOD for all props in the tile.
+- Why not `InstancedMesh`: one instanced mesh for each kind and LOD gives about 34 draw calls (17 kinds), and Three.js culls an instanced mesh as one object, so every instance draws. The merged tiles took 7 to 16 calls. The batch takes 1.
+- Wind: the prop material reads the world position from the batching matrix, and turns the world wind move into the template space with the inverse of the matrix (a yaw and a uniform scale). The trees sway as before.
+- Normals: a kit template with no normals gets its own computed normals. Before, a tile with one such prop computed the normals of every prop in the tile.
+- Unchanged: the colliders (`env.props`), the prop templates, the toon material, and the ink outlines.
+- `__atl.level.props` now gives `instances`, `kinds`, `drawn`, and `lod0`. The `tiles` and `lod0Tiles` fields are gone.
+- Measured (`reports/prop-perf/`, SwiftShader, 3 runs for each build, load average 9 to 27): the draw calls decrease by 6 to 15 (12% to 54%) on the low and phone tiers. The prop triangles decrease by 8% at the spawn and by 65% on the overview camera.
+- Not verified: a decrease of the 90th percentile frame time. The effect is smaller than the run-to-run spread on this harness. Without any props the spawn view still draws 48 calls and 116,816 triangles, so the props are not the main cost of a frame. The phone tier holds a median of 59.9 FPS on all four cameras, before and after. The low tier does not hold 55 FPS at the spawn on either build at this load.
+- High tier (ANGLE Metal, with the local markings hang fix on both builds): the draw calls decrease by 12 to 30 (8% to 32%), because the props also draw into the shadow map. The GPU holds 60 FPS on both builds.
+- Not measured: a real phone GPU.
+
+## 2026-11-03: The road markings match the street width by the sign name (#78 follow-up)
+
+- Problem: after #123 the high tier (`quality=high`) did not load. `streetIntersections()` now gives the city sign names (`signName`), but `roadMarkings()` still found the street width by the OSM `name`. For a renamed street the width was `-Infinity`, so the crosswalk bars went to infinity. `drapeMesh()` then looped over an infinite range of terrain cells. The low tier has no road markings, so the low-tier tests did not find it.
+- Fix: `widthOf()` in `src/level/geo/markings.js` matches `signName ?? name`. `drapeMesh()` in `src/level/geo/terrain.js` skips a triangle with a position that is not finite, so one bad triangle cannot stop the load.
+- Measured: the BeltLine markings have 8476 triangles again (3192 with the defect). The high tier loads to 5 frames in 10.4 s in headless Chromium (before: no load in 105 s).
+- Tests: `src/level/geo/markings.test.js` checks that each marking position and tile is finite on the real level, and that a street with a city name different from its OSM name gets finite crosswalks. Both tests fail without the fix.

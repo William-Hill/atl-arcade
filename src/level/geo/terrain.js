@@ -509,6 +509,9 @@ export function drapeMesh(mesh, terrain) {
     const i1 = Math.floor((Math.max(...xs) - x0) / cell);
     const j0 = Math.floor((Math.min(...zs) - z0) / cell);
     const j1 = Math.floor((Math.max(...zs) - z0) / cell);
+    // A triangle with a position that is not finite has no cells. Without
+    // this check an infinite range makes the cell loop run without end.
+    if (![i0, i1, j0, j1].every(Number.isFinite)) continue;
     for (let i = i0; i <= i1; i += 1) {
       for (let j = j0; j <= j1; j += 1) {
         const cx = x0 + i * cell;

@@ -186,6 +186,15 @@ export const STYLES = [
   },
 ];
 
+// The belt course of the facade kit: a ledge over the ground floor of a
+// storefront style. The murals (geo-mesh.js) start above it.
+export const BELT = { out: 0.18, height: 0.28 };
+
+// The height of the storefront awnings over the wall base (geo-mesh.js).
+export function awningHeight(style) {
+  return Math.min(style.floorHeight * 0.8, 3.4);
+}
+
 export const STYLE_INDEX = Object.fromEntries(STYLES.map((s, i) => [s.id, i]));
 
 // A stable hash of a string (FNV-1a), for seeded choices.

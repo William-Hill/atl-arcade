@@ -239,6 +239,13 @@ body.touch #shell-info { display: none; }
   pointer-events: none;
 }
 #minimap[data-hidden="1"] { width: auto; height: auto; }
+/* On a desktop the minimap and the photo mode button both use the bottom
+   right corner. Put the photo button to the left of the map, so it does not
+   cover the map button (#90, #86). The open photo panel starts 64px from the
+   bottom, so it does not cover the photo button. */
+body:not(.touch):has(#minimap) #photo-toggle {
+  right: calc(16px + 180px + 10px + env(safe-area-inset-right));
+}
 #minimap .minimap-canvas {
   display: block;
   width: 100%;

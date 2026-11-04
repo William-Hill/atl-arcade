@@ -27,6 +27,8 @@ import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./ren
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
 import { createLitePost, createPost } from "./render/post.js";
+import { addTiltShift } from "./render/tilt-shift.js";
+import { createPhotoPanel } from "./ui/photo-panel.js";
 import { createStreetSigns } from "./render/street-signs.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
@@ -275,6 +277,14 @@ if (view === "orbit") {
 // the lite ink pass on the phone tier, none on the low tier.
 const postOptions = { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: params.get("halftone") !== "0" };
 let post = tier.post === "full" ? createPost(renderer, scene, camera, postOptions) : tier.post === "lite" ? createLitePost(renderer, scene, camera, postOptions) : null;
+// Photo mode's tilt-shift blur (src/render/tilt-shift.js): on the full
+// chain only, and off in play.
+let tiltShift = post && post.kind === "full" ? addTiltShift(post, camera, renderer) : null;
+function draw() {
+  renderer.info.reset();
+  if (post) post.render();
+  else renderer.render(scene, camera);
+}
 
 // The frame-time governor (src/render/governor.js) steps the phone and high
 // tiers down when the frame rate is too low. The low tier is the floor of
@@ -288,6 +298,7 @@ function applyRung(rung) {
   if (!rung.post && post) {
     post.dispose();
     post = null;
+    tiltShift = null;
   }
   resize();
 }
@@ -412,6 +423,23 @@ if (view === "follow") {
   lookInput = createLookInput({ element: renderer.domElement });
 }
 
+// Photo mode (#90, src/ui/photo-panel.js): P or the PHOTO button. The
+// simulation stops and a free camera moves while it is open.
+const photoLook = lookInput ?? createLookInput({ element: renderer.domElement });
+const photo = createPhotoPanel({
+  canvas,
+  camera,
+  tiltShift: () => tiltShift,
+  render: draw,
+  sampleLook: (dt) => mapLook(photoLook.sample(), dt),
+  // The camera height selects the floor below the camera, not a bridge deck above it.
+  floor: (x, z, y) => env.sampleGround(x, z, y)?.height ?? null,
+  onChange: (open) => {
+    if (controls) controls.enabled = !open;
+    input.reset();
+  },
+});
+
 let stepper = createStepper();
 let ticks = 0;
 let last = performance.now();
@@ -450,22 +478,30 @@ function frame(now) {
     requestAnimationFrame(frame);
     return;
   }
-  if (governor) {
+  // Photo mode pauses the governor: the blur is slow and the game is stopped.
+  if (governor && !photo.isOpen) {
     governor = governorStep(governor, elapsed * 1000);
     if (governor.changed) applyRung(currentRung(governor));
   }
 
-  const stepped = advance(stepper, elapsed);
-  stepper = stepped.stepper;
-  for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
-  ticks += stepped.steps;
+  if (photo.isOpen) {
+    // Photo mode stops the simulation and the skater animation.
+    stepper = { ...stepper, leftover: 0 };
+  } else {
+    const stepped = advance(stepper, elapsed);
+    stepper = stepped.stepper;
+    for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
+    ticks += stepped.steps;
+  }
 
-  skaterView.sync(skater, Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
-  if (controls) {
+  skaterView.sync(skater, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
+  if (photo.isOpen) {
+    photo.update(Math.min(elapsed, 0.1));
+  } else if (controls) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
-  if (follow) {
+  if (follow && !photo.isOpen) {
     const dt = Math.min(elapsed, 0.1);
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
   }
@@ -484,9 +520,7 @@ function frame(now) {
   if (sky) sky.update(camera, now / 1000);
   if (streetSigns) streetSigns.update(camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
-  renderer.info.reset();
-  if (post) post.render();
-  else renderer.render(scene, camera);
+  draw();
   frames += 1;
   if (frames === 1) {
     loader.hide();
@@ -513,6 +547,24 @@ window.__atl = {
   // The render settings now, after any governor step.
   get render() {
     return { quality, pixelRatio: renderer.getPixelRatio(), post: post ? post.kind : null, rung: governor ? governor.rung : null, lastMedianMs: governor ? governor.last : null };
+  },
+  // Photo mode (#90): open, close, toggle, set({ center, strength }), save().
+  photo: {
+    get isOpen() {
+      return photo.isOpen;
+    },
+    get state() {
+      return photo.state;
+    },
+    // The blur pass state, or null on the low tier (no blur).
+    get blur() {
+      return tiltShift ? { enabled: tiltShift.enabled, ...tiltShift.params } : null;
+    },
+    open: () => photo.open(),
+    close: () => photo.close(),
+    toggle: () => photo.toggle(),
+    set: (params) => photo.set(params),
+    save: () => photo.save()
   },
   level: {
     name: level.name,

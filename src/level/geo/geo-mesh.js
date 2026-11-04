@@ -7,7 +7,7 @@
 
 import { FACE, extrudeFootprint, flatPolygon, mergeMeshes, orientRing, placeTemplate, stripMesh } from "./extrude.js";
 import { createGeoGroundSampler, surfaceTop } from "./geo-ground.js";
-import { STYLES, STYLE_INDEX, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
+import { BELT, STYLES, STYLE_INDEX, awningHeight, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
 import { BRIDGE, bridgeDeck, buildingSpan, coarseTerrainOf, drapeMesh, liftMesh, terrainOf } from "./terrain.js";
 
 export const GEO_TILE = 125; // m. Small enough that the camera culls most of the draped terrain.
@@ -146,7 +146,7 @@ export function awningsFor(b, style, isStreet) {
   const ring = orientRing(b.outer, false);
   const rand = seededRandom(hash32(`${b.id}:awning`));
   const color = AWNING_COLORS[hash32(`${b.id}:awning-color`) % AWNING_COLORS.length];
-  const y0 = Math.min(style.floorHeight * 0.8, 3.4);
+  const y0 = awningHeight(style);
   for (let i = 0; i < ring.length; i += 1) {
     const [px, pz] = ring[i];
     const [qx, qz] = ring[(i + 1) % ring.length];
@@ -238,8 +238,13 @@ export function bridgeMeshes(level, s) {
   return { deck: deckMesh, structure: m };
 }
 
-// Murals on walls that face the trail: [{ id, a: [x, z], b: [x, z], n: [x, z], y0, y1, cell }].
+// Murals on walls that face the trail: [{ id, a: [x, z], b: [x, z], n: [x, z], y0, y1, cell, edge, t0, t1 }].
 // Murals, not graffiti: each one is an original design from the atlas.
+// `edge` is the wall index in orientRing(b.outer, false), and t0 to t1 is
+// the mural span along that wall (m from its start). The facade kit
+// (facade-kit.js) puts no sill or pier in that span. On a storefront style
+// the mural starts above the awnings and the belt course, so no ledge
+// crosses it.
 export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
   const trails = (level.strips ?? []).filter((s) => s.kind === "trail").map((s) => s.points);
   const out = [];
@@ -262,7 +267,7 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
       if (!near || near.d > maxDistance) continue;
       const facing = (nx * (near.x - mx) + nz * (near.z - mz)) / Math.max(near.d, 1e-6);
       if (facing < 0.6) continue;
-      if (!best || len > best.len) best = { len, p: [px, pz], q: [qx, qz], n: [nx, nz] };
+      if (!best || len > best.len) best = { len, edge: i, p: [px, pz], q: [qx, qz], n: [nx, nz] };
     }
     if (!best) continue;
     const h = Math.min(b.height - 0.6, 12);
@@ -277,15 +282,28 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
     const g = Math.max(terrain.height(ma[0], ma[1]), terrain.height(mb[0], mb[1]));
     const span = buildingSpan(level, b);
     const y1 = Math.min(g + h, span.top - 0.6);
-    if (y1 - (g + 0.8) < 2) continue;
+    let y0 = g + 0.8;
+    const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
+    if (style.storefront) {
+      // The same floors as the facade kit: the belt course is over the
+      // ground floor when the building has two floors or more.
+      const floors = Math.max(1, Math.round((span.top - span.base) / style.floorHeight));
+      const floorH = (span.top - span.base) / floors;
+      if (style.awnings > 0) y0 = Math.max(y0, span.base + awningHeight(style) + 0.1);
+      if (floors >= 2) y0 = Math.max(y0, span.base + floorH + BELT.height / 2 + 0.1);
+    }
+    if (y1 - y0 < 2) continue;
     out.push({
       id: b.id,
       a: ma,
       b: mb,
       n: best.n,
-      y0: g + 0.8,
+      y0,
       y1,
       cell: hash32(`${b.id}:mural`) % MURAL_CELLS,
+      edge: best.edge,
+      t0: (best.len - w) / 2,
+      t1: (best.len + w) / 2,
     });
     if (out.length >= maxCount) break;
   }

@@ -772,6 +772,20 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Test: `scripts/street-names.test.js` checks every sign name of the level against the city labels. Only a name in `REVIEWED` can differ. It also checks each rule on small fixtures. The byte-for-byte rebuild test in `scripts/build-block.test.js` covers the new raw file.
 - Not done: the sign blades are still too small to read on a phone (GEO-5, #24).
 
+## 2026-11-03: All props in one BatchedMesh, with an LOD for each prop (#89)
+
+- Decision: the 3392 BeltLine props (trees, lamps, roof units, benches, bins, water towers) are one `THREE.BatchedMesh` (`src/render/prop-batch.js`). Each prop is one instance. With `WEBGL_multi_draw` the batch is one draw call. Three.js culls each instance against the view and the shadow camera.
+- LOD: each prop picks LOD0 under `PROP_LOD0_DISTANCE` (60 m), LOD1 under `PROP_DRAW_DISTANCE` (200 m), or hidden, by its own distance from the camera. `setGeometryIdAt()` changes the shape. Before, the center of a 50 m tile picked the LOD for all props in the tile.
+- Why not `InstancedMesh`: one instanced mesh for each kind and LOD gives about 34 draw calls (17 kinds), and Three.js culls an instanced mesh as one object, so every instance draws. The merged tiles took 7 to 16 calls. The batch takes 1.
+- Wind: the prop material reads the world position from the batching matrix, and turns the world wind move into the template space with the inverse of the matrix (a yaw and a uniform scale). The trees sway as before.
+- Normals: a kit template with no normals gets its own computed normals. Before, a tile with one such prop computed the normals of every prop in the tile.
+- Unchanged: the colliders (`env.props`), the prop templates, the toon material, and the ink outlines.
+- `__atl.level.props` now gives `instances`, `kinds`, `drawn`, and `lod0`. The `tiles` and `lod0Tiles` fields are gone.
+- Measured (`reports/prop-perf/`, SwiftShader, 3 runs for each build, load average 9 to 27): the draw calls decrease by 6 to 15 (12% to 54%) on the low and phone tiers. The prop triangles decrease by 8% at the spawn and by 65% on the overview camera.
+- Not verified: a decrease of the 90th percentile frame time. The effect is smaller than the run-to-run spread on this harness. Without any props the spawn view still draws 48 calls and 116,816 triangles, so the props are not the main cost of a frame. The phone tier holds a median of 59.9 FPS on all four cameras, before and after. The low tier does not hold 55 FPS at the spawn on either build at this load.
+- High tier (ANGLE Metal, with the local markings hang fix on both builds): the draw calls decrease by 12 to 30 (8% to 32%), because the props also draw into the shadow map. The GPU holds 60 FPS on both builds.
+- Not measured: a real phone GPU.
+
 ## 2026-11-03: The road markings match the street width by the sign name (#78 follow-up)
 
 - Problem: after #123 the high tier (`quality=high`) did not load. `streetIntersections()` now gives the city sign names (`signName`), but `roadMarkings()` still found the street width by the OSM `name`. For a renamed street the width was `-Infinity`, so the crosswalk bars went to infinity. `drapeMesh()` then looped over an infinite range of terrain cells. The low tier has no road markings, so the low-tier tests did not find it.

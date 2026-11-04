@@ -61,11 +61,15 @@ test("the BeltLine block loads with Rapier colliders on every merged mesh", asyn
   expect(info.level.stats.strips.trail).toBeGreaterThan(0);
   for (const id of info.level.ids) expect(info.collidersById[id], `collider for ${id}`).toBeGreaterThan(0);
   expect(info.colliderCount).toBe(info.level.ids.length);
-  // M1-08: the street kit props loaded, merged into prop tiles.
+  // M1-08: the street kit props loaded. #89: all props are one batch, with
+  // one instance per prop and an LOD for each prop.
   const props = await page.evaluate(() => window.__atl.level.props);
   expect(props.error).toBeNull();
   expect(props.count).toBeGreaterThan(1000);
-  expect(props.tiles).toBeGreaterThan(10);
+  expect(props.instances).toBeGreaterThan(1000);
+  expect(props.kinds).toBeGreaterThan(10);
+  expect(props.drawn).toBeGreaterThan(0);
+  expect(props.drawn).toBeLessThan(props.instances);
   // M2-01: the Ponce City Market tower with its rooftop sign, and the Krog
   // Street Market front (both from img2threejs).
   const landmarks = await page.evaluate(() => window.__atl.level.landmarks);

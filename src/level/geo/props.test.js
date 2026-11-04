@@ -48,6 +48,7 @@ describe("prop placement", () => {
     expect(count("tree_round") + count("tree_tall")).toBeGreaterThan(500);
     expect(count("lamp")).toBeGreaterThan(100);
     expect(count("bench")).toBeGreaterThan(10);
+    expect(count("bench_painted")).toBeGreaterThan(10);
     expect(count("bin")).toBeGreaterThan(5);
   });
 

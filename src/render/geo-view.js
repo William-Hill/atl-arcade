@@ -16,6 +16,11 @@ import trailInfo from "../../assets/ground/trail/set.json";
 import grassInfo from "../../assets/ground/grass/set.json";
 
 const KIT_URL = new URL("../../assets/kit/street-kit.glb", import.meta.url).href;
+// Props from other sources, in the kit format (one mesh, vertex colors):
+// { kind: GLB URL }. See assets/props/<name>/provenance.json.
+const EXTRA_PROP_URLS = {
+  bench_painted: new URL("../../assets/props/painted_wooden_bench/painted_wooden_bench.glb", import.meta.url).href,
+};
 // The CC0 brick scan (scripts/landmark-textures.py), shared with the
 // landmarks, so the buildings and the landmarks show the same brick.
 const BRICK_URL = new URL("../../assets/landmarks/textures/brick/color.jpg", import.meta.url).href;
@@ -378,6 +383,18 @@ function addMesh(root, byId, name, geometry, material, { castShadow = false } = 
   root.add(obj);
   byId.set(name, obj);
   return obj;
+}
+
+// The kit templates and the extra props. Each extra GLB has one mesh, and
+// its template gets the kind name of EXTRA_PROP_URLS.
+export async function loadPropTemplates() {
+  const kinds = Object.keys(EXTRA_PROP_URLS);
+  const [kit, ...extras] = await Promise.all([loadKitTemplates(), ...kinds.map((k) => loadKitTemplates(EXTRA_PROP_URLS[k]))]);
+  kinds.forEach((kind, i) => {
+    const [template] = Object.values(extras[i]);
+    if (template) kit[kind] = template;
+  });
+  return kit;
 }
 
 // Reads the kit GLB into plain templates: { kind: { positions, indices, colors } }.

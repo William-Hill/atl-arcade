@@ -158,7 +158,12 @@ test("desktop: the results screen on the Beltline keeps clear of the minimap", a
   const z = await page.evaluate(() => ["minimap", "results"].map((id) => Number(getComputedStyle(document.getElementById(id)).zIndex)));
   expect(z[0]).toBeGreaterThan(z[1]);
   await expect(page.locator('#results-goals li[data-goal="gap-stone-mountain"]')).toHaveAttribute("data-done", "1");
-  await expect(page.locator('#results-goals li[data-goal="cards"] .results-progress')).toHaveText("2 / 3");
+  // The hop can also pass over a real fact card on the trail (#17). A card
+  // counts once, so the count is the union of the two test ids and the
+  // cards that the run collected.
+  const cards = await page.evaluate(() => new Set(["fact-1", "fact-2", ...window.__atl.run.cards.collected]).size);
+  expect(cards).toBeGreaterThanOrEqual(2);
+  await expect(page.locator('#results-goals li[data-goal="cards"] .results-progress')).toHaveText(`${Math.min(cards, 3)} / 3`);
   await page.screenshot({ path: "e2e/__screenshots__/results-desktop.png" });
 });
 

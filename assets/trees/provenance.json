@@ -40,5 +40,5 @@
     }
   },
   "nodes": "tree_<species>_<variant>; GLTFLoader drops ':' so geo-view glbTreeTemplates() maps them to tree:<species>:<variant>. Far trees are impostors baked from these models in the browser at load (src/render/tree-impostors.js), not stored in the files.",
-  "total_bytes": 1067988
+  "total_bytes": 1065016
 }

@@ -118,10 +118,10 @@ vec4 treeTexel(vec3 l) {
     }
     if (e < 1.0 && 1.0 - e > best) {
       best = 1.0 - e;
-      tone = (0.8 + 0.34 * fract(fi * 0.618 + l.z * 3.0)) * vein;
+      tone = (0.9 + 0.22 * fract(fi * 0.618 + l.z * 3.0)) * vein;
     }
   }
-  return vec4(vec3(tone * (0.86 + 0.14 * best)), best > 0.0 ? 1.0 : 0.0);
+  return vec4(vec3(tone * (0.92 + 0.08 * best)), best > 0.0 ? 1.0 : 0.0);
 }`;
 
 export function patchLeafVertex(shader) {
@@ -170,6 +170,20 @@ vec4 leafHit = treeTexel(vLeaf);
 if (leafHit.a < 0.5) discard;`,
     );
   if (tone) shader.fragmentShader = shader.fragmentShader.replace("#include <color_fragment>", "#include <color_fragment>\ndiffuseColor.rgb *= leafHit.rgb;");
+  // Leaf cards and impostors are two sided but shade as the crown volume:
+  // keep the crown normal on the back face too (three flips it), or half the
+  // cards of a crown, and of each impostor, go dark.
+  if (tone)
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <normal_fragment_begin>",
+      `#include <normal_fragment_begin>
+#if defined(DOUBLE_SIDED) && !defined(FLAT_SHADED)
+if (vLeaf.z > 0.025 || vLeaf.z < -9.5) {
+  normal = normalize(vNormal);
+  nonPerturbedNormal = normal;
+}
+#endif`,
+    );
   if (backlight) shader.fragmentShader = shader.fragmentShader.replace("#include <lights_fragment_end>", `#include <lights_fragment_end>\n${BACKLIGHT_GLSL}`);
 }
 

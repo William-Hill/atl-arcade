@@ -12,7 +12,7 @@ bark it is -1 - the bark kind. Textures are painted here
 from seeded noise (no photos, no third-party art) and shared by all species:
 bark (color + normal), and a leaf atlas (color with alpha + normal).
 COLOR_0.r is the wind sway weight (0 at the trunk base, 1 at the crown edge);
-COLOR_0.g is a baked crown occlusion (1 open, 0.35 deep inside).
+COLOR_0.g is a baked crown occlusion (1 open, 0.72 deep inside).
 Units are meters, +y up in glTF, the trunk base at the origin. Draco compressed.
 """
 import math
@@ -300,7 +300,7 @@ MOSS_SRGB = (0.36, 0.44, 0.2)
 def crown_occlusion(p, sp):
     cy, hw, hh = sp["crown"]
     q = Vector((p.x / hw, p.y / hw, (p.z - cy) / hh))
-    return max(0.5, min(1.0, 0.5 + 0.6 * q.length))
+    return max(0.72, min(1.0, 0.72 + 0.4 * q.length))
 
 
 def crown_normal(p, sp):

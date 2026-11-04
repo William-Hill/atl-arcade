@@ -12,6 +12,8 @@ import { BRIDGE, bridgeDeck, buildingSpan, coarseTerrainOf, drapeMesh, liftMesh,
 
 export const GEO_TILE = 125; // m. Small enough that the camera culls most of the draped terrain.
 export const PROP_TILE = 50; // m. Small, so only near props get full detail.
+// The plinth color of a building on a slope, as a factor on the style trim.
+export const PLINTH_SHADE = 0.78;
 
 // Material groups. Each group is one material in the render. All flat
 // surfaces share one material and get their color from vertex colors.
@@ -466,7 +468,9 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
       const color = wallColor(style, b.id);
       const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, parapet: style.parapet, corniceColor: style.trim };
       const span = buildingSpan(level, b);
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: roofColorOf(style, color), facade }));
+      // The plinth is cast stone: the style trim, a little darker.
+      const plinth = { bottom: span.foot, color: style.trim.map((c) => c * PLINTH_SHADE) };
+      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: roofColorOf(style, color), facade, plinth }));
       const aw = awningsFor(b, style, isStreet);
       if (aw.indices.length) add("building", b, span.base ? liftMesh(aw, () => span.base) : aw);
     }
@@ -475,7 +479,7 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     for (const b of level.buildings ?? []) {
       const color = buildingColor(b.id);
       const span = buildingSpan(level, b);
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: tint(color, 0.35) }));
+      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.foot, top: span.top }, { color, roofColor: tint(color, 0.35) }));
     }
   }
 

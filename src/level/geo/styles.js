@@ -26,7 +26,7 @@ export const STYLES = [
     // The crown (facade-kit.js crownKit()): a raised center parapet `step`
     // meters over the parapet, and a stair bulkhead box on the roof
     // ([along, across, height] in meters).
-    crown: { step: 1.2, bulkhead: [3.0, 3.6, 2.8] },
+    crown: { step: 1.6, bulkhead: [3.0, 3.6, 2.8] },
     // Painted steel window frames: a mid sage, not darker than the brick.
     frame: [0.2, 0.3, 0.24],
   },
@@ -45,7 +45,7 @@ export const STYLES = [
     awnings: 0.2,
     roof: { water_tower: 0.25, roof_unit: 1 / 500 },
     roofColor: [0.32, 0.31, 0.3],
-    crown: { step: 1.2, bulkhead: [3.0, 3.6, 2.8] },
+    crown: { step: 1.6, bulkhead: [3.0, 3.6, 2.8] },
     frame: [0.2, 0.3, 0.24],
   },
   {

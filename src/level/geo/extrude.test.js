@@ -185,3 +185,30 @@ describe("facade attribute and parapet", () => {
     expect(mesh.colors).toEqual([0.2, 0.4, 0.6]);
   });
 });
+
+describe("extrudeFootprint with a plinth", () => {
+  const facade = { style: 0, bay: 4, floorHeight: 3.5, parapet: 0 };
+  const outer = [[0, 0], [10, 0], [10, 8], [0, 8]];
+
+  it("adds plain walls from the plinth bottom to the base", () => {
+    const plain = extrudeFootprint({ outer, base: 2, top: 12 }, { color: [1, 1, 1], facade });
+    const m = extrudeFootprint({ outer, base: 2, top: 12 }, { color: [1, 1, 1], facade, plinth: { bottom: -0.5, color: [0.5, 0.5, 0.5] } });
+    expect(m.positions.length).toBeGreaterThan(plain.positions.length);
+    const ys = [];
+    for (let i = 1; i < m.positions.length; i += 3) ys.push(m.positions[i]);
+    expect(Math.min(...ys)).toBe(-0.5);
+    // Every plinth vertex is a cornice face (no windows) with the plinth color.
+    for (let v = 0; v < m.positions.length / 3; v += 1) {
+      if (m.positions[v * 3 + 1] < 2 - 1e-6) {
+        expect(m.facade[v * 4 + 3]).toBe(2);
+        expect(m.colors[v * 3]).toBeCloseTo(0.5, 6);
+      }
+    }
+  });
+
+  it("adds nothing when the base is at the plinth bottom", () => {
+    const plain = extrudeFootprint({ outer, base: 0, top: 10 }, { color: [1, 1, 1], facade });
+    const m = extrudeFootprint({ outer, base: 0, top: 10 }, { color: [1, 1, 1], facade, plinth: { bottom: 0 } });
+    expect(m.positions.length).toBe(plain.positions.length);
+  });
+});

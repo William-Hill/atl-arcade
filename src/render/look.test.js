@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { BRICK_TONE, ENV_LIGHT, ENV_SKY, LOOKS, ROUGHNESS, WALL_AO, brickTone, desaturate, litMaterial, lookFor, toneMappingOf, wallOcclusion, wallSkyLight } from "./look.js";
+import { BRICK_TONE, DETAIL_NORMAL, GROUND_ALBEDO, sunElevation, ENV_LIGHT, ENV_SKY, GRADE, LOOKS, ROUGHNESS, WALL_AO, brickTone, desaturate, detailNormal, gradeColor, litMaterial, lookFor, toneMappingOf, wallOcclusion, wallSkyLight } from "./look.js";
 import { SKY } from "./sky.js";
 import { STYLES } from "../level/geo/styles.js";
 
@@ -171,5 +171,94 @@ describe("the shade light of the pbr look", () => {
   it("keeps the toon hemisphere light as it was", () => {
     expect(LOOKS.toon.hemisphereSky).toBe(0xcfe8ff);
     expect(LOOKS.toon.hemisphereGround).toBe(0x5a6a48);
+  });
+});
+
+describe("detailNormal", () => {
+  const n = [0, 0, 1];
+  const tu = [1, 0, 0];
+  const tv = [0, 1, 0];
+
+  it("keeps the normal for a flat map sample or a zero strength", () => {
+    expect(detailNormal(n, tu, tv, [0.5, 0.5, 1], 1)).toEqual([0, 0, 1]);
+    const r = detailNormal(n, tu, tv, [0.9, 0.2, 0.8], 0);
+    expect(r[0]).toBeCloseTo(0, 6);
+    expect(r[1]).toBeCloseTo(0, 6);
+  });
+
+  it("tilts toward u and v as the map says, more with more strength", () => {
+    const a = detailNormal(n, tu, tv, [0.7, 0.4, 0.9], 1);
+    expect(a[0]).toBeGreaterThan(0);
+    expect(a[1]).toBeLessThan(0);
+    const b = detailNormal(n, tu, tv, [0.7, 0.4, 0.9], 2);
+    expect(b[0]).toBeGreaterThan(a[0]);
+    expect(Math.hypot(...b)).toBeCloseTo(1, 6);
+  });
+
+  it("works with a tangent that is not square to the normal", () => {
+    const r = detailNormal(n, [1, 0, 0.5], [0, 1, -0.3], [0.5, 0.5, 1], 1);
+    expect(r[2]).toBeCloseTo(1, 6);
+  });
+});
+
+describe("the pbr detail and the ink", () => {
+  it("gives a normal strength to every ground set", () => {
+    expect(DETAIL_NORMAL.ground).toHaveLength(4);
+    for (const k of [DETAIL_NORMAL.brick, DETAIL_NORMAL.stone, ...DETAIL_NORMAL.ground]) expect(k).toBeGreaterThan(0);
+  });
+
+  it("gives an albedo factor under 1 to every ground set, and the darkest to grass", () => {
+    expect(GROUND_ALBEDO).toHaveLength(DETAIL_NORMAL.ground.length);
+    for (const a of GROUND_ALBEDO) expect(a).toBeGreaterThan(0.3);
+    for (const a of GROUND_ALBEDO) expect(a).toBeLessThanOrEqual(1);
+    expect(GROUND_ALBEDO[3]).toBe(Math.min(...GROUND_ALBEDO));
+  });
+
+  it("draws a lighter ink in the pbr look than in the toon look", () => {
+    expect(LOOKS.pbr.ink).toBeLessThan(LOOKS.toon.ink);
+    expect(LOOKS.pbr.grade).toBe(true);
+    expect(LOOKS.toon.grade).toBe(false);
+  });
+});
+
+describe("gradeColor", () => {
+  const luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+
+  it("keeps black at black", () => {
+    expect(gradeColor([0, 0, 0])).toEqual([0, 0, 0]);
+  });
+
+  it("adds contrast around the mid gray", () => {
+    expect(luma(gradeColor([0.5, 0.5, 0.5]))).toBeGreaterThan(0.5 * 1.02);
+    expect(luma(gradeColor([0.05, 0.05, 0.05]))).toBeLessThan(0.05);
+  });
+
+  it("adds saturation to a color", () => {
+    const c = [0.4, 0.2, 0.1];
+    const g = gradeColor(c, { ...GRADE, contrast: 1, shadowTint: [1, 1, 1], lightTint: [1, 1, 1] });
+    expect(g[0] - g[2]).toBeGreaterThan(c[0] - c[2]);
+    expect(luma(g)).toBeCloseTo(luma(c), 6);
+  });
+
+  it("makes a shadow cool and a light warm", () => {
+    const s = gradeColor([0.02, 0.02, 0.02]);
+    const l = gradeColor([0.8, 0.8, 0.8]);
+    expect(s[2]).toBeGreaterThan(s[0]);
+    expect(l[0]).toBeGreaterThan(l[2]);
+  });
+});
+
+describe("the sun of each look", () => {
+  it("keeps the toon sun, and gives the pbr look a lower sun from the same azimuth", () => {
+    expect(sunElevation("toon")).toBeCloseTo(54.2, 1);
+    expect(sunElevation("pbr")).toBeGreaterThan(20);
+    expect(sunElevation("pbr")).toBeLessThan(35);
+    const az = (o) => Math.atan2(o[2], o[0]);
+    expect(az(LOOKS.pbr.sunOffset)).toBeCloseTo(az(LOOKS.toon.sunOffset), 2);
+  });
+
+  it("gives the pbr sun a warmer color than the toon sun", () => {
+    const rb = (c) => ((c >> 16) & 255) - (c & 255);
+    expect(rb(LOOKS.pbr.sunColor)).toBeGreaterThan(rb(LOOKS.toon.sunColor));
   });
 });

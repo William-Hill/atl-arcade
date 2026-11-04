@@ -662,7 +662,7 @@ export function shopFront(m, ring, style, si, base, floorH, front, seed, awningC
 // `mural` is the mural of the building, if it has one (see wallDepth()).
 // `front` ({ edge, street }, frontEdge()) is the front wall. Without it the
 // building gets no shop front.
-export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null, front = null) {
+export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null, front = null, level = null) {
   const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
   const si = STYLE_INDEX[style.id];
   const ring = orientRing(b.outer, false);
@@ -748,7 +748,7 @@ export function facadeKit(level, fronts = frontEdges(level)) {
     let dm = depthTiles.get(dkey);
     if (!dm) depthTiles.set(dkey, (dm = emptyMesh(true)));
     const front = fronts.get(b.id) ?? null;
-    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null, front);
+    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null, front, level);
     for (const k of Object.keys(counts)) counts[k] += c[k];
   }
   const out = [...tiles.entries()]

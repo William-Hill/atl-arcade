@@ -118,6 +118,11 @@ export function createFacadeMaterial(gradientMap, { brickMap = null, interiors =
     // uniform so the weather can write it after the shader compiles.
     shader.uniforms.uLit = { value: 0 };
     mat.userData.uLit = shader.uniforms.uLit;
+    // The sun direction in world space (+x east, +y up, +z south) and its
+    // elevation factor in w (weather-view writes it): the lintels, the
+    // sills, and the floor slabs shade the wall face under it.
+    shader.uniforms.uSun = { value: new THREE.Vector4(0, 1, 0, 0) };
+    mat.userData.uSun = shader.uniforms.uSun;
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;\nflat varying vec3 vWallSeed;")
       .replace(
@@ -144,6 +149,7 @@ uniform vec3 uBrickMean;
 uniform float uBrickTile;
 uniform float uBrickOn;
 uniform float uLit;
+uniform vec4 uSun;
 // The glass mask for the roughness (pbr look): 1 on a near window pixel,
 // and the glass roughness of that window.
 float facadeGlass = 0.0;
@@ -312,10 +318,22 @@ vec3 roomColor(float h) {
     col = mix(col, uTrim[st], max(sill, lintel) * 0.85);
     col = mix(col, uTrim[st] * 0.85, kick);
     #ifdef PBR_LOOK
+    // The sun on this wall face: the lintels, the sills, and the floor
+    // slabs cast thin shadow bands (the self-shadowing cue of
+    // docs/research/2026-11-04-gen-city-auto.md).
+    float sunFace = max(dot(normalize(vNormal), normalize((viewMatrix * vec4(uSun.xyz, 0.0)).xyz)), 0.0) * clamp(uSun.w, 0.0, 1.0);
+    // The lintel shadow: a band on the wall and the window top under the
+    // lintel line.
+    float lshade = (!shop && a.w > 0.5) ? (1.0 - smoothstep(fw.x + 0.04 - aa.x, fw.x + 0.04 + aa.x, d.x)) * (1.0 - smoothstep(0.05 - aa.y, 0.05 + aa.y, abs(cell.y - (lintelY - 0.055)))) : 0.0;
+    col *= 1.0 - 0.3 * lshade * sunFace;
+    // The sill shadow: a band on the wall under each sill.
+    float sshade = (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(0.055 - aa.y, 0.055 + aa.y, abs(cell.y - (sillY - 0.06))));
+    col *= 1.0 - 0.22 * sshade * sunFace;
     // A floor band at each slab, above the ground floor: a thin line a little
-    // darker than the wall, so a tall building shows its floors.
+    // darker than the wall, so a tall building shows its floors. The slab
+    // shadow deepens it when the sun is on the face.
     float slab = level > 0.5 ? 1.0 - smoothstep(0.035, 0.035 + aa.y, cell.y) : 0.0;
-    col *= 1.0 - 0.22 * slab;
+    col *= 1.0 - (0.22 + 0.26 * sunFace) * slab;
     #endif
     col = mix(col, glass, inWin);
     col = mix(col, uFrame[st], mull * 0.9);
@@ -326,6 +344,13 @@ vec3 roomColor(float h) {
     vec3 mean = mix(mix(wallCol, uTrim[st], 0.08), uGlass[st] + vec3(0.09), win.x * win.y * 0.9);
     diffuseColor.rgb = mix(col, mean, far);
     facadeGlass = inWin * (1.0 - far);
+    #ifdef PBR_LOOK
+    // The albedo calibration (the bleached white-box fix of the gen-city
+    // research): darker walls, a little less chroma.
+    diffuseColor.rgb *= 0.74;
+    float albL = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(albL), 0.1);
+    #endif
     #ifdef PBR_LOOK
     // Ground contact: darker at the base of the wall (look.js wallOcclusion).
     diffuseColor.rgb *= ${WALL_AO.base.toFixed(3)} + ${(1 - WALL_AO.base).toFixed(3)} * smoothstep(0.0, ${WALL_AO.floors.toFixed(3)}, vFacade.z);
@@ -349,9 +374,20 @@ vec3 roomColor(float h) {
   }
 }`,
       )
-      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);");
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);")
+      .replace(
+        "#include <normal_fragment_begin>",
+        `#include <normal_fragment_begin>
+{
+  // Each pane reflects at its own angle: a small normal wobble per window
+  // cell (gen-city), so adjacent panes catch the sky differently.
+  float wu = facadeHash(vec3(floor(vFacade.yz), vFacade.x + 11.0));
+  float wv = facadeHash(vec3(floor(vFacade.yz), vFacade.x + 29.0));
+  normal = normalize(normal + vec3(wu - 0.5, wv - 0.5, 0.0) * 0.06 * facadeGlass);
+}`,
+      );
   };
-  mat.customProgramCacheKey = () => `facade-v7${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}`;
+  mat.customProgramCacheKey = () => `facade-v8${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}`;
   return mat;
 }
 
@@ -380,6 +416,9 @@ const GROUND_OF = {
 // out with distance, where a tile is under a few pixels.
 export function createSurfaceMaterial(gradientMap, { maps = null, look = "toon" } = {}) {
   const mat = litMaterial(look, { vertexColors: true }, { gradientMap, roughness: ROUGHNESS.ground, envLight: ENV_LIGHT.ground });
+  // The albedo calibration (pbr look): a darker ground, toward real
+  // asphalt and soil (docs/research gen-city: nothing stays near-white).
+  if (look === "pbr") mat.color.setScalar(0.72);
   if (!maps) return mat;
   const kinds = Object.keys(GROUND_OF);
   const kindColor = kinds.map((k) => new THREE.Vector3(...SURFACE_COLORS[k]));
@@ -571,6 +610,8 @@ export async function loadKitTemplates(url = KIT_URL) {
 // world wind move into the template space.
 function createPropMaterial({ wind = true, look = "toon", leaves = false } = {}) {
   const material = litMaterial(look, { vertexColors: true }, { gradientMap: toonRamp({ soft: true }), roughness: ROUGHNESS.props, envLight: ENV_LIGHT.props });
+  // The albedo calibration (pbr look): darker leaves and props.
+  if (look === "pbr") material.color.setScalar(0.8);
   // A card is a single quad: both sides must draw.
   if (leaves) material.side = THREE.DoubleSide;
   const time = { value: 0 };
@@ -720,7 +761,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     // The weather handles (src/render/weather-view.js): the facade
     // material gets uLit (window light) and the surface material gets
     // uWet (wet ground). The uniforms appear when the shaders compile.
-    weather: { lit: [materials.building], wet: [materials.surface] },
+    weather: { lit: [materials.building], wet: [materials.surface], sun: [materials.building] },
     get meshCount() {
       return meshes.length + (propBatch ? 1 : 0);
     },

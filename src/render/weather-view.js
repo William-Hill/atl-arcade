@@ -102,6 +102,11 @@ export function createWeatherView({ scene, renderer, geoLights, sky, levelView, 
     if (mats) {
       for (const m of mats.lit) if (m.userData?.uLit) m.userData.uLit.value = cur.windowLit;
       for (const m of mats.wet) if (m.userData?.uWet) m.userData.uWet.value = cur.wet;
+      for (const m of mats.sun ?? []) {
+        // The sun direction in world space and the elevation factor in w:
+        // the facade shades its lintels and slabs under the sun.
+        if (m.userData?.uSun) m.userData.uSun.value.set(cur.sun.dir.x ?? cur.sun.dir[0], cur.sun.dir.y ?? cur.sun.dir[1], cur.sun.dir.z ?? cur.sun.dir[2], Math.max(cur.sun.dir.y ?? cur.sun.dir[1] ?? 0, 0));
+      }
     }
     // The exposure eases a little at night; the key stays on the day.
     if (renderer.toneMapping !== THREE.NoToneMapping) renderer.toneMappingExposure = exposureBase * (0.88 + 0.17 * cur.day);

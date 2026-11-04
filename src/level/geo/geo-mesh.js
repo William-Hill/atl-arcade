@@ -247,25 +247,40 @@ export function bridgeMeshes(level, s) {
   const pts = densify(L.points, 1.5);
   const { left, right } = ribbonEdges(pts, h);
   const flat = { positions: [], indices: [], colors: [] };
+  // Each row has a vertex on the center line too, so the deck top there is
+  // the deck height itself, the same as the draped center line on it.
   for (let i = 0; i < pts.length - 1; i += 1) {
-    const base = flat.positions.length / 3;
-    for (const p of [left[i], right[i], right[i + 1], left[i + 1]]) {
-      flat.positions.push(p[0], top, p[1]);
-      flat.colors.push(color[0], color[1], color[2]);
+    for (const [a0, a1, b0, b1] of [
+      [left[i], left[i + 1], pts[i], pts[i + 1]],
+      [pts[i], pts[i + 1], right[i], right[i + 1]],
+    ]) {
+      const base = flat.positions.length / 3;
+      for (const p of [a0, b0, b1, a1]) {
+        flat.positions.push(p[0], top, p[1]);
+        flat.colors.push(color[0], color[1], color[2]);
+      }
+      // The left side first: (a, d, c) and (a, c, b) face up.
+      flat.indices.push(base, base + 3, base + 2, base, base + 2, base + 1);
     }
-    // Left is +normal: (a, d, c) and (a, c, b) face up.
-    flat.indices.push(base, base + 3, base + 2, base, base + 2, base + 1);
   }
-  // A disk at each joint, as at an inner point of a strip: the road past J
-  // can turn there (or end square at a junction), and the disk fills the
-  // wedge between the two ends. Past J the deck height is the ground, so the
-  // disk lies on the road there.
+  // A half disk past each joint, as the disk at an inner point of a strip:
+  // the road past J can turn there (or end square at a junction), and the
+  // half disk fills the wedge between the two ends. Past J the deck height
+  // is the ground, so the half disk lies on the road. It stops at the J
+  // edge: a triangle across J would not follow the kink in the deck height
+  // there and could cover the center line.
   for (const [k, e] of L.ends.entries()) {
     if (!e.approach) continue;
-    const J = k ? L.points[L.points.length - 1] : L.points[0];
-    const ring = [];
-    for (let i = 0; i < 16; i += 1) ring.push([J[0] + Math.cos((i / 16) * Math.PI * 2) * h, J[1] + Math.sin((i / 16) * Math.PI * 2) * h]);
-    flatPolygon(ring, [], top, { color, mesh: flat });
+    const P = L.points;
+    const [J, next] = k ? [P[P.length - 1], P[P.length - 2]] : [P[0], P[1]];
+    const l = Math.hypot(J[0] - next[0], J[1] - next[1]) || 1;
+    const out = Math.atan2(J[1] - next[1], J[0] - next[0]);
+    const ring = [J];
+    for (let i = 0; i <= 12; i += 1) {
+      const t = out - Math.PI / 2 + (i / 12) * Math.PI;
+      ring.push([J[0] + Math.cos(t) * h, J[1] + Math.sin(t) * h]);
+    }
+    if (l > 0) flatPolygon(ring, [], top, { color, mesh: flat });
   }
   const deckSurface = drapeMesh(flat, { flat: false, cell: terrain.cell, x0: terrain.x0, z0: terrain.z0, height: deck });
   const m = { positions: [], indices: [], colors: [], facade: [] };

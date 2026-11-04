@@ -16,14 +16,14 @@
 // cm over the street top. They are a visual only; the ground sampler and
 // the physics do not see them.
 //
-// On a bridge the lines follow the deck (terrain.js bridgeDeck), not the
-// ground, and run on to the deck joint; the line of the approach road
+// On a bridge the lines are draped on the deck height (terrain.js
+// bridgeDeck), not on the ground, and run on to the deck joint; the line of the approach road
 // starts at the joint (bridges.js, issue #131). These lines are in `deck`,
 // at their final height: the view must not drape them again.
 
 import { streetIntersections } from "./signs.js";
 import { GEO_TILE } from "./geo-mesh.js";
-import { approachTrims, bridgeLayout, densify, slicePolyline, trimPolyline } from "./bridges.js";
+import { approachTrims, bridgeLayout, densify, trimPolyline } from "./bridges.js";
 import { mergeMeshes } from "./extrude.js";
 import { bridgeDeck, drapeMesh, terrainOf } from "./terrain.js";
 
@@ -132,27 +132,17 @@ export function roadMarkings(level) {
       if (others.length) cuts.push({ x: n.x, z: n.z, r: Math.max(...others.map((o) => o.width / 2)) + CLEAR });
     }
     if (s.bridge && !flat) {
-      // On the deck, from joint to joint: lifted to the deck on the span,
-      // and draped on the deck height on each run-on (terrain.js bridgeDeck).
+      // On the deck, from joint to joint, draped on the deck height like the
+      // deck top (terrain.js bridgeDeck, geo-mesh.js bridgeMeshes).
       const deck = bridgeDeck(level, s);
       const L = bridgeLayout(level, s);
       const t = terrainOf(level);
-      const own = { positions: [], indices: [], colors: [] };
-      const runOn = { positions: [], indices: [], colors: [] };
-      const parts = [
-        [0, L.span[0], runOn],
-        [L.span[0], L.span[1], own],
-        [L.span[1], L.total, runOn],
-      ];
-      for (const [s0, s1, target] of parts) {
-        if (!(s1 - s0 > 0.05)) continue;
-        const pts = densify(slicePolyline(L.points, s0, s1), 1.5);
-        const yAt = target === own ? (x, z) => y + deck(x, z) : y;
-        for (const side of [1, -1]) line(target, pts, yAt, side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, cuts, MARKING_COLORS.yellow);
-      }
-      const draped = runOn.indices.length ? drapeMesh(runOn, { flat: false, cell: t.cell, x0: t.x0, z0: t.z0, height: deck }) : null;
+      const flatLine = { positions: [], indices: [], colors: [] };
+      const pts = densify(L.points, 1.5);
+      for (const side of [1, -1]) line(flatLine, pts, y, side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, cuts, MARKING_COLORS.yellow);
+      const draped = flatLine.indices.length ? drapeMesh(flatLine, { flat: false, cell: t.cell, x0: t.x0, z0: t.z0, height: deck }) : null;
       const [x0, z0] = s.points[0];
-      deckParts.push({ tile: `${Math.floor(x0 / GEO_TILE)},${Math.floor(z0 / GEO_TILE)}`, meshes: draped ? [own, draped] : [own] });
+      deckParts.push({ tile: `${Math.floor(x0 / GEO_TILE)},${Math.floor(z0 / GEO_TILE)}`, meshes: draped ? [draped] : [] });
       continue;
     }
     const pts = trimPolyline(s.points, trims.get(s.id));

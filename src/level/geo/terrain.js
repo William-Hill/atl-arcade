@@ -581,24 +581,46 @@ export function gradeBridgeEnds(grid, strips) {
     const r = reach + L.width / 2;
     return { L, family: L.host ?? L.id, line: lines.get(L.host ?? L.id), box: [minX - r, maxX + r, minZ - r, maxZ + r] };
   });
-  // A way under a deck keeps its ground (no fill on a road under a bridge):
-  // near each crossing on an OSM span the grade only lowers the ground.
-  const under = [];
+  // A way under a deck keeps its ground along its whole length (no fill on
+  // a road or the trail under a bridge, and no blend from a joint band near
+  // it): there the grade only lowers the ground under a span. A deck run-on
+  // follows the ground at its joint, so a joint near such a way still meets
+  // its road.
+  const under = new Set();
   for (const L of layouts.values()) {
     const P = L.points;
     for (let i = 0; i < P.length - 1; i += 1) {
       for (const o of strips) {
-        if (o.bridge) continue;
+        if (o.bridge || under.has(o)) continue;
         for (let j = 0; j < o.points.length - 1; j += 1) {
           const x = segmentsCross(P[i], P[i + 1], o.points[j], o.points[j + 1]);
           if (!x) continue;
           const a = L.cum[i] + Math.hypot(x[0] - P[i][0], x[1] - P[i][1]);
-          if (a >= L.span[0] + 3 && a <= L.span[1] - 3) under.push({ x: x[0], z: x[1], r: o.width / 2 + CRITICAL });
+          if (a >= L.span[0] + 3 && a <= L.span[1] - 3) under.add(o);
         }
       }
     }
   }
-  const keepsGround = (x, z) => under.some((u) => Math.hypot(x - u.x, z - u.z) <= u.r);
+  const keep = [...under].map((o) => {
+    const r = o.width / 2 + CRITICAL;
+    const xs = o.points.map((p) => p[0]);
+    const zs = o.points.map((p) => p[1]);
+    return { o, r, box: [Math.min(...xs) - r, Math.max(...xs) + r, Math.min(...zs) - r, Math.max(...zs) + r] };
+  });
+  const keepsGround = (x, z) =>
+    keep.some(({ o, r, box }) => {
+      if (x < box[0] || x > box[1] || z < box[2] || z > box[3]) return false;
+      for (let j = 0; j < o.points.length - 1; j += 1) {
+        const [ax, az] = o.points[j];
+        const [bx, bz] = o.points[j + 1];
+        const dx = bx - ax;
+        const dz = bz - az;
+        const l2 = dx * dx + dz * dz || 1;
+        const k = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / l2));
+        if (Math.hypot(x - ax - k * dx, z - az - k * dz) <= r) return true;
+      }
+      return false;
+    });
   const smooth = (k) => k * k * (3 - 2 * k);
   let changed = 0;
   for (let j = 0; j < rows; j += 1) {
@@ -626,6 +648,7 @@ export function gradeBridgeEnds(grid, strips) {
         }
         if (s > G.inward && s < L.total - G.inward && d <= half + G.side) clamps.push({ family, v: line(x, z) - G.under });
       }
+      if (set && keepsGround(x, z)) set = null;
       if (!set && !clamps.length) continue;
       const k = j * cols + i;
       let h = heights[k];
@@ -633,7 +656,6 @@ export function gradeBridgeEnds(grid, strips) {
       // A deck of the same family as the set is on the same line, so the set
       // ground is already under it.
       for (const c of clamps) if (!(set && set.w >= 1 && c.family === set.family)) h = Math.min(h, c.v);
-      if (h > heights[k] && keepsGround(x, z)) h = heights[k];
       if (Math.abs(h - heights[k]) > 1e-6) changed += 1;
       heights[k] = h;
     }

@@ -662,6 +662,30 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Game code: no change. `src/main.js` and the recorder stay as they are.
 - Evidence: at a load average of 37 to 39, the old spec failed 4 of 4 runs (17, 19, 14, and 14 samples). At a load average of 120 to 45, the new spec passed 20 of 20 tests with `--repeat-each 5`.
 
+## 2026-11-03: Score ceiling and move balance (#75)
+
+- Problem: the multiplier was equal to the link count, with no repeat decay and no cap. A combo of n links of p points banked n × n × p. A held dance kept the combo open, so 120 s of one input held more than 1,400,000 points (GP-2 in `production/audits/2026-11-playability/fun-gameplay/FINDINGS.md`).
+- Repeat decay: in one combo, the same move name earns 100 %, 50 %, then 25 % of its points (`COMBO.repeatDecay`). A repeat past the end of the list earns 0 points and does not raise the multiplier. The decay starts again in each new combo. The key is the move name, so each dance in the Q list and the E list counts as a different move.
+- Multiplier cap: the multiplier is the count of links that earn points, from 1 to 10 (`COMBO.maxMultiplier`).
+- Grind rate: `COMBO.grindPerSecond` goes from 60 to 300. The best dance (spin) earns 160 points in 0.6 s, or 267 per second. A grind earns `100 + 300 × t` points, which is more than 300 per second for each length `t`.
+
+  | Grind | Old points (per second) | New points (per second) |
+  |---|---|---|
+  | 1 s | 160 (160) | 400 (400) |
+  | 3 s | 280 (93) | 1,000 (333) |
+
+- Ceiling: `src/sim/skate/balance.test.js` replays the three degenerate inputs from `fun-gameplay/balance-sim.json` for 120 s on flat ground. The test fails if the banked score plus the open combo is 25,000 points or more.
+
+  | Input (120 s) | Links | Old points | New points | New multiplier peak |
+  |---|---|---|---|---|
+  | Push 1 s, then hold W+Q (`holdQLate`) | 99 | 1,470,150 | 789 | 3 |
+  | Hold W, Q and E in turn each 1.2 s (`altQE`) | 148 | 3,432,120 | 21,380 | 10 |
+  | Hold W, Space every 0.7 s (`hops`) | 171 | 1,462,050 | 264 | 3 |
+
+- `altQE` stays the highest, because the Q and E lists have 8 dance names. The ceiling for one combo with only dances is 8 names × 1.75 × the dance points × 10. A grind, an air and the dances in one combo give more.
+- Also: `comboTick` now reads the link window from its `k` argument (GP-10).
+- Not verified: real skaters have not reviewed the balance. No human played the new numbers.
+
 ## 2026-11-03: The window rooms keep their look when the camera turns
 
 - Problem: the windows on the BeltLine buildings flickered. The room hash in the facade shader (`src/render/geo-view.js`) used the view-space normal. Thus each camera turn gave a room a new color, light, blind, and furniture.

@@ -614,6 +614,32 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - State: `wallSlide` is true on a tick where the skater slid. The controller stays pure and deterministic.
 - Not done: real skaters have not reviewed the feel of the slide (AGENTS.md). The two constants are first guesses.
 
+## 2026-11-03: The building source file (#88)
+
+- Decision: each building in a level has one record in `data/buildings/<level>.json`. The record has the name, the address, the height, the floors, and the facade. Each fact has a `value`, a `source`, a `confidence` (`high`, `medium`, `low`, or `none`), and a `ref`. `scripts/building-sources.mjs` writes the file and `data/buildings/<level>.report.md`. `scripts/build-block.mjs` takes each height from the file, and stops with an error when a building has no record.
+- Addresses: the open-data-atl catalog has a City of Atlanta address layer, "Official Address Points" (`dpcd-0a5785b3466a46c7a256f7fa9d628afd-0`, `https://gis.atlantaga.gov/dpcd/rest/services/AdministrativeArea/AddressPoint/MapServer/0`). `scripts/city-addresses.mjs` caches the 4455 current points in the box in `levels/beltline-eastside/raw/city-addresses.json`. A building gets the city address of the points inside its footprint. When one city address agrees with the OSM `addr:*` tags, the record uses that one; otherwise it uses the address with the most points. The OSM `addr:*` tags are the fallback. The tax parcel layer (25) is not used: it has owner names, and it adds no fact that the address points do not have.
+- Result on `beltline-eastside` (1042 buildings): 813 city addresses, 51 OSM addresses, 178 with no address. 35 buildings have a city address and an OSM address that do not agree; the report lists them. The source file uses the city address for them.
+- Heights: no City of Atlanta layer in the catalog has a building height. The zoning `HEIGHT` field is a limit, not a measure, so it is not used. The height order does not change: a researched override, the OSM `height` tag, the OSM `building:levels` tag, Overture (capped for small types), then the type default. 110 buildings keep the type default; none of them has an OSM tag or an Overture value.
+- The M1-03 status line "1024 of 1045 heights are defaults" was out of date. The level on `main` already had 111 defaults of 1042, because the Overture heights were in the build.
+- New override: FORTH Hotel (`w1229184074`, 800 Rankin St NE), 16 stories from Time Out (`https://www.timeout.com/atlanta/hotels/forth-hotel`), 52.2 m (was the 20 m hotel default). One height covers the full footprint, so the low part of the footprint is too tall. This is the only height change in the level.
+- Facade: OSM has no `building:material` tag on this level. The facade fact is the game style from `chooseStyle` (source `style-rule`, confidence `low`). It is a game choice, not a surveyed material.
+- Floors: 19 from OSM, 5 from research, and 1018 estimates from the height (confidence `low`).
+- Level data: the rebuild changes the FORTH Hotel height and adds `stats.buildingSources`. The offline rebuild test fixture (`levels/beltline-eastside/level.json`) changes on purpose.
+
+## 2026-11-03: First load on a phone (#74)
+
+- Rapier WASM as a file: `@dimforge/rapier3d-compat` inlines its 3 MB WASM as base64 in `rapier.mjs`. The Vite plugin `tools/vite/rapier-wasm-file.js` swaps the base64 bytes for the URL of `rapier_wasm3d_bg.wasm`, which the same package ships. The build stops if the pattern does not match exactly once. The dev server does not prebundle Rapier (`optimizeDeps.exclude`), so the URL works in dev too. No new dependency.
+- Bundle: `main.js` goes from 4,541 kB (1,742 kB gzip) to 437 kB (113 kB gzip). The WASM is 3,082 kB (1,188 kB gzip). Vercel compresses `application/wasm` (https://vercel.com/docs/compression).
+- Early downloads: the physics WASM and the skater GLB start at the top of `src/main.js`, in parallel with the level JSON. `fetchSkaterModel()` reports the GLB bytes to the load screen. A test that started the GLB after the physics gave the same first frame and a later skater, so both start at once.
+- Load screen: plain markup and inline CSS in `index.html`, so it shows at the first paint. `src/ui/loader.js` (pure part tested) moves the bar for the level, the physics, and the skater bytes, and fades the screen out after the first game frame.
+- Check: `npm run loadcheck -- --gpu` serves `dist/` with `vite preview`, gzips `.wasm` as the host does, and opens the BeltLine level as a Pixel 7 on Fast 4G (9 Mbps, 60 ms) with a 4x CPU throttle. It prints the startup marks (`atl:level`, `atl:meshes`, `atl:scene`, `atl:physics`, `atl:world`, `atl:first-frame`).
+- Result, 3 runs each, back to back, machine GPU, load average about 30:
+  - Before: first game frame 5,943–6,023 ms, skater 8,893–8,957 ms, 5.51 MB, no load screen.
+  - After: first game frame 5,806–5,921 ms, skater 6,351–6,457 ms, 5.08 MB, a load screen at about 0.2 s.
+  - With the phone skater (1024 px), load average about 32: first game frame 5,527–5,777 ms, skater 5,658–5,878 ms, 4.00 MB.
+- The 4 s target is not met. The marks show the path: `buildGeoMeshes` takes about 2.8 s of main-thread CPU at the 4x throttle, and the physics then waits about 1.1 s for the WASM compile. Next step: build the level meshes at build time or in a worker (#98).
+- Phone skater: `assets/skaters/<name>/skater-1024.glb` has a 1024 px base color in place of 2048 px, with the same mesh, rig, and clips (William approved the `npx @gltf-transform/cli@4.1.1` step). Nia goes from 2,735,736 to 1,598,396 bytes, and Marcus from 2,071,416 to 1,493,828 bytes. A phone screen (the `isPhone()` test of the phone tier) or `?quality=phone` loads it, and `?quality=high` keeps 2048 px. The resize decoded the Draco meshes, so a second step compressed them again with the M1-01 quantization. The provenance files record both commands.
+
 ## 2026-11-03: The toon material keeps the face decal of Nia
 
 - Problem: `toonSkater()` replaced the face decal material that `attachFace()` adds in `loadSkaterModel()`. The shader key went from `skater-face` to `skater-toon-rim`, so the decal eyes and mouth did not show with `?toon=1` (the default).
@@ -625,3 +651,47 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Review fix: `KEPT` also has `depthWrite`. For glTF alpha blend, GLTFLoader sets `transparent: true` and `depthWrite: false`, and the toon material now keeps both.
 - Review fix: `toonSkater()` adds no outline hull to a skinned mesh with a transparent material, because the opaque hull shows through the mesh. Nia and Marcus have only opaque materials, so their hulls do not change.
 - Review fix: the chained hook calls the source hook with the source material as `this`, so a hook that reads `this.userData` keeps its state. The rim state stays in `userData.rim` of the toon material.
+
+## 2026-11-03: Phone layout: hints, HUD, credit, and landscape camera (#73)
+
+- Hints: the start hint names the device ("Tap to start the beat" on touch). The developer hints (H for the colliders, `?view=orbit`) show only with `?dev=1` or `?debug=1`.
+- HUD pills: each HUD text sits on its own dark pill (`--hud-pill`, black at 82%). The text keeps a WCAG contrast of 4.5:1 or more over a white or a black scene. The combo text uses a lighter pink (`#ff80c4`), because the brand pink gave 4.25:1 on the pill over white. All HUD text is 14 px or larger.
+- Compact layout (`@media (max-width: 600px), (max-height: 500px)`): one top line with the short credit "© OpenStreetMap contributors", the score and the HUD column on the left, the beat pulse in the middle, and a smaller skater select on the right. Every position adds the safe-area inset.
+- Credit: on a compact screen a tap on the short credit shows the full attribution text (OpenStreetMap, ODbL, Overture, USGS). A desktop shows the full text, as before.
+- Review fix: the short credit sits on the dark pill, so the white text keeps 4.5:1 or more. It is 24 px high, the WCAG minimum for a tap target. A keyboard user can focus it, and `aria-controls` points to the full text. A tap or a click removes the focus, so the Space key still jumps.
+- Landscape camera: a landscape screen 500 px high or less gets a 42 degree vertical field of view in place of 60 (`fovFor()` in `src/ui/layout.js`). The skater is about 1.5 times as tall, and the test measures at least 15% of the screen height at 844x390.
+- Tests: `e2e/phone-layout.spec.js` checks at 390x844 and 844x390 that no item overlaps another with the longest HUD (a 3-move combo, the pending score, a move tag, and the balance meter), the font sizes, and the contrast.
+- Not done: a fullscreen button and an orientation hint (MOB-9). A reduced-motion option (MOB-11). A shape cue for "style ready" (MOB-12). The skater select still reloads the page (MOB-13).
+- Not verified: iOS Safari (WebKit is not installed) and a real notch or home bar.
+
+## 2026-11-03: The camera tests check ticks, not frames
+
+- Problem: two tests in `e2e/camera.spec.js` failed at a load average of about 20 to 60, on `main` too. They are "the follow camera keeps the skater on screen for a whole lap" and "the follow camera rides the quarter pipe without snapping or flipping". The recorder samples once every N render frames. A slow frame loop gives fewer frames, so `samples.length > 20` and `onRamp.length > 20` failed (11 to 20 seen). Each slow frame also carries up to 5 simulation ticks, so the camera jump per frame went over 1 m (1.46 m seen).
+- Decision: the two tests sample every frame (`recorder.start(1)`) and check simulation ticks:
+  - The largest tick gap between two samples is at most 5 (`maxStepsPerFrame` in `src/sim/fixed-step.js`), and the samples cover the lap less 10 ticks. Thus the off-screen check sees every rendered frame.
+  - The on-ramp samples cover at least 80 ticks. The skater is on the ramp for about 95 ticks.
+  - The camera jump limit is 1 m per tick, not per frame. The bug that this check found was a 12 m jump in 1 tick.
+- Why not a loose gate: the intent does not change. Each frame that the player sees is checked for the skater on screen, and a camera snap still fails. Only the count of frames no longer depends on the machine.
+- Game code: no change. `src/main.js` and the recorder stay as they are.
+- Evidence: at a load average of 37 to 39, the old spec failed 4 of 4 runs (17, 19, 14, and 14 samples). At a load average of 120 to 45, the new spec passed 20 of 20 tests with `--repeat-each 5`.
+
+## 2026-11-03: The window rooms keep their look when the camera turns
+
+- Problem: the windows on the BeltLine buildings flickered. The room hash in the facade shader (`src/render/geo-view.js`) used the view-space normal. Thus each camera turn gave a room a new color, light, blind, and furniture.
+- Decision: the vertex shader makes a seed for each wall face from the model-space normal (rounded to 1/8) and the wall plane distance (rounded to 1 m, mod 97). A `flat` varying sends it to the fragment shader, so all pixels of a wall get the same exact value. The seed does not change with the camera.
+- Second change: the blind slats (40 for each floor) fade to their mean where a slat is under about one pixel, so far blinds do not shimmer.
+- Effect: two parallel walls of one building at the same plane distance (rounded) get the same rooms. This is rare and does not flicker.
+- Shader cache key: `facade-v5`.
+- Test: `e2e/window-rooms.spec.js` turns the fixed camera in place by 0.9 degrees and maps each pixel to the first frame. For a pure rotation the mapped pixel sees the same world ray. With the fix, 21 of 53568 pixels changed (0.04%). With the old shader, 2696 of 53568 pixels changed (5.03%), and the test failed. The limit is 0.5%.
+- Not changed: the ink lines on thin far ledges (`src/render/post.js`) can still shimmer a little.
+
+## 2026-11-03: The far terrain uses the mesh bounds, not the tile square (#87)
+
+- Problem: on the low tier, the coarse far terrain covered Nia to the waist at the BeltLine spawn. With `?farterrain=0` she showed in full.
+- Root cause: `buildGeoMeshes()` puts an item in the 125 m tile of its first point. A long strip runs far out of that tile. The far mesh of tile `1,-3` spans x -153 to 361 and z -375 to 794, and its trail runs under the spawn (337.07, -1.3). `update()` measured the distance to the 125 m tile square, which is 264 m from the spawn. Thus it showed the coarse drape of that trail at the spawn. The coarse drape follows a 16 m terrain and sits above the exact ground that the physics uses.
+- Decision: `update()` measures the distance from the camera to the x/z bounds of the near and far meshes of the tile (`meshBounds()`, `unionBounds()`, `boundsDistance()` in `src/level/geo/geo-mesh.js`). A tile shows its far mesh only when no vertex is within `FAR_TERRAIN_DISTANCE` (60 m) of the camera.
+- Why not a render order or a depth offset: the drape really sits above the near ground. A draw order change hides the symptom at the spawn but not on other slopes.
+- Cost: a tile with a long strip stays near for a longer distance. At the spawn, more than half of the tiles still use the far mesh (Vitest checks this).
+- Test hook: `window.__atl.level.terrainLod` gives `{ tiles, far, nearestFar }`. `nearestFar` is the distance from the camera to the nearest far tile.
+- Tests: `src/level/geo/geo-mesh.test.js` checks the bounds and tile `1,-3`. `e2e/far-terrain.spec.js` opens the spawn on the low tier, checks `nearestFar > 60`, and saves `e2e/__screenshots__/far-terrain-spawn-low.png`. Not verified: the `nearestFar` check against the old distance test. The old `geo-view.js` has no `terrainLod` hook, so the spec fails there before that check.
+- Evidence: `reports/far-terrain/spawn-low-before.png` and `reports/far-terrain/spawn-low-after.png`.

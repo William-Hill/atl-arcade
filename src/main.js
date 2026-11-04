@@ -4,7 +4,8 @@ import { createRenderer, fitToWindow } from "./render/renderer.js";
 import { createLevelLights, createLevelView } from "./render/level-view.js";
 import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
-import { loadSkaterModel } from "./render/skater-model.js";
+import { fetchSkaterModel, loadSkaterModel } from "./render/skater-model.js";
+import { createLoader } from "./ui/loader.js";
 import { toonSkater } from "./render/toon.js";
 import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
@@ -13,6 +14,7 @@ import { createSkaterEnv } from "./sim/skate/skater.js";
 import { createRun, stepRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
 import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
+import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
 import { loadLevel } from "./level/levels.js";
 import { createLevelEnv } from "./level/ground.js";
@@ -20,7 +22,7 @@ import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { terrainOf } from "./level/geo/terrain.js";
 import { createGeoLights, createGeoView, loadKitTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
-import { QUALITY, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
+import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
 import { createLitePost, createPost } from "./render/post.js";
@@ -38,8 +40,24 @@ import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
 
 const params = new URLSearchParams(window.location.search);
+// Start the slow downloads at once, in parallel with the level (#74): the
+// physics WASM and the skater GLB. A test that started the GLB after the
+// physics gave the same first frame (the WASM compile, not the link, is the
+// limit) and a skater 1.6 s later.
+const physicsReady = initPhysics();
+const skaterName = resolveSkater(params.get("skater"));
+const loader = createLoader(document.getElementById("loader"), { skater: skaterName !== "capsule" });
+// A phone gets the skater with a 1024 px base color (#74). The tier is not
+// known yet (it needs the WebGL renderer), so this uses the same device test
+// as the phone tier. ?quality=phone forces it, and ?quality=high keeps 2048 px.
+const smallSkater = params.get("quality") === "phone" || (params.get("quality") !== "high" && isPhone({ touch: (navigator.maxTouchPoints ?? 0) > 0 || (window.matchMedia?.("(pointer: coarse)").matches ?? false), width: window.screen?.width ?? window.innerWidth, height: window.screen?.height ?? window.innerHeight }));
+const skaterBytes = skaterName !== "capsule" ? fetchSkaterModel(skaterName, (n, total) => loader.progress("skater", n, total), { small: smallSkater }) : null;
+// A failed download is reported where the model loads, not here.
+skaterBytes?.catch(() => {});
 // ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
 const level = await loadLevel(params.get("level"));
+performance.mark("atl:level");
+loader.step("level");
 const geo = isGeoLevel(level);
 const env = createLevelEnv(level, { props: params.get("props") !== "0" });
 const skaterEnv = createSkaterEnv(level);
@@ -71,6 +89,7 @@ const GEO_FOG_NEAR = tier.fogNear;
 // A geodata level gets a day sky, a far fog, and a sun that follows the
 // skater. Its meshes are built once and shared with the physics.
 const geoMeshes = geo ? buildGeoMeshes(level) : null;
+performance.mark("atl:meshes");
 let geoLights = null;
 let sky = null;
 if (geo) {
@@ -102,14 +121,30 @@ if (geo) {
 // ODbL: a level built from OpenStreetMap shows its attribution on screen.
 const attribution = document.getElementById("attribution");
 if (attribution && level.attribution) {
-  attribution.textContent = level.attribution;
+  // A compact screen shows the short credit; a tap shows the full text (#73).
+  const short = Object.assign(document.createElement("button"), { type: "button", className: "attr-short", textContent: shortAttribution(level.attribution) });
+  const full = Object.assign(document.createElement("span"), { id: "attr-full", className: "attr-full", textContent: level.attribution });
+  short.setAttribute("aria-expanded", "false");
+  short.setAttribute("aria-controls", full.id);
+  short.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = attribution.classList.toggle("open");
+    short.setAttribute("aria-expanded", String(open));
+    // A tap or a mouse click (detail > 0) removes the focus, so the Space key
+    // jumps and does not toggle the credit. A keyboard user keeps the focus.
+    if (e.detail > 0) short.blur();
+  });
+  attribution.replaceChildren(short, full);
   attribution.hidden = false;
 }
+// ?dev=1 or ?debug=1 shows the developer hints.
+if (params.get("dev") === "1" || params.get("debug") === "1") document.body.classList.add("dev");
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
 const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0" }) : createLevelView(level);
 scene.add(levelView.root);
+performance.mark("atl:view");
 
 // Street name signs at the real intersections (src/level/geo/signs.js).
 // ?signs=0 leaves them out.
@@ -164,12 +199,12 @@ if (geo && !tier.shadows) {
 // skater (src/ui/skater-select.js), and ?skater=capsule keeps the capsule.
 // The skater gets the toon look (src/render/toon.js); ?toon=0 keeps the GLB
 // materials.
-const skaterName = resolveSkater(params.get("skater"));
 createSkaterSelect(document.body, skaterName);
 const skaterModel = { name: skaterName, loaded: false, error: null };
 if (skaterName !== "capsule") {
-  loadSkaterModel(skaterName)
+  loadSkaterModel(skaterName, skaterBytes)
     .then((loaded) => {
+      loader.step("skater");
       if (params.get("toon") !== "0") toonSkater(loaded);
       skaterView.attachModel(loaded);
       skaterModel.loaded = true;
@@ -247,8 +282,12 @@ window.addEventListener("resize", resize);
 
 const silhouette = createSilhouette(renderer);
 
-const RAPIER = await initPhysics();
+performance.mark("atl:scene");
+const RAPIER = await physicsReady;
+performance.mark("atl:physics");
+loader.step("physics");
 const physics = createPhysicsWorld(RAPIER, level, { geoMeshes });
+performance.mark("atl:world");
 const debug = createDebugColliders(physics.world);
 scene.add(debug.lines);
 debug.visible = params.get("debug") === "1";
@@ -265,7 +304,7 @@ if (touch) document.body.classList.add("touch");
 const input = createInput({ target: window, touch });
 let run = createRun(level);
 let skater = run.skater;
-const hud = createHud(document.getElementById("hud"));
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch) });
 // Simulation events for the tests and the playtest harness.
 const events = [];
 
@@ -376,6 +415,14 @@ const recorder = { active: false, every: 10, samples: [] };
 const fps = { active: false, frameMs: [] };
 const projected = new THREE.Vector3();
 
+// The skater height on the screen, as a fraction of the screen height
+// (feet to 1.7 m), for the phone layout test (#73).
+function skaterScreenHeight() {
+  const feet = new THREE.Vector3(skater.position[0], skater.position[1], skater.position[2]).project(camera);
+  const head = new THREE.Vector3(skater.position[0], skater.position[1] + 1.7, skater.position[2]).project(camera);
+  return Math.abs(head.y - feet.y) / 2;
+}
+
 function projectSkater() {
   projected.set(skater.position[0], skater.position[1] + 0.8, skater.position[2]).project(camera);
   return { x: projected.x, y: projected.y, z: projected.z };
@@ -434,6 +481,10 @@ function frame(now) {
   if (npcView) npcView.sync(crowd, camera.position);
   draw();
   frames += 1;
+  if (frames === 1) {
+    loader.hide();
+    performance.mark("atl:first-frame");
+  }
   if (recorder.active && frames % recorder.every === 0) {
     recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
   }
@@ -492,6 +543,9 @@ window.__atl = {
     },
     signs: streetSigns ? { count: streetSigns.count, names: streetSigns.names } : null,
     kit: geo ? levelView.kit : null,
+    get terrainLod() {
+      return geo && levelView.terrainLod ? { ...levelView.terrainLod } : null;
+    },
     get facadeDepth() {
       return geo && levelView.facadeDepth ? { ...levelView.facadeDepth } : null;
     },
@@ -589,6 +643,8 @@ window.__atl = {
     get name() {
       return skaterModel.name;
     },
+    // True when the 1024 px phone variant loaded.
+    small: smallSkater,
     get loaded() {
       return skaterModel.loaded;
     },
@@ -693,6 +749,10 @@ window.__atl = {
   },
   get frames() {
     return frames;
+  },
+  skaterScreenHeight,
+  get fov() {
+    return camera.fov;
   },
   get rendererInfo() {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };

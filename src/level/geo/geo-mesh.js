@@ -75,6 +75,33 @@ function tileOf(x, z) {
   return `${Math.floor(x / GEO_TILE)},${Math.floor(z / GEO_TILE)}`;
 }
 
+// The ground bounds of a mesh: { minX, maxX, minZ, maxZ }. An item joins
+// the tile of its first point, so a long strip runs out of its tile; use
+// these bounds, not the tile square, for a distance test.
+export function meshBounds(mesh) {
+  const p = mesh.positions;
+  const b = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+  for (let i = 0; i < p.length; i += 3) {
+    if (p[i] < b.minX) b.minX = p[i];
+    if (p[i] > b.maxX) b.maxX = p[i];
+    if (p[i + 2] < b.minZ) b.minZ = p[i + 2];
+    if (p[i + 2] > b.maxZ) b.maxZ = p[i + 2];
+  }
+  return b;
+}
+
+// The bounds that hold both a and b.
+export function unionBounds(a, b) {
+  return { minX: Math.min(a.minX, b.minX), maxX: Math.max(a.maxX, b.maxX), minZ: Math.min(a.minZ, b.minZ), maxZ: Math.max(a.maxZ, b.maxZ) };
+}
+
+// The ground distance from (x, z) to the bounds (0 inside them).
+export function boundsDistance(b, x, z) {
+  const dx = Math.max(b.minX - x, 0, x - b.maxX);
+  const dz = Math.max(b.minZ - z, 0, z - b.maxZ);
+  return Math.hypot(dx, dz);
+}
+
 function firstPoint(item) {
   return item.outer ? item.outer[0] : item.points[0];
 }

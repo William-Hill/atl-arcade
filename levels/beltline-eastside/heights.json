@@ -4,6 +4,7 @@
     "w269992060": { "name": "Signal House", "stories": 21, "height": 68.2, "source": "https://www.bdcnetwork.com/home/news/55165570/atlantas-old-fourth-ward-gets-a-21-story-162-unit-multifamily-residential-building", "was": "27.7 m (Overture)" },
     "w1139043886": { "name": "Overline Residences", "stories": 18, "height": 58.6, "source": "https://atlantaagentmagazine.com/2023/09/28/overline-residences-opens/", "was": "19.73 m (Overture)" },
     "w741961704": { "name": "Kroger at 725 Ponce", "stories": 1, "height": 7, "source": "https://en.wikipedia.org/wiki/725_Ponce", "note": "A ground-floor store under the 12-story office building. 7 m is one tall retail floor.", "was": "51.5 m (Overture)" },
+    "w1229184074": { "name": "FORTH Hotel", "stories": 16, "height": 52.2, "source": "https://www.timeout.com/atlanta/hotels/forth-hotel", "note": "800 Rankin St NE. The page calls it a 16-story tower. One height covers the full footprint, so the low wing is too tall.", "was": "20 m (default for hotel)" },
     "w1139043884": { "name": "619 Ponce", "stories": 4, "height": 17.8, "source": "https://casestudies.uli.org/metro_area/atlanta", "note": "4 stories at about 4.2 m (office floors).", "was": "23.57 m (Overture)" }
   }
 }

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { GEO_TILE, SURFACE_COLORS, buildGeoMeshes, buildPropMeshes } from "../level/geo/geo-mesh.js";
+import { SURFACE_COLORS, boundsDistance, buildGeoMeshes, buildPropMeshes, meshBounds, unionBounds } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
 import { facadeKit } from "../level/geo/facade-kit.js";
@@ -96,13 +96,21 @@ export function createFacadeMaterial(gradientMap, { brickMap = null, interiors =
     shader.uniforms.uBrickTile = { value: brickInfo.tileMeters };
     shader.uniforms.uBrickOn = { value: brickMap ? 1 : 0 };
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;")
-      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFacade = facade;");
+      .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;\nflat varying vec3 vWallSeed;")
+      .replace(
+        "#include <begin_vertex>",
+        // A seed for each wall face, from the model-space normal and the
+        // wall plane. It does not change with the camera, so a room keeps
+        // its look when the camera turns. All 4 corners of a wall give the
+        // same value, and the flat varying keeps it exact.
+        "#include <begin_vertex>\nvFacade = facade;\nvWallSeed = vec3(floor(normal.xz * 8.0 + 0.5), mod(floor(dot(position.xz, normal.xz) + 0.5), 97.0));",
+      );
     shader.fragmentShader = shader.fragmentShader
       .replace(
         "#include <common>",
         `#include <common>
 varying vec4 vFacade;
+flat varying vec3 vWallSeed;
 uniform vec4 uStyleA[${n}];
 uniform vec3 uGlass[${n}];
 uniform vec3 uTrim[${n}];
@@ -172,7 +180,7 @@ vec3 roomColor(float h) {
       vec2 o0 = vec2(0.5 - win.x * 0.5, cy - win.y * 0.5) * m;
       vec2 o1 = vec2(0.5 + win.x * 0.5, cy + win.y * 0.5) * m;
       vec3 q = p + r * (reveal / r.z);
-      vec3 rid = vec3(floor(vFacade.yz), float(st) + dot(wallCol, vec3(7.0, 13.0, 3.0)) + dot(N, vec3(5.0, 0.0, 9.0)));
+      vec3 rid = vec3(floor(vFacade.yz), float(st) + dot(wallCol, vec3(7.0, 13.0, 3.0)) + dot(vWallSeed, vec3(5.0, 9.0, 0.37)));
       float h0 = roomHash(rid);
       float h1 = roomHash(rid + 17.3);
       float h2 = roomHash(rid + 41.9);
@@ -214,7 +222,11 @@ vec3 roomColor(float h) {
         if (!lit) col *= 0.42;
         // Blinds pulled down from the top in some windows.
         float blind = h2 < 0.35 ? h2 * 1.6 : 0.0;
-        if (!shop && cell.y > cy + win.y * 0.5 - win.y * blind) col = mix(uTrim[st], vec3(0.96, 0.93, 0.86), 0.5) * (0.82 + 0.1 * step(0.5, fract((cell.y) * 40.0)));
+        // The blind slats: 40 for each floor. Where a slat is under about a
+        // pixel, use the mean, so far blinds do not shimmer.
+        float slatW = aa.y * 20.0; // aa is 2 fwidth, taken outside the branch
+        float slat = mix(step(0.5, fract(cell.y * 40.0)), 0.5, smoothstep(0.35, 0.8, slatW));
+        if (!shop && cell.y > cy + win.y * 0.5 - win.y * blind) col = mix(uTrim[st], vec3(0.96, 0.93, 0.86), 0.5) * (0.82 + 0.1 * slat);
         roomGlow = lit ? col * (shop ? 0.24 : 0.2) : vec3(0.0);
         // The glass: a tint and a sky reflection that grows at a low angle.
         float fres = 0.1 + 0.55 * pow(1.0 - r.z, 3.0);
@@ -246,7 +258,7 @@ vec3 roomColor(float h) {
 }`,
       );
   };
-  mat.customProgramCacheKey = () => `facade-v4${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}`;
+  mat.customProgramCacheKey = () => `facade-v5${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}`;
   return mat;
 }
 
@@ -466,6 +478,9 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   // A far level of detail for the surfaces (the low tier): a surface tile
   // past FAR_TERRAIN_DISTANCE shows a drape on a 16 m terrain, with about a
   // quarter of the triangles. The physics keeps the exact tiles.
+  // The distance uses the bounds of the meshes, not the tile square: a strip
+  // joins the tile of its first point and can run far out of it. The coarse
+  // drape sits above the exact ground, so it must never show near the camera.
   const terrainLods = [];
   if (farTerrain && !terrain.flat) {
     for (const { tile, mesh } of buildGeoMeshes(level, { terrainStep: 2, surfacesOnly: true })) {
@@ -473,10 +488,11 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       if (!near) continue;
       const far = addMesh(root, byId, `surface-far-${tile}`, geoGeometry(mesh), materials.surface);
       far.visible = false;
-      const [ix, iz] = tile.split(",").map(Number);
-      terrainLods.push({ near, far, x0: ix * GEO_TILE, z0: iz * GEO_TILE });
+      const bounds = unionBounds(meshBounds({ positions: near.geometry.attributes.position.array }), meshBounds(mesh));
+      terrainLods.push({ near, far, bounds });
     }
   }
+  const terrainLod = { tiles: terrainLods.length, far: 0, nearestFar: Infinity };
   for (const [tile, mesh] of kitTiles) addMesh(root, byId, `kit-${tile}`, geoGeometry(mesh), materials.building, { castShadow: true });
   // The sills and the piers: one mesh per depth tile, hidden far away in
   // update().
@@ -518,20 +534,29 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     },
     props,
     kit: kitParts.counts,
-    terrainLods: terrainLods.length,
+    // The far terrain: the tile count, the far tiles now, and the distance
+    // from the camera to the nearest far tile (Infinity with none).
+    terrainLod,
     facadeDepth,
     addProps,
     // Shows each prop tile at one level of detail by its distance from the
     // camera, and hides the far prop and depth tiles.
     update(cameraPosition, seconds = performance.now() / 1000) {
       propMaterial.time.value = seconds;
+      let farTiles = 0;
+      let nearestFar = Infinity;
       for (const t of terrainLods) {
-        const dx = Math.max(t.x0 - cameraPosition.x, 0, cameraPosition.x - (t.x0 + GEO_TILE));
-        const dz = Math.max(t.z0 - cameraPosition.z, 0, cameraPosition.z - (t.z0 + GEO_TILE));
-        const far = Math.hypot(dx, dz) > FAR_TERRAIN_DISTANCE;
+        const d = boundsDistance(t.bounds, cameraPosition.x, cameraPosition.z);
+        const far = d > FAR_TERRAIN_DISTANCE;
         t.near.visible = !far;
         t.far.visible = far;
+        if (far) {
+          farTiles += 1;
+          nearestFar = Math.min(nearestFar, d);
+        }
       }
+      terrainLod.far = farTiles;
+      terrainLod.nearestFar = nearestFar;
       let near = 0;
       let nearTriangles = 0;
       for (const obj of depthTiles) {

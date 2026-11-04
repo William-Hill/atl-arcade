@@ -153,6 +153,8 @@ const VIEWS = [
   { name: "fourth-ward-park", cam: [380, 40, 120, 200, 0, -150], query: "fog=0" },
   { name: "krog-street-market", cam: [-20, 18, 760, -72, 4, 850] },
   { name: "overview", cam: [900, 900, 1100, 0, 0, 0], query: "fog=0" },
+  // FORTH Hotel, 800 Rankin St NE: a 16-story tower (issue #88).
+  { name: "forth-hotel", cam: [90, 30, -300, -44, 28, -435] },
 ];
 
 for (const v of VIEWS) {

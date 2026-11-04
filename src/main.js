@@ -708,6 +708,13 @@ window.__atl = {
   get post() {
     return post;
   },
+  // Debug handles for the sky dome and the scene (weather tuning).
+  get scene() {
+    return scene;
+  },
+  get sky() {
+    return sky;
+  },
   // The render settings now, after any governor step.
   get render() {
     return { quality, pixelRatio: renderer.getPixelRatio(), post: post ? post.kind : null, rung: governor ? governor.rung : null, lastMedianMs: governor ? governor.last : null };

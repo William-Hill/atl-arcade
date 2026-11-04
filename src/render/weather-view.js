@@ -51,9 +51,9 @@ const LERP1 = ["sunIntensity", "hemi", "cloudCover", "fog", "windowLit", "wet", 
 function lerpState(cur, tgt, k) {
   for (const f of LERP1) cur[f] += (tgt[f] - cur[f]) * k;
   for (const f of LERP3) for (let i = 0; i < 3; i += 1) cur[f][i] += (tgt[f][i] - cur[f][i]) * k;
-  const d = tgt.sun.dir.map((v, i) => v - cur.sun.dir[i]);
-  const n = Math.hypot(d[0] + cur.sun.dir[0] * k, d[1] + cur.sun.dir[1] * k, d[2] + cur.sun.dir[2] * k) || 1;
-  cur.sun.dir = cur.sun.dir.map((v, i) => (v + d[i] * k) / n);
+  cur.sun.dir = cur.sun.dir.map((v, i) => v + (tgt.sun.dir[i] - v) * k);
+  const n = Math.hypot(...cur.sun.dir) || 1;
+  cur.sun.dir = cur.sun.dir.map((v) => v / n);
   cur.sun.elevation += (tgt.sun.elevation - cur.sun.elevation) * k;
   return cur;
 }

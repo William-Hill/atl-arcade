@@ -59,7 +59,11 @@ export function createRain({ count = 1800 } = {}) {
         vec3 toCam = normalize(uCam - p);
         // At least about 0.7 px wide so the streak does not average away.
         float pxW = distance(p, uCam) * 1.4 / uResY;
-        vec3 side = normalize(cross(dir, toCam)) * max(mix(0.004, 0.008, h.z), pxW);
+        vec3 sideDir = cross(dir, toCam);
+        // A drop right at the camera gives a zero cross; a NaN here blackens
+        // the whole frame through the bloom pass.
+        sideDir = length(sideDir) < 0.0001 ? vec3(1.0, 0.0, 0.0) : normalize(sideDir);
+        vec3 side = sideDir * max(mix(0.004, 0.008, h.z), pxW);
         vec3 w = p + side * position.x + dir * len * position.y;
         vUv = position.xy;
         vFade = smoothstep(${(BOX / 2).toFixed(1)}, ${(BOX * 0.2).toFixed(1)}, distance(p, uCam)) * smoothstep(0.3, 2.0, distance(p, uCam));
@@ -72,7 +76,8 @@ export function createRain({ count = 1800 } = {}) {
       varying vec2 vUv;
       varying float vFade;
       void main() {
-        float a = (1.0 - abs(vUv.x)) * pow(sin(vUv.y * 3.14159), 0.7) * vFade * 0.42;
+        float a = (1.0 - abs(vUv.x)) * pow(max(sin(vUv.y * 3.14159), 0.0), 0.7) * vFade * 0.42;
+        a = clamp(a, 0.0, 1.0);
         vec3 c = uSky * 1.9 + uGlow * 6.0;
         gl_FragColor = vec4(c * a * uIntensity, a * uIntensity);
       }`,

@@ -51,6 +51,7 @@ import { carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSam
 import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
 import { parkedCars } from "./sim/traffic/parking.js";
 import { createCarView } from "./render/car-view.js";
+import { createCarModelView, loadCarModels } from "./render/car-models.js";
 import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
 import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
 import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
@@ -259,6 +260,21 @@ if (carView) {
   carView.update({ x: level.spawn.position[0], z: level.spawn.position[2] }, traffic?.cars);
   scene.add(carView.mesh);
   env.sampleGround = carGroundSampler(levelSample, parked, () => (traffic ? traffic.cars : []));
+  // The pbr look swaps the near cars for the rigged GLB vehicles
+  // (src/render/car-models.js). ?carglb=0 keeps the kit cars.
+  if (look === "pbr" && params.get("carglb") !== "0") {
+    const cars = [...parked, ...(traffic ? traffic.cars : [])];
+    loadCarModels([...new Set(cars.map((c) => c.kind))])
+      .then((models) => {
+        const view = createCarModelView(models, cars);
+        scene.add(view.group);
+        carView.setModels(view);
+      })
+      .catch((err) => {
+        carView.info.modelError = String(err);
+        console.error(err);
+      });
+  }
 }
 
 // Fact cards (M1-07): 3 cards on the trail, from the open-data-atl site.
@@ -856,9 +872,15 @@ window.__atl = {
         get lanes() {
           return traffic ? traffic.lanes.length : 0;
         },
-        drawCalls: carView.drawCalls,
+        get drawCalls() {
+          return carView.drawCalls;
+        },
         get drawn() {
           return carView.info.drawn;
+        },
+        // The near cars drawn as rigged GLBs (pbr look), and the load error.
+        get models() {
+          return carView.models ? { kinds: carView.models.drawCalls, drawn: carView.info.models } : { error: carView.info.modelError ?? null };
         },
         get lod0() {
           return carView.info.lod0;

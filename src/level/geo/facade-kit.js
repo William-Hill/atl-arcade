@@ -663,7 +663,7 @@ export function shopFront(m, ring, style, si, base, floorH, front, seed, awningC
 // `front` ({ edge, street }, frontEdge()) is the front wall. Without it the
 // building gets no shop front.
 export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null, front = null) {
-  const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
+  const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
   const si = STYLE_INDEX[style.id];
   const ring = orientRing(b.outer, false);
   const counts = { cornice: 0, coping: 0, belt: 0, roof: 0, sill: 0, pier: 0, crown: 0, bulkhead: 0, sign: 0, awning: 0 };
@@ -724,7 +724,7 @@ export function frontEdges(level) {
   const blockedFor = buildingTest(level, sample);
   const out = new Map();
   for (const b of level.buildings ?? []) {
-    if (!(b.outer?.length >= 3) || !STYLES[STYLE_INDEX[chooseStyle(b)]].storefront) continue;
+    if (!(b.outer?.length >= 3) || !STYLES[STYLE_INDEX[chooseStyle(b, level)]].storefront) continue;
     out.set(b.id, frontEdge(orientRing(b.outer, false), isStreet, blockedFor(b.id)));
   }
   return out;

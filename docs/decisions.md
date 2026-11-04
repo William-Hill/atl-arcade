@@ -1019,3 +1019,11 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Footprint claims (`src/level/geo/landmarks.js` `claimedIds`, `geo-mesh.js`, `geo-view.js`): the teleoperator mechanism — a landmark entry with `claim: true` removes its building from the generic extrusion (its merged tile gets material "claimed", which only the render skips). The collider stays. Nothing is claimed yet: the PCM tower/rooftop sign and the Krog front are add-ons over the extrusion. The mechanism is for the next real building models (for example a true Ponce City Market or Fox Theatre GLB).
 - Verified after the merge: 744 Vitest tests + 23 landmark/geo-mesh tests pass; storm, night-rain, and dusk-clouds frames render on the high tier; pbr day and night frames render with no ink.
 - Not done on the epic: district facade styles (per-neighborhood wall/style mixes, teleoperator-style district table), district labels and storefront names, the e2e suite, and the FPS gate on a quiet machine.
+
+## 2026-11-04: epic — district facade styles
+
+- `chooseStyle(b, level)` in `src/level/geo/styles.js` takes the level now. A `DISTRICTS` table anchors each neighborhood on a named building in the level (Ponce City Market → poncey-highland, 380 m; Iris O4W → old-fourth-ward, 520 m; Krog Street Market → inman-park, 380 m), and `DISTRICT_MIX` gives each district a style palette: Inman Park leans craftsman/shotgun/brick, O4W leans modern apartments and storefronts, Poncey-Highland leans storefronts and brick lofts.
+- The mix applies only to the mid-size fallback bucket of `chooseStyle`: BY_NAME and BY_TYPE still win, and the tower and garage rules stay by size. The same building id keeps the same style (the hash pick is unchanged), and a level without the anchors falls back to the old behavior. `anchors()` memoizes per level object.
+- Named landmarks now map to real styles through BY_NAME (PCM → brick-warehouse, Krog → brick-market-hall), so the district mechanism cannot restyle the anchors themselves.
+- Verified: styles.test.js (district mix keeps mid-size stock inside its palette; named buildings keep their style) and the full suite still passes.
+- Not done: district labels and storefront name decals (teleoperator's RUSSIAN HILL map labels / real-business signs), the e2e suite, and the FPS gate.

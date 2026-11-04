@@ -420,7 +420,7 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
     const span = buildingSpan(level, b);
     const y1 = Math.min(g + h, span.top - 0.6);
     let y0 = g + 0.8;
-    const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
+    const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
     if (style.storefront) {
       // The same floors as the facade kit: the belt course is over the
       // ground floor when the building has two floors or more.
@@ -604,7 +604,7 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     // and the render skips it (geo-view.js).
     const claimed = claimedIds(level);
     for (const b of level.buildings ?? []) {
-      const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
+      const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
       const color = wallColor(style, b.id);
       const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, parapet: style.parapet, corniceColor: style.trim };
       const span = buildingSpan(level, b);

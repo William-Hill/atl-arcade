@@ -285,15 +285,71 @@ const BY_NAME = [
   [/fourth ward offices/i, "glass-office"],
 ];
 
+// The district table (after the teleoperator district map): each district
+// anchors on a named building in the level, and mid-size stock near the
+// anchor draws its style from the district's own mix, so a block reads as
+// its neighborhood — the Inman Park houses, the Fourth Ward's newer
+// apartments, the Poncey-Highland storefronts. The big-tower and garage
+// rules stay by size, and named or typed buildings keep their style.
+const DISTRICTS = [
+  { id: "poncey-highland", anchor: "Ponce City Market", radius: 380 },
+  { id: "old-fourth-ward", anchor: "Iris O4W", radius: 520 },
+  { id: "inman-park", anchor: "Krog Street Market", radius: 380 },
+];
+const DISTRICT_MIX = {
+  "poncey-highland": [["storefront", 45], ["brick-loft", 30], ["stucco-apartment", 25]],
+  "old-fourth-ward": [["modern-apartment", 40], ["storefront", 30], ["stucco-apartment", 30]],
+  "inman-park": [["craftsman-house", 35], ["shotgun-house", 20], ["brick-loft", 25], ["stucco-apartment", 20]],
+};
+const anchorCache = new WeakMap();
+function anchors(level) {
+  let list = anchorCache.get(level);
+  if (!list) {
+    const byName = new Map((level.buildings ?? []).map((b) => [b.name, b]));
+    list = DISTRICTS.map((d) => ({ d, b: byName.get(d.anchor) }))
+      .filter((e) => e.b)
+      .map(({ d, b }) => {
+        let x = 0, z = 0;
+        for (const p of b.outer) { x += p[0]; z += p[1]; }
+        return { id: d.id, radius: d.radius, x: x / b.outer.length, z: z / b.outer.length };
+      });
+    anchorCache.set(level, list);
+  }
+  return list;
+}
+// The district of a building: the nearest anchor within its radius.
+function districtOf(b, level) {
+  let x = 0, z = 0;
+  for (const p of b.outer) { x += p[0]; z += p[1]; }
+  x /= b.outer.length;
+  z /= b.outer.length;
+  let best = null;
+  for (const a of anchors(level)) {
+    const d = Math.hypot(x - a.x, z - a.z);
+    if (d < a.radius && (!best || d < best.d)) best = { id: a.id, d };
+  }
+  return best?.id ?? null;
+}
+
 // Picks the style for one building: a landmark name, then the OSM building
-// type, then the size and height. Deterministic for a building id.
-export function chooseStyle(b) {
+// type, then the district mix for mid-size stock, then the size and
+// height. Deterministic for a building id.
+export function chooseStyle(b, level = null) {
   for (const [re, id] of BY_NAME) if (re.test(b.name ?? "")) return id;
   if (b.type && BY_TYPE[b.type]) return BY_TYPE[b.type];
   const area = footprintArea(b.outer);
   const r = hash32(b.id) % 100;
   if (area < 40) return "garage";
   if (b.height >= 30) return r < 50 ? "glass-office" : "modern-apartment";
+  const d = level ? districtOf(b, level) : null;
+  const mix = d ? DISTRICT_MIX[d] : null;
+  if (mix) {
+    let acc = 0;
+    for (const [id, w] of mix) {
+      acc += w;
+      if (r < acc) return id;
+    }
+  }
   if (b.height >= 14) return r < 60 ? "modern-apartment" : "stucco-apartment";
   if (area < 220) return r < 55 ? "craftsman-house" : "shotgun-house";
   if (area > 2500) return r < 50 ? "brick-warehouse" : "industrial-shed";

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import dracoWrapperUrl from "three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js?url";
 import dracoWasmUrl from "three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?url";
 import { attachFace } from "./skater-face.js";
@@ -77,17 +78,56 @@ export function fetchSkaterModel(name = "nia", onProgress = null, { small = fals
   });
 }
 
+// One parse for each skater GLB (#134). The player and the NPC skaters
+// share it. `pristine` is a clone of the scene, made before the player
+// model changes its materials, so an NPC clone starts from the GLB as it
+// is. The clones share the geometry, the textures, and the clips.
+const parsed = new Map();
+
+// Parses a skater GLB once. Returns a promise of { gltf, pristine }.
+// `bytes` is an optional promise from fetchSkaterModel().
+export function parseSkaterGltf(name = "nia", bytes = null) {
+  if (parsed.has(name)) return parsed.get(name);
+  const url = SKATER_MODELS[name];
+  if (!url) return Promise.reject(new Error(`Unknown skater model: ${name}`));
+  const loader = new GLTFLoader();
+  loader.setDRACOLoader(getDracoLoader());
+  const promise = (async () => {
+    const gltf = bytes ? await loader.parseAsync(await bytes, url.slice(0, url.lastIndexOf("/") + 1)) : await loader.loadAsync(url);
+    return { gltf, pristine: cloneSkinned(gltf.scene) };
+  })();
+  parsed.set(name, promise);
+  // A failed parse may try again later.
+  promise.catch(() => parsed.delete(name));
+  return promise;
+}
+
+// A new copy of a skater for an NPC: its own skeleton, and the shared
+// geometry, materials, and clips. Returns the same shape as
+// loadSkaterModel(), with no face decals.
+export async function cloneSkaterModel(name = "nia", bytes = null) {
+  const { gltf, pristine } = await parseSkaterGltf(name, bytes);
+  const scene = cloneSkinned(pristine);
+  let skinnedMesh = null;
+  scene.traverse((o) => {
+    if (o.isSkinnedMesh && !skinnedMesh) skinnedMesh = o;
+    if (o.isMesh) o.castShadow = true;
+  });
+  if (!skinnedMesh) throw new Error(`Skater model ${name} has no skinned mesh`);
+  return { root: wrapModel(scene), skinnedMesh, animations: gltf.animations, face: null };
+}
+
 // Loads a skater GLB. Returns the wrapper, the skinned mesh, the clips, and
 // the face (null when the skater has no face decals). `bytes` is an optional
 // promise from fetchSkaterModel().
 export async function loadSkaterModel(name = "nia", bytes = null) {
-  const url = SKATER_MODELS[name];
-  if (!url) throw new Error(`Unknown skater model: ${name}`);
-  const loader = new GLTFLoader();
-  loader.setDRACOLoader(getDracoLoader());
-  const gltf = bytes ? await loader.parseAsync(await bytes, url.slice(0, url.lastIndexOf("/") + 1)) : await loader.loadAsync(url);
+  const { gltf, pristine } = await parseSkaterGltf(name, bytes);
+  // A second load of the same skater takes a fresh clone, because the
+  // first load changed the scene.
+  const scene = gltf.userData.taken ? cloneSkinned(pristine) : gltf.scene;
+  gltf.userData.taken = true;
   let skinnedMesh = null;
-  gltf.scene.traverse((o) => {
+  scene.traverse((o) => {
     if (o.isSkinnedMesh && !skinnedMesh) skinnedMesh = o;
     if (o.isMesh) o.castShadow = true;
   });
@@ -100,5 +140,5 @@ export async function loadSkaterModel(name = "nia", bytes = null) {
   } catch (err) {
     console.warn(`Skater ${name}: no face decals (${err?.message ?? err})`);
   }
-  return { root: wrapModel(gltf.scene), skinnedMesh, animations: gltf.animations, face };
+  return { root: wrapModel(scene), skinnedMesh, animations: gltf.animations, face };
 }

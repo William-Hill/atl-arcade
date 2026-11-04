@@ -651,10 +651,15 @@ async function cachedOverpass(rawFile, metaFile, query, bbox, args) {
   if (existsSync(rawFile) && existsSync(metaFile) && !args.refresh) {
     const meta = JSON.parse(readFileSync(metaFile, "utf8"));
     if (meta.query === query) {
-      console.log(`build-block: cache hit ${rawFile} (fetched ${meta.fetchedAt})`);
-      return JSON.parse(readFileSync(rawFile, "utf8"));
-    }
-    console.log(`build-block: the cached query in ${metaFile} differs; fetch again`);
+      // Valid JSON is not enough: a cut or edited file must have the
+      // elements list, or it counts as a miss.
+      const cached = JSON.parse(readFileSync(rawFile, "utf8"));
+      if (Array.isArray(cached?.elements)) {
+        console.log(`build-block: cache hit ${rawFile} (fetched ${meta.fetchedAt})`);
+        return cached;
+      }
+      console.log(`build-block: ${rawFile} has no elements list; fetch again`);
+    } else console.log(`build-block: the cached query in ${metaFile} differs; fetch again`);
   }
   if (args.offline) throw new Error(`build-block: --offline and no matching cache at ${rawFile}`);
   console.log(`build-block: fetch ${rawFile} from Overpass`);

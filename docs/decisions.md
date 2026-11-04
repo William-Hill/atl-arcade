@@ -771,3 +771,10 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Result: 95 signs before, 88 after. 24 old corner pairs went and 17 new pairs came. Examples: "Brickworks Cir / Closed Lake Ave" and "Closed Lake Ave / West Ashland Ave NE" became one sign "Brickworks Cir NE / West Ashland Ave NE". The false corner "Ralph McGill Blvd / Ralph McGill Blvd NE" became "Ralph McGill Blvd NE / Fortune St NE". "Austin Ave NE / Elizabeth St NE" became "Elizabeth St NE / Lake Ave NE".
 - Test: `scripts/street-names.test.js` checks every sign name of the level against the city labels. Only a name in `REVIEWED` can differ. It also checks each rule on small fixtures. The byte-for-byte rebuild test in `scripts/build-block.test.js` covers the new raw file.
 - Not done: the sign blades are still too small to read on a phone (GEO-5, #24).
+
+## 2026-11-03: The road markings match the street width by the sign name (#78 follow-up)
+
+- Problem: after #123 the high tier (`quality=high`) did not load. `streetIntersections()` now gives the city sign names (`signName`), but `roadMarkings()` still found the street width by the OSM `name`. For a renamed street the width was `-Infinity`, so the crosswalk bars went to infinity. `drapeMesh()` then looped over an infinite range of terrain cells. The low tier has no road markings, so the low-tier tests did not find it.
+- Fix: `widthOf()` in `src/level/geo/markings.js` matches `signName ?? name`. `drapeMesh()` in `src/level/geo/terrain.js` skips a triangle with a position that is not finite, so one bad triangle cannot stop the load.
+- Measured: the BeltLine markings have 8476 triangles again (3192 with the defect). The high tier loads to 5 frames in 10.4 s in headless Chromium (before: no load in 105 s).
+- Tests: `src/level/geo/markings.test.js` checks that each marking position and tile is finite on the real level, and that a street with a city name different from its OSM name gets finite crosswalks. Both tests fail without the fix.

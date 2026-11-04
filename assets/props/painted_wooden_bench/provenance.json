@@ -1,0 +1,24 @@
+{
+  "asset": "painted_wooden_bench: a street prop for grinds, converted to the toon prop format of assets/kit/street-kit.glb",
+  "date": "2026-11-03",
+  "source": "Poly Haven, https://polyhaven.com/a/painted_wooden_bench, glTF 1k (https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/painted_wooden_bench/painted_wooden_bench_1k.gltf)",
+  "license": "CC0 1.0 (https://polyhaven.com/license). No attribution is necessary.",
+  "credits": "Model by Poly Haven. Conversion by the project. No paid generation credits.",
+  "tool": "Blender 5.2.2 LTS through the Blender MCP (execute_blender_code), glTF 2.0 importer and exporter",
+  "prompt": "None. No generative model was used.",
+  "conversion": [
+    "1. Import the 1k glTF. Keep the original mesh (630 triangles, no decimation).",
+    "2. Sample the diffuse texture at 7 points in each triangle, and average the samples.",
+    "3. Group the triangle colors into 3 colors (k-means, weighted by area).",
+    "4. Keep the hue of each color. Set saturation to at least 0.55 and value to 0.80 * sqrt(v / v_max).",
+    "5. Write the colors as a flat corner color attribute (linear). Remove the materials and the UV map.",
+    "6. Put the bench on y = 0 with its center on x = z = 0. Export with materials NONE and the active vertex color only."
+  ],
+  "colors_srgb": [[0.800, 0.434, 0.354], [0.680, 0.376, 0.306], [0.587, 0.335, 0.264]],
+  "format": "GLB, one mesh, POSITION + NORMAL + COLOR_0, no textures, no materials, no Draco (the kit loader in src/render/geo-view.js has no Draco decoder)",
+  "size_bytes": 30804,
+  "triangles": 630,
+  "vertices": 811,
+  "bounds_m": { "x": [-0.576, 0.589], "y": [0.0, 0.889], "z": [-0.254, 0.243] },
+  "verified": "Loaded with loadKitTemplates() from src/render/geo-view.js and drawn with MeshToonMaterial in headless Chromium (Playwright). No page errors. See preview.png (left: kit bench, right: this bench)."
+}

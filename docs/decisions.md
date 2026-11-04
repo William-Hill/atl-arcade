@@ -758,3 +758,10 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Result: 95 signs before, 88 after. 24 old corner pairs went and 17 new pairs came. Examples: "Brickworks Cir / Closed Lake Ave" and "Closed Lake Ave / West Ashland Ave NE" became one sign "Brickworks Cir NE / West Ashland Ave NE". The false corner "Ralph McGill Blvd / Ralph McGill Blvd NE" became "Ralph McGill Blvd NE / Fortune St NE". "Austin Ave NE / Elizabeth St NE" became "Elizabeth St NE / Lake Ave NE".
 - Test: `scripts/street-names.test.js` checks every sign name of the level against the city labels. Only a name in `REVIEWED` can differ. It also checks each rule on small fixtures. The byte-for-byte rebuild test in `scripts/build-block.test.js` covers the new raw file.
 - Not done: the sign blades are still too small to read on a phone (GEO-5, #24).
+
+## 2026-11-03: Poly Haven props
+
+- Source: Poly Haven (https://polyhaven.com) has CC0 models, textures, and HDRIs. `docs/assets/polyhaven-shortlist.md` lists the assets that fit the game, the gaps (no cone, bollard, ramp, rail, or sign), and the assets that the political rules keep out.
+- Format: a Poly Haven model becomes a toon prop in the format of `assets/kit/street-kit.glb`: vertex colors (COLOR_0), no textures, no materials. The texture gives a few flat colors (k-means), with the brightness range of the kit palette. This keeps the cel look and keeps the files small.
+- First prop: `assets/props/painted_wooden_bench/painted_wooden_bench.glb`, 630 triangles, 30,804 bytes. `loadKitTemplates()` loads it. No Draco, because the kit loader has no Draco decoder.
+- Not done: the bench is not in a level, and it has no LOD1. The Blender MCP add-on is at protocol 7 (the server expects 15), so its Poly Haven import is off. The models came from the Poly Haven API.

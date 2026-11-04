@@ -121,7 +121,17 @@ export function roadMarkings(level) {
 
   // Zebra crosswalks: bars across each street arm, past the cross street.
   for (const ix of streetIntersections(level)) {
-    const widthOf = (name) => Math.max(...streets.filter((s) => s.name === name).map((s) => s.width));
+    // The intersection names are the sign names (the city name when the
+    // build has one, #78), so match on the same name. Use only the strips
+    // through this node, so a wider part of the same street far away does
+    // not move the crosswalk. If no strip has the node, use all strips with
+    // the name.
+    const named = (name) => streets.filter((s) => (s.signName ?? s.name) === name);
+    const widthOf = (name) => {
+      const all = named(name);
+      const here = all.filter((s) => s.points.some(([x, z]) => x === ix.x && z === ix.z));
+      return Math.max(...(here.length ? here : all).map((s) => s.width));
+    };
     for (let k = 0; k < 2; k += 1) {
       const [dx, dz] = ix.dirs[k];
       const w = widthOf(ix.names[k]);

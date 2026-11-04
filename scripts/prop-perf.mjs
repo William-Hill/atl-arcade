@@ -52,6 +52,10 @@ const CAMS = {
   "trail-north": "-37.5,6,-907.5,-61,5,-1000",
   storefront: "-296.7,4,-769,-317.9,4.5,-780.7",
   overview: "126.4,30,-271.7,124.6,5.3,-120",
+  // Trees (#137): a street with a tree row (the North Avenue sidewalk), and
+  // the canopy of Historic Fourth Ward Park.
+  street: "-125,9.5,-706,20,16.5,-700",
+  park: "-175,15,-385,-160,11,-260",
 };
 
 function percentile(sorted, p) {

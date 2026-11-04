@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildPropMeshes } from "./geo-mesh.js";
 import { levelProps } from "./props.js";
-import { TREE_SPECIES, TREE_VARIANTS, isTreeKind, treeKindFor, treeTemplate, treeTemplates, withProceduralTrees } from "./trees.js";
+import { SEASONS, TREE_SPECIES, TREE_VARIANTS, isTreeKind, seasonColors, treeKindFor, treeTemplate, treeTemplates, withProceduralTrees } from "./trees.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
 const SPECIES = Object.keys(TREE_SPECIES);
@@ -35,9 +35,54 @@ describe("procedural trees", () => {
     }
   });
 
-  it("has well-formed attributes: unit normals, colors in 0..1.1, sway in 0..1", () => {
+  it("has the six Atlanta species of issue #137", () => {
+    expect(new Set(SPECIES)).toEqual(new Set(["oak", "pine", "magnolia", "myrtle", "dogwood", "street"]));
+  });
+
+  it("draws a far tree as a few crossed cards of the same size as the near tree", () => {
     for (const s of SPECIES) {
-      const t = treeTemplate(s, 0);
+      for (let v = 0; v < TREE_VARIANTS; v += 1) {
+        const near = treeTemplate(s, v, 0);
+        const far = treeTemplate(s, v, 1);
+        // 3 cards, 2 sides, a trunk quad (2) and a crown fan (8).
+        expect(triangles(far)).toBe(60);
+        const top = (t) => Math.max(...t.positions.filter((_, i) => i % 3 === 1));
+        const width = (t) => Math.max(...t.positions.filter((_, i) => i % 3 === 0)) - Math.min(...t.positions.filter((_, i) => i % 3 === 0));
+        expect(top(far) / top(near)).toBeGreaterThan(0.8);
+        expect(top(far) / top(near)).toBeLessThan(1.15);
+        expect(width(far) / width(near)).toBeGreaterThan(0.7);
+        expect(width(far) / width(near)).toBeLessThan(1.3);
+      }
+    }
+  });
+
+  it("changes the colors with the season, and keeps the shape", () => {
+    for (const s of SPECIES) {
+      const summer = treeTemplate(s, 1, 0, "summer");
+      for (const season of SEASONS) {
+        const t = treeTemplate(s, 1, 0, season);
+        expect(Array.from(t.positions)).toEqual(Array.from(summer.positions));
+      }
+    }
+    // The deciduous trees turn in the fall; the pine stays green.
+    for (const s of ["oak", "dogwood", "street", "myrtle"]) expect(seasonColors(s, "fall").leaf).not.toEqual(seasonColors(s, "summer").leaf);
+    expect(seasonColors("pine", "fall").leaf).toEqual(seasonColors("pine", "summer").leaf);
+    // The dogwood blooms in the spring, the crape myrtle in the summer.
+    expect(seasonColors("dogwood", "spring").share).toBeGreaterThan(0.5);
+    expect(seasonColors("dogwood", "summer").blooms).toBe(null);
+    expect(seasonColors("myrtle", "summer").share).toBeGreaterThan(0.5);
+    expect(seasonColors("myrtle", "fall").blooms).toBe(null);
+    expect(Object.keys(treeTemplates({ season: "winter" }))).toEqual(Object.keys(treeTemplates()));
+  });
+
+  it("keeps a placement species, and its variant from the position", () => {
+    expect(treeKindFor({ kind: "tree_round", species: "dogwood", x: 1, z: 2 })).toMatch(/^tree:dogwood:\d$/);
+    expect(treeKindFor({ kind: "tree_round", species: "nope", x: 1, z: 2 })).not.toMatch(/nope/);
+  });
+
+  it("has well-formed attributes: unit normals, colors in 0..1.1, sway in 0..1", () => {
+    for (const [s, lod] of SPECIES.flatMap((x) => [[x, 0], [x, 1]])) {
+      const t = treeTemplate(s, 0, lod);
       const n = t.positions.length / 3;
       expect(t.normals.length).toBe(n * 3);
       expect(t.colors.length).toBe(n * 3);
@@ -82,6 +127,18 @@ describe("procedural trees", () => {
         }
         expect(crownLow * 0.85).toBeGreaterThan(1.8);
       }
+    }
+  });
+
+  it("has a `clear` height at or under the lowest leaf of each species", () => {
+    for (const s of SPECIES) {
+      let low = Infinity;
+      for (let v = 0; v < TREE_VARIANTS; v += 1) {
+        const t = treeTemplate(s, v);
+        for (let i = 0; i < t.sway.length; i += 1) if (Math.hypot(t.positions[i * 3], t.positions[i * 3 + 2]) > 0.6) low = Math.min(low, t.positions[i * 3 + 1]);
+      }
+      expect(low, s).toBeGreaterThanOrEqual(TREE_SPECIES[s].clear);
+      expect(low - TREE_SPECIES[s].clear, s).toBeLessThan(0.2);
     }
   });
 

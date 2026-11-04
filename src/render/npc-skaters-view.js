@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createSkaterView } from "./skater-view.js";
-import { toonSkater } from "./toon.js";
+import { pbrSkater, toonSkater } from "./toon.js";
 
 // Three.js view of the NPC skaters (#134). Each NPC is a clone of a skater
 // GLB (src/render/skater-model.js: one parse for each GLB), with its own
@@ -112,19 +112,20 @@ export function outfitMaterial(source, outfit) {
   return mat;
 }
 
-// Gives a cloned skater (cloneSkaterModel()) an outfit and the toon look.
+// Gives a cloned skater (cloneSkaterModel()) an outfit and the look's
+// materials: the toon swap + ink hull, or the pbr env-lit GLB materials.
 // `toon: false` keeps the GLB shading (?toon=0).
-export function dressNpc(loaded, outfit, { toon = true } = {}) {
+export function dressNpc(loaded, outfit, { toon = true, look = "toon" } = {}) {
   loaded.root.traverse((o) => {
     if (!o.isMesh) return;
     o.material = Array.isArray(o.material) ? o.material.map((m) => outfitMaterial(m, outfit)) : outfitMaterial(o.material, outfit);
   });
-  return toon ? toonSkater(loaded) : [];
+  return toon ? (look === "pbr" ? pbrSkater : toonSkater)(loaded) : [];
 }
 
 // The view. `state` is from createNpcSkaters(). `load(model)` returns a
 // promise of a cloned skater (cloneSkaterModel()).
-export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW.high } = {}) {
+export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW.high, look = "toon" } = {}) {
   const group = new THREE.Group();
   group.name = "npc-skaters";
   const views = new Map();
@@ -141,7 +142,7 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
     const outfit = { name: npc.spec.outfit, ...(OUTFITS[npc.spec.outfit] ?? OUTFITS.cobalt) };
     load(npc.spec.model)
       .then((model) => {
-        dressNpc(model, outfit, { toon });
+        dressNpc(model, outfit, { toon, look });
         view.attachModel(model);
         entry.ready = true;
         loaded += 1;
@@ -164,9 +165,10 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
     get drawn() {
       return drawn;
     },
-    // Two draw calls for each NPC drawn: the skin and the ink hull.
+    // Two draw calls for each NPC drawn under the toon look (the skin and
+    // the ink hull); the pbr look draws the skin only.
     get drawCalls() {
-      return drawn * (toon ? 2 : 1);
+      return drawn * (toon && look !== "pbr" ? 2 : 1);
     },
     // Compiles the NPC shader programs before the first NPC comes into view.
     // The outfit gives the NPC skin its own program; without this step, a

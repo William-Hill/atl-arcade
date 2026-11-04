@@ -209,3 +209,13 @@ export function landmarkPlacements(level) {
   }
   return out;
 }
+
+// The footprint claim (the teleoperator approach): a landmark with
+// `claim: true` replaces its building — the generic extrusion, facade kit,
+// and awnings do not draw it, so a real landmark model does not double-
+// build over a stylized box. The footprint's collider stays (geo-mesh.js
+// gives it a "claimed" material, which only the render skips).
+export function claimedIds(level, landmarks = LANDMARKS) {
+  const names = new Set(landmarks.filter((l) => l.claim).map((l) => l.buildingName));
+  return new Set((level.buildings ?? []).filter((b) => names.has(b.name)).map((b) => b.id));
+}

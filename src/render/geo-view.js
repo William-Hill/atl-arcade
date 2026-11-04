@@ -3,12 +3,16 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { SURFACE_COLORS, boundsDistance, buildGeoMeshes, meshBounds, unionBounds } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
-import { facadeKit } from "../level/geo/facade-kit.js";
+import { storefrontAprons } from "../level/geo/aprons.js";
+import { facadeKit, frontEdges } from "../level/geo/facade-kit.js";
+import { shopNamesMesh } from "./shop-names.js";
 import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
 import { createMuralAtlas } from "./murals.js";
 import { createPropBatch } from "./prop-batch.js";
+import { BRICK_TONE, ENV_LIGHT, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
+import { createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
 import concreteInfo from "../../assets/ground/concrete/set.json";
@@ -80,9 +84,15 @@ export function geoGeometry(mesh) {
 // (interior mapping): the view ray goes through a window reveal and hits the
 // walls, the floor, or the ceiling of a box room. The room has depth and
 // parallax, at no geometry cost.
-export function createFacadeMaterial(gradientMap, { brickMap = null, interiors = false } = {}) {
-  const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
-  if (interiors) mat.defines = { INTERIOR: 1 };
+//
+// In the pbr look (src/render/look.js) the glass is smooth, so it reflects
+// the sky environment map, and the wall is rough. The base of each wall gets
+// a ground-contact darkening (WALL_AO), and the fake sky reflection of the
+// interior glass is weaker, because the environment map gives a real one.
+export function createFacadeMaterial(gradientMap, { brickMap = null, interiors = false, look = "toon" } = {}) {
+  const pbr = look === "pbr";
+  const mat = litMaterial(look, { vertexColors: true }, { gradientMap, roughness: ROUGHNESS.wall, envLight: ENV_LIGHT.wall });
+  mat.defines = { ...(interiors ? { INTERIOR: 1 } : {}), ...(pbr ? { PBR_LOOK: 1 } : {}) };
   const n = STYLES.length;
   // styleA: window width and height (cell fractions), storefront, brick.
   const styleA = STYLES.map((s) => new THREE.Vector4(s.window[0], s.window[1], s.storefront ? 1 : 0, s.brick ? 1 : 0));
@@ -92,15 +102,28 @@ export function createFacadeMaterial(gradientMap, { brickMap = null, interiors =
   const brickMean = new THREE.Color(brickInfo.targetHex);
   const glass = STYLES.map((s) => new THREE.Vector3(...s.glass));
   const trim = STYLES.map((s) => new THREE.Vector3(...s.trim));
+  // The window frames: the style frame color (painted steel), or the trim.
+  const frameCol = STYLES.map((s) => new THREE.Vector3(...(s.frame ?? s.trim)));
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uStyleA = { value: styleA };
     shader.uniforms.uGlass = { value: glass };
     shader.uniforms.uTrim = { value: trim };
+    shader.uniforms.uFrame = { value: frameCol };
     shader.uniforms.uStyleM = { value: styleM };
     shader.uniforms.uBrick = { value: brickMap };
     shader.uniforms.uBrickMean = { value: new THREE.Vector3(brickMean.r, brickMean.g, brickMean.b) };
     shader.uniforms.uBrickTile = { value: brickInfo.tileMeters };
     shader.uniforms.uBrickOn = { value: brickMap ? 1 : 0 };
+    // The window light factor (src/render/weather-view.js): 0 in the day,
+    // up to 1 at night, more under a dark sky. The material keeps the
+    // uniform so the weather can write it after the shader compiles.
+    shader.uniforms.uLit = { value: 0 };
+    mat.userData.uLit = shader.uniforms.uLit;
+    // The sun direction in world space (+x east, +y up, +z south) and its
+    // elevation factor in w (weather-view writes it): the lintels, the
+    // sills, and the floor slabs shade the wall face under it.
+    shader.uniforms.uSun = { value: new THREE.Vector4(0, 1, 0, 0) };
+    mat.userData.uSun = shader.uniforms.uSun;
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;\nflat varying vec3 vWallSeed;")
       .replace(
@@ -120,13 +143,23 @@ flat varying vec3 vWallSeed;
 uniform vec4 uStyleA[${n}];
 uniform vec3 uGlass[${n}];
 uniform vec3 uTrim[${n}];
+uniform vec3 uFrame[${n}];
 uniform vec2 uStyleM[${n}];
 uniform sampler2D uBrick;
 uniform vec3 uBrickMean;
 uniform float uBrickTile;
 uniform float uBrickOn;
+uniform float uLit;
+uniform vec4 uSun;
+// The glass mask for the roughness (pbr look): 1 on a near window pixel,
+// and the glass roughness of that window.
+float facadeGlass = 0.0;
+float facadeGlassRough = ${ROUGHNESS.glass.toFixed(3)};
+float facadeHash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+float roomHash(vec3 p) { return facadeHash(p); }
+// The center (cell fraction) of the shop window on the ground floor.
+#define SHOP_CY 0.46
 #ifdef INTERIOR
-float roomHash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
 // Room colors: warm white, beige, pale blue, sage, peach, and a deep teal.
 vec3 roomColor(float h) {
   if (h < 0.22) return vec3(0.95, 0.9, 0.8);
@@ -149,8 +182,9 @@ vec3 roomColor(float h) {
     float level = floor(vFacade.z);
     vec4 a = uStyleA[st];
     bool shop = level < 0.5 && a.z > 0.5;
-    vec2 win = shop ? vec2(0.84, 0.74) : a.xy;
-    vec2 d = abs(cell - vec2(0.5, shop ? 0.42 : 0.55)) * 2.0;
+    // The shop glass ends at 0.13 of the floor: a stone kick plate is under it.
+    vec2 win = shop ? vec2(0.84, 0.66) : a.xy;
+    vec2 d = abs(cell - vec2(0.5, shop ? SHOP_CY : 0.55)) * 2.0;
     // Anti-aliased edges: blend over one screen pixel, not a hard step.
     vec2 aa = max(fwidth(vFacade.yz) * 2.0, vec2(1e-4));
     float inWin = (1.0 - smoothstep(win.x - aa.x, win.x + aa.x, d.x)) * (1.0 - smoothstep(win.y - aa.y, win.y + aa.y, d.y));
@@ -158,11 +192,31 @@ vec3 roomColor(float h) {
     float inFrame = (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(fw.y - aa.y, fw.y + aa.y, d.y));
     float frame = clamp(inFrame - inWin, 0.0, 1.0);
     // A sill under each window, and a center mullion on wide windows.
-    float sillY = (shop ? 0.42 : 0.55) - win.y * 0.5 - 0.05;
+    float sillY = (shop ? SHOP_CY : 0.55) - win.y * 0.5 - 0.05;
     float sill = (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(0.03 - aa.y, 0.03 + aa.y, abs(cell.y - sillY)));
+    // A stone lintel over each upper window of a brick style: a band over
+    // the frame top, a little wider than the frame.
+    float lintelY = 0.55 + win.y * 0.5 + 0.035;
+    float lintel = (!shop && a.w > 0.5) ? (1.0 - smoothstep(fw.x + 0.04 - aa.x, fw.x + 0.04 + aa.x, d.x)) * (1.0 - smoothstep(0.03 - aa.y, 0.03 + aa.y, abs(cell.y - lintelY - 0.03))) : 0.0;
+    // The kick plate under the shop glass: from the floor to the frame
+    // bottom, as wide as the frame.
+    float kick = shop ? (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(SHOP_CY - fw.y * 0.5 - aa.y, SHOP_CY - fw.y * 0.5 + aa.y, cell.y)) : 0.0;
     float mull = win.x > 0.5 ? (1.0 - smoothstep(0.025 - aa.x, 0.025 + aa.x, abs(cell.x - 0.5))) * inWin : 0.0;
     vec3 glass = uGlass[st] + vec3(0.18 * cell.y) + vec3(0.12) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
+    #ifdef PBR_LOOK
+    // Each window pane is a little different: its tint and how sharp its
+    // reflection is. A real facade reads as a patchwork, not a grid.
+    float paneH = facadeHash(vec3(floor(vFacade.yz), float(st) * 7.0 + vFacade.x));
+    glass *= 0.82 + 0.36 * paneH;
+    facadeGlassRough = mix(0.03, 0.28, fract(paneH * 7.31));
+    #endif
     vec3 wallCol = diffuseColor.rgb;
+    // The brick tone of the wall face (look.js brickTone()): one value for
+    // each face, so two faces of a building do not have the same tone.
+    if (a.w > 0.5) {
+      float tk = 2.0 * facadeHash(vWallSeed + float(st)) - 1.0;
+      wallCol *= vec3(1.0) + tk * vec3(${(BRICK_TONE.value + BRICK_TONE.warm).toFixed(3)}, ${BRICK_TONE.value.toFixed(3)}, ${(BRICK_TONE.value - BRICK_TONE.warm).toFixed(3)});
+    }
     #ifdef INTERIOR
     vec3 roomGlow = vec3(0.0);
     {
@@ -182,7 +236,7 @@ vec3 roomColor(float h) {
       float reveal = 0.22;
       vec3 p = vec3(cell.x * m.x, cell.y * m.y, 0.0);
       // The window opening, in meters, and the ray at the glass plane.
-      float cy = shop ? 0.42 : 0.55;
+      float cy = shop ? SHOP_CY : 0.55;
       vec2 o0 = vec2(0.5 - win.x * 0.5, cy - win.y * 0.5) * m;
       vec2 o1 = vec2(0.5 + win.x * 0.5, cy + win.y * 0.5) * m;
       vec3 q = p + r * (reveal / r.z);
@@ -202,7 +256,9 @@ vec3 roomColor(float h) {
         float t = min(min(tx, ty), tz);
         vec3 h = p + r * t;
         vec3 base = roomColor(h0);
-        bool lit = shop || h1 > 0.3;
+        // More rooms are lit at night (uLit): about half in the day, most
+        // of them after dark.
+        bool lit = shop || h1 > mix(0.45, 0.18, uLit);
         if (shop && (t == tz || t == tx) && h.y > 0.3 && h.y < 2.3) {
           // Shop shelves: rows of goods in bright colors, with dark shelf lines.
           float along = t == tz ? h.x : h.z;
@@ -233,10 +289,18 @@ vec3 roomColor(float h) {
         float slatW = aa.y * 20.0; // aa is 2 fwidth, taken outside the branch
         float slat = mix(step(0.5, fract(cell.y * 40.0)), 0.5, smoothstep(0.35, 0.8, slatW));
         if (!shop && cell.y > cy + win.y * 0.5 - win.y * blind) col = mix(uTrim[st], vec3(0.96, 0.93, 0.86), 0.5) * (0.82 + 0.1 * slat);
-        roomGlow = lit ? col * (shop ? 0.24 : 0.2) : vec3(0.0);
-        // The glass: a tint and a sky reflection that grows at a low angle.
+        // A daylit room is much darker than the facade (the reflection
+        // carries the window); at night the lit room is the light source,
+        // in a warm interior color.
+        roomGlow = lit ? col * mix(0.05, shop ? 1.1 : 0.85, uLit) : vec3(0.0);
+        roomGlow *= mix(vec3(1.0), vec3(1.0, 0.72, 0.42), uLit * 0.8);
+        // The glass: a tint and a sky reflection that grows at a low angle
+        // and dims at night, when the dark sky gives little to reflect.
         float fres = 0.1 + 0.55 * pow(1.0 - r.z, 3.0);
-        vec3 sky = mix(vec3(0.75, 0.87, 1.0), uGlass[st] + vec3(0.25), 0.4);
+        #ifdef PBR_LOOK
+        fres *= 0.35;
+        #endif
+        vec3 sky = mix(vec3(0.75, 0.87, 1.0), uGlass[st] + vec3(0.25), 0.4) * mix(1.0, 0.18, uLit);
         col = mix(col * mix(vec3(1.0), uGlass[st] * 2.2, 0.25), sky, fres);
         col += vec3(0.08) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
       }
@@ -249,22 +313,82 @@ vec3 roomColor(float h) {
     // Sample outside the branch, so the mipmap level stays correct.
     vec3 detail = clamp(texture2D(uBrick, vFacade.yz * uStyleM[st] / uBrickTile).rgb / uBrickMean, 0.35, 2.2);
     if (uBrickOn > 0.5 && a.w > 0.5) wallCol *= mix(detail, vec3(1.0), far0);
-    vec3 col = mix(wallCol, uTrim[st], max(frame, sill) * 0.85);
+    // The frame is painted steel; the sill, the lintel, and the kick plate
+    // are cast stone.
+    vec3 col = mix(wallCol, uFrame[st], frame * 0.85);
+    col = mix(col, uTrim[st], max(sill, lintel) * 0.85);
+    col = mix(col, uTrim[st] * 0.85, kick);
+    #ifdef PBR_LOOK
+    // The sun on this wall face: the lintels, the sills, and the floor
+    // slabs cast thin shadow bands (the self-shadowing cue of
+    // docs/research/2026-11-04-gen-city-auto.md).
+    float sunFace = max(dot(normalize(vNormal), normalize((viewMatrix * vec4(uSun.xyz, 0.0)).xyz)), 0.0) * clamp(uSun.w, 0.0, 1.0);
+    // The lintel shadow: a band on the wall and the window top under the
+    // lintel line.
+    float lshade = (!shop && a.w > 0.5) ? (1.0 - smoothstep(fw.x + 0.04 - aa.x, fw.x + 0.04 + aa.x, d.x)) * (1.0 - smoothstep(0.05 - aa.y, 0.05 + aa.y, abs(cell.y - (lintelY - 0.055)))) : 0.0;
+    col *= 1.0 - 0.3 * lshade * sunFace;
+    // The sill shadow: a band on the wall under each sill.
+    float sshade = (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(0.055 - aa.y, 0.055 + aa.y, abs(cell.y - (sillY - 0.06))));
+    col *= 1.0 - 0.22 * sshade * sunFace;
+    // A floor band at each slab, above the ground floor: a thin line a little
+    // darker than the wall, so a tall building shows its floors. The slab
+    // shadow deepens it when the sun is on the face.
+    float slab = level > 0.5 ? 1.0 - smoothstep(0.035, 0.035 + aa.y, cell.y) : 0.0;
+    col *= 1.0 - (0.22 + 0.26 * sunFace) * slab;
+    #endif
     col = mix(col, glass, inWin);
-    col = mix(col, uTrim[st], mull * 0.9);
+    col = mix(col, uFrame[st], mull * 0.9);
     // Far away a window cell is under a few pixels: fade to the mean color,
     // so the grid does not shimmer.
     float far = far0;
-    vec3 mean = mix(wallCol, uGlass[st] + vec3(0.09), win.x * win.y * 0.9);
+    // The trim area is in the mean, so the near and the far colors match.
+    vec3 mean = mix(mix(wallCol, uTrim[st], 0.08), uGlass[st] + vec3(0.09), win.x * win.y * 0.9);
     diffuseColor.rgb = mix(col, mean, far);
+    facadeGlass = inWin * (1.0 - far);
+    #ifdef PBR_LOOK
+    // The albedo calibration (the bleached white-box fix of the gen-city
+    // research): darker walls, a little less chroma.
+    diffuseColor.rgb *= 0.74;
+    float albL = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(albL), 0.1);
+    #endif
+    #ifdef PBR_LOOK
+    // Ground contact: darker at the base of the wall (look.js wallOcclusion).
+    diffuseColor.rgb *= ${WALL_AO.base.toFixed(3)} + ${(1 - WALL_AO.base).toFixed(3)} * smoothstep(0.0, ${WALL_AO.floors.toFixed(3)}, vFacade.z);
+    #endif
     #ifdef INTERIOR
     totalEmissiveRadiance += roomGlow * inWin * (1.0 - far);
     #endif
+    // The flat lit window: on the tier with no interior rooms it carries
+    // the whole night look; with rooms it adds a faint lamp in the unlit
+    // ones. A per-window hash picks which windows light and how warm.
+    if (uLit > 0.01) {
+      float wh = roomHash(vec3(floor(vFacade.yz), float(st) + dot(vWallSeed, vec3(5.0, 9.0, 0.37)) + 31.0));
+      float litWin = step(wh, uLit * (shop ? 0.95 : 0.6));
+      vec3 glowC = wh < 0.5 ? vec3(1.0, 0.76, 0.48) : vec3(0.82, 0.88, 1.0);
+      #ifdef INTERIOR
+      totalEmissiveRadiance += glowC * litWin * inWin * (1.0 - far) * uLit * 0.12;
+      #else
+      totalEmissiveRadiance += glowC * litWin * inWin * (1.0 - far) * uLit * 0.55;
+      #endif
+    }
   }
+}`,
+      )
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);")
+      .replace(
+        "#include <normal_fragment_begin>",
+        `#include <normal_fragment_begin>
+{
+  // Each pane reflects at its own angle: a small normal wobble per window
+  // cell (gen-city), so adjacent panes catch the sky differently.
+  float wu = facadeHash(vec3(floor(vFacade.yz), vFacade.x + 11.0));
+  float wv = facadeHash(vec3(floor(vFacade.yz), vFacade.x + 29.0));
+  normal = normalize(normal + vec3(wu - 0.5, wv - 0.5, 0.0) * 0.06 * facadeGlass);
 }`,
       );
   };
-  mat.customProgramCacheKey = () => `facade-v5${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}`;
+  mat.customProgramCacheKey = () => `facade-v8${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}`;
   return mat;
 }
 
@@ -291,8 +415,11 @@ const GROUND_OF = {
 // meters. The detail is the scan over its mean color, so the palette stays.
 // A second, rotated, larger sample breaks the tile repeat. The detail fades
 // out with distance, where a tile is under a few pixels.
-export function createSurfaceMaterial(gradientMap, { maps = null } = {}) {
-  const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
+export function createSurfaceMaterial(gradientMap, { maps = null, look = "toon" } = {}) {
+  const mat = litMaterial(look, { vertexColors: true }, { gradientMap, roughness: ROUGHNESS.ground, envLight: ENV_LIGHT.ground });
+  // The albedo calibration (pbr look): a darker ground, toward real
+  // asphalt and soil (docs/research gen-city: nothing stays near-white).
+  if (look === "pbr") mat.color.setScalar(0.72);
   if (!maps) return mat;
   const kinds = Object.keys(GROUND_OF);
   const kindColor = kinds.map((k) => new THREE.Vector3(...SURFACE_COLORS[k]));
@@ -307,6 +434,10 @@ export function createSurfaceMaterial(gradientMap, { maps = null } = {}) {
     shader.uniforms.uKindColor = { value: kindColor };
     shader.uniforms.uKindSet = { value: kindSet };
     shader.uniforms.uKindStrength = { value: kindStrength };
+    // The ground wetness (src/render/weather-view.js): 0 dry, 1 soaked.
+    // Kept on the material so the weather can write it after compile.
+    shader.uniforms.uWet = { value: 0 };
+    mat.userData.uWet = shader.uniforms.uWet;
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec2 vGroundXZ;")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGroundXZ = (modelMatrix * vec4(transformed, 1.0)).xz;");
@@ -320,6 +451,7 @@ ${decl}
 uniform vec3 uKindColor[${kinds.length}];
 uniform float uKindSet[${kinds.length}];
 uniform float uKindStrength[${kinds.length}];
+uniform float uWet;
 vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   vec3 a = texture2D(t, xz / tile).rgb / mean;
   vec2 r = mat2(0.8, -0.6, 0.6, 0.8) * xz;
@@ -345,10 +477,15 @@ vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   vec3 det = set < -0.5 ? vec3(1.0) : set < 0.5 ? d0 : set < 1.5 ? d1 : set < 2.5 ? d2 : d3;
   float fade = 1.0 - smoothstep(90.0, 280.0, length(vViewPosition));
   diffuseColor.rgb *= mix(vec3(1.0), det, strength * fade);
+  // A soaked street is darker; a material that has roughness gets the wet
+  // sheen too (the toon shader has no roughness chunk, so that part only
+  // lands on standard materials).
+  diffuseColor.rgb *= mix(1.0, 0.72, uWet);
 }`,
-      );
+      )
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor *= mix(1.0, 0.3, uWet);");
   };
-  mat.customProgramCacheKey = () => "surface-v1-ground";
+  mat.customProgramCacheKey = () => `surface-v1-ground-${look}`;
   return mat;
 }
 
@@ -464,18 +601,28 @@ export async function loadKitTemplates(url = KIT_URL) {
   return templates;
 }
 
-// The prop material: the soft toon ramp, and wind on the tree crowns. The
-// vertex shader moves each vertex by its sway weight (0 for trunks and kit
-// props), with a phase from the world position, so near trees do not move
-// as one. The shadow map does not get the wind; the move is under 0.3 m.
-// In the prop batch (src/render/prop-batch.js) the position is in the
-// template space: the batching matrix gives the world position, and its
-// inverse turns the world wind move into the template space.
-function createPropMaterial({ wind = true } = {}) {
-  const material = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp({ soft: true }) });
+// The prop material: the soft toon ramp (or pbr), wind on the tree crowns,
+// and, with `leaves`, the leaf cut on the tree cards. The vertex shader
+// moves each vertex by its sway weight (0 for trunks and kit props), with a
+// phase from the world position, so near trees do not move as one. The
+// shadow map does not get the wind; the move is under 0.3 m. In the prop
+// batch (src/render/prop-batch.js) the position is in the template space:
+// the batching matrix gives the world position, and its inverse turns the
+// world wind move into the template space.
+function createPropMaterial({ wind = true, look = "toon", leaves = false } = {}) {
+  const material = litMaterial(look, { vertexColors: true }, { gradientMap: toonRamp({ soft: true }), roughness: ROUGHNESS.props, envLight: ENV_LIGHT.props });
+  // The albedo calibration (pbr look): darker leaves and props.
+  if (look === "pbr") material.color.setScalar(0.8);
+  // A card is a single quad: both sides must draw.
+  if (leaves) material.side = THREE.DoubleSide;
   const time = { value: 0 };
-  if (wind) {
+  if (wind || leaves) {
     material.onBeforeCompile = (shader) => {
+      if (leaves) {
+        patchLeafVertex(shader);
+        patchLeafFragment(shader);
+      }
+      if (!wind) return;
       shader.uniforms.uWindTime = time;
       shader.vertexShader = shader.vertexShader
         .replace("#include <common>", "#include <common>\nattribute float sway;\nuniform float uWindTime;")
@@ -500,42 +647,60 @@ function createPropMaterial({ wind = true } = {}) {
           ].join("\n"),
         );
     };
-    material.customProgramCacheKey = () => "geo-props-wind";
+    material.customProgramCacheKey = () => `geo-props${wind ? "-wind" : ""}${leaves ? "-leaves" : ""}-${look}`;
   }
   return { material, time };
 }
 
 // `groundDetail: false` keeps the flat art colors on the ground.
 // `trees: false` keeps the two street kit trees (for an A/B check).
+// `aprons: false` leaves out the concrete aprons of the shops (aprons.js).
 // `season` sets the tree colors: "spring", "summer" (the default), or "fall".
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer" } = {}) {
+// `look` picks the material set ("toon" or "pbr", src/render/look.js).
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer", look = "toon" } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
   let muralMap = null;
   const materials = {
-    surface: createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null }),
-    building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors }),
+    surface: createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null, look }),
+    building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors, look }),
     props: null,
     get mural() {
-      if (!muralMap) muralMap = new THREE.MeshToonMaterial({ map: createMuralAtlas(), gradientMap });
+      if (!muralMap) muralMap = litMaterial(look, { map: createMuralAtlas() }, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural });
       return muralMap;
     },
   };
-  const propMaterial = createPropMaterial({ wind });
+  // The leaf cards on the trees come with the pbr look (look.js).
+  const leaves = trees && look === "pbr";
+  const propMaterial = createPropMaterial({ wind, look, leaves });
   materials.props = propMaterial.material;
   const byId = new Map();
   // Road markings join the render copy of their surface tile (no extra
   // draw call). The shared meshes, which the physics reads, stay as they are.
   // The markings follow the terrain like the streets (terrain.js).
   const terrain = terrainOf(level);
-  // The lines on a bridge deck come at their final height (no drape).
-  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, t.deck ? mergeMeshes([drapeMesh(t.mesh, terrain), t.deck]) : drapeMesh(t.mesh, terrain)]) : []);
+  // The concrete aprons around the storefront buildings (aprons.js) join
+  // the surface tiles in the same way. The kit and the aprons share the
+  // front walls. The lines on a bridge deck come at their final height
+  // (no drape).
+  const fronts = kit || aprons ? frontEdges(level) : null;
+  const groundExtras = new Map();
+  for (const t of [...(markings ? roadMarkings(level) : []), ...(aprons ? storefrontAprons(level, fronts) : [])]) {
+    const list = groundExtras.get(t.tile) ?? [];
+    list.push(t.deck ? mergeMeshes([drapeMesh(t.mesh, terrain), t.deck]) : drapeMesh(t.mesh, terrain));
+    groundExtras.set(t.tile, list);
+  }
+  const markingTiles = new Map([...groundExtras].map(([tile, list]) => [tile, list.length > 1 ? mergeMeshes(list) : list[0]]));
   // The facade kit (cornices, copings, belt courses, house roofs) joins the
   // render copy of its building tile in the same way.
-  const kitParts = kit ? facadeKit(level) : { tiles: [], depthTiles: [], counts: {} };
+  const shopBoards = [];
+  const kitParts = kit ? facadeKit(level, fronts, shopBoards) : { tiles: [], depthTiles: [], counts: {} };
   const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));
   for (const { material, tile, mesh } of meshes) {
+    // A "claimed" mesh is the footprint of a landmark with claim: true —
+    // the landmark model draws it; physics still sees the collider.
+    if (material === "claimed") continue;
     const extra = material === "surface" ? markingTiles.get(tile) : material === "building" ? kitTiles.get(tile) : null;
     if (extra && material === "surface") markingTiles.delete(tile);
     if (extra && material === "building") kitTiles.delete(tile);
@@ -562,6 +727,11 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   }
   const terrainLod = { tiles: terrainLods.length, far: 0, nearestFar: Infinity };
   for (const [tile, mesh] of kitTiles) addMesh(root, byId, `kit-${tile}`, geoGeometry(mesh), materials.building, { castShadow: true });
+
+  // The shop-name decals on the kit's sign boards, and the district names
+  // on the trail (render/shop-names.js): one atlas, one merged mesh.
+  const names = shopBoards.length ? shopNamesMesh(shopBoards, level, look) : null;
+  if (names) root.add(names);
   // The sills and the piers: one mesh per depth tile, hidden far away in
   // update().
   const depthTiles = [];
@@ -580,9 +750,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null };
   function addProps(placements, templates) {
     // The procedural trees take the place of the two kit trees.
-    const all = trees ? { ...templates, ...treeTemplates({ season }) } : templates;
+    const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves }) } : templates;
     const placed = trees ? withProceduralTrees(placements) : placements;
     propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance });
+    if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial();
     root.add(propBatch.mesh);
     byId.set("props", propBatch.mesh);
     props.count = placements.length;
@@ -594,6 +765,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   return {
     root,
     byId,
+    // The weather handles (src/render/weather-view.js): the facade
+    // material gets uLit (window light) and the surface material gets
+    // uWet (wet ground). The uniforms appear when the shaders compile.
+    weather: { lit: [materials.building], wet: [materials.surface], sun: [materials.building] },
     get meshCount() {
       return meshes.length + (propBatch ? 1 : 0);
     },
@@ -647,10 +822,12 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
 // shadow map cannot cover 2 km at a useful resolution. The shell turns the
 // shadow map off on a geodata level for speed; the light keeps the setup
 // for a faster machine.
-export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048 } = {}) {
+export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048, look = "toon" } = {}) {
   const group = new THREE.Group();
-  group.add(new THREE.HemisphereLight(0xcfe8ff, 0x5a6a48, 0.7));
-  const sun = new THREE.DirectionalLight(0xfff1d6, 1.5);
+  const L = LOOKS[look];
+  const hemi = new THREE.HemisphereLight(L.hemisphereSky, L.hemisphereGround, L.hemisphere);
+  group.add(hemi);
+  const sun = new THREE.DirectionalLight(0xfff1d6, L.sun);
   const offset = new THREE.Vector3(30, 50, 20);
   sun.position.copy(offset);
   sun.castShadow = true;
@@ -669,7 +846,20 @@ export function createGeoLights({ shadowRadius = 45, shadowMapSize = 2048 } = {}
   return {
     group,
     sun,
+    hemi,
     sunDirection: offset.clone().normalize(),
+    // The weather (src/render/weather-view.js) sets the sun on the solar
+    // direction at a fixed distance, so the shadow box keeps its size.
+    setSun(dir, color, intensity) {
+      offset.set(dir[0], dir[1], dir[2]).normalize().multiplyScalar(90);
+      if (color) sun.color.copy(color);
+      if (intensity !== undefined) sun.intensity = intensity;
+    },
+    setHemi(skyColor, groundColor, intensity) {
+      if (skyColor) hemi.color.copy(skyColor);
+      if (groundColor) hemi.groundColor.copy(groundColor);
+      if (intensity !== undefined) hemi.intensity = intensity;
+    },
     // Snap to whole meters, so the shadow edges do not shimmer.
     follow(x, z, y = 0) {
       const sx = Math.round(x);

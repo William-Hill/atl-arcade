@@ -5,6 +5,7 @@ import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { withLeafCut } from "./leaf-cut.js";
 
 // The high tier post chain:
 //   scene (MSAA x4) -> GTAO ambient occlusion -> ink outlines -> bloom -> output.
@@ -44,6 +45,29 @@ export function disposeComposer(composer) {
   }
   composer.dispose();
 }
+
+// The crease test of the ink pass, on the normal buffer. A crease draws
+// ink where the normal step `dn` (1 - cos) goes from `start` to `end`. The
+// step must hold 2 pixels out (`wide`), and this pixel must not be a sliver
+// between two neighbors that agree (`sliver`): a face under one pixel wide
+// shows at some pixels only and gives a dotted line.
+export const INK_CREASE = { start: 0.35, end: 0.6, wide: [0.2, 0.35], sliver: [0.1, 0.2] };
+
+function smooth(a, b, x) {
+  const t = Math.min(Math.max((x - a) / (b - a), 0), 1);
+  return t * t * (3 - 2 * t);
+}
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+
+// Pure: the crease ink (0..1) at a pixel with the normal n, as in the
+// shader. na is the normal one step out, nb two steps out, and nc one step
+// back.
+export function creaseInk(n, na, nb, nc, c = INK_CREASE) {
+  const wide = smooth(c.wide[0], c.wide[1], 1 - dot3(n, nb)) * smooth(c.sliver[0], c.sliver[1], 1 - dot3(nc, na));
+  return smooth(c.start, c.end, 1 - dot3(n, na)) * wide;
+}
+
+const f3 = (v) => v.toFixed(3);
 
 const InkShader = {
   uniforms: {
@@ -98,8 +122,18 @@ const InkShader = {
         float dz = (dn - d) / d;
         edge = max(edge, smoothstep(0.04, 0.12, dz));
         // A normal step: a crease, such as a wall corner or a roof edge.
-        float dn2 = 1.0 - dot(n, viewNormal(uv));
-        edge = max(edge, smoothstep(0.35, 0.6, dn2) * step(abs(dz), 0.05));
+        vec3 na = viewNormal(uv);
+        float dn2 = 1.0 - dot(n, na);
+        // A face under one pixel wide (the top of a sign band, the end of
+        // a name panel) shows in the normal buffer at some pixels only, and
+        // gives a dotted line. The normal buffer has no MSAA. So a crease
+        // must hold for 2 pixels: the pixel 2 steps away also differs from
+        // this pixel, and this pixel is not a sliver between two neighbors
+        // that agree.
+        vec3 nb = viewNormal(vUv + offs[i] * 2.0);
+        vec3 nc = viewNormal(vUv - offs[i]);
+        float wide = smoothstep(${f3(INK_CREASE.wide[0])}, ${f3(INK_CREASE.wide[1])}, 1.0 - dot(n, nb)) * smoothstep(${f3(INK_CREASE.sliver[0])}, ${f3(INK_CREASE.sliver[1])}, 1.0 - dot(nc, na));
+        edge = max(edge, smoothstep(${f3(INK_CREASE.start)}, ${f3(INK_CREASE.end)}, dn2) * step(abs(dz), 0.05) * wide);
       }
       float fade = 1.0 - smoothstep(fadeNear, fadeFar, d);
       edge *= fade;
@@ -117,13 +151,45 @@ const InkShader = {
     }`,
 };
 
-export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true }) {
+// The grade pass (pbr look): a light filmic curve, a small saturation
+// lift, and a split tone — cool shadows, warm highlights — instead of the
+// ink lines. The weather tunes `uWarm` per time of day (0 neutral).
+const GradeShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uContrast: { value: 1.06 },
+    uSat: { value: 1.05 },
+    uWarm: { value: 0.0 },
+  },
+  vertexShader: /* glsl */ `
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform float uContrast;
+    uniform float uSat;
+    uniform float uWarm;
+    varying vec2 vUv;
+    void main() {
+      vec4 col = texture2D(tDiffuse, vUv);
+      float luma = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
+      col.rgb = (col.rgb - 0.5) * uContrast + 0.5 + luma - luma;
+      col.rgb = mix(vec3(luma), col.rgb, uSat);
+      // Cool shadows, warm highlights; uWarm 0 is neutral.
+      col.rgb += (luma - 0.5) * 2.0 * uWarm * vec3(0.06, 0.0, -0.08);
+      gl_FragColor = col;
+    }`,
+};
+
+export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true, look = "toon" }) {
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
 
   const gtao = new GTAOPass(scene, camera, size.x, size.y);
+  // The tree leaf cards (src/render/leaf-cut.js): AO and ink see the leaves.
+  withLeafCut(gtao.normalMaterial);
   // World units are meters: a 2.5 m radius darkens the ground at a wall
   // foot, the inside corners, and under the trees.
   gtao.updateGtaoMaterial({ radius: 2.5, distanceExponent: 1.5, thickness: 4, scale: 1.2, samples: 12 });
@@ -131,29 +197,42 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   gtao.blendIntensity = 0.9;
   composer.addPass(gtao);
 
-  const ink = new ShaderPass(InkShader);
-  ink.uniforms.fadeNear.value = fadeNear;
-  ink.uniforms.fadeFar.value = fadeFar;
-  if (!halftone) ink.uniforms.halftone.value.x = 0;
-  composer.addPass(ink);
+  // The pbr look drops the ink lines and the halftone dots — the Jet Set
+  // Radio effect — and grades instead. The toon look keeps the ink pass.
+  const pbr = look === "pbr";
+  let ink = null;
+  let grade = null;
+  if (pbr) {
+    grade = new ShaderPass(GradeShader);
+    composer.addPass(grade);
+  } else {
+    ink = new ShaderPass(InkShader);
+    ink.uniforms.fadeNear.value = fadeNear;
+    ink.uniforms.fadeFar.value = fadeFar;
+    if (!halftone) ink.uniforms.halftone.value.x = 0;
+    composer.addPass(ink);
+  }
 
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.28, 0.5, 0.92);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
   function sync() {
-    ink.uniforms.tDepth.value = gtao.depthTexture;
-    ink.uniforms.tNormal.value = gtao.normalTexture;
-    ink.uniforms.cameraNear.value = camera.near;
-    ink.uniforms.cameraFar.value = camera.far;
-    ink.uniforms.thickness.value = 1.25 * Math.max(1, renderer.getPixelRatio());
-    if (ink.uniforms.halftone.value.x > 0) ink.uniforms.halftone.value.x = HALFTONE.cell * Math.max(1, renderer.getPixelRatio());
+    if (ink) {
+      ink.uniforms.tDepth.value = gtao.depthTexture;
+      ink.uniforms.tNormal.value = gtao.normalTexture;
+      ink.uniforms.cameraNear.value = camera.near;
+      ink.uniforms.cameraFar.value = camera.far;
+      ink.uniforms.thickness.value = 1.25 * Math.max(1, renderer.getPixelRatio());
+      if (ink.uniforms.halftone.value.x > 0) ink.uniforms.halftone.value.x = HALFTONE.cell * Math.max(1, renderer.getPixelRatio());
+    }
   }
   return {
     kind: "full",
     composer,
     gtao,
     ink,
+    grade,
     bloom,
     render() {
       sync();
@@ -163,7 +242,7 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
       const s = renderer.getDrawingBufferSize(new THREE.Vector2());
       // EffectComposer multiplies by the pixel ratio itself.
       syncComposerSize(composer, renderer, s);
-      ink.uniforms.resolution.value.set(s.x, s.y);
+      if (ink) ink.uniforms.resolution.value.set(s.x, s.y);
     },
     dispose() {
       // The composer also disposes `target`, its first render target.

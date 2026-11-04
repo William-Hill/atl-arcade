@@ -10,6 +10,7 @@ import { createGeoGroundSampler, surfaceTop } from "./geo-ground.js";
 import { BELT, STYLES, STYLE_INDEX, awningHeight, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
 import { BRIDGE, bridgeDeck, buildingSpan, coarseTerrainOf, drapeMesh, liftMesh, parapetBlocked, terrainOf } from "./terrain.js";
 import { approachTrims, bridgeLayout, bridgeLayouts, densify, parapetRuns, ribbonEdges, slicePolyline, trimPolyline } from "./bridges.js";
+import { claimedIds } from "./landmarks.js";
 
 export const GEO_TILE = 125; // m. Small enough that the camera culls most of the draped terrain.
 export const PROP_TILE = 50; // m. Small, so only near props get full detail.
@@ -42,7 +43,7 @@ export const SURFACE_COLORS = {
 };
 
 // Building wall colors: a warm, bright palette (Jet Set Radio style). The
-// roof is a lighter tint of the wall.
+// roof is a lighter tint of the wall, or the style roof color.
 export const BUILDING_PALETTE = [
   [0.96, 0.62, 0.42],
   [0.98, 0.8, 0.45],
@@ -139,6 +140,47 @@ function quad(mesh, a, b, c, d, color, uv = null) {
   mesh.indices.push(base, base + 1, base + 2, base, base + 2, base + 3, base, base + 2, base + 1, base, base + 3, base + 2);
 }
 
+// The walls of a ring that face a street: the indices of the walls whose
+// midpoint, moved 4 m out along the wall normal, is on a street. A wall
+// under 4 m long is left out. `ring` has the outer winding of orientRing().
+export function streetWalls(ring, isStreet) {
+  const out = [];
+  for (let i = 0; i < ring.length; i += 1) {
+    const [px, pz] = ring[i];
+    const [qx, qz] = ring[(i + 1) % ring.length];
+    const len = Math.hypot(qx - px, qz - pz);
+    if (len < 4) continue;
+    const nx = -(qz - pz) / len;
+    const nz = (qx - px) / len;
+    if (isStreet((px + qx) / 2 + nx * 4, (pz + qz) / 2 + nz * 4)) out.push(i);
+  }
+  return out;
+}
+
+// A test for a level: `isStreet(x, z)` is true when the point is on a
+// street, sidewalk, path, or trail. `sample` is a ground sampler of the
+// level, to share one sampler between tests.
+export function streetTest(level, sample = createGeoGroundSampler(level)) {
+  const stripKind = new Map((level.strips ?? []).map((s) => [s.id, s.kind]));
+  return (x, z) => STREET_KINDS.has(stripKind.get(sample(x, z)?.id));
+}
+
+// A test for a level: `blockedFor(id)(x, z)` is true when the point is in
+// the footprint of a building other than `id`, or out of the level.
+export function buildingTest(level, sample = createGeoGroundSampler(level)) {
+  const ids = new Set((level.buildings ?? []).map((b) => b.id));
+  return (self) => (x, z) => {
+    const g = sample(x, z);
+    return g === null || (ids.has(g.id) && g.id !== self);
+  };
+}
+
+// The roof color of a building with the facade detail: the style roof
+// color, or a light tint of the wall.
+export function roofColorOf(style, wall) {
+  return style.roofColor ?? tint(wall, 0.45);
+}
+
 // Awnings over the street-facing ground floor of a storefront style.
 // `isStreet(x, z)` says if a point is on a street, sidewalk, path, or trail.
 export function awningsFor(b, style, isStreet) {
@@ -148,16 +190,12 @@ export function awningsFor(b, style, isStreet) {
   const rand = seededRandom(hash32(`${b.id}:awning`));
   const color = AWNING_COLORS[hash32(`${b.id}:awning-color`) % AWNING_COLORS.length];
   const y0 = awningHeight(style);
-  for (let i = 0; i < ring.length; i += 1) {
+  for (const i of streetWalls(ring, isStreet)) {
     const [px, pz] = ring[i];
     const [qx, qz] = ring[(i + 1) % ring.length];
     const len = Math.hypot(qx - px, qz - pz);
-    if (len < 4) continue;
     const nx = -(qz - pz) / len;
     const nz = (qx - px) / len;
-    const mx = (px + qx) / 2;
-    const mz = (pz + qz) / 2;
-    if (!isStreet(mx + nx * 4, mz + nz * 4)) continue;
     const bays = Math.max(1, Math.round(len / style.bay));
     for (let k = 0; k < bays; k += 1) {
       if (rand() > style.awnings) continue;
@@ -382,7 +420,7 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
     const span = buildingSpan(level, b);
     const y1 = Math.min(g + h, span.top - 0.6);
     let y0 = g + 0.8;
-    const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
+    const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
     if (style.storefront) {
       // The same floors as the facade kit: the belt course is over the
       // ground floor when the building has two floors or more.
@@ -560,24 +598,28 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
   if (surfacesOnly) {
     // Only the surfaces (a far level of detail): no buildings, murals, or bridges.
   } else if (detail) {
-    const stripKind = new Map((level.strips ?? []).map((s) => [s.id, s.kind]));
-    const sample = createGeoGroundSampler(level);
-    const isStreet = (x, z) => STREET_KINDS.has(stripKind.get(sample(x, z)?.id));
+    const isStreet = streetTest(level);
+    // A landmark with `claim: true` replaces its building's extrusion; the
+    // mesh still merges as "claimed", so the physics keeps its collider
+    // and the render skips it (geo-view.js).
+    const claimed = claimedIds(level);
     for (const b of level.buildings ?? []) {
-      const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
+      const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
       const color = wallColor(style, b.id);
       const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, parapet: style.parapet, corniceColor: style.trim };
       const span = buildingSpan(level, b);
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: tint(color, 0.45), facade }));
+      const bucket = claimed.has(b.id) ? "claimed" : "building";
+      add(bucket, b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: roofColorOf(style, color), facade }));
       const aw = awningsFor(b, style, isStreet);
-      if (aw.indices.length) add("building", b, span.base ? liftMesh(aw, () => span.base) : aw);
+      if (aw.indices.length) add(bucket, b, span.base ? liftMesh(aw, () => span.base) : aw);
     }
     for (const m of muralWalls(level)) add("mural", { points: [m.a] }, muralMesh(m));
   } else {
+    const claimed = claimedIds(level);
     for (const b of level.buildings ?? []) {
       const color = buildingColor(b.id);
       const span = buildingSpan(level, b);
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: tint(color, 0.35) }));
+      add(claimed.has(b.id) ? "claimed" : "building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: tint(color, 0.35) }));
     }
   }
 

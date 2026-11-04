@@ -170,3 +170,17 @@ export function toonSkater(loaded) {
   }
   return meshes.filter((m) => m.isSkinnedMesh && !isTransparent(m)).map(outlineHull);
 }
+
+// The pbr look on a skater: the glTF materials are already standard
+// materials, so they keep their maps and roughness and light up under the
+// sky environment map. No outline hulls — the pbr look has no ink.
+export function pbrSkater(loaded, { envIntensity = 0.9 } = {}) {
+  loaded.root.traverse((o) => {
+    if (!o.isMesh) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const m of mats) {
+      if (m.isMeshStandardMaterial) m.envMapIntensity = envIntensity;
+    }
+  });
+  return [];
+}

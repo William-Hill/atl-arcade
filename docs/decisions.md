@@ -926,3 +926,24 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - **Two shader bugs.** The window room hash read the interpolated wall color, so each pixel got a different room (the speckle). The hash now uses the color in steps of 1/32. The ground scans streaked on vertical faces (curb sides); only a face that points up gets them now.
 - **The full map (M key).** `src/ui/fullmap.js` shows the whole level over the game, and the game stops. It has two layers: the plan (the minimap drawing) and a 3D layer. M opens the full map now; the × button hides the minimap.
 - **The 3D layer.** We learned from Isometric Toronto (iso.sloptoronto.ca): one fixed orthographic camera (30 degrees down, turned 45 degrees) renders the whole level into one image, cut into tiles, so every place is where it is in the city and the tiles join with no seam. We do not use Google 3D Tiles (issue 93 and Google's terms) or a generative model: `scripts/bake-iso-map.mjs` renders our own level with the game renderer (`?view=iso`), and `scripts/iso-pyramid.py` makes the zoom levels. The BeltLine level is 17 x 9 tiles at 0.5 m per pixel, 2.5 MB in all, and bakes in about 25 s on the real GPU (`BAKE_GPU=1`). Bake the map again after a change to the level or the look.
+
+## 2026-11-04: Street lines and curb bands, so the road reads at once
+
+- Why: the user could not tell the sidewalks from the roads, and asked for real street lines. Most streets in the BeltLine level have no sidewalk strip beside them.
+- `roadMarkings()` in `src/level/geo/markings.js` now adds 4 marks. It stays pure and render-only, and the view merges it into the surface tiles as before.
+  1. A curb band on both edges of every street that is not a service road: 0.3 m wide, inside the street edge, in a color 6 % lighter than the sidewalk (`MARKING_COLORS.curb`). It is 1.2 cm over the street, under the paint (2 cm), so a line on a band does not flicker.
+  2. A white edge line (0.12 m) on the main streets and the residential streets. It is 0.3 m in from the inner side of the curb band (0.6 m from the street edge), so a dark gap of asphalt shows between the band and the line.
+  3. Dashed white lane lines (3 m dash, 9 m gap) on a main street with 2 or more lanes in one direction. A lane is 3.4 m, so a 14 m street has 4 lanes and a 19.8 m street has 5 (2 in each direction). The level has no oneway tag. A strip with `oneway: true` gets no yellow line and white lines between all lanes.
+  4. A white stop bar (0.45 m deep) on the inbound half (the right side of the traffic) of each named arm, 1 m before the crosswalk.
+- Divided roads (`medianSide()`): the level has no oneway tag, but John Lewis Freedom Parkway has one strip for each direction. A main street strip is one half of a divided road when 30 % or more of its length runs beside a parallel strip of the same name with a gap of 12 m or less. Such a half gets no double yellow line, a yellow edge line on the median side, and white lane lines between all lanes. On the BeltLine level only Freedom Parkway strips (13) match.
+- Cuts: a line stops short of a node with a cross street or with 3 or more street arms (service roads do not count). On an arm with a crosswalk, the yellow line, the lane lines, and the edge lines stop at the stop bar, and the curb band stops at the crosswalk. A curb band elsewhere stops 0.5 m past the cross street edge.
+- Curves: each line follows the centerline polyline. The quads of two segments share a miter edge, and a strip joins the next strip of the same street and width with a miter. A quad that folds over itself on the inner side of a tight turn is left out.
+- Bridge decks keep only the center line, because the markings follow the ground under the deck.
+- Cost on the BeltLine level: 8,416 marking triangles before, 17,280 after, before the drape.
+- Not done: a real oneway tag in the level build, curb ramps at the crosswalks, and markings on bridge decks.
+
+## 2026-11-04: Fast travel, a darker asphalt, and a bake with no reload
+
+- **Fast travel** (a play-test aid): on the full map, a click picks a place or an icon, and T or "Travel here" moves the skater there (`src/level/geo/travel.js`, `teleportRun()` in `src/sim/skate/run.js`). The skater lands on the nearest trail, path, sidewalk, or street point, outside every building, at rest. The score stays; the combo ends. It is on in the dev server and off in a production build; `?travel=1` or `?travel=0` sets it.
+- **Asphalt and sidewalk** (pbr look): `GROUND_ALBEDO` in `src/render/look.js` is now RGB. The asphalt is darker and less blue, and the slab sidewalk is near its art color, so a sidewalk is more than 3 times brighter than a road.
+- **The bake** (`scripts/bake-iso-map.mjs`) runs Vite with no hot reload and no watch of `assets/map/`. The game imports the tiles, so each new tile file reloaded the page in the middle of a bake. A tile also gets 3 tries.

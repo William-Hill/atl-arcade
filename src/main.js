@@ -11,11 +11,12 @@ import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkaterEnv } from "./sim/skate/skater.js";
-import { createRun, stepRun } from "./sim/skate/run.js";
+import { createRun, stepRun, teleportRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
 import { createMinimap } from "./ui/minimap.js";
 import { createFullMap } from "./ui/fullmap.js";
 import { isoTilesFor } from "./ui/iso-tiles.js";
+import { travelSpot } from "./level/geo/travel.js";
 import { ISO, isoBasis, isoCameraPose, isoGrid, tileCenter } from "./level/geo/iso-map.js";
 import { mapLandmarks } from "./ui/minimap-math.js";
 import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
@@ -509,6 +510,22 @@ function simulate(dt) {
 
 let follow = null;
 
+// Fast travel (the full map): the skater goes to the nearest trail, path,
+// sidewalk, or street point, at rest, on the ground there. Returns the spot.
+function fastTravel(x, z) {
+  const spot = travelSpot(level, x, z);
+  if (!spot) return null;
+  const ground = terrainOf(level).height(spot.x, spot.z);
+  // The top surface at or under 3 m over the terrain: the street, not a
+  // bridge deck far above it.
+  const y = env.sampleGround(spot.x, spot.z, ground + 3)?.height ?? ground;
+  run = teleportRun(run, level, { position: [spot.x, y, spot.z], yaw: spot.yaw });
+  skater = run.skater;
+  if (follow) follow.reset(skater);
+  events.push({ type: "travel", x: spot.x, z: spot.z });
+  return { ...spot, y };
+}
+
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   run = createRun(level, { position, yaw, cards: factCardSpots() });
   skater = run.skater;
@@ -572,6 +589,9 @@ fullmap =
         // The baked isometric map of the level (scripts/bake-iso-map.mjs).
         iso: params.get("isomap") === "0" ? null : isoTilesFor(level.name),
         groundAt: (x, z) => terrainOf(level).height(x, z),
+        // Fast travel: on in the dev server, off in a production build.
+        // ?travel=1 or ?travel=0 sets it either way.
+        onTravel: (params.get("travel") ?? (import.meta.env.DEV ? "1" : "0")) === "1" ? (x, z) => fastTravel(x, z) : null,
       })
     : null;
 
@@ -802,6 +822,8 @@ window.__atl = {
         close: () => fullmap.close(),
         setView: (v) => fullmap.setView(v),
         setLayer: (l) => fullmap.setLayer(l),
+        select: (icon, target) => fullmap.select(icon, target),
+        travel: () => fullmap.travel(),
       }
     : null,
   // The crowd (M1-09), or null on the greybox and with ?npcs=0.
@@ -982,6 +1004,7 @@ window.__atl = {
     return run;
   },
   resetSkater,
+  fastTravel: (x, z) => fastTravel(x, z),
   runScript,
   view,
   projectSkater,

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { BRICK_TONE, DETAIL_NORMAL, GROUND_ALBEDO, sunElevation, ENV_LIGHT, ENV_SKY, GRADE, LOOKS, ROUGHNESS, WALL_AO, brickTone, desaturate, detailNormal, gradeColor, litMaterial, lookFor, toneMappingOf, wallOcclusion, wallSkyLight } from "./look.js";
 import { SKY } from "./sky.js";
+import { SURFACE_COLORS } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 
 describe("lookFor", () => {
@@ -209,9 +210,22 @@ describe("the pbr detail and the ink", () => {
 
   it("gives an albedo factor under 1 to every ground set, and the darkest to grass", () => {
     expect(GROUND_ALBEDO).toHaveLength(DETAIL_NORMAL.ground.length);
-    for (const a of GROUND_ALBEDO) expect(a).toBeGreaterThan(0.3);
-    for (const a of GROUND_ALBEDO) expect(a).toBeLessThanOrEqual(1);
-    expect(GROUND_ALBEDO[3]).toBe(Math.min(...GROUND_ALBEDO));
+    for (const rgb of GROUND_ALBEDO) {
+      expect(rgb).toHaveLength(3);
+      for (const c of rgb) {
+        expect(c).toBeGreaterThan(0.3);
+        expect(c).toBeLessThanOrEqual(1);
+      }
+    }
+    const mean = (rgb) => (rgb[0] + rgb[1] + rgb[2]) / 3;
+    expect(mean(GROUND_ALBEDO[3])).toBe(Math.min(...GROUND_ALBEDO.map(mean)));
+  });
+
+  it("makes the asphalt much darker than the sidewalk slabs", () => {
+    const luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    const asphalt = SURFACE_COLORS.street.map((c, i) => c * GROUND_ALBEDO[0][i]);
+    const slab = SURFACE_COLORS.sidewalk.map((c, i) => c * GROUND_ALBEDO[1][i]);
+    expect(luma(slab) / luma(asphalt)).toBeGreaterThan(3);
   });
 
   it("draws a lighter ink in the pbr look than in the toon look", () => {

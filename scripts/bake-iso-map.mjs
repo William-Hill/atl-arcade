@@ -36,7 +36,9 @@ const only = opt("only", null);
 const PORT = Number(process.env.BAKE_PORT ?? 5190);
 const side = ISO.tile + 2 * ISO.margin;
 
-const server = await createServer({ root: ROOT, server: { port: PORT, strictPort: true }, logLevel: "warn" });
+// No hot reload and no watch of the map folder: the game imports the tiles
+// (src/ui/iso-tiles.js), so each new tile file would reload the page.
+const server = await createServer({ root: ROOT, server: { port: PORT, strictPort: true, hmr: false, watch: { ignored: ["**/assets/map/**"] } }, logLevel: "warn" });
 await server.listen();
 const gpu = process.env.BAKE_GPU === "1";
 const browser = await chromium.launch({
@@ -75,16 +77,30 @@ const tiles = [];
 for (let row = 0; row < grid.rows; row += 1) for (let col = 0; col < grid.cols; col += 1) tiles.push([col, row]);
 const todo = only ? [only.split(",").map(Number)] : tiles;
 const t0 = Date.now();
-for (const [col, row] of todo) {
+// One tile: move the camera, wait for the frames, and save the center. The
+// GPU can stall on a frame now and then, so a tile gets 3 tries.
+async function shoot(col, row) {
   const f0 = await page.evaluate(([c, r]) => {
     window.__atl.iso.shot(c, r);
     return window.__atl.frames;
   }, [col, row]);
   // The detail, the shadow box, and the AO follow the camera in a frame or
   // two; wait for 6 frames.
-  await page.waitForFunction((f) => window.__atl.frames > f + 6, f0, { timeout: 120000 });
-  await page.screenshot({ path: resolve(out, "0", `${col}_${row}.jpg`), type: "jpeg", quality: 88, clip: { x: ISO.margin, y: ISO.margin, width: ISO.tile, height: ISO.tile } });
-  const done = todo.indexOf(todo.find((t) => t[0] === col && t[1] === row)) + 1;
+  await page.waitForFunction((f) => window.__atl.frames > f + 6, f0, { timeout: 30000 });
+  await page.screenshot({ path: resolve(out, "0", `${col}_${row}.jpg`), type: "jpeg", quality: 88, clip: { x: ISO.margin, y: ISO.margin, width: ISO.tile, height: ISO.tile }, timeout: 15000 });
+}
+let done = 0;
+for (const [col, row] of todo) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await shoot(col, row);
+      break;
+    } catch (err) {
+      console.log(`tile ${col},${row}: try ${attempt} failed (${String(err.message).split("\n")[0]})`);
+      if (attempt >= 3) throw err;
+    }
+  }
+  done += 1;
   if (done % 10 === 0 || done === todo.length) console.log(`${done}/${todo.length} tiles, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 }
 

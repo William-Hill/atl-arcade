@@ -19,7 +19,7 @@
 import { COLORS, drawArrow, drawIcon, drawMapBase } from "./minimap.js";
 import { mapFrame } from "./minimap-math.js";
 import { FULLMAP, baseTransform, clampView, fitView, isoBounds, isoLevelFor, labelFits, nearestIcon, panBy, screenToWorld, streetLabelSpots, visibleTiles, worldToScreen, zoomAt } from "./fullmap-math.js";
-import { isoBasis, isoProject } from "../level/geo/iso-map.js";
+import { isoBasis, isoProject, isoUnproject } from "../level/geo/iso-map.js";
 
 // The sky color of the baked isometric map, around the level.
 const ISO_BACKGROUND = "#b6dbf2";
@@ -41,16 +41,25 @@ function rectsOverlap(a, b) {
 // false while another screen (photo mode) is open. `iso` is the bake of the
 // level (src/ui/iso-tiles.js isoTilesFor()) or null. `groundAt(x, z)` is the
 // ground height, to place the icons on the isometric map.
-export function createFullMap(parent, level, { icons, onChange = () => {}, canOpen = () => true, iso = null, groundAt = () => 0 } = {}) {
+// `onTravel(x, z)` turns on fast travel (a debug and play-test aid): a click
+// picks a place or an icon, and "Travel here" or T moves the skater there.
+// Null turns it off.
+export function createFullMap(parent, level, { icons, onChange = () => {}, canOpen = () => true, iso = null, groundAt = () => 0, onTravel = null } = {}) {
   const bounds = level.bounds;
   const spots = streetLabelSpots(level.strips);
-  const state = { open: false, view: null, draws: 0, selected: null, layer: iso ? "iso" : "plan" };
+  const state = { open: false, view: null, draws: 0, selected: null, layer: iso ? "iso" : "plan", target: null, travel: Boolean(onTravel) };
   const basis = iso ? isoBasis(iso.info.yaw, iso.info.pitch) : null;
   // The map space point of a world point, for the current layer.
   function toMap(x, y, z) {
     if (state.layer !== "iso") return [x, z];
     const [a, b] = isoProject(basis, x, y, z);
     return [a, -b];
+  }
+  // The world point [x, z] of a map space point, on the ground.
+  function toWorld(mx, mz) {
+    if (state.layer !== "iso") return [mx, mz];
+    const p = isoUnproject(basis, mx, -mz, groundAt);
+    return [p[0], p[2]];
   }
   const mapBounds = () => (state.layer === "iso" ? isoBounds(iso.info) : bounds);
   // The loaded tile images, by URL. A tile draws when its image is ready.
@@ -83,7 +92,7 @@ export function createFullMap(parent, level, { icons, onChange = () => {}, canOp
   canvas.setAttribute("role", "img");
   const head = el("div", "fullmap-head", root);
   el("div", "fullmap-title", head, level.title ?? level.name);
-  el("div", "fullmap-hint", head, `Drag to move · wheel or pinch to zoom · C: center${iso ? " · V: 2D or 3D" : ""} · M: close`);
+  el("div", "fullmap-hint", head, `Drag to move · wheel or pinch to zoom · C: center${iso ? " · V: 2D or 3D" : ""}${onTravel ? " · click, then T: travel" : ""} · M: close`);
   const closeBtn = el("button", "fullmap-close", head, "×");
   closeBtn.type = "button";
   closeBtn.setAttribute("aria-label", "Close the map (M or Escape)");
@@ -99,7 +108,10 @@ export function createFullMap(parent, level, { icons, onChange = () => {}, canOp
   for (const b of [zoomIn, zoomOut, center]) b.type = "button";
   const info = el("div", "fullmap-info", root);
   info.hidden = true;
-  info.setAttribute("aria-live", "polite");
+  const infoText = el("span", "fullmap-info-text", info);
+  infoText.setAttribute("aria-live", "polite");
+  const travelBtn = onTravel ? el("button", "fullmap-travel", info, "Travel here (T)") : null;
+  if (travelBtn) travelBtn.type = "button";
   const legend = el("div", "fullmap-legend", root);
   for (const [cls, text] of [
     ["you", "You"],
@@ -124,11 +136,20 @@ export function createFullMap(parent, level, { icons, onChange = () => {}, canOp
     dirty = true;
   }
 
-  function select(icon) {
+  // `target` is the world point for fast travel: the icon, or a place.
+  function select(icon, target = icon ? { x: icon.x, z: icon.z } : null) {
     state.selected = icon;
-    info.hidden = !icon;
-    info.textContent = icon ? `${icon.name} · ${icon.kind === "landmark" ? "Landmark" : "Park"}` : "";
+    state.target = onTravel ? target : null;
+    info.hidden = !icon && !state.target;
+    infoText.textContent = icon ? `${icon.name} · ${icon.kind === "landmark" ? "Landmark" : "Park"}` : state.target ? "This place" : "";
     dirty = true;
+  }
+
+  function travel() {
+    if (!onTravel || !state.target) return;
+    const { x, z } = state.target;
+    close();
+    onTravel(x, z);
   }
 
   function open() {
@@ -202,6 +223,7 @@ export function createFullMap(parent, level, { icons, onChange = () => {}, canOp
   zoomOut.addEventListener("click", tap(() => zoomBy(1 / FULLMAP.step)));
   center.addEventListener("click", tap(centerOnSkater));
   if (layerBtn) layerBtn.addEventListener("click", tap(() => setLayer(state.layer === "iso" ? "plan" : "iso")));
+  if (travelBtn) travelBtn.addEventListener("click", tap(travel));
 
   // The keys go to the map only while it is open. The capture phase and
   // stopImmediatePropagation keep them from the game and from photo mode.
@@ -226,6 +248,7 @@ export function createFullMap(parent, level, { icons, onChange = () => {}, canOp
     else if (e.code === "Minus" || e.code === "NumpadSubtract") zoomBy(1 / FULLMAP.step);
     else if (e.code === "KeyC") centerOnSkater();
     else if (e.code === "KeyV" && !e.repeat) setLayer(state.layer === "iso" ? "plan" : "iso");
+    else if (e.code === "KeyT" && !e.repeat && state.target) travel();
     else if (e.code === "Tab") used = false;
     if (used) {
       e.preventDefault();
@@ -287,7 +310,11 @@ export function createFullMap(parent, level, { icons, onChange = () => {}, canOp
       const { w, h } = size();
       const [x, z] = screenToWorld(state.view, w, h, e.clientX - r.left, e.clientY - r.top);
       const hit = nearestIcon(mappedIcons(), x, z, 18 / state.view.zoom);
-      select(hit ? icons.find((i) => i.id === hit.id) : null);
+      if (hit) select(icons.find((i) => i.id === hit.id));
+      else {
+        const [wx, wz] = toWorld(x, z);
+        select(null, { x: wx, z: wz });
+      }
     }
   };
   canvas.addEventListener("pointerup", up);
@@ -396,6 +423,23 @@ export function createFullMap(parent, level, { icons, onChange = () => {}, canOp
       }
     }
 
+    // The fast travel target, when it is a place and not an icon.
+    if (state.target && !state.selected) {
+      const [tx, ty] = screenOf(state.target.x, groundAt(state.target.x, state.target.z), state.target.z);
+      ctx.strokeStyle = COLORS.ink;
+      ctx.lineWidth = 6;
+      for (const sw of [6, 3]) {
+        ctx.lineWidth = sw;
+        ctx.strokeStyle = sw === 6 ? COLORS.ink : COLORS.trail;
+        ctx.beginPath();
+        ctx.moveTo(tx - 9, ty - 9);
+        ctx.lineTo(tx + 9, ty + 9);
+        ctx.moveTo(tx + 9, ty - 9);
+        ctx.lineTo(tx - 9, ty + 9);
+        ctx.stroke();
+      }
+    }
+
     if (skater) {
       const [ax, ay] = screenOf(...skater.position);
       // The heading on the screen: the skater forward direction is
@@ -426,6 +470,8 @@ export function createFullMap(parent, level, { icons, onChange = () => {}, canOp
     toggle: () => (state.open ? close() : open()),
     setView,
     setLayer,
+    select,
+    travel,
     // Called once per frame with the skater state. Draws only when open and
     // when something changed.
     update(s) {

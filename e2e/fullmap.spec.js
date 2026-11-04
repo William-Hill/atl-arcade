@@ -83,3 +83,28 @@ test.describe("phone map", () => {
     await expect(page.locator("#fullmap")).toBeHidden();
   });
 });
+
+test("fast travel: pick a landmark, press T, and the skater is there on the ground", async ({ page }) => {
+  await ready(page);
+  await page.keyboard.press("KeyM");
+  await expect(page.locator("#fullmap")).toBeVisible();
+  expect(await page.evaluate(() => window.__atl.fullmap.state.travel)).toBe(true);
+  const ksm = await page.evaluate(() => window.__atl.minimap.icons.find((i) => i.id === "krog-street-market"));
+  await page.evaluate((icon) => window.__atl.fullmap.select(icon), ksm);
+  await expect(page.locator("#fullmap .fullmap-travel")).toBeVisible();
+  await page.keyboard.press("KeyT");
+  await expect(page.locator("#fullmap")).toBeHidden();
+  await page.waitForTimeout(500);
+  const s = await page.evaluate(() => ({ p: window.__atl.skater.position, state: window.__atl.skater.state }));
+  expect(Math.hypot(s.p[0] - ksm.x, s.p[2] - ksm.z)).toBeLessThan(60);
+  expect(s.state).toBe("rolling");
+  await page.screenshot({ path: "e2e/__screenshots__/fullmap-travel.png" });
+});
+
+test("?travel=0 turns fast travel off", async ({ page }) => {
+  await page.goto("/?level=beltline-eastside&mute=1&travel=0");
+  await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.fullmap, null, { timeout: 60000 });
+  await page.keyboard.press("KeyM");
+  expect(await page.evaluate(() => window.__atl.fullmap.state.travel)).toBe(false);
+  await expect(page.locator("#fullmap .fullmap-travel")).toHaveCount(0);
+});

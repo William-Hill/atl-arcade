@@ -539,7 +539,7 @@ vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   #ifdef DETAIL
   groundSet = set;
   groundK = strength * fade;
-  diffuseColor.rgb *= set < -0.5 ? 1.0 : set < 0.5 ? ${GROUND_ALBEDO[0].toFixed(3)} : set < 1.5 ? ${GROUND_ALBEDO[1].toFixed(3)} : set < 2.5 ? ${GROUND_ALBEDO[2].toFixed(3)} : ${GROUND_ALBEDO[3].toFixed(3)};
+  diffuseColor.rgb *= set < -0.5 ? vec3(1.0) : set < 0.5 ? vec3(${GROUND_ALBEDO[0].map((c) => c.toFixed(3)).join(", ")}) : set < 1.5 ? vec3(${GROUND_ALBEDO[1].map((c) => c.toFixed(3)).join(", ")}) : set < 2.5 ? vec3(${GROUND_ALBEDO[2].map((c) => c.toFixed(3)).join(", ")}) : vec3(${GROUND_ALBEDO[3].map((c) => c.toFixed(3)).join(", ")});
   #endif
 }`,
       )

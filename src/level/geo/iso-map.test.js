@@ -82,3 +82,23 @@ describe("pyramid", () => {
     ]);
   });
 });
+
+describe("isoUnproject", async () => {
+  const { isoUnproject } = await import("./iso-map.js");
+  const basis = isoBasis();
+
+  it("finds the ground point back on flat ground", () => {
+    const [a, b] = isoProject(basis, 120, 0, -45);
+    const p = isoUnproject(basis, a, b, () => 0);
+    expect(p[0]).toBeCloseTo(120, 9);
+    expect(p[1]).toBe(0);
+    expect(p[2]).toBeCloseTo(-45, 9);
+  });
+
+  it("finds the ground point on a slope to within a few cm", () => {
+    const ground = (x, z) => 0.05 * x - 0.03 * z + 4;
+    const [a, b] = isoProject(basis, 80, ground(80, 30), 30);
+    const p = isoUnproject(basis, a, b, ground, 8);
+    expect(Math.hypot(p[0] - 80, p[2] - 30)).toBeLessThan(0.05);
+  });
+});

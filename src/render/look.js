@@ -66,7 +66,16 @@ export const DETAIL_NORMAL = {
 // color, in the order of GROUND. The sun of the pbr look (3.2) falls full on
 // flat ground, and the art colors are for the toon ramp, so a light grass
 // went near white. Real grass reflects about 10 to 20 % of the light.
-export const GROUND_ALBEDO = [0.85, 0.85, 0.85, 0.55];
+//
+// Each factor is RGB. The asphalt is darker and less blue than its art
+// color, and the slab sidewalk is near its art color, so a road and a
+// sidewalk differ at once in value (about 3 to 1 in linear light).
+export const GROUND_ALBEDO = [
+  [0.62, 0.62, 0.54],
+  [1.0, 1.0, 0.98],
+  [0.85, 0.85, 0.85],
+  [0.55, 0.55, 0.55],
+];
 // The roughness of a painted steel window frame (semi-gloss).
 export const FRAME_ROUGHNESS = 0.45;
 

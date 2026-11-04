@@ -121,3 +121,18 @@ export function pyramid(grid, levels = ISO.levels) {
   }
   return out;
 }
+
+// The world point [x, y, z] under the plane point (a, b): where the view
+// line meets the ground. `groundAt(x, z)` is the ground height. The view
+// line crosses the ground at a slope, so a few steps find the point.
+export function isoUnproject(basis, a, b, groundAt, steps = 6) {
+  const { d, r, u } = basis;
+  let y = groundAt(r[0] * a + u[0] * b, r[2] * a + u[2] * b);
+  let p = null;
+  for (let i = 0; i < steps; i += 1) {
+    const s = (y - u[1] * b) / d[1];
+    p = [0, 1, 2].map((k) => r[k] * a + u[k] * b + d[k] * s);
+    y = groundAt(p[0], p[2]);
+  }
+  return [p[0], y, p[2]];
+}

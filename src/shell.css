@@ -588,6 +588,8 @@ body.results-open #touch-controls { display: none; }
   max-width: calc(100vw - 140px);
 }
 #fullmap .fullmap-info[hidden] { display: none; }
+#fullmap .fullmap-info { display: flex; align-items: center; gap: 12px; }
+#fullmap .fullmap-travel { height: 36px; font-size: 14px; padding: 0 14px; border-color: #ffd166; }
 #fullmap .fullmap-legend {
   position: absolute;
   left: calc(12px + env(safe-area-inset-left));

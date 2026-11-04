@@ -162,3 +162,20 @@ describe("run signals for the loop and the HUD", () => {
     expect(r.combo.bails).toBe(1);
   });
 });
+
+describe("teleportRun", async () => {
+  const { createRun, teleportRun } = await import("./run.js");
+
+  it("moves the skater to rest at the new place, and keeps the score and the time", () => {
+    const level = { spawn: { position: [0, 0, 0], yaw: 0 } };
+    const run = { ...createRun(level, { position: [0, 0, 0], yaw: 0 }), time: 12, score: 345 };
+    const next = teleportRun(run, level, { position: [50, 2, -30], yaw: 1 });
+    expect(next.skater.position).toEqual([50, 2, -30]);
+    expect(next.skater.yaw).toBe(1);
+    expect(next.skater.speed).toBe(0);
+    expect(next.time).toBe(12);
+    expect(next.score).toBe(345);
+    expect(next.moves).toEqual([]);
+    expect(run.skater.position).toEqual([0, 0, 0]);
+  });
+});

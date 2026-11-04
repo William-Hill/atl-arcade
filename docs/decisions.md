@@ -882,7 +882,8 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Source: Poly Haven (https://polyhaven.com) has CC0 models, textures, and HDRIs. `docs/assets/polyhaven-shortlist.md` lists the assets that fit the game, the gaps (no cone, bollard, ramp, rail, or sign), and the assets that the political rules keep out.
 - Format: a Poly Haven model becomes a toon prop in the format of `assets/kit/street-kit.glb`: vertex colors (COLOR_0), no textures, no materials. The texture gives a few flat colors (k-means), with the brightness range of the kit palette. This keeps the cel look and keeps the files small.
 - First prop: `assets/props/painted_wooden_bench/painted_wooden_bench.glb`, 630 triangles, 30,804 bytes. `loadKitTemplates()` loads it. No Draco, because the kit loader has no Draco decoder.
-- Not done: the bench is not in a level, and it has no LOD1. The Blender MCP add-on is at protocol 7 (the server expects 15), so its Poly Haven import is off. The models came from the Poly Haven API.
+- In the level: on the trail, each second pair of benches is the painted bench (`bench_painted` in `src/level/geo/props.js`, solid radius 0.65 m). The BeltLine level has 14 kit benches and 13 painted benches. `loadPropTemplates()` in `src/render/geo-view.js` adds the GLB to the kit templates.
+- Not done: the painted bench has no LOD1, so it shows the 630-triangle shape at all distances. The Blender MCP add-on is at protocol 7 (the server expects 15), so its Poly Haven import is off. The models came from the Poly Haven API.
 
 ## 2026-11-03: NPC skaters on the player controller (#134)
 

@@ -152,7 +152,9 @@ const BACKLIGHT_GLSL = /* glsl */ `
 #if NUM_DIR_LIGHTS > 0
 if (vLeaf.z > 0.025 || vLeaf.z < -9.5) {
   float leafBack = pow(saturate(dot(-normalize(vViewPosition), directionalLights[0].direction)), ${LEAF_BACKLIGHT.power.toFixed(1)});
-  reflectedLight.indirectDiffuse += diffuseColor.rgb * vec3(${LEAF_BACKLIGHT.tint.map((v) => v.toFixed(2)).join(", ")}) * directionalLights[0].color * leafBack * ${LEAF_BACKLIGHT.strength.toFixed(2)};
+  // The green-gold tint is for leaves: blossoms (red over green) glow in their own color.
+  vec3 leafTint = diffuseColor.r > diffuseColor.g ? vec3(1.0) : vec3(${LEAF_BACKLIGHT.tint.map((v) => v.toFixed(2)).join(", ")});
+  reflectedLight.indirectDiffuse += diffuseColor.rgb * leafTint * directionalLights[0].color * leafBack * ${LEAF_BACKLIGHT.strength.toFixed(2)};
 }
 #endif`;
 

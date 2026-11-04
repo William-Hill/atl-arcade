@@ -37,7 +37,7 @@ SPECIES = {
     "oak":      dict(trunk=(3.6, 0.32), crown=(7.4, 4.4, 2.6), branches=5, levels=3, spread=0.9, cards=520, leaf=1.5, tint=(0.36, 0.52, 0.2)),
     "pine":     dict(trunk=(11.5, 0.27), crown=(13.4, 2.4, 2.0), branches=7, levels=2, spread=1.35, cards=300, leaf=1.3, tint=(0.24, 0.38, 0.2), needles=True),
     "magnolia": dict(trunk=(1.6, 0.24), crown=(5.0, 2.6, 3.2), branches=6, levels=3, spread=0.7, cards=480, leaf=1.2, tint=(0.18, 0.34, 0.17), glossy=True),
-    "myrtle":   dict(trunk=(3.1, 0.1), crown=(4.5, 2.2, 1.4), branches=3, levels=2, spread=0.6, cards=300, leaf=1.1, tint=(0.4, 0.55, 0.24), stems=3, bloom=(0.88, 0.42, 0.62)),
+    "myrtle":   dict(trunk=(3.1, 0.1), crown=(4.5, 2.2, 1.4), branches=3, levels=2, spread=0.6, cards=300, leaf=1.1, tint=(0.4, 0.55, 0.24), stems=3, blooms=((0.9, 0.42, 0.66), (0.84, 0.3, 0.62), (0.96, 0.92, 0.94))),
     "dogwood":  dict(trunk=(1.7, 0.13), crown=(3.5, 2.7, 1.3), branches=5, levels=3, spread=1.1, cards=340, leaf=1.1, tint=(0.36, 0.52, 0.22)),
     "street":   dict(trunk=(2.9, 0.18), crown=(5.8, 2.6, 2.4), branches=5, levels=3, spread=0.6, cards=400, leaf=1.2, tint=(0.36, 0.54, 0.2)),
 }
@@ -330,6 +330,8 @@ def build_tree(name, sp, seed, mats):
     cy, hw, hh = sp["crown"]
     top_h = cy + hh
     barkc = lin(BARK_OF.get(sp["name"], BARK_SRGB))
+    # One bloom color per tree (pink, magenta or white), as on real crape myrtles.
+    bloomc = lin(rng.choice(sp["blooms"])) if sp.get("blooms") else None
     mossc = lin(MOSS_SRGB)
     moss = sp["name"] in MOSS
 
@@ -387,8 +389,10 @@ def build_tree(name, sp, seed, mats):
         occ = crown_occlusion(c, sp)
         sw = min(1.0, 0.55 + 0.45 * q.length)
         k = occ * rng.uniform(0.85, 1.12)
-        bloom = sp.get("bloom") and rng.random() < 0.55
-        col = (*[x * k for x in lin(sp["bloom"] if bloom else sp["leafc"])], 1)
+        # Blossoms sit in clusters at the outside of the crown, so a far crown
+        # reads as color rather than a pink and green mix.
+        bloom = bloomc and rng.random() < (0.9 if q.length > 0.7 else 0.15)
+        col = (*[x * (max(k, 0.95) if bloom else k) for x in (bloomc if bloom else lin(sp["leafc"]))], 1)
         quad = [c - a - b, c + a - b, c + a + b, c - a + b]
         # The card normals point out of the crown, so the cards shade as one volume.
         nrm = [crown_normal(q, sp) for q in quad]

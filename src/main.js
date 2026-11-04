@@ -42,6 +42,10 @@ import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
+import { carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSampler, streetsOnly } from "./sim/traffic/traffic.js";
+import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
+import { parkedCars } from "./sim/traffic/parking.js";
+import { createCarView } from "./render/car-view.js";
 import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
 import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
 import { createFactCardsView } from "./render/fact-cards-view.js";
@@ -187,6 +191,28 @@ const npcView = crowd ? createNpcView(crowd) : null;
 if (npcView) {
   npcView.sync(crowd);
   scene.add(npcView.group);
+}
+
+// Parked cars and calm traffic on the main streets (#132). ?cars=0 leaves
+// them out, ?traffic=0 keeps only the parked cars, and ?carseed=<n> picks
+// another seeded traffic. A car is a solid box for the skater: the
+// controller bonks or slides on it as on a wall.
+const carsOn = geo && params.get("cars") !== "0";
+const carSeed = Number(params.get("carseed") ?? 1) || 1;
+const levelSample = env.sampleGround;
+const levelTerrain = geo ? terrainOf(level) : null;
+// The car heights come from the streets alone (streetsOnly).
+const carHeight = carsOn ? streetHeightSampler(createGeoGroundSampler(streetsOnly(level)), (x, z) => (levelTerrain && !levelTerrain.flat ? levelTerrain.height(x, z) : 0)) : null;
+const parked = carsOn
+  ? parkedCars(level, levelSample, { heightAt: (x, z) => carHeight(x, z, -Infinity) }).map((c) => ({ ...c, pitch: carPitch(c, (x, z) => carHeight(x, z, c.y)) }))
+  : [];
+const makeTraffic = () => createTraffic(level, { seed: carSeed, heightAt: carHeight });
+let traffic = carsOn && params.get("traffic") !== "0" ? makeTraffic() : null;
+const carView = carsOn ? createCarView(parked, traffic ? traffic.cars : [], { pitchAt: (c) => carPitch(c, (x, z) => carHeight(x, z, c.y)) }) : null;
+if (carView) {
+  carView.update({ x: level.spawn.position[0], z: level.spawn.position[2] }, traffic?.cars);
+  scene.add(carView.mesh);
+  env.sampleGround = carGroundSampler(levelSample, parked, () => (traffic ? traffic.cars : []));
 }
 
 // Fact cards (M1-07): 3 cards on the trail, from the open-data-atl site.
@@ -398,6 +424,7 @@ function simulate(dt) {
     if (goals.ended) events.push({ tick: run.tick, type: "run-end", ...goalsJson(goals, goalDef) });
   }
   if (crowd) crowd = stepCrowd(crowd, dt, skater.position);
+  if (traffic) traffic = stepTraffic(traffic, dt, skater.position);
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
   if (run.banked) {
     events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
@@ -428,6 +455,7 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
     results.hide();
   }
   if (crowd) crowd = createCrowd(level, { seed: npcSeed });
+  if (traffic) traffic = makeTraffic();
   events.length = 0;
   if (follow) follow.reset(skater);
 }
@@ -552,6 +580,7 @@ function frame(now) {
   if (sky) sky.update(camera, now / 1000);
   if (streetSigns) streetSigns.update(camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
+  if (carView) carView.update(camera.position, traffic?.cars);
   draw();
   frames += 1;
   if (frames === 1) {
@@ -693,6 +722,46 @@ window.__atl = {
             return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
           }).map((n) => n.id);
         },
+      }
+    : null,
+  // The cars (#132), or null on the greybox and with ?cars=0.
+  cars: carView
+    ? {
+        parked: parked.length,
+        get moving() {
+          return traffic ? traffic.cars.length : 0;
+        },
+        get lanes() {
+          return traffic ? traffic.lanes.length : 0;
+        },
+        drawCalls: carView.drawCalls,
+        get drawn() {
+          return carView.info.drawn;
+        },
+        get lod0() {
+          return carView.info.lod0;
+        },
+        get triangles() {
+          return carView.info.triangles;
+        },
+        // The smallest distance from a car body to the skater in the last
+        // step (m), and the count of yields to the skater.
+        get minSkaterGap() {
+          return traffic ? traffic.minSkaterGap : Infinity;
+        },
+        // The smallest gap since the last reset (m).
+        get closest() {
+          return traffic ? traffic.closest : Infinity;
+        },
+        get yields() {
+          return traffic ? traffic.yields : 0;
+        },
+        get list() {
+          return traffic ? traffic.cars.map((c) => ({ id: c.id, kind: c.kind, lane: c.lane, x: c.x, y: c.y, z: c.z, yaw: c.yaw, speed: c.speed, yielding: c.yielding })) : [];
+        },
+        parkedList: parked.map((c) => ({ kind: c.kind, x: c.x, y: c.y, z: c.z, yaw: c.yaw })),
+        // The ground sample at (x, z) with the cars, for the tests.
+        sample: (x, z, y) => env.sampleGround(x, z, y),
       }
     : null,
   get events() {

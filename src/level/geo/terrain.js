@@ -11,6 +11,8 @@
 //
 // A level with no terrain gets the flat terrain (height 0 everywhere).
 
+import { bridgeLayouts, project } from "./bridges.js";
+
 const cache = new WeakMap();
 const UP = [0, 1, 0];
 
@@ -159,31 +161,69 @@ export function buildingSpan(level, b) {
   return s;
 }
 
-// A bridge deck: the strip runs straight in height from the ground at its
-// first point to the ground at its last point (the bridge ends sit on the
-// approach grade). Where the deck crosses a way at grade with less than
-// DECK_CLEARANCE, the deck rises in a smooth arch to that clearance, and the
-// ends stay on the approach grade. Returns deck(x, z), the deck height
-// (without the surface offset) at the nearest point of the center line.
+// A bridge deck. bridges.js puts the joint J of each end JOINT_SHIFT m past
+// the OSM end, on the approach road. On the OSM span the deck runs straight
+// in height from the ground at the first joint to the ground at the last
+// joint. Where the span crosses a way at grade with less than
+// DECK_CLEARANCE, the deck rises in a smooth arch to that clearance; the
+// arch is 0 at the OSM ends. From the OSM end to J (the run-on), the deck
+// blends from that line down to the ground: at J it is on the ground, so it
+// meets the approach road, which is on the ground too, with no step and no
+// gap (issue #131). It never goes under the ground. A hosted bridge (a
+// sidewalk on a road bridge) has the line and the arch of its host, and its
+// own run-ons.
+//
+// Returns deck(x, z), the deck height (without the surface offset) at the
+// nearest point of the center line.
 export const DECK_CLEARANCE = 4.5;
 const ARCH_GRADE = 0.12;
 const decks = new WeakMap();
+const raws = new WeakMap();
 
-export function bridgeDeck(level, s) {
-  let m = decks.get(level);
-  if (!m) decks.set(level, (m = new Map()));
-  if (m.has(s.id)) return m.get(s.id);
+// The straight deck line of a bridge layout on terrain t: line(x, z).
+// `heights` can give the end heights; the default is the ground at J.
+function deckLine(L, t, heights = null) {
+  const [J0, J1] = [L.points[0], L.points[L.points.length - 1]];
+  const h0 = heights?.[0] ?? t.height(J0[0], J0[1]);
+  const h1 = heights?.[1] ?? t.height(J1[0], J1[1]);
+  const total = L.total || 1;
+  const at = (s) => h0 + (h1 - h0) * (s / total);
+  const line = (x, z) => at(project(L.points, L.cum, x, z).s);
+  line.at = at;
+  line.ends = [h0, h1];
+  line.slope = (h1 - h0) / total;
+  return line;
+}
+
+// The line and the arch of a host layout (no run-ons): raw(x, z). An end
+// with no approach road that is on another deck (a footway spur off a
+// footway bridge) starts at the height of that deck, not of the ground.
+function rawDeck(level, L, seen = new Set()) {
+  let m = raws.get(level);
+  if (!m) raws.set(level, (m = new Map()));
+  if (m.has(L.id)) return m.get(L.id);
+  seen.add(L.id);
   const t = terrainOf(level);
-  const pts = s.points;
-  const cum = [0];
-  for (let i = 1; i < pts.length; i += 1) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
-  const total = cum[cum.length - 1] || 1;
-  const h0 = t.height(pts[0][0], pts[0][1]);
-  const h1 = t.height(pts[pts.length - 1][0], pts[pts.length - 1][1]);
-  const line = (a) => h0 + (h1 - h0) * (a / total);
+  const pts = L.points;
+  const cum = L.cum;
+  const [a0, a1] = L.span;
+  const layouts = bridgeLayouts(level.strips);
+  const heights = L.ends.map((e, k) => {
+    if (e.approach) return null;
+    const J = k ? pts[pts.length - 1] : pts[0];
+    for (const O of layouts.values()) {
+      const root = O.host ?? O.id;
+      if (root === L.id || seen.has(root)) continue;
+      const { s, d } = project(O.points, O.cum, J[0], J[1]);
+      if (s >= 0 && s <= O.total && d <= O.width / 2) return rawDeck(level, layouts.get(root), seen)(J[0], J[1]);
+    }
+    return null;
+  });
+  const line = deckLine(L, t, heights);
   // The arch: the largest lift that a crossing needs, at its distance along.
+  // A way that meets the OSM end is the approach, not a way under the deck.
   let lift = 0;
-  let at = total / 2;
+  let at = (a0 + a1) / 2;
   for (let i = 0; i < pts.length - 1; i += 1) {
     for (const o of level.strips ?? []) {
       if (o.bridge) continue;
@@ -191,8 +231,8 @@ export function bridgeDeck(level, s) {
         const x = segmentsCross(pts[i], pts[i + 1], o.points[j], o.points[j + 1]);
         if (!x) continue;
         const a = cum[i] + Math.hypot(x[0] - pts[i][0], x[1] - pts[i][1]);
-        if (a < 3 || a > total - 3) continue;
-        const need = t.height(x[0], x[1]) + DECK_CLEARANCE - line(a);
+        if (a < a0 + 3 || a > a1 - 3) continue;
+        const need = t.height(x[0], x[1]) + DECK_CLEARANCE - line.at(a);
         if (need > lift) {
           lift = need;
           at = a;
@@ -200,33 +240,121 @@ export function bridgeDeck(level, s) {
       }
     }
   }
-  function along(x, z) {
-    let best = { d: Infinity, s: 0 };
-    for (let i = 0; i < pts.length - 1; i += 1) {
-      const [ax, az] = pts[i];
-      const [bx, bz] = pts[i + 1];
-      const dx = bx - ax;
-      const dz = bz - az;
-      const l2 = dx * dx + dz * dz;
-      const k = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / l2)) : 0;
-      const d = Math.hypot(x - (ax + k * dx), z - (az + k * dz));
-      if (d < best.d) best = { d, s: cum[i] + k * Math.sqrt(l2) };
-    }
-    return best.s;
-  }
   // No arch steeper than ARCH_GRADE on average (a short span gets less lift).
-  lift = Math.min(lift, ARCH_GRADE * Math.min(at, total - at));
-  // A sine arch from 0 at each end to `lift` at `at`.
-  const arch = (a) => (lift > 0 ? lift * Math.sin((Math.PI / 2) * (a < at ? a / at : (total - a) / (total - at))) : 0);
-  const deck = (x, z) => {
-    const a = along(x, z);
-    return line(a) + arch(a);
+  lift = Math.max(0, Math.min(lift, ARCH_GRADE * Math.min(at - a0, a1 - at)));
+  // A sine arch from 0 at each OSM end to `lift` at `at`.
+  const arch = (a) => {
+    if (!(lift > 0) || a <= a0 || a >= a1) return 0;
+    return lift * Math.sin((Math.PI / 2) * (a < at ? (a - a0) / (at - a0) : (a1 - a) / (a1 - at)));
   };
-  deck.slope = (h1 - h0) / total;
-  deck.ends = [h0, h1];
-  deck.lift = lift;
+  const raw = (x, z) => {
+    const a = project(pts, cum, x, z).s;
+    return line.at(a) + arch(a);
+  };
+  raw.line = line;
+  raw.lift = lift;
+  m.set(L.id, raw);
+  return raw;
+}
+
+export function bridgeDeck(level, s) {
+  let m = decks.get(level);
+  if (!m) decks.set(level, (m = new Map()));
+  if (m.has(s.id)) return m.get(s.id);
+  const layouts = bridgeLayouts(level.strips);
+  const L = layouts.get(s.id);
+  const raw = rawDeck(level, layouts.get(L.host ?? L.id));
+  const t = terrainOf(level);
+  // The run-on weight: 0 at J, 1 a little before the OSM end, so the whole
+  // mitered end edge of the span (a turn of up to 35 degrees) is on the line.
+  const half = L.width / 2;
+  const e0 = L.span[0];
+  const e1 = L.total - L.span[1];
+  const full0 = Math.max(e0 / 2, e0 - 0.35 * half);
+  const full1 = Math.max(e1 / 2, e1 - 0.35 * half);
+  const weight = (a) => {
+    if (e0 > 0 && a < e0) return Math.max(0, Math.min(1, a / full0));
+    if (e1 > 0 && a > L.total - e1) return Math.max(0, Math.min(1, (L.total - a) / full1));
+    return 1;
+  };
+  // On a run-on the deck blends from the line to the ground on the joint
+  // edge (the ground at J, at the same offset across the road): at J it is
+  // the approach road, and the blend has no kink from the terrain grid under
+  // the run-on. The deck never goes under the ground: where the ground is
+  // higher (near an OSM end, where another graded corridor meets this one)
+  // the deck rides on it.
+  const joints = [0, 1].map((k) => {
+    const P = L.points;
+    const [J, next] = k ? [P[P.length - 1], P[P.length - 2]] : [P[0], P[1]];
+    const l = Math.hypot(next[0] - J[0], next[1] - J[1]) || 1;
+    return { J, n: [-(next[1] - J[1]) / l, (next[0] - J[0]) / l] };
+  });
+  const deck = (x, z) => {
+    const r = raw(x, z);
+    const a = project(L.points, L.cum, x, z).s;
+    const w = weight(a);
+    const g = t.height(x, z);
+    if (w >= 1) return Math.max(r, g);
+    // Past a joint (the round end of a sampler strip) the deck is the ground.
+    if (a <= 0 || a >= L.total) return g;
+    const { J, n } = joints[a < L.total / 2 ? 0 : 1];
+    const o = (x - J[0]) * n[0] + (z - J[1]) * n[1];
+    const gJ = t.height(J[0] + n[0] * o, J[1] + n[1] * o);
+    return Math.max(g, r + (gJ - r) * (1 - w));
+  };
+  deck.weight = weight;
+  // The line and the arch without the run-ons or the ground (level across).
+  deck.raw = raw;
+  deck.slope = raw.line.slope;
+  deck.ends = raw.line.ends;
+  deck.lift = raw.lift;
   m.set(s.id, deck);
   return deck;
+}
+
+// True where a parapet of bridge `s` would stand in an at-grade way at the
+// deck height (a sidewalk that goes on past the end of its own deck), other
+// than the approaches of the bridge. A way far under the deck is not in it.
+const blockers = new WeakMap();
+export function parapetBlocked(level, s) {
+  let m = blockers.get(level);
+  if (!m) blockers.set(level, (m = new Map()));
+  if (m.has(s.id)) return m.get(s.id);
+  const L = bridgeLayouts(level.strips).get(s.id);
+  const own = new Set(L.ends.map((e) => e.approach));
+  const t = terrainOf(level);
+  const deck = bridgeDeck(level, s);
+  const top = level.surfaces?.[s.kind] ?? 0;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  for (const [x, z] of L.points) {
+    minX = Math.min(minX, x - 30);
+    maxX = Math.max(maxX, x + 30);
+    minZ = Math.min(minZ, z - 30);
+    maxZ = Math.max(maxZ, z + 30);
+  }
+  const near = (level.strips ?? []).filter((o) => !o.bridge && !own.has(o.id) && o.points.some(([x, z]) => x >= minX && x <= maxX && z >= minZ && z <= maxZ));
+  const blocked = (x, z) => {
+    const y = deck(x, z) + top;
+    for (const o of near) {
+      const oy = t.height(x, z) + (level.surfaces?.[o.kind] ?? 0);
+      if (Math.abs(oy - y) > 0.6) continue;
+      for (let i = 0; i < o.points.length - 1; i += 1) {
+        const [ax, az] = o.points[i];
+        const [bx, bz] = o.points[i + 1];
+        const dx = bx - ax;
+        const dz = bz - az;
+        const l2 = dx * dx + dz * dz || 1;
+        const k = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / l2));
+        if (Math.hypot(x - ax - k * dx, z - az - k * dz) < o.width / 2) return true;
+      }
+    }
+    return false;
+  };
+  m.set(s.id, blocked);
+  return blocked;
 }
 
 // A bridge: the slab under the deck and a parapet on each side (m).
@@ -412,6 +540,127 @@ export function gradeTrail(grid, strips) {
     }
   }
   return { heights, points: pts.length };
+}
+
+// Grades the ground at the bridge joints (issue #131). Near each joint J
+// (bridges.js) the ground goes on the deck line, level across the road:
+// from one cell diagonal before J to one cell diagonal past it, and to one
+// cell diagonal past each road edge. Then it blends back to the old ground
+// over BRIDGE_GRADE.blend m along and BRIDGE_GRADE.sideBlend m across.
+// The deck line is linear, and every grid node of each terrain triangle at
+// J is on it, so the ground at J is exactly the deck end height: the deck
+// end and the road meet with no step. The nodes of such a triangle are up
+// to one cell diagonal from J, so the bands are at least that wide. Under the rest of the deck, the ground
+// stays at least BRIDGE_GRADE.under m below the deck line, so no terrain
+// shows through a deck. Where two corridors meet, the nearer center line
+// wins. Run it after raiseEmbankments(). Pure: returns new heights.
+export const BRIDGE_GRADE = { blend: 24, sideBlend: 8, under: 0.05 };
+
+export function gradeBridgeEnds(grid, strips) {
+  const t = createTerrain(grid);
+  // The nodes of a terrain triangle are at most one cell diagonal apart.
+  const CRITICAL = grid.cell * Math.SQRT2 + 0.01;
+  const G = { ...BRIDGE_GRADE, inward: CRITICAL, out: CRITICAL, side: CRITICAL };
+  const heights = Float32Array.from(grid.heights);
+  const { cell, x0, z0, cols, rows } = grid;
+  const layouts = bridgeLayouts(strips);
+  const lines = new Map();
+  for (const L of layouts.values()) if (!L.host) lines.set(L.id, deckLine(L, t));
+  const reach = G.out + G.blend + G.side + G.sideBlend;
+  const items = [...layouts.values()].map((L) => {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    for (const [x, z] of L.points) {
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minZ = Math.min(minZ, z);
+      maxZ = Math.max(maxZ, z);
+    }
+    const r = reach + L.width / 2;
+    return { L, family: L.host ?? L.id, line: lines.get(L.host ?? L.id), box: [minX - r, maxX + r, minZ - r, maxZ + r] };
+  });
+  // A way under a deck keeps its ground along its whole length (no fill on
+  // a road or the trail under a bridge, and no blend from a joint band near
+  // it): there the grade only lowers the ground under a span. A deck run-on
+  // follows the ground at its joint, so a joint near such a way still meets
+  // its road.
+  const under = new Set();
+  for (const L of layouts.values()) {
+    const P = L.points;
+    for (let i = 0; i < P.length - 1; i += 1) {
+      for (const o of strips) {
+        if (o.bridge || under.has(o)) continue;
+        for (let j = 0; j < o.points.length - 1; j += 1) {
+          const x = segmentsCross(P[i], P[i + 1], o.points[j], o.points[j + 1]);
+          if (!x) continue;
+          const a = L.cum[i] + Math.hypot(x[0] - P[i][0], x[1] - P[i][1]);
+          if (a >= L.span[0] + 3 && a <= L.span[1] - 3) under.add(o);
+        }
+      }
+    }
+  }
+  const keep = [...under].map((o) => {
+    const r = o.width / 2 + CRITICAL;
+    const xs = o.points.map((p) => p[0]);
+    const zs = o.points.map((p) => p[1]);
+    return { o, r, box: [Math.min(...xs) - r, Math.max(...xs) + r, Math.min(...zs) - r, Math.max(...zs) + r] };
+  });
+  const keepsGround = (x, z) =>
+    keep.some(({ o, r, box }) => {
+      if (x < box[0] || x > box[1] || z < box[2] || z > box[3]) return false;
+      for (let j = 0; j < o.points.length - 1; j += 1) {
+        const [ax, az] = o.points[j];
+        const [bx, bz] = o.points[j + 1];
+        const dx = bx - ax;
+        const dz = bz - az;
+        const l2 = dx * dx + dz * dz || 1;
+        const k = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / l2));
+        if (Math.hypot(x - ax - k * dx, z - az - k * dz) <= r) return true;
+      }
+      return false;
+    });
+  const smooth = (k) => k * k * (3 - 2 * k);
+  let changed = 0;
+  for (let j = 0; j < rows; j += 1) {
+    const z = z0 + j * cell;
+    for (let i = 0; i < cols; i += 1) {
+      const x = x0 + i * cell;
+      let set = null;
+      const clamps = [];
+      for (const { L, family, line, box } of items) {
+        if (x < box[0] || x > box[1] || z < box[2] || z > box[3]) continue;
+        const { s, d } = project(L.points, L.cum, x, z);
+        const half = L.width / 2;
+        // a: the distance out past each joint (negative: in toward the span).
+        for (const a of [-s, s - L.total]) {
+          if (a < -G.inward) continue;
+          const wa = a <= G.out ? 1 : 1 - (a - G.out) / G.blend;
+          const ws = d <= half + G.side ? 1 : 1 - (d - half - G.side) / G.sideBlend;
+          if (!(wa > 0 && ws > 0)) continue;
+          const w = smooth(wa) * smooth(ws);
+          // A node of a terrain triangle at the joint edge is critical: it
+          // wins over the blend band of another bridge.
+          const critical = Math.abs(a) <= CRITICAL && d <= half + CRITICAL;
+          const better = !set || critical > set.critical || (critical === set.critical && (d < set.d - 1e-9 || (Math.abs(d - set.d) <= 1e-9 && w > set.w)));
+          if (better) set = { d, w, critical, family, v: line(x, z) };
+        }
+        if (s > G.inward && s < L.total - G.inward && d <= half + G.side) clamps.push({ family, v: line(x, z) - G.under });
+      }
+      if (set && keepsGround(x, z)) set = null;
+      if (!set && !clamps.length) continue;
+      const k = j * cols + i;
+      let h = heights[k];
+      if (set) h += (set.v - h) * set.w;
+      // A deck of the same family as the set is on the same line, so the set
+      // ground is already under it.
+      for (const c of clamps) if (!(set && set.w >= 1 && c.family === set.family)) h = Math.min(h, c.v);
+      if (Math.abs(h - heights[k]) > 1e-6) changed += 1;
+      heights[k] = h;
+    }
+  }
+  return { heights, changed };
 }
 
 // --- Draping a mesh on the terrain ---

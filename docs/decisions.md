@@ -941,3 +941,36 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Limits: the closest pass to a player who stands still is 0.94 m (the bodies touch at 0.65 m). The crowd does not stop for a skater, so a crowd NPC can brush a skater that waits (one event in the seeded minute, 0.16 m from the skater center).
 - Not verified: the median FPS gate (55). The harness gave 10 FPS with the NPC skaters and 12 FPS without them at a load average of 18 to 23, so both runs fail. `e2e/npcs.spec.js` (a 10 s crowd ride in the follow view) timed out at 30 s with the NPC skaters after a merge of main. Cause: the outfit gives the NPC skin its own shader program, and SwiftShader stalled on the first frame with an NPC in view. The first ride took 16.6 s with the NPC skaters and 11.6 s without them. `warm()` in `src/render/npc-skaters-view.js` now compiles the programs after the NPC models load; the first ride then took 10.06 s, and all 8 rides took 9.9 to 10.1 s (load average 15 to 18). Measure the FPS gate again on a quiet machine.
 - Not done: real skaters have not reviewed the NPC moves (AGENTS.md requires it before release). An NPC skater does not give a challenge yet (a later issue).
+
+## 2026-11-04: Bridge decks meet their roads (#131)
+
+### Root causes
+
+- The terrain grid is 8 m, not 4 m. A deck end cannot meet the road at the OSM end: the ground there ramps down into the cut under the bridge. The deck end also used the ground height at its center point only. The deck is level across, and the approach road drapes on a ground with a cross slope, so the corners had steps up to 2.87 m (Parkway, (393.8, -43.3)).
+- Under the decks the ground was up to 1.49 m above the deck (Parkway), and the slab was straight across a deck that sat on the ground.
+- The deck end was square to the deck and the road end was square to the road (up to 10 degrees apart), so wedges of grass showed. The deck had no miter at a turn.
+- A sidewalk deck next to a road deck had its own height line, up to 3.9 m lower (Highland Ave NE, south side). The two Parkway carriageways had lines up to 0.8 m apart, side by side.
+- The parapets stopped in the road with no end, and the road parapets stood inside the sidewalk decks.
+- The markings on a deck were draped on the ground, not on the deck.
+
+### Decisions
+
+- `src/level/geo/bridges.js` (new, pure): each deck goes on past its OSM end along the approach road to a joint J, up to 12 m (one grid diagonal). The run-on stops where the approach bends more than 20 degrees. The approach road mesh stops at J. A deck alongside a wider deck in parallel (a sidewalk, or the second carriageway) is hosted: it uses the line of its host. Ribbons are mitered. `project()` measures along a polyline between miter lines, so the height has no jump on the inside of a turn.
+- `bridgeDeck()`: on the span, the line from the ground at J0 to the ground at J1, with the arch. On a run-on the deck blends from that line to the ground on the joint edge. So at J the deck is on the ground, the same as the road. The deck never goes under the ground. A free end on another deck (the footway spur at Ponce City Market) starts at that deck height.
+- `gradeBridgeEnds()` (build step, after `raiseEmbankments()`, run twice): the ground goes on the deck line, level across the road, within one grid diagonal of each joint, and blends back over 24 m. Under each span the ground stays 5 cm under the deck line. Along a way that passes under a deck (a street, or the BeltLine trail under the Parkway) the grade sets no height: it only lowers the ground under a span. So no arch grows from a fill, and the trail outside the trail bridge approaches keeps its grade.
+- The deck top is one drape on the deck height. The slab is on the straight line, 5 cm under the deck top. Each parapet ends at an end post and a 4 m wing wall that turns 30 degrees out and goes down into the ground. A parapet side inside another deck or in an at-grade way at the deck height gets no parapet. A half disk past each joint fills the wedge between the deck end and the next road. A disk fills the wedge where two roads of one kind meet end to end within 40 m of a bridge. The deck top has a vertex row on the center line, and the deck center lines are draped on the deck height, so the deck top never covers them.
+- The deck markings follow the deck (`roadMarkings()` returns them in `deck`, not draped again).
+- NPC check: after the merge of main, Kiana bonked 3 times on a bench in the crowd test. The cause: the grade raised the trail 11 cm at (339.12, -31.22), in the blend band of the Parkway joint. Her path moved, and a turn took her off the trail into the bench. The grade now keeps the ground along ways under a deck, and the test passes with no NPC script change.
+
+### Evidence
+
+- `src/level/geo/bridges.test.js` (13 tests): deck end on the ground at each of the joints within 2 cm, the deck mesh edge at J on the ground, no terrain over any deck from joint to joint, wing walls off the road, center lines across the Parkway joints, and 2 skater rolls at 3 offsets across each joint with no bonk and no fall.
+- `e2e/bridges.spec.js`: high-tier pictures of 17 bridge ends, in `reports/bridges/before/` (origin/main) and `reports/bridges/after/`.
+- The high tier loads to 5 frames in 8.2 s headless. Vitest: 645 tests pass (after the merge of main with the cars, the NPC skaters, and the trees).
+
+### Limits
+
+- Where the run-on of one deck meets the graded band of another (the Highland and Randolph corner, the Parkway west end with the Stone Mountain Trail), the deck rides the ground for a few meters. The height is continuous, but the grade has a crease of up to about 10 cm.
+- The footway spur `w1118177210` goes from the footway deck (9.5 m) to the ground (4.8 m) in 10 m, as in the OSM data: a 47% ramp.
+- The ground sampler is about 1.4 times slower (deck heights now read the terrain).
+- Not checked: the low tier far terrain at the bridge ends.

@@ -15,9 +15,17 @@
 // surface tile, so the markings cost no draw call. The markings are a few
 // cm over the street top. They are a visual only; the ground sampler and
 // the physics do not see them.
+//
+// On a bridge the lines are draped on the deck height (terrain.js
+// bridgeDeck), not on the ground, and run on to the deck joint; the line of the approach road
+// starts at the joint (bridges.js, issue #131). These lines are in `deck`,
+// at their final height: the view must not drape them again.
 
 import { streetIntersections } from "./signs.js";
 import { GEO_TILE } from "./geo-mesh.js";
+import { approachTrims, bridgeLayout, densify, trimPolyline } from "./bridges.js";
+import { mergeMeshes } from "./extrude.js";
+import { bridgeDeck, drapeMesh, terrainOf } from "./terrain.js";
 
 export const MARKING_COLORS = {
   yellow: [0.96, 0.74, 0.16],
@@ -38,13 +46,16 @@ function quad(mesh, a, b, c, d, color) {
   mesh.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
 }
 
-// A flat rectangle centered at (cx, cz), long along (dx, dz).
+// A rectangle centered at (cx, cz), long along (dx, dz). `y` is a height,
+// or a function y(x, z) for each corner.
 function rect(mesh, cx, cz, y, dx, dz, along, across, color) {
   const ax = (dx * along) / 2;
   const az = (dz * along) / 2;
   const nx = (-dz * across) / 2;
   const nz = (dx * across) / 2;
-  quad(mesh, [cx - ax - nx, y, cz - az - nz], [cx + ax - nx, y, cz + az - nz], [cx + ax + nx, y, cz + az + nz], [cx - ax + nx, y, cz - az + nz], color);
+  const Y = typeof y === "function" ? y : () => y;
+  const P = (x, z) => [x, Y(x, z), z];
+  quad(mesh, P(cx - ax - nx, cz - az - nz), P(cx + ax - nx, cz + az - nz), P(cx + ax + nx, cz + az + nz), P(cx - ax + nx, cz - az + nz), color);
 }
 
 // A line along a polyline, offset sideways by `offset`, with the parts in
@@ -90,9 +101,13 @@ function line(mesh, points, y, offset, width, cuts, color) {
 
 export function roadMarkings(level) {
   const mesh = { positions: [], indices: [], colors: [] };
+  // The lines on bridge decks: [{ tile, meshes }] at their final height.
+  const deckParts = [];
   const streetTop = level.surfaces?.street ?? 0;
   const y = streetTop + LIFT;
   const streets = (level.strips ?? []).filter((s) => s.kind === "street");
+  const flat = terrainOf(level).flat;
+  const trims = flat ? new Map() : approachTrims(level.strips ?? []);
 
   // The street strips at each node.
   const nodes = new Map();
@@ -116,7 +131,23 @@ export function roadMarkings(level) {
       const others = [...n.strips.values()].filter((o) => o.id !== s.id && o.highway !== "service" && o.name !== s.name);
       if (others.length) cuts.push({ x: n.x, z: n.z, r: Math.max(...others.map((o) => o.width / 2)) + CLEAR });
     }
-    for (const side of [1, -1]) line(mesh, s.points, y, side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, cuts, MARKING_COLORS.yellow);
+    if (s.bridge && !flat) {
+      // On the deck, from joint to joint, draped on the deck height like the
+      // deck top (terrain.js bridgeDeck, geo-mesh.js bridgeMeshes).
+      const deck = bridgeDeck(level, s);
+      const L = bridgeLayout(level, s);
+      const t = terrainOf(level);
+      const flatLine = { positions: [], indices: [], colors: [] };
+      const pts = densify(L.points, 1.5);
+      for (const side of [1, -1]) line(flatLine, pts, y, side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, cuts, MARKING_COLORS.yellow);
+      const draped = flatLine.indices.length ? drapeMesh(flatLine, { flat: false, cell: t.cell, x0: t.x0, z0: t.z0, height: deck }) : null;
+      const [x0, z0] = s.points[0];
+      deckParts.push({ tile: `${Math.floor(x0 / GEO_TILE)},${Math.floor(z0 / GEO_TILE)}`, meshes: draped ? [draped] : [] });
+      continue;
+    }
+    const pts = trimPolyline(s.points, trims.get(s.id));
+    if (!pts) continue;
+    for (const side of [1, -1]) line(mesh, pts, y, side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, cuts, MARKING_COLORS.yellow);
   }
 
   // Zebra crosswalks: bars across each street arm, past the cross street.
@@ -154,12 +185,15 @@ export function roadMarkings(level) {
 
   // Split the quads (4 vertices, 6 indices each) into tiles.
   const tiles = new Map();
+  const entry = (key) => {
+    let e = tiles.get(key);
+    if (!e) tiles.set(key, (e = { mesh: { positions: [], indices: [], colors: [] }, deck: [] }));
+    return e;
+  };
   for (let q = 0; q < mesh.positions.length / 12; q += 1) {
     const x = mesh.positions[q * 12];
     const z = mesh.positions[q * 12 + 2];
-    const key = `${Math.floor(x / GEO_TILE)},${Math.floor(z / GEO_TILE)}`;
-    let t = tiles.get(key);
-    if (!t) tiles.set(key, (t = { positions: [], indices: [], colors: [] }));
+    const t = entry(`${Math.floor(x / GEO_TILE)},${Math.floor(z / GEO_TILE)}`).mesh;
     const base = t.positions.length / 3;
     for (let k = 0; k < 12; k += 1) {
       t.positions.push(mesh.positions[q * 12 + k]);
@@ -167,9 +201,11 @@ export function roadMarkings(level) {
     }
     t.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
   }
+  for (const { tile, meshes } of deckParts) entry(tile).deck.push(...meshes.filter((m) => m.indices.length));
+  const typed = (t) => ({ positions: Float32Array.from(t.positions), indices: Uint32Array.from(t.indices), colors: Float32Array.from(t.colors) });
   return [...tiles.entries()]
     .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-    .map(([tile, t]) => ({ tile, mesh: { positions: Float32Array.from(t.positions), indices: Uint32Array.from(t.indices), colors: Float32Array.from(t.colors) } }));
+    .map(([tile, e]) => (e.deck.length ? { tile, mesh: typed(e.mesh), deck: typed(mergeMeshes(e.deck)) } : { tile, mesh: typed(e.mesh) }));
 }
 
 // Every tile in one mesh (for the tests).
@@ -177,11 +213,13 @@ export function mergeMarkings(tiles) {
   const positions = [];
   const colors = [];
   const indices = [];
-  for (const { mesh } of tiles) {
-    const base = positions.length / 3;
-    positions.push(...mesh.positions);
-    colors.push(...mesh.colors);
-    for (const i of mesh.indices) indices.push(base + i);
+  for (const { mesh: m, deck } of tiles) {
+    for (const mesh of deck ? [m, deck] : [m]) {
+      const base = positions.length / 3;
+      positions.push(...mesh.positions);
+      colors.push(...mesh.colors);
+      for (const i of mesh.indices) indices.push(base + i);
+    }
   }
   return { positions, colors, indices };
 }

@@ -529,7 +529,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   // draw call). The shared meshes, which the physics reads, stay as they are.
   // The markings follow the terrain like the streets (terrain.js).
   const terrain = terrainOf(level);
-  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, drapeMesh(t.mesh, terrain)]) : []);
+  // The lines on a bridge deck come at their final height (no drape).
+  const markingTiles = new Map(markings ? roadMarkings(level).map((t) => [t.tile, t.deck ? mergeMeshes([drapeMesh(t.mesh, terrain), t.deck]) : drapeMesh(t.mesh, terrain)]) : []);
   // The facade kit (cornices, copings, belt courses, house roofs) joins the
   // render copy of its building tile in the same way.
   const kitParts = kit ? facadeKit(level) : { tiles: [], depthTiles: [], counts: {} };

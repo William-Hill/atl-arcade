@@ -26,7 +26,7 @@ import { pathToFileURL } from "node:url";
 import polygonClipping from "polygon-clipping";
 import { bboxCenter, createProjection, parseBbox } from "../src/level/geo/projection.js";
 import { cleanRing, signedArea } from "../src/level/geo/extrude.js";
-import { decodeHeights, encodeHeights, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
+import { decodeHeights, encodeHeights, gradeBridgeEnds, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
 import { shortName } from "../src/level/geo/signs.js";
 import { createStreetNamer } from "./street-names.mjs";
 
@@ -432,7 +432,12 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     const graded = gradeTrail({ ...terrain, heights: decodeHeights(terrain.data, terrain.cols * terrain.rows) }, strips).heights;
     const r = raiseEmbankments({ ...terrain, heights: graded }, strips);
     embankments = r.changes;
-    terrain = { ...terrain, data: encodeHeights(r.heights) };
+    // Last, the ground at the bridge joints goes on the deck line (#131).
+    // A second pass takes the deck line ends from the graded ground, so the
+    // runtime deck (bridgeDeck) has the same line as the grade.
+    const once = gradeBridgeEnds({ ...terrain, heights: r.heights }, strips);
+    const ends = gradeBridgeEnds({ ...terrain, heights: once.heights }, strips);
+    terrain = { ...terrain, data: encodeHeights(ends.heights) };
   }
   const spawn = trailSpawn(strips.filter((st) => !st.bridge));
   if (terrain) spawn.position[1] = round(spawn.position[1] + terrainOf({ terrain }).height(spawn.position[0], spawn.position[2]));

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { GEO_TILE, SURFACE_COLORS, buildGeoMeshes, buildPropMeshes } from "../level/geo/geo-mesh.js";
+import { SURFACE_COLORS, boundsDistance, buildGeoMeshes, buildPropMeshes, meshBounds, unionBounds } from "../level/geo/geo-mesh.js";
 import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
 import { facadeKit } from "../level/geo/facade-kit.js";
@@ -466,6 +466,9 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   // A far level of detail for the surfaces (the low tier): a surface tile
   // past FAR_TERRAIN_DISTANCE shows a drape on a 16 m terrain, with about a
   // quarter of the triangles. The physics keeps the exact tiles.
+  // The distance uses the bounds of the meshes, not the tile square: a strip
+  // joins the tile of its first point and can run far out of it. The coarse
+  // drape sits above the exact ground, so it must never show near the camera.
   const terrainLods = [];
   if (farTerrain && !terrain.flat) {
     for (const { tile, mesh } of buildGeoMeshes(level, { terrainStep: 2, surfacesOnly: true })) {
@@ -473,10 +476,11 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       if (!near) continue;
       const far = addMesh(root, byId, `surface-far-${tile}`, geoGeometry(mesh), materials.surface);
       far.visible = false;
-      const [ix, iz] = tile.split(",").map(Number);
-      terrainLods.push({ near, far, x0: ix * GEO_TILE, z0: iz * GEO_TILE });
+      const bounds = unionBounds(meshBounds({ positions: near.geometry.attributes.position.array }), meshBounds(mesh));
+      terrainLods.push({ near, far, bounds });
     }
   }
+  const terrainLod = { tiles: terrainLods.length, far: 0, nearestFar: Infinity };
   for (const [tile, mesh] of kitTiles) addMesh(root, byId, `kit-${tile}`, geoGeometry(mesh), materials.building, { castShadow: true });
   // The sills and the piers: one mesh per depth tile, hidden far away in
   // update().
@@ -518,20 +522,29 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     },
     props,
     kit: kitParts.counts,
-    terrainLods: terrainLods.length,
+    // The far terrain: the tile count, the far tiles now, and the distance
+    // from the camera to the nearest far tile (Infinity with none).
+    terrainLod,
     facadeDepth,
     addProps,
     // Shows each prop tile at one level of detail by its distance from the
     // camera, and hides the far prop and depth tiles.
     update(cameraPosition, seconds = performance.now() / 1000) {
       propMaterial.time.value = seconds;
+      let farTiles = 0;
+      let nearestFar = Infinity;
       for (const t of terrainLods) {
-        const dx = Math.max(t.x0 - cameraPosition.x, 0, cameraPosition.x - (t.x0 + GEO_TILE));
-        const dz = Math.max(t.z0 - cameraPosition.z, 0, cameraPosition.z - (t.z0 + GEO_TILE));
-        const far = Math.hypot(dx, dz) > FAR_TERRAIN_DISTANCE;
+        const d = boundsDistance(t.bounds, cameraPosition.x, cameraPosition.z);
+        const far = d > FAR_TERRAIN_DISTANCE;
         t.near.visible = !far;
         t.far.visible = far;
+        if (far) {
+          farTiles += 1;
+          nearestFar = Math.min(nearestFar, d);
+        }
       }
+      terrainLod.far = farTiles;
+      terrainLod.nearestFar = nearestFar;
       let near = 0;
       let nearTriangles = 0;
       for (const obj of depthTiles) {

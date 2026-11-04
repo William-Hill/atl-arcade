@@ -661,3 +661,14 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Why not a loose gate: the intent does not change. Each frame that the player sees is checked for the skater on screen, and a camera snap still fails. Only the count of frames no longer depends on the machine.
 - Game code: no change. `src/main.js` and the recorder stay as they are.
 - Evidence: at a load average of 37 to 39, the old spec failed 4 of 4 runs (17, 19, 14, and 14 samples). At a load average of 120 to 45, the new spec passed 20 of 20 tests with `--repeat-each 5`.
+
+## 2026-11-03: The far terrain uses the mesh bounds, not the tile square (#87)
+
+- Problem: on the low tier, the coarse far terrain covered Nia to the waist at the BeltLine spawn. With `?farterrain=0` she showed in full.
+- Root cause: `buildGeoMeshes()` puts an item in the 125 m tile of its first point. A long strip runs far out of that tile. The far mesh of tile `1,-3` spans x -153 to 361 and z -375 to 794, and its trail runs under the spawn (337.07, -1.3). `update()` measured the distance to the 125 m tile square, which is 264 m from the spawn. Thus it showed the coarse drape of that trail at the spawn. The coarse drape follows a 16 m terrain and sits above the exact ground that the physics uses.
+- Decision: `update()` measures the distance from the camera to the x/z bounds of the near and far meshes of the tile (`meshBounds()`, `unionBounds()`, `boundsDistance()` in `src/level/geo/geo-mesh.js`). A tile shows its far mesh only when no vertex is within `FAR_TERRAIN_DISTANCE` (60 m) of the camera.
+- Why not a render order or a depth offset: the drape really sits above the near ground. A draw order change hides the symptom at the spawn but not on other slopes.
+- Cost: a tile with a long strip stays near for a longer distance. At the spawn, more than half of the tiles still use the far mesh (Vitest checks this).
+- Test hook: `window.__atl.level.terrainLod` gives `{ tiles, far, nearestFar }`. `nearestFar` is the distance from the camera to the nearest far tile.
+- Tests: `src/level/geo/geo-mesh.test.js` checks the bounds and tile `1,-3`. `e2e/far-terrain.spec.js` opens the spawn on the low tier, checks `nearestFar > 60`, and saves `e2e/__screenshots__/far-terrain-spawn-low.png`. Not verified: the `nearestFar` check against the old distance test. The old `geo-view.js` has no `terrainLod` hook, so the spec fails there before that check.
+- Evidence: `reports/far-terrain/spawn-low-before.png` and `reports/far-terrain/spawn-low-after.png`.

@@ -661,3 +661,42 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Why not a loose gate: the intent does not change. Each frame that the player sees is checked for the skater on screen, and a camera snap still fails. Only the count of frames no longer depends on the machine.
 - Game code: no change. `src/main.js` and the recorder stay as they are.
 - Evidence: at a load average of 37 to 39, the old spec failed 4 of 4 runs (17, 19, 14, and 14 samples). At a load average of 120 to 45, the new spec passed 20 of 20 tests with `--repeat-each 5`.
+
+## 2026-11-03: Street-sign names from the City of Atlanta centerlines (#78)
+
+- Problem: the audit (#65, GEO-1 and GEO-4) found sign names that do not match the city data. Two signs said "Closed Lake Ave", an OSM mapper note on way 586825917.
+- Source: the City of Atlanta street centerlines, open-data-atl catalog `atl-street-centerlines`. `scripts/city-streets.mjs` writes `levels/beltline-eastside/raw/city-streets.json` (199 segments, fetched 2026-11-03). The build runs offline after the fetch.
+- Data model: the strip `name` stays the OSM name (ODbL data). The build adds `signName` (the name on the sign) and `nameSource` (`city`, `reviewed`, or `osm`) to each named street strip. The level attribution adds "Street names: City of Atlanta Department of City Planning".
+- Rules (`scripts/street-names.mjs`), in this order for each named street strip:
+  1. A city line within 40 m has the same name. The sign uses the OSM name.
+  2. A city line within 40 m has the same name without the quadrant, or a spelling one letter apart. The sign uses the city label.
+  3. The OSM name is in `REVIEWED`. The sign uses the OSM name.
+  4. One city line within 15 m runs along 60% or more of the strip. The sign uses the city label.
+  5. No city line matches. The OSM name is the fallback, with `nameSource: "osm"` and no `signName`. A sign does not show a fallback name. The crosswalks at that intersection stay.
+- Capitals: the sign keeps the OSM capitals where the words are equal. Thus "Ralph McGill", not the city "Ralph Mcgill", and "Ponce de Leon", not "Ponce De Leon".
+- Reviewed name: "John Lewis Freedom Pkwy NE". The city renamed Freedom Parkway in 2018, but the city layer still has "Freedom Pkwy North NE" and "Freedom Pkwy South NE". The audit confirms the new name.
+- Changed sign names (old, then new):
+
+  | Old name | New name | Rule | OSM ways |
+  |---|---|---|---|
+  | Closed Lake Ave | Brickworks Cir NE | 4 | w586825917 |
+  | Brickworks Cir | Brickworks Cir NE | 2 | w218549750, w218549751, w218549752, w586825916 |
+  | Bishop Way NE | Bishops Way NE | 2 | w243830594 |
+  | Austin Ave NE | Lake Ave NE | 4 | w9246448 |
+  | Ralph McGill Blvd | Ralph McGill Blvd NE | 2 | w28688645, w630643907 |
+  | Patterson Way NE | Patterson Way | 2 | w232548873 |
+  | Inman Ln | Inman Ln NE | 2 | w211062133 |
+  | Inman Way | Inman Way NE | 2 | w211062141 |
+  | Irwin Pl | Irwin Pl NE | 2 | w243830604 |
+  | Kendall St | Kendall St NE | 2 | w93212526 |
+  | Montag Cir | Montag Cir NE | 2 | w9239208 |
+  | Village Pkwy | Village Pkwy NE | 2 | w562435149, w562435152, w93727868 |
+  | Randolph St NE | Glen Iris Dr NE | 4 | w41545411, w41545414 |
+  | Rankin St NE | Dallas St NE | 4 | w1229184077 |
+  | Dallas St NE | Morgan St NE | 4 | w1466674340 |
+
+- The last 3 rows are short OSM pieces on the same line as a longer city segment with the other name. The city layer puts the name change at a different node than OSM. The city layer is the source, so the city name wins.
+- OSM fallback names with no sign: Prospect Way NE (w232548874), Garden Park Dr (w182470294), North Angier Ave NE (w1187794330), and Dallas St NE (w496236757). The city layer has no line near these strips. Ford Pl NE (w9277776) is a service road and has no sign in any case.
+- Result: 95 signs before, 88 after. 24 old corner pairs went and 17 new pairs came. Examples: "Brickworks Cir / Closed Lake Ave" and "Closed Lake Ave / West Ashland Ave NE" became one sign "Brickworks Cir NE / West Ashland Ave NE". The false corner "Ralph McGill Blvd / Ralph McGill Blvd NE" became "Ralph McGill Blvd NE / Fortune St NE". "Austin Ave NE / Elizabeth St NE" became "Elizabeth St NE / Lake Ave NE".
+- Test: `scripts/street-names.test.js` checks every sign name of the level against the city labels. Only a name in `REVIEWED` can differ. It also checks each rule on small fixtures. The byte-for-byte rebuild test in `scripts/build-block.test.js` covers the new raw file.
+- Not done: the sign blades are still too small to read on a phone (GEO-5, #24).

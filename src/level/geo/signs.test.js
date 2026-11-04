@@ -29,11 +29,13 @@ describe("street signs", () => {
     for (const [x, z] of cornerSpots(ix[0])) expect(Math.min(Math.abs(x - 10), Math.abs(z))).toBeGreaterThan(6);
   });
 
-  it("puts one sign at each real intersection of the BeltLine level", () => {
+  it("puts one sign at each real intersection of the BeltLine level with confirmed names", () => {
     const ix = streetIntersections(LEVEL);
     const signs = levelProps(LEVEL).filter((p) => p.kind === "street_sign");
     expect(ix.length).toBeGreaterThan(80);
-    expect(signs.length).toBe(ix.length);
+    // An intersection with an OSM fallback name gets no sign (issue #78).
+    expect(signs.length).toBe(ix.filter((i) => i.confirmed).length);
+    expect(ix.some((i) => !i.confirmed)).toBe(true);
     const all = signs.flatMap((s) => s.names);
     expect(all).toContain("Ponce de Leon Ave NE");
     expect(all).toContain("Ralph McGill Blvd NE");

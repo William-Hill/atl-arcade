@@ -45,11 +45,7 @@ test("NPC skaters ride the trail in other outfits and do tricks, with no fall an
   const after = await page.evaluate(() => window.__atl.skaters.list);
   for (const n of after) {
     const before = start.list.find((b) => b.id === n.id);
-    // The window starts when the models finish their load, so it can fall on
-    // a slow part of a route (a dance or a trick). 30 m in 15 s still shows
-    // that the skater rides and does not stop. Kiana rode 38.3 m in a window
-    // that started late, after the merge of the cars (#132).
-    expect(n.stats.distance - before.stats.distance, `${n.id} rode`).toBeGreaterThan(30);
+    expect(n.stats.distance - before.stats.distance, `${n.id} rode`).toBeGreaterThan(40);
     expect(n.stats.falls + n.stats.respawns, `${n.id} falls`).toBe(0);
     expect(n.stats.bonks, `${n.id} wall bonks`).toBe(0);
     // On the trail, on a skater clip.

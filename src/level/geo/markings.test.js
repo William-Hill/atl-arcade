@@ -69,3 +69,15 @@ describe("road markings on the real level with city sign names (#78)", () => {
     for (const t of roadMarkings(level)) for (const v of t.mesh.positions) expect(Number.isFinite(v)).toBe(true);
   });
 });
+
+describe("crosswalk width at the intersection node", () => {
+  it("uses the width of the strip through the node, not a wider part far away", () => {
+    const strip = (id, name, points, width) => ({ id, kind: "street", highway: "residential", name, signName: name, nameSource: "city", points, width });
+    const base = [strip("a", "Main St NE", [[-40, 0], [0, 0], [40, 0]], 10), strip("b", "Cross St NE", [[0, -40], [0, 0], [0, 40]], 10)];
+    const far = strip("c", "Main St NE", [[400, 0], [500, 0]], 20);
+    const zs = (level) => roadMarkings(level).flatMap((t) => Array.from(t.mesh.positions).filter((_, i) => i % 3 === 2));
+    const near = zs({ ...LEVEL, strips: base });
+    const withFar = zs({ ...LEVEL, strips: [...base, far] }).filter((z) => Math.abs(z) < 60);
+    expect(Math.max(...withFar.map(Math.abs))).toBeCloseTo(Math.max(...near.map(Math.abs)), 5);
+  });
+});

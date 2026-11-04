@@ -685,3 +685,24 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - `altQE` stays the highest, because the Q and E lists have 8 dance names. The ceiling for one combo with only dances is 8 names × 1.75 × the dance points × 10. A grind, an air and the dances in one combo give more.
 - Also: `comboTick` now reads the link window from its `k` argument (GP-10).
 - Not verified: real skaters have not reviewed the balance. No human played the new numbers.
+
+## 2026-11-03: The window rooms keep their look when the camera turns
+
+- Problem: the windows on the BeltLine buildings flickered. The room hash in the facade shader (`src/render/geo-view.js`) used the view-space normal. Thus each camera turn gave a room a new color, light, blind, and furniture.
+- Decision: the vertex shader makes a seed for each wall face from the model-space normal (rounded to 1/8) and the wall plane distance (rounded to 1 m, mod 97). A `flat` varying sends it to the fragment shader, so all pixels of a wall get the same exact value. The seed does not change with the camera.
+- Second change: the blind slats (40 for each floor) fade to their mean where a slat is under about one pixel, so far blinds do not shimmer.
+- Effect: two parallel walls of one building at the same plane distance (rounded) get the same rooms. This is rare and does not flicker.
+- Shader cache key: `facade-v5`.
+- Test: `e2e/window-rooms.spec.js` turns the fixed camera in place by 0.9 degrees and maps each pixel to the first frame. For a pure rotation the mapped pixel sees the same world ray. With the fix, 21 of 53568 pixels changed (0.04%). With the old shader, 2696 of 53568 pixels changed (5.03%), and the test failed. The limit is 0.5%.
+- Not changed: the ink lines on thin far ledges (`src/render/post.js`) can still shimmer a little.
+
+## 2026-11-03: The far terrain uses the mesh bounds, not the tile square (#87)
+
+- Problem: on the low tier, the coarse far terrain covered Nia to the waist at the BeltLine spawn. With `?farterrain=0` she showed in full.
+- Root cause: `buildGeoMeshes()` puts an item in the 125 m tile of its first point. A long strip runs far out of that tile. The far mesh of tile `1,-3` spans x -153 to 361 and z -375 to 794, and its trail runs under the spawn (337.07, -1.3). `update()` measured the distance to the 125 m tile square, which is 264 m from the spawn. Thus it showed the coarse drape of that trail at the spawn. The coarse drape follows a 16 m terrain and sits above the exact ground that the physics uses.
+- Decision: `update()` measures the distance from the camera to the x/z bounds of the near and far meshes of the tile (`meshBounds()`, `unionBounds()`, `boundsDistance()` in `src/level/geo/geo-mesh.js`). A tile shows its far mesh only when no vertex is within `FAR_TERRAIN_DISTANCE` (60 m) of the camera.
+- Why not a render order or a depth offset: the drape really sits above the near ground. A draw order change hides the symptom at the spawn but not on other slopes.
+- Cost: a tile with a long strip stays near for a longer distance. At the spawn, more than half of the tiles still use the far mesh (Vitest checks this).
+- Test hook: `window.__atl.level.terrainLod` gives `{ tiles, far, nearestFar }`. `nearestFar` is the distance from the camera to the nearest far tile.
+- Tests: `src/level/geo/geo-mesh.test.js` checks the bounds and tile `1,-3`. `e2e/far-terrain.spec.js` opens the spawn on the low tier, checks `nearestFar > 60`, and saves `e2e/__screenshots__/far-terrain-spawn-low.png`. Not verified: the `nearestFar` check against the old distance test. The old `geo-view.js` has no `terrainLod` hook, so the spec fails there before that check.
+- Evidence: `reports/far-terrain/spawn-low-before.png` and `reports/far-terrain/spawn-low-after.png`.

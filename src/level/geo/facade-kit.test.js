@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { DEPTH_TILE, KIT, buildingKit, facadeKit, gableRoof, ledge, minRect, offsetRing, wallBox, wallDepth } from "./facade-kit.js";
 import { STYLES } from "./styles.js";
 import { orientRing } from "./extrude.js";
+import { muralWalls } from "./geo-mesh.js";
 
 const LEVEL = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../levels/beltline-eastside/level.json"), "utf8"));
 const SQUARE = orientRing([[0, 0], [10, 0], [10, 10], [0, 10]], false);
@@ -214,5 +215,57 @@ describe("facade kit", () => {
     expect(worst).toBeLessThan(150000);
     expect(max).toBeLessThan(60000);
     expect(tris).toBeGreaterThan(kitTris);
+  });
+});
+
+// Issue #80: no kit geometry (sills, piers, ledges) crosses a mural. Each
+// kit triangle near a mural is sampled every 0.2 m; no sample may be in the
+// box in front of the mural (out to 0.5 m from the wall).
+describe("the facade kit and the murals", () => {
+  it("puts no kit geometry on a mural", () => {
+    const murals = muralWalls(LEVEL);
+    expect(murals.length).toBeGreaterThanOrEqual(10);
+    const { tiles, depthTiles } = facadeKit(LEVEL);
+    const meshes = [...tiles, ...depthTiles].map((t) => t.mesh);
+    const boxes = murals.map((m) => {
+      const len = Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]);
+      const t = [(m.b[0] - m.a[0]) / len, (m.b[1] - m.a[1]) / len];
+      return { m, len, t, minX: Math.min(m.a[0], m.b[0]) - 1, maxX: Math.max(m.a[0], m.b[0]) + 1, minZ: Math.min(m.a[1], m.b[1]) - 1, maxZ: Math.max(m.a[1], m.b[1]) + 1 };
+    });
+    const inside = (box, x, y, z) => {
+      const dx = x - box.m.a[0];
+      const dz = z - box.m.a[1];
+      const along = dx * box.t[0] + dz * box.t[1];
+      const out = dx * box.m.n[0] + dz * box.m.n[1];
+      return along > 0 && along < box.len && out > 0.01 && out < 0.5 && y > box.m.y0 && y < box.m.y1;
+    };
+    const hits = [];
+    for (const mesh of meshes) {
+      const p = mesh.positions;
+      const idx = mesh.indices;
+      for (let i = 0; i < idx.length; i += 3) {
+        const v = [idx[i], idx[i + 1], idx[i + 2]].map((k) => [p[k * 3], p[k * 3 + 1], p[k * 3 + 2]]);
+        const minX = Math.min(v[0][0], v[1][0], v[2][0]);
+        const maxX = Math.max(v[0][0], v[1][0], v[2][0]);
+        const minZ = Math.min(v[0][2], v[1][2], v[2][2]);
+        const maxZ = Math.max(v[0][2], v[1][2], v[2][2]);
+        for (const box of boxes) {
+          if (maxX < box.minX || minX > box.maxX || maxZ < box.minZ || minZ > box.maxZ) continue;
+          const size = Math.max(Math.hypot(v[1][0] - v[0][0], v[1][1] - v[0][1], v[1][2] - v[0][2]), Math.hypot(v[2][0] - v[0][0], v[2][1] - v[0][1], v[2][2] - v[0][2]));
+          const n = Math.max(1, Math.ceil(size / 0.2));
+          let hit = false;
+          for (let a = 0; a <= n && !hit; a += 1) {
+            for (let b = 0; a + b <= n && !hit; b += 1) {
+              const u = a / n;
+              const w = b / n;
+              const q = [0, 1, 2].map((k) => v[0][k] + (v[1][k] - v[0][k]) * u + (v[2][k] - v[0][k]) * w);
+              if (inside(box, q[0], q[1], q[2])) hit = true;
+            }
+          }
+          if (hit) hits.push(box.m.id);
+        }
+      }
+    }
+    expect([...new Set(hits)]).toEqual([]);
   });
 });

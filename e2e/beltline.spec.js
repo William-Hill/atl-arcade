@@ -61,11 +61,15 @@ test("the BeltLine block loads with Rapier colliders on every merged mesh", asyn
   expect(info.level.stats.strips.trail).toBeGreaterThan(0);
   for (const id of info.level.ids) expect(info.collidersById[id], `collider for ${id}`).toBeGreaterThan(0);
   expect(info.colliderCount).toBe(info.level.ids.length);
-  // M1-08: the street kit props loaded, merged into prop tiles.
+  // M1-08: the street kit props loaded. #89: all props are one batch, with
+  // one instance per prop and an LOD for each prop.
   const props = await page.evaluate(() => window.__atl.level.props);
   expect(props.error).toBeNull();
   expect(props.count).toBeGreaterThan(1000);
-  expect(props.tiles).toBeGreaterThan(10);
+  expect(props.instances).toBeGreaterThan(1000);
+  expect(props.kinds).toBeGreaterThan(10);
+  expect(props.drawn).toBeGreaterThan(0);
+  expect(props.drawn).toBeLessThan(props.instances);
   // M2-01: the Ponce City Market tower with its rooftop sign, and the Krog
   // Street Market front (both from img2threejs).
   const landmarks = await page.evaluate(() => window.__atl.level.landmarks);
@@ -149,7 +153,7 @@ test("Nia skates north on the Eastside Trail and the run matches the pure contro
 const VIEWS = [
   { name: "ponce-city-market", cam: [-60, 14, -700, -218, 18, -874] },
   { name: "ponce-city-market-tower", cam: [-120, 70, -760, -219, 48, -915] },
-  { name: "krog-street-market-front", cam: [-12, 3, 866, -48, 7, 849] },
+  { name: "krog-street-market-front", cam: [-14, 3, 862, -49, 7, 857] },
   { name: "fourth-ward-park", cam: [380, 40, 120, 200, 0, -150], query: "fog=0" },
   { name: "krog-street-market", cam: [-20, 18, 760, -72, 4, 850] },
   { name: "overview", cam: [900, 900, 1100, 0, 0, 0], query: "fog=0" },

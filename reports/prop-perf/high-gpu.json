@@ -1,0 +1,516 @@
+{
+  "date": "2026-11-04T02:44:07.402Z",
+  "gpu": "machine",
+  "quality": "high",
+  "seconds": 6,
+  "repeat": 3,
+  "rows": [
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 15.4,
+      "calls": 235,
+      "triangles": 581173,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "trail-north",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 16.9,
+      "calls": 73,
+      "triangles": 118393,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "storefront",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 15.9,
+      "calls": 93,
+      "triangles": 139161,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 15.1,
+      "calls": 269,
+      "triangles": 643417,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 14.5,
+      "calls": 215,
+      "triangles": 581737,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "trail-north",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 14.9,
+      "calls": 61,
+      "triangles": 116809,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "storefront",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 15.1,
+      "calls": 63,
+      "triangles": 136577,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 14.7,
+      "calls": 247,
+      "triangles": 632809,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 15.3,
+      "calls": 235,
+      "triangles": 581173,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "trail-north",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 16,
+      "calls": 73,
+      "triangles": 118393,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "storefront",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 15.8,
+      "calls": 93,
+      "triangles": 139161,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 14.5,
+      "calls": 269,
+      "triangles": 643417,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 13,
+      "calls": 215,
+      "triangles": 581737,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "trail-north",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 11.5,
+      "calls": 61,
+      "triangles": 116809,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "storefront",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 10.1,
+      "calls": 63,
+      "triangles": 136577,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 9.5,
+      "calls": 247,
+      "triangles": 632809,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 9,
+      "calls": 235,
+      "triangles": 581173,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "trail-north",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 8.5,
+      "calls": 73,
+      "triangles": 118393,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "storefront",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 7.8,
+      "calls": 93,
+      "triangles": 139161,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 7.7,
+      "calls": 269,
+      "triangles": 643417,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 7.5,
+      "calls": 215,
+      "triangles": 581737,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "trail-north",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 6.8,
+      "calls": 61,
+      "triangles": 116809,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "storefront",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 6.7,
+      "calls": 63,
+      "triangles": 136577,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "machine",
+      "load": 6.4,
+      "calls": 247,
+      "triangles": 632809,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    }
+  ],
+  "table": [
+    {
+      "build": "before",
+      "cam": "spawn",
+      "calls": "235",
+      "triangles": "581173",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.7,
+        16.7,
+        16.7
+      ],
+      "load": [
+        15.4,
+        15.3,
+        9
+      ]
+    },
+    {
+      "build": "before",
+      "cam": "trail-north",
+      "calls": "73",
+      "triangles": "118393",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.7,
+        16.7,
+        16.7
+      ],
+      "load": [
+        16.9,
+        16,
+        8.5
+      ]
+    },
+    {
+      "build": "before",
+      "cam": "storefront",
+      "calls": "93",
+      "triangles": "139161",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.7,
+        16.7,
+        16.7
+      ],
+      "load": [
+        15.9,
+        15.8,
+        7.8
+      ]
+    },
+    {
+      "build": "before",
+      "cam": "overview",
+      "calls": "269",
+      "triangles": "643417",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.7,
+        16.7,
+        16.7
+      ],
+      "load": [
+        15.1,
+        14.5,
+        7.7
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "spawn",
+      "calls": "215",
+      "triangles": "581737",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.7,
+        16.7,
+        16.7
+      ],
+      "load": [
+        14.5,
+        13,
+        7.5
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "trail-north",
+      "calls": "61",
+      "triangles": "116809",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.7,
+        16.7,
+        16.7
+      ],
+      "load": [
+        14.9,
+        11.5,
+        6.8
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "storefront",
+      "calls": "63",
+      "triangles": "136577",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.7,
+        16.7,
+        16.7
+      ],
+      "load": [
+        15.1,
+        10.1,
+        6.7
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "overview",
+      "calls": "247",
+      "triangles": "632809",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.7,
+        16.7,
+        16.7
+      ],
+      "load": [
+        14.7,
+        9.5,
+        6.4
+      ]
+    }
+  ],
+  "errors": []
+}

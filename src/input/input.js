@@ -71,6 +71,11 @@ export function createInput({ target = window, bindings = createBindings(), getG
     get bindings() {
       return current;
     },
+    // Releases every held key. Photo mode calls it when it opens and closes,
+    // so a key from one mode does not reach the other mode.
+    reset() {
+      down.clear();
+    },
     set bindings(b) {
       current = b;
       bound = new Set(Object.values(b.keyboard).flat());

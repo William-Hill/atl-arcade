@@ -7,12 +7,15 @@ import { COMBO } from "./constants.js";
 import { comboBail, comboMove, comboTick, createCombo } from "./combo.js";
 import { createSkater, stepSkater } from "./skater.js";
 import { FLAT_GROUND } from "./controller.js";
+import { FACT_CARDS, createCardState, stepCards } from "../fact-cards.js";
 
 export function createRun(level, opts = {}) {
   // `moves` holds this tick's scored moves only. `lastMove` and `moveSeq`
   // persist, so a HUD that reads once per frame sees a move even when the
   // frame ran several ticks. `banked` is the points banked this tick (0 if none).
-  return { skater: createSkater(level, opts), combo: createCombo(), tick: 0, time: 0, moves: [], lastMove: null, moveSeq: 0, banked: 0 };
+  // `cards` is the fact card state (M1-07): `cards.count` is the number of
+  // cards collected in this run. `factsCollected` holds this tick's card ids.
+  return { skater: createSkater(level, opts), combo: createCombo(), tick: 0, time: 0, moves: [], lastMove: null, moveSeq: 0, banked: 0, cards: createCardState(opts.cards ?? []), factsCollected: [] };
 }
 
 function grindName(id, seconds) {
@@ -49,6 +52,10 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
   const before = combo;
   combo = comboTick(combo, dt, open);
   const banked = before.active && !combo.active ? combo.lastBanked : 0;
+  // A fact card adds its points straight to the banked score, outside the
+  // combo, so a bail does not lose them.
+  const cardStep = stepCards(run.cards ?? createCardState(), skater.position);
+  if (cardStep.collected.length) combo = { ...combo, score: combo.score + FACT_CARDS.points * cardStep.collected.length };
   return {
     skater,
     combo,
@@ -58,6 +65,8 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
     lastMove: moves.length ? moves[moves.length - 1] : run.lastMove,
     moveSeq: run.moveSeq + moves.length,
     banked,
+    cards: cardStep.state,
+    factsCollected: cardStep.collected,
   };
 }
 

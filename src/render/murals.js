@@ -6,7 +6,11 @@ import { seededRandom } from "../level/geo/styles.js";
 // the skyline, the BeltLine), and clean lettering. No third-party art.
 
 const PALETTE = ["#ff6b35", "#ffd166", "#06d6a0", "#118ab2", "#ef476f", "#8338ec", "#f4a261", "#2a9d8f", "#fefae0", "#264653"];
-const WORDS = ["ATL", "BELTLINE", "SKATE ATL", "O4W", "ROLL ON", "PEACH", "INMAN", "PONCE", "GLIDE", "A-TOWN", "SWEET AUBURN", "KROG", "OLD 4TH WARD", "SWAG SURF", "RINK", "SHINE"];
+// The words name no neighborhood (issue #80): a mural can stand on any wall
+// of the level, so a neighborhood word can be wrong. "ATL" and "A-TOWN" name
+// the city, and "BELTLINE" the trail: every mural is in the city and faces
+// the trail (muralWalls() in geo-mesh.js).
+export const MURAL_WORDS = ["ATL", "BELTLINE", "SKATE ATL", "DOGWOOD", "ROLL ON", "PEACH", "FLOW", "STRIDE", "GLIDE", "A-TOWN", "SUNSHINE", "GOOD VIBES", "SMOOTH", "SWAG SURF", "RINK", "SHINE"];
 
 function pick(rand, list) {
   return list[Math.floor(rand() * list.length)];
@@ -115,7 +119,7 @@ function drawCell(ctx, s, cell) {
   }
 
   // Lettering on a band.
-  const word = WORDS[cell % WORDS.length];
+  const word = MURAL_WORDS[cell % MURAL_WORDS.length];
   ctx.fillStyle = "rgba(38, 70, 83, 0.85)";
   ctx.fillRect(0, s * 0.06, s, s * 0.22);
   ctx.fillStyle = "#fefae0";

@@ -30,6 +30,8 @@ import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./ren
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
 import { createLitePost, createPost } from "./render/post.js";
+import { addTiltShift } from "./render/tilt-shift.js";
+import { createPhotoPanel } from "./ui/photo-panel.js";
 import { createStreetSigns } from "./render/street-signs.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
@@ -40,6 +42,10 @@ import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
+import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
+import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
+import { createFactCardsView } from "./render/fact-cards-view.js";
+import { createFactPopup } from "./ui/fact-popup.js";
 
 const params = new URLSearchParams(window.location.search);
 // Start the slow downloads at once, in parallel with the level (#74): the
@@ -183,6 +189,30 @@ if (npcView) {
   scene.add(npcView.group);
 }
 
+// Fact cards (M1-07): 3 cards on the trail, from the open-data-atl site.
+// The cards show at once with the fixture text; a live text replaces it when
+// the call returns. ?facts=fixture|live|0 sets the mode (src/facts/client.js).
+const facts = { mode: factsMode(params.get("facts"), { webdriver: Boolean(navigator.webdriver) }), cards: [], live: "none" };
+const factData = facts.mode !== "off" && Object.hasOwn(LEVEL_FACTS, level.name) ? await LEVEL_FACTS[level.name]() : null;
+if (factData) {
+  facts.cards = fixtureFacts(factData.specs, factData.fixture).map((card, i) => {
+    const [x, z] = factData.specs[i].at;
+    const g = env.sampleGround(x, z);
+    return { ...card, position: [x, g ? g.height : 0, z] };
+  });
+  if (facts.mode === "live") {
+    facts.live = "pending";
+    loadFacts(factData.specs, factData.fixture, { base: factsBase(import.meta.env.DEV) }).then((loaded) => {
+      facts.cards = facts.cards.map((c, i) => ({ ...loaded[i], position: c.position }));
+      facts.live = loaded.some((c) => c.origin === "live") ? "live" : "fixture";
+    });
+  }
+}
+const factCardsView = facts.cards.length ? createFactCardsView(facts.cards) : null;
+if (factCardsView) scene.add(factCardsView.group);
+const factPopup = facts.cards.length ? createFactPopup(document.body) : null;
+const factCardSpots = () => facts.cards.map((c) => ({ id: c.id, position: c.position }));
+
 const skaterView = createSkaterView();
 scene.add(skaterView.group);
 
@@ -250,6 +280,14 @@ if (view === "orbit") {
 // the lite ink pass on the phone tier, none on the low tier.
 const postOptions = { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: params.get("halftone") !== "0" };
 let post = tier.post === "full" ? createPost(renderer, scene, camera, postOptions) : tier.post === "lite" ? createLitePost(renderer, scene, camera, postOptions) : null;
+// Photo mode's tilt-shift blur (src/render/tilt-shift.js): on the full
+// chain only, and off in play.
+let tiltShift = post && post.kind === "full" ? addTiltShift(post, camera, renderer) : null;
+function draw() {
+  renderer.info.reset();
+  if (post) post.render();
+  else renderer.render(scene, camera);
+}
 
 // The frame-time governor (src/render/governor.js) steps the phone and high
 // tiers down when the frame rate is too low. The low tier is the floor of
@@ -263,6 +301,7 @@ function applyRung(rung) {
   if (!rung.post && post) {
     post.dispose();
     post = null;
+    tiltShift = null;
   }
   resize();
 }
@@ -295,20 +334,22 @@ const touch = wantsTouch(params.get("touch"), { maxTouchPoints: navigator.maxTou
   : null;
 if (touch) document.body.classList.add("touch");
 const input = createInput({ target: window, touch });
-let run = createRun(level);
+let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch) });
 // Goals, the run timer, and the results screen (M1-05). The goal list is
 // data per level (src/level/goals.js). ?run=free turns the timer off.
 const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
 let goals = goalDef ? createGoals(goalDef) : null;
-// The fact cards that the skater collected in this run. The fact cards (#17)
-// call collectFactCard(id); the goal module reads only the count.
+// The fact cards for the goal list. The run collects the cards on the trail
+// (run.cards, #17). collectFactCard(id) also adds a card, for the tests. A
+// card counts once, by its id; the goal module reads only the count.
 const factCards = new Set();
+const cardCount = () => new Set([...run.cards.collected, ...factCards]).size;
 function collectFactCard(id) {
   if (!goals || goals.ended || factCards.has(id)) return false;
   factCards.add(id);
-  events.push({ tick: run.tick, type: "card", id, count: factCards.size });
+  events.push({ tick: run.tick, type: "card", id, count: cardCount() });
   return true;
 }
 const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: () => resetSkater() }) : null;
@@ -352,7 +393,7 @@ function simulate(dt) {
   run = stepRun(run, goals && goals.ended ? {} : sampled, dt, env, skaterEnv, beat.running ? beat : null);
   skater = run.skater;
   if (goals && !goals.ended) {
-    goals = stepGoals(goals, run, goalDef, dt, { cards: factCards.size });
+    goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
     if (goals.ended) events.push({ tick: run.tick, type: "run-end", ...goalsJson(goals, goalDef) });
   }
@@ -364,6 +405,11 @@ function simulate(dt) {
   }
   if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
   if (skater.respawned) events.push({ tick: run.tick, type: "respawn" });
+  for (const id of run.factsCollected) {
+    events.push({ tick: run.tick, type: "fact", id, count: run.cards.count });
+    const card = facts.cards.find((c) => c.id === id);
+    if (card && factPopup) factPopup.show(card, performance.now(), { count: run.cards.count, total: run.cards.total });
+  }
   if (skater.justSnapped) events.push({ tick: skater.tick, type: "snap", id: skater.grind.id, s: skater.grind.s });
   if (skater.justExited) events.push({ tick: skater.tick, type: "exit", reason: skater.exitReason, position: [...skater.position] });
   if (skater.justFell) events.push({ tick: skater.tick, type: "fall", position: [...skater.position] });
@@ -374,7 +420,7 @@ function simulate(dt) {
 let follow = null;
 
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
-  run = createRun(level, { position, yaw });
+  run = createRun(level, { position, yaw, cards: factCardSpots() });
   skater = run.skater;
   if (goalDef) {
     goals = createGoals(goalDef);
@@ -407,6 +453,23 @@ if (view === "follow") {
   follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
   lookInput = createLookInput({ element: renderer.domElement });
 }
+
+// Photo mode (#90, src/ui/photo-panel.js): P or the PHOTO button. The
+// simulation stops and a free camera moves while it is open.
+const photoLook = lookInput ?? createLookInput({ element: renderer.domElement });
+const photo = createPhotoPanel({
+  canvas,
+  camera,
+  tiltShift: () => tiltShift,
+  render: draw,
+  sampleLook: (dt) => mapLook(photoLook.sample(), dt),
+  // The camera height selects the floor below the camera, not a bridge deck above it.
+  floor: (x, z, y) => env.sampleGround(x, z, y)?.height ?? null,
+  onChange: (open) => {
+    if (controls) controls.enabled = !open;
+    input.reset();
+  },
+});
 
 let stepper = createStepper();
 let ticks = 0;
@@ -446,28 +509,38 @@ function frame(now) {
     requestAnimationFrame(frame);
     return;
   }
-  if (governor) {
+  // Photo mode pauses the governor: the blur is slow and the game is stopped.
+  if (governor && !photo.isOpen) {
     governor = governorStep(governor, elapsed * 1000);
     if (governor.changed) applyRung(currentRung(governor));
   }
 
-  const stepped = advance(stepper, elapsed);
-  stepper = stepped.stepper;
-  for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
-  ticks += stepped.steps;
+  if (photo.isOpen) {
+    // Photo mode stops the simulation and the skater animation.
+    stepper = { ...stepper, leftover: 0 };
+  } else {
+    const stepped = advance(stepper, elapsed);
+    stepper = stepped.stepper;
+    for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
+    ticks += stepped.steps;
+  }
 
-  skaterView.sync(skater, Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
-  if (controls) {
+  skaterView.sync(skater, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
+  if (photo.isOpen) {
+    photo.update(Math.min(elapsed, 0.1));
+  } else if (controls) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
-  if (follow) {
+  if (follow && !photo.isOpen) {
     const dt = Math.min(elapsed, 0.1);
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
   }
   hud.update(run, now, beat.running ? beat.phase() : null, goals);
   if (results && goals.ended && !results.shown) results.show(computeResults(goalsJson(goals, goalDef), goalDef));
   if (minimap) minimap.update(skater);
+  if (factCardsView) factCardsView.update(run.cards.collected, now / 1000);
+  if (factPopup) factPopup.update(now);
   if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
   if (blob) {
     // With the skater height, as the controller samples: under a bridge the
@@ -479,9 +552,7 @@ function frame(now) {
   if (sky) sky.update(camera, now / 1000);
   if (streetSigns) streetSigns.update(camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
-  renderer.info.reset();
-  if (post) post.render();
-  else renderer.render(scene, camera);
+  draw();
   frames += 1;
   if (frames === 1) {
     loader.hide();
@@ -508,6 +579,24 @@ window.__atl = {
   // The render settings now, after any governor step.
   get render() {
     return { quality, pixelRatio: renderer.getPixelRatio(), post: post ? post.kind : null, rung: governor ? governor.rung : null, lastMedianMs: governor ? governor.last : null };
+  },
+  // Photo mode (#90): open, close, toggle, set({ center, strength }), save().
+  photo: {
+    get isOpen() {
+      return photo.isOpen;
+    },
+    get state() {
+      return photo.state;
+    },
+    // The blur pass state, or null on the low tier (no blur).
+    get blur() {
+      return tiltShift ? { enabled: tiltShift.enabled, ...tiltShift.params } : null;
+    },
+    open: () => photo.open(),
+    close: () => photo.close(),
+    toggle: () => photo.toggle(),
+    set: (params) => photo.set(params),
+    save: () => photo.save()
   },
   level: {
     name: level.name,
@@ -608,6 +697,29 @@ window.__atl = {
     : null,
   get events() {
     return events;
+  },
+  // Fact cards (M1-07). `collected` is the count in this run (the same as
+  // run.cards.count), for the goal list (#15) and the tests.
+  facts: {
+    mode: facts.mode,
+    get live() {
+      return facts.live;
+    },
+    get collected() {
+      return run.cards.count;
+    },
+    get total() {
+      return run.cards.total;
+    },
+    get cards() {
+      return facts.cards.map((c) => ({ id: c.id, text: c.text, dataset: c.dataset, sourceUrl: c.sourceUrl, origin: c.origin, position: [...c.position], collected: run.cards.collected.includes(c.id) }));
+    },
+    get popup() {
+      return factPopup ? factPopup.state : null;
+    },
+    get visibleCards() {
+      return factCardsView ? factCardsView.visibleCount : 0;
+    },
   },
   get combo() {
     return run.combo;

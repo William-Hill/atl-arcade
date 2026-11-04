@@ -1,0 +1,516 @@
+{
+  "date": "2026-11-04T02:33:55.403Z",
+  "gpu": "swiftshader",
+  "quality": "phone",
+  "seconds": 6,
+  "repeat": 3,
+  "rows": [
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 25.2,
+      "calls": 57,
+      "triangles": 164791,
+      "propCount": 3392,
+      "frames": 175,
+      "medianFps": 30,
+      "p90Ms": 50,
+      "p99Ms": 66.7
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "trail-north",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 25.4,
+      "calls": 18,
+      "triangles": 22819,
+      "propCount": 3392,
+      "frames": 327,
+      "medianFps": 59.9,
+      "p90Ms": 16.8,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "storefront",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 24.9,
+      "calls": 29,
+      "triangles": 34562,
+      "propCount": 3392,
+      "frames": 326,
+      "medianFps": 59.9,
+      "p90Ms": 16.8,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "overview",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 22.8,
+      "calls": 60,
+      "triangles": 162907,
+      "propCount": 3392,
+      "frames": 242,
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "spawn",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 20.3,
+      "calls": 50,
+      "triangles": 164129,
+      "propCount": 3392,
+      "frames": 263,
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "trail-north",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 19.3,
+      "calls": 12,
+      "triangles": 22027,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "storefront",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 18.1,
+      "calls": 14,
+      "triangles": 33270,
+      "propCount": 3392,
+      "frames": 318,
+      "medianFps": 59.9,
+      "p90Ms": 33.3,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "overview",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 17.2,
+      "calls": 49,
+      "triangles": 157603,
+      "propCount": 3392,
+      "frames": 250,
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 18.3,
+      "calls": 57,
+      "triangles": 164791,
+      "propCount": 3392,
+      "frames": 258,
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "trail-north",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 18.1,
+      "calls": 18,
+      "triangles": 22819,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "storefront",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 17.6,
+      "calls": 29,
+      "triangles": 34562,
+      "propCount": 3392,
+      "frames": 321,
+      "medianFps": 59.9,
+      "p90Ms": 33.2,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "overview",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 15.8,
+      "calls": 60,
+      "triangles": 162907,
+      "propCount": 3392,
+      "frames": 251,
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "spawn",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 14.7,
+      "calls": 50,
+      "triangles": 164129,
+      "propCount": 3392,
+      "frames": 264,
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "trail-north",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 14.8,
+      "calls": 12,
+      "triangles": 22027,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "storefront",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 14.6,
+      "calls": 14,
+      "triangles": 33270,
+      "propCount": 3392,
+      "frames": 318,
+      "medianFps": 59.9,
+      "p90Ms": 33.3,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "overview",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 14.2,
+      "calls": 49,
+      "triangles": 157603,
+      "propCount": 3392,
+      "frames": 249,
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 14.6,
+      "calls": 57,
+      "triangles": 164791,
+      "propCount": 3392,
+      "frames": 269,
+      "medianFps": 59.9,
+      "p90Ms": 33.3,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "trail-north",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 14.2,
+      "calls": 18,
+      "triangles": 22819,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "storefront",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 13.2,
+      "calls": 29,
+      "triangles": 34562,
+      "propCount": 3392,
+      "frames": 325,
+      "medianFps": 59.9,
+      "p90Ms": 16.8,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "overview",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 13.3,
+      "calls": 60,
+      "triangles": 162907,
+      "propCount": 3392,
+      "frames": 251,
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "spawn",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 13.7,
+      "calls": 50,
+      "triangles": 164129,
+      "propCount": 3392,
+      "frames": 267,
+      "medianFps": 59.9,
+      "p90Ms": 33.3,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "trail-north",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 13.7,
+      "calls": 12,
+      "triangles": 22027,
+      "propCount": 3392,
+      "frames": 355,
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "p99Ms": 16.8
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "storefront",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 13.5,
+      "calls": 14,
+      "triangles": 33270,
+      "propCount": 3392,
+      "frames": 319,
+      "medianFps": 59.9,
+      "p90Ms": 33.3,
+      "p99Ms": 33.4
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "overview",
+      "quality": "phone",
+      "gpu": "swiftshader",
+      "load": 13.9,
+      "calls": 49,
+      "triangles": 157603,
+      "propCount": 3392,
+      "frames": 250,
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "p99Ms": 33.4
+    }
+  ],
+  "table": [
+    {
+      "build": "before",
+      "cam": "spawn",
+      "calls": "57",
+      "triangles": "164791",
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "runsP90Ms": [
+        50,
+        33.4,
+        33.3
+      ],
+      "load": [
+        25.2,
+        18.3,
+        14.6
+      ]
+    },
+    {
+      "build": "before",
+      "cam": "trail-north",
+      "calls": "18",
+      "triangles": "22819",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.8,
+        16.7,
+        16.7
+      ],
+      "load": [
+        25.4,
+        18.1,
+        14.2
+      ]
+    },
+    {
+      "build": "before",
+      "cam": "storefront",
+      "calls": "29",
+      "triangles": "34562",
+      "medianFps": 59.9,
+      "p90Ms": 16.8,
+      "runsP90Ms": [
+        16.8,
+        33.2,
+        16.8
+      ],
+      "load": [
+        24.9,
+        17.6,
+        13.2
+      ]
+    },
+    {
+      "build": "before",
+      "cam": "overview",
+      "calls": "60",
+      "triangles": "162907",
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "runsP90Ms": [
+        33.4,
+        33.4,
+        33.4
+      ],
+      "load": [
+        22.8,
+        15.8,
+        13.3
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "spawn",
+      "calls": "50",
+      "triangles": "164129",
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "runsP90Ms": [
+        33.4,
+        33.4,
+        33.3
+      ],
+      "load": [
+        20.3,
+        14.7,
+        13.7
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "trail-north",
+      "calls": "12",
+      "triangles": "22027",
+      "medianFps": 59.9,
+      "p90Ms": 16.7,
+      "runsP90Ms": [
+        16.7,
+        16.7,
+        16.7
+      ],
+      "load": [
+        19.3,
+        14.8,
+        13.7
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "storefront",
+      "calls": "14",
+      "triangles": "33270",
+      "medianFps": 59.9,
+      "p90Ms": 33.3,
+      "runsP90Ms": [
+        33.3,
+        33.3,
+        33.3
+      ],
+      "load": [
+        18.1,
+        14.6,
+        13.5
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "overview",
+      "calls": "49",
+      "triangles": "157603",
+      "medianFps": 59.9,
+      "p90Ms": 33.4,
+      "runsP90Ms": [
+        33.4,
+        33.4,
+        33.4
+      ],
+      "load": [
+        17.2,
+        14.2,
+        13.9
+      ]
+    }
+  ],
+  "errors": []
+}

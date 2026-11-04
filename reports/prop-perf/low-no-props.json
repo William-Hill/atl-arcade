@@ -1,0 +1,138 @@
+{
+  "date": "2026-11-04T02:35:12.105Z",
+  "gpu": "swiftshader",
+  "quality": "low",
+  "seconds": 6,
+  "repeat": 3,
+  "rows": [
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "low",
+      "gpu": "swiftshader",
+      "load": 13.8,
+      "calls": 48,
+      "triangles": 116816,
+      "propCount": 0,
+      "frames": 167,
+      "medianFps": 30,
+      "p90Ms": 33.4,
+      "p99Ms": 50.1
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "overview",
+      "quality": "low",
+      "gpu": "swiftshader",
+      "load": 13.2,
+      "calls": 47,
+      "triangles": 110881,
+      "propCount": 0,
+      "frames": 149,
+      "medianFps": 29.9,
+      "p90Ms": 50,
+      "p99Ms": 50.1
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "low",
+      "gpu": "swiftshader",
+      "load": 15.1,
+      "calls": 48,
+      "triangles": 116816,
+      "propCount": 0,
+      "frames": 166,
+      "medianFps": 30,
+      "p90Ms": 33.4,
+      "p99Ms": 50
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "overview",
+      "quality": "low",
+      "gpu": "swiftshader",
+      "load": 14.4,
+      "calls": 47,
+      "triangles": 110881,
+      "propCount": 0,
+      "frames": 151,
+      "medianFps": 29.9,
+      "p90Ms": 50,
+      "p99Ms": 50.1
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "low",
+      "gpu": "swiftshader",
+      "load": 14.9,
+      "calls": 48,
+      "triangles": 116816,
+      "propCount": 0,
+      "frames": 168,
+      "medianFps": 30,
+      "p90Ms": 33.4,
+      "p99Ms": 50
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "overview",
+      "quality": "low",
+      "gpu": "swiftshader",
+      "load": 14.1,
+      "calls": 47,
+      "triangles": 110881,
+      "propCount": 0,
+      "frames": 151,
+      "medianFps": 29.9,
+      "p90Ms": 50,
+      "p99Ms": 50.1
+    }
+  ],
+  "table": [
+    {
+      "build": "before",
+      "cam": "spawn",
+      "calls": "48",
+      "triangles": "116816",
+      "medianFps": 30,
+      "p90Ms": 33.4,
+      "runsP90Ms": [
+        33.4,
+        33.4,
+        33.4
+      ],
+      "load": [
+        13.8,
+        15.1,
+        14.9
+      ]
+    },
+    {
+      "build": "before",
+      "cam": "overview",
+      "calls": "47",
+      "triangles": "110881",
+      "medianFps": 29.9,
+      "p90Ms": 50,
+      "runsP90Ms": [
+        50,
+        50,
+        50
+      ],
+      "load": [
+        13.2,
+        14.4,
+        14.1
+      ]
+    }
+  ],
+  "errors": []
+}

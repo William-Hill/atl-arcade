@@ -220,7 +220,7 @@ if (landmarks) {
 // The street kit (trees, lamps, benches, roof units) loads after the level
 // shows. ?props=0 leaves it out.
 if (geo && params.get("props") !== "0") {
-  loadPropTemplates()
+  loadPropTemplates({ glbTrees: look === "pbr" && params.get("glbtrees") !== "0" })
     .then((templates) => levelView.addProps(env.props, templates))
     .catch((err) => {
       levelView.props.error = String(err);

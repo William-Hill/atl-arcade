@@ -13,6 +13,7 @@ import { createMuralAtlas } from "./murals.js";
 import { createPropBatch } from "./prop-batch.js";
 import { BRICK_TONE, ENV_LIGHT, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
 import { createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
+import { getDracoLoader } from "./skater-model.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
 import concreteInfo from "../../assets/ground/concrete/set.json";
@@ -560,17 +561,53 @@ export function withTimeout(promise, ms, label = "request") {
 
 // The kit templates and the extra props. A failed or slow extra GLB does
 // not stop the kit: the kind gets its fallback kit template.
-export async function loadPropTemplates() {
+// The Blender trees (scripts/blender/pbr_trees.py): one GLB per species with
+// the templates tree:<species>:<variant> and their _lod1 copies, in the
+// treeKindFor() names. They have branches and leaf cards for the pbr look.
+export const TREE_GLB_URLS = {
+  oak: new URL("../../assets/trees/oak.glb", import.meta.url).href,
+  pine: new URL("../../assets/trees/pine.glb", import.meta.url).href,
+  magnolia: new URL("../../assets/trees/magnolia.glb", import.meta.url).href,
+  myrtle: new URL("../../assets/trees/myrtle.glb", import.meta.url).href,
+  dogwood: new URL("../../assets/trees/dogwood.glb", import.meta.url).href,
+  street: new URL("../../assets/trees/street.glb", import.meta.url).href,
+};
+
+// The kit templates and the extra props. A failed or slow extra GLB does
+// not stop the kit: the kind gets its fallback kit template. With
+// `glbTrees` the Blender tree templates come too; a species that fails
+// keeps its procedural tree.
+export async function loadPropTemplates({ glbTrees = false } = {}) {
   const kinds = Object.keys(EXTRA_PROP_URLS);
   const extras = kinds.map((k) => withTimeout(loadKitTemplates(EXTRA_PROP_URLS[k]), EXTRA_PROP_TIMEOUT_MS, k));
-  const [kit, results] = await Promise.all([loadKitTemplates(), Promise.allSettled(extras)]);
+  const species = glbTrees ? Object.keys(TREE_GLB_URLS) : [];
+  const treeLoads = species.map((k) => withTimeout(loadKitTemplates(TREE_GLB_URLS[k]), EXTRA_PROP_TIMEOUT_MS, `tree ${k}`));
+  const [kit, results, treeResults] = await Promise.all([loadKitTemplates(), Promise.allSettled(extras), Promise.allSettled(treeLoads)]);
   for (const problem of addExtraTemplates(kit, kinds, results)) console.warn(`extra prop: ${problem}`);
+  treeResults.forEach((r, i) => {
+    if (r.status === "fulfilled") Object.assign(kit, r.value);
+    else console.warn(`tree glb: ${species[i]}: ${r.reason}`);
+  });
   return kit;
+}
+
+// Pure: the GLB tree templates under their treeKindFor() names. GLTFLoader
+// drops the ":" from a node name, so the GLBs name them tree_oak_0.
+const GLB_TREE_NAME = new RegExp(`^tree[:_]?(${Object.keys(TREE_GLB_URLS).join("|")})[:_]?(\\d+)(_lod1)?$`);
+export function glbTreeTemplates(templates) {
+  const out = {};
+  for (const [k, t] of Object.entries(templates)) {
+    // The far trees keep the procedural crown cards (trees.js cardTree):
+    // their silhouettes read better at a distance than cut leaf cards.
+    const m = GLB_TREE_NAME.exec(k);
+    if (m && !m[3]) out[`tree:${m[1]}:${m[2]}`] = t;
+  }
+  return out;
 }
 
 // Reads the kit GLB into plain templates: { kind: { positions, indices, colors } }.
 export async function loadKitTemplates(url = KIT_URL) {
-  const gltf = await new GLTFLoader().loadAsync(url);
+  const gltf = await new GLTFLoader().setDRACOLoader(getDracoLoader()).loadAsync(url);
   const templates = {};
   gltf.scene.updateMatrixWorld(true);
   gltf.scene.traverse((o) => {
@@ -596,7 +633,12 @@ export async function loadKitTemplates(url = KIT_URL) {
       }
     }
     const indices = g.index ? Uint32Array.from(g.index.array) : Uint32Array.from({ length: pos.count }, (_, i) => i);
-    templates[o.name] = normals ? { positions, indices, colors, normals } : { positions, indices, colors };
+    const t = normals ? { positions, indices, colors, normals } : { positions, indices, colors };
+    // The Blender trees carry the wind weight and the leaf card data
+    // (glTF custom attributes _SWAY and _LEAF).
+    if (g.attributes._sway) t.sway = Float32Array.from(g.attributes._sway.array);
+    if (g.attributes._leaf) t.leaf = Float32Array.from(g.attributes._leaf.array);
+    templates[o.name] = t;
   });
   return templates;
 }
@@ -750,7 +792,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null };
   function addProps(placements, templates) {
     // The procedural trees take the place of the two kit trees.
-    const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves }) } : templates;
+    // The GLB trees (summer colors) take the place of the procedural ones
+    // in the pbr look.
+    const glb = leaves && season === "summer" ? glbTreeTemplates(templates) : {};
+    const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves }), ...glb } : templates;
     const placed = trees ? withProceduralTrees(placements) : placements;
     propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance });
     if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial();

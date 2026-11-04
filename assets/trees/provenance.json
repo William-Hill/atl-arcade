@@ -1,0 +1,50 @@
+{
+  "asset": "Blender trees for the pbr look: oak (willow oak), pine (loblolly), magnolia, myrtle (crape myrtle), dogwood, street (red maple). Each GLB holds tree:<species>:<0..2> (LOD0: branching trunk + leaf cards) and tree:<species>:<v>_lod1 (trunk + 3 crossed crown cards).",
+  "date": "2026-11-04",
+  "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco",
+  "source": "scripts/blender/pbr_trees.py. Branches are seeded random tubes, leaves are quads. No library, scan, photo, or generated model is in it.",
+  "command": "blender -b -P scripts/blender/pbr_trees.py -- assets/trees",
+  "prompt": "None. The script is the full recipe; run it again to rebuild the files.",
+  "credits": "Original work for this project. No third-party art. No paid generation credits.",
+  "format": "GLB, Draco, no materials or textures. COLOR_0 linear vertex color (bark, leaf color with baked crown occlusion), _SWAY (wind weight) and _LEAF ([u, v, seed]; the leaf cut in src/render/leaf-cut.js) custom attributes, crown-facing normals on the leaf cards.",
+  "files": {
+    "oak.glb": {
+      "bytes": 162416,
+      "lod0_triangles": 2556,
+      "lod1_triangles": 32,
+      "variants": 3
+    },
+    "pine.glb": {
+      "bytes": 105080,
+      "lod0_triangles": 1620,
+      "lod1_triangles": 32,
+      "variants": 3
+    },
+    "magnolia.glb": {
+      "bytes": 165448,
+      "lod0_triangles": 2732,
+      "lod1_triangles": 32,
+      "variants": 3
+    },
+    "myrtle.glb": {
+      "bytes": 131328,
+      "lod0_triangles": 2036,
+      "lod1_triangles": 32,
+      "variants": 3
+    },
+    "dogwood.glb": {
+      "bytes": 137308,
+      "lod0_triangles": 2196,
+      "lod1_triangles": 32,
+      "variants": 3
+    },
+    "street.glb": {
+      "bytes": 143604,
+      "lod0_triangles": 2316,
+      "lod1_triangles": 32,
+      "variants": 3
+    }
+  },
+  "nodes": "tree_<species>_<variant> (LOD0) and tree_<species>_<variant>_lod1; GLTFLoader drops ':' so geo-view glbTreeTemplates() maps them to tree:<species>:<variant>. The game uses the GLB LOD0 only and keeps the procedural LOD1 crown cards.",
+  "total_bytes": 845184
+}

@@ -31,7 +31,7 @@ export const MODEL_YAW = Math.PI / 2;
 let dracoLoader = null;
 
 // Vite serves the Draco decoder from node_modules. No CDN.
-function getDracoLoader() {
+export function getDracoLoader() {
   if (!dracoLoader) {
     dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath({ js: dracoWrapperUrl, wasm: dracoWasmUrl });

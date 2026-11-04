@@ -81,6 +81,23 @@ export function isoGrid(bounds, minY, maxY, { basis = isoBasis(), mpp = ISO.mpp,
   return { a0, b1, mpp, tile, cols, rows, width: cols * tile, height: rows * tile };
 }
 
+// The image of a level: the grid from the lowest ground to the highest
+// roof (plus 4 m for the roof gear) of its buildings. `heightAt(x, z)` is
+// the terrain height. The bake (src/main.js view=iso) and the tests use it.
+// Returns { grid, minY, maxY }.
+export function levelIsoGrid(level, heightAt, basis = isoBasis()) {
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const b of level.buildings ?? []) {
+    for (const [x, z] of b.outer) {
+      const g = heightAt(x, z);
+      minY = Math.min(minY, g);
+      maxY = Math.max(maxY, g + b.height + 4);
+    }
+  }
+  return { grid: isoGrid(level.bounds, minY, maxY, { basis }), minY, maxY };
+}
+
 // The image pixel [px, py] of a world point.
 export function isoPixel(grid, basis, x, y, z) {
   const [a, b] = isoProject(basis, x, y, z);

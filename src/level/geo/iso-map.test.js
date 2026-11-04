@@ -102,3 +102,18 @@ describe("isoUnproject", async () => {
     expect(Math.hypot(p[0] - 80, p[2] - 30)).toBeLessThan(0.05);
   });
 });
+
+describe("the baked isometric map of the BeltLine level", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { levelIsoGrid } = await import("./iso-map.js");
+  const { terrainOf } = await import("./terrain.js");
+  const level = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url)));
+  const info = JSON.parse(readFileSync(new URL("../../../assets/map/beltline-eastside/iso.json", import.meta.url)));
+
+  it("matches the level and the camera; if not, bake it again (scripts/bake-iso-map.mjs)", () => {
+    const t = terrainOf(level);
+    const { grid } = levelIsoGrid(level, (x, z) => t.height(x, z), isoBasis(info.yaw, info.pitch));
+    expect([info.yaw, info.pitch, info.mpp, info.tile]).toEqual([ISO.yaw, ISO.pitch, ISO.mpp, ISO.tile]);
+    expect({ a0: info.a0, b1: info.b1, cols: info.cols, rows: info.rows }).toEqual({ a0: grid.a0, b1: grid.b1, cols: grid.cols, rows: grid.rows });
+  });
+});

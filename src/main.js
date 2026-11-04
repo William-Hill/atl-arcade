@@ -17,7 +17,7 @@ import { createMinimap } from "./ui/minimap.js";
 import { createFullMap } from "./ui/fullmap.js";
 import { isoTilesFor } from "./ui/iso-tiles.js";
 import { travelSpot } from "./level/geo/travel.js";
-import { ISO, isoBasis, isoCameraPose, isoGrid, tileCenter } from "./level/geo/iso-map.js";
+import { ISO, isoBasis, isoCameraPose, levelIsoGrid, tileCenter } from "./level/geo/iso-map.js";
 import { mapLandmarks } from "./ui/minimap-math.js";
 import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
 import { shortAttribution } from "./ui/layout.js";
@@ -365,17 +365,8 @@ let isoFocus = null;
 let iso = null;
 if (view === "iso" && geo) {
   const basis = isoBasis();
-  let minY = Infinity;
-  let maxY = -Infinity;
   const t = terrainOf(level);
-  for (const b of level.buildings) {
-    for (const [x, z] of b.outer) {
-      const g = t.height(x, z);
-      minY = Math.min(minY, g);
-      maxY = Math.max(maxY, g + b.height + 4);
-    }
-  }
-  const grid = isoGrid(level.bounds, minY, maxY, { basis });
+  const { grid, minY, maxY } = levelIsoGrid(level, (x, z) => t.height(x, z), basis);
   const groundY = (minY + Math.min(maxY, minY + 40)) / 2;
   iso = {
     grid,
@@ -386,8 +377,7 @@ if (view === "iso" && geo) {
       // The ground point under the tile center, for the detail and the shadows.
       const p = pose.position;
       const ground = t.height(p[0], p[2]);
-      const [fa, fb] = [a, b];
-      const focus = isoCameraPose(basis, fa, fb, ground).position;
+      const focus = isoCameraPose(basis, a, b, ground).position;
       isoFocus = new THREE.Vector3(...focus);
       camera.up.set(...basis.u);
       camera.position.set(...p.map((v, k) => v - basis.d[k] * ISO_BACK));
@@ -567,9 +557,9 @@ function fastTravel(x, z) {
   const spot = travelSpot(level, x, z);
   if (!spot) return null;
   const ground = terrainOf(level).height(spot.x, spot.z);
-  // The top surface at or under 3 m over the terrain: the street, not a
-  // bridge deck far above it.
-  const y = env.sampleGround(spot.x, spot.z, ground + 3)?.height ?? ground;
+  // The top surface over the spot: a bridge deck when the strip is a deck
+  // (the spot is on a strip, so never on a roof).
+  const y = env.sampleGround(spot.x, spot.z, ground + 40)?.height ?? ground;
   run = teleportRun(run, level, { position: [spot.x, y, spot.z], yaw: spot.yaw });
   skater = run.skater;
   if (follow) follow.reset(skater);

@@ -12,7 +12,8 @@
 // are strips: a point is on a strip when it is within width / 2 of the
 // center line. A uniform grid keeps each query to a few candidates.
 
-import { BRIDGE, bridgeDeck, buildingSpan, terrainOf } from "./terrain.js";
+import { BRIDGE, bridgeDeck, buildingSpan, parapetBlocked, terrainOf } from "./terrain.js";
+import { bridgeLayout, parapetRuns } from "./bridges.js";
 
 export const GEO_CELL = 16; // m, grid cell size.
 export const BRIDGE_HEADROOM = 2.5; // m
@@ -80,18 +81,21 @@ export function geoShapes(level) {
   for (const s of level.strips ?? []) {
     const top = surfaceTop(level, s.kind);
     const deck = s.bridge && !terrain.flat ? bridgeDeck(level, s) : null;
-    for (let i = 0; i < s.points.length - 1; i += 1) {
-      const a = s.points[i];
-      const b = s.points[i + 1];
-      shapes.push({ id: s.id, kind: s.kind, top, a, b, r: s.width / 2, deck });
-      if (deck) {
-        // The parapets: a wall on each side of the deck.
-        const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-        const o = s.width / 2 - BRIDGE.parapetWidth / 2;
-        const nx = (-(b[1] - a[1]) / len) * o;
-        const nz = ((b[0] - a[0]) / len) * o;
-        for (const k of [1, -1]) {
-          shapes.push({ id: `${s.id}:parapet`, kind: "parapet", top: top + BRIDGE.parapet, a: [a[0] + nx * k, a[1] + nz * k], b: [b[0] + nx * k, b[1] + nz * k], r: BRIDGE.parapetWidth / 2, deck });
+    // A deck runs from joint to joint (bridges.js), past the OSM ends.
+    const points = deck ? bridgeLayout(level, s).points : s.points;
+    for (let i = 0; i < points.length - 1; i += 1) shapes.push({ id: s.id, kind: s.kind, top, a: points[i], b: points[i + 1], r: s.width / 2, deck });
+    if (!deck) continue;
+    // The parapets: a wall on each open side of the OSM span (geo-mesh.js).
+    const o = s.width / 2 - BRIDGE.parapetWidth / 2;
+    for (const k of [1, -1]) {
+      for (const run of parapetRuns(level, s, k, BRIDGE.parapetWidth, parapetBlocked(level, s))) {
+        for (let i = 0; i < run.points.length - 1; i += 1) {
+          const a = run.points[i];
+          const b = run.points[i + 1];
+          const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+          const nx = (-(b[1] - a[1]) / len) * o * k;
+          const nz = ((b[0] - a[0]) / len) * o * k;
+          shapes.push({ id: `${s.id}:parapet`, kind: "parapet", top: top + BRIDGE.parapet, a: [a[0] + nx, a[1] + nz], b: [b[0] + nx, b[1] + nz], r: BRIDGE.parapetWidth / 2, deck });
         }
       }
     }

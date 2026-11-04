@@ -30,9 +30,18 @@
 // surface tile, so the markings cost no draw call. The markings are a few
 // cm over the street top. They are a visual only; the ground sampler and
 // the physics do not see them.
+//
+// On a bridge the center line is draped on the deck height (terrain.js
+// bridgeDeck), not on the ground, and runs on to the deck joint; the lines
+// of the approach road start at the joint (bridges.js, issue #131). The deck
+// lines are in `deck`, at their final height: the view must not drape them
+// again. A deck gets no lane lines, edge lines, or curb band.
 
 import { streetIntersections } from "./signs.js";
 import { GEO_TILE, SURFACE_COLORS } from "./geo-mesh.js";
+import { approachTrims, bridgeLayout, densify, trimPolyline } from "./bridges.js";
+import { mergeMeshes } from "./extrude.js";
+import { bridgeDeck, drapeMesh, terrainOf } from "./terrain.js";
 
 export const MARKING_COLORS = {
   yellow: [0.96, 0.74, 0.16],
@@ -292,6 +301,8 @@ export function edgeLineOffset(width) {
 
 export function roadMarkings(level) {
   const mesh = { positions: [], indices: [], colors: [] };
+  // The lines on bridge decks: [{ tile, meshes }] at their final height.
+  const deckParts = [];
   const streetTop = level.surfaces?.street ?? 0;
   const y = streetTop + LIFT;
   const yCurb = streetTop + CURB_LIFT;
@@ -299,6 +310,8 @@ export function roadMarkings(level) {
   // One way: the tag, or one half of a divided road.
   const median = new Map(streets.map((s) => [s.id, medianSide(s, streets)]));
   const isOneway = (s) => Boolean(s.oneway) || median.get(s.id) !== 0;
+  const flat = terrainOf(level).flat;
+  const trims = flat ? new Map() : approachTrims(level.strips ?? []);
 
   // The street strips at each node, and the street arms at each node (an
   // end point gives 1 arm, a middle point 2). Service roads do not count.
@@ -387,27 +400,41 @@ export function roadMarkings(level) {
   };
 
   for (const s of streets) {
-    // A deck is over the ground; the markings follow the ground, so a deck
-    // gets only the old center line.
-    const deck = Boolean(s.bridge);
     const lineCuts = cutsOf(s, "line");
-    const ends = endsOf(s);
     const oneway = isOneway(s);
-    if (MAIN.has(s.highway) && !oneway && s.width >= 9) {
-      // A one-lane ramp or a divided carriageway (under 9 m) has no center line.
-      for (const side of [1, -1]) line(mesh, s.points, y, side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, lineCuts, MARKING_COLORS.yellow);
+    // A one-lane ramp or a divided carriageway (under 9 m) has no center line.
+    const center = MAIN.has(s.highway) && !oneway && s.width >= 9;
+    if (s.bridge && !flat) {
+      // A deck gets only the center line, from joint to joint, draped on the
+      // deck height like the deck top (terrain.js bridgeDeck, geo-mesh.js
+      // bridgeMeshes).
+      if (!center) continue;
+      const deck = bridgeDeck(level, s);
+      const L = bridgeLayout(level, s);
+      const t = terrainOf(level);
+      const flatLine = { positions: [], indices: [], colors: [] };
+      const pts = densify(L.points, 1.5);
+      for (const side of [1, -1]) line(flatLine, pts, y, side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, lineCuts, MARKING_COLORS.yellow);
+      const draped = flatLine.indices.length ? drapeMesh(flatLine, { flat: false, cell: t.cell, x0: t.x0, z0: t.z0, height: deck }) : null;
+      const [x0, z0] = s.points[0];
+      deckParts.push({ tile: `${Math.floor(x0 / GEO_TILE)},${Math.floor(z0 / GEO_TILE)}`, meshes: draped ? [draped] : [] });
+      continue;
     }
-    if (deck) continue;
+    // A road that meets a deck stops at the deck joint (bridges.js).
+    const pts = trimPolyline(s.points, trims.get(s.id));
+    if (!pts) continue;
+    const ends = endsOf(s);
+    if (center) for (const side of [1, -1]) line(mesh, pts, y, side * (LINE_GAP / 2 + LINE_W / 2), LINE_W, lineCuts, MARKING_COLORS.yellow);
     if (MAIN.has(s.highway)) {
-      for (const o of laneLineOffsets({ width: s.width, oneway })) line(mesh, s.points, y, o, S.laneLine, lineCuts, MARKING_COLORS.white, { dash: [S.dash, S.dashGap] });
+      for (const o of laneLineOffsets({ width: s.width, oneway })) line(mesh, pts, y, o, S.laneLine, lineCuts, MARKING_COLORS.white, { dash: [S.dash, S.dashGap] });
     }
     if (EDGE.has(s.highway) && edgeLineOffset(s.width) > S.lane / 2) {
       // On a divided road the edge line on the median side is yellow.
-      for (const side of [1, -1]) line(mesh, s.points, y, side * edgeLineOffset(s.width), S.edgeLine, lineCuts, side === median.get(s.id) ? MARKING_COLORS.yellow : MARKING_COLORS.white, { ends });
+      for (const side of [1, -1]) line(mesh, pts, y, side * edgeLineOffset(s.width), S.edgeLine, lineCuts, side === median.get(s.id) ? MARKING_COLORS.yellow : MARKING_COLORS.white, { ends });
     }
     if (s.highway !== "service") {
       const curbCuts = cutsOf(s, "curb");
-      for (const side of [1, -1]) line(mesh, s.points, yCurb, side * (s.width / 2 - S.curb / 2), S.curb, curbCuts, MARKING_COLORS.curb, { ends });
+      for (const side of [1, -1]) line(mesh, pts, yCurb, side * (s.width / 2 - S.curb / 2), S.curb, curbCuts, MARKING_COLORS.curb, { ends });
     }
   }
 
@@ -439,12 +466,15 @@ export function roadMarkings(level) {
 
   // Split the quads (4 vertices, 6 indices each) into tiles.
   const tiles = new Map();
+  const entry = (key) => {
+    let e = tiles.get(key);
+    if (!e) tiles.set(key, (e = { mesh: { positions: [], indices: [], colors: [] }, deck: [] }));
+    return e;
+  };
   for (let q = 0; q < mesh.positions.length / 12; q += 1) {
     const x = mesh.positions[q * 12];
     const z = mesh.positions[q * 12 + 2];
-    const key = `${Math.floor(x / GEO_TILE)},${Math.floor(z / GEO_TILE)}`;
-    let t = tiles.get(key);
-    if (!t) tiles.set(key, (t = { positions: [], indices: [], colors: [] }));
+    const t = entry(`${Math.floor(x / GEO_TILE)},${Math.floor(z / GEO_TILE)}`).mesh;
     const base = t.positions.length / 3;
     for (let k = 0; k < 12; k += 1) {
       t.positions.push(mesh.positions[q * 12 + k]);
@@ -452,9 +482,11 @@ export function roadMarkings(level) {
     }
     t.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
   }
+  for (const { tile, meshes } of deckParts) entry(tile).deck.push(...meshes.filter((m) => m.indices.length));
+  const typed = (t) => ({ positions: Float32Array.from(t.positions), indices: Uint32Array.from(t.indices), colors: Float32Array.from(t.colors) });
   return [...tiles.entries()]
     .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-    .map(([tile, t]) => ({ tile, mesh: { positions: Float32Array.from(t.positions), indices: Uint32Array.from(t.indices), colors: Float32Array.from(t.colors) } }));
+    .map(([tile, e]) => (e.deck.length ? { tile, mesh: typed(e.mesh), deck: typed(mergeMeshes(e.deck)) } : { tile, mesh: typed(e.mesh) }));
 }
 
 // Every tile in one mesh (for the tests).

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-// The leaf cut-out of a tree card (src/level/geo/trees.js CARDS): up to
+// The leaf cut-out of a tree card (src/level/geo/trees.js LEAF_CARDS): up to
 // LEAVES.count leaf ellipses at places from the card seed. A pixel outside
 // every leaf is discarded. The shadow pass uses the same cut, so a card
 // does not cast a square shadow.

@@ -4,10 +4,35 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createGeoGroundSampler } from "../src/level/geo/geo-ground.js";
-import { buildingHeight, buildLevel, classifyWay, clipOffCorridor, clipPolyline, hasGroundWalls, joinRings, overpassQuery, parseHeight, trailCorridor } from "./build-block.mjs";
+import { buildingHeight, buildLevel, classifyWay, clipOffCorridor, clipPolyline, furnitureQuery, hasGroundWalls, joinRings, overpassQuery, parseHeight, trailCorridor } from "./build-block.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const BBOX = { south: 33.756, west: -84.3685, north: 33.7735, east: -84.358 };
+
+describe("build-block street furniture", () => {
+  it("queries only nodes, and keeps the useful tags of each point", () => {
+    expect(furnitureQuery(BBOX)).toContain('node["amenity"~"^(bench|waste_basket|bicycle_parking|drinking_water)$"]');
+    expect(furnitureQuery(BBOX)).not.toContain("way[");
+    const raw = { elements: [{ type: "way", id: 1, tags: { building: "yes" } }] };
+    const furniture = {
+      elements: [
+        { type: "node", id: 7, lat: 33.765, lon: -84.363, tags: { amenity: "bench", backrest: "yes", "check_date": "2024" } },
+        { type: "node", id: 8, lat: 33.765, lon: -84.3631, tags: { highway: "street_lamp" } },
+        { type: "node", id: 9, lat: 34.5, lon: -84.363, tags: { amenity: "bench" } },
+      ],
+    };
+    const level = buildLevel(raw, { bbox: BBOX, name: "t", title: "t", furniture });
+    expect(level.furniture.map((f) => [f.id, f.kind])).toEqual([["n7", "bench"], ["n8", "street_lamp"]]);
+    expect(level.furniture[0].tags).toEqual({ backrest: "yes" });
+    expect(level.stats.furniture).toMatchObject({ bench: 1, street_lamp: 1, bollard: 0 });
+  });
+
+  it("matches the 2026-11-03 count of the BeltLine furniture", () => {
+    const level = JSON.parse(readFileSync(join(ROOT, "levels/beltline-eastside/level.json"), "utf8"));
+    expect(level.stats.furniture).toEqual({ bench: 23, waste_basket: 7, bicycle_parking: 14, drinking_water: 5, street_lamp: 4, bollard: 4 });
+    expect(level.furniture.filter((f) => f.tags?.backrest === "yes").length).toBe(12);
+  });
+});
 
 describe("build-block tags", () => {
   it("parses heights in meters and feet", () => {

@@ -767,8 +767,9 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
 
 // `groundDetail: false` keeps the flat art colors on the ground.
 // `trees: false` keeps the two street kit trees (for an A/B check).
+// `season` sets the tree colors: "spring", "summer" (the default), or "fall".
 // `aprons: false` leaves out the concrete aprons of the shops (aprons.js).
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, look = "toon" } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, look = "toon", season = "summer" } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -799,6 +800,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   for (const t of [...(markings ? roadMarkings(level) : []), ...(aprons ? storefrontAprons(level, fronts) : [])]) {
     const list = groundExtras.get(t.tile) ?? [];
     list.push(drapeMesh(t.mesh, terrain));
+    // The lines on a bridge deck come at their final height (no drape).
+    if (t.deck) list.push(t.deck);
     groundExtras.set(t.tile, list);
   }
   const markingTiles = new Map([...groundExtras].map(([tile, list]) => [tile, list.length > 1 ? mergeMeshes(list) : list[0]]));
@@ -851,7 +854,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null };
   function addProps(placements, templates) {
     // The procedural trees take the place of the two kit trees.
-    const all = trees ? { ...templates, ...treeTemplates({ cards: leaves }) } : templates;
+    const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves }) } : templates;
     const placed = trees ? withProceduralTrees(placements) : placements;
     propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance });
     if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial();

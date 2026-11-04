@@ -8,7 +8,8 @@
 import { FACE, extrudeFootprint, flatPolygon, mergeMeshes, orientRing, placeTemplate, stripMesh } from "./extrude.js";
 import { createGeoGroundSampler, surfaceTop } from "./geo-ground.js";
 import { BELT, STYLES, STYLE_INDEX, awningHeight, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
-import { BRIDGE, bridgeDeck, buildingSpan, coarseTerrainOf, drapeMesh, liftMesh, terrainOf } from "./terrain.js";
+import { BRIDGE, bridgeDeck, buildingSpan, coarseTerrainOf, drapeMesh, liftMesh, parapetBlocked, terrainOf } from "./terrain.js";
+import { approachTrims, bridgeLayout, bridgeLayouts, densify, parapetRuns, ribbonEdges, slicePolyline, trimPolyline } from "./bridges.js";
 
 export const GEO_TILE = 125; // m. Small enough that the camera culls most of the draped terrain.
 export const PROP_TILE = 50; // m. Small, so only near props get full detail.
@@ -214,67 +215,165 @@ export function awningsFor(b, style, isStreet) {
   return mesh;
 }
 
-// A bridge: its slab sides and two parapets, in the facade material (no
-// windows), lifted onto the deck line. The deck top is a surface strip.
+// A bridge (issue #131): the deck top is a surface ribbon from joint to
+// joint (bridges.js), with mitered turns and its height from bridgeDeck().
+// The structure is in the facade material (no windows): the slab under the
+// OSM span, a parapet on each open side of the span, and at each OSM end an
+// end post and a wing wall that turns out away from the road and down into
+// the ground. A parapet side that is inside another deck (a sidewalk bridge
+// on a road bridge) gets no parapet.
+export const WING = { length: 4, turn: (30 * Math.PI) / 180, post: 0.4, postRise: 0.15, foot: 0.5 };
 
-function boxAlong(m, a, b, o0, o1, y0, y1, deck, color) {
-  const dx = b[0] - a[0];
-  const dz = b[1] - a[1];
-  const len = Math.hypot(dx, dz);
-  if (len < 1e-6) return;
-  const nx = -dz / len;
-  const nz = dx / len;
-  const P = (p, o, y) => [p[0] + nx * o, y + deck(p[0] + nx * o, p[1] + nz * o), p[1] + nz * o];
-  const faces = [
-    [P(a, o0, y0), P(b, o0, y0), P(b, o0, y1), P(a, o0, y1), [-nx, 0, -nz]],
-    [P(a, o1, y0), P(b, o1, y0), P(b, o1, y1), P(a, o1, y1), [nx, 0, nz]],
-    [P(a, o0, y1), P(b, o0, y1), P(b, o1, y1), P(a, o1, y1), [0, 1, 0]],
-    [P(a, o0, y0), P(b, o0, y0), P(b, o1, y0), P(a, o1, y0), [0, -1, 0]],
-  ];
-  for (const [p0, p1, p2, p3, n] of faces) {
-    const base = m.positions.length / 3;
-    for (const q of [p0, p1, p2, p3]) {
-      m.positions.push(q[0], q[1], q[2]);
-      m.colors.push(color[0], color[1], color[2]);
-      m.facade.push(0, 0, 0, FACE.cornice);
-    }
-    const ux = p1[0] - p0[0];
-    const uy = p1[1] - p0[1];
-    const uz = p1[2] - p0[2];
-    const vx = p2[0] - p0[0];
-    const vy = p2[1] - p0[1];
-    const vz = p2[2] - p0[2];
-    const dot = (uy * vz - uz * vy) * n[0] + (uz * vx - ux * vz) * n[1] + (ux * vy - uy * vx) * n[2];
-    if (dot >= 0) m.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
-    else m.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
+// One quad of the structure, wound so that its normal points along `hint`.
+function face(m, p0, p1, p2, p3, hint, color) {
+  const base = m.positions.length / 3;
+  for (const q of [p0, p1, p2, p3]) {
+    m.positions.push(q[0], q[1], q[2]);
+    m.colors.push(color[0], color[1], color[2]);
+    m.facade.push(0, 0, 0, FACE.cornice);
   }
+  const ux = p1[0] - p0[0];
+  const uy = p1[1] - p0[1];
+  const uz = p1[2] - p0[2];
+  const vx = p2[0] - p0[0];
+  const vy = p2[1] - p0[1];
+  const vz = p2[2] - p0[2];
+  const dot = (uy * vz - uz * vy) * hint[0] + (uz * vx - ux * vz) * hint[1] + (ux * vy - uy * vx) * hint[2];
+  if (dot >= 0) m.indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  else m.indices.push(base, base + 2, base + 1, base, base + 3, base + 2);
+}
+
+// A solid along two edge polylines (left and right, one point each per
+// row): the side faces, the top, the bottom, and an end cap at each end.
+// y0(x, z) and y1(x, z) give the bottom and the top.
+function prism(m, left, right, y0, y1, color, caps = [true, true]) {
+  const P = (p, y) => [p[0], y(p[0], p[1]), p[1]];
+  const n = left.length;
+  for (let i = 0; i < n - 1; i += 1) {
+    const [l0, l1, r0, r1] = [left[i], left[i + 1], right[i], right[i + 1]];
+    const dx = (l1[0] + r1[0] - l0[0] - r0[0]) / 2;
+    const dz = (l1[1] + r1[1] - l0[1] - r0[1]) / 2;
+    // The left side faces (-dz, dx), the right side (dz, -dx).
+    face(m, P(l0, y0), P(l1, y0), P(l1, y1), P(l0, y1), [-dz, 0, dx], color);
+    face(m, P(r0, y0), P(r1, y0), P(r1, y1), P(r0, y1), [dz, 0, -dx], color);
+    face(m, P(l0, y1), P(l1, y1), P(r1, y1), P(r0, y1), [0, 1, 0], color);
+    face(m, P(l0, y0), P(l1, y0), P(r1, y0), P(r0, y0), [0, -1, 0], color);
+  }
+  const cap = (i, j) => {
+    const [l, r] = [left[i], right[i]];
+    const dx = (left[i][0] + right[i][0] - left[j][0] - right[j][0]) / 2;
+    const dz = (left[i][1] + right[i][1] - left[j][1] - right[j][1]) / 2;
+    face(m, P(l, y0), P(r, y0), P(r, y1), P(l, y1), [dx, 0, dz], color);
+  };
+  if (caps[0]) cap(0, 1);
+  if (caps[1]) cap(n - 1, n - 2);
 }
 
 // The structure of one bridge strip: { deck: surface mesh, structure: mesh }.
 export function bridgeMeshes(level, s) {
   const top = surfaceTop(level, s.kind);
   const deck = bridgeDeck(level, s);
-  // A point each 1.5 m, so the mesh follows the deck arch.
-  const pts = [s.points[0]];
-  for (let i = 0; i < s.points.length - 1; i += 1) {
-    const [ax, az] = s.points[i];
-    const [bx, bz] = s.points[i + 1];
-    const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / 1.5));
-    for (let k = 1; k <= n; k += 1) pts.push([ax + ((bx - ax) * k) / n, az + ((bz - az) * k) / n]);
-  }
-  const deckMesh = liftMesh(stripMesh(pts, s.width, top, { color: SURFACE_COLORS[s.kind], jointSides: 0 }), deck);
-  const m = { positions: [], indices: [], colors: [], facade: [] };
+  const terrain = terrainOf(level);
+  const L = bridgeLayout(level, s);
   const h = s.width / 2;
   const pw = BRIDGE.parapetWidth;
+  const color = SURFACE_COLORS[s.kind];
+  // The deck top, from joint to joint: a row each 1.5 m, so it follows the
+  // arch, with mitered turns. The whole top is draped on the deck height
+  // (bridgeDeck), cut on the terrain triangles like the approach road it
+  // meets. One drape for the whole deck leaves no crack between the span
+  // and a run-on where the deck rides on the ground.
+  const pts = densify(L.points, 1.5);
+  const { left, right } = ribbonEdges(pts, h);
+  const flat = { positions: [], indices: [], colors: [] };
+  // Each row has a vertex on the center line too, so the deck top there is
+  // the deck height itself, the same as the draped center line on it.
   for (let i = 0; i < pts.length - 1; i += 1) {
-    const a = pts[i];
-    const b = pts[i + 1];
-    // The slab under the deck, and a parapet on each side.
-    boxAlong(m, a, b, -h, h, top - BRIDGE.slab, top - 0.01, deck, BRIDGE.color);
-    boxAlong(m, a, b, -h, -h + pw, top, top + BRIDGE.parapet, deck, BRIDGE.color);
-    boxAlong(m, a, b, h - pw, h, top, top + BRIDGE.parapet, deck, BRIDGE.color);
+    for (const [a0, a1, b0, b1] of [
+      [left[i], left[i + 1], pts[i], pts[i + 1]],
+      [pts[i], pts[i + 1], right[i], right[i + 1]],
+    ]) {
+      const base = flat.positions.length / 3;
+      for (const p of [a0, b0, b1, a1]) {
+        flat.positions.push(p[0], top, p[1]);
+        flat.colors.push(color[0], color[1], color[2]);
+      }
+      // The left side first: (a, d, c) and (a, c, b) face up.
+      flat.indices.push(base, base + 3, base + 2, base, base + 2, base + 1);
+    }
   }
-  return { deck: deckMesh, structure: m };
+  // A half disk past each joint, as the disk at an inner point of a strip:
+  // the road past J can turn there (or end square at a junction), and the
+  // half disk fills the wedge between the two ends. Past J the deck height
+  // is the ground, so the half disk lies on the road. It stops at the J
+  // edge: a triangle across J would not follow the kink in the deck height
+  // there and could cover the center line.
+  for (const [k, e] of L.ends.entries()) {
+    if (!e.approach) continue;
+    const P = L.points;
+    const [J, next] = k ? [P[P.length - 1], P[P.length - 2]] : [P[0], P[1]];
+    const l = Math.hypot(J[0] - next[0], J[1] - next[1]) || 1;
+    const out = Math.atan2(J[1] - next[1], J[0] - next[0]);
+    const ring = [J];
+    for (let i = 0; i <= 12; i += 1) {
+      const t = out - Math.PI / 2 + (i / 12) * Math.PI;
+      ring.push([J[0] + Math.cos(t) * h, J[1] + Math.sin(t) * h]);
+    }
+    if (l > 0) flatPolygon(ring, [], top, { color, mesh: flat });
+  }
+  const deckSurface = drapeMesh(flat, { flat: false, cell: terrain.cell, x0: terrain.x0, z0: terrain.z0, height: deck });
+  const m = { positions: [], indices: [], colors: [], facade: [] };
+  const onDeck = (y) => (x, z) => y + deck(x, z);
+  // The slab under the OSM span, on the straight deck line (level across).
+  // The deck top is never under that line, so the slab top stays under the
+  // deck top also where the deck rides on higher ground.
+  const span = densify(slicePolyline(L.points, L.span[0], L.span[1]), 1.5);
+  if (span.length >= 2) {
+    const e = ribbonEdges(span, h);
+    const onLine = (y) => (x, z) => y + deck.raw(x, z);
+    prism(m, e.left, e.right, onLine(top - BRIDGE.slab), onLine(top - 0.05), BRIDGE.color);
+  }
+  // The parapets, each with an end post and a wing wall at an OSM end.
+  for (const k of [1, -1]) {
+    for (const run of parapetRuns(level, s, k, pw, parapetBlocked(level, s))) {
+      const e = ribbonEdges(run.points, pw / 2, (h - pw / 2) * k);
+      prism(m, e.left, e.right, onDeck(top - 0.01), onDeck(top + BRIDGE.parapet), BRIDGE.color);
+      // Each OSM end of the run: E, the travel direction f along the span
+      // there, and u, the outward direction.
+      const ends = [];
+      const P = run.points;
+      if (run.from === 0) ends.push({ E: P[0], f: [P[1][0] - P[0][0], P[1][1] - P[0][1]], out: -1 });
+      if (run.to === run.last) ends.push({ E: P[P.length - 1], f: [P[P.length - 1][0] - P[P.length - 2][0], P[P.length - 1][1] - P[P.length - 2][1]], out: 1 });
+      for (const { E, f: f0, out } of ends) {
+        const l = Math.hypot(f0[0], f0[1]) || 1;
+        const f = [f0[0] / l, f0[1] / l];
+        const u = [f[0] * out, f[1] * out];
+        // n points from the center line to this parapet (the left normal is (-f.z, f.x)).
+        const n = [-f[1] * k, f[0] * k];
+        // The parapet end S, and the wing end W: out along u, turned away from the road.
+        const S = [E[0] + n[0] * (h - pw / 2), E[1] + n[1] * (h - pw / 2)];
+        const c = Math.cos(WING.turn);
+        const t = Math.sin(WING.turn);
+        const dir = [u[0] * c + n[0] * t, u[1] * c + n[1] * t];
+        const W = [S[0] + dir[0] * WING.length, S[1] + dir[1] * WING.length];
+        const yS = top + deck(S[0], S[1]);
+        const gW = terrain.height(W[0], W[1]);
+        const gS = terrain.height(S[0], S[1]);
+        const yTop = (x, z) => {
+          const f = Math.max(0, Math.min(1, ((x - S[0]) * dir[0] + (z - S[1]) * dir[1]) / WING.length));
+          return yS + BRIDGE.parapet + (gW + 0.2 - yS - BRIDGE.parapet) * f;
+        };
+        const yBot = (x, z) => Math.min(terrain.height(x, z), yS - BRIDGE.slab) - WING.foot;
+        const w = ribbonEdges([S, W], pw / 2);
+        prism(m, w.left, w.right, yBot, yTop, BRIDGE.color);
+        // The end post, a little taller and wider than the parapet.
+        const q = WING.post / 2;
+        const post = ribbonEdges([[S[0] - u[0] * q, S[1] - u[1] * q], [S[0] + u[0] * q, S[1] + u[1] * q]], q);
+        prism(m, post.left, post.right, () => Math.min(gS, yS) - WING.foot, () => yS + BRIDGE.parapet + WING.postRise, BRIDGE.color);
+      }
+    }
+  }
+  return { deck: deckSurface, structure: m };
 }
 
 // Murals on walls that face the trail: [{ id, a: [x, z], b: [x, z], n: [x, z], y0, y1, cell, edge, t0, t1 }].
@@ -407,6 +506,28 @@ export function buildPropMeshes(props, templates) {
   return out;
 }
 
+// The end points (as "kind:x,z") where two at-grade strips of one kind
+// meet end to end within 40 m of a bridge end (issue #131).
+function jointEnds(level) {
+  const strips = (level.strips ?? []).filter((s) => !s.bridge);
+  const near = [];
+  for (const L of bridgeLayouts(level.strips ?? []).values()) for (const e of L.ends) near.push(e.E);
+  const count = new Map();
+  for (const s of strips) {
+    for (const p of [s.points[0], s.points[s.points.length - 1]]) {
+      const key = `${s.kind}:${p[0]},${p[1]}`;
+      count.set(key, (count.get(key) ?? 0) + 1);
+    }
+  }
+  const out = new Set();
+  for (const [key, n] of count) {
+    if (n < 2) continue;
+    const [x, z] = key.split(":")[1].split(",").map(Number);
+    if (near.some((E) => Math.hypot(E[0] - x, E[1] - z) <= 40)) out.add(key);
+  }
+  return out;
+}
+
 // Returns [{ material, tile, mesh }] with each mesh merged. With
 // `detail: false` the buildings are plain boxes (the M1-03 look).
 // `terrainStep` > 1 drapes on a coarser terrain (a far level of detail for
@@ -447,6 +568,10 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
 
   for (const a of level.areas ?? []) add("surface", a, drape(flatPolygon(a.outer, a.holes ?? [], surfaceTop(level, a.kind), { color: SURFACE_COLORS[a.kind] })));
 
+  // A deck runs on over the end of its approach road to the joint, so the
+  // approach road mesh stops at the joint (bridges.js).
+  const trims = terrain.flat ? new Map() : approachTrims(level.strips ?? []);
+  const endDisks = terrain.flat ? new Set() : jointEnds(level);
   for (const s of level.strips ?? []) {
     const top = surfaceTop(level, s.kind);
     const curb = s.kind === "sidewalk";
@@ -456,7 +581,19 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
       if (!surfacesOnly) add("building", s, structure);
       continue;
     }
-    add("surface", s, drape(stripMesh(s.points, s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind] })));
+    const trim = trims.get(s.id);
+    const points = trimPolyline(s.points, trim);
+    if (!points) continue;
+    const m = stripMesh(points, s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind] });
+    // Two strips that meet end to end near a bridge get a joint disk, as at
+    // an inner point, so a turn at the meeting point leaves no wedge.
+    for (const [cut, p] of [[trim?.start, s.points[0]], [trim?.end, s.points[s.points.length - 1]]]) {
+      if (cut > 0 || !endDisks.has(`${s.kind}:${p[0]},${p[1]}`)) continue;
+      const ring = [];
+      for (let k = 0; k < 16; k += 1) ring.push([p[0] + Math.cos((k / 16) * Math.PI * 2) * (s.width / 2), p[1] + Math.sin((k / 16) * Math.PI * 2) * (s.width / 2)]);
+      flatPolygon(ring, [], top, { color: SURFACE_COLORS[s.kind], mesh: m });
+    }
+    add("surface", s, drape(m));
   }
 
   if (surfacesOnly) {

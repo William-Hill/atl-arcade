@@ -408,11 +408,25 @@ export function addExtraTemplates(kit, kinds, results, fallback = EXTRA_PROP_FAL
   return problems;
 }
 
-// The kit templates and the extra props. A failed extra GLB does not stop
-// the kit: the kind gets its fallback kit template.
+// The time limit for one extra prop GLB (ms). A request that takes longer
+// counts as a failure, so it cannot stop the kit props.
+export const EXTRA_PROP_TIMEOUT_MS = 15000;
+
+// Rejects when `promise` does not settle in `ms` milliseconds.
+export function withTimeout(promise, ms, label = "request") {
+  let timer;
+  const limit = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label}: no answer in ${ms} ms`)), ms);
+  });
+  return Promise.race([promise, limit]).finally(() => clearTimeout(timer));
+}
+
+// The kit templates and the extra props. A failed or slow extra GLB does
+// not stop the kit: the kind gets its fallback kit template.
 export async function loadPropTemplates() {
   const kinds = Object.keys(EXTRA_PROP_URLS);
-  const [kit, results] = await Promise.all([loadKitTemplates(), Promise.allSettled(kinds.map((k) => loadKitTemplates(EXTRA_PROP_URLS[k])))]);
+  const extras = kinds.map((k) => withTimeout(loadKitTemplates(EXTRA_PROP_URLS[k]), EXTRA_PROP_TIMEOUT_MS, k));
+  const [kit, results] = await Promise.all([loadKitTemplates(), Promise.allSettled(extras)]);
   for (const problem of addExtraTemplates(kit, kinds, results)) console.warn(`extra prop: ${problem}`);
   return kit;
 }

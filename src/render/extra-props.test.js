@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { addExtraTemplates, EXTRA_PROP_FALLBACK } from "./geo-view.js";
+import { describe, expect, it, vi } from "vitest";
+import { addExtraTemplates, EXTRA_PROP_FALLBACK, withTimeout } from "./geo-view.js";
 import { PROP_SOLID } from "../level/geo/props.js";
 
 const t = (n) => ({ positions: new Float32Array(n * 3) });
@@ -25,6 +25,19 @@ describe("extra prop templates", () => {
     const problems = addExtraTemplates(kit, ["bench_painted"], [{ status: "fulfilled", value: { a: t(2), b: t(3) } }]);
     expect(problems[0]).toMatch(/2 meshes/);
     expect(kit.bench_painted).toBe(kit.bench);
+  });
+
+  it("rejects a load that does not settle in time, and keeps a fast load", async () => {
+    vi.useFakeTimers();
+    try {
+      const stalled = withTimeout(new Promise(() => {}), 1000, "bench_painted");
+      const check = expect(stalled).rejects.toThrow(/bench_painted: no answer in 1000 ms/);
+      await vi.advanceTimersByTimeAsync(1000);
+      await check;
+      await expect(withTimeout(Promise.resolve(7), 1000)).resolves.toBe(7);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("gives each extra prop with a solid obstacle a fallback kit prop", () => {

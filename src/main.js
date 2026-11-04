@@ -17,7 +17,10 @@ import { createMinimap } from "./ui/minimap.js";
 import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
 import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
-import { loadLevel } from "./level/levels.js";
+import { loadLevel, resolveLevelName } from "./level/levels.js";
+import { goalsFor } from "./level/goals.js";
+import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
+import { createResults } from "./ui/results.js";
 import { createLevelEnv } from "./level/ground.js";
 import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { terrainOf } from "./level/geo/terrain.js";
@@ -334,6 +337,22 @@ const input = createInput({ target: window, touch });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch) });
+// Goals, the run timer, and the results screen (M1-05). The goal list is
+// data per level (src/level/goals.js). ?run=free turns the timer off.
+const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
+let goals = goalDef ? createGoals(goalDef) : null;
+// The fact cards for the goal list. The run collects the cards on the trail
+// (run.cards, #17). collectFactCard(id) also adds a card, for the tests. A
+// card counts once, by its id; the goal module reads only the count.
+const factCards = new Set();
+const cardCount = () => new Set([...run.cards.collected, ...factCards]).size;
+function collectFactCard(id) {
+  if (!goals || goals.ended || factCards.has(id)) return false;
+  factCards.add(id);
+  events.push({ tick: run.tick, type: "card", id, count: cardCount() });
+  return true;
+}
+const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: () => resetSkater() }) : null;
 // The minimap (#86) on a geodata level. ?minimap=0 leaves it out, and
 // ?minimap=north or ?minimap=heading sets the mode.
 const minimapParam = params.get("minimap");
@@ -369,8 +388,15 @@ function sampleInput() {
 }
 
 function simulate(dt) {
-  run = stepRun(run, sampleInput(), dt, env, skaterEnv, beat.running ? beat : null);
+  // After the run ends the skater gets no input and rolls to a stop.
+  const sampled = sampleInput();
+  run = stepRun(run, goals && goals.ended ? {} : sampled, dt, env, skaterEnv, beat.running ? beat : null);
   skater = run.skater;
+  if (goals && !goals.ended) {
+    goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
+    for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
+    if (goals.ended) events.push({ tick: run.tick, type: "run-end", ...goalsJson(goals, goalDef) });
+  }
   if (crowd) crowd = stepCrowd(crowd, dt, skater.position);
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
   if (run.banked) {
@@ -396,6 +422,11 @@ let follow = null;
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   run = createRun(level, { position, yaw, cards: factCardSpots() });
   skater = run.skater;
+  if (goalDef) {
+    goals = createGoals(goalDef);
+    factCards.clear();
+    results.hide();
+  }
   if (crowd) crowd = createCrowd(level, { seed: npcSeed });
   events.length = 0;
   if (follow) follow.reset(skater);
@@ -505,7 +536,8 @@ function frame(now) {
     const dt = Math.min(elapsed, 0.1);
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
   }
-  hud.update(run, now, beat.running ? beat.phase() : null);
+  hud.update(run, now, beat.running ? beat.phase() : null, goals);
+  if (results && goals.ended && !results.shown) results.show(computeResults(goalsJson(goals, goalDef), goalDef));
   if (minimap) minimap.update(skater);
   if (factCardsView) factCardsView.update(run.cards.collected, now / 1000);
   if (factPopup) factPopup.update(now);
@@ -692,6 +724,32 @@ window.__atl = {
   get combo() {
     return run.combo;
   },
+  // Goals and the run timer (M1-05), or null with ?run=free.
+  goals: goalDef
+    ? {
+        def: goalDef,
+        get state() {
+          return goals;
+        },
+        // The run JSON, and the results computed from it.
+        get json() {
+          return goalsJson(goals, goalDef);
+        },
+        get results() {
+          return computeResults(goalsJson(goals, goalDef), goalDef);
+        },
+        get shown() {
+          return results.shown;
+        },
+        collectCard: collectFactCard,
+        // Sets the time left (for tests): setTimeLeft(0) ends the run when
+        // no combo is open.
+        setTimeLeft(seconds) {
+          goals = { ...goals, time: Math.max(0, goalDef.time - seconds) };
+        },
+        replay: () => resetSkater(),
+      }
+    : null,
   beat,
   input: {
     get source() {

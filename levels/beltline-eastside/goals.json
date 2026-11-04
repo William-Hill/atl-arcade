@@ -1,0 +1,14 @@
+{
+  "level": "beltline-eastside",
+  "time": 150,
+  "overtime": 10,
+  "goals": [
+    { "id": "score", "type": "score", "target": 6000, "label": "Score 6,000 points" },
+    { "id": "combo", "type": "combo", "target": 1000, "label": "Land a 1,000 point combo" },
+    { "id": "cards", "type": "cards", "target": 3, "label": "Collect 3 fact cards" },
+    { "id": "gap-freedom-parkway", "type": "gap", "label": "Freedom Parkway Underpass Hop", "zone": { "x": 336, "z": 18.6, "r": 12 } },
+    { "id": "gap-stone-mountain", "type": "gap", "label": "Stone Mountain Trail Bridge Hop", "zone": { "x": 335.9, "z": 51.9, "r": 8 } }
+  ],
+  "medals": { "bronze": 2500, "silver": 6000, "gold": 12000 },
+  "notes": "Targets are first guesses. Real skaters have not reviewed them. The gap zones are on the trail under the John Lewis Freedom Parkway bridges and the Stone Mountain Trail bridge (OSM strips with bridge: true)."
+}

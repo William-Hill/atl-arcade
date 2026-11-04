@@ -770,4 +770,5 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - `__atl.level.props` now gives `instances`, `kinds`, `drawn`, and `lod0`. The `tiles` and `lod0Tiles` fields are gone.
 - Measured (`reports/prop-perf/`, SwiftShader, 3 runs for each build, load average 9 to 27): the draw calls decrease by 6 to 15 (12% to 54%) on the low and phone tiers. The prop triangles decrease by 8% at the spawn and by 65% on the overview camera.
 - Not verified: a decrease of the 90th percentile frame time. The effect is smaller than the run-to-run spread on this harness. Without any props the spawn view still draws 48 calls and 116,816 triangles, so the props are not the main cost of a frame. The phone tier holds a median of 59.9 FPS on all four cameras, before and after. The low tier does not hold 55 FPS at the spawn on either build at this load.
-- Not measured: the high tier (the headless page did not answer in 5 minutes on either build) and a real phone GPU.
+- High tier (ANGLE Metal, with the local markings hang fix on both builds): the draw calls decrease by 12 to 30 (8% to 32%), because the props also draw into the shadow map. The GPU holds 60 FPS on both builds.
+- Not measured: a real phone GPU.

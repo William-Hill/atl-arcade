@@ -507,7 +507,8 @@ function createPropMaterial({ wind = true } = {}) {
 
 // `groundDetail: false` keeps the flat art colors on the ground.
 // `trees: false` keeps the two street kit trees (for an A/B check).
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true } = {}) {
+// `season` sets the tree colors: "spring", "summer" (the default), or "fall".
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer" } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -578,7 +579,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null };
   function addProps(placements, templates) {
     // The procedural trees take the place of the two kit trees.
-    const all = trees ? { ...templates, ...treeTemplates() } : templates;
+    const all = trees ? { ...templates, ...treeTemplates({ season }) } : templates;
     const placed = trees ? withProceduralTrees(placements) : placements;
     propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance });
     root.add(propBatch.mesh);

@@ -6,8 +6,22 @@ import { GREYBOX } from "./greybox.js";
 
 export const LEVELS = {
   greybox: async () => GREYBOX,
-  "beltline-eastside": async () => (await import("../../levels/beltline-eastside/level.json")).default,
+  "beltline-eastside": async () => {
+    const [level, canopy] = await Promise.all([import("../../levels/beltline-eastside/level.json"), import("../../levels/beltline-eastside/canopy.json")]);
+    return withCanopy(level.default, canopy.default);
+  },
 };
+
+// Pure: the level with its canopy grid (scripts/city-canopy.py, issue #137).
+// The grid is a file of its own, so the level build does not write it.
+// Props use it for the canopy trees, and its credit goes on the level
+// attribution.
+export function withCanopy(level, canopy) {
+  if (!canopy) return level;
+  const credit = canopy.attribution;
+  const attribution = credit && level.attribution && !level.attribution.includes(credit) ? `${level.attribution}. ${credit}` : level.attribution;
+  return { ...level, canopy, attribution };
+}
 
 export const LEVEL_ALIASES = { beltline: "beltline-eastside" };
 

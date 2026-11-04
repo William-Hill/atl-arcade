@@ -6,6 +6,24 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## M2 early work, 2026-11-03
+
+| Issue | Branch | PR | Verified |
+|---|---|---|---|
+| #90 Photo mode with a depth tilt-shift blur | `claude/90-photo-mode-876a18` | PR open | Vitest on the band math, the state, the free camera, and the file name (18 tests); Playwright on the high tier opens it with P, checks that the ticks and the skater stop, moves the band and the strength with the sliders and the keys, measures the blur (the far strip loses detail, the band keeps it), saves a PNG named `skate-atl-YYYYMMDD-HHMMSS.png`, flies and turns the free camera, and closes with the button and with Escape; Playwright on the low tier opens it with the button, with no blur, and the follow camera returns on close; evidence `e2e/__screenshots__/photo-mode-{high,low,saved}.png`; full suite 52 of 52 pass |
+
+#90 after the merge of `main` (touch controls #71): `npm test` 403 of 403 pass; `npm run e2e` 59 of 61 pass under load, and the 2 failed camera tests (`camera.spec.js` lap and quarter pipe) pass when they run alone (4 of 4); the 3 photo-mode tests pass, with a new touch test (`e2e/__screenshots__/photo-mode-touch.png`). On a touch screen the PHOTO button moves to the top center, under the map attribution, and the touch controls hide in photo mode.
+
+#90 FPS gate: FAIL on this Mac; the cause is other sessions' load, not photo mode. After the merge of `main` with #95 (governor, phone tier):
+- Alone after a 25-minute wait (load average 4.40 at the start; other sessions started Playwright again during the run): median 20 FPS, `reports/playtest-beltline-eastside-2026-11-03-22-30-49.json`.
+- A/B back to back (load average 10 to 14): `origin/main` (0fbdea0) median 20 FPS; this branch median 29.9 FPS, `reports/playtest-beltline-eastside-2026-11-03-22-32-55.json`.
+- Earlier runs on this branch under load average 17 to 105 gave 15, 15, 29.9, and 10 FPS. An earlier A/B (load 31 to 64) gave 20 FPS on `main` (89dbb96) and 20 FPS on this branch.
+- Run the playtest again on an idle machine before merge.
+
+#90 e2e after the merge with #95, under load average 70 to 105: 60 of 65 pass. The 5 failures are in specs that this change does not touch (`skater-anim.spec.js` Marcus T-pose, 3 tests in `skater-face.spec.js`, and the `@beat-timing` test with its retry). They were not run again alone. The 3 photo-mode tests pass alone after the merge.
+
+#90 not verified: no person used photo mode; the free camera has no gamepad move and no touch move (a drag or the right stick only turns it); the blur ran only in headless SwiftShader, not on a real GPU or a phone; PR #95 and PR #96 are not merged yet, so a rebase can be necessary. See `docs/decisions.md` for the design.
+
 ## M1 status, 2026-10-31
 
 | Issue | Branch | PR | Verified |

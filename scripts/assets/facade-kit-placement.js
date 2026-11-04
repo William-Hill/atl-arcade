@@ -173,8 +173,9 @@ export function facadePlacements({ ring, style, base = 0, top, front = null, see
   if (!(ring?.length >= 3) || !(top > base)) return out;
   const rand = rng(seed);
   const height = top - base;
-  const floorH = style.floorHeight;
-  const floors = Math.max(1, Math.floor(height / floorH + 0.25));
+  // Same floor split as facadeKit()/extrudeFootprint(): whole floors, stretched to fit.
+  const floors = Math.max(1, Math.round(height / style.floorHeight));
+  const floorH = height / floors;
   const add = (module, wall, w, a, y, d, sx = 1, sy = 1, tint = null) => {
     out.push({ module, wall: w, position: [w.o[0] + w.t[0] * a + w.n[0] * d, y, w.o[1] + w.t[1] * a + w.n[1] * d], rotationY: wallYaw(w.t), scale: [sx, sy, 1], tint, wallIndex: wall });
   };

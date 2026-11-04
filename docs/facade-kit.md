@@ -91,19 +91,19 @@ shader's own window (src/render/geo-view.js) instead of fighting it.
    `bl = L / bays` (as `shopFront` in facade-kit.js). Modules are centered at
    `(k + 0.5) · bl` along the wall. Walls under 1.5 m get nothing
    (`KIT.sill.minWall`).
-2. **Floors.** Floor f starts at `base + f · style.floorHeight`
-   (`buildingSpan(level, b).base`); `floors = floor(height / floorHeight + 0.25)`.
+2. **Floors.** Floor f starts at `base + f · floorH`
+   (`buildingSpan(level, b).base`); `floors = max(1, round(height / style.floorHeight))` and `floorH = height / floors`, the same split as `facadeKit()` and the shader, so modules land on the shader's window cells.
    A window is not placed if its frame top would reach the wall top.
 3. **Windows.** The shader frame is `(window + FRAME)` cells (FRAME = 0.07),
    centered at `WINDOW_CENTER = 0.55` of the floor. So
    `scaleX = (window[0] + 0.07) · bl / size.x`,
-   `scaleY = (window[1] + 0.07) · floorHeight / size.y`, and the frame bottom
-   is `(0.55 − (window[1] + 0.07) / 2) · floorHeight` over the floor line.
+   `scaleY = (window[1] + 0.07) · floorH / size.y`, and the frame bottom
+   is `(0.55 − (window[1] + 0.07) / 2) · floorH` over the floor line.
    The module sizes are the style's own frame at its nominal bay, so the
    scale is 1.0 on a nominal bay.
 4. **Storefronts.** Opening `bl − 0.36` (`KIT.pier.width`): pick the width
    (26/32/45) nearest to it, then `scaleX = opening / size.x`;
-   `scaleY = (0.84 · floorHeight − 0.04) / 3.3` (the sign band starts at
+   `scaleY = (0.84 · floorH − 0.04) / 3.3` (the sign band starts at
    `KIT.sign.y0 = 0.84` of the floor). One door bay in the middle of the
    front edge, glass elsewhere, pilasters on the bay lines between.
 5. **Runs.** Cornice, parapet cap and belt course are 2 m segments:

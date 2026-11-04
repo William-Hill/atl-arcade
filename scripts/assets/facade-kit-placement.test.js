@@ -44,8 +44,9 @@ describe("facade kit placement", () => {
     expect(by.get("hvac_rooftop")).toHaveLength(1);
     // A window frame bottom sits where the shader frame starts.
     const win = by.get("window_brick_loft")[0];
-    const frameBottom = (0.55 - (s.window[1] + 0.07) / 2) * s.floorHeight;
-    expect((win.position[1] + 1e-9) % s.floorHeight).toBeCloseTo(frameBottom);
+    const floorH = 17 / Math.round(17 / s.floorHeight);
+    const frameBottom = (0.55 - (s.window[1] + 0.07) / 2) * floorH;
+    expect((win.position[1] + 1e-9) % floorH).toBeCloseTo(frameBottom);
     for (const it of out) for (const v of it.scale) expect(v).toBeGreaterThan(0.5);
     // Every roof unit is on the roof and inside the footprint.
     for (const it of out.filter((o) => o.wall === null)) {

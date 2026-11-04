@@ -37,6 +37,10 @@ import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
+import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
+import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
+import { createFactCardsView } from "./render/fact-cards-view.js";
+import { createFactPopup } from "./ui/fact-popup.js";
 
 const params = new URLSearchParams(window.location.search);
 // Start the slow downloads at once, in parallel with the level (#74): the
@@ -180,6 +184,30 @@ if (npcView) {
   scene.add(npcView.group);
 }
 
+// Fact cards (M1-07): 3 cards on the trail, from the open-data-atl site.
+// The cards show at once with the fixture text; a live text replaces it when
+// the call returns. ?facts=fixture|live|0 sets the mode (src/facts/client.js).
+const facts = { mode: factsMode(params.get("facts"), { webdriver: Boolean(navigator.webdriver) }), cards: [], live: "none" };
+const factData = facts.mode !== "off" && Object.hasOwn(LEVEL_FACTS, level.name) ? await LEVEL_FACTS[level.name]() : null;
+if (factData) {
+  facts.cards = fixtureFacts(factData.specs, factData.fixture).map((card, i) => {
+    const [x, z] = factData.specs[i].at;
+    const g = env.sampleGround(x, z);
+    return { ...card, position: [x, g ? g.height : 0, z] };
+  });
+  if (facts.mode === "live") {
+    facts.live = "pending";
+    loadFacts(factData.specs, factData.fixture, { base: factsBase(import.meta.env.DEV) }).then((loaded) => {
+      facts.cards = facts.cards.map((c, i) => ({ ...loaded[i], position: c.position }));
+      facts.live = loaded.some((c) => c.origin === "live") ? "live" : "fixture";
+    });
+  }
+}
+const factCardsView = facts.cards.length ? createFactCardsView(facts.cards) : null;
+if (factCardsView) scene.add(factCardsView.group);
+const factPopup = facts.cards.length ? createFactPopup(document.body) : null;
+const factCardSpots = () => facts.cards.map((c) => ({ id: c.id, position: c.position }));
+
 const skaterView = createSkaterView();
 scene.add(skaterView.group);
 
@@ -292,7 +320,7 @@ const touch = wantsTouch(params.get("touch"), { maxTouchPoints: navigator.maxTou
   : null;
 if (touch) document.body.classList.add("touch");
 const input = createInput({ target: window, touch });
-let run = createRun(level);
+let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch) });
 // The minimap (#86) on a geodata level. ?minimap=0 leaves it out, and
@@ -340,6 +368,11 @@ function simulate(dt) {
   }
   if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
   if (skater.respawned) events.push({ tick: run.tick, type: "respawn" });
+  for (const id of run.factsCollected) {
+    events.push({ tick: run.tick, type: "fact", id, count: run.cards.count });
+    const card = facts.cards.find((c) => c.id === id);
+    if (card && factPopup) factPopup.show(card, performance.now(), { count: run.cards.count, total: run.cards.total });
+  }
   if (skater.justSnapped) events.push({ tick: skater.tick, type: "snap", id: skater.grind.id, s: skater.grind.s });
   if (skater.justExited) events.push({ tick: skater.tick, type: "exit", reason: skater.exitReason, position: [...skater.position] });
   if (skater.justFell) events.push({ tick: skater.tick, type: "fall", position: [...skater.position] });
@@ -350,7 +383,7 @@ function simulate(dt) {
 let follow = null;
 
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
-  run = createRun(level, { position, yaw });
+  run = createRun(level, { position, yaw, cards: factCardSpots() });
   skater = run.skater;
   if (crowd) crowd = createCrowd(level, { seed: npcSeed });
   events.length = 0;
@@ -438,6 +471,8 @@ function frame(now) {
   }
   hud.update(run, now, beat.running ? beat.phase() : null);
   if (minimap) minimap.update(skater);
+  if (factCardsView) factCardsView.update(run.cards.collected, now / 1000);
+  if (factPopup) factPopup.update(now);
   if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
   if (blob) {
     // With the skater height, as the controller samples: under a bridge the
@@ -578,6 +613,29 @@ window.__atl = {
     : null,
   get events() {
     return events;
+  },
+  // Fact cards (M1-07). `collected` is the count in this run (the same as
+  // run.cards.count), for the goal list (#15) and the tests.
+  facts: {
+    mode: facts.mode,
+    get live() {
+      return facts.live;
+    },
+    get collected() {
+      return run.cards.count;
+    },
+    get total() {
+      return run.cards.total;
+    },
+    get cards() {
+      return facts.cards.map((c) => ({ id: c.id, text: c.text, dataset: c.dataset, sourceUrl: c.sourceUrl, origin: c.origin, position: [...c.position], collected: run.cards.collected.includes(c.id) }));
+    },
+    get popup() {
+      return factPopup ? factPopup.state : null;
+    },
+    get visibleCards() {
+      return factCardsView ? factCardsView.visibleCount : 0;
+    },
   },
   get combo() {
     return run.combo;

@@ -4,8 +4,9 @@
 // Placement rules (also in docs/decisions.md):
 // - Trail: a tree each 12 m on each side, 2.5 m past the edge; a lamp each
 //   24 m, sides in turn, 0.7 m past the edge; a bench each 60 m, 1.2 m past
-//   the edge and turned to face the trail, with a bin 2.5 m after it; a bike
-//   rack each 180 m.
+//   the edge and turned to face the trail, with a bin 2.5 m after it (each
+//   second pair of benches is the Poly Haven painted bench); a bike rack
+//   each 180 m.
 // - Sidewalks: a tree each 16 m and a lamp each 36 m, 1.8 m and 0.5 m past
 //   the edge, on the side that is open ground.
 // - Trees (issue #137): each row tree gets a species from its setting (the
@@ -35,6 +36,8 @@ export const PROP_SOLID = {
   tree_tall: { r: 0.3, h: 2.0 },
   lamp: { r: 0.2, h: 4.2 },
   bench: { r: 0.9, h: 0.75 },
+  // The Poly Haven painted bench: 1.17 m x 0.50 m, 0.89 m high at the back.
+  bench_painted: { r: 0.65, h: 0.75 },
   bin: { r: 0.35, h: 1.05 },
   bike_rack: { r: 0.8, h: 0.85 },
   street_sign: { r: 0.12, h: 3.2 },
@@ -170,8 +173,11 @@ export function streetProps(level, sample) {
         const nz = dx * side;
         const bx = x + nx * (half + 1.2);
         const bz = z + nz * (half + 1.2);
-        // The bench front (+z of the template) faces the trail.
-        if (put("bench", bx, bz, yawFrontToward(-nx, -nz))) put("bin", bx + dx * 2.5, bz + dz * 2.5, 0);
+        // The bench front (+z of the template) faces the trail. The benches
+        // come in pairs, one on each side; each second pair is the painted
+        // bench.
+        const kind = Math.floor(i / 2) % 2 === 1 ? "bench_painted" : "bench";
+        if (put(kind, bx, bz, yawFrontToward(-nx, -nz))) put("bin", bx + dx * 2.5, bz + dz * 2.5, 0);
       });
       along(s.points, 180, 90, (x, z, dx, dz) => {
         put("bike_rack", x + dz * (half + 1.5), z - dx * (half + 1.5), yawToward(dx, dz));

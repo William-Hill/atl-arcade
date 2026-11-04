@@ -901,3 +901,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Not verified: the median FPS of 55 on the harness. The load average was 13 to 23 in every run. Both builds gave the same median (phone spawn, 3 runs: 30 FPS and a p90 of 50 ms on each build). Not measured: a real phone GPU.
 - The high tier loads to 7 frames in 11.1 s headless (`scripts/high-tier-check.mjs`, load average about 9).
 - Props at load: `levelProps()` takes about 165 ms in node (79 ms before), for 6955 props (3392 before).
+
+- In the level: on the trail, each second pair of benches is the painted bench (`bench_painted` in `src/level/geo/props.js`, solid radius 0.65 m). The BeltLine level has 14 kit benches and 13 painted benches. `loadPropTemplates()` in `src/render/geo-view.js` adds the GLB to the kit templates.
+- Not done: the painted bench has no LOD1, so it shows the 630-triangle shape at all distances. The Blender MCP add-on is at protocol 7 (the server expects 15), so its Poly Haven import is off. The models came from the Poly Haven API.

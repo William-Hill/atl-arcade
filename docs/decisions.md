@@ -675,6 +675,30 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Game code: no change. `src/main.js` and the recorder stay as they are.
 - Evidence: at a load average of 37 to 39, the old spec failed 4 of 4 runs (17, 19, 14, and 14 samples). At a load average of 120 to 45, the new spec passed 20 of 20 tests with `--repeat-each 5`.
 
+## 2026-11-03: Score ceiling and move balance (#75)
+
+- Problem: the multiplier was equal to the link count, with no repeat decay and no cap. A combo of n links of p points banked n × n × p. A held dance kept the combo open, so 120 s of one input held more than 1,400,000 points (GP-2 in `production/audits/2026-11-playability/fun-gameplay/FINDINGS.md`).
+- Repeat decay: in one combo, the same move name earns 100 %, 50 %, then 25 % of its points (`COMBO.repeatDecay`). A repeat past the end of the list earns 0 points and does not raise the multiplier. The decay starts again in each new combo. The key is the move name, so each dance in the Q list and the E list counts as a different move.
+- Multiplier cap: the multiplier is the count of links that earn points, from 1 to 10 (`COMBO.maxMultiplier`).
+- Grind rate: `COMBO.grindPerSecond` goes from 60 to 300. The best dance (spin) earns 160 points in 0.6 s, or 267 per second. A grind earns `100 + 300 × t` points, which is more than 300 per second for each length `t`.
+
+  | Grind | Old points (per second) | New points (per second) |
+  |---|---|---|
+  | 1 s | 160 (160) | 400 (400) |
+  | 3 s | 280 (93) | 1,000 (333) |
+
+- Ceiling: `src/sim/skate/balance.test.js` replays the three degenerate inputs from `fun-gameplay/balance-sim.json` for 120 s on flat ground. The test fails if the banked score plus the open combo is 25,000 points or more.
+
+  | Input (120 s) | Links | Old points | New points | New multiplier peak |
+  |---|---|---|---|---|
+  | Push 1 s, then hold W+Q (`holdQLate`) | 99 | 1,470,150 | 789 | 3 |
+  | Hold W, Q and E in turn each 1.2 s (`altQE`) | 148 | 3,432,120 | 21,380 | 10 |
+  | Hold W, Space every 0.7 s (`hops`) | 171 | 1,462,050 | 264 | 3 |
+
+- `altQE` stays the highest, because the Q and E lists have 8 dance names. The ceiling for one combo with only dances is 8 names × 1.75 × the dance points × 10. A grind, an air and the dances in one combo give more.
+- Also: `comboTick` now reads the link window from its `k` argument (GP-10).
+- Not verified: real skaters have not reviewed the balance. No human played the new numbers.
+
 ## 2026-11-03: The window rooms keep their look when the camera turns
 
 - Problem: the windows on the BeltLine buildings flickered. The room hash in the facade shader (`src/render/geo-view.js`) used the view-space normal. Thus each camera turn gave a room a new color, light, blind, and furniture.
@@ -684,6 +708,19 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Shader cache key: `facade-v5`.
 - Test: `e2e/window-rooms.spec.js` turns the fixed camera in place by 0.9 degrees and maps each pixel to the first frame. For a pure rotation the mapped pixel sees the same world ray. With the fix, 21 of 53568 pixels changed (0.04%). With the old shader, 2696 of 53568 pixels changed (5.03%), and the test failed. The limit is 0.5%.
 - Not changed: the ink lines on thin far ledges (`src/render/post.js`) can still shimmer a little.
+
+## 2026-11-03: The minimap (#86, #108)
+
+- Decision: the minimap is a 2D canvas, not a second 3D render. `src/ui/minimap.js` draws the level one time to a base image: the park areas, the strips (sidewalk, street, path, and the trail last), and the building footprints. Each frame draws only the base image part around the skater, with a move and a turn, then the landmark icons and the skater arrow.
+- Pure math: `src/ui/minimap-math.js` converts world coordinates to map pixels (`worldToMap`), makes the view transform for north up and heading up (`viewTransform`), and finds the icon points (`mapLandmarks`). Vitest tests it in `src/ui/minimap-math.test.js`.
+- Base image: 1 px per meter, and the largest side is 2048 px or less. The Eastside level gives 971x1946 px. The view shows 240 m across.
+- Draw cost: the map draws again only when the skater moves by 0.25 view pixels or more, or turns, or the mode changes (`needsRedraw`). A still skater gives no draws.
+- Icons: the landmark buildings of `src/level/geo/landmarks.js` get a gold disc with initials ("PCM", "KSM"), and their footprints are gold. Each named park gets a green triangle. The skater is a white arrow. The trail is the widest line (9 m or more). Thus no item shows by color only. The canvas has `role="img"` and an `aria-label` that names the level, the mode, and the icons.
+- Controls: the "N" button and the N key change north up and heading up. In heading up, an "N" mark on the edge shows north. The "×" button and the M key hide the map, and a "Map" button shows it again. The choice stays in `localStorage` (key `atl.minimap`). `?minimap=0` leaves the map out, and `?minimap=north` or `?minimap=heading` sets the mode.
+- Layout: a desktop shows a 180 px map in the bottom right corner. The key help line on the bottom left gets a max width, so the map does not cover it. A touch screen shows the map in the top right corner under the skater select. A compact screen shows it 76 px from the top, with a size of `clamp(72px, 100vh - 268px - safe areas, 120px)`, so it ends above the touch buttons. Every position adds the safe-area inset.
+- Only a geodata level has the map. The greybox has no footprints or trail.
+- Tests: `e2e/minimap.spec.js` checks the trail pixels, the arrow, the icons, the keys, the saved choice, no draws for a still skater, and no overlap with the touch controls, the HUD, the credit, or the skater select at 390x844 and 844x390. `e2e/phone-layout.spec.js` also lists the map in its overlap check. Screenshots: `e2e/__screenshots__/minimap-desktop.png`, `minimap-desktop-close.png`, `minimap-phone-portrait.png`, and `minimap-phone-landscape.png`.
+- FPS: not verified against the 55 FPS gate. At a load average of 15 to 19 (other sessions on the same machine), `npm run playtest:beltline` gave a median of 29.9 FPS with `?minimap=0` and 29.9 FPS with the map. Thus the map adds no measurable cost, but the gate run must be done again on an idle machine. Reports: `reports/playtest-beltline-eastside-2026-11-04-01-11-17.json` (no map) and `reports/playtest-beltline-eastside-2026-11-04-01-12-03.json` (map). In the browser, one map draw took 0.1 ms or less (p95 of 300 draws), and the base image took 3.5 ms one time.
 
 ## 2026-11-03: The far terrain uses the mesh bounds, not the tile square (#87)
 
@@ -695,3 +732,42 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Test hook: `window.__atl.level.terrainLod` gives `{ tiles, far, nearestFar }`. `nearestFar` is the distance from the camera to the nearest far tile.
 - Tests: `src/level/geo/geo-mesh.test.js` checks the bounds and tile `1,-3`. `e2e/far-terrain.spec.js` opens the spawn on the low tier, checks `nearestFar > 60`, and saves `e2e/__screenshots__/far-terrain-spawn-low.png`. Not verified: the `nearestFar` check against the old distance test. The old `geo-view.js` has no `terrainLod` hook, so the spec fails there before that check.
 - Evidence: `reports/far-terrain/spawn-low-before.png` and `reports/far-terrain/spawn-low-after.png`.
+
+## 2026-11-03: Street-sign names from the City of Atlanta centerlines (#78)
+
+- Problem: the audit (#65, GEO-1 and GEO-4) found sign names that do not match the city data. Two signs said "Closed Lake Ave", an OSM mapper note on way 586825917.
+- Source: the City of Atlanta street centerlines, open-data-atl catalog `atl-street-centerlines`. `scripts/city-streets.mjs` writes `levels/beltline-eastside/raw/city-streets.json` (199 segments, fetched 2026-11-03). The build runs offline after the fetch.
+- Data model: the strip `name` stays the OSM name (ODbL data). The build adds `signName` (the name on the sign) and `nameSource` (`city`, `reviewed`, or `osm`) to each named street strip. The level attribution adds "Street names: City of Atlanta Department of City Planning".
+- Rules (`scripts/street-names.mjs`), in this order for each named street strip:
+  1. A city line within 40 m has the same name. The sign uses the OSM name.
+  2. A city line within 40 m has the same name without the quadrant, or a spelling one letter apart. The sign uses the city label.
+  3. The OSM name is in `REVIEWED`. The sign uses the OSM name.
+  4. One city line within 15 m runs along 60% or more of the strip. The sign uses the city label.
+  5. No city line matches. The OSM name is the fallback, with `nameSource: "osm"` and no `signName`. A sign does not show a fallback name. The crosswalks at that intersection stay.
+- Capitals: the sign keeps the OSM capitals where the words are equal. Thus "Ralph McGill", not the city "Ralph Mcgill", and "Ponce de Leon", not "Ponce De Leon".
+- Reviewed name: "John Lewis Freedom Pkwy NE". The city renamed Freedom Parkway in 2018, but the city layer still has "Freedom Pkwy North NE" and "Freedom Pkwy South NE". The audit confirms the new name.
+- Changed sign names (old, then new):
+
+  | Old name | New name | Rule | OSM ways |
+  |---|---|---|---|
+  | Closed Lake Ave | Brickworks Cir NE | 4 | w586825917 |
+  | Brickworks Cir | Brickworks Cir NE | 2 | w218549750, w218549751, w218549752, w586825916 |
+  | Bishop Way NE | Bishops Way NE | 2 | w243830594 |
+  | Austin Ave NE | Lake Ave NE | 4 | w9246448 |
+  | Ralph McGill Blvd | Ralph McGill Blvd NE | 2 | w28688645, w630643907 |
+  | Patterson Way NE | Patterson Way | 2 | w232548873 |
+  | Inman Ln | Inman Ln NE | 2 | w211062133 |
+  | Inman Way | Inman Way NE | 2 | w211062141 |
+  | Irwin Pl | Irwin Pl NE | 2 | w243830604 |
+  | Kendall St | Kendall St NE | 2 | w93212526 |
+  | Montag Cir | Montag Cir NE | 2 | w9239208 |
+  | Village Pkwy | Village Pkwy NE | 2 | w562435149, w562435152, w93727868 |
+  | Randolph St NE | Glen Iris Dr NE | 4 | w41545411, w41545414 |
+  | Rankin St NE | Dallas St NE | 4 | w1229184077 |
+  | Dallas St NE | Morgan St NE | 4 | w1466674340 |
+
+- The last 3 rows are short OSM pieces on the same line as a longer city segment with the other name. The city layer puts the name change at a different node than OSM. The city layer is the source, so the city name wins.
+- OSM fallback names with no sign: Prospect Way NE (w232548874), Garden Park Dr (w182470294), North Angier Ave NE (w1187794330), and Dallas St NE (w496236757). The city layer has no line near these strips. Ford Pl NE (w9277776) is a service road and has no sign in any case.
+- Result: 95 signs before, 88 after. 24 old corner pairs went and 17 new pairs came. Examples: "Brickworks Cir / Closed Lake Ave" and "Closed Lake Ave / West Ashland Ave NE" became one sign "Brickworks Cir NE / West Ashland Ave NE". The false corner "Ralph McGill Blvd / Ralph McGill Blvd NE" became "Ralph McGill Blvd NE / Fortune St NE". "Austin Ave NE / Elizabeth St NE" became "Elizabeth St NE / Lake Ave NE".
+- Test: `scripts/street-names.test.js` checks every sign name of the level against the city labels. Only a name in `REVIEWED` can differ. It also checks each rule on small fixtures. The byte-for-byte rebuild test in `scripts/build-block.test.js` covers the new raw file.
+- Not done: the sign blades are still too small to read on a phone (GEO-5, #24).

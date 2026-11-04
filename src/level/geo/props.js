@@ -114,6 +114,8 @@ export function streetProps(level, sample) {
   // The blades point along the streets: yaws[i] turns the blade (+x) along
   // street i.
   for (const ix of streetIntersections(level)) {
+    // A name that the city layer does not confirm gets no sign (issue #78).
+    if (!ix.confirmed) continue;
     const extra = { names: ix.names.map(shortName), yaws: ix.dirs.map(([dx, dz]) => Math.round(yawToward(dx, dz) * 1000) / 1000) };
     for (const [x, z] of cornerSpots(ix)) if (put("street_sign", x, z, 0, 1, extra)) break;
   }

@@ -26,15 +26,17 @@ export function placementMatrix({ x = 0, y = 0, z = 0, yaw = 0, scale = 1 }) {
   return [c, 0, -s, 0, 0, scale, 0, 0, s, 0, c, 0, x, y, z, 1];
 }
 
-// A template ({ positions, indices, colors, normals?, sway? }) as a
+// A template ({ positions, indices, colors, normals?, sway?, leaf? }) as a
 // geometry with the attribute set that the batch needs: position, normal,
-// color, sway, and an index.
+// color, sway, leaf, and an index.
 export function templateGeometry(t) {
   const geom = new THREE.BufferGeometry();
   const count = t.positions.length / 3;
   geom.setAttribute("position", new THREE.BufferAttribute(Float32Array.from(t.positions), 3));
   geom.setAttribute("color", new THREE.BufferAttribute(t.colors ? Float32Array.from(t.colors) : new Float32Array(count * 3).fill(1), 3));
   geom.setAttribute("sway", new THREE.BufferAttribute(t.sway ? Float32Array.from(t.sway) : new Float32Array(count), 1));
+  // The leaf cards of a tree (trees.js): [u, v, seed]. Seed 0 is "not a card".
+  geom.setAttribute("leaf", new THREE.BufferAttribute(t.leaf ? Float32Array.from(t.leaf) : new Float32Array(count * 3), 3));
   geom.setIndex(new THREE.BufferAttribute(Uint32Array.from(t.indices), 1));
   if (t.normals) geom.setAttribute("normal", new THREE.BufferAttribute(Float32Array.from(t.normals), 3));
   else geom.computeVertexNormals();

@@ -7,6 +7,11 @@
 // - A sill under each upper-floor window, at the window that the facade
 //   shader paints, so the wall has real depth.
 // - Piers between the storefront bays on the ground floor.
+// - A crown on a brick loft or warehouse: a raised center parapet with a
+//   blank stone name panel, and a stair bulkhead box on the roof.
+// - A shop front on the front wall of a storefront style: a painted sign
+//   band in each bay, blank cream boards, and awnings when no street wall
+//   has them.
 //
 // The output is a list of meshes { tile, mesh: { positions, indices,
 // colors, facade } }, one per GEO_TILE square, with the building tile keys
@@ -21,8 +26,9 @@
 // The faces do not share vertices, so each face gets its own flat normal.
 
 import { FACE, orientRing } from "./extrude.js";
-import { GEO_TILE, muralWalls } from "./geo-mesh.js";
-import { BELT, STYLES, STYLE_INDEX, chooseStyle, hash32, wallColor } from "./styles.js";
+import { createGeoGroundSampler, pointInRings } from "./geo-ground.js";
+import { AWNING_COLORS, GEO_TILE, buildingTest, muralWalls, streetTest, streetWalls } from "./geo-mesh.js";
+import { BELT, SIGN_COLORS, STYLES, STYLE_INDEX, awningHeight, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
 import { buildingSpan } from "./terrain.js";
 
 export const KIT = {
@@ -37,6 +43,17 @@ export const KIT = {
   pier: { out: 0.16, width: 0.36 },
   // A miter longer than this many offsets is cut off (a sharp corner).
   miterLimit: 3,
+  // The crown: the raised center panel goes `depth` into the roof from the
+  // wall line, its coping sticks out `copingOut`, and the blank name panel
+  // sticks out `nameOut`. The bulkhead stands `margin` from every wall,
+  // `end` from the end wall, with a coping `bulkheadCoping` [out, height].
+  crown: { minBays: 4, depth: 0.3, copingOut: 0.1, nameOut: 0.04, nameWidth: 0.6, nameHeight: 0.5, end: 1.5, margin: 1.0, minAcross: 2.0, bulkheadCoping: [0.06, 0.12] },
+  // The shop front: the sign band starts `pierGap` from each pier center
+  // and sticks out `out`; it goes from `y0` of the floor to under the belt
+  // course. A board is `boardOut` in front of the band.
+  sign: { pierGap: 0.24, out: 0.07, y0: 0.84, beltGap: 0.04, boardOut: 0.02, boardWidth: 0.7, boardHeight: 0.6 },
+  // A kit awning: the same shape as awningsFor() in geo-mesh.js.
+  awning: { out: 1.3, drop: 0.5, valance: 0.3, t0: 0.12, t1: 0.88, minChance: 0.5 },
 };
 // A curtain wall and an open parking deck have no sills.
 const NO_SILLS = new Set(["glass-office", "parking-deck"]);
@@ -336,16 +353,320 @@ export function gableRoof(m, ring, top, wall, shingle, style) {
   return true;
 }
 
+// A closed box on a wall: from a0 to a1 along the wall, from d0 to d1 out
+// of the wall line (a negative value is inside the wall), and from y0 to
+// y1. It has all 6 faces, so it shows no hole from any side. `bottom: false`
+// leaves out the bottom face.
+export function solidBox(m, o, t, n, a0, a1, d0, d1, y0, y1, color, style, bottom = true) {
+  const at = (a, y, d) => [o[0] + t[0] * a + n[0] * d, y, o[1] + t[1] * a + n[1] * d];
+  quad(m, at(a0, y0, d1), at(a1, y0, d1), at(a1, y1, d1), at(a0, y1, d1), color, [n[0], 0, n[1]], style);
+  quad(m, at(a0, y0, d0), at(a1, y0, d0), at(a1, y1, d0), at(a0, y1, d0), color, [-n[0], 0, -n[1]], style);
+  quad(m, at(a0, y1, d0), at(a1, y1, d0), at(a1, y1, d1), at(a0, y1, d1), color, [0, 1, 0], style);
+  if (bottom) quad(m, at(a0, y0, d0), at(a1, y0, d0), at(a1, y0, d1), at(a0, y0, d1), color, [0, -1, 0], style);
+  quad(m, at(a0, y0, d0), at(a0, y0, d1), at(a0, y1, d1), at(a0, y1, d0), color, [-t[0], 0, -t[1]], style);
+  quad(m, at(a1, y0, d0), at(a1, y0, d1), at(a1, y1, d1), at(a1, y1, d0), color, [t[0], 0, t[1]], style);
+}
+
+// The wall i of a ring: { o: start [x, z], t: unit along, n: unit outward
+// normal, len }.
+function wallOf(ring, i) {
+  const [px, pz] = ring[i];
+  const [qx, qz] = ring[(i + 1) % ring.length];
+  const len = Math.hypot(qx - px, qz - pz) || 1;
+  const t = [(qx - px) / len, (qz - pz) / len];
+  // The outward normal of an outer ring edge is (-dz, dx); see offsetRing().
+  return { o: [px, pz], t, n: [-t[1], t[0]], len };
+}
+
+function longestWall(ring, walls = ring.map((_, i) => i)) {
+  let best = -1;
+  let bestLen = -1;
+  for (const i of walls) {
+    const len = wallOf(ring, i).len;
+    if (len > bestLen) {
+      best = i;
+      bestLen = len;
+    }
+  }
+  return best;
+}
+
+// The raised center parapet on the longest wall: a solid box over the
+// center 3 bays (an odd bay count) or 2 bays (an even count), `crown.step`
+// meters over the parapet top, with a stone coping and a blank stone name
+// panel. The box stands on the roof, so it is closed from the roof side.
+// The panel edges are on bay lines, so they are on the window grid.
+// Returns 1 when it builds the panel, else 0.
+export function crownPanel(m, ring, top, style, si, wall) {
+  const c = KIT.crown;
+  const i = longestWall(ring);
+  if (i < 0) return 0;
+  const { o, t, n, len } = wallOf(ring, i);
+  const bays = Math.max(1, Math.round(len / style.bay));
+  if (bays < c.minBays) return 0;
+  const bl = len / bays;
+  const k = bays % 2 ? 3 : 2;
+  const a0 = ((bays - k) / 2) * bl;
+  const a1 = a0 + k * bl;
+  const p = style.parapet ?? 0;
+  const y1 = top + p + style.crown.step;
+  // The box goes down to the roof at the back. Its front starts at the
+  // parapet top, so it does not cover the parapet face of extrudeFootprint().
+  quad(m, [o[0] + t[0] * a0, top + p, o[1] + t[1] * a0], [o[0] + t[0] * a1, top + p, o[1] + t[1] * a1], [o[0] + t[0] * a1, y1, o[1] + t[1] * a1], [o[0] + t[0] * a0, y1, o[1] + t[1] * a0], wall, [n[0], 0, n[1]], si);
+  solidBoxNoFront(m, o, t, n, a0, a1, -c.depth, 0, top, y1, wall, si);
+  // The coping: out on all sides, and a closed box.
+  const co = c.copingOut;
+  solidBox(m, o, t, n, a0 - co, a1 + co, -c.depth - co, co, y1, y1 + KIT.coping.height, style.trim, si);
+  // The name panel: blank, with no text.
+  const w = (a1 - a0) * c.nameWidth;
+  const am = (a0 + a1) / 2;
+  const ym = top + p + style.crown.step / 2;
+  const h = style.crown.step * c.nameHeight;
+  wallBox(m, o, t, n, am - w / 2, am + w / 2, ym - h / 2, ym + h / 2, c.nameOut, style.trim, si);
+  return 1;
+}
+
+// The back, the top, and the two ends of a box from d0 to d1 (no front and
+// no bottom face).
+function solidBoxNoFront(m, o, t, n, a0, a1, d0, d1, y0, y1, color, style) {
+  const at = (a, y, d) => [o[0] + t[0] * a + n[0] * d, y, o[1] + t[1] * a + n[1] * d];
+  quad(m, at(a0, y0, d0), at(a1, y0, d0), at(a1, y1, d0), at(a0, y1, d0), color, [-n[0], 0, -n[1]], style);
+  quad(m, at(a0, y1, d0), at(a1, y1, d0), at(a1, y1, d1), at(a0, y1, d1), color, [0, 1, 0], style);
+  quad(m, at(a0, y0, d0), at(a0, y0, d1), at(a0, y1, d1), at(a0, y1, d0), color, [-t[0], 0, -t[1]], style);
+  quad(m, at(a1, y0, d0), at(a1, y0, d1), at(a1, y1, d1), at(a1, y1, d0), color, [t[0], 0, t[1]], style);
+}
+
+// The stair bulkhead: a box on the roof at one end of the long axis of the
+// footprint rectangle (`seed & 1` picks the end), with a stone coping.
+// Returns 1 when it builds the box, else 0. It builds no box when the box
+// is too narrow or when it does not stand `crown.margin` from every wall.
+export function stairBulkhead(m, ring, top, style, si, wall, seed) {
+  const c = KIT.crown;
+  const r = minRect(ring);
+  if (!r) return 0;
+  const [along, across0, height] = style.crown.bulkhead;
+  const across = Math.min(across0, r.short - 2.4);
+  if (across < c.minAcross) return 0;
+  const side = seed & 1 ? 1 : -1;
+  const off = side * (r.long / 2 - c.end - along / 2);
+  const cx = r.cx + r.ux * off;
+  const cz = r.cz + r.uz * off;
+  // u along the long axis, v across it.
+  const u = [r.ux, r.uz];
+  const v = [-r.uz, r.ux];
+  const ha = along / 2;
+  const hc = across / 2;
+  for (const [sa, sc] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+    const x = cx + u[0] * sa * (ha + c.margin) + v[0] * sc * (hc + c.margin);
+    const z = cz + u[1] * sa * (ha + c.margin) + v[1] * sc * (hc + c.margin);
+    if (!pointInRings(x, z, [ring])) return 0;
+  }
+  // A box on a "wall" through the center: o is the box center, t is u,
+  // and n is v, so a runs along u and d runs along v.
+  const o = [cx, cz];
+  solidBox(m, o, u, v, -ha, ha, -hc, hc, top, top + height, wall, si, false);
+  const [co, ch] = c.bulkheadCoping;
+  solidBox(m, o, u, v, -ha - co, ha + co, -hc - co, hc + co, top + height, top + height + ch, style.trim, si);
+  return 1;
+}
+
+// The crown of one building, into mesh `m`: the raised center parapet and
+// the stair bulkhead. `top` is the wall top, `wall` the wall color, and
+// `seed` a hash of the building id. Returns { crown, bulkhead }.
+export function crownKit(m, ring, top, style, si, wall, seed) {
+  if (!style.crown) return { crown: 0, bulkhead: 0 };
+  return { crown: crownPanel(m, ring, top, style, si, wall), bulkhead: stairBulkhead(m, ring, top, style, si, wall, seed) };
+}
+
+// The choice of the front wall when no wall faces a street (frontEdge()).
+// A wall can be the front when it is at least `minLength` of the longest
+// wall. From 3 points on the wall (`samples`, fractions of the wall), the
+// test marches out along the normal from `near` to `far` meters in `step`
+// meter steps. It stops at the first footprint of another building. A
+// neighbor wall wraps the sign band when it also faces open ground: its
+// mean open distance is at least `wrapOpen`, or it faces a street.
+export const FRONT = { near: 4, far: 60, step: 2, minLength: 0.7, samples: [0.25, 0.5, 0.75], wrapOpen: 20, minWrap: 4 };
+
+// Pure: what wall i of a ring looks out on. `isStreet(x, z)` is true on a
+// street; `isBlocked(x, z)` is true in the footprint of another building or
+// out of the level. Returns { street, open }: the median over the sample
+// lines of the distance to a street before a footprint (Infinity when a
+// line has none), and the mean distance to the first footprint (FRONT.far
+// when there is none). The median ignores one stray street sample, such as
+// a short drive between the wall and a neighbor.
+export function wallOutlook(ring, i, isStreet, isBlocked = () => false, f = FRONT) {
+  const { o, t, n, len } = wallOf(ring, i);
+  const streets = [];
+  let open = 0;
+  for (const s of f.samples) {
+    const x0 = o[0] + t[0] * len * s;
+    const z0 = o[1] + t[1] * len * s;
+    let hit = f.far;
+    let street = Infinity;
+    for (let d = f.near; d <= f.far; d += f.step) {
+      const x = x0 + n[0] * d;
+      const z = z0 + n[1] * d;
+      if (isBlocked(x, z)) {
+        hit = d;
+        break;
+      }
+      if (street === Infinity && isStreet(x, z)) street = d;
+    }
+    streets.push(street);
+    open += hit;
+  }
+  streets.sort((a, b) => a - b);
+  return { street: streets[Math.floor(streets.length / 2)], open: open / f.samples.length };
+}
+
+// True when the corner between wall i and the next wall is an outside
+// corner, so a sign band can turn it.
+function outsideCorner(ring, i) {
+  const a = wallOf(ring, i);
+  const b = wallOf(ring, (i + 1) % ring.length);
+  return a.n[0] * b.t[0] + a.n[1] * b.t[1] < -0.5;
+}
+
+// The walls next to the front wall `edge` that the sign band wraps onto.
+function wrapWalls(ring, edge, isStreet, isBlocked, streets, f) {
+  const n = ring.length;
+  const out = [];
+  const next = (edge + 1) % n;
+  const prev = (edge - 1 + n) % n;
+  for (const [j, corner] of [[prev, prev], [next, edge]]) {
+    if (j === edge || out.includes(j) || !outsideCorner(ring, corner)) continue;
+    if (wallOf(ring, j).len < f.minWrap) continue;
+    if (streets.includes(j) || wallOutlook(ring, j, isStreet, isBlocked, f).open >= f.wrapOpen) out.push(j);
+  }
+  return out;
+}
+
+// The front wall of a building: the longest wall that faces a street
+// (streetWalls() in geo-mesh.js), with `street: true`. Else, of the long
+// walls (FRONT.minLength), the wall with the nearest street in front of
+// it, then the wall with the most open ground, then the longest wall, with
+// `street: false`. So a shop front does not face the back of a neighbor.
+// `wraps` lists the next walls that the sign band turns onto (wrapWalls()).
+// Returns { edge, street, wraps }.
+export function frontEdge(ring, isStreet, isBlocked = () => false, f = FRONT) {
+  const walls = streetWalls(ring, isStreet);
+  if (walls.length) {
+    const edge = longestWall(ring, walls);
+    return { edge, street: true, wraps: wrapWalls(ring, edge, isStreet, isBlocked, walls, f) };
+  }
+  const longest = wallOf(ring, longestWall(ring)).len;
+  let best = null;
+  for (let i = 0; i < ring.length; i += 1) {
+    const len = wallOf(ring, i).len;
+    if (len < longest * f.minLength - 1e-9) continue;
+    const c = { i, len, ...wallOutlook(ring, i, isStreet, isBlocked, f) };
+    if (!best || c.street < best.street || (c.street === best.street && (c.open > best.open + 1e-9 || (Math.abs(c.open - best.open) <= 1e-9 && c.len > best.len + 1e-9)))) best = c;
+  }
+  return { edge: best.i, street: false, wraps: wrapWalls(ring, best.i, isStreet, isBlocked, walls, f) };
+}
+
+// A double-sided quad, so an awning shows from below and from above.
+function twoSided(m, a, b, c, d, color, normal, style) {
+  quad(m, a, b, c, d, color, normal, style);
+  quad(m, a, b, c, d, color, [-normal[0], -normal[1], -normal[2]], style);
+}
+
+// The sign band in bay k of a wall (wallOf()) with `bays` bays, from y0 to
+// y1, and a blank board on it when `board` is true. The band has only a
+// front face and a top face, and the board has only a front face. The
+// piers stand in front of the band ends, and this keeps the triangle count
+// low (there are about 2,000 bands on the BeltLine level). Returns true
+// when it builds the band.
+function signBay(m, { o, t, n, len }, bays, k, y0, y1, color, style, si, board) {
+  const g = KIT.sign;
+  const bl = len / bays;
+  const w = KIT.pier.width / 2;
+  // The pier centers, as in wallDepth().
+  const pier = (i) => Math.min(Math.max(i * bl, w), len - w);
+  const a0 = pier(k) + g.pierGap;
+  const a1 = pier(k + 1) - g.pierGap;
+  if (!(y1 > y0) || a1 - a0 < 0.5) return false;
+  const at = (a, y, d) => [o[0] + t[0] * a + n[0] * d, y, o[1] + t[1] * a + n[1] * d];
+  const out = [n[0], 0, n[1]];
+  quad(m, at(a0, y0, g.out), at(a1, y0, g.out), at(a1, y1, g.out), at(a0, y1, g.out), color, out, si);
+  quad(m, at(a0, y1, 0), at(a1, y1, 0), at(a1, y1, g.out), at(a0, y1, g.out), color, [0, 1, 0], si);
+  if (!board) return true;
+  // A blank board on the band. It reads as a shop name at 30 m.
+  const bw = (a1 - a0) * g.boardWidth;
+  const bh = (y1 - y0) * g.boardHeight;
+  const am = (a0 + a1) / 2;
+  const ym = (y0 + y1) / 2;
+  const d = g.out + g.boardOut;
+  quad(m, at(am - bw / 2, ym - bh / 2, d), at(am + bw / 2, ym - bh / 2, d), at(am + bw / 2, ym + bh / 2, d), at(am - bw / 2, ym + bh / 2, d), style.trim, out, si);
+  return true;
+}
+
+// The shop front on the wall `front.edge` (frontEdge()) of one storefront
+// building, into mesh `m`: a painted sign band in each bay between the
+// piers, a blank cream board on every second bay, the band on the corner
+// bay of each wall in `front.wraps`, and awnings when
+// `front.street` is false (awningsFor() covers a street wall). The walls go
+// from `base`, with floors of `floorH`. `seed` picks the sign color and the
+// awning bays. Returns { sign, awning }.
+//
+// The kit awnings are render-only. They hang under the sign band, so the
+// band stays in view.
+export function shopFront(m, ring, style, si, base, floorH, front, seed, awningColor = AWNING_COLORS[seed % AWNING_COLORS.length]) {
+  const counts = { sign: 0, awning: 0 };
+  if (!front || front.edge < 0 || front.edge >= ring.length) return counts;
+  const { o, t, n, len } = wallOf(ring, front.edge);
+  if (len < KIT.pier.width * 2) return counts;
+  const g = KIT.sign;
+  const bays = Math.max(1, Math.round(len / style.bay));
+  const bl = len / bays;
+  const y0 = base + g.y0 * floorH;
+  const y1 = base + floorH - KIT.belt.height / 2 - g.beltGap;
+  const color = SIGN_COLORS[seed % SIGN_COLORS.length];
+  const at = (a, y, d) => [o[0] + t[0] * a + n[0] * d, y, o[1] + t[1] * a + n[1] * d];
+  for (let k = 0; k < bays; k += 1) if (signBay(m, wallOf(ring, front.edge), bays, k, y0, y1, color, style, si, k % 2 === 0)) counts.sign += 1;
+  // The sign band turns the corner: the bay at the corner of each wrap wall.
+  for (const j of front.wraps ?? []) {
+    const wj = wallOf(ring, j);
+    const bj = Math.max(1, Math.round(wj.len / style.bay));
+    const k = j === (front.edge + 1) % ring.length ? 0 : bj - 1;
+    if (signBay(m, wj, bj, k, y0, y1, color, style, si, true)) counts.sign += 1;
+  }
+  if (front.street || !(style.awnings > 0)) return counts;
+  const aw = KIT.awning;
+  const rand = seededRandom(seed);
+  const chosen = new Set();
+  for (let k = 0; k < bays; k += 1) if (rand() < Math.max(style.awnings, aw.minChance)) chosen.add(k);
+  if (chosen.size < 2) {
+    const c0 = Math.floor((bays - 1) / 2);
+    chosen.add(c0);
+    chosen.add(Math.min(bays - 1, c0 + 1));
+  }
+  // Under the sign band, and no higher than the street awnings.
+  const top = Math.min(base + awningHeight(style), y0);
+  const slope = [n[0] * aw.drop, aw.out, n[1] * aw.drop];
+  for (const k of [...chosen].sort((a, b) => a - b)) {
+    const a0 = (k + aw.t0) * bl;
+    const a1 = (k + aw.t1) * bl;
+    const yb = top - aw.drop;
+    twoSided(m, at(a0, top, 0.02), at(a1, top, 0.02), at(a1, yb, 0.02 + aw.out), at(a0, yb, 0.02 + aw.out), awningColor, slope, si);
+    twoSided(m, at(a0, yb, 0.02 + aw.out), at(a1, yb, 0.02 + aw.out), at(a1, yb - aw.valance, 0.02 + aw.out), at(a0, yb - aw.valance, 0.02 + aw.out), awningColor, [n[0], 0, n[1]], si);
+    counts.awning += 1;
+  }
+  return counts;
+}
+
 // The kit parts for one building, into mesh `m`. Returns the part counts.
 // `span` ({ base, top }, src/level/geo/terrain.js) is where the walls stand;
 // without it the building stands on y = 0. The sills and the piers go into
 // mesh `depth` (by default `m`).
 // `mural` is the mural of the building, if it has one (see wallDepth()).
-export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null) {
+// `front` ({ edge, street }, frontEdge()) is the front wall. Without it the
+// building gets no shop front.
+export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null, front = null) {
   const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
   const si = STYLE_INDEX[style.id];
   const ring = orientRing(b.outer, false);
-  const counts = { cornice: 0, coping: 0, belt: 0, roof: 0, sill: 0, pier: 0 };
+  const counts = { cornice: 0, coping: 0, belt: 0, roof: 0, sill: 0, pier: 0, crown: 0, bulkhead: 0, sign: 0, awning: 0 };
   if (ring.length < 3 || !(b.height > 0)) return counts;
   const { base, top } = span;
   // The same floor count as extrudeFootprint(), so the belt course sits on
@@ -369,10 +690,21 @@ export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, 
     ledge(m, ring, top + p, top + p + KIT.coping.height, KIT.coping.out, style.trim, si);
     counts.coping = 1;
   }
+  if (style.crown) {
+    const c = crownKit(m, ring, top, style, si, wallColor(style, b.id), hash32(`${b.id}:crown`));
+    counts.crown = c.crown;
+    counts.bulkhead = c.bulkhead;
+  }
   if (style.storefront && floors >= 2) {
     const y = base + floorH - KIT.belt.height / 2;
     ledge(m, ring, y, y + KIT.belt.height, KIT.belt.out, style.trim, si);
     counts.belt = 1;
+    if (front) {
+      const awningColor = AWNING_COLORS[hash32(`${b.id}:awning-color`) % AWNING_COLORS.length];
+      const c = shopFront(m, ring, style, si, base, floorH, front, hash32(`${b.id}:shop`), awningColor);
+      counts.sign = c.sign;
+      counts.awning = c.awning;
+    }
   }
   return counts;
 }
@@ -383,12 +715,28 @@ function packMesh(m) {
   return out;
 }
 
+// Pure: the front wall (frontEdge()) of every storefront building of a
+// level, as a Map from the building id. The kit and the aprons (aprons.js)
+// use the same fronts.
+export function frontEdges(level) {
+  const sample = createGeoGroundSampler(level);
+  const isStreet = streetTest(level, sample);
+  const blockedFor = buildingTest(level, sample);
+  const out = new Map();
+  for (const b of level.buildings ?? []) {
+    if (!(b.outer?.length >= 3) || !STYLES[STYLE_INDEX[chooseStyle(b)]].storefront) continue;
+    out.set(b.id, frontEdge(orientRing(b.outer, false), isStreet, blockedFor(b.id)));
+  }
+  return out;
+}
+
 // Returns { tiles: [{ tile, mesh }], one per building tile; depthTiles:
 // [{ tile, center: [x, z], mesh }], one per DEPTH_TILE square; counts }.
-export function facadeKit(level) {
+// `fronts` is the Map of frontEdges(), to share it with the aprons.
+export function facadeKit(level, fronts = frontEdges(level)) {
   const tiles = new Map();
   const depthTiles = new Map();
-  const counts = { cornice: 0, coping: 0, belt: 0, roof: 0, sill: 0, pier: 0 };
+  const counts = { cornice: 0, coping: 0, belt: 0, roof: 0, sill: 0, pier: 0, crown: 0, bulkhead: 0, sign: 0, awning: 0 };
   const buildings = (level.buildings ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));
   const murals = new Map(muralWalls(level).map((mw) => [mw.id, mw]));
   for (const b of buildings) {
@@ -399,7 +747,8 @@ export function facadeKit(level) {
     const dkey = `${Math.floor(x / DEPTH_TILE)},${Math.floor(z / DEPTH_TILE)}`;
     let dm = depthTiles.get(dkey);
     if (!dm) depthTiles.set(dkey, (dm = emptyMesh(true)));
-    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null);
+    const front = fronts.get(b.id) ?? null;
+    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null, front);
     for (const k of Object.keys(counts)) counts[k] += c[k];
   }
   const out = [...tiles.entries()]

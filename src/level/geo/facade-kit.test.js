@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEPTH_TILE, KIT, buildingKit, facadeKit, gableRoof, ledge, minRect, offsetRing, wallBox, wallDepth } from "./facade-kit.js";
-import { STYLES } from "./styles.js";
+import { DEPTH_TILE, FRONT, KIT, buildingKit, crownKit, crownPanel, facadeKit, frontEdge, frontEdges, gableRoof, ledge, minRect, offsetRing, shopFront, solidBox, stairBulkhead, wallBox, wallDepth } from "./facade-kit.js";
+import { SIGN_COLORS, STYLES } from "./styles.js";
 import { orientRing } from "./extrude.js";
 import { muralWalls } from "./geo-mesh.js";
+import { labBuildings } from "./lab.js";
 
 const LEVEL = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../levels/beltline-eastside/level.json"), "utf8"));
 const SQUARE = orientRing([[0, 0], [10, 0], [10, 10], [0, 10]], false);
@@ -267,5 +268,298 @@ describe("the facade kit and the murals", () => {
       }
     }
     expect([...new Set(hits)]).toEqual([]);
+  });
+});
+
+// The lab building w270469054: a 27.1 m x 8.7 m brick loft, 9.7 m tall.
+const LOFT = STYLES.find((st) => st.id === "brick-loft");
+const LAB = orientRing([[0, 0], [27.1, 0], [27.1, 8.7], [0, 8.7]], false);
+
+function vertices(m) {
+  const out = [];
+  for (let i = 0; i < m.positions.length; i += 3) out.push({ p: [m.positions[i], m.positions[i + 1], m.positions[i + 2]], c: [m.colors[i], m.colors[i + 1], m.colors[i + 2]] });
+  return out;
+}
+
+// The longest wall of a ring, as crownPanel() and frontEdge() pick it.
+function wall(ring, i) {
+  const [px, pz] = ring[i];
+  const [qx, qz] = ring[(i + 1) % ring.length];
+  const len = Math.hypot(qx - px, qz - pz);
+  const t = [(qx - px) / len, (qz - pz) / len];
+  const n = [-t[1], t[0]];
+  // Along the wall and out of the wall, for a point [x, y, z].
+  const along = (p) => (p[0] - px) * t[0] + (p[2] - pz) * t[1];
+  const out = (p) => (p[0] - px) * n[0] + (p[2] - pz) * n[1];
+  return { len, along, out };
+}
+
+function longest(ring) {
+  let best = 0;
+  for (let i = 1; i < ring.length; i += 1) if (wall(ring, i).len > wall(ring, best).len) best = i;
+  return best;
+}
+
+describe("the crown of a brick loft", () => {
+  const top = 9.7;
+  const p = LOFT.parapet;
+
+  it("builds a raised center parapet and a stair bulkhead on the lab building", () => {
+    expect(crownKit(empty(), LAB, top, LOFT, 0, LOFT.walls[0], 7)).toEqual({ crown: 1, bulkhead: 1 });
+  });
+
+  it("puts the panel coping at the parapet top plus the step, on the center 2 bays", () => {
+    const m = empty();
+    expect(crownPanel(m, LAB, top, LOFT, 0, LOFT.walls[0])).toBe(1);
+    const w = wall(LAB, longest(LAB));
+    const vs = vertices(m);
+    const near = vs.filter(({ p: q }) => Math.abs(w.out(q)) < 0.5);
+    const maxY = Math.max(...near.map(({ p: q }) => q[1]));
+    expect(maxY).toBeCloseTo(top + p + LOFT.crown.step + KIT.coping.height, 2);
+    expect(maxY).toBeCloseTo(11.94, 2);
+    // The panel vertices on the wall line are between the bay lines of bays 3 and 5.
+    const bl = 27.1 / 8;
+    const online = vs.filter(({ p: q }) => Math.abs(w.out(q)) < 1e-6 && q[1] > top + p - 1e-6);
+    expect(online.length).toBeGreaterThan(0);
+    for (const { p: q } of online) {
+      expect(w.along(q)).toBeGreaterThanOrEqual(3 * bl - 1e-6);
+      expect(w.along(q)).toBeLessThanOrEqual(5 * bl + 1e-6);
+    }
+  });
+
+  it("keeps the bulkhead inside the roof, 0.9 m or more from every wall", () => {
+    for (const seed of [0, 1]) {
+      const m = empty();
+      expect(stairBulkhead(m, LAB, top, LOFT, 0, LOFT.walls[0], seed)).toBe(1);
+      const ys = vertices(m).map(({ p: q }) => q[1]);
+      expect(Math.max(...ys)).toBeCloseTo(9.7 + 2.8 + 0.12, 6);
+      expect(Math.min(...ys)).toBeCloseTo(top, 6);
+      for (const { p: q } of vertices(m)) {
+        expect(q[0]).toBeGreaterThanOrEqual(0.9);
+        expect(q[0]).toBeLessThanOrEqual(27.1 - 0.9);
+        expect(q[2]).toBeGreaterThanOrEqual(0.9);
+        expect(q[2]).toBeLessThanOrEqual(8.7 - 0.9);
+      }
+    }
+  });
+
+  it("puts the bulkhead at the end that the seed picks", () => {
+    const xs = [0, 1].map((seed) => {
+      const m = empty();
+      stairBulkhead(m, LAB, top, LOFT, 0, LOFT.walls[0], seed);
+      const v = vertices(m).map(({ p: q }) => q[0]);
+      return (Math.min(...v) + Math.max(...v)) / 2;
+    });
+    expect(Math.abs(xs[0] - 27.1 / 2)).toBeCloseTo(10.55, 6);
+    expect(Math.abs(xs[1] - 27.1 / 2)).toBeCloseTo(10.55, 6);
+    expect(Math.sign(xs[0] - 27.1 / 2)).toBe(-Math.sign(xs[1] - 27.1 / 2));
+  });
+
+  it("gives the same mesh on every build", () => {
+    const a = empty();
+    const b = empty();
+    crownKit(a, LAB, top, LOFT, 0, LOFT.walls[0], 12345);
+    crownKit(b, LAB, top, LOFT, 0, LOFT.walls[0], 12345);
+    expect(a.positions).toEqual(b.positions);
+    expect(a.indices).toEqual(b.indices);
+  });
+
+  it("gives a 3-bay building no raised panel and a house no crown", () => {
+    const small = orientRing([[0, 0], [10, 0], [10, 6], [0, 6]], false);
+    expect(crownKit(empty(), small, 8, LOFT, 0, LOFT.walls[0], 1).crown).toBe(0);
+    const house = { id: "h2", type: "house", height: 7, outer: [[0, 0], [12, 0], [12, 8], [0, 8]] };
+    expect(buildingKit(empty(), house)).toMatchObject({ crown: 0, bulkhead: 0 });
+    const loft = { id: "l1", name: "Stove Works", height: 9.7, outer: [[0, 0], [27.1, 0], [27.1, 8.7], [0, 8.7]] };
+    expect(buildingKit(empty(), loft)).toMatchObject({ crown: 1, bulkhead: 1 });
+  });
+
+  it("builds a closed box whose faces point away from its center", () => {
+    const m = empty();
+    solidBox(m, [0, 0], [1, 0], [0, -1], 0, 2, -1, 1, 0, 2, [1, 1, 1], 0);
+    expect(m.indices.length / 3).toBe(12);
+    for (const { n, c } of normals(m)) expect(n[0] * (c[0] - 1) + n[1] * (c[1] - 1) + n[2] * c[2]).toBeGreaterThan(0);
+  });
+});
+
+describe("the shop front of a storefront building", () => {
+  const floorH = 3.68;
+
+  it("picks the longest wall when no wall faces a street", () => {
+    const f = frontEdge(LAB, () => false);
+    expect(f.street).toBe(false);
+    expect(wall(LAB, f.edge).len).toBeCloseTo(27.1);
+  });
+
+  it("picks a short wall when only that wall faces a street", () => {
+    const f = frontEdge(LAB, (x) => x > 29);
+    expect(f.street).toBe(true);
+    expect(wall(LAB, f.edge).len).toBeCloseTo(8.7);
+    // The wall at x = 27.1.
+    const [px] = LAB[f.edge];
+    const [qx] = LAB[(f.edge + 1) % LAB.length];
+    expect(px).toBeCloseTo(27.1);
+    expect(qx).toBeCloseTo(27.1);
+  });
+
+  it("puts a sign band in each bay, between the piers and under the belt course", () => {
+    const awningColor = [0.123, 0.456, 0.789];
+    // The front wall only: the wrap bands have a test of their own.
+    const front = { ...frontEdge(LAB, () => false), wraps: [] };
+    const m = empty();
+    const c = shopFront(m, LAB, LOFT, 0, 0, floorH, front, 99, awningColor);
+    expect(c.sign).toBe(8);
+    expect(c.awning).toBeGreaterThanOrEqual(2);
+    const w = wall(LAB, front.edge);
+    const bl = w.len / 8;
+    const piers = Array.from({ length: 9 }, (_, k) => Math.min(Math.max(k * bl, KIT.pier.width / 2), w.len - KIT.pier.width / 2));
+    const signs = vertices(m).filter(({ c: col }) => Math.abs(col[0] - awningColor[0]) > 1e-6);
+    expect(signs.length).toBeGreaterThan(0);
+    for (const { p: q, c: col } of signs) {
+      expect(q[1]).toBeGreaterThanOrEqual(0.84 * floorH - 1e-6);
+      expect(q[1]).toBeLessThanOrEqual(floorH - 0.14 + 1e-6);
+      expect(w.out(q)).toBeLessThanOrEqual(0.1 + 1e-6);
+      expect(w.out(q)).toBeGreaterThanOrEqual(-1e-6);
+      for (const pc of piers) expect(Math.abs(w.along(q) - pc)).toBeGreaterThan(0.18);
+      const known = [...SIGN_COLORS, LOFT.trim].some((k) => k.every((v, i) => Math.abs(v - col[i]) < 1e-6));
+      expect(known).toBe(true);
+    }
+  });
+
+  it("builds no kit awning on a street wall", () => {
+    const front = frontEdge(LAB, (x) => x > 29);
+    const c = shopFront(empty(), LAB, LOFT, 0, 0, floorH, front, 99);
+    expect(c.awning).toBe(0);
+    expect(c.sign).toBeGreaterThan(0);
+  });
+
+  it("gives the same mesh on every build", () => {
+    const front = frontEdge(LAB, () => false);
+    const a = empty();
+    const b = empty();
+    shopFront(a, LAB, LOFT, 0, 0, floorH, front, 4242);
+    shopFront(b, LAB, LOFT, 0, 0, floorH, front, 4242);
+    expect(a.positions).toEqual(b.positions);
+    expect(a.colors).toEqual(b.colors);
+  });
+
+  it("builds no shop front without a front wall", () => {
+    const loft = { id: "l1", name: "Stove Works", height: 9.7, outer: [[0, 0], [27.1, 0], [27.1, 8.7], [0, 8.7]] };
+    expect(buildingKit(empty(), loft)).toMatchObject({ sign: 0, awning: 0 });
+    expect(buildingKit(empty(), loft, undefined, undefined, null, frontEdge(orientRing(loft.outer, false), () => false)).sign).toBeGreaterThan(0);
+  });
+});
+
+// The frames must not read as black outlines at 30 m: on a brick style with
+// a frame color, the frame luma is 0.7 to 1.0 of the darkest wall luma.
+describe("the window frame colors", () => {
+  const luma = ([r, g, b]) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  it("keeps the frames of each brick style near the brick value", () => {
+    const framed = STYLES.filter((st) => st.brick && st.frame);
+    expect(framed.map((st) => st.id).sort()).toEqual(["brick-loft", "brick-warehouse"]);
+    for (const st of framed) {
+      const r = luma(st.frame) / Math.min(...st.walls.map(luma));
+      expect(r).toBeGreaterThanOrEqual(0.7);
+      expect(r).toBeLessThanOrEqual(1.0);
+    }
+  });
+});
+
+// The outward normal z of wall i of a ring (the walls of LAB are along x or z).
+function wallNormal(ring, i) {
+  const [px, pz] = ring[i];
+  const [qx, qz] = ring[(i + 1) % ring.length];
+  const len = Math.hypot(qx - px, qz - pz);
+  return [-(qz - pz) / len, (qx - px) / len];
+}
+// The wall of LAB whose outward normal is n.
+function labWall(n) {
+  return LAB.findIndex((_, i) => {
+    const w = wallNormal(LAB, i);
+    return Math.abs(w[0] - n[0]) < 1e-6 && Math.abs(w[1] - n[1]) < 1e-6;
+  });
+}
+
+describe("the front wall of a building with no street wall", () => {
+  const SOUTH = labWall([0, -1]); // the long wall at z = 0
+  const NORTH = labWall([0, 1]); // the long wall at z = 8.7
+  const EAST = labWall([1, 0]); // the short wall at x = 27.1
+  const WEST = labWall([-1, 0]);
+
+  it("does not face the back of a neighbor 8 m away", () => {
+    const neighbor = (x, z) => z < -8 && z > -20 && x > -5 && x < 32;
+    for (const isStreet of [() => false, (x, z) => z < -30 || z > 40]) {
+      const f = frontEdge(LAB, isStreet, neighbor);
+      expect(f.edge).toBe(NORTH);
+      expect(f.street).toBe(false);
+    }
+  });
+
+  it("takes the long wall with the nearest street", () => {
+    const f = frontEdge(LAB, (x, z) => z < -30 || z > 8.7 + 14);
+    expect(f.edge).toBe(NORTH);
+    const g = frontEdge(LAB, (x, z) => z < -12 || z > 8.7 + 30);
+    expect(g.edge).toBe(SOUTH);
+  });
+
+  it("ignores one stray street sample between the wall and a neighbor", () => {
+    // A short drive in front of one sample line only, then a neighbor.
+    const drive = (x, z) => x > 18 && x < 23 && z < -8 && z > -10;
+    const neighbor = (x, z) => z < -14 && z > -30;
+    const f = frontEdge(LAB, (x, z) => drive(x, z) || z > 8.7 + 40, neighbor);
+    expect(f.edge).toBe(NORTH);
+  });
+
+  it("does not take a short wall when no wall faces a street", () => {
+    // Only the short east wall has open ground; it is too short to be the front.
+    const blocked = (x, z) => x < 27.1 && (z < -6 || z > 14.7);
+    const f = frontEdge(LAB, () => false, blocked);
+    expect(wall(LAB, f.edge).len).toBeGreaterThan(27.1 * FRONT.minLength);
+  });
+
+  it("wraps the sign band onto a next wall that faces open ground", () => {
+    const f = frontEdge(LAB, () => false, (x, z) => z < -8);
+    expect(f.edge).toBe(NORTH);
+    expect([...f.wraps].sort()).toEqual([EAST, WEST].sort());
+    // A neighbor 10 m off the west wall: no wrap there.
+    const g = frontEdge(LAB, () => false, (x, z) => z < -8 || x < -10);
+    expect(g.wraps).toEqual([EAST]);
+  });
+
+  it("builds the wrap band in the corner bay of the next wall", () => {
+    const floorH = 3.68;
+    const front = frontEdge(LAB, () => false, (x, z) => z < -8 || x < -10);
+    const plain = shopFront(empty(), LAB, LOFT, 0, 0, floorH, { ...front, wraps: [] }, 99);
+    const m = empty();
+    const c = shopFront(m, LAB, LOFT, 0, 0, floorH, front, 99);
+    expect(c.sign).toBe(plain.sign + 1);
+    // The bands on the east wall: in its corner bay next to the north wall.
+    const w = wall(LAB, EAST);
+    const bay = w.len / Math.max(1, Math.round(w.len / LOFT.bay));
+    const sign = SIGN_COLORS[99 % SIGN_COLORS.length];
+    const east = vertices(m).filter(({ p: q, c: col }) => q[0] > 27.1 + 1e-6 && sign.every((v, i) => Math.abs(v - col[i]) < 1e-6));
+    expect(east.length).toBeGreaterThan(0);
+    for (const { p: q } of east) {
+      expect(w.out(q)).toBeLessThanOrEqual(KIT.sign.out + 1e-6);
+      expect(q[2]).toBeGreaterThan(8.7 - bay - 1e-6);
+      expect(q[1]).toBeGreaterThanOrEqual(0.84 * floorH - 1e-6);
+    }
+  });
+
+  it("keeps the old front on a street wall", () => {
+    const f = frontEdge(LAB, (x) => x > 29);
+    expect(f.street).toBe(true);
+    expect(f.edge).toBe(EAST);
+  });
+
+  it("gives the BeltLine lab building a front on open ground", () => {
+    const lab = labBuildings(LEVEL, "brick-loft")[0];
+    const ring = orientRing(lab.outer, false);
+    const f = frontEdges(LEVEL).get(lab.id);
+    expect(f.street).toBe(false);
+    // The front is a long wall, and its normal points to the open side (+z):
+    // the other long wall faces the back of a neighbor.
+    expect(wall(ring, f.edge).len).toBeGreaterThan(27);
+    expect(wallNormal(ring, f.edge)[1]).toBeGreaterThan(0.99);
+    expect(f.wraps.length).toBeGreaterThan(0);
   });
 });

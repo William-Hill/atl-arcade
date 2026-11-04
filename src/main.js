@@ -29,6 +29,8 @@ import { createLandmarksView } from "./render/landmarks-view.js";
 import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
+import { LOOKS, createSkyEnvironment, lookFor, toneMappingOf } from "./render/look.js";
+import { labBuildings, labCamera } from "./level/geo/lab.js";
 import { createLitePost, createPost } from "./render/post.js";
 import { addTiltShift } from "./render/tilt-shift.js";
 import { createPhotoPanel } from "./ui/photo-panel.js";
@@ -99,6 +101,9 @@ renderer.info.autoReset = false;
 // in headless SwiftShader with video capture on (see docs/decisions.md).
 const GEO_FAR = tier.far;
 const GEO_FOG_NEAR = tier.fogNear;
+// The city look (src/render/look.js): pbr on the high tier, toon on the
+// others. ?look=toon|pbr sets it.
+const look = geo ? lookFor(params.get("look"), quality) : "toon";
 
 // A geodata level gets a day sky, a far fog, and a sun that follows the
 // skater. Its meshes are built once and shared with the physics.
@@ -111,17 +116,29 @@ if (geo) {
   // frame rate. The kit trees carry a shadow disc and the skater a blob.
   renderer.shadowMap.enabled = tier.shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  if (tier.post) {
-    // Neutral tone mapping keeps the art colors and rolls off the bright sun.
-    renderer.toneMapping = THREE.NeutralToneMapping;
-    renderer.toneMappingExposure = 1.05;
+  if (tier.post || look === "pbr") {
+    // Toon: neutral tone mapping keeps the art colors and rolls off the
+    // bright sun. Pbr uses the same curve (see src/render/look.js).
+    renderer.toneMapping = toneMappingOf(look);
+    renderer.toneMappingExposure = LOOKS[look].exposure;
   }
-  geoLights = createGeoLights({ shadowRadius: tier.shadows ? 70 : 45, shadowMapSize: tier.shadows ? 4096 : 2048 });
+  geoLights = createGeoLights({ shadowRadius: tier.shadows ? 70 : 45, shadowMapSize: tier.shadows ? 4096 : 2048, look });
   scene.add(geoLights.group);
   // The low tier has no sky dome (a flat horizon color), to keep the
   // headless frame budget. ?sky=0 leaves it out on the high tier too.
   sky = tier.post !== "full" || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
   if (sky) scene.add(sky.mesh);
+  if (look === "pbr") {
+    // The sky environment map: ambient light and reflections. A tier with
+    // no sky dome gets one made only for the map.
+    const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection });
+    scene.environment = createSkyEnvironment(renderer, envSky);
+    scene.environmentIntensity = LOOKS.pbr.environment;
+    if (!sky) {
+      envSky.mesh.geometry.dispose();
+      envSky.mesh.material.dispose();
+    }
+  }
   const horizon = sky ? sky.fogColor : new THREE.Color(0xbfe4ff);
   scene.background = horizon.clone();
   // ?fog=0 removes the fog (for an overview screenshot).
@@ -156,7 +173,7 @@ if (params.get("dev") === "1" || params.get("debug") === "1") document.body.clas
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer" }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
@@ -300,10 +317,16 @@ const camera = new THREE.PerspectiveCamera(60, 1, 0.1, geo ? (params.get("fog") 
 // view=follow (default), view=orbit (drag to look), view=fixed (screenshot reference).
 const view = params.get("view") ?? "follow";
 // ?cam=x,y,z,lookX,lookY,lookZ sets the fixed camera (for screenshots).
-const camParam = (params.get("cam") ?? "").split(",").map(Number);
+// ?lab=building&kind=<style>&pick=<n>&labview=<view> (src/level/geo/lab.js)
+// sets the fixed camera on one building, for the art loop.
+const labBuilding = geo && params.get("lab") === "building" ? labBuildings(level, params.get("kind") || null)[Number(params.get("pick") ?? 0)] ?? null : null;
+const camParam = labBuilding ? labCamera(labBuilding, params.get("labview") ?? "street", level, (x, z) => terrainOf(level).height(x, z)) : (params.get("cam") ?? "").split(",").map(Number);
 // On a level with terrain each height is over the terrain under that point,
 // so a camera from before the terrain still sees the same place.
 const terrainY = (x, z) => (geo ? terrainOf(level).height(x, z) : 0);
+// The place a fixed camera looks at, over the terrain: the shadow box goes
+// there (see the frame loop).
+const shadowFocus = view === "fixed" && camParam.length === 6 && camParam.every(Number.isFinite) ? [camParam[3], camParam[4] + terrainY(camParam[3], camParam[5]), camParam[5]] : null;
 if (camParam.length === 6 && camParam.every(Number.isFinite)) {
   camera.position.set(camParam[0], camParam[1] + terrainY(camParam[0], camParam[2]), camParam[2]);
   camera.lookAt(camParam[3], camParam[4] + terrainY(camParam[3], camParam[5]), camParam[5]);
@@ -327,7 +350,9 @@ if (view === "orbit") {
 
 // The post chain (src/render/post.js): the full chain on the high tier,
 // the lite ink pass on the phone tier, none on the low tier.
-const postOptions = { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: params.get("halftone") !== "0" };
+// The pbr look has no halftone dots: on glass and in shade they read as speckle
+// (docs/art-loop/reports/brick-loft-r0-judge.md).
+const postOptions = { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: look !== "pbr" && params.get("halftone") !== "0" };
 let post = tier.post === "full" ? createPost(renderer, scene, camera, postOptions) : tier.post === "lite" ? createLitePost(renderer, scene, camera, postOptions) : null;
 // Photo mode's tilt-shift blur (src/render/tilt-shift.js): on the full
 // chain only, and off in play.
@@ -597,7 +622,10 @@ function frame(now) {
   if (minimap) minimap.update(skater);
   if (factCardsView) factCardsView.update(run.cards.collected, now / 1000);
   if (factPopup) factPopup.update(now);
-  if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
+  // A fixed camera (a screenshot or the lab) gets the shadow box at the place
+  // it looks at; the skater can be far away.
+  if (geoLights && shadowFocus) geoLights.follow(shadowFocus[0], shadowFocus[2], shadowFocus[1]);
+  else if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
   if (blob) {
     // With the skater height, as the controller samples: under a bridge the
     // blob stays on the road, not on the deck.
@@ -633,6 +661,19 @@ window.__atl = {
   shell: "skate-atl",
   ready: true,
   quality,
+  look,
+  // The lab building (?lab=building), for the lab spec and the judge.
+  lab: labBuilding ? { id: labBuilding.id, name: labBuilding.name ?? null, height: labBuilding.height } : null,
+  // Tune the light from the console or a test, for example
+  // __atl.tuneLook({ toneMapping: "Neutral", exposure: 1.2, sun: 3 }).
+  tuneLook(t = {}) {
+    if (t.toneMapping) renderer.toneMapping = THREE[`${t.toneMapping}ToneMapping`];
+    if (t.exposure !== undefined) renderer.toneMappingExposure = t.exposure;
+    if (t.environment !== undefined) scene.environmentIntensity = t.environment;
+    if (geoLights && t.sun !== undefined) geoLights.sun.intensity = t.sun;
+    if (geoLights && t.hemisphere !== undefined) geoLights.group.children.find((c) => c.isHemisphereLight).intensity = t.hemisphere;
+    return { toneMapping: renderer.toneMapping, exposure: renderer.toneMappingExposure, environment: scene.environmentIntensity, sun: geoLights?.sun.intensity };
+  },
   gpu: gpuName,
   // The post chain, to tune the effects from the console.
   get post() {

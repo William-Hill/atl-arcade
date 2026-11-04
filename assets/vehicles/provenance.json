@@ -1,0 +1,134 @@
+{
+  "date": "2026-11-04",
+  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine), then Blender 4.2.23 LTS headless (scripts/blender/street_props.py): join, weld UV seams, drop floating parts, recalc normals, smooth by angle 30 deg, scale to meters, origin at bottom center, +z forward / +y up, Draco GLB export",
+  "pipeline": "node scripts/assets/meshy-street-props.mjs (needs MESHY_API_KEY in env; raw downloads go to .meshy-raw/, git-ignored)",
+  "license": "Generated with the project owner's Meshy account; usage is governed by Meshy's terms of service for that account.",
+  "format": "GLB, one mesh, POSITION + NORMAL + TEXCOORD_0, PBR material with 3 JPEG textures, KHR_draco_mesh_compression (needs a DRACOLoader, as in src/render/skater-model.js)",
+  "style": "Realistic mid-2010s Atlanta street, no branding (prompts forbid logos and text)",
+  "verify": "node scripts/assets/street-props-check.mjs --out preview.png <glb...> loads the files in headless Chromium with GLTFLoader + DRACOLoader",
+  "asset": "Street traffic vehicles for Skate ATL: sedan, bus, pickup. Lengths match CAR_SIZE in src/sim/traffic/traffic.js.",
+  "files": {
+    "sedan.glb": {
+      "prompt": "Realistic mid-2010s midsize four-door sedan car, generic unbranded design, dark blue metallic paint, tinted glass windows, black tires with silver alloy wheels, headlights and red taillights, closed doors, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Dark blue metallic car paint, dark tinted glass, black rubber tires, silver alloy rims, black plastic trim, clear headlights, red taillights, blank license plate, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 12000,
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1a7b5-85b6-75c9-a4c6-8453dbeb2ddd",
+        "refine_task_id": "01a1a7b6-0240-75a9-a0a2-0e813a62e691",
+        "seed": 2422897295
+      },
+      "credits": 15,
+      "generated_at": "2026-11-04T17:58:35.708Z",
+      "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/sedan.glb <out> 4.6",
+      "triangles": 11034,
+      "triangles_from_meshy": 11035,
+      "bytes": 579664,
+      "bounds_m": {
+        "x": [
+          -0.984,
+          0.984
+        ],
+        "y": [
+          0.0,
+          1.381
+        ],
+        "z": [
+          -2.3,
+          2.3
+        ]
+      },
+      "scale_applied": 4.8188,
+      "removed_parts": {},
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG"
+    },
+    "bus.glb": {
+      "prompt": "Realistic long 40-foot low-floor American city transit bus, mid-2010s design, very long low rectangular body about four times longer than tall, flat front with a large one-piece windshield, seven large dark side windows in a row, front door and middle door on the right side, three-quarter roof pod for air conditioning, white body with a blue and orange stripe, black tires, blank destination sign, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "White painted bus body, blue and orange horizontal stripes, dark tinted windows, black rubber tires, gray hubs, black bumpers, blank dark destination sign, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 14000,
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1a7c0-b525-7447-aab2-2ee07a63b4d1",
+        "refine_task_id": "01a1a7c1-6c64-7603-8942-6c617190ea20",
+        "seed": 24962006
+      },
+      "credits": 15,
+      "generated_at": "2026-11-04T18:11:03.301Z",
+      "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bus-v2.glb <out> 12",
+      "triangles": 13791,
+      "triangles_from_meshy": 13804,
+      "bytes": 732324,
+      "bounds_m": {
+        "x": [
+          -1.831,
+          1.831
+        ],
+        "y": [
+          0.0,
+          3.988
+        ],
+        "z": [
+          -6.0,
+          6.0
+        ]
+      },
+      "scale_applied": 12.5837,
+      "removed_parts": {
+        "speck": {
+          "parts": 2,
+          "faces": 2
+        }
+      },
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "note": "Second generation. The first (preview 01a1a7b6-7fbc-734a-a40b-e6f11538448f, 15 credits, prompt without proportions) came out as a stubby coach and was discarded. This one is still taller and wider than CAR_SIZE.bus (about 4.0 m high, 3.7 m wide with mirrors, at 12 m long).",
+      "rejected_attempt_credits": 15
+    },
+    "pickup.glb": {
+      "prompt": "Realistic mid-2010s full-size crew cab pickup truck, generic unbranded design, dark red paint, empty open truck bed, black grille, tinted windows, black tires with steel wheels, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Dark red car paint, black plastic grille and trim, dark tinted glass, black rubber tires, gray steel wheels, chrome-free bumpers, blank license plate, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 12000,
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1a7b7-7a45-754f-8372-8e93304009ba",
+        "refine_task_id": "01a1a7b7-f81e-74eb-b08d-bc3e8c9981ac",
+        "seed": 3877376956
+      },
+      "credits": 15,
+      "generated_at": "2026-11-04T18:00:46.721Z",
+      "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/pickup.glb <out> 5.4",
+      "triangles": 10614,
+      "triangles_from_meshy": 10616,
+      "bytes": 513180,
+      "bounds_m": {
+        "x": [
+          -1.168,
+          1.168
+        ],
+        "y": [
+          0.0,
+          1.989
+        ],
+        "z": [
+          -2.7,
+          2.7
+        ]
+      },
+      "scale_applied": 5.6338,
+      "removed_parts": {},
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG"
+    }
+  },
+  "credits": "60 Meshy credits (5 per preview + 10 per refine)"
+}

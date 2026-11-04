@@ -168,6 +168,22 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
     get drawCalls() {
       return drawn * (toon ? 2 : 1);
     },
+    // Compiles the NPC shader programs before the first NPC comes into view.
+    // The outfit gives the NPC skin its own program; without this step, a
+    // software GPU stalls for seconds on the frame where the first NPC draws.
+    warm(renderer, camera, scene) {
+      const hidden = [];
+      for (const { view, ready } of views.values()) {
+        if (ready && !view.group.visible) {
+          view.group.visible = true;
+          hidden.push(view.group);
+        }
+      }
+      // compile() collects the objects at once, so the groups can hide again.
+      const done = renderer.compileAsync ? renderer.compileAsync(group, camera, scene) : Promise.resolve(renderer.compile(group, camera, scene));
+      for (const g of hidden) g.visible = false;
+      return done;
+    },
     clipOf(id) {
       return views.get(id)?.view.clip ?? null;
     },

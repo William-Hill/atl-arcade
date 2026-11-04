@@ -526,6 +526,9 @@ function projectSkater() {
 // headless Chromium takes a frame's worth of time and delays timers.
 let renderPaused = false;
 
+// The NPC skater programs compile once, after the NPC models load.
+let npcWarm = false;
+
 function frame(now) {
   const elapsed = (now - last) / 1000;
   last = now;
@@ -577,6 +580,10 @@ function frame(now) {
   if (sky) sky.update(camera, now / 1000);
   if (streetSigns) streetSigns.update(camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
+  if (npcSkatersView && !npcWarm && npcSkatersView.loaded + npcSkatersView.failed === npcSkaters.npcs.length) {
+    npcWarm = true;
+    npcSkatersView.warm(renderer, camera, scene).catch(() => {});
+  }
   if (npcSkatersView) npcSkatersView.sync(npcSkaters, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null, camera.position);
   draw();
   frames += 1;

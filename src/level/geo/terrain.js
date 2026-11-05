@@ -141,6 +141,8 @@ const spans = new WeakMap();
 export const PLINTH_DEPTH = 0.5;
 // The step (m) of the ground samples along the walls and under the footprint.
 const SPAN_STEP = 2;
+// The walls at 1 m: the graded ground near a way bends more between samples.
+const WALL_STEP = 1;
 
 function insideRing(x, z, ring) {
   let inside = false;
@@ -172,7 +174,7 @@ export function buildingSpan(level, b) {
     for (let i = 0; i < ring.length; i += 1) {
       const [px, pz] = ring[i];
       const [qx, qz] = ring[(i + 1) % ring.length];
-      const n = Math.max(1, Math.ceil(Math.hypot(qx - px, qz - pz) / SPAN_STEP));
+      const n = Math.max(1, Math.ceil(Math.hypot(qx - px, qz - pz) / WALL_STEP));
       for (let k = 0; k < n; k += 1) {
         const h = t.height(px + ((qx - px) * k) / n, pz + ((qz - pz) * k) / n);
         lo = Math.min(lo, h);
@@ -219,22 +221,28 @@ const raws = new WeakMap();
 
 // The straight deck line of a bridge layout on terrain t: line(x, z).
 // `heights` can give the end heights; the default is the ground at J.
-function deckLine(L, t, heights = null) {
+// `lands` are level landings (m) at the ends: the line holds the end height
+// over each one, and slopes between them.
+function deckLine(L, t, heights = null, lands = [0, 0]) {
   const [J0, J1] = [L.points[0], L.points[L.points.length - 1]];
   const h0 = heights?.[0] ?? t.height(J0[0], J0[1]);
   const h1 = heights?.[1] ?? t.height(J1[0], J1[1]);
   const total = L.total || 1;
-  const at = (s) => h0 + (h1 - h0) * (s / total);
+  const run = total - lands[0] - lands[1];
+  const [l0, span] = run >= 1 ? [lands[0], run] : [0, total];
+  const at = (s) => h0 + (h1 - h0) * Math.max(0, Math.min(1, (s - l0) / span));
   const line = (x, z) => at(project(L.points, L.cum, x, z).s);
   line.at = at;
   line.ends = [h0, h1];
-  line.slope = (h1 - h0) / total;
+  line.slope = (h1 - h0) / span;
   return line;
 }
 
 // The line and the arch of a host layout (no run-ons): raw(x, z). An end
 // with no approach road that is on another deck (a footway spur off a
-// footway bridge) starts at the height of that deck, not of the ground.
+// footway bridge) starts at the height of that deck, not of the ground, and
+// holds it level to just past the edge of that deck, so the spur meets the
+// deck with no step (w1118177210 had a 0.68 m step, a wall to the skater).
 function rawDeck(level, L, seen = new Set()) {
   let m = raws.get(level);
   if (!m) raws.set(level, (m = new Map()));
@@ -245,6 +253,7 @@ function rawDeck(level, L, seen = new Set()) {
   const cum = L.cum;
   const [a0, a1] = L.span;
   const layouts = bridgeLayouts(level.strips);
+  const lands = [0, 0];
   const heights = L.ends.map((e, k) => {
     if (e.approach) return null;
     const J = k ? pts[pts.length - 1] : pts[0];
@@ -252,11 +261,14 @@ function rawDeck(level, L, seen = new Set()) {
       const root = O.host ?? O.id;
       if (root === L.id || seen.has(root)) continue;
       const { s, d } = project(O.points, O.cum, J[0], J[1]);
-      if (s >= 0 && s <= O.total && d <= O.width / 2) return rawDeck(level, layouts.get(root), seen)(J[0], J[1]);
+      if (s >= 0 && s <= O.total && d <= O.width / 2) {
+        lands[k] = O.width / 2 - d + 0.5;
+        return rawDeck(level, layouts.get(root), seen)(J[0], J[1]);
+      }
     }
     return null;
   });
-  const line = deckLine(L, t, heights);
+  const line = deckLine(L, t, heights, lands);
   // The arch: the largest lift that a crossing needs, at its distance along.
   // A way that meets the OSM end is the approach, not a way under the deck.
   let lift = 0;
@@ -829,6 +841,261 @@ export function gradeBridgeEnds(grid, strips) {
     }
   }
   return { heights, changed };
+}
+
+// Grades the ground on the playable ways to a skating grade. The DEM under
+// a street, a sidewalk, or a path has the cuts and fills of the lots next
+// to it, so short ramps of 30% to 50% stay after gradeTrail(), and a skater
+// cannot push up them. The trail (`fixed` kinds) has its rail grade from
+// gradeTrail() in its cut under the Freedom Parkway bridges: it is pinned,
+// so the clearance under the decks stays.
+//
+// Each grid node within `margin` m of the edge of an at-grade way (by
+// default the nodes of every terrain triangle under the way) is in the way
+// network. Two next nodes of the network (along x or along z) may differ by
+// at most L = `max` / sqrt(2) per meter, so both legs of each terrain
+// triangle under a way, and so its grade in any direction, stay at `max` or
+// less. The new height of a node is the mean of two exact envelopes on the
+// network graph (Dijkstra, a fixed order, so the result is deterministic):
+// the highest L-limited ground under the old ground (it cuts the humps)
+// and the lowest one over it (it fills the dips). The mean of two L-limited
+// functions is L-limited, and the cut and the fill balance. A `pinned` node
+// (a bridge joint, the ground under a deck) keeps its height, and the
+// others stay within L of it along the network. Then each node from
+// `margin` to `margin + blend` m off the network takes the mean change of
+// the network nodes near it, fading to 0 (smoothstep), so the grade has no
+// step at the edge of the network. Pure: returns new heights, the network
+// node count, and the largest change.
+export const WAY_GRADE = { max: 0.1, blend: 32, kinds: ["street", "sidewalk", "path"], fixed: ["trail"] };
+
+// One envelope of the heights on the network graph, by Dijkstra from every
+// node at once: sign 1 gives min over j of (h_j + step * hops), sign -1 gives
+// max over j of (h_j - step * hops). The heap holds [key, node] pairs (ties
+// by node index), so the order is deterministic.
+function envelope(heights, inNet, cols, rows, step, sign) {
+  const n = heights.length;
+  const key = new Float64Array(n).fill(Infinity);
+  const heap = [];
+  const less = (a, b) => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
+  const push = (e) => {
+    heap.push(e);
+    let i = heap.length - 1;
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (!less(heap[i], heap[p])) break;
+      [heap[i], heap[p]] = [heap[p], heap[i]];
+      i = p;
+    }
+  };
+  const pop = () => {
+    const top = heap[0];
+    const last = heap.pop();
+    if (heap.length) {
+      heap[0] = last;
+      let i = 0;
+      for (;;) {
+        const l = i * 2 + 1;
+        const r = l + 1;
+        let m = i;
+        if (l < heap.length && less(heap[l], heap[m])) m = l;
+        if (r < heap.length && less(heap[r], heap[m])) m = r;
+        if (m === i) break;
+        [heap[i], heap[m]] = [heap[m], heap[i]];
+        i = m;
+      }
+    }
+    return top;
+  };
+  for (let k = 0; k < n; k += 1) {
+    if (!inNet[k] || !Number.isFinite(heights[k])) continue;
+    key[k] = sign * heights[k];
+    push([key[k], k]);
+  }
+  const done = new Uint8Array(n);
+  while (heap.length) {
+    const [kv, v] = pop();
+    if (done[v] || kv > key[v]) continue;
+    done[v] = 1;
+    const i = v % cols;
+    const j = (v - i) / cols;
+    for (const w of [i > 0 ? v - 1 : -1, i + 1 < cols ? v + 1 : -1, j > 0 ? v - cols : -1, j + 1 < rows ? v + cols : -1]) {
+      if (w < 0 || !inNet[w] || done[w]) continue;
+      const kw = kv + step;
+      if (kw < key[w]) {
+        key[w] = kw;
+        push([kw, w]);
+      }
+    }
+  }
+  const out = new Float64Array(n);
+  for (let k = 0; k < n; k += 1) out[k] = sign * key[k];
+  return out;
+}
+
+export function gradeWays(grid, strips, { pinned: given = null, ...opts } = {}) {
+  const g = { ...WAY_GRADE, ...opts };
+  const { cell, cols, rows } = grid;
+  const margin = g.margin ?? cell * Math.SQRT2 + 0.01;
+  const ways = strips.filter((s) => !s.bridge && g.kinds.includes(s.kind));
+  const inNet = wayNodes(grid, ways, margin);
+  // The trail keeps its rail grade (gradeTrail()): its nodes are in the
+  // network, pinned, so the ways meet the trail and not the other way.
+  const fixed = wayNodes(grid, strips.filter((s) => !s.bridge && g.fixed.includes(s.kind)), margin);
+  let pinned = given;
+  if (fixed.some((v) => v)) {
+    pinned = Uint8Array.from(fixed, (v, k) => (v || given?.[k] ? 1 : 0));
+    for (let k = 0; k < inNet.length; k += 1) inNet[k] ||= fixed[k];
+  }
+  const step = (g.max / Math.SQRT2) * cell;
+  const base = grid.heights;
+  const heights = Float32Array.from(base);
+  const upper = envelope(base, inNet, cols, rows, step, 1);
+  const lower = envelope(base, inNet, cols, rows, step, -1);
+  // The cones of the pinned nodes: every network node stays within L of
+  // each pinned node along the network.
+  let hi = null;
+  let lo = null;
+  if (pinned) {
+    const pins = Uint8Array.from(inNet, (v, k) => (v && pinned[k] ? 1 : 0));
+    if (pins.some((v) => v)) {
+      const sources = Float64Array.from(base, (h, k) => (pins[k] ? h : NaN));
+      hi = envelope(sources, inNet, cols, rows, step, 1);
+      lo = envelope(sources, inNet, cols, rows, step, -1);
+    }
+  }
+  for (let k = 0; k < heights.length; k += 1) {
+    if (!inNet[k]) continue;
+    let h = (upper[k] + lower[k]) / 2;
+    if (hi) {
+      const a = lo[k];
+      const b = hi[k];
+      h = a <= b ? Math.max(a, Math.min(b, h)) : (a + b) / 2;
+      if (pinned[k]) h = base[k];
+    }
+    heights[k] = h;
+  }
+  // The blend band off the network.
+  const R = Math.ceil(g.blend / cell);
+  const out = Float32Array.from(heights);
+  for (let j = 0; j < rows; j += 1) {
+    for (let i = 0; i < cols; i += 1) {
+      const at = j * cols + i;
+      if (inNet[at] || pinned?.[at]) continue;
+      let sw = 0;
+      let swd = 0;
+      let near = Infinity;
+      for (let dj = -R; dj <= R; dj += 1) {
+        const jj = j + dj;
+        if (jj < 0 || jj >= rows) continue;
+        for (let di = -R; di <= R; di += 1) {
+          const ii = i + di;
+          if (ii < 0 || ii >= cols) continue;
+          const k = jj * cols + ii;
+          if (!inNet[k]) continue;
+          const d = Math.hypot(di, dj) * cell;
+          if (d > g.blend) continue;
+          const w = 1 / (d * d);
+          sw += w;
+          swd += w * (heights[k] - base[k]);
+          near = Math.min(near, d);
+        }
+      }
+      if (!(sw > 0)) continue;
+      const k = 1 - near / g.blend;
+      out[at] = base[at] + (swd / sw) * k * k * (3 - 2 * k);
+    }
+  }
+  let moved = 0;
+  let count = 0;
+  for (let k = 0; k < out.length; k += 1) {
+    moved = Math.max(moved, Math.abs(out[k] - base[k]));
+    count += inNet[k];
+  }
+  return { heights: out, nodes: count, moved };
+}
+
+// The grade limit of the skating ground. gradeWays() grades the ground under
+// the ways to WAY_GRADE.max, but a few short ramps stay: where a deck meets
+// a road or the ground (bridge stairs, w1118177210 drops 2 to 5 m in 10 m),
+// at the bridge ends, and off the ways (lawns, embankments). At 47% gravity
+// on the slope (20 m/s^2 x 0.42) is more than the push (8 m/s^2), so the
+// skater cannot climb, and she rolls back. The ground sampler bends each
+// terrain and deck normal to at most `GRADE_LIMIT` (the height stays the
+// real one), so the slope pull on the skater is at most 20 x 0.29 = 5.7
+// m/s^2, under the push, and she can push up anything that is not a wall (a
+// rise over SKATE.maxStep in one step). The trail and the ways (10% or less)
+// are under the limit, so it changes nothing on them.
+export const GRADE_LIMIT = 0.3;
+
+export function limitGrade(n, max = GRADE_LIMIT) {
+  const h = Math.hypot(n[0], n[2]);
+  if (!(n[1] > 0) || h <= max * n[1]) return n;
+  const ny = 1 / Math.sqrt(1 + max * max);
+  const k = (max * ny) / h;
+  return [n[0] * k, ny, n[2] * k];
+}
+
+// The grid nodes that the bridge grades own: each node within one cell
+// diagonal of a deck (bridges.js layout, joint to joint, plus one cell
+// diagonal past each joint and each side). gradeWays() pins them after
+// gradeBridgeEnds(), so each deck end still meets its road and the ground
+// under each deck keeps its clearance.
+export function bridgeNodes(grid, strips) {
+  const { cell, x0, z0, cols, rows } = grid;
+  const CRITICAL = cell * Math.SQRT2 + 0.01;
+  const out = new Uint8Array(cols * rows);
+  for (const L of bridgeLayouts(strips).values()) {
+    const r = L.width / 2 + CRITICAL;
+    const xs = L.points.map((p) => p[0]);
+    const zs = L.points.map((p) => p[1]);
+    const i0 = Math.max(0, Math.floor((Math.min(...xs) - r - x0) / cell));
+    const i1 = Math.min(cols - 1, Math.ceil((Math.max(...xs) + r - x0) / cell));
+    const j0 = Math.max(0, Math.floor((Math.min(...zs) - r - z0) / cell));
+    const j1 = Math.min(rows - 1, Math.ceil((Math.max(...zs) + r - z0) / cell));
+    for (let j = j0; j <= j1; j += 1) {
+      for (let i = i0; i <= i1; i += 1) {
+        const { s, d } = project(L.points, L.cum, x0 + i * cell, z0 + j * cell);
+        if (s >= -CRITICAL && s <= L.total + CRITICAL && d <= r) out[j * cols + i] = 1;
+      }
+    }
+  }
+  return out;
+}
+
+// The steepest grade (rise over run) of the terrain triangles under the
+// at-grade ways, sampled every `step` m along each center line and each
+// edge. For the build report and the tests.
+export function wayGrades(terrain, strips, { step = 1, kinds = WAY_GRADE.kinds } = {}) {
+  const out = [];
+  for (const s of strips) {
+    if (s.bridge || !kinds.includes(s.kind)) continue;
+    let worst = 0;
+    let at = null;
+    const half = (s.width ?? 0) / 2;
+    for (let i = 0; i < s.points.length - 1; i += 1) {
+      const [ax, az] = s.points[i];
+      const [bx, bz] = s.points[i + 1];
+      const len = Math.hypot(bx - ax, bz - az);
+      if (!(len > 0)) continue;
+      const nx = -(bz - az) / len;
+      const nz = (bx - ax) / len;
+      const n = Math.max(1, Math.ceil(len / step));
+      for (let k = 0; k <= n; k += 1) {
+        for (const o of [-half * 0.9, 0, half * 0.9]) {
+          const x = ax + ((bx - ax) * k) / n + nx * o;
+          const z = az + ((bz - az) * k) / n + nz * o;
+          const [gx, gy, gz] = terrain.normal(x, z);
+          const grade = Math.hypot(gx, gz) / gy;
+          if (grade > worst) {
+            worst = grade;
+            at = [x, z];
+          }
+        }
+      }
+    }
+    out.push({ id: s.id, kind: s.kind, grade: worst, at });
+  }
+  return out;
 }
 
 // --- Draping a mesh on the terrain ---

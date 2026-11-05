@@ -1287,3 +1287,18 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Frames ship as JPGs with one `<frame>.provenance.json` each and a folder `provenance.json` listing them in `docs/style-frames/<subject>/`, with a grouped contact sheet; the owner chooses the frames to keep, and the chosen ones go into the doc.
 
 
+
+## 2026-11-05: epic/city-look — skating grades on the playable ways (terrain A)
+
+- Problem: the DEM put 40%+ ramps on the ways (bridge footway `w1118177210` about 47%, a Beltline access path 75%, streets to 42%). At 47% gravity on the slope (20 m/s² × 0.42) beats the push (8 m/s²), so the skater stops and rolls back.
+- `gradeWays()` (`src/level/geo/terrain.js`, called from `scripts/build-block.mjs` after `gradeTrail()` and again after the embankments and bridge ends) grades the grid nodes under the streets, sidewalks and paths to `WAY_GRADE.max` (10%). It takes the upper and lower grade envelopes of the way network (a Dijkstra-style pass with a binary heap; ties go to the lower node index, so the output does not depend on the strip order) and keeps their mean, then blends the change into the next 32 m. The trail band (already at rail grade from `gradeTrail()`) and the bridge nodes (`bridgeNodes()`) are pinned, so the trail, the underpasses and the deck ends keep their height. A last `gradeFootprints()` pass after it keeps the plinths low.
+- Result on the BeltLine level (terrain normal at the way samples, streets + sidewalks + paths): p50 grade 0.208 → 0.091, p90 0.480 → 0.140, samples over 30% 323 → 51. The effective ground under the skater (`wayGrades()`): streets max 0.415 → 0.195, sidewalks 0.306 → 0.204, paths 0.753 → 0.390. Plinths: median 1.38 m, 56 over 3 m.
+- Grade limit: the ground sampler (`src/level/geo/geo-ground.js`) bends each terrain and deck normal to at most `GRADE_LIMIT` (0.3) with `limitGrade()`; the height stays the real one. The slope pull is then at most 5.7 m/s², under the push, so the skater can push up any short ramp that is left (bridge stairs, embankments, lawns) and only a real wall (`SKATE.maxStep`) stops her. The controller is unchanged. 0.15 and 0.2 were tried: both changed the seeded NPC crowd run enough to fail `skaters.test.js` (a near contact, a short distance); 0.3 passes it and leaves the ways (10%) and the trail untouched.
+- Hosted bridge ends: a footway deck that lands on another deck (`w1118177210` on `w431443668`) now has a level landing over the host's width (`deckLine()` lands), so the stair meets the host deck at its height and the skater rolls on with no bonk.
+- `buildingSpan()` samples the walls every 1 m (`WALL_STEP`): the graded ground near a way bends more between 2 m samples, and the plinth missed the lowest foot.
+- The level was rebaked with `scripts/build-block.mjs --offline` from the cached raw data; only `terrain.data` and `stats` change, so the #146 and #147 data stay as they were.
+
+### Limits
+
+- A few short ways stay steeper than 10% where they meet a bridge end or the trail (path `w30977457` 39%, `w431443667` 26%); the grade limit keeps them skatable. The trail keeps its rail grades (up to 66% on the bridge approach `w83291378`), which `gradeTrail()` owns.
+- `assets/map/beltline-eastside/iso.json` (the baked isometric map) moves by half a meter with the new terrain; `iso-map.test.js` fails until it is baked again with `scripts/bake-iso-map.mjs`.

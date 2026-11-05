@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BRIDGE_CLEARANCE, FOOTPRINT_GRADE, PLINTH_DEPTH, bridgeDeck, buildingSpan, bridgeMiddle, createTerrain, decodeHeights, drapeMesh, encodeHeights, gradeFootprints, gradeTrail, raiseEmbankments, terrainOf } from "./terrain.js";
+import { BRIDGE_CLEARANCE, FOOTPRINT_GRADE, GRADE_LIMIT, PLINTH_DEPTH, WAY_GRADE, bridgeDeck, bridgeNodes, buildingSpan, bridgeMiddle, createTerrain, decodeHeights, drapeMesh, encodeHeights, gradeFootprints, gradeTrail, gradeWays, limitGrade, raiseEmbankments, terrainOf, wayGrades } from "./terrain.js";
 import { flatPolygon, stripMesh } from "./extrude.js";
 import { createGeoGroundSampler } from "./geo-ground.js";
 import { createSkateState, stepSkate } from "../../sim/skate/controller.js";
@@ -264,9 +264,157 @@ describe("gradeFootprints", () => {
       return s.base - s.foot;
     });
     plinths.sort((a, b) => a - b);
-    // Before the grade: a median of 1.8 m, and 146 plinths over 3 m.
+    // Before the grade: a median of 1.8 m, and 146 plinths over 3 m. The
+    // ways win over the lots (gradeWays cuts and fills the ground near the
+    // streets), so a few more plinths than the 49 before it go over 3 m.
     expect(plinths[Math.floor(plinths.length / 2)]).toBeLessThan(1.4);
-    expect(plinths.filter((p) => p > 3).length).toBeLessThan(60);
+    expect(plinths.filter((p) => p > 3).length).toBeLessThan(65);
   });
 });
 
+
+describe("gradeWays: the playable ways at a skating grade", () => {
+  // A 2 m grid with a 47% hump across a street along x (footway w1118177210
+  // had ~47% before), and a lawn on the far side.
+  const cols = 40;
+  const rows = 30;
+  const raw = [];
+  for (let j = 0; j < rows; j += 1) {
+    for (let i = 0; i < cols; i += 1) {
+      const x = i * 2;
+      raw.push(x < 30 ? 0 : x < 40 ? (x - 30) * 0.47 : 4.7);
+    }
+  }
+  const grid = { cell: 2, x0: 0, z0: 0, cols, rows, heights: Float32Array.from(raw) };
+  const street = { id: "s", kind: "street", width: 8, points: [[0, 20], [78, 20]] };
+  const lawn = { id: "g", kind: "grass", width: 8, points: [[0, 50], [78, 50]] };
+  const worst = (heights, strips) => Math.max(...wayGrades(createTerrain({ ...grid, heights }), strips).map((w) => w.grade));
+
+  it("grades a 47% ramp under a street to WAY_GRADE.max", () => {
+    expect(worst(grid.heights, [street])).toBeGreaterThan(0.4);
+    const out = gradeWays(grid, [street, lawn]);
+    expect(worst(out.heights, [street])).toBeLessThanOrEqual(WAY_GRADE.max + 1e-4);
+    expect(out.nodes).toBeGreaterThan(0);
+  });
+
+  it("cuts and fills inside the old range, and leaves the ground far off the ways", () => {
+    const out = gradeWays(grid, [street]);
+    for (const h of out.heights) {
+      expect(h).toBeGreaterThanOrEqual(-1e-4);
+      expect(h).toBeLessThanOrEqual(4.7 + 1e-4);
+    }
+    // Rows past the network (one cell diagonal) and the blend band are as before.
+    const far = Math.ceil((20 + 4 + 2 * Math.SQRT2 + WAY_GRADE.blend) / 2) + 1;
+    for (let j = far; j < rows; j += 1) for (let i = 0; i < cols; i += 1) expect(out.heights[j * cols + i]).toBe(grid.heights[j * cols + i]);
+  });
+
+  it("is deterministic and does not depend on the order of the strips", () => {
+    const side = { id: "w", kind: "sidewalk", width: 3, points: [[40, 0], [40, 58]] };
+    const a = gradeWays(grid, [street, side]);
+    const b = gradeWays(grid, [side, street]);
+    const c = gradeWays(grid, [street, side]);
+    expect(Array.from(b.heights)).toEqual(Array.from(a.heights));
+    expect(Array.from(c.heights)).toEqual(Array.from(a.heights));
+  });
+
+  it("keeps a pinned node (a bridge joint) at its height and grades the way to it", () => {
+    const pinned = new Uint8Array(cols * rows);
+    const at = 10 * cols + 18;
+    pinned[at] = 1;
+    const out = gradeWays(grid, [street], { pinned });
+    expect(out.heights[at]).toBe(grid.heights[at]);
+    expect(worst(out.heights, [street])).toBeLessThanOrEqual(WAY_GRADE.max + 1e-4);
+  });
+
+  it("leaves a bridge strip out of the network", () => {
+    const deck = { ...street, bridge: true };
+    expect(gradeWays(grid, [deck]).nodes).toBe(0);
+  });
+});
+
+describe("limitGrade", () => {
+  it("keeps a gentle normal and bends a steep one to GRADE_LIMIT", () => {
+    const gentle = [0.05, Math.sqrt(1 - 0.05 * 0.05), 0];
+    expect(limitGrade(gentle)).toBe(gentle);
+    const l = Math.hypot(0.47, 1);
+    const n = limitGrade([-0.47 / l, 1 / l, 0]);
+    expect(Math.hypot(...n)).toBeCloseTo(1, 9);
+    expect(-n[0] / n[1]).toBeCloseTo(GRADE_LIMIT, 9);
+    expect(n[2]).toBe(0);
+    expect(limitGrade([1, 0, 0])).toEqual([1, 0, 0]);
+  });
+
+  it("lets the skater push up a 47% terrain ramp that she rolled back down before", () => {
+    // 47% grade down along +x on a 4 m grid.
+    const heights = [];
+    for (let j = 0; j < 3; j += 1) for (let i = 0; i < 60; i += 1) heights.push(-0.47 * i * 4);
+    const ramp = { terrain: { cell: 4, x0: 0, z0: -4, cols: 60, rows: 3, data: encodeHeights(heights) }, bounds: { minX: 0, maxX: 236, minZ: -4, maxZ: 4 }, surfaces: { ground: 0 } };
+    const env = { sampleGround: createGeoGroundSampler(ramp) };
+    expect(env.sampleGround(118, 0).normal[1]).toBeCloseTo(1 / Math.hypot(1, GRADE_LIMIT), 6);
+    let s = createSkateState({ position: [118, env.sampleGround(118, 0).height, 0], yaw: Math.PI });
+    s.speed = 3;
+    const y0 = s.position[1];
+    for (let i = 0; i < 180; i += 1) s = stepSkate(s, { push: true }, 1 / 60, env);
+    expect(s.state).toBe("rolling");
+    expect(Math.cos(s.yaw)).toBeLessThan(-0.99);
+    expect(s.position[0]).toBeLessThan(118 - 3);
+    expect(s.position[1]).toBeGreaterThan(y0 + 1.5);
+  });
+});
+
+describe("the BeltLine level at skating grades", () => {
+  const level = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../levels/beltline-eastside/level.json"), "utf8"));
+  const t = terrainOf(level);
+  const pins = bridgeNodes(level.terrain, level.strips);
+  const { cell, x0, z0, cols } = level.terrain;
+  // The nodes that gradeWays() keeps: the bridge nodes and the trail band.
+  const trail = level.strips.filter((s) => s.kind === "trail" && !s.bridge);
+  const reach = cell * Math.SQRT2 + 0.01;
+  const nearTrail = (x, z) =>
+    trail.some((s) =>
+      s.points.slice(1).some(([bx, bz], k) => {
+        const [ax, az] = s.points[k];
+        const dx = bx - ax;
+        const dz = bz - az;
+        const u = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1)));
+        return Math.hypot(x - ax - u * dx, z - az - u * dz) <= s.width / 2 + reach;
+      }),
+    );
+  const nearPin = ([x, z]) => {
+    const i = Math.floor((x - x0) / cell);
+    const j = Math.floor((z - z0) / cell);
+    return [0, 1].some((a) => [0, 1].some((b) => pins[(j + b) * cols + i + a] || nearTrail(x0 + (i + a) * cell, z0 + (j + b) * cell)));
+  };
+
+  it("holds every at-grade way off the bridge ends and the trail at WAY_GRADE.max", () => {
+    const steep = wayGrades(t, level.strips).filter((w) => w.grade > WAY_GRADE.max + 0.005 && !nearPin(w.at));
+    expect(steep.map((w) => `${w.id} ${w.grade.toFixed(3)}`)).toEqual([]);
+  });
+
+  it("pins the ground at the ends of each deck, footway w1118177210 among them", () => {
+    const s = level.strips.find((q) => q.id === "w1118177210");
+    expect(s.bridge).toBe(true);
+    for (const [x, z] of s.points) expect(nearPin([x, z])).toBe(true);
+  });
+
+  it("lets the skater push up the stair deck w1118177210 onto its footbridge", () => {
+    const env = { sampleGround: createGeoGroundSampler(level) };
+    const [top, foot] = level.strips.find((q) => q.id === "w1118177210").points;
+    const yaw = Math.atan2(-(top[1] - foot[1]), top[0] - foot[0]);
+    // A little up the deck from its foot, facing up it.
+    const l = Math.hypot(top[0] - foot[0], top[1] - foot[1]);
+    const p = [foot[0] + ((top[0] - foot[0]) * 1.5) / l, foot[1] + ((top[1] - foot[1]) * 1.5) / l];
+    const g = env.sampleGround(p[0], p[1], t.height(p[0], p[1]) + 1);
+    expect(g.id).toBe("w1118177210");
+    let s = createSkateState({ position: [p[0], g.height, p[1]], yaw });
+    s.speed = 3;
+    const y0 = s.position[1];
+    // Up the spur and onto the footbridge it comes off, with no step at the joint.
+    for (let i = 0; i < 120 && s.groundId !== "w431443668"; i += 1) {
+      s = stepSkate(s, { push: true }, 1 / 60, env);
+      expect(s.bonked).toBeFalsy();
+    }
+    expect(s.groundId).toBe("w431443668");
+    expect(s.position[1]).toBeGreaterThan(y0 + 1);
+  });
+});

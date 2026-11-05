@@ -10,10 +10,19 @@
 // Lanes: each main street is a chain of street strips. A chain with an
 // opposite carriageway parallel to it (a divided road, such as Freedom
 // Parkway) is one-way, and the opposite carriageway is on the left of the
-// driver (right-hand traffic). Every other chain gets one lane in each
-// direction, on the right of the center line. At the end of a two-way chain
-// a car turns into the lane back; at the end of a one-way chain it goes on
-// at the start of the same lane.
+// driver (right-hand traffic). Every other chain is two-way. Each travel
+// direction gets the lanes of the street layout (laneLayout() in
+// src/level/geo/lanes.js, from the OSM lanes tags), at the lane centers
+// that the lane markings show. A car keeps its lane. At the end of a
+// two-way chain a car turns (a U-turn, with the left signal) into the lane
+// back; at the end of a one-way chain it goes on at the start of the same
+// lane.
+//
+// Car following: the Intelligent Driver Model (src/sim/cars.js). The car
+// ahead, a stop line, a crosswalk with the skater on it, and the skater in
+// the lane are each a leader for the IDM, and the car takes the lowest
+// acceleration. The acceleration also drives the brake lights, and the lane
+// heading ahead drives the turn signals.
 //
 // Stop rules: a car stops at the stop line before each intersection with a
 // named street (src/level/geo/signs.js), waits TRAFFIC.stopWait, and goes
@@ -25,6 +34,8 @@ import { chainStrips, projectOnLine } from "../../playtest/trail-script.js";
 import { createPath, pathOffsetPoint, pathTangent } from "../npc/path.js";
 import { streetIntersections } from "../../level/geo/signs.js";
 import { hash32, seededRandom } from "../../level/geo/styles.js";
+import { MARKING_SIZES, crosswalksOf, laneLayout } from "../../level/geo/lanes.js";
+import { angleDelta, brakeLevel, idmAccel, idmStopAccel, onCrosswalk, runLaneOffsets, turnSignal } from "../cars.js";
 
 export const TRAFFIC = {
   // A car body never comes nearer to the skater than this (m), when the
@@ -48,8 +59,17 @@ export const TRAFFIC = {
   // The skater is in the lane when the side distance from the car axis is
   // under width / 2 + safeRadius + laneMargin (m).
   laneMargin: 0.75,
-  // Cars per km of lane.
+  // Cars per km of lane (perKm * multiLane on a street with two or more
+  // lanes in the direction).
   perKm: 6,
+  multiLane: 0.7,
+  // The turn signal looks this far ahead along the lane (m): 100 ft.
+  signalAhead: 30,
+  // A skater on a crosswalk ahead (or at its ends) stops the car this far
+  // (m) before the crosswalk (the stop bar gap, lanes.js stopGap).
+  crossingStop: 1,
+  // The speed (m/s) of the U-turn at the end of a two-way street.
+  turnSpeed: 3,
   // The largest height change of a car in one step on the same lane (m).
   // A step in the street (a bridge joint) becomes a short ramp.
   maxClimb: 0.06,
@@ -84,6 +104,7 @@ export const MAIN_STREETS = [
 ];
 
 const MIN_CHAIN = 60; // m. A shorter chain gets no lane.
+const CURB_CLEAR = 1.3; // m from a lane center to the curb band: half a wide car and a margin.
 
 function pathLength(points) {
   let len = 0;
@@ -121,12 +142,55 @@ export function oppositeSide(chain, others, { step = 25, minGap = 5, maxGap = 50
   return right > left ? "right" : "left";
 }
 
-// The lanes of the level: [{ id, name, path, offset, length, speed,
-// oneway, next, stops: [{ sStop, sExit, box }] }]. `boxes` lists the
-// intersections that have a stop line.
+// The strip of a chain that sets its lane layout: of the strips along the
+// chain, the lane layout (lane counts and width) that covers the most
+// length, so the cars follow the lane markings on most of the street. A
+// two-way chain leaves out the oneway-tagged strips (a one-way stretch of a
+// two-way street). Returns { strip, sign, minWidth } with sign +1 when the
+// chain runs the strip direction, or null.
+function chainLayoutStrip(chain, strips, oneway) {
+  const path = createPath(chain);
+  const byKey = new Map();
+  let minWidth = Infinity;
+  for (const s of strips) {
+    const i = Math.floor((s.points.length - 1) / 2);
+    const [ax, az] = s.points[i];
+    const [bx, bz] = s.points[i + 1];
+    const p = projectOnLine(chain, (ax + bx) / 2, (az + bz) / 2);
+    if (p.d > 0.5) continue;
+    minWidth = Math.min(minWidth, s.width);
+    if (!oneway && s.oneway) continue;
+    const L = laneLayout(s, oneway);
+    const key = `${L.forward}/${L.backward}/${s.width}`;
+    const [tx, tz] = pathTangent(path, p.s);
+    const e = byKey.get(key) ?? { strip: s, sign: tx * (bx - ax) + tz * (bz - az) >= 0 ? 1 : -1, length: 0 };
+    e.length += pathLength(s.points);
+    byKey.set(key, e);
+  }
+  let best = null;
+  for (const e of byKey.values()) if (!best || e.length > best.length || (e.length === best.length && e.strip.width < best.strip.width)) best = e;
+  return best ? { ...best, minWidth } : null;
+}
+
+// The lane offsets (curb lane first) of a run of a chain. `along` is +1 when
+// the run goes the chain direction. A lane stays inside the curbs of the
+// narrowest strip of the chain.
+function laneOffsetsOf(ref, along, oneway, width) {
+  const fallback = [oneway ? width / 4 : Math.min(width / 4, 3.5)];
+  if (!ref) return fallback;
+  const offsets = runLaneOffsets(laneLayout(ref.strip, oneway), ref.sign * along);
+  const max = ref.minWidth / 2 - MARKING_SIZES.curb - CURB_CLEAR;
+  return offsets.length ? offsets.map((o) => Math.max(-max, Math.min(max, o))) : fallback;
+}
+
+// The lanes of the level: [{ id, name, path, offset, laneIndex, laneCount,
+// length, speed, oneway, next, stops: [{ sStop, sExit, box }], crossings:
+// [{ s, x, z, dx, dz, depth, w }] }]. laneIndex 0 is the curb lane of its
+// travel direction. `boxes` lists the intersections that have a stop line.
 export function trafficLanes(level, { streets = MAIN_STREETS } = {}) {
   const lanes = [];
   const all = streetIntersections(level);
+  const walks = crosswalksOf(level);
   const boxIndex = new Map();
   const boxes = [];
   for (const group of streets) {
@@ -146,8 +210,9 @@ export function trafficLanes(level, { streets = MAIN_STREETS } = {}) {
       // A divided road without a partner here has no known direction: no lane.
       if (divided && !side) return;
       const runs = side ? [side === "right" ? chain.slice().reverse() : chain] : [chain, chain.slice().reverse()];
-      const offset = side ? width / 4 : Math.min(width / 4, 3.5);
-      const first = lanes.length;
+      const alongs = side ? [side === "right" ? -1 : 1] : [1, -1];
+      const ref = chainLayoutStrip(chain, strips, Boolean(side));
+      const runLanes = [];
       runs.forEach((points, ri) => {
         const path = createPath(points);
         const stops = [];
@@ -172,8 +237,34 @@ export function trafficLanes(level, { streets = MAIN_STREETS } = {}) {
           if (last && st.sStop - last.sStop < 15) last.sExit = Math.max(last.sExit, st.sExit);
           else merged.push({ ...st });
         }
-        lanes.push({ id: lanes.length, name: group[0], path, offset, length: path.length, speed, oneway: Boolean(side), highway, next: side ? first : first + (1 - ri), nextS: 0, stops: merged, stripIds });
+        // The crosswalks over this street that the run passes.
+        const walksOnRun = [];
+        for (const c of walks) {
+          if (!signNames.has(c.name)) continue;
+          const x = c.x + c.dx * c.at;
+          const z = c.z + c.dz * c.at;
+          const p = projectOnLine(points, x, z);
+          if (p.d > width / 2 + 2 || p.s < 1 || p.s > path.length - 1) continue;
+          walksOnRun.push({ s: p.s, x, z, dx: c.dx, dz: c.dz, depth: MARKING_SIZES.crossDepth, w: c.w });
+        }
+        walksOnRun.sort((a, b) => a.s - b.s);
+        const offsets = laneOffsetsOf(ref, alongs[ri], Boolean(side), width);
+        runLanes.push(
+          offsets.map((offset, k) => {
+            const lane = { id: lanes.length, name: group[0], path, offset, laneIndex: k, laneCount: offsets.length, length: path.length, speed, oneway: Boolean(side), highway, next: lanes.length, nextS: 0, stops: merged, crossings: walksOnRun, stripIds };
+            lanes.push(lane);
+            return lane;
+          }),
+        );
       });
+      // Two-way: the end of a lane turns into the same lane (or the nearest
+      // one) of the run back.
+      if (runLanes.length === 2) {
+        runLanes.forEach((run, ri) => {
+          const back = runLanes[1 - ri];
+          for (const lane of run) lane.next = back[Math.min(lane.laneIndex, back.length - 1)].id;
+        });
+      }
     });
     linkOneWay(lanes.filter((l) => l.oneway && l.name === group[0]), level.bounds);
   }
@@ -192,12 +283,14 @@ function edgeDistance([x, z], b) {
 // start at the level edge (the far carriageway comes back), else to its own
 // start.
 function linkOneWay(group, bounds) {
+  // A lane goes on in the lane of the same index (or the nearest one).
+  const sameIndex = (lane, o) => o.laneIndex === Math.min(lane.laneIndex, o.laneCount - 1);
   for (const lane of group) {
     const end = lane.path.points[lane.path.points.length - 1];
     const [tx, tz] = pathTangent(lane.path, lane.length);
     let link = null;
     for (const o of group) {
-      if (o === lane) continue;
+      if (o === lane || o.path === lane.path || !sameIndex(lane, o)) continue;
       const p = projectOnLine(o.path.points, end[0], end[1]);
       if (p.d > 3 || p.s < 1 || p.s > o.length - 20) continue;
       const [ux, uz] = pathTangent(o.path, p.s);
@@ -208,7 +301,7 @@ function linkOneWay(group, bounds) {
       for (const o of group) {
         const start = o.path.points[0];
         const d = Math.hypot(start[0] - end[0], start[1] - end[1]);
-        if (o !== lane && d < best && edgeDistance(start, bounds) < LINK_EDGE) {
+        if (o !== lane && o.path !== lane.path && sameIndex(lane, o) && d < best && edgeDistance(start, bounds) < LINK_EDGE) {
           best = d;
           link = { id: o.id, s: 0 };
         }
@@ -254,6 +347,11 @@ function pickKind(rand, busOk) {
 
 const flatHeight = () => 0;
 
+function spawnSpeedLimit(lane, front) {
+  const st = lane.stops.find((t) => t.sStop >= front);
+  return st ? Math.sqrt(2 * TRAFFIC.brake * 0.5 * Math.max(0, st.sStop - front)) : Infinity;
+}
+
 // Creates the traffic. `heightAt(x, z, y)` gives the street height under a
 // car (y is the last car height); the default is flat ground.
 export function createTraffic(level, { seed = 1, heightAt = flatHeight, streets = MAIN_STREETS, perKm = TRAFFIC.perKm } = {}) {
@@ -261,7 +359,7 @@ export function createTraffic(level, { seed = 1, heightAt = flatHeight, streets 
   const cars = [];
   for (const lane of lanes) {
     const rand = seededRandom(hash32(`${lane.name}:${lane.id}:${seed}`));
-    const count = Math.max(1, Math.round((lane.length / 1000) * perKm));
+    const count = Math.max(1, Math.round((lane.length / 1000) * perKm * (lane.laneCount > 1 ? TRAFFIC.multiLane : 1)));
     const spacing = lane.length / count;
     let bus = !lane.oneway && lane.length > 600;
     for (let i = 0; i < count; i += 1) {
@@ -281,7 +379,8 @@ export function createTraffic(level, { seed = 1, heightAt = flatHeight, streets 
         color: Math.floor(rand() * CAR_COLORS.length),
         lane: lane.id,
         s,
-        speed: lane.speed * (0.6 + rand() * 0.4),
+        // No faster than a comfortable stop before the next stop line.
+        speed: Math.min(lane.speed * (0.6 + rand() * 0.4), spawnSpeedLimit(lane, s + half)),
         ...pose,
         y,
         wait: 0,
@@ -290,10 +389,14 @@ export function createTraffic(level, { seed = 1, heightAt = flatHeight, streets 
         box: -1,
         boxExit: 0,
         yielding: false,
+        crossing: false,
+        accel: 0,
+        brake: 0,
+        signal: 0,
       });
     }
   }
-  return { lanes, boxes, occupant: boxes.map(() => -1), cars, tick: 0, heightAt, minSkaterGap: Infinity, closest: Infinity, yields: 0 };
+  return { lanes, boxes, occupant: boxes.map(() => -1), cars, tick: 0, heightAt, minSkaterGap: Infinity, closest: Infinity, yields: 0, crossingYields: 0 };
 }
 
 function nextStop(lane, front) {
@@ -302,24 +405,38 @@ function nextStop(lane, front) {
   return i;
 }
 
-// The free distance (m) from the car front to the rear of the nearest car
-// ahead, on the same lane or past its end on the next lane.
-function leaderGap(state, car) {
+// The nearest car ahead, on the same lane or past its end on the next
+// lane: { gap, speed }, gap the free distance (m) from the car front to its
+// rear (Infinity with no car ahead).
+function leader(state, car) {
   const lane = state.lanes[car.lane];
   const front = car.s + CAR_SIZE[car.kind].length / 2;
-  let best = Infinity;
+  let gap = Infinity;
+  let speed = 0;
   for (const o of state.cars) {
     if (o === car) continue;
     const half = CAR_SIZE[o.kind].length / 2;
-    if (o.lane === car.lane && o.s > car.s) best = Math.min(best, o.s - half - front);
-    else if (o.lane === lane.next && o.s >= lane.nextS && (o.lane !== car.lane || o.s < car.s)) best = Math.min(best, lane.length - front + o.s - lane.nextS - half);
+    let g = Infinity;
+    if (o.lane === car.lane && o.s > car.s) g = o.s - half - front;
+    else if (o.lane === lane.next && o.s >= lane.nextS && (o.lane !== car.lane || o.s < car.s)) g = lane.length - front + o.s - lane.nextS - half;
+    if (g < gap) {
+      gap = g;
+      speed = o.speed;
+    }
   }
-  return best;
+  return { gap, speed };
 }
 
-// The speed that stops the car in `dist` m at TRAFFIC.brake.
-function stopSpeed(dist) {
-  return Math.sqrt(2 * TRAFFIC.brake * Math.max(0, dist));
+// The crosswalks ahead of `front` (m) on a lane, within `range` m, with the
+// skater on them (or at their ends). Returns the nearest one, or null.
+function skaterCrossing(lane, front, until, skater, carY) {
+  if (!skater || Math.abs(skater[1] - carY) > TRAFFIC.skaterHeight) return null;
+  for (const cw of lane.crossings) {
+    if (cw.s - cw.depth / 2 < front) continue;
+    if (cw.s > until) break;
+    if (onCrosswalk(cw, skater[0], skater[2])) return cw;
+  }
+  return null;
 }
 
 // Is the skater in the lane ahead of the car? Returns the distance (m) from
@@ -408,51 +525,79 @@ export function stepTraffic(state, dt, skater = null) {
     const size = CAR_SIZE[car.kind];
     const half = size.length / 2;
     const front = car.s + half;
-    let target = lane.speed;
+    const v = car.speed;
+    const v0 = lane.speed;
+    // hold: the car is at a stop point and stays at rest.
+    let hold = false;
+    // A fixed stop point `dist` m ahead of the front.
+    const stopAt = (dist) => {
+      if (dist < 0.6 && v < 0.2) hold = true;
+      else acc = Math.min(acc, idmStopAccel(v, v0, dist));
+    };
 
-    // The car ahead.
-    const lead = leaderGap(state, car);
-    target = Math.min(target, stopSpeed(lead - T.gap));
+    // The car ahead (the IDM leader).
+    const lead = leader(state, car);
+    let acc = idmAccel(v, v0, lead.gap, v - lead.speed);
+    if (lead.speed < 0.1 && lead.gap - T.gap < 0.6 && v < 0.2) hold = true;
 
     // The stop line, and the intersection.
     const st = lane.stops[car.next];
     if (st) {
       const dist = st.sStop - front;
-      if (dist < 0.6 && car.speed < 0.2) {
+      if (dist < 0.6 && v < 0.2) {
         // The wait counts from the full stop.
-        if (car.speed === 0) car.wait += dt;
+        if (v === 0) car.wait += dt;
         const free = state.occupant[st.box] === -1 || state.occupant[st.box] === car.id;
         // Room past the intersection, so a queue never blocks it.
-        const room = lead >= st.sExit - st.sStop + size.length + T.gap;
-        if (car.wait >= T.stopWait && free && room) {
+        const room = lead.gap >= st.sExit - st.sStop + size.length + T.gap;
+        // No skater on a crosswalk on the far side.
+        const clear = !skaterCrossing(lane, front, st.sExit + 4, skater, car.y);
+        if (car.wait >= T.stopWait && free && room && clear) {
           state.occupant[st.box] = car.id;
           car.box = st.box;
           car.boxExit = st.sExit;
           car.next += 1;
           car.wait = 0;
-        } else target = 0;
-      } else target = Math.min(target, stopSpeed(dist));
+        } else hold = true;
+      } else stopAt(dist);
     }
 
+    // Slow to turnSpeed for the U-turn at the end of a two-way street.
+    if (!lane.oneway) {
+      const toEnd = lane.length - car.s;
+      const need = (v * v - T.turnSpeed * T.turnSpeed) / (2 * Math.max(1, toEnd));
+      if (need > 0.2) acc = Math.min(acc, -Math.min(T.hardBrake, need));
+    }
+
+    // The skater on a crosswalk ahead: stop before it and wait.
+    const cw = skaterCrossing(lane, front, front + T.lookAhead, skater, car.y);
     // The skater in the lane ahead: slow, stop, wait, then go on.
     const ahead = skaterAhead(car, skater);
-    if (ahead < Infinity) {
-      target = Math.min(target, stopSpeed(ahead - T.safeRadius - T.yieldMargin));
-      if (!car.yielding) state.yields += 1;
+    if (cw || ahead < Infinity) {
+      if (cw) stopAt(Math.max(0, cw.s - cw.depth / 2 - T.crossingStop - front));
+      if (ahead < Infinity) stopAt(ahead - T.safeRadius - T.yieldMargin);
+      if (!car.yielding) {
+        state.yields += 1;
+        if (cw) state.crossingYields += 1;
+      }
       car.yielding = true;
+      car.crossing = Boolean(cw) || (car.crossing && car.yielding);
       car.yieldTime = T.yieldWait;
     } else if (car.yieldTime > 0) {
       car.yieldTime = Math.max(0, car.yieldTime - dt);
-      if (car.speed < 0.5) target = 0;
+      if (v < 0.5) hold = true;
       if (car.yieldTime === 0) car.yielding = false;
     } else car.yielding = false;
+    if (!car.yielding) car.crossing = false;
 
-    if (car.speed < target) car.speed = Math.min(target, car.speed + T.accel * dt);
-    else car.speed = Math.max(target, car.speed - T.hardBrake * dt, 0);
-    if (target === 0 && car.speed < 0.3) car.speed = 0;
+    if (hold) acc = -T.hardBrake;
+    car.speed = Math.max(0, Math.min(v0, v + acc * dt));
+    if (hold && car.speed < 0.3) car.speed = 0;
+    car.accel = (car.speed - v) / dt;
+    car.brake = brakeLevel(car.accel, car.speed);
 
     // Never into the car ahead.
-    let ds = Math.min(car.speed * dt, Math.max(0, lead - 0.5));
+    let ds = Math.min(car.speed * dt, Math.max(0, lead.gap - 0.5));
 
     // The next lane at the end of this one must be free at its start.
     if (car.s + ds > lane.length) {
@@ -506,6 +651,12 @@ export function stepTraffic(state, dt, skater = null) {
       state.occupant[car.box] = -1;
       car.box = -1;
     }
+    // The turn signal: the heading change over the next signalAhead m
+    // (a U-turn at a lane end signals left, as in right-hand traffic).
+    const ahead2 = poseAfter(state, car, Math.min(T.signalAhead, state.lanes[car.lane].length - 1));
+    let dyaw = angleDelta(car.yaw, ahead2.yaw);
+    if (Math.abs(dyaw) > 2.6) dyaw = Math.PI;
+    car.signal = turnSignal(dyaw, car.signal);
     minGap = Math.min(minGap, skaterGap(car, skater));
   }
   state.tick += 1;

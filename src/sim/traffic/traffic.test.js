@@ -63,16 +63,24 @@ describe("lanes", () => {
     expect(oppositeSide(d1, [d2])).toBe("right");
     expect(oppositeSide(d2, [d1])).toBe("right");
     const { lanes } = trafficLanes(TOWN, { streets: [["Divided Parkway"]] });
-    expect(lanes).toHaveLength(2);
-    expect(lanes.every((l) => l.oneway)).toBe(true);
-    const north = lanes.find((l) => l.path.points[0][1] === 100);
-    const south = lanes.find((l) => l.path.points[0][1] === 120);
-    // The north carriageway goes west, the south one goes east.
-    expect(north.path.points[0][0]).toBe(300);
-    expect(south.path.points[0][0]).toBe(-300);
-    // At the level edge each end links to the start of the other carriageway.
-    expect(north.next).toBe(south.id);
-    expect(south.next).toBe(north.id);
+    // A 10 m carriageway with no lanes tag has two lanes (lanes.js laneLayout).
+    expect(lanes).toHaveLength(4);
+    expect(lanes.every((l) => l.oneway && l.laneCount === 2)).toBe(true);
+    for (const k of [0, 1]) {
+      const north = lanes.find((l) => l.path.points[0][1] === 100 && l.laneIndex === k);
+      const south = lanes.find((l) => l.path.points[0][1] === 120 && l.laneIndex === k);
+      // The north carriageway goes west, the south one goes east.
+      expect(north.path.points[0][0]).toBe(300);
+      expect(south.path.points[0][0]).toBe(-300);
+      // At the level edge each end links to the same lane of the other carriageway.
+      expect(north.next).toBe(south.id);
+      expect(south.next).toBe(north.id);
+    }
+    // The curb lane (k = 0) is on the right of the driver, at a lane center.
+    const curb = lanes.find((l) => l.laneIndex === 0);
+    const inner = lanes.find((l) => l.path === curb.path && l.laneIndex === 1);
+    expect(curb.offset).toBeCloseTo(2.5, 6);
+    expect(inner.offset).toBeCloseTo(-2.5, 6);
   });
 
   it("finds the main streets of the BeltLine level, with Freedom Parkway one-way", () => {
@@ -82,7 +90,18 @@ describe("lanes", () => {
     const parkway = lanes.filter((l) => l.name.startsWith("John Lewis"));
     expect(parkway.length).toBeGreaterThan(0);
     expect(parkway.every((l) => l.oneway)).toBe(true);
-    expect(lanes.filter((l) => !l.oneway).length % 2).toBe(0);
+    // A two-way lane turns at its end into a lane of the run back.
+    for (const l of lanes.filter((x) => !x.oneway)) {
+      const back = lanes[l.next];
+      expect(back.oneway).toBe(false);
+      expect(back.path).not.toBe(l.path);
+      expect(back.name).toBe(l.name);
+    }
+    // The lanes come from the OSM lane tags: Ponce de Leon has five lanes.
+    const ponce = lanes.filter((l) => l.name.startsWith("Ponce"));
+    expect(ponce.length).toBe(5);
+    // Every lane center is inside the curbs, with room for a wide car.
+    for (const l of lanes) expect(Math.abs(l.offset)).toBeLessThanOrEqual(7 - 0.3 - 1.3 + 1e-9);
     expect(boxes.length).toBeGreaterThan(5);
     // Every lane end goes somewhere: no car is lost.
     for (const l of lanes) expect(lanes[l.next]).toBeDefined();
@@ -286,7 +305,8 @@ describe("yield to the skater", () => {
         expect(t.minSkaterGap).toBeGreaterThanOrEqual(TRAFFIC.safeRadius);
       }
     }
-  });
+    // 40 trials of 40 s: over the 5 s default on a loaded machine.
+  }, 30000);
 
   it("never moves a car into the 2 m circle around a skater who skates around", () => {
     const rand = seededRandom(5);
@@ -347,5 +367,79 @@ describe("cars as obstacles", () => {
     for (const st of states) expect(st.position[0]).toBeLessThanOrEqual(rear - SKATE.bodyRadius + 1e-6);
     expect(states.some((st) => st.bonked)).toBe(true);
     expect(state.position[0]).toBeGreaterThan(rear - 1);
+  });
+});
+
+describe("lights, signals, and crosswalks", () => {
+  it("lights the brakes while it slows for a stop line, and not while it cruises", () => {
+    const t = createTraffic(TOWN, { streets: MAIN, perKm: 1 });
+    const car = t.cars[0];
+    t.cars = [car];
+    const st = t.lanes[car.lane].stops[0];
+    car.s = st.sStop - 150;
+    car.speed = 5;
+    car.next = 0;
+    let braked = false;
+    let cruisedDark = false;
+    for (let i = 0; i < 60 * 60 && car.s < st.sStop; i += 1) {
+      stepTraffic(t, DT, null);
+      if (car.accel < -0.5) {
+        braked = true;
+        expect(car.brake).toBeGreaterThan(0.4);
+      }
+      if (Math.abs(car.accel) < 0.05 && car.speed > 3) {
+        cruisedDark = true;
+        expect(car.brake).toBe(0);
+      }
+      if (car.speed === 0) expect(car.brake).toBeGreaterThan(0);
+    }
+    expect(braked).toBe(true);
+    expect(cruisedDark).toBe(true);
+  });
+
+  it("signals left before the U-turn at the end of a two-way street", () => {
+    const t = createTraffic(TOWN, { streets: MAIN, perKm: 1 });
+    const car = t.cars[0];
+    const lane = t.lanes[car.lane];
+    let signalled = false;
+    let early = false;
+    for (let i = 0; i < 60 * 240 && car.lane === lane.id; i += 1) {
+      stepTraffic(t, DT, null);
+      if (car.lane !== lane.id) break;
+      const toEnd = lane.length - car.s;
+      if (toEnd < TRAFFIC.signalAhead - 5) signalled ||= car.signal === 1;
+      if (toEnd > TRAFFIC.signalAhead + 5 && car.signal !== 0) early = true;
+    }
+    expect(signalled).toBe(true);
+    expect(early).toBe(false);
+    // The U-turn is slow.
+    expect(car.speed).toBeLessThanOrEqual(TRAFFIC.turnSpeed + 0.5);
+    // After the turn the signal goes off.
+    for (let i = 0; i < 60 * 8; i += 1) stepTraffic(t, DT, null);
+    expect(car.signal).toBe(0);
+  });
+
+  it("stops before a crosswalk with the skater on it, even out of its lane, then goes on", () => {
+    const t = createTraffic(TOWN, { streets: MAIN, perKm: 1 });
+    const car = t.cars.find((c) => t.lanes[c.lane].path.points[0][0] < 0);
+    t.cars = [car];
+    const lane = t.lanes[car.lane];
+    car.s = 150;
+    car.next = 0;
+    const cw = lane.crossings.find((c) => c.s > car.s + 30);
+    expect(cw).toBeDefined();
+    // The skater is on the far half of the crosswalk: not in the car lane.
+    const skater = [cw.x, 0, cw.z - lane.offset - 1];
+    for (let i = 0; i < 60 * 40; i += 1) stepTraffic(t, DT, skater);
+    const front = car.s + CAR_SIZE[car.kind].length / 2;
+    expect(car.speed).toBe(0);
+    expect(car.crossing).toBe(true);
+    expect(t.crossingYields).toBeGreaterThan(0);
+    expect(front).toBeLessThanOrEqual(cw.s - cw.depth / 2 - TRAFFIC.crossingStop + 0.01);
+    expect(front).toBeGreaterThan(cw.s - cw.depth / 2 - TRAFFIC.crossingStop - 1.5);
+    // The skater leaves the crosswalk: the car drives on over it.
+    for (let i = 0; i < 60 * 30; i += 1) stepTraffic(t, DT, null);
+    expect(car.s + CAR_SIZE[car.kind].length / 2 > cw.s || car.lane !== lane.id).toBe(true);
+    expect(car.crossing).toBe(false);
   });
 });

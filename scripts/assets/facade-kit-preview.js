@@ -9,7 +9,7 @@ import dracoWasmUrl from "three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?
 import { loadLevel } from "../../src/level/levels.js";
 import { orientRing } from "../../src/level/geo/extrude.js";
 import { frontEdges } from "../../src/level/geo/facade-kit.js";
-import { AWNING_COLORS } from "../../src/level/geo/geo-mesh.js";
+import { AWNING_COLORS, muralWalls } from "../../src/level/geo/geo-mesh.js";
 import { STYLES, STYLE_INDEX, chooseStyle, hash32 } from "../../src/level/geo/styles.js";
 import { buildingSpan } from "../../src/level/geo/terrain.js";
 import { LOD1, LOD1_DISTANCE, byModule, facadePlacements, instanceMatrix } from "./facade-kit-placement.js";
@@ -23,6 +23,7 @@ export async function previewKit({ scene, camera, levelName = "beltline-eastside
   const nodes = new Map();
   gltf.scene.traverse((o) => o.isMesh && nodes.set(o.name, o));
   const fronts = frontEdges(level);
+  const murals = new Map(muralWalls(level).map((mw) => [mw.id, mw]));
   const eye = camera.position;
   const all = [];
   let buildings = 0;
@@ -33,7 +34,7 @@ export async function previewKit({ scene, camera, levelName = "beltline-eastside
     const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
     const span = buildingSpan(level, b);
     const seed = hash32(String(b.id));
-    const list = facadePlacements({ ring: orientRing(b.outer, false), style, base: span.base, top: span.top, front: fronts.get(b.id) ?? null, seed });
+    const list = facadePlacements({ ring: orientRing(b.outer, false), holes: b.holes ?? [], style, base: span.base, top: span.top, front: fronts.get(b.id) ?? null, mural: murals.get(b.id) ?? null, seed });
     const trim = new THREE.Color().setRGB(...style.trim, THREE.SRGBColorSpace);
     const awning = new THREE.Color().setRGB(...AWNING_COLORS[seed % AWNING_COLORS.length], THREE.SRGBColorSpace);
     for (const it of list) all.push({ ...it, color: it.tint === "trim" ? trim : it.tint === "awning" ? awning : null });

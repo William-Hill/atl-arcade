@@ -63,13 +63,13 @@ be a few cm bigger (sills and caps stick out).
 | `window_stucco_apartment` | 1.56 × 1.98 × 0.10 | frame bottom center | stucco-apartment, craftsman-house, shotgun-house |
 | `window_stucco_modern` | 2.00 × 2.28 × 0.22 | frame bottom center | modern-apartment (0.7×0.62, bay 2.6, floor 3.3) |
 | `cornice_segment` / `cornice_corner` | 2.0 × 0.76 × 0.5 / 1.1 × 0.76 × 1.1 | wall top − 0.76 | parapet ≥ 0.5 m and height > 5 m, street walls |
-| `parapet_cap_segment` / `_corner` | 2.0 × 0.2 × 0.45 / 0.67² | wall top (the cap reaches 0.38 m back over the roof) | every other flat-roof wall |
+| `parapet_cap_segment` / `_corner` | 2.0 × 0.2 × 0.45 / 0.67² | parapet top, `top + style.parapet` (the cap reaches 0.38 m back over the roof) | every wall of a flat-roof style with a parapet |
 | `belt_course_segment` / `_corner` | 2.0 × 0.26 × 0.12 / 0.72² | belt line (top of the ground floor) − 0.13 | storefront styles with 2+ floors |
 | `awning_fabric` (tint) | 2.84 × 1.02 × 1.2 | top edge at the bay center, under the sign band | storefront, stucco |
 | `awning_metal` | 2.84 × 1.14 × 1.0 | canopy top at the bay center | brick, modern, glass |
 | `balcony_juliet` | 2.02 × 1.07 × 0.32 | floor line, window bay center | stucco-apartment, brick-loft upper floors |
 | `balcony_slab` (+lod1) | 3.0 × 1.27 × 1.4 | floor line (slab top), bay center | modern-apartment upper floors |
-| `fire_escape_floor` (+lod1) | 3.4 × 4.8 × 1.1 | floor line, window bay center; scale y to the floor height | brick-loft, brick-warehouse, stucco-apartment side/back walls |
+| `fire_escape_floor` (+lod1) | 3.4 × 4.8 × 1.1 | floor line, window bay center; scale y by `floorH / 4.2` (the stair rise) | brick-loft, brick-warehouse, stucco-apartment side/back walls |
 | `fire_escape_top` (+lod1) | 3.4 × 1.0 × 1.1 | floor line of the top floor | caps the stack |
 | `fire_escape_ladder` | 0.49 × 3.3 × 0.82 | floor line of the lowest platform | hangs under it |
 | `ac_unit_wall` | 0.66 × 0.78 × 0.45 | bottom center, 0.45 m under a window bottom | side walls of apartments and houses |
@@ -130,9 +130,11 @@ import Three.js:
 import { facadePlacements, byModule, instanceMatrix, LOD1, LOD1_DISTANCE } from "../../scripts/assets/facade-kit-placement.js";
 const list = facadePlacements({
   ring: orientRing(b.outer, false),
+  holes: b.holes ?? [],                       // courtyards: no roof units there
   style: STYLES[STYLE_INDEX[chooseStyle(b, level)]],
   base: span.base, top: span.top,             // buildingSpan(level, b)
   front: frontEdges(level).get(b.id) ?? null, // the storefront edge + wraps
+  mural: murals.get(b.id) ?? null,            // muralWalls(level) by building id
   seed: hash32(String(b.id)),
 });
 // -> [{ module, wall, position: [x, y, z], rotationY, scale: [sx, sy, 1], tint }]
@@ -143,19 +145,29 @@ Per building:
 1. Front walls = `front.edge` plus `front.wraps`: the storefront wall the game
    already finds from the real OSM/Overture street lines (`frontEdge`).
    Storefront styles get storefront bays, sign boards, pilasters, a belt
-   course, and awnings (chance `max(style.awnings, 0.5)` per bay) on those
-   walls only.
-2. Every wall ≥ 1.5 m gets the style window on every floor above the shop
-   (every floor on the other walls).
+   course, and awnings (chance `max(style.awnings, 0.5)` per bay) on the
+   primary front. A wrap wall gets only its corner bay (glass + sign board),
+   like `shopFront()`.
+2. Every wall ≥ 1.5 m gets the style window on every floor. Storefront styles
+   skip the ground floor on every wall, because the shader paints shop glass
+   there (and `wallDepth()` puts no sill there).
+   With a `mural`, no wall module goes on the mural rectangle or within
+   `MURAL_CLEAR = 0.3` m of it, and the fire escape avoids that wall.
 3. Upper floors of front walls: a balcony on ~18% of the bays (modern: slab;
    stucco/brick loft: juliet). Other walls: an AC unit on ~10% of windows.
 4. Brick and stucco apartments with 3+ floors: a fire escape on the longest
    non-front wall ≥ 8 m (50% chance), on its middle bay, with a downspout
    2.2 m beside it. The windows behind it are skipped.
-5. The roof line: cornice on the front walls of a tall parapet style (all
-   walls if it has no storefront), parapet cap on the rest; corner pieces at
-   the outside corners.
-6. Roof units on flat roofs (rule 8).
+5. The roof line, as `buildingKit()`: cornice at the wall top on the front
+   walls of a tall parapet style (all walls if it has no storefront), and a
+   parapet cap at `top + style.parapet` on every wall when the style has a
+   parapet (none otherwise). Corner pieces go at the outside corners: a cap
+   corner at each, a cornice corner between two cornice walls.
+6. `fire_escape_floor` scales y by `floorH / FIRE_ESCAPE_RISE` (4.2 m, the
+   stair rise; the 4.8 m nominal height includes the top handrail), so each
+   stair lands on the next platform.
+7. Roof units on flat roofs (rule 8), never in a courtyard (`holes`) or
+   within 1.5 m + clearance of its edge.
 
 Wiring it in (the parent's job, not done here):
 

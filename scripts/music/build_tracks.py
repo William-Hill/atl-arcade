@@ -93,6 +93,15 @@ def main():
             d = decoded(f)
             checks[os.path.basename(f)] = {"bytes": os.path.getsize(f), "decodedSamples": len(d), "lagSamples": lag_fast(ref, d)}
         L = loop["samples"]
+        # The manifest's grid only holds if both encodes start on sample 0;
+        # Opus keeps the exact length, AAC may pad its last frame (loopEnd is explicit).
+        for name, c in checks.items():
+            if c["lagSamples"] != 0:
+                sys.exit(f"{tid}: {name} is shifted by {c['lagSamples']} samples")
+            if name.endswith(".ogg") and c["decodedSamples"] != L:
+                sys.exit(f"{tid}: {name} decodes to {c['decodedSamples']} samples, want {L}")
+            if not L <= c["decodedSamples"] < L + 2048:
+                sys.exit(f"{tid}: {name} decodes to {c['decodedSamples']} samples, want {L} (+AAC padding)")
         entry = {
             "id": tid,
             "title": s["title"],

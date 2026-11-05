@@ -7,6 +7,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { createServer } from "vite";
 import { chromium } from "@playwright/test";
+import { execFileSync } from "node:child_process";
 
 const args = process.argv.slice(2);
 function opt(name, fallback) {
@@ -37,6 +38,7 @@ const BASE = {
 const server = await createServer({ server: { port, strictPort: true }, logLevel: "error" });
 await server.listen();
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+const commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 const log = [];
 try {
   for (const shot of want) {
@@ -75,7 +77,7 @@ try {
     const file = `${out}/${shot.name}.png`;
     await page.screenshot({ path: file, timeout: 300000 });
     const info = await page.evaluate(() => ({ renderer: window.__atl.rendererInfo, look: window.__atl.tuneLook(), grade: Object.fromEntries(Object.entries(window.__atl.post?.grade?.uniforms ?? {}).filter(([k]) => k !== "tDiffuse").map(([k, u]) => [k, u.value])), bloom: window.__atl.post?.bloom?.strength ?? null, weather: window.__atl.weather ? { kind: window.__atl.weather.kind, elevation: window.__atl.weather.elevation } : null }));
-    const entry = { name: shot.name, url: `/?${q}`, tune: shot.tune ?? null, ...info, seconds: Math.round((Date.now() - t0) / 1000) };
+    const entry = { name: shot.name, commit, url: `/?${q}`, tune: shot.tune ?? null, ...info, seconds: Math.round((Date.now() - t0) / 1000) };
     log.push(entry);
     console.log(file, JSON.stringify(entry));
     await page.close();

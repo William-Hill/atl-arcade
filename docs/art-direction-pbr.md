@@ -241,7 +241,7 @@ Comic effects ride on the pbr look as a layer, not a new look:
 ## Style frames (#114)
 
 Options per subject in `docs/style-frames/<subject>/`, each image with its
-`provenance.json`, and a contact sheet of all options grouped by subject in
+`<frame>.provenance.json` and a folder `provenance.json` listing them, and a contact sheet of all options grouped by subject in
 `docs/style-frames/contact-sheet.jpg`. The owner chooses the frames to keep;
 the chosen ones replace the option lists below.
 

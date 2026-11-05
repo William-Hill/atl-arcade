@@ -2,8 +2,10 @@
 // provenance.json per option in docs/style-frames/<subject>/, the today
 // frames in docs/style-frames/today/, and a contact sheet of all options,
 // grouped by subject. ImageMagick 6 only (no image model, 0 credits).
-//   node scripts/art/style-frames.mjs --raw ~/evidence/art/raw [--out docs/style-frames]
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
+//   node scripts/art/style-frames.mjs --raw ~/evidence/art/raw [--out docs/style-frames] [--commit <sha>]
+// The commit is the one the captures were rendered at: the capture log's
+// `commit`, else --commit, else HEAD.
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -20,13 +22,14 @@ const logs = {};
 for (const f of readdirSync(raw).filter((f) => f.startsWith("shots-log-")).sort()) {
   for (const e of JSON.parse(readFileSync(join(raw, f), "utf8"))) logs[e.name] = e;
 }
-const commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+const commit = opt("--commit", execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim());
 const im = execFileSync("convert", ["-version"], { encoding: "utf8" }).split("\n")[0].replace("Version: ", "");
 const three = JSON.parse(readFileSync("node_modules/three/package.json", "utf8")).version;
 const pw = JSON.parse(readFileSync("node_modules/@playwright/test/package.json", "utf8")).version;
 const date = new Date().toISOString().slice(0, 10);
-const tmp = join(tmpdir(), `style-frames-${process.pid}`);
-mkdirSync(tmp, { recursive: true });
+const tmp = mkdtempSync(join(tmpdir(), "style-frames-"));
+// Each output folder also gets one provenance.json listing all of its frames.
+const folders = {};
 
 function build(dir, o, subject) {
   mkdirSync(dir, { recursive: true });
@@ -63,13 +66,14 @@ function build(dir, o, subject) {
       look: log.look,
       grade: log.grade,
       bloom: log.bloom,
-      commit,
+      commit: log.commit ?? commit,
     },
     credits: 0,
     date,
     license: "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props.",
   };
   writeFileSync(join(dir, `${o.id}.provenance.json`), JSON.stringify(prov, null, 2) + "\n");
+  (folders[dir] ??= []).push(prov);
   return { jpg, title: o.title };
 }
 
@@ -88,29 +92,31 @@ function row(title, tiles) {
   return f;
 }
 
-const rows = [];
-const today = manifest.today.map((o) => build(join(out, "today"), { ...o, id: o.id }, "today"));
-rows.push(row("TODAY: the pbr look as it is (in-game, commit " + commit.slice(0, 7) + ")", today));
-for (const s of manifest.subjects) {
-  const tiles = s.options.map((o) => build(join(out, s.id), o, s.id));
-  rows.push(row(`STYLE FRAMES: ${s.title} (${tiles.length} options)`, tiles));
+try {
+  const rows = [];
+  const today = manifest.today.map((o) => build(join(out, "today"), { ...o, id: o.id }, "today"));
+  rows.push(row("TODAY: the pbr look as it is (in-game, commit " + commit.slice(0, 7) + ")", today));
+  for (const s of manifest.subjects) {
+    const tiles = s.options.map((o) => build(join(out, s.id), o, s.id));
+    rows.push(row(`STYLE FRAMES: ${s.title} (${tiles.length} options)`, tiles));
+  }
+  execFileSync("convert", [...rows, "-background", "#222", "-gravity", "west", "-append", "-quality", "82", join(out, "contact-sheet.jpg")]);
+  const sheet = {
+    file: "contact-sheet.jpg",
+    tool: `${im} montage of the style frames in this folder`,
+    method: "contact sheet of in-game captures and scripted paintovers (no image model)",
+    prompt: null,
+    settings: { build: "scripts/art/style-frames.mjs", manifest: "scripts/art/style-frames.json", commit },
+    credits: 0,
+    date,
+    license: "Original work for ATL Arcade; see each frame's provenance.json.",
+  };
+  writeFileSync(join(out, "contact-sheet.provenance.json"), JSON.stringify(sheet, null, 2) + "\n");
+  (folders[out] ??= []).push(sheet);
+  for (const [dir, frames] of Object.entries(folders)) {
+    writeFileSync(join(dir, "provenance.json"), JSON.stringify({ frames }, null, 2) + "\n");
+  }
+  console.log("wrote", join(out, "contact-sheet.jpg"));
+} finally {
+  rmSync(tmp, { recursive: true, force: true });
 }
-execFileSync("convert", [...rows, "-background", "#222", "-gravity", "west", "-append", "-quality", "82", join(out, "contact-sheet.jpg")]);
-writeFileSync(
-  join(out, "contact-sheet.provenance.json"),
-  JSON.stringify(
-    {
-      file: "contact-sheet.jpg",
-      tool: `${im} montage of the style frames in this folder`,
-      method: "contact sheet of in-game captures and scripted paintovers (no image model)",
-      prompt: null,
-      settings: { build: "scripts/art/style-frames.mjs", manifest: "scripts/art/style-frames.json", commit },
-      credits: 0,
-      date,
-      license: "Original work for ATL Arcade; see each frame's provenance.json.",
-    },
-    null,
-    2,
-  ) + "\n",
-);
-console.log("wrote", join(out, "contact-sheet.jpg"));

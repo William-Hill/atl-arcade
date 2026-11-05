@@ -1,0 +1,44 @@
+{
+  "asset": "Blender trees for the pbr look: oak (willow oak), pine (loblolly), magnolia, myrtle (crape myrtle), dogwood, street (red maple). Each GLB holds tree:<species>:<0..2>: a branching trunk with root flare (moss near the ground on oak, dogwood and maple) and leaf cards.",
+  "date": "2026-11-04",
+  "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco",
+  "source": "scripts/blender/pbr_trees.py. Branches are seeded random tubes, leaves are quads. No library, scan, photo, or generated model is in it.",
+  "command": "blender -b -P scripts/blender/pbr_trees.py -- assets/trees",
+  "prompt": "None. The script is the full recipe; run it again to rebuild the files.",
+  "credits": "Original work for this project. No third-party art. No paid generation credits.",
+  "format": "GLB, Draco, no materials or textures. COLOR_0 linear vertex color (bark, moss, leaf color with baked crown occlusion), _SWAY (wind weight) and _LEAF custom attributes, crown-facing normals on the leaf cards. _LEAF is [u, v, code]: leaf cards carry the species leaf shape (src/render/leaf-cut.js LEAF_SHAPE_OF), bark carries -1 - bark kind; the shader draws the leaf outline and bark pattern, so no texture is downloaded.",
+  "files": {
+    "oak.glb": {
+      "bytes": 199476,
+      "triangles": 2992,
+      "variants": 3
+    },
+    "pine.glb": {
+      "bytes": 135976,
+      "triangles": 2056,
+      "variants": 3
+    },
+    "magnolia.glb": {
+      "bytes": 202584,
+      "triangles": 3168,
+      "variants": 3
+    },
+    "myrtle.glb": {
+      "bytes": 170356,
+      "triangles": 2504,
+      "variants": 3
+    },
+    "dogwood.glb": {
+      "bytes": 174636,
+      "triangles": 2632,
+      "variants": 3
+    },
+    "street.glb": {
+      "bytes": 180004,
+      "triangles": 2752,
+      "variants": 3
+    }
+  },
+  "nodes": "tree_<species>_<variant>; GLTFLoader drops ':' so geo-view glbTreeTemplates() maps them to tree:<species>:<variant>. Far trees are impostors baked from these models in the browser at load (src/render/tree-impostors.js), not stored in the files.",
+  "total_bytes": 1063032
+}

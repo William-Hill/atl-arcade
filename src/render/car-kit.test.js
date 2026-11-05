@@ -46,9 +46,9 @@ describe("car kit", () => {
     }
   });
 
-  it("paints the body of each car, and keeps the bus in its own colors", () => {
-    for (const kind of ["sedan", "hatchback", "pickup", "van"]) expect(templates[kind].paint.some((p) => p === 1)).toBe(true);
-    expect(templates.bus.paint.every((p) => p === 0)).toBe(true);
+  it("paints the body of each car, and keeps the bus and the taxi in their own colors", () => {
+    for (const kind of ["sedan", "hatchback", "pickup", "van", "box_truck"]) expect(templates[kind].paint.some((p) => p === 1)).toBe(true);
+    for (const kind of ["bus", "taxi"]) expect(templates[kind].paint.every((p) => p === 0)).toBe(true);
   });
 
   it("turns each face outward: the normal points away from the body center", () => {

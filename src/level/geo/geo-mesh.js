@@ -387,8 +387,10 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
   const out = [];
   if (!trails.length) return out;
   const buildings = (level.buildings ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));
+  // A claimed footprint is drawn by its landmark model, so no mural there.
+  const claimed = claimedIds(level);
   for (const b of buildings) {
-    if (b.height < 5) continue;
+    if (b.height < 5 || claimed.has(b.id)) continue;
     const ring = orientRing(b.outer, false);
     let best = null;
     for (let i = 0; i < ring.length; i += 1) {

@@ -1,0 +1,184 @@
+{
+  "asset": "Facade kit for the pbr look (Beltline Eastside: Old Fourth Ward, Inman Park, Poncey-Highland): 35 instanceable building modules (storefront glass/door in 3 widths, brick and stucco upper windows, cornice / parapet cap / belt course segments and corners, fabric and metal awnings, juliet and slab balconies, fire escape floor/top/ladder, wall AC unit, rooftop HVAC, condenser, vents, pilasters, downspouts, sign board, gooseneck lamp) plus LOD1 nodes for the 4 largest.",
+  "date": "2026-11-04",
+  "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco",
+  "source": "scripts/blender/facade_kit.py. Geometry is built from boxes, beams, tubes, cones and extruded profiles in code. The trim-sheet atlas (brick, stone, stucco, paint, metals, louver, glass, fabric, rubber, concrete) is painted procedurally in numpy in the same script. No library, scan, photo, or generated model is in it. No brand, logo, sign text, or mural.",
+  "command": "blender -b -P scripts/blender/facade_kit.py -- assets/facades --stats stats.json",
+  "prompt": "None. The script is the full recipe; run it again to rebuild the file.",
+  "credits": "Original work for this project. No third-party art. Meshy credits used: 0. No paid generation credits.",
+  "format": "GLB, Draco (level 7), one material facade_kit with baseColor 1024 JPEG, normal 1024 JPEG, metallicRoughness 512 JPEG; COLOR_0 baked occlusion; extras.kit metadata per node (kind, size, anchor, fits, scale limits, tint, lod1). See docs/facade-kit.md.",
+  "textures": {
+    "count": 3,
+    "baseColor": "1024x1024 JPEG",
+    "normal": "1024x1024 JPEG",
+    "metallicRoughness": "512x512 JPEG",
+    "file_bytes": 296571,
+    "gpu_bytes_with_mips": 12582912
+  },
+  "files": {
+    "facade-kit.glb": {
+      "bytes": 400464,
+      "nodes": 39,
+      "triangles_lod0_total": 5428,
+      "max_module_triangles": 836,
+      "modules": {
+        "ac_unit_wall": {
+          "bytes": 1599,
+          "triangles": 110
+        },
+        "awning_fabric": {
+          "bytes": 1552,
+          "triangles": 82
+        },
+        "awning_metal": {
+          "bytes": 1175,
+          "triangles": 64
+        },
+        "balcony_juliet": {
+          "bytes": 2243,
+          "triangles": 270
+        },
+        "balcony_slab": {
+          "bytes": 3260,
+          "triangles": 478
+        },
+        "balcony_slab_lod1": {
+          "bytes": 1676,
+          "triangles": 158
+        },
+        "belt_course_corner": {
+          "bytes": 606,
+          "triangles": 28
+        },
+        "belt_course_segment": {
+          "bytes": 446,
+          "triangles": 18
+        },
+        "cornice_corner": {
+          "bytes": 1446,
+          "triangles": 98
+        },
+        "cornice_segment": {
+          "bytes": 2227,
+          "triangles": 214
+        },
+        "fire_escape_floor": {
+          "bytes": 6580,
+          "triangles": 836
+        },
+        "fire_escape_floor_lod1": {
+          "bytes": 2895,
+          "triangles": 258
+        },
+        "fire_escape_ladder": {
+          "bytes": 980,
+          "triangles": 112
+        },
+        "fire_escape_top": {
+          "bytes": 4487,
+          "triangles": 608
+        },
+        "fire_escape_top_lod1": {
+          "bytes": 2174,
+          "triangles": 210
+        },
+        "hvac_condenser": {
+          "bytes": 2006,
+          "triangles": 188
+        },
+        "hvac_rooftop": {
+          "bytes": 3074,
+          "triangles": 314
+        },
+        "hvac_rooftop_lod1": {
+          "bytes": 1335,
+          "triangles": 106
+        },
+        "parapet_cap_corner": {
+          "bytes": 633,
+          "triangles": 26
+        },
+        "parapet_cap_segment": {
+          "bytes": 444,
+          "triangles": 16
+        },
+        "roof_exhaust": {
+          "bytes": 1459,
+          "triangles": 120
+        },
+        "roof_vent": {
+          "bytes": 932,
+          "triangles": 76
+        },
+        "storefront_door_26": {
+          "bytes": 2285,
+          "triangles": 190
+        },
+        "storefront_door_32": {
+          "bytes": 2318,
+          "triangles": 200
+        },
+        "storefront_door_45": {
+          "bytes": 2479,
+          "triangles": 220
+        },
+        "storefront_glass_26": {
+          "bytes": 1362,
+          "triangles": 94
+        },
+        "storefront_glass_32": {
+          "bytes": 1431,
+          "triangles": 104
+        },
+        "storefront_glass_45": {
+          "bytes": 1685,
+          "triangles": 134
+        },
+        "trim_downspout": {
+          "bytes": 545,
+          "triangles": 26
+        },
+        "trim_downspout_head": {
+          "bytes": 607,
+          "triangles": 30
+        },
+        "trim_downspout_shoe": {
+          "bytes": 727,
+          "triangles": 60
+        },
+        "trim_gooseneck_lamp": {
+          "bytes": 1532,
+          "triangles": 138
+        },
+        "trim_pilaster": {
+          "bytes": 368,
+          "triangles": 10
+        },
+        "trim_pilaster_cap": {
+          "bytes": 479,
+          "triangles": 22
+        },
+        "trim_sign_board": {
+          "bytes": 862,
+          "triangles": 50
+        },
+        "window_brick_loft": {
+          "bytes": 1722,
+          "triangles": 134
+        },
+        "window_brick_warehouse": {
+          "bytes": 1722,
+          "triangles": 144
+        },
+        "window_stucco_apartment": {
+          "bytes": 1538,
+          "triangles": 112
+        },
+        "window_stucco_modern": {
+          "bytes": 1404,
+          "triangles": 102
+        }
+      }
+    }
+  }
+}

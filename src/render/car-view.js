@@ -101,12 +101,22 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
     pose(id, c, c.pitch ?? 0);
     mesh.setVisibleAt(id, false);
   });
-  const info = { parked: parked.length, moving: moving.length, drawn: 0, lod0: 0, triangles: 0 };
+  const info = { parked: parked.length, moving: moving.length, drawn: 0, lod0: 0, triangles: 0, models: 0 };
+  // The GLB cars (src/render/car-models.js, LOD0 to LOD2) replace the kit
+  // shapes of their kinds within models.range once they load.
+  let models = null;
   return {
     mesh,
     info,
     get drawCalls() {
-      return 1;
+      return 1 + (models ? models.drawCalls : 0);
+    },
+    get models() {
+      return models;
+    },
+    setModels(view) {
+      models = view;
+      state.fill(-2);
     },
     // Sets the LOD, the visibility, and (for the traffic) the pose of each
     // car for a camera position. Call it once per frame.
@@ -117,26 +127,33 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
       const cx = cameraPosition.x;
       const cz = cameraPosition.z;
       const np = parked.length;
+      models?.beginFrame();
       for (let i = 0; i < all.length; i += 1) {
         const c = i < np ? parked[i] : (movingNow[i - np] ?? all[i]);
-        const lod = propLodFor(Math.hypot(c.x - cx, c.z - cz), lod0Distance, drawDistance);
+        const d = Math.hypot(c.x - cx, c.z - cz);
+        const lod = propLodFor(d, lod0Distance, drawDistance);
+        // The GLB cars (with their own LODs) cover models.range; kit cars beyond.
+        const glb = lod >= 0 && models?.has(i) && d < (models.range ?? lod0Distance) && models.set(i, c, i < np ? (c.pitch ?? 0) : pitchAt ? pitchAt(c) : 0, d);
+        if (!glb) models?.hide(i);
         if (lod >= 0) {
           drawn += 1;
-          tris += triangles.get(c.kind)[lod];
-          if (i >= parked.length) pose(i, c, pitchAt ? pitchAt(c) : 0);
+          if (!glb) tris += triangles.get(c.kind)[lod];
+          if (i >= parked.length && !glb) pose(i, c, pitchAt ? pitchAt(c) : 0);
         }
         if (lod === 0) lod0 += 1;
-        if (lod === state[i]) continue;
-        if (lod < 0) mesh.setVisibleAt(i, false);
+        const want = glb ? -3 : lod;
+        if (want === state[i]) continue;
+        state[i] = want;
+        if (lod < 0 || glb) mesh.setVisibleAt(i, false);
         else {
           mesh.setGeometryIdAt(i, ids.get(c.kind)[lod]);
           mesh.setVisibleAt(i, true);
         }
-        state[i] = lod;
       }
       info.drawn = drawn;
       info.lod0 = lod0;
-      info.triangles = tris;
+      info.models = models ? models.info.drawn : 0;
+      info.triangles = tris + (models ? models.info.triangles : 0);
     },
   };
 }

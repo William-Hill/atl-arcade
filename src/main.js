@@ -26,6 +26,8 @@ import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { terrainOf } from "./level/geo/terrain.js";
 import { createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
+import { createLandmarkModels } from "./render/landmark-models.js";
+import { claimLandmarkModels } from "./level/geo/landmarks.js";
 import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
@@ -51,6 +53,7 @@ import { carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSam
 import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
 import { parkedCars } from "./sim/traffic/parking.js";
 import { createCarView } from "./render/car-view.js";
+import { createCarModelView, loadCarModels } from "./render/car-models.js";
 import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
 import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
 import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
@@ -107,6 +110,11 @@ const GEO_FOG_NEAR = tier.fogNear;
 // The city look (src/render/look.js): pbr on the high tier, toon on the
 // others. ?look=toon|pbr sets it.
 const look = geo ? lookFor(params.get("look"), quality) : "toon";
+// The pbr look draws the Blender landmark GLBs (src/render/landmark-models.js)
+// in place of the buildings on their footprints, so the footprints are claimed
+// before the meshes build. ?landmarkglb=0 keeps the generic buildings.
+const landmarkGlbs = look === "pbr" && params.get("landmarks") !== "0" && params.get("landmarkglb") !== "0";
+if (landmarkGlbs) claimLandmarkModels();
 
 // A geodata level gets a day sky, a far fog, and a sun that follows the
 // skater. Its meshes are built once and shared with the physics.
@@ -216,12 +224,17 @@ if (landmarks) {
   scene.add(landmarks.root);
   landmarks.ready.catch((err) => console.error(err));
 }
+const landmarkModels = landmarkGlbs ? createLandmarkModels(level.name) : null;
+if (landmarkModels) {
+  scene.add(landmarkModels.root);
+  landmarkModels.ready.catch((err) => console.error(err));
+}
 
 // The street kit (trees, lamps, benches, roof units) loads after the level
 // shows. ?props=0 leaves it out.
 if (geo && params.get("props") !== "0") {
-  loadPropTemplates()
-    .then((templates) => levelView.addProps(env.props, templates))
+  loadPropTemplates({ glbTrees: look === "pbr" && params.get("glbtrees") !== "0" })
+    .then((templates) => levelView.addProps(env.props, templates, { renderer: params.get("impostors") !== "0" ? renderer : null }))
     .catch((err) => {
       levelView.props.error = String(err);
       console.error(err);
@@ -259,6 +272,21 @@ if (carView) {
   carView.update({ x: level.spawn.position[0], z: level.spawn.position[2] }, traffic?.cars);
   scene.add(carView.mesh);
   env.sampleGround = carGroundSampler(levelSample, parked, () => (traffic ? traffic.cars : []));
+  // The pbr look swaps the near cars for the rigged GLB vehicles
+  // (src/render/car-models.js). ?carglb=0 keeps the kit cars.
+  if (look === "pbr" && params.get("carglb") !== "0") {
+    const cars = [...parked, ...(traffic ? traffic.cars : [])];
+    loadCarModels([...new Set(cars.map((c) => c.kind))])
+      .then((models) => {
+        const view = createCarModelView(models, cars);
+        scene.add(view.group);
+        carView.setModels(view);
+      })
+      .catch((err) => {
+        carView.info.modelError = String(err);
+        console.error(err);
+      });
+  }
 }
 
 // Fact cards (M1-07): 3 cards on the trail, from the open-data-atl site.
@@ -689,6 +717,10 @@ requestAnimationFrame(frame);
 
 // Read by the Playwright tests.
 window.__atl = {
+  // The far tree impostors (tree-impostors.js): atlas bytes, bake time, kinds.
+  get trees() {
+    return geo && levelView.treeCost ? { ...levelView.treeCost } : null;
+  },
   shell: "skate-atl",
   ready: true,
   quality,
@@ -770,7 +802,7 @@ window.__atl = {
       return geo && levelView.facadeDepth ? { ...levelView.facadeDepth } : null;
     },
     get landmarks() {
-      return landmarks ? { ...landmarks.info } : null;
+      return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null } : null;
     },
     // The ground under (x, z), from the pure sampler. With `y`, a bridge
     // high over y is left out (the skater is under it).
@@ -852,9 +884,15 @@ window.__atl = {
         get lanes() {
           return traffic ? traffic.lanes.length : 0;
         },
-        drawCalls: carView.drawCalls,
+        get drawCalls() {
+          return carView.drawCalls;
+        },
         get drawn() {
           return carView.info.drawn;
+        },
+        // The near cars drawn as rigged GLBs (pbr look), and the load error.
+        get models() {
+          return carView.models ? { kinds: carView.models.drawCalls, drawn: carView.info.models } : { error: carView.info.modelError ?? null };
         },
         get lod0() {
           return carView.info.lod0;
@@ -1098,7 +1136,7 @@ window.__atl = {
     return camera.fov;
   },
   get rendererInfo() {
-    return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
+    return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   },
 };
 

@@ -8,11 +8,13 @@ import { facadeKit, frontEdges } from "../level/geo/facade-kit.js";
 import { shopNamesMesh } from "./shop-names.js";
 import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
-import { treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
+import { seasonColors, treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
 import { createMuralAtlas } from "./murals.js";
 import { createPropBatch } from "./prop-batch.js";
 import { BRICK_TONE, ENV_LIGHT, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
-import { createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
+import { TREE_UNIFORMS, createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
+import { bakeTreeImpostors } from "./tree-impostors.js";
+import { getDracoLoader } from "./skater-model.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
 import concreteInfo from "../../assets/ground/concrete/set.json";
@@ -32,6 +34,9 @@ const BRICK_URL = new URL("../../assets/landmarks/textures/brick/color.jpg", imp
 // PROP_LOD0_DISTANCE a prop shows its detailed shape, under
 // PROP_DRAW_DISTANCE its simple shape, and past that nothing.
 export const PROP_LOD0_DISTANCE = 60;
+// The band (m) under PROP_LOD0_DISTANCE where a GLB tree dithers into its
+// impostor (leaf-cut.js, prop-batch.js).
+export const TREE_FADE_BAND = 8;
 export const PROP_DRAW_DISTANCE = 200;
 // The distance from the camera to the nearest edge of a surface tile past
 // which the low tier shows the coarse terrain drape (m).
@@ -560,17 +565,119 @@ export function withTimeout(promise, ms, label = "request") {
 
 // The kit templates and the extra props. A failed or slow extra GLB does
 // not stop the kit: the kind gets its fallback kit template.
-export async function loadPropTemplates() {
+// The Blender trees (scripts/blender/pbr_trees.py): one GLB per species with
+// the templates tree:<species>:<variant> and their _lod1 copies, in the
+// treeKindFor() names. They have branches and leaf cards for the pbr look.
+export const TREE_GLB_URLS = {
+  oak: new URL("../../assets/trees/oak.glb", import.meta.url).href,
+  pine: new URL("../../assets/trees/pine.glb", import.meta.url).href,
+  magnolia: new URL("../../assets/trees/magnolia.glb", import.meta.url).href,
+  myrtle: new URL("../../assets/trees/myrtle.glb", import.meta.url).href,
+  dogwood: new URL("../../assets/trees/dogwood.glb", import.meta.url).href,
+  street: new URL("../../assets/trees/street.glb", import.meta.url).href,
+};
+
+// The kit templates and the extra props. A failed or slow extra GLB does
+// not stop the kit: the kind gets its fallback kit template. With
+// `glbTrees` the Blender tree templates come too; a species that fails
+// keeps its procedural tree.
+export async function loadPropTemplates({ glbTrees = false } = {}) {
   const kinds = Object.keys(EXTRA_PROP_URLS);
   const extras = kinds.map((k) => withTimeout(loadKitTemplates(EXTRA_PROP_URLS[k]), EXTRA_PROP_TIMEOUT_MS, k));
-  const [kit, results] = await Promise.all([loadKitTemplates(), Promise.allSettled(extras)]);
+  const species = glbTrees ? Object.keys(TREE_GLB_URLS) : [];
+  const treeLoads = species.map((k) => withTimeout(loadKitTemplates(TREE_GLB_URLS[k]), EXTRA_PROP_TIMEOUT_MS, `tree ${k}`));
+  const [kit, results, treeResults] = await Promise.all([loadKitTemplates(), Promise.allSettled(extras), Promise.allSettled(treeLoads)]);
   for (const problem of addExtraTemplates(kit, kinds, results)) console.warn(`extra prop: ${problem}`);
+  treeResults.forEach((r, i) => {
+    if (r.status === "fulfilled") Object.assign(kit, r.value);
+    else console.warn(`tree glb: ${species[i]}: ${r.reason}`);
+  });
   return kit;
+}
+
+// Pure: the GLB tree templates under their treeKindFor() names. GLTFLoader
+// drops the ":" from a node name, so the GLBs name them tree_oak_0.
+const GLB_TREE_NAME = new RegExp(`^tree[:_]?(${Object.keys(TREE_GLB_URLS).join("|")})[:_]?(\\d+)(_lod1)?$`);
+export function glbTreeTemplates(templates, season = "summer") {
+  const out = {};
+  for (const [k, t] of Object.entries(templates)) {
+    // The far shapes are the impostors (tree-impostors.js), or the
+    // procedural crown cards (trees.js) with no renderer to draw them.
+    const m = GLB_TREE_NAME.exec(k);
+    if (m && !m[3]) out[`tree:${m[1]}:${m[2]}`] = seasonalGlbTree(t, m[1], season);
+  }
+  return out;
+}
+
+const toLinear = (v) => Math.pow(Math.max(0, v), 2.2);
+const luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+const unitHash = (n) => {
+  const x = Math.sin(n * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+// Pure: a GLB tree (painted in its summer colors) in the colors of `season`
+// (trees.js seasonColors). The leaves and the crown cores take the season
+// leaf color; a card that blooms in summer (red over green) turns leaf in a
+// season with no blooms; in a season with blooms, `share` of the cards (by
+// their seed) take a bloom color. Each keeps its own shade. The bark keeps
+// its colors.
+export function seasonalGlbTree(t, species, season = "summer") {
+  if (season === "summer" || !t.leaf) return t;
+  const summer = seasonColors(species, "summer");
+  const now = seasonColors(species, season);
+  const ratio = now.leaf.map((c, i) => toLinear(c) / Math.max(toLinear(summer.leaf[i]), 1e-4));
+  const src = t.colors;
+  const n = src.length / 3;
+  const bloomOf = (i) => t.leaf[i * 3 + 2] > 0 && src[i * 3] > src[i * 3 + 1];
+  const leafRef = [0, 0, 0];
+  const bloomRef = [0, 0, 0];
+  let nl = 0;
+  let nb = 0;
+  for (let i = 0; i < n; i += 1) {
+    if (!(t.leaf[i * 3 + 2] > 0)) continue;
+    const ref = bloomOf(i) ? bloomRef : leafRef;
+    for (let c = 0; c < 3; c += 1) ref[c] += src[i * 3 + c];
+    if (ref === bloomRef) nb += 1;
+    else nl += 1;
+  }
+  for (let c = 0; c < 3; c += 1) {
+    leafRef[c] /= Math.max(nl, 1);
+    bloomRef[c] /= Math.max(nb, 1);
+  }
+  const blooms = now.blooms ? now.blooms.map((b) => b.map(toLinear)) : null;
+  const colors = new Float32Array(src.length);
+  for (let i = 0; i < n; i += 1) {
+    const code = t.leaf[i * 3 + 2];
+    const c = [src[i * 3], src[i * 3 + 1], src[i * 3 + 2]];
+    let out = c;
+    if (code >= 0) {
+      const wasBloom = bloomOf(i);
+      const k = luma(c) / Math.max(luma(wasBloom ? bloomRef : leafRef), 1e-4);
+      out = wasBloom ? leafRef.map((v, j) => v * ratio[j] * k) : c.map((v, j) => v * ratio[j]);
+      if (code > 0 && blooms && unitHash(code) < now.share) {
+        const b = blooms[Math.floor(unitHash(code * 7.31) * blooms.length) % blooms.length];
+        out = b.map((v) => v * Math.min(1, k * 0.85));
+      }
+    }
+    colors.set(out, i * 3);
+  }
+  return { ...t, colors };
+}
+
+// Pure: the color of one GLB tree placement (prop-batch tint): a little
+// lighter or darker, warmer or cooler, from its position.
+export function treeTint(p) {
+  const a = unitHash(p.x * 0.731 + p.z * 1.917);
+  const b = unitHash(p.x * 1.311 - p.z * 0.537);
+  const k = 0.9 + 0.18 * a;
+  const warm = (b - 0.5) * 2;
+  return [k * (1 + 0.06 * warm), k, k * (1 - 0.08 * warm)];
 }
 
 // Reads the kit GLB into plain templates: { kind: { positions, indices, colors } }.
 export async function loadKitTemplates(url = KIT_URL) {
-  const gltf = await new GLTFLoader().loadAsync(url);
+  const gltf = await new GLTFLoader().setDRACOLoader(getDracoLoader()).loadAsync(url);
   const templates = {};
   gltf.scene.updateMatrixWorld(true);
   gltf.scene.traverse((o) => {
@@ -596,7 +703,12 @@ export async function loadKitTemplates(url = KIT_URL) {
       }
     }
     const indices = g.index ? Uint32Array.from(g.index.array) : Uint32Array.from({ length: pos.count }, (_, i) => i);
-    templates[o.name] = normals ? { positions, indices, colors, normals } : { positions, indices, colors };
+    const t = normals ? { positions, indices, colors, normals } : { positions, indices, colors };
+    // The Blender trees carry the wind weight and the leaf card data
+    // (glTF custom attributes _SWAY and _LEAF).
+    if (g.attributes._sway) t.sway = Float32Array.from(g.attributes._sway.array);
+    if (g.attributes._leaf) t.leaf = Float32Array.from(g.attributes._leaf.array);
+    templates[o.name] = t;
   });
   return templates;
 }
@@ -609,6 +721,8 @@ export async function loadKitTemplates(url = KIT_URL) {
 // batch (src/render/prop-batch.js) the position is in the template space:
 // the batching matrix gives the world position, and its inverse turns the
 // world wind move into the template space.
+// The leaf flutter of a tree card on top of the crown sway (m, rad/s).
+export const LEAF_FLUTTER = { amplitude: 0.035, rate: 7.0 };
 function createPropMaterial({ wind = true, look = "toon", leaves = false } = {}) {
   const material = litMaterial(look, { vertexColors: true }, { gradientMap: toonRamp({ soft: true }), roughness: ROUGHNESS.props, envLight: ENV_LIGHT.props });
   // The albedo calibration (pbr look): darker leaves and props.
@@ -620,7 +734,7 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
     material.onBeforeCompile = (shader) => {
       if (leaves) {
         patchLeafVertex(shader);
-        patchLeafFragment(shader);
+        patchLeafFragment(shader, { backlight: look === "pbr" });
       }
       if (!wind) return;
       shader.uniforms.uWindTime = time;
@@ -636,7 +750,8 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
             "vec3 windWorld = position;",
             "#endif",
             "float windPhase = uWindTime * 1.3 + windWorld.x * 0.17 + windWorld.z * 0.13;",
-            "vec3 windMove = sway * vec3(0.2 * sin(windPhase) + 0.05 * sin(windPhase * 2.7), 0.0, 0.12 * cos(windPhase * 0.8));",
+            "float windGust = 0.75 + 0.25 * sin(uWindTime * 0.37 + windWorld.x * 0.011 - windWorld.z * 0.007);",
+            "vec3 windMove = windGust * sway * vec3(0.2 * sin(windPhase) + 0.05 * sin(windPhase * 2.7), 0.0, 0.12 * cos(windPhase * 0.8));",
             "#ifdef USE_BATCHING",
             // A yaw and a uniform scale: the inverse is the transpose over the scale squared.
             "mat3 windBasis = mat3(batchingMatrix);",
@@ -644,6 +759,8 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
             "#else",
             "transformed += windMove;",
             "#endif",
+            // The leaf flutter: each card shakes along its normal at its own phase.
+            ...(leaves ? [`if (leaf.z > 0.0) transformed += sway * normal * ${LEAF_FLUTTER.amplitude.toFixed(3)} * sin(uWindTime * ${LEAF_FLUTTER.rate.toFixed(2)} + leaf.z * 61.0 + windWorld.y * 1.3);`] : []),
           ].join("\n"),
         );
     };
@@ -748,11 +865,32 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   // draw call); update() picks the LOD of each prop.
   let propBatch = null;
   const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null };
-  function addProps(placements, templates) {
+  // `renderer` draws the far tree impostors (tree-impostors.js).
+  const treeCost = { impostorKinds: 0, atlasBytes: 0, bakeMs: 0 };
+  const treeAtlas = { pixels: null, size: 0 };
+  function addProps(placements, templates, { renderer = null } = {}) {
     // The procedural trees take the place of the two kit trees.
-    const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves }) } : templates;
-    const placed = trees ? withProceduralTrees(placements) : placements;
-    propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance });
+    // The GLB trees take the place of the procedural ones in the pbr look,
+    // in the colors of the season.
+    const glb = leaves ? glbTreeTemplates(templates, season) : {};
+    let far = {};
+    if (renderer && Object.keys(glb).length) {
+      const t0 = performance.now();
+      const baked = bakeTreeImpostors(renderer, glb);
+      far = baked.templates;
+      treeCost.impostorKinds = Object.keys(far).length;
+      treeCost.atlasBytes = baked.bytes;
+      treeCost.bakeMs = Math.round(performance.now() - t0);
+      treeAtlas.pixels = baked.pixels;
+      treeAtlas.size = baked.size;
+    }
+    const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves }), ...glb, ...far } : templates;
+    const glbKinds = new Set(Object.keys(glb));
+    // Each GLB tree gets its own turn when the data gives none.
+    const placed = (trees ? withProceduralTrees(placements) : placements).map((p) => (glbKinds.has(p.kind) && !p.yaw ? { ...p, yaw: Math.round(unitHash(p.x * 3.7 + p.z * 0.29) * 6283) / 1000 } : p));
+    const fade = glbKinds.size ? { band: TREE_FADE_BAND, kinds: [...glbKinds] } : null;
+    if (fade) TREE_UNIFORMS.uLodFade.value.set(lod0Distance - TREE_FADE_BAND, lod0Distance);
+    propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance, fade, tint: glbKinds.size ? (p) => (glbKinds.has(p.kind) ? treeTint(p) : null) : null });
     if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial();
     root.add(propBatch.mesh);
     byId.set("props", propBatch.mesh);
@@ -773,6 +911,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       return meshes.length + (propBatch ? 1 : 0);
     },
     props,
+    treeCost,
+    treeAtlas,
     kit: kitParts.counts,
     // The far terrain: the tile count, the far tiles now, and the distance
     // from the camera to the nearest far tile (Infinity with none).
@@ -783,6 +923,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     // camera, and hides the far props and depth tiles.
     update(cameraPosition, seconds = performance.now() / 1000) {
       propMaterial.time.value = seconds;
+      TREE_UNIFORMS.uLodCamera.value.copy(cameraPosition);
       let farTiles = 0;
       let nearestFar = Infinity;
       for (const t of terrainLods) {

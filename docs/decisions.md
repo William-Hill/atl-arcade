@@ -1027,3 +1027,100 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Named landmarks now map to real styles through BY_NAME (PCM → brick-warehouse, Krog → brick-market-hall), so the district mechanism cannot restyle the anchors themselves.
 - Verified: styles.test.js (district mix keeps mid-size stock inside its palette; named buildings keep their style) and the full suite still passes.
 - Not done: district labels and storefront name decals (teleoperator's RUSSIAN HILL map labels / real-business signs), the e2e suite, and the FPS gate.
+
+## 2026-11-04: epic/assets — Blender facade kit (pbr look)
+
+- `scripts/blender/facade_kit.py` (Blender 5.2.3, headless, no Meshy) builds `assets/facades/facade-kit.glb`: 35 instanceable facade modules + 4 LOD1 nodes in one 400 KB Draco GLB, on **one material** with one procedural trim-sheet atlas (1024 color + 1024 normal + 512 ORM, 12.6 MB GPU with mips, shared). One material keeps a whole tile of modules at one draw call per module type with `InstancedMesh`.
+- Module sizes are the style's own facade-shader window frame at its nominal bay/floor (`window + FRAME` cells, `WINDOW_CENTER = 0.55`), and storefront widths match bays 2.6 / 3.2 / 4.5 minus the 0.36 m pier, so a module covers the shader window instead of fighting it; scaling within ±20–25% covers the other bay lengths.
+- Placement is a pure function, `scripts/assets/facade-kit-placement.js` (`facadePlacements`, with Vitest tests), driven by the existing `frontEdges()` storefront edges from OSM/Overture street lines, `chooseStyle`, and `buildingSpan`. It is **not wired into the game**; the parent session owns that (docs/facade-kit.md lists the steps, including which procedural kit parts to turn off).
+- In-context preview without touching shared files: `scripts/assets/facade-kit-preview.mjs` uses `?kit=0` and the existing `__atl.scene` / `__atl.cameraPosition` debug handles to add the kit as instanced meshes.
+
+## 2026-11-04: epic/assets — four more traffic vehicles (hatchback, van, taxi, box truck)
+- Meshy text-to-3D (meshy-t2.5, smart topology, PBR) → `scripts/blender/street_props.py` → `scripts/blender/vehicle_wheels.py --round`, same rig as sedan/pickup/bus (`steer_FL/FR > wheel_FL/FR`, `wheel_RL/RR`, `wheels_roll`). Full commands, task IDs, and credits in `assets/vehicles/provenance.json`.
+- Meshy painted made-up emblems and lettering despite "no logos, no text" prompts. `street_props.py --paint scripts/blender/vehicle_paint.json --paint-key <name>` fills those texture boxes with the median color (flat normal), so no asset ships with brand-like marks. The taxi livery is a plain yellow body with a teal checker stripe and a blank roof light.
+- `vehicle_wheels.py --round` projects tire-rim vertices onto the fitted radius: Meshy tires are lumpy, and a rolling lumpy tire dipped ~2 cm into the ground. With it every wheel stays within 2.4 mm of the ground through the clip.
+- `--width-scale` in `street_props.py` narrows only the x width after scaling to length. The box truck uses `--width-scale 0.9` (it came out ~3.1 m wide at 7.5 m long; now 2.79 m); the other three use 1.0. The over-wide first hatchback was regenerated instead.
+- `scripts/assets/vehicles-in-context.mjs` previews GLBs in the real game (`look=pbr`, `cars=0`) next to a parked-car anchor without editing shared code; wiring the vehicles into traffic is left to the integration owner.
+
+## 2026-11-04: storefront dressing (assets/storefronts)
+
+- Procedural Blender 5.2.3 (`scripts/blender/storefronts.py`) for every piece, no Meshy: signs need exact sizes and UVs on the shared atlas, and the patio props came out clean from primitives, so the 45-credit Meshy cap went unused (0 credits).
+- One shared 1024 JPEG atlas (`storefront-atlas.jpg`) for all sign art, painted with the Chromium 2D canvas from code (original icons and DejaVu lettering); GLBs reference it as an external image, so it downloads once. Props use vertex colors and no textures.
+- Neon, lamp lenses, and bulbs use `sf_neon` with emissive strength 3 to cross the pbr bloom threshold (0.92); light sign backgrounds were darkened so they do not bloom in the pbr sun.
+- Grid: 3.5-4.5 m ground floors, 3-6 m bays, board centered on the kit sign band (`facade-kit.js`), patio on the 3.5 m apron. Details in `docs/storefronts.md`.
+- Invented businesses only (`scripts/assets/storefront-businesses.json`); no real names or logos.
+
+
+## 2026-11-04: Landmark facsimiles for the BeltLine Eastside (assets)
+
+- Ponce City Market (full building), Telephone Factory Lofts, Studioplex, New Realm Brewing, and the Eastside Trail bridges (North Avenue, Ralph McGill, Ponce de Leon, Freedom Parkway) are procedural Blender models (`scripts/blender/landmarks.py`) on the real OSM footprints at the game's heights and ground (`scripts/assets/landmark-sites.mjs` → `assets/landmarks/sites.json`, from the game's own `buildingSpan`/`bridgeDeck`). One Draco GLB per landmark with LOD nodes that share materials and tiling textures. See `docs/landmarks.md`.
+- Why Blender and not img2threejs or Meshy: the footprints are large and exact (PCM is 183 x 177 m, 26 points); a generator that walks the footprint fits them exactly, keeps triangles low (recessed windows from a shared 1024 px atlas), and can be rerun. Meshy (credit cap 30) was not needed: the water tower is about 600 Blender tris.
+- Sign texts are generic or fictional ("CITY MARKET", "STUDIO YARDS", "BREW HALL"); no real lettering or logos.
+- Krog Street Tunnel is outside the level bounds: skipped.
+- Integration is for the parent session: claim the four footprints, drop the PCM img2threejs tower and rooftop sign entry, add the GLBs as THREE.LOD at their origin with yaw 0. `scripts/assets/landmarks-preview.html` does this as a preview only, without editing shared code.
+
+## 2026-11-04: epic/assets — hatchback, van, taxi and box truck in traffic
+- The four PR #148 GLBs are near-LOD models in `src/render/car-models.js` (pbr look), next to sedan, pickup and bus. Farther cars draw the kit shapes.
+- `CAR_SIZE` follows the GLB bodies, so the skater's collision box matches what is drawn: hatchback 4.1 m long and 1.55 m tall; van 5.2 × 2.4 × 3.1 m (a high-roof van); taxi 4.9 × 1.95 × 1.65 m (the roof light sticks out above the box); box truck 7.5 × 2.5 × 3.9 m.
+- The car kit gains a yellow taxi (its own colors, no paint) and a box truck (painted cab, white box) with far shapes, so the procedural fallback and `?carglb=0` match the new kinds.
+- Traffic mix (`pickKind`): sedan 45%, hatchback 20%, pickup 12%, van 10%, taxi 7%, box truck 6%, plus the bus where allowed. Parking is unchanged (no parked taxis or trucks).
+
+## 2026-11-05: epic/assets — landmark GLBs in the game (pbr look)
+- In the pbr look, `main.js` calls `claimLandmarkModels()` (`src/level/geo/landmarks.js`) before the level meshes build: the four GLB buildings claim their footprints (no extrusion, facade kit, awnings or murals; the colliders stay), and the Ponce City Market entry loses its img2threejs tower and rooftop sign, which the full model replaces. `?landmarkglb=0` keeps the generic buildings; the toon look is unchanged.
+- `src/render/landmark-models.js` loads the eight GLBs as `THREE.LOD`s at their `sites.json` origins (only on the level the sites were built for). The files embed copies of the same brick, concrete and window images, so a GLTFLoader plugin keys every embedded image by its bytes and sampler and hands later files the first texture: each image is uploaded to the GPU once instead of once per file.
+- `muralWalls()` skips claimed footprints, so no mural shows through a landmark model (New Realm Brewing had one).
+
+## 2026-11-05: epic/assets — Beltline Eastside landmark fixes (heights, night windows, cost)
+
+- Heights from sources, not map data, where a source gives storeys: PCM 9
+  storeys at the OSM 50 m (NRHP form 16000769), the PCM one-story shipping
+  room 7 m and the Telephone Factory Lofts 4 storeys at 17.8 m plus a 23 m
+  entrance tower (Wikipedia). The two footprint heights are overrides in
+  `levels/beltline-eastside/heights.json`, so the colliders match the models.
+  The PCM rooftop water tower is removed: the NRHP form puts the tank inside
+  the tower.
+- PCM is split into 2 x 2 sections, each its own `THREE.LOD` from its own
+  center (LOD1 at 110 m, LOD2 at 320 m), instead of one LOD from the center
+  of a 180 m building; the LOD0 sill boxes are gone (the window reveal keeps
+  the sill line). 3 x 3 cut triangles the same but raised draw calls (150 ->
+  194 at the PCM trail camera: 8 sections x 5-11 materials), so 2 x 2 plus
+  vertex-color merged materials (dark brick, sill, cream trim) it is.
+- Landmark meshes do not cast shadows; one shadow proxy per GLB (the
+  coarsest LOD, merged, position only) casts for it, on a layer only the
+  shadow cameras see (found in the scene by `landmark-models.js`). Shadows were ~28 calls
+  and ~115k triangles at the PCM trail camera.
+- Night windows: an emissive map on the window atlas plus a per-window light
+  key in TEXCOORD_1, lit by the facade rule of `geo-view.js`
+  (`key < windowLit * 0.6`, strength `windowLit`). `landmark-models.js`
+  reads the facade `uLit` uniform from the scene, so `main.js` and
+  `weather-view.js` are unchanged.
+- Texture memory: one red brick color image for every red brick (glTF color
+  factors), roughness and the window glow at 256 px, the window color atlas
+  at 512 px: about 11 MiB per building instead of 17-19 MiB.
+- Studioplex is cut at the level's south bound in the generator
+  (`sites.json` carries the bounds); a cut inside the bound would leave the
+  uncut claimed-footprint collider as an invisible wall.
+- PCM LOD2 window light is keyed per tiled UV cell (a hash of
+  `floor(vEmissiveMapUv)`), so far walls do not light all at once.
+
+
+## 2026-11-05: epic/assets — painted murals for the pbr look (assets/murals)
+- 16 original mural designs (dogwood, peach, magnolia, brown thrasher, heron and river, skyline silhouettes, the BeltLine trail, skaters, music, porch-row neighbors, a crowd wave, a night rink) are drawn from code with the Chromium 2D canvas (`scripts/assets/mural-atlas.mjs`, seed 1979), then a per-pixel paint pass adds brush strokes, a ragged dry-brush edge over painted brick or stucco, mortar show-through, weathering, and a roughness atlas. No image model, no Meshy (0 credits), no real murals, artists' styles, or brands.
+- Canvas, not Blender: the art is flat paint on a wall, and the 2D canvas gives exact lettering and shapes and runs in seconds; the storefront atlas uses the same tool.
+- Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
+- `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
+- `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
+## 2026-11-05: epic/assets — traffic vehicle LODs and a shared 512 px atlas
+- `scripts/blender/vehicle_lods.py` (Blender 5.2.3, no Meshy) builds, per kind, LOD1 (collapse decimate to ~35% of LOD0 triangles, same `body > steer_FL/FR > wheel_FL/FR`, `body > wheel_RL/RR` rig and pivots) and LOD2 (~10%, wheels merged into the body).
+- Packaging: one sibling file, `assets/vehicles/vehicles_lod.glb` (1.8 MB, Draco), with all 7 kinds' LOD1/LOD2 on one material. Why not inside each `<kind>.glb`: the low tiers would still download and upload the 1024 px LOD0 textures; why not 14 sibling GLBs: one shared atlas lets every far car of every kind draw in one BatchedMesh call instead of 7, and one request instead of 14.
+- Textures: a 2048x1024 atlas per role (base color, metallic-roughness, normal), 512x512 per kind and 1024x512 for the 12 m bus, 8 texel padding: 33.5 MB GPU for the whole fleet, vs 16.7 MB per kind for the 1024 sets. LOD0 keeps its 1024 sets on high.
+- Distances (`CAR_LOD_DISTANCES` in `src/render/car-models.js`): LOD0 < 25 m, LOD1 to 70 m, LOD2 to 140 m; kit cars only from 140 m to 240 m (they were used from 70 m). `?quality=low|phone` skips the 7 LOD0 GLBs and draws LOD1 near. `src/render/car-view.js` hands every car within `models.range` to the GLB view; `?carglb=0` keeps the kit cars as before.
+- LOD1 has no `wheels_roll` clip: the game never played it (car-models.js spins and steers the wheel instances itself).
+- Badge cleanup: `scripts/blender/vehicle_cleanup.json` boxes (glTF meters) on the taxi (grille chevron, rear emblem, trunk mark), sedan, pickup, hatchback, and bus (windshield signs, roof-box lettering). Texels are masked by their interpolated 3D position, not face centers, because plates and badges often sit on large faces. The fill is the median of a separate sample box. With `--patch` the script also writes the painted 1024 textures back into the LOD0 GLBs in place (another JPEG encode), so restore `assets/vehicles/*.glb` first; without it, re-runs only rebuild `vehicles_lod.glb`.
+
+## 2026-11-05: epic/assets — painted murals for the pbr look (assets/murals)
+- 16 original mural designs (dogwood, peach, magnolia, brown thrasher, heron and river, skyline silhouettes, the BeltLine trail, skaters, music, porch-row neighbors, a crowd wave, a night rink) are drawn from code with the Chromium 2D canvas (`scripts/assets/mural-atlas.mjs`, seed 1979), then a per-pixel paint pass adds brush strokes, a ragged dry-brush edge over painted brick or stucco, mortar show-through, weathering, and a roughness atlas. No image model, no Meshy (0 credits), no real murals, artists' styles, or brands.
+- Canvas, not Blender: the art is flat paint on a wall, and the 2D canvas gives exact lettering and shapes and runs in seconds; the storefront atlas uses the same tool.
+- Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
+- `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
+- `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.

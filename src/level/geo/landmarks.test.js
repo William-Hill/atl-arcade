@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { LANDMARKS, claimedIds, edgeAnchor, frontClear, interiorPoint, landmarkPlacements, wallPoint } from "./landmarks.js";
+import { LANDMARKS, LANDMARK_GLB_BUILDINGS, claimLandmarkModels, claimedIds, edgeAnchor, frontClear, interiorPoint, landmarkPlacements, wallPoint } from "./landmarks.js";
 import { pointInRings } from "./geo-ground.js";
 import { buildingSpan, terrainOf } from "./terrain.js";
 
@@ -98,5 +98,17 @@ describe("footprint claims", () => {
     // The real level claims nothing today: the PCM tower and the Krog
     // front are add-ons, not replacements.
     expect(claimedIds(LEVEL ?? level).size).toBe(0);
+  });
+});
+
+describe("landmark GLB claims", () => {
+  it("claims every GLB building and drops the tower and sign it replaces", () => {
+    const list = claimLandmarkModels(LANDMARKS.map((l) => ({ ...l })));
+    for (const name of Object.values(LANDMARK_GLB_BUILDINGS)) expect(list.find((l) => l.buildingName === name)?.claim).toBe(true);
+    const pcm = list.find((l) => l.id === "ponce-city-market");
+    expect(pcm.model).toBeUndefined();
+    expect(pcm.sign).toBeUndefined();
+    expect(list.find((l) => l.id === "krog-street-market").model).toBeDefined();
+    expect(LANDMARKS.find((l) => l.id === "ponce-city-market").model).toBeDefined();
   });
 });

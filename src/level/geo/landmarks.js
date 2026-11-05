@@ -175,7 +175,7 @@ export function landmarkPlacements(level) {
   const out = [];
   for (const lm of LANDMARKS) {
     const b = (level.buildings ?? []).find((x) => x.name === lm.buildingName);
-    if (!b) continue;
+    if (!b || !lm.model) continue;
     const anchors = edgeAnchors(b, lm.model.side, lm.model.inset);
     if (!anchors.length) continue;
     let model = null;
@@ -218,4 +218,31 @@ export function landmarkPlacements(level) {
 export function claimedIds(level, landmarks = LANDMARKS) {
   const names = new Set(landmarks.filter((l) => l.claim).map((l) => l.buildingName));
   return new Set((level.buildings ?? []).filter((b) => names.has(b.name)).map((b) => b.id));
+}
+
+// The Blender landmark GLBs (assets/landmarks/<key>/, docs/landmarks.md) of
+// the pbr look, by key: the buildings (with their OSM names) and the bridges.
+export const LANDMARK_GLB_BUILDINGS = {
+  "ponce-city-market": "Ponce City Market",
+  "telephone-factory-lofts": "Telephone Factory Lofts",
+  studioplex: "Studioplex",
+  "new-realm-brewing": "New Realm Brewing",
+};
+export const LANDMARK_GLB_BRIDGES = ["bridge-north-ave", "bridge-ralph-mcgill", "bridge-ponce", "bridge-freedom-parkway"];
+
+// Claims the footprint of every GLB building, in place: a GLB replaces the
+// whole building, so an existing entry loses its tower model and rooftop sign
+// (the Ponce City Market tower); a building without an entry gets one.
+export function claimLandmarkModels(landmarks = LANDMARKS) {
+  for (const [id, buildingName] of Object.entries(LANDMARK_GLB_BUILDINGS)) {
+    const lm = landmarks.find((l) => l.buildingName === buildingName);
+    if (!lm) {
+      landmarks.push({ id, buildingName, claim: true });
+      continue;
+    }
+    lm.claim = true;
+    delete lm.model;
+    delete lm.sign;
+  }
+  return landmarks;
 }

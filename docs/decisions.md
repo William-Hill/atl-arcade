@@ -1064,3 +1064,8 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - `CAR_SIZE` follows the GLB bodies, so the skater's collision box matches what is drawn: hatchback 4.1 m long and 1.55 m tall; van 5.2 × 2.4 × 3.1 m (a high-roof van); taxi 4.9 × 1.95 × 1.65 m (the roof light sticks out above the box); box truck 7.5 × 2.5 × 3.9 m.
 - The car kit gains a yellow taxi (its own colors, no paint) and a box truck (painted cab, white box) with far shapes, so the procedural fallback and `?carglb=0` match the new kinds.
 - Traffic mix (`pickKind`): sedan 45%, hatchback 20%, pickup 12%, van 10%, taxi 7%, box truck 6%, plus the bus where allowed. Parking is unchanged (no parked taxis or trucks).
+
+## 2026-11-05: epic/assets — landmark GLBs in the game (pbr look)
+- In the pbr look, `main.js` calls `claimLandmarkModels()` (`src/level/geo/landmarks.js`) before the level meshes build: the four GLB buildings claim their footprints (no extrusion, facade kit, awnings or murals; the colliders stay), and the Ponce City Market entry loses its img2threejs tower and rooftop sign, which the full model replaces. `?landmarkglb=0` keeps the generic buildings; the toon look is unchanged.
+- `src/render/landmark-models.js` loads the eight GLBs as `THREE.LOD`s at their `sites.json` origins (only on the level the sites were built for). The files embed copies of the same brick, concrete and window images, so a GLTFLoader plugin keys every embedded image by its bytes and sampler and hands later files the first texture: each image is uploaded to the GPU once instead of once per file.
+- `muralWalls()` skips claimed footprints, so no mural shows through a landmark model (New Realm Brewing had one).

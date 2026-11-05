@@ -26,6 +26,8 @@ import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { terrainOf } from "./level/geo/terrain.js";
 import { createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
+import { createLandmarkModels } from "./render/landmark-models.js";
+import { claimLandmarkModels } from "./level/geo/landmarks.js";
 import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
@@ -108,6 +110,11 @@ const GEO_FOG_NEAR = tier.fogNear;
 // The city look (src/render/look.js): pbr on the high tier, toon on the
 // others. ?look=toon|pbr sets it.
 const look = geo ? lookFor(params.get("look"), quality) : "toon";
+// The pbr look draws the Blender landmark GLBs (src/render/landmark-models.js)
+// in place of the buildings on their footprints, so the footprints are claimed
+// before the meshes build. ?landmarkglb=0 keeps the generic buildings.
+const landmarkGlbs = look === "pbr" && params.get("landmarks") !== "0" && params.get("landmarkglb") !== "0";
+if (landmarkGlbs) claimLandmarkModels();
 
 // A geodata level gets a day sky, a far fog, and a sun that follows the
 // skater. Its meshes are built once and shared with the physics.
@@ -216,6 +223,11 @@ const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(l
 if (landmarks) {
   scene.add(landmarks.root);
   landmarks.ready.catch((err) => console.error(err));
+}
+const landmarkModels = landmarkGlbs ? createLandmarkModels(level.name) : null;
+if (landmarkModels) {
+  scene.add(landmarkModels.root);
+  landmarkModels.ready.catch((err) => console.error(err));
 }
 
 // The street kit (trees, lamps, benches, roof units) loads after the level
@@ -790,7 +802,7 @@ window.__atl = {
       return geo && levelView.facadeDepth ? { ...levelView.facadeDepth } : null;
     },
     get landmarks() {
-      return landmarks ? { ...landmarks.info } : null;
+      return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null } : null;
     },
     // The ground under (x, z), from the pure sampler. With `y`, a bridge
     // high over y is left out (the skater is under it).
@@ -1124,7 +1136,7 @@ window.__atl = {
     return camera.fov;
   },
   get rendererInfo() {
-    return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
+    return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   },
 };
 

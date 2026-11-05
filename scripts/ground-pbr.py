@@ -76,10 +76,14 @@ SURFACES = {
         "candidates": ["red_brick_pavers", "herringbone_brick", "brick_pavement_02", "square_brick_paving"],
     },
     "asphalt": {
-        "flatten": (0.5, 2.0),
+        "flatten": (0.4, 3.0),
+        # clean_asphalt has the least baked light but almost no aggregate (detail 0.16 vs 0.45 for asphalt_track); the de-light takes out the shadow asphalt_track has baked in.
+        "minDetail": 0.3,
         "kind": "street",
         "palette": [0.34 * 0.62, 0.35 * 0.62, 0.44 * 0.54],
-        "candidates": ["asphalt_track", "clean_asphalt", "asphalt_pit_lane", "asphalt_02"],
+        # Not asphalt_track (its light wear stripes repeat every tile in a 3 x 3
+        # view) nor asphalt_02 (long cracks: no decline on the streets).
+        "candidates": ["clean_asphalt", "asphalt_pit_lane"],
     },
     "trail": {
         "flatten": (0.4, 2.5),
@@ -158,11 +162,14 @@ def measure(lin, ao, nor):
         # Side light: how much of the high-pass luminance the normal slope explains.
         "sideLight": float(np.hypot(corr(hp, nx), corr(hp, ny))),
         "seam": seam_ratio(lin),
+        # Fine detail (grain, joints): std of the high-pass log luminance. A scan
+        # with too little reads as flat paint at skating height.
+        "detail": float(hp.std()),
     }
 
 
-def score(m):
-    return m["gradient"] * 4 + m["blotch"] * 2 + max(m["aoCorr"], 0) * 0.5 + m["sideLight"] + max(m["seam"] - 1.2, 0)
+def score(m, min_detail=0.0):
+    return max(min_detail - m["detail"], 0) * 8 + m["gradient"] * 4 + m["blotch"] * 2 + max(m["aoCorr"], 0) * 0.5 + m["sideLight"] + max(m["seam"] - 1.2, 0)
 
 
 def flatten(albedo, k, clamp_sigma):
@@ -276,8 +283,8 @@ def build(surface, cfg, toktx):
         nor = load(urls["nor"], WORK)
         m = measure(lin, ao, nor)
         m = {k: round(v, 4) for k, v in m.items()}
-        cands.append({"asset": asset, "info": info, "urls": urls, "res": res, "lin": lin, "ao": ao, "nor": nor, "metrics": m, "score": round(score(m), 4)})
-        print(f"  {surface} candidate {asset}: score {score(m):.3f} {m}")
+        cands.append({"asset": asset, "info": info, "urls": urls, "res": res, "lin": lin, "ao": ao, "nor": nor, "metrics": m, "score": round(score(m, cfg.get("minDetail", 0.0)), 4)})
+        print(f"  {surface} candidate {asset}: score {score(m, cfg.get('minDetail', 0.0)):.3f} {m}")
     best = min(cands, key=lambda c: c["score"])
     lin, ao, nor = best["lin"], best["ao"], best["nor"]
     rough = load(best["urls"]["rough"], WORK, "L")

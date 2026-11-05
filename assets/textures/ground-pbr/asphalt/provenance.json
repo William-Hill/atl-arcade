@@ -5,25 +5,23 @@
   "license": "CC0 1.0",
   "credits": [
     {
-      "asset": "clean_asphalt",
+      "asset": "asphalt_pit_lane",
       "authors": {
         "Dimitrios Savva": "All"
       },
-      "url": "https://polyhaven.com/a/clean_asphalt",
+      "url": "https://polyhaven.com/a/asphalt_pit_lane",
       "files": {
-        "diffuse": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/clean_asphalt/clean_asphalt_diff_2k.jpg",
-        "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/clean_asphalt/clean_asphalt_ao_2k.jpg",
-        "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/clean_asphalt/clean_asphalt_nor_gl_2k.jpg",
-        "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/clean_asphalt/clean_asphalt_rough_2k.jpg"
+        "diffuse": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_pit_lane/asphalt_pit_lane_diff_2k.jpg",
+        "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_pit_lane/asphalt_pit_lane_ao_2k.jpg",
+        "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_pit_lane/asphalt_pit_lane_nor_gl_2k.jpg",
+        "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/asphalt_pit_lane/asphalt_pit_lane_rough_2k.jpg"
       },
       "resolution": "2k"
     }
   ],
   "candidates": [
-    "asphalt_track",
     "clean_asphalt",
-    "asphalt_pit_lane",
-    "asphalt_02"
+    "asphalt_pit_lane"
   ],
   "settings": {
     "work": 1024,
@@ -43,8 +41,8 @@
       0.2376
     ],
     "flatten": [
-      0.5,
-      2.0
+      0.4,
+      3.0
     ]
   },
   "paidCredits": 0,

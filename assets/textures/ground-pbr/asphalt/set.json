@@ -1,13 +1,13 @@
 {
   "setId": "asphalt",
   "surfaceKind": "street",
-  "asset": "clean_asphalt",
-  "source": "https://polyhaven.com/a/clean_asphalt",
+  "asset": "asphalt_pit_lane",
+  "source": "https://polyhaven.com/a/asphalt_pit_lane",
   "authors": {
     "Dimitrios Savva": "All"
   },
   "license": "CC0 1.0",
-  "tileMeters": 2.1,
+  "tileMeters": 2.0,
   "meanLinear": [
     0.2108,
     0.217,
@@ -18,8 +18,8 @@
     0.217,
     0.2376
   ],
-  "roughMean": 0.6602,
-  "aoMean": 0.8916,
+  "roughMean": 0.8318,
+  "aoMean": 0.9034,
   "tiers": {
     "high": 1024,
     "phone": 512
@@ -30,49 +30,39 @@
     "orm": "R ambient occlusion, G roughness, B metalness (0)"
   },
   "delight": {
-    "gradientRemoved": 0.0004756125573581574,
+    "gradientRemoved": 0.0030423620545264535,
     "slopeK": [
-      -0.0763,
-      0.2156
+      -0.4813,
+      -0.1883
     ],
-    "aoK": 0.0107,
+    "aoK": 3.8957,
     "flatten": {
-      "midBandScale": 0.5,
-      "clampSigma": 2.0
+      "midBandScale": 0.6,
+      "clampSigma": 3.0
     }
   },
   "seamFix": false,
   "metricsAfter": {
-    "gradient": 0.0003,
-    "blotch": 0.0026,
-    "aoCorr": 0.0018,
-    "sideLight": 0.0008,
-    "seam": 1.0732
+    "gradient": 0.0094,
+    "blotch": 0.0195,
+    "aoCorr": 0.0128,
+    "sideLight": 0.0066,
+    "seam": 0.9816,
+    "detail": 0.3349
   },
   "candidates": [
     {
-      "asset": "asphalt_track",
-      "score": 0.3174,
-      "metrics": {
-        "gradient": 0.0032,
-        "blotch": 0.0069,
-        "aoCorr": 0.357,
-        "sideLight": 0.1123,
-        "seam": 1.0365
-      },
-      "chosen": false
-    },
-    {
       "asset": "clean_asphalt",
-      "score": 0.0393,
+      "score": 1.1425,
       "metrics": {
         "gradient": 0.0005,
         "blotch": 0.0044,
         "aoCorr": 0.0024,
         "sideLight": 0.0273,
-        "seam": 1.0632
+        "seam": 1.0632,
+        "detail": 0.1621
       },
-      "chosen": true
+      "chosen": false
     },
     {
       "asset": "asphalt_pit_lane",
@@ -82,57 +72,46 @@
         "blotch": 0.012,
         "aoCorr": 0.4568,
         "sideLight": 0.061,
-        "seam": 0.9704
+        "seam": 0.9704,
+        "detail": 0.4196
       },
-      "chosen": false
-    },
-    {
-      "asset": "asphalt_02",
-      "score": 0.7688,
-      "metrics": {
-        "gradient": 0.0216,
-        "blotch": 0.0744,
-        "aoCorr": 0.1869,
-        "sideLight": 0.4401,
-        "seam": 1.0627
-      },
-      "chosen": false
+      "chosen": true
     }
   ],
   "files": {
-    "albedo_high.jpg": 355193,
-    "albedo_high.ktx2": 1022757,
-    "normal_high.jpg": 290225,
-    "normal_high.ktx2": 978776,
-    "orm_high.jpg": 334268,
-    "orm_high.ktx2": 1083136,
-    "albedo_phone.jpg": 60060,
-    "albedo_phone.ktx2": 197738,
-    "normal_phone.jpg": 34505,
-    "normal_phone.ktx2": 118969,
-    "orm_phone.jpg": 58826,
-    "orm_phone.ktx2": 219429
+    "albedo_high.jpg": 610606,
+    "albedo_high.ktx2": 1240987,
+    "normal_high.jpg": 636941,
+    "normal_high.ktx2": 1260239,
+    "orm_high.jpg": 295538,
+    "orm_high.ktx2": 985009,
+    "albedo_phone.jpg": 132653,
+    "albedo_phone.ktx2": 305693,
+    "normal_phone.jpg": 126625,
+    "normal_phone.ktx2": 305747,
+    "orm_phone.jpg": 61782,
+    "orm_phone.ktx2": 226004
   },
   "ktx2Quality": {
     "albedo_high.ktx2": {
-      "psnr": 49.58
+      "psnr": 40.42
     },
     "normal_high.ktx2": {
-      "psnr": 45.24,
-      "meanAngleDeg": 0.77
+      "psnr": 36.26,
+      "meanAngleDeg": 2.17
     },
     "orm_high.ktx2": {
-      "psnr": 44.49
+      "psnr": 45.02
     },
     "albedo_phone.ktx2": {
-      "psnr": 47.95
+      "psnr": 42.51
     },
     "normal_phone.ktx2": {
-      "psnr": 47.02,
-      "meanAngleDeg": 0.649
+      "psnr": 38.53,
+      "meanAngleDeg": 1.65
     },
     "orm_phone.ktx2": {
-      "psnr": 45.68
+      "psnr": 45.63
     }
   }
 }

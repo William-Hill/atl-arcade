@@ -7,7 +7,7 @@ look (`?look=pbr`). The toon version is #91 (albedo + normal only).
 |---|---|---|---|
 | `sidewalk` | `sidewalk`, `path` | `brushed_concrete_03` | 2.0 m |
 | `brick` | none yet (a district style can map `sidewalk` or `path` to it) | `brick_pavement_02` | 2.0 m |
-| `asphalt` | `street` (and the street markings) | `clean_asphalt` | 2.1 m |
+| `asphalt` | `street` (and the street markings) | `asphalt_pit_lane` | 2.0 m |
 | `trail` | `trail` (the BeltLine) | `concrete_floor` | 2.08 m |
 
 Files: `assets/textures/ground-pbr/<set>/`

@@ -248,11 +248,12 @@ export function facadePlacements({ ring, holes = [], style, base = 0, top, front
         for (let b = 0; b < bays; b += 1) {
           const a = (b + 0.5) * bl;
           if (b === fireBay && f >= 1) continue;
-          if (onMural(i, a - bl / 2, a + bl / 2, yf, yf + floorH)) continue;
+          // The frame's own bounds, as wallDepth() tests the sill's.
+          if (onMural(i, a - (sx * mw) / 2, a + (sx * mw) / 2, yf + yOff, yf + yOff + sy * mh)) continue;
           if (inRange(sx, SCALE.window) && inRange(sy, SCALE.window)) add(windowModule, i, w, a, yf + yOff, 0, sx, sy);
           const r = rand();
           if (f >= 1 && BALCONY[style.id] && fronts.has(i) && r < 0.18) add(BALCONY[style.id], i, w, a, yf, 0, Math.min(1.3, bl / MODULES[BALCONY[style.id]][0]));
-          else if (AC_UNITS.has(style.id) && !fronts.has(i) && r > 0.9) add("ac_unit_wall", i, w, a + 0.2 * bl, yf + yOff - 0.45, 0);
+          else if (AC_UNITS.has(style.id) && !fronts.has(i) && r > 0.9 && !onMural(i, a + 0.2 * bl - 0.33, a + 0.2 * bl + 0.33, yf + yOff - 0.45, yf + yOff + 0.33)) add("ac_unit_wall", i, w, a + 0.2 * bl, yf + yOff - 0.45, 0);
         }
       }
     }
@@ -312,11 +313,9 @@ function pickFireWall(ring, fronts, rand, mural) {
 function roofUnits(out, ring, holes, top, style, rand) {
   const area = ringArea(ring) - holes.reduce((s, h) => s + ringArea(h), 0);
   if (area < 60) return;
-  let cx = 0, cz = 0;
-  for (const [x, z] of ring) { cx += x; cz += z; }
-  cx /= ring.length;
-  cz /= ring.length;
-  const r = Math.sqrt(area / Math.PI);
+  // Sample the outer footprint's bounds (a courtyard can cover the middle).
+  const xs = ring.map((p) => p[0]), zs = ring.map((p) => p[1]);
+  const [x0, x1, z0, z1] = [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
   const list = [];
   if (area > 300) list.push(["hvac_rooftop", 2.2]);
   for (let k = 0; k < Math.min(4, Math.floor(area / 150)); k += 1) list.push(["hvac_condenser", 1.2]);
@@ -324,9 +323,9 @@ function roofUnits(out, ring, holes, top, style, rand) {
   for (let k = 0; k < 2 + Math.floor(rand() * 3); k += 1) list.push(["roof_vent", 0.6]);
   const spots = [];
   for (const [module, clear] of list) {
-    for (let tries = 0; tries < 24; tries += 1) {
-      const x = cx + (rand() * 2 - 1) * r * 0.8;
-      const z = cz + (rand() * 2 - 1) * r * 0.8;
+    for (let tries = 0; tries < 48; tries += 1) {
+      const x = x0 + rand() * (x1 - x0);
+      const z = z0 + rand() * (z1 - z0);
       if (!inside(ring, x, z) || edgeDistance(ring, x, z) < 1.5 + clear) continue;
       if (holes.some((h) => inside(h, x, z) || edgeDistance(h, x, z) < 1.5 + clear)) continue;
       if (spots.some(([sx, sz, sc]) => Math.hypot(sx - x, sz - z) < sc + clear)) continue;

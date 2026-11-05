@@ -111,5 +111,17 @@ describe("facade kit placement", () => {
         expect(x > 18.5 && x < 41.5 && z > 18.5 && z < 41.5, `${it.module} at ${x},${z}`).toBe(false);
       }
     }
+
+    // A big courtyard: units still land on the 8 m roof ring around it.
+    const ringRoof = [[[8, 8], [8, 52], [52, 52], [52, 8]]];
+    const units = facadePlacements({ ring: big, holes: ringRoof, style: s, base: 0, top: 17, front: null, seed: 3 }).filter((o) => o.wall === null);
+    expect(units.length).toBeGreaterThan(0);
+    for (const it of units) expect(it.position[0] < 8 || it.position[0] > 52 || it.position[2] < 8 || it.position[2] > 52).toBe(true);
+
+    // A mural that ends 0.3 m+ below the top-floor frames keeps those frames.
+    const low = { edge: 2, t0: 0, t1: 24, y0: 0.8, y1: 12.7 };
+    const top4 = facadePlacements({ ring, style: s, base: 0, top: 17, front: null, mural: low, seed: 2 }).filter((o) => o.wallIndex === 2 && o.module === "window_brick_loft");
+    expect(top4.length).toBeGreaterThan(0);
+    for (const it of top4) expect(it.position[1]).toBeGreaterThan(13);
   });
 });

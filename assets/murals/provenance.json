@@ -1,0 +1,243 @@
+{
+  "asset": "murals",
+  "description": "16 original painted-wall mural designs for the trail-facing walls of the BeltLine Eastside level (pbr look): a 4 x 4 color atlas and a roughness atlas in the cell layout of muralMesh() (src/level/geo/geo-mesh.js).",
+  "generated": "2026-11-05",
+  "tool": {
+    "art": "scripts/assets/mural-atlas.mjs: Chromium 2D canvas via Playwright (@playwright/test 1.63.0). Every shape is drawn from code: Bezier paths, circles, gradients, and system DejaVu Sans / Bitstream Charter lettering. A per-pixel paint pass (seeded value noise) adds brush strokes, roughness, weathering, and a ragged dry-brush edge over painted brick or stucco.",
+    "generator": "deterministic: same seed, same pixels (up to the browser's JPEG encoder)"
+  },
+  "command": "node scripts/assets/mural-atlas.mjs --seed 1979 --size 2048 --quality 0.82",
+  "seed": 1979,
+  "prompt": "none (no generative model)",
+  "credits": {
+    "meshy": 0,
+    "tripo": 0,
+    "imageGeneration": 0,
+    "total": 0
+  },
+  "originality": "All 16 designs are original work drawn from code for ATL Arcade. They do not copy or imitate any real mural or the recognizable style of any artist, and they contain no brands, logos, or third-party artwork. Lettering is MURAL_WORDS from src/render/murals.js (no neighborhood names, issue #80).",
+  "license": "Original work for ATL Arcade.",
+  "files": {
+    "mural-atlas.jpg": {
+      "size": [
+        2048,
+        2048
+      ],
+      "colorSpace": "srgb",
+      "bytes": 883141,
+      "gpuBytes": 22313697,
+      "layout": "4 x 4 cells, cell = row * 4 + column, row 0 at the top (flipY texture)"
+    },
+    "mural-roughness.jpg": {
+      "size": [
+        512,
+        512
+      ],
+      "colorSpace": "linear",
+      "bytes": 34170,
+      "gpuBytes": 1394606,
+      "encoding": "gray = roughness / 0.85 (ROUGHNESS.mural), read from the green channel by MeshStandardMaterial.roughnessMap"
+    }
+  },
+  "totalBytes": 917311,
+  "totalGpuBytes": 23708303,
+  "designs": [
+    {
+      "cell": 0,
+      "word": "ATL",
+      "name": "Peach sunset skyline",
+      "wall": "brick",
+      "motifs": [
+        "skyline silhouette",
+        "sunset",
+        "tree canopy"
+      ],
+      "paintCoverage": 0.901
+    },
+    {
+      "cell": 1,
+      "word": "BELTLINE",
+      "name": "Trail through the canopy",
+      "wall": "stucco",
+      "motifs": [
+        "the BeltLine trail",
+        "forest canopy",
+        "skaters and walkers"
+      ],
+      "paintCoverage": 0.89
+    },
+    {
+      "cell": 2,
+      "word": "SKATE ATL",
+      "name": "Skater over rainbow arcs",
+      "wall": "brick",
+      "motifs": [
+        "roller skater",
+        "dogwood petals",
+        "color arcs"
+      ],
+      "paintCoverage": 0.909
+    },
+    {
+      "cell": 3,
+      "word": "DOGWOOD",
+      "name": "Dogwood branch",
+      "wall": "brick",
+      "motifs": [
+        "dogwood blossoms",
+        "branch",
+        "bokeh"
+      ],
+      "paintCoverage": 0.897
+    },
+    {
+      "cell": 4,
+      "word": "ROLL ON",
+      "name": "Wheel sun over the Piedmont",
+      "wall": "stucco",
+      "motifs": [
+        "skate wheel sun",
+        "rolling hills",
+        "pines",
+        "trail"
+      ],
+      "paintCoverage": 0.885
+    },
+    {
+      "cell": 5,
+      "word": "PEACH",
+      "name": "Three peaches",
+      "wall": "brick",
+      "motifs": [
+        "peaches",
+        "peach leaves",
+        "dogwood"
+      ],
+      "paintCoverage": 0.896
+    },
+    {
+      "cell": 6,
+      "word": "FLOW",
+      "name": "River flow with heron",
+      "wall": "stucco",
+      "motifs": [
+        "river",
+        "great blue heron",
+        "fish",
+        "river stones"
+      ],
+      "paintCoverage": 0.905
+    },
+    {
+      "cell": 7,
+      "word": "STRIDE",
+      "name": "Stride sequence",
+      "wall": "brick",
+      "motifs": [
+        "skaters in motion",
+        "sun stripes"
+      ],
+      "paintCoverage": 0.9
+    },
+    {
+      "cell": 8,
+      "word": "GLIDE",
+      "name": "Thrasher at dawn",
+      "wall": "stucco",
+      "motifs": [
+        "brown thrasher (state bird)",
+        "pine forest",
+        "dawn"
+      ],
+      "paintCoverage": 0.89
+    },
+    {
+      "cell": 9,
+      "word": "A-TOWN",
+      "name": "Record sun and dancers",
+      "wall": "brick",
+      "motifs": [
+        "music",
+        "vinyl record",
+        "sound waves",
+        "dancers"
+      ],
+      "paintCoverage": 0.892
+    },
+    {
+      "cell": 10,
+      "word": "SUNSHINE",
+      "name": "Magnolia sunshine",
+      "wall": "stucco",
+      "motifs": [
+        "magnolia blossoms",
+        "sun"
+      ],
+      "paintCoverage": 0.915
+    },
+    {
+      "cell": 11,
+      "word": "GOOD VIBES",
+      "name": "Porch row neighbors",
+      "wall": "brick",
+      "motifs": [
+        "shotgun houses",
+        "neighbors",
+        "pennants",
+        "community"
+      ],
+      "paintCoverage": 0.907
+    },
+    {
+      "cell": 12,
+      "word": "SMOOTH",
+      "name": "Smooth leaves",
+      "wall": "stucco",
+      "motifs": [
+        "magnolia leaves (abstract)",
+        "color fields"
+      ],
+      "paintCoverage": 0.914
+    },
+    {
+      "cell": 13,
+      "word": "SWAG SURF",
+      "name": "Crowd wave",
+      "wall": "brick",
+      "motifs": [
+        "community",
+        "dancing crowd",
+        "wave ribbon",
+        "confetti"
+      ],
+      "paintCoverage": 0.907
+    },
+    {
+      "cell": 14,
+      "word": "RINK",
+      "name": "Night rink",
+      "wall": "brick",
+      "motifs": [
+        "roller rink",
+        "skaters",
+        "lights",
+        "stars"
+      ],
+      "paintCoverage": 0.886
+    },
+    {
+      "cell": 15,
+      "word": "SHINE",
+      "name": "Skyline night shine",
+      "wall": "stucco",
+      "motifs": [
+        "skyline silhouette",
+        "moon",
+        "stars",
+        "fireflies",
+        "magnolia"
+      ],
+      "paintCoverage": 0.888
+    }
+  ]
+}

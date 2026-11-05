@@ -6,8 +6,10 @@ For each set it downloads the 1k JPG color and AO maps from the Poly Haven
 API and writes assets/ground/<id>/:
 
 - color.jpg: the color map times the AO map, 1024 px.
-- set.json: the real tile size in meters, the mean linear color, and the
-  source and authors.
+- normal.jpg: the OpenGL normal map, 1024 px (the pbr look only).
+- rough.jpg: the roughness map, 512 px (the pbr look only).
+- set.json: the real tile size in meters, the mean linear color, the mean
+  roughness, and the source and authors.
 
 The game does not show these colors directly. The surface shader divides
 the map by its mean color and multiplies the result into the art color of
@@ -64,6 +66,13 @@ def main():
         out = OUT / set_id
         out.mkdir(parents=True, exist_ok=True)
         Image.fromarray((np.clip(d, 0, 1) * 255 + 0.5).astype(np.uint8)).save(out / "color.jpg", quality=85)
+        nor_url = files["nor_gl"]["1k"]["jpg"]["url"]
+        rough_url = files["Rough"]["1k"]["jpg"]["url"]
+        nor = Image.open(io.BytesIO(fetch(nor_url))).convert("RGB").resize((SIZE, SIZE), Image.LANCZOS)
+        nor.save(out / "normal.jpg", quality=90)
+        rough = Image.open(io.BytesIO(fetch(rough_url))).convert("L").resize((SIZE // 2, SIZE // 2), Image.LANCZOS)
+        rough.save(out / "rough.jpg", quality=85)
+        rough_mean = float(np.asarray(rough, dtype=np.float64).mean() / 255)
         mean = srgb_to_linear(d).reshape(-1, 3).mean(axis=0)
         dims = info.get("dimensions") or [2000, 2000]
         meta = {
@@ -74,13 +83,14 @@ def main():
             "license": "CC0 1.0",
             "tileMeters": round(dims[0] / 1000, 3),
             "meanLinear": [round(float(x), 4) for x in mean],
-            "files": {"diffuse": diff_url, "ao": ao_url},
+            "roughMean": round(rough_mean, 4),
+            "files": {"diffuse": diff_url, "ao": ao_url, "nor": nor_url, "rough": rough_url},
         }
         (out / "set.json").write_text(json.dumps(meta, indent=2) + "\n")
         credits.append({"set": set_id, "asset": asset, "authors": info.get("authors"), "url": meta["source"]})
         print(f"{set_id}: {asset}, tile {meta['tileMeters']} m, mean {meta['meanLinear']}")
     prov = {
-        "tool": "scripts/ground-textures.py (Poly Haven API download, AO multiply, resize)",
+        "tool": "scripts/ground-textures.py (Poly Haven API download, AO multiply, resize; color, normal, and roughness maps)",
         "prompt": None,
         "license": "CC0 1.0",
         "credits": credits,

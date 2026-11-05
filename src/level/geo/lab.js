@@ -1,5 +1,5 @@
 // The asset lab: fixed camera views of one building, for the art loop
-// (agents/asset-judge.md, agents/asset-director.md). Pure.
+// (docs/art-loop/judge.md, docs/art-loop/director.md). Pure.
 //
 // A lab view is a normal `?view=fixed&cam=` camera, computed from the
 // building footprint, so the building shows in the real renderer with its

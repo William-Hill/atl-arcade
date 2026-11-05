@@ -6,6 +6,7 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { withLeafCut } from "./leaf-cut.js";
+import { GRADE } from "./look.js";
 
 // The high tier post chain:
 //   scene (MSAA x4) -> GTAO ambient occlusion -> ink outlines -> bloom -> output.
@@ -81,6 +82,8 @@ const InkShader = {
     fadeFar: { value: 400 },
     strength: { value: 0.85 },
     thickness: { value: 1 },
+    // 1 for an orthographic camera (the isometric map bake).
+    ortho: { value: 0 },
     // x: the dot cell (px), y: the luminance where the dots start, z: the
     // darkening inside a dot. x = 0 turns the halftone off.
     halftone: { value: new THREE.Vector3(HALFTONE.cell, HALFTONE.start, HALFTONE.strength) },
@@ -100,10 +103,12 @@ const InkShader = {
     uniform float fadeFar;
     uniform float strength;
     uniform float thickness;
+    uniform float ortho;
     uniform vec3 halftone;
     varying vec2 vUv;
     float viewDepth(vec2 uv) {
-      return -perspectiveDepthToViewZ(texture2D(tDepth, uv).x, cameraNear, cameraFar);
+      float z = texture2D(tDepth, uv).x;
+      return ortho > 0.5 ? -orthographicDepthToViewZ(z, cameraNear, cameraFar) : -perspectiveDepthToViewZ(z, cameraNear, cameraFar);
     }
     vec3 viewNormal(vec2 uv) { return unpackRGBToNormal(texture2D(tNormal, uv).rgb); }
     void main() {
@@ -181,7 +186,7 @@ const GradeShader = {
     }`,
 };
 
-export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true, look = "toon" }) {
+export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true, ink: inkStrength = 0.85, look = "toon" }) {
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
   const composer = new EffectComposer(renderer, target);
@@ -194,7 +199,7 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   // foot, the inside corners, and under the trees.
   gtao.updateGtaoMaterial({ radius: 2.5, distanceExponent: 1.5, thickness: 4, scale: 1.2, samples: 12 });
   gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
-  gtao.blendIntensity = 0.9;
+  gtao.blendIntensity = grade ? 1.0 : 0.9;
   composer.addPass(gtao);
 
   // The pbr look drops the ink lines and the halftone dots — the Jet Set
@@ -210,11 +215,13 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
     ink.uniforms.fadeNear.value = fadeNear;
     ink.uniforms.fadeFar.value = fadeFar;
     if (!halftone) ink.uniforms.halftone.value.x = 0;
+    ink.uniforms.strength.value = inkStrength;
     composer.addPass(ink);
   }
 
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.28, 0.5, 0.92);
   composer.addPass(bloom);
+  if (grade) composer.addPass(new ShaderPass(GradeShader));
   composer.addPass(new OutputPass());
 
   function sync() {
@@ -223,6 +230,7 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
       ink.uniforms.tNormal.value = gtao.normalTexture;
       ink.uniforms.cameraNear.value = camera.near;
       ink.uniforms.cameraFar.value = camera.far;
+      ink.uniforms.ortho.value = camera.isOrthographicCamera ? 1 : 0;
       ink.uniforms.thickness.value = 1.25 * Math.max(1, renderer.getPixelRatio());
       if (ink.uniforms.halftone.value.x > 0) ink.uniforms.halftone.value.x = HALFTONE.cell * Math.max(1, renderer.getPixelRatio());
     }

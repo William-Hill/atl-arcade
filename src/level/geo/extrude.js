@@ -144,21 +144,30 @@ function wallQuad(m, [px, pz], [qx, qz], y0, y1, color, facade) {
 // A building: walls from `base` to `top` and a flat roof. The roof can have
 // its own color.
 //
-// With `facade` ({ style, bay, floorHeight, parapet, corniceColor, blank }) the
-// mesh gets the facade attribute: the walls count bays and floors for the
+// With `facade` ({ style, bay, floorHeight, floors, parapet, corniceColor, blank })
+// the mesh gets the facade attribute: the walls count bays and floors for the
 // window shader, and a parapet of `parapet` meters rises above the roof
 // with its outer face marked as cornice and an inner face. `blank`
 // ({ edge, from }, see walls()) is a windowless outer wall.
-export function extrudeFootprint({ outer, holes = [], base = 0, top }, { color = null, roofColor = null, mesh = null, facade = null } = {}) {
+//
+// With `plinth` ({ bottom, color }) and `facade`, a plain wall (a cornice
+// face, no windows) goes from `bottom` up to `base`: the base of a building
+// on a slope (terrain.js buildingSpan()).
+export function extrudeFootprint({ outer, holes = [], base = 0, top }, { color = null, roofColor = null, mesh = null, facade = null, plinth = null } = {}) {
   const m = mesh ?? emptyMesh(Boolean(color), Boolean(facade));
   const o = orient(outer, false);
   if (o.length < 3 || !(top > base)) return m;
   const hs = holes.map((h) => orient(h, true)).filter((h) => h.length >= 3);
   if (facade) {
-    const floors = Math.max(1, Math.round((top - base) / facade.floorHeight));
+    const floors = facade.floors ?? Math.max(1, Math.round((top - base) / facade.floorHeight));
     const wall = { style: facade.style, bay: facade.bay, floors, kind: FACE.wall };
     walls(m, o, base, top, color, wall, facade.blank ?? null);
     for (const h of hs) walls(m, h, base, top, color, wall);
+    if (plinth && base > plinth.bottom) {
+      const face = { style: facade.style, bay: facade.bay, floors: 1, kind: FACE.cornice };
+      walls(m, o, plinth.bottom, base, plinth.color ?? color, face);
+      for (const h of hs) walls(m, h, plinth.bottom, base, plinth.color ?? color, face);
+    }
     const parapet = facade.parapet ?? 0;
     if (parapet > 0) {
       const trim = facade.corniceColor ?? color;

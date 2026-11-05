@@ -1,0 +1,59 @@
+{
+  "file": "c-o4w-morning.jpg",
+  "title": "C: O4W mural, morning 10:00",
+  "subject": "mural-wall",
+  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
+  "method": "in-game capture (no image model)",
+  "prompt": null,
+  "settings": {
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=10&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-101.41%2C2%2C623.32%2C-81.28%2C6.07%2C628.46",
+    "cam": [
+      -101.41,
+      2,
+      623.32,
+      -81.28,
+      6.07,
+      628.46
+    ],
+    "params": {
+      "time": "10"
+    },
+    "tune": {
+      "look": {
+        "environment": 1
+      },
+      "grade": {
+        "uSat": 1.12
+      }
+    },
+    "paintover": null,
+    "viewport": [
+      1280,
+      720
+    ],
+    "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
+    "build": "scripts/art/style-frames.mjs",
+    "renderer": {
+      "calls": 200,
+      "triangles": 660473,
+      "textures": 38,
+      "geometries": 82
+    },
+    "look": {
+      "toneMapping": 7,
+      "exposure": 1.0976805,
+      "environment": 1,
+      "sun": 2.847
+    },
+    "grade": {
+      "uContrast": 1.06,
+      "uSat": 1.12,
+      "uWarm": 0
+    },
+    "bloom": 0.28,
+    "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+  },
+  "credits": 0,
+  "date": "2026-11-05",
+  "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
+}

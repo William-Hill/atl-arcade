@@ -11,9 +11,14 @@ import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkaterEnv } from "./sim/skate/skater.js";
-import { createRun, stepRun } from "./sim/skate/run.js";
+import { createRun, stepRun, teleportRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
 import { createMinimap } from "./ui/minimap.js";
+import { createFullMap } from "./ui/fullmap.js";
+import { isoTilesFor } from "./ui/iso-tiles.js";
+import { travelSpot, landingProbe } from "./level/geo/travel.js";
+import { ISO, isoBasis, isoCameraPose, levelIsoGrid, tileCenter } from "./level/geo/iso-map.js";
+import { mapLandmarks } from "./ui/minimap-math.js";
 import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
 import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
@@ -82,7 +87,7 @@ performance.mark("atl:level");
 loader.step("level");
 const geo = isGeoLevel(level);
 const env = createLevelEnv(level, { props: params.get("props") !== "0" });
-const skaterEnv = createSkaterEnv(level);
+const skaterEnv = createSkaterEnv(level, env.grindables);
 
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
@@ -133,7 +138,10 @@ if (geo) {
     renderer.toneMapping = toneMappingOf(look);
     renderer.toneMappingExposure = LOOKS[look].exposure;
   }
-  geoLights = createGeoLights({ shadowRadius: tier.shadows ? 70 : 45, shadowMapSize: tier.shadows ? 4096 : 2048, look });
+  // The isometric bake (view=iso) renders a 192 m square at a time, so its
+  // shadow box is larger.
+  const isoBake = params.get("view") === "iso";
+  geoLights = createGeoLights({ shadowRadius: isoBake ? 140 : tier.shadows ? 70 : 45, shadowMapSize: tier.shadows || isoBake ? 4096 : 2048, look });
   scene.add(geoLights.group);
   // The low tier has no sky dome (a flat horizon color), to keep the
   // headless frame budget. ?sky=0 leaves it out on the high tier too.
@@ -315,6 +323,8 @@ const factCardSpots = () => facts.cards.map((c) => ({ id: c.id, position: c.posi
 
 const skaterView = createSkaterView();
 scene.add(skaterView.group);
+// The isometric map bake shows the city only.
+if (params.get("view") === "iso") skaterView.group.visible = false;
 
 // NPC skaters (#134): other skaters on the trail, on the same controller as
 // the player. On by default on a geodata level; ?skaters=0 turns them off,
@@ -370,7 +380,15 @@ if (skaterName !== "capsule") {
     });
 }
 
-const camera = new THREE.PerspectiveCamera(60, 1, 0.1, geo ? (params.get("fog") === "0" ? 4000 : GEO_FAR) : 500);
+// view=iso is the isometric map bake (scripts/bake-iso-map.mjs,
+// src/level/geo/iso-map.js): an orthographic camera, ISO.mpp meters for
+// each screen pixel. It stands far back on the view line, so the depth
+// buffer and the screen space passes see positive depths.
+const ISO_BACK = 600;
+const camera =
+  params.get("view") === "iso" && geo
+    ? Object.assign(new THREE.OrthographicCamera(-1, 1, 1, -1, 1, ISO_BACK * 3), { userData: { mpp: ISO.mpp } })
+    : new THREE.PerspectiveCamera(60, 1, 0.1, geo ? (params.get("fog") === "0" ? 4000 : GEO_FAR) : 500);
 // view=follow (default), view=orbit (drag to look), view=fixed (screenshot reference).
 const view = params.get("view") ?? "follow";
 // ?cam=x,y,z,lookX,lookY,lookZ sets the fixed camera (for screenshots).
@@ -397,6 +415,38 @@ if (camParam.length === 6 && camParam.every(Number.isFinite)) {
   camera.lookAt(0, 0, 2);
 }
 
+// The isometric bake: the grid of the whole level, and shot(col, row) puts
+// the camera on one tile. The game picks its detail and the shadow box from
+// the ground point of the tile (isoFocus), not from the far camera.
+let isoFocus = null;
+let iso = null;
+if (view === "iso" && geo) {
+  const basis = isoBasis();
+  const t = terrainOf(level);
+  const { grid, minY, maxY } = levelIsoGrid(level, (x, z) => t.height(x, z), basis);
+  const groundY = (minY + Math.min(maxY, minY + 40)) / 2;
+  iso = {
+    grid,
+    basis,
+    shot(col, row) {
+      const [a, b] = tileCenter(grid, col, row);
+      const pose = isoCameraPose(basis, a, b, groundY);
+      // The ground point under the tile center, for the detail and the shadows.
+      const p = pose.position;
+      const ground = t.height(p[0], p[2]);
+      const focus = isoCameraPose(basis, a, b, ground).position;
+      isoFocus = new THREE.Vector3(...focus);
+      camera.up.set(...basis.u);
+      camera.position.set(...p.map((v, k) => v - basis.d[k] * ISO_BACK));
+      camera.lookAt(p[0], p[1], p[2]);
+      camera.updateMatrixWorld();
+      return { col, row, focus };
+    },
+  };
+  const [c0, r0] = (params.get("iso") ?? "0,0").split(",").map(Number);
+  iso.shot(Number.isFinite(c0) ? c0 : 0, Number.isFinite(r0) ? r0 : 0);
+}
+
 let controls = null;
 if (view === "orbit") {
   controls = new OrbitControls(camera, renderer.domElement);
@@ -409,7 +459,7 @@ if (view === "orbit") {
 // the lite ink pass on the phone tier, none on the low tier.
 // The pbr look has no halftone dots: on glass and in shade they read as speckle
 // (docs/art-loop/reports/brick-loft-r0-judge.md).
-const postOptions = { fadeNear: GEO_FOG_NEAR * 0.5, fadeFar: GEO_FAR * 0.8, halftone: look !== "pbr" && params.get("halftone") !== "0", look };
+const postOptions = { fadeNear: iso ? ISO_BACK * 4 : GEO_FOG_NEAR * 0.5, fadeFar: iso ? ISO_BACK * 5 : GEO_FAR * 0.8, halftone: look !== "pbr" && params.get("halftone") !== "0", ink: LOOKS[look].ink, grade: LOOKS[look].grade, look };
 let post = tier.post === "full" ? createPost(renderer, scene, camera, postOptions) : tier.post === "lite" ? createLitePost(renderer, scene, camera, postOptions) : null;
 // Photo mode's tilt-shift blur (src/render/tilt-shift.js): on the full
 // chain only, and off in play.
@@ -487,7 +537,13 @@ const results = goalDef ? createResults(document.body, { title: level.title ?? "
 // The minimap (#86) on a geodata level. ?minimap=0 leaves it out, and
 // ?minimap=north or ?minimap=heading sets the mode.
 const minimapParam = params.get("minimap");
-const minimap = geo && minimapParam !== "0" ? createMinimap(document.body, level, { mode: ["north", "heading"].includes(minimapParam) ? minimapParam : undefined }) : null;
+// The full map (src/ui/fullmap.js) is made after photo mode, below; the
+// minimap expand button opens it.
+let fullmap = null;
+const minimap =
+  geo && minimapParam !== "0"
+    ? createMinimap(document.body, level, { mode: ["north", "heading"].includes(minimapParam) ? minimapParam : undefined, onExpand: () => fullmap?.open() })
+    : null;
 // Simulation events for the tests and the playtest harness.
 const events = [];
 
@@ -552,6 +608,23 @@ function simulate(dt) {
 
 let follow = null;
 
+// Fast travel (the full map): the skater goes to the nearest trail, path,
+// sidewalk, or street point, at rest, on the ground there. Returns the spot.
+function fastTravel(x, z) {
+  const spot = travelSpot(level, x, z);
+  if (!spot) return null;
+  const ground = terrainOf(level).height(spot.x, spot.z);
+  // The top surface of the spot's own strip: the deck when the strip is a
+  // bridge, the road under it otherwise (the spot is on a strip, so never on
+  // a roof).
+  const y = env.sampleGround(spot.x, spot.z, landingProbe(level, spot, ground))?.height ?? ground;
+  run = teleportRun(run, level, { position: [spot.x, y, spot.z], yaw: spot.yaw });
+  skater = run.skater;
+  if (follow) follow.reset(skater);
+  events.push({ type: "travel", x: spot.x, z: spot.z });
+  return { ...spot, y };
+}
+
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   run = createRun(level, { position, yaw, cards: factCardSpots() });
   skater = run.skater;
@@ -606,6 +679,23 @@ const photo = createPhotoPanel({
   },
 });
 
+// The full map of the level (M key, or the minimap expand button). The game
+// stops while it is open. ?fullmap=0 leaves it out.
+fullmap =
+  geo && params.get("fullmap") !== "0"
+    ? createFullMap(document.body, level, {
+        icons: minimap?.icons ?? mapLandmarks(level),
+        canOpen: () => !photo.isOpen,
+        onChange: () => input.reset(),
+        // The baked isometric map of the level (scripts/bake-iso-map.mjs).
+        iso: params.get("isomap") === "0" ? null : isoTilesFor(level.name),
+        groundAt: (x, z) => terrainOf(level).height(x, z),
+        // Fast travel: on in the dev server, off in a production build.
+        // ?travel=1 or ?travel=0 sets it either way.
+        onTravel: (params.get("travel") ?? (import.meta.env.DEV ? "1" : "0")) === "1" ? (x, z) => fastTravel(x, z) : null,
+      })
+    : null;
+
 let stepper = createStepper();
 let ticks = 0;
 let last = performance.now();
@@ -647,14 +737,16 @@ function frame(now) {
     requestAnimationFrame(frame);
     return;
   }
+  // Photo mode and the full map stop the game.
+  const paused = photo.isOpen || Boolean(fullmap?.isOpen);
   // Photo mode pauses the governor: the blur is slow and the game is stopped.
-  if (governor && !photo.isOpen) {
+  if (governor && !paused) {
     governor = governorStep(governor, elapsed * 1000);
     if (governor.changed) applyRung(currentRung(governor));
   }
 
-  if (photo.isOpen) {
-    // Photo mode stops the simulation and the skater animation.
+  if (paused) {
+    // Photo mode and the full map stop the simulation and the skater animation.
     stepper = { ...stepper, leftover: 0 };
   } else {
     const stepped = advance(stepper, elapsed);
@@ -663,25 +755,27 @@ function frame(now) {
     ticks += stepped.steps;
   }
 
-  skaterView.sync(skater, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
+  skaterView.sync(skater, paused ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
   if (photo.isOpen) {
     photo.update(Math.min(elapsed, 0.1));
   } else if (controls) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
-  if (follow && !photo.isOpen) {
+  if (follow && !paused) {
     const dt = Math.min(elapsed, 0.1);
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
   }
   hud.update(run, now, beat.running ? beat.phase() : null, goals);
   if (results && goals.ended && !results.shown) results.show(computeResults(goalsJson(goals, goalDef), goalDef));
   if (minimap) minimap.update(skater);
+  if (fullmap) fullmap.update(skater);
   if (factCardsView) factCardsView.update(run.cards.collected, now / 1000);
   if (factPopup) factPopup.update(now);
   // A fixed camera (a screenshot or the lab) gets the shadow box at the place
   // it looks at; the skater can be far away.
-  if (geoLights && shadowFocus) geoLights.follow(shadowFocus[0], shadowFocus[2], shadowFocus[1]);
+  if (geoLights && isoFocus) geoLights.follow(isoFocus.x, isoFocus.z, isoFocus.y);
+  else if (geoLights && shadowFocus) geoLights.follow(shadowFocus[0], shadowFocus[2], shadowFocus[1]);
   else if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
   if (blob) {
     // With the skater height, as the controller samples: under a bridge the
@@ -689,11 +783,11 @@ function frame(now) {
     const g = env.sampleGround(skater.position[0], skater.position[2], skater.position[1]);
     blob.position.set(skater.position[0], (g ? g.height : 0) + 0.02, skater.position[2]);
   }
-  if (levelView.update) levelView.update(camera.position);
+  if (levelView.update) levelView.update(isoFocus ?? camera.position);
   if (sky) sky.update(camera, now / 1000);
   if (weatherView) weatherView.update(elapsed, camera);
   if (rain) rain.update(camera, now / 1000, weatherView?.state, renderer.domElement.height);
-  if (streetSigns) streetSigns.update(camera.position);
+  if (streetSigns) streetSigns.update(isoFocus ?? camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
   if (carView) carView.update(camera.position, traffic?.cars);
   if (npcSkatersView && !npcWarm && npcSkatersView.loaded + npcSkatersView.failed === npcSkaters.npcs.length) {
@@ -807,6 +901,8 @@ window.__atl = {
     // The ground under (x, z), from the pure sampler. With `y`, a bridge
     // high over y is left out (the skater is under it).
     sample: (x, z, y) => env.sampleGround(x, z, y),
+    // The grindables by kind (#136: the OSM benches and the curbs are ledges).
+    grindables: skaterEnv.grindables.reduce((acc, g) => ({ ...acc, [g.id.split(":").slice(0, 2).join(":")]: (acc[g.id.split(":").slice(0, 2).join(":")] ?? 0) + 1 }), {}),
   },
   physics: {
     colliderCount: physics.colliderCount,
@@ -835,6 +931,30 @@ window.__atl = {
         icons: minimap.icons,
         setMode: minimap.setMode,
         setHidden: minimap.setHidden,
+      }
+    : null,
+  // The isometric bake (view=iso), or null.
+  iso: iso
+    ? {
+        grid: iso.grid,
+        shot: (col, row) => iso.shot(col, row),
+      }
+    : null,
+  // The full map, or null on the greybox and with ?fullmap=0.
+  fullmap: fullmap
+    ? {
+        get isOpen() {
+          return fullmap.isOpen;
+        },
+        get state() {
+          return { ...fullmap.state };
+        },
+        open: () => fullmap.open(),
+        close: () => fullmap.close(),
+        setView: (v) => fullmap.setView(v),
+        setLayer: (l) => fullmap.setLayer(l),
+        select: (icon, target) => fullmap.select(icon, target),
+        travel: () => fullmap.travel(),
       }
     : null,
   // The crowd (M1-09), or null on the greybox and with ?npcs=0.
@@ -1084,6 +1204,7 @@ window.__atl = {
     return run;
   },
   resetSkater,
+  fastTravel: (x, z) => fastTravel(x, z),
   runScript,
   view,
   projectSkater,

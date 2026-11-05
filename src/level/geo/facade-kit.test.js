@@ -1,8 +1,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEPTH_TILE, FRONT, KIT, buildingKit, crownKit, crownPanel, facadeKit, frontEdge, frontEdges, gableRoof, ledge, minRect, offsetRing, shopFront, solidBox, stairBulkhead, wallBox, wallDepth } from "./facade-kit.js";
-import { SIGN_COLORS, STYLES } from "./styles.js";
+import { DEPTH_TILE, FRONT, HOUSE_FRONT, KIT, WALK, buildingKit, crownKit, crownPanel, doorBay, facadeKit, frontEdge, frontEdges, frontWalk, gableRoof, houseFronts, housePorch, ledge, minRect, offsetRing, porchSpan, roofSolar, roofVents, shopEntrance, shopFront, solidBox, stairBulkhead, wallBox, wallClear, wallDepth } from "./facade-kit.js";
+import { streetTest } from "./geo-mesh.js";
+import { createGeoGroundSampler } from "./geo-ground.js";
+import { buildingSpan } from "./terrain.js";
+import { roofPlan } from "./roof-plan.js";
+import { SIGN_COLORS, STYLES, chooseStyle, floorCount } from "./styles.js";
 import { orientRing } from "./extrude.js";
 import { muralWalls } from "./geo-mesh.js";
 import { labBuildings } from "./lab.js";
@@ -308,7 +312,7 @@ describe("the crown of a brick loft", () => {
     expect(crownKit(empty(), LAB, top, LOFT, 0, LOFT.walls[0], 7)).toEqual({ crown: 1, bulkhead: 1 });
   });
 
-  it("puts the panel coping at the parapet top plus the step, on the center 2 bays", () => {
+  it("puts the panel coping at the parapet top plus the step, on the center 4 bays, with a lower step on each side", () => {
     const m = empty();
     expect(crownPanel(m, LAB, top, LOFT, 0, LOFT.walls[0])).toBe(1);
     const w = wall(LAB, longest(LAB));
@@ -316,15 +320,47 @@ describe("the crown of a brick loft", () => {
     const near = vs.filter(({ p: q }) => Math.abs(w.out(q)) < 0.5);
     const maxY = Math.max(...near.map(({ p: q }) => q[1]));
     expect(maxY).toBeCloseTo(top + p + LOFT.crown.step + KIT.coping.height, 2);
-    expect(maxY).toBeCloseTo(11.94, 2);
-    // The panel vertices on the wall line are between the bay lines of bays 3 and 5.
+    expect(maxY).toBeCloseTo(12.34, 2);
     const bl = 27.1 / 8;
     const online = vs.filter(({ p: q }) => Math.abs(w.out(q)) < 1e-6 && q[1] > top + p - 1e-6);
     expect(online.length).toBeGreaterThan(0);
+    // The center panel (over the side steps) is between the bay lines of
+    // bays 2 and 6. The side steps add one bay on each side.
+    const high = top + p + KIT.crown.sideStep + KIT.coping.height + 1e-6;
     for (const { p: q } of online) {
-      expect(w.along(q)).toBeGreaterThanOrEqual(3 * bl - 1e-6);
-      expect(w.along(q)).toBeLessThanOrEqual(5 * bl + 1e-6);
+      const a = w.along(q);
+      expect(a).toBeGreaterThanOrEqual((q[1] > high ? 2 : 1) * bl - 1e-6);
+      expect(a).toBeLessThanOrEqual((q[1] > high ? 6 : 7) * bl + 1e-6);
     }
+    // The side steps stand 0.5 m over the parapet.
+    const stepTops = online.filter(({ p: q }) => w.along(q) < 2 * bl - 1e-6).map(({ p: q }) => q[1]);
+    expect(Math.max(...stepTops)).toBeCloseTo(top + p + KIT.crown.sideStep, 6);
+  });
+
+  it("gives an odd wall a 3-bay panel and a 4-bay wall a 2-bay panel with no side steps", () => {
+    const odd = orientRing([[0, 0], [7 * 3.4, 0], [7 * 3.4, 8.7], [0, 8.7]], false);
+    const m = empty();
+    crownPanel(m, odd, top, LOFT, 0, LOFT.walls[0]);
+    const w = wall(odd, longest(odd));
+    const tall = vertices(m).filter(({ p: q }) => Math.abs(w.out(q)) < 1e-6 && q[1] > top + p + KIT.crown.sideStep + KIT.coping.height + 1e-6);
+    expect(Math.min(...tall.map(({ p: q }) => w.along(q)))).toBeCloseTo(2 * 3.4, 6);
+    expect(Math.max(...tall.map(({ p: q }) => w.along(q)))).toBeCloseTo(5 * 3.4, 6);
+    const four = orientRing([[0, 0], [4 * 3.4, 0], [4 * 3.4, 8.7], [0, 8.7]], false);
+    const m4 = empty();
+    crownPanel(m4, four, top, LOFT, 0, LOFT.walls[0]);
+    const w4 = wall(four, longest(four));
+    const on4 = vertices(m4).filter(({ p: q }) => Math.abs(w4.out(q)) < 1e-6 && q[1] > top + p - 1e-6);
+    expect(Math.min(...on4.map(({ p: q }) => w4.along(q)))).toBeCloseTo(3.4, 6);
+    expect(Math.max(...on4.map(({ p: q }) => w4.along(q)))).toBeCloseTo(3 * 3.4, 6);
+  });
+
+  it("paints the bulkhead steel, not brick", () => {
+    const m = empty();
+    expect(stairBulkhead(m, LAB, top, LOFT, 0, LOFT.walls[0], 7)).toBe(1);
+    const colors = new Set(vertices(m).map(({ c }) => c.join(",")));
+    expect(colors.has(KIT.crown.metal.join(","))).toBe(true);
+    expect(colors.has(KIT.crown.metalCap.join(","))).toBe(true);
+    expect(colors.has(LOFT.walls[0].join(","))).toBe(false);
   });
 
   it("keeps the bulkhead inside the roof, 0.9 m or more from every wall", () => {
@@ -561,5 +597,306 @@ describe("the front wall of a building with no street wall", () => {
     expect(wall(ring, f.edge).len).toBeGreaterThan(27);
     expect(wallNormal(ring, f.edge)[1]).toBeGreaterThan(0.99);
     expect(f.wraps.length).toBeGreaterThan(0);
+  });
+});
+
+// The geometry content pass: lintels, heads, the stacked cornice, the shop
+// entrance, the roof vents, and the walk from the door.
+describe("the facade relief", () => {
+  const ring = orientRing([[0, 0], [17, 0], [17, 10.2], [0, 10.2]], false);
+
+  it("puts a stone lintel over each upper window of a brick style, on the painted lintel", () => {
+    const m = empty();
+    // 4 floors of 4.2 m, walls of 5 and 3 bays.
+    const c = wallDepth(m, ring, 16.8, LOFT, 0);
+    // Floors 1, 2, and 3 on each wall. The top floor lintel is lower: its
+    // top stays under the bed molding of the cornice (issue #135).
+    expect(c.lintel).toBe((5 + 3) * 2 * 3);
+    const ceiling = 16.8 - KIT.cornice.height - KIT.bed.height;
+    let top = -Infinity;
+    for (let i = 1; i < m.positions.length; i += 3) top = Math.max(top, m.positions[i]);
+    expect(top).toBeLessThanOrEqual(ceiling - 0.02 + 1e-6);
+    expect(c.head).toBe(0);
+    const [ww, wh] = LOFT.window;
+    // The lintel bottom is the frame top, as the shader paints it
+    // (lintelY = 0.55 + win.y / 2 + 0.035).
+    const ys = new Set();
+    for (let i = 1; i < m.positions.length; i += 3) ys.add(m.positions[i].toFixed(3));
+    expect(ys.has(((1 + 0.55 + (wh + 0.07) / 2) * 4.2).toFixed(3))).toBe(true);
+    expect(ys.has(((1 + 0.55 + (wh + 0.07) / 2 + KIT.lintel.rise) * 4.2).toFixed(3))).toBe(true);
+    // The lintel on the 17 m wall (along +x at z = 0) is centered on the
+    // bay and covers the painted lintel half width (ww + 0.11) / 2 cells.
+    const bl = 17 / 5;
+    const y0 = (1 + 0.55 + (wh + 0.07) / 2) * 4.2;
+    const xs = [];
+    for (let i = 0; i < m.positions.length; i += 3) {
+      if (Math.abs(m.positions[i + 1] - y0) < 1e-6 && m.positions[i + 2] < 1e-6 && m.positions[i] < bl) xs.push(m.positions[i]);
+    }
+    expect(Math.min(...xs)).toBeLessThanOrEqual(bl / 2 - ((ww + 0.11) / 2) * bl + 1e-6);
+    expect(Math.max(...xs)).toBeGreaterThanOrEqual(bl / 2 + ((ww + 0.11) / 2) * bl - 1e-6);
+  });
+
+  it("puts a thin head over each window of a style with sills and no brick", () => {
+    const stucco = STYLES.find((st) => st.id === "stucco-apartment");
+    const c = wallDepth(empty(), ring, 12.8, stucco, 0);
+    expect(c.head).toBeGreaterThan(0);
+    expect(c.lintel).toBe(0);
+    // One head for each sill, also on the top floor: it gets lower under
+    // the cornice (issue #135).
+    expect(c.head).toBe(c.sill);
+    expect(wallDepth(empty(), ring, 30, STYLES.find((st) => st.id === "glass-office"), 0).head).toBe(0);
+  });
+
+  it("keeps every lintel and head under the cornice and its bed molding", () => {
+    for (const style of STYLES) {
+      const m = empty();
+      const top = 13;
+      const c = wallDepth(m, ring, top, style, 0);
+      if (!c.lintel && !c.head) continue;
+      const cap = (style.parapet ?? 0) >= KIT.cornice.minParapet ? top - KIT.cornice.height - KIT.bed.height : top;
+      let maxY = -Infinity;
+      for (let i = 1; i < m.positions.length; i += 3) maxY = Math.max(maxY, m.positions[i]);
+      expect(maxY, style.id).toBeLessThanOrEqual(cap + 1e-6);
+    }
+  });
+
+  it("stacks a bed molding and a cap step on the cornice, in the depth mesh", () => {
+    const b = { id: "w-stack", outer: [[0, 0], [17, 0], [17, 10.2], [0, 10.2]], height: 12.6, type: "industrial" };
+    const m = empty();
+    const depth = { ...empty(), normals: [] };
+    const c = buildingKit(m, b, { base: 0, top: 12.6 }, depth);
+    expect(c.cornice).toBe(1);
+    expect(c.stack).toBe(1);
+    const ys = new Set();
+    for (let i = 1; i < depth.positions.length; i += 3) ys.add(depth.positions[i].toFixed(3));
+    expect(ys.has((12.6 - KIT.cornice.height - KIT.bed.height).toFixed(3))).toBe(true);
+    expect(ys.has((12.6 + KIT.cap.height).toFixed(3))).toBe(true);
+    // The main mesh keeps the one cornice slab: no bed molding there.
+    const bed = 12.6 - KIT.cornice.height - KIT.bed.height;
+    for (let i = 1; i < m.positions.length; i += 3) expect(Math.abs(m.positions[i] - bed)).toBeGreaterThan(1e-3);
+  });
+
+  it("builds a door, a step, and a lamp on each inner pier of the front wall", () => {
+    const m = empty();
+    const front = { edge: 0, street: false, wraps: [], door: 2 };
+    const c = shopEntrance(m, ring, LOFT, 0, 0, 4.2, front, -0.4, SIGN_COLORS[1]);
+    expect(c).toEqual({ door: 1, step: 1, sconce: 4 });
+    // Wall 0 runs from (0, 10.2) to (17, 10.2); its outward normal is +z.
+    const w = wall(ring, 0);
+    const bl = 17 / 5;
+    const vs = vertices(m);
+    const door = vs.filter(({ c: col }) => col.join(",") === SIGN_COLORS[1].join(","));
+    expect(door.length).toBeGreaterThan(0);
+    for (const { p: q } of door) {
+      expect(Math.abs(w.along(q) - 2.5 * bl)).toBeLessThanOrEqual(KIT.door.width / 2 + 1e-6);
+      expect(q[1]).toBeGreaterThanOrEqual(KIT.step.height - 1e-6);
+      expect(w.out(q)).toBeGreaterThanOrEqual(-1e-6);
+    }
+    // The step goes from the foot up to 0.15 m and sticks out 0.55 m.
+    const minY = Math.min(...vs.map(({ p: q }) => q[1]));
+    expect(minY).toBeCloseTo(-0.4, 6);
+    const maxOut = Math.max(...vs.map(({ p: q }) => w.out(q)));
+    expect(maxOut).toBeCloseTo(KIT.step.depth, 6);
+    // Every part is outside the wall or on its line.
+    for (const { p: q } of vs) expect(w.out(q)).toBeGreaterThanOrEqual(-1e-6);
+  });
+
+  it("puts the lamps on the pier faces, between the bays", () => {
+    const m = empty();
+    shopEntrance(m, ring, LOFT, 0, 0, 4.2, { edge: 0, street: false, wraps: [] }, 0);
+    const w = wall(ring, 0);
+    const bl = 17 / 5;
+    const lamps = vertices(m).filter(({ c: col }) => col.join(",") === KIT.sconce.lampColor.join(","));
+    expect(lamps.length).toBeGreaterThan(0);
+    for (const { p: q } of lamps) {
+      const a = w.along(q);
+      expect(Math.abs(a - Math.round(a / bl) * bl)).toBeLessThanOrEqual(KIT.sconce.lamp[0] / 2 + 1e-6);
+      expect(q[1]).toBeLessThan(KIT.sconce.maxY + 0.2);
+    }
+  });
+
+  it("builds no door in a bay that is too narrow, and nothing without a front", () => {
+    // An 18 m wall of 1.8 m bays: the door and its trim do not fit.
+    const office = STYLES.find((st) => st.id === "glass-office");
+    const ring18 = orientRing([[0, 0], [18, 0], [18, 10], [0, 10]], false);
+    expect(shopEntrance(empty(), ring18, office, 0, 0, 3.8, { edge: 0, wraps: [] }).door).toBe(0);
+    expect(shopEntrance(empty(), ring, LOFT, 0, 0, 4.2, null)).toEqual({ door: 0, step: 0, sconce: 0 });
+  });
+
+  it("takes the door bay from the front, else the center bay", () => {
+    expect(doorBay({ door: 3 }, 5)).toBe(3);
+    expect(doorBay({ door: 9 }, 5)).toBe(2);
+    expect(doorBay(null, 8)).toBe(3);
+  });
+
+  it("builds a pipe and a cap for each vent of the roof plan, on the roof", () => {
+    const b = { id: "w-vents", outer: [[0, 0], [30, 0], [30, 14], [0, 14]], height: 10 };
+    const stucco = STYLES.find((st) => st.id === "stucco-apartment");
+    const plan = roofPlan(b, stucco);
+    const vents = plan.parts.filter((p) => p.kind === "vent");
+    const m = empty();
+    expect(roofVents(m, plan.parts, 10, 0)).toBe(vents.length);
+    // A pipe with no bottom (5 quads) and a closed cap (6 quads).
+    expect(m.indices.length / 3).toBe(vents.length * 22);
+    let minY = Infinity;
+    for (let i = 1; i < m.positions.length; i += 3) minY = Math.min(minY, m.positions[i]);
+    expect(minY).toBeCloseTo(10, 6);
+  });
+
+  it("finds the door bay with the nearest street, and the walk to it", () => {
+    // Wall 0 is a 5-bay wall along +x at z = 10.2; its outward normal is
+    // +z. A street fills z > 22.2 in front of bays 3 and 4 only (x > 10.2).
+    const isStreet = (x, z) => z > 22.2 && x > 10.2;
+    const r = frontWalk(ring, 0, 3.4, isStreet);
+    expect(r.door).toBe(3);
+    // The walk ends on the street, at most one cut step past its edge.
+    expect(r.walk).toBeGreaterThanOrEqual(12 - 1e-6);
+    expect(r.walk).toBeLessThanOrEqual(12 + WALK.step / 2 ** WALK.refine + 1e-3);
+  });
+
+  it("gives no walk when a neighbor stands between the wall and the street", () => {
+    const isStreet = (x, z) => z > 30.2;
+    const isBlocked = (x, z) => z > 16.2 && z < 20.2;
+    expect(frontWalk(ring, 0, 3.4, isStreet, isBlocked)).toEqual({ door: 2, walk: null });
+  });
+
+  it("gives each BeltLine shop front a door bay and a walk", () => {
+    const fronts = frontEdges(LEVEL);
+    expect(frontEdges(LEVEL)).toBe(fronts);
+    let walks = 0;
+    for (const f of fronts.values()) {
+      expect(Number.isInteger(f.door)).toBe(true);
+      if (f.walk !== null) walks += 1;
+    }
+    expect(walks).toBeGreaterThan(fronts.size / 2);
+  });
+});
+
+// Issue #135: porches on the houses, solar rows on the flat roofs, and the
+// OSM level counts.
+describe("the house porches", () => {
+  const HOUSE = STYLES.find((st) => st.id === "craftsman-house");
+  // A 12 m x 9 m house. Wall 2 runs from (12, 9) to (0, 9) in the outer
+  // winding (orientRing()), so its outward normal is +z.
+  const ring = orientRing([[0, 0], [12, 0], [12, 9], [0, 9]], false);
+  const edge = ring.findIndex((p, i) => {
+    const q = ring[(i + 1) % ring.length];
+    return p[1] === 9 && q[1] === 9;
+  });
+
+  it("centers the porch on the door bay and keeps it on the wall", () => {
+    const s = porchSpan(12, 4, 1);
+    expect(s.a1 - s.a0).toBeCloseTo(KIT.porch.width);
+    expect(s.a0).toBeGreaterThanOrEqual(0.2 - 1e-9);
+    expect(s.door).toBeCloseTo(4.5);
+    // A wall too short for the narrowest porch gets none.
+    expect(porchSpan(2.5, 1, 0)).toBeNull();
+  });
+
+  it("measures the clear depth to the first way or building", () => {
+    const isStreet = (x, z) => z > 13;
+    expect(wallClear(ring, edge, 2, 8, 5, isStreet)).toBeCloseTo(4, 0);
+    const isBlocked = (x, z) => x > 6 && z > 11;
+    expect(wallClear(ring, edge, 2, 8, 5, () => false, isBlocked)).toBeLessThanOrEqual(2 + HOUSE_FRONT.step);
+    expect(wallClear(ring, edge, 2, 8, 5, () => false)).toBe(HOUSE_FRONT.far);
+  });
+
+  it("builds a porch in front of the wall, under the eave, with room to stand", () => {
+    const m = empty();
+    const front = { edge, door: 1, clear: HOUSE_FRONT.far };
+    expect(housePorch(m, ring, HOUSE, 0, 0, 3.5, 7, front)).toBe(1);
+    const P = KIT.porch;
+    const eave = 7 - KIT.roof.overhang * Math.tan(KIT.roof.pitch);
+    let maxY = -Infinity;
+    let maxZ = -Infinity;
+    for (let i = 0; i < m.positions.length; i += 3) {
+      maxY = Math.max(maxY, m.positions[i + 1]);
+      maxZ = Math.max(maxZ, m.positions[i + 2]);
+      // Nothing goes into the house.
+      expect(m.positions[i + 2]).toBeGreaterThanOrEqual(9 - 1e-6);
+    }
+    expect(maxY).toBeLessThanOrEqual(eave + 1e-6);
+    expect(maxZ).toBeLessThanOrEqual(9 + P.depth + P.steps * P.run + P.overhang + 1e-6);
+    // About 160 triangles: it fits the depth tile budget.
+    expect(m.indices.length / 3).toBeLessThan(220);
+  });
+
+  it("gives no porch when the way is too near or the walls are too low", () => {
+    // Room for the deck but not for one step.
+    const front = { edge, door: 1, clear: KIT.porch.minDepth + KIT.porch.run + KIT.porch.margin - 0.1 };
+    expect(housePorch(empty(), ring, HOUSE, 0, 0, 3.5, 7, front)).toBe(0);
+    expect(housePorch(empty(), ring, HOUSE, 0, 0, 2.4, 2.4, { edge, door: 1, clear: 5 })).toBe(0);
+  });
+
+  it("puts each BeltLine porch off the ways and the other buildings", () => {
+    const houses = houseFronts(LEVEL);
+    expect(houseFronts(LEVEL)).toBe(houses);
+    const sample = createGeoGroundSampler(LEVEL);
+    const isStreet = streetTest(LEVEL, sample);
+    const byId = new Map(LEVEL.buildings.map((b) => [b.id, b]));
+    // In the footprint of another building. A point out of the level (a
+    // house at the level edge) is not in a footprint.
+    const blockedFor = (self) => (x, z) => {
+      const g = sample(x, z);
+      return Boolean(g && byId.has(g.id) && g.id !== self);
+    };
+    let porches = 0;
+    for (const [id, front] of houses) {
+      const b = byId.get(id);
+      const span = buildingSpan(LEVEL, b);
+      const style = STYLES.find((st) => st.id === chooseStyle(b));
+      const floors = floorCount(b, style, span.top - span.base);
+      const m = empty();
+      const ring = orientRing(b.outer, false);
+      if (!housePorch(m, ring, style, 0, span.base, (span.top - span.base) / floors, span.top, front, span.foot)) continue;
+      porches += 1;
+      const blocked = blockedFor(id);
+      for (let i = 0; i < m.positions.length; i += 3) {
+        const x = m.positions[i];
+        const z = m.positions[i + 2];
+        expect(isStreet(x, z), `porch of ${id} on a way`).toBe(false);
+        expect(blocked(x, z), `porch of ${id} in another building`).toBe(false);
+      }
+    }
+    expect(porches).toBeGreaterThan(150);
+  });
+});
+
+describe("the solar rows and the level counts", () => {
+  it("builds a frame and the panels of each solar row, on the roof", () => {
+    const m = empty();
+    const parts = [{ kind: "solar", x: 0, z: 0, yaw: 0, ha: 4, hc: 1 }, { kind: "vent", x: 5, z: 5, yaw: 0, ha: 0.17, hc: 0.17, height: 0.6 }];
+    expect(roofSolar(m, parts, 10, 0)).toBe(1);
+    // 5 frame quads and 4 panels of 2 m.
+    expect(m.indices.length / 3).toBe((5 + 4) * 2);
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let i = 1; i < m.positions.length; i += 3) {
+      lo = Math.min(lo, m.positions[i]);
+      hi = Math.max(hi, m.positions[i]);
+    }
+    expect(lo).toBeCloseTo(10);
+    expect(hi).toBeLessThan(10 + KIT.solar.foot + 2 * Math.tan(KIT.solar.tilt) + 0.05);
+    // The panels face up and to the south (+z).
+    const panel = normals(m).filter((t) => t.n[1] > 0 && t.c[1] > 10 + KIT.solar.foot);
+    expect(panel.length).toBeGreaterThan(0);
+    for (const t of panel) expect(t.n[2]).toBeGreaterThan(0);
+  });
+
+  it("uses the OSM level count for the floors of the kit", () => {
+    const LOFT = STYLES.find((st) => st.id === "brick-loft");
+    const outer = [[0, 0], [17, 0], [17, 10.2], [0, 10.2]];
+    // 12 m with the style floors is 3 floors; the OSM tag says 2.
+    const b = { id: "t-levels", height: 12, outer, type: "industrial", name: "Ford Factory" };
+    const three = buildingKit(empty(), b, { base: 0, top: 12 });
+    const two = buildingKit(empty(), { ...b, levels: 2 }, { base: 0, top: 12 });
+    expect(LOFT.floorHeight).toBe(4.2);
+    expect(two.sill).toBeLessThan(three.sill);
+  });
+
+  it("puts the solar rows on BeltLine roofs and keeps the kit budgets", () => {
+    const { counts } = facadeKit(LEVEL);
+    expect(counts.solar).toBeGreaterThan(40);
+    expect(counts.porch).toBeGreaterThan(150);
   });
 });

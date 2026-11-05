@@ -14,6 +14,9 @@
 
 import { BRIDGE, bridgeDeck, buildingSpan, parapetBlocked, terrainOf } from "./terrain.js";
 import { bridgeLayout, parapetRuns } from "./bridges.js";
+import { streetJunctions } from "./junctions.js";
+import { medianStrips } from "./medians.js";
+import { piecePoints, rampAt, sidewalkLayout } from "./curbs.js";
 
 export const GEO_CELL = 16; // m, grid cell size.
 export const BRIDGE_HEADROOM = 2.5; // m
@@ -78,12 +81,27 @@ export function geoShapes(level) {
   for (const a of level.areas ?? []) {
     shapes.push({ id: a.id, kind: a.kind, top: surfaceTop(level, a.kind), rings: [a.outer, ...(a.holes ?? [])] });
   }
+  // The junction patches (junctions.js): a street surface that fills the
+  // corner between two arms.
+  if ((level.strips ?? []).some((s) => s.kind === "street")) {
+    const top = surfaceTop(level, "street");
+    for (const j of streetJunctions(level, { flat: terrain.flat }).junctions) shapes.push({ id: j.id, kind: "street", top, rings: [j.ring] });
+  }
+  // The raised medians (medians.js): a curb at the sidewalk height.
+  if (level.surfaces?.sidewalk !== undefined) {
+    const top = surfaceTop(level, "sidewalk");
+    for (const m of medianStrips(level)) for (let i = 0; i < m.points.length - 1; i += 1) shapes.push({ id: m.id, kind: "median", top, a: m.points[i], b: m.points[i + 1], r: m.width / 2 });
+  }
+  const walks = sidewalkLayout(level);
   for (const s of level.strips ?? []) {
     const top = surfaceTop(level, s.kind);
     const deck = s.bridge && !terrain.flat ? bridgeDeck(level, s) : null;
-    // A deck runs from joint to joint (bridges.js), past the OSM ends.
-    const points = deck ? bridgeLayout(level, s).points : s.points;
-    for (let i = 0; i < points.length - 1; i += 1) shapes.push({ id: s.id, kind: s.kind, top, a: points[i], b: points[i + 1], r: s.width / 2, deck });
+    // A deck runs from joint to joint (bridges.js), past the OSM ends. A
+    // sidewalk is its pieces and its curb ramps (curbs.js, #136).
+    const lay = !deck && s.kind === "sidewalk" ? walks.get(s.id) : null;
+    const lines = deck ? [bridgeLayout(level, s).points] : lay ? lay.pieces.map((r) => piecePoints(s.points, r)) : [s.points];
+    for (const points of lines) for (let i = 0; i < points.length - 1; i += 1) shapes.push({ id: s.id, kind: s.kind, top, a: points[i], b: points[i + 1], r: s.width / 2, deck });
+    for (const ramp of lay?.ramps ?? []) shapes.push({ id: s.id, kind: "ramp", top: ramp.h0, ramp });
     if (!deck) continue;
     // The parapets: a wall on each open side of the OSM span (geo-mesh.js).
     const o = s.width / 2 - BRIDGE.parapetWidth / 2;
@@ -104,6 +122,10 @@ export function geoShapes(level) {
 }
 
 function shapeBox(s) {
+  if (s.ramp) {
+    const { a, b, r } = s.ramp;
+    return { minX: Math.min(a[0], b[0]) - r, maxX: Math.max(a[0], b[0]) + r, minZ: Math.min(a[1], b[1]) - r, maxZ: Math.max(a[1], b[1]) + r };
+  }
   if (s.c) return { minX: s.c[0] - s.r, maxX: s.c[0] + s.r, minZ: s.c[1] - s.r, maxZ: s.c[1] + s.r };
   if (s.rings) {
     let minX = Infinity;
@@ -160,8 +182,15 @@ export function createGeoGroundSampler(level, cell = GEO_CELL, { obstacles = [] 
     const n = flat ? UP : terrain.normal(x, z);
     let best = { height: groundTop + t, normal: n, id: "ground" };
     const list = grid.get(cellKey(Math.floor(x / cell), Math.floor(z / cell)));
+    let ramp = null;
     if (list) {
       for (const s of list) {
+        if (s.ramp) {
+          // A curb ramp (curbs.js): it wins over the sidewalk it cuts.
+          const r = ramp ? null : rampAt(s.ramp, x, z);
+          if (r) ramp = { height: r.height + t, normal: r.normal, id: s.id, top: s.ramp.h0 + t };
+          continue;
+        }
         let h;
         let normal = n;
         if (s.abs) {
@@ -176,6 +205,9 @@ export function createGeoGroundSampler(level, cell = GEO_CELL, { obstacles = [] 
         if (contains(s, x, z)) best = { height: h, normal, id: s.id };
       }
     }
+    // Over a ramp, nothing higher than the sidewalk (a prop, a building)
+    // hides the ramp.
+    if (ramp && best.height <= ramp.top + 0.01) return { height: ramp.height, normal: ramp.normal, id: ramp.id };
     return best;
   }
   sampleGround.cellCount = grid.size;

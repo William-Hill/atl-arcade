@@ -1058,4 +1058,3 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Sign texts are generic or fictional ("CITY MARKET", "STUDIO YARDS", "BREW HALL"); no real lettering or logos.
 - Krog Street Tunnel is outside the level bounds: skipped.
 - Integration is for the parent session: claim the four footprints, drop the PCM img2threejs tower and rooftop sign entry, add the GLBs as THREE.LOD at their origin with yaw 0. `scripts/assets/landmarks-preview.html` does this as a preview only, without editing shared code.
-||||||| d79d170

@@ -54,14 +54,14 @@ show more floors than the uphill walls. Bridge structure follows
 
 | File | LOD tris | Bytes | Textures | Est. GPU texture memory |
 |---|---|---|---|---|
-| `assets/landmarks/ponce-city-market/ponce-city-market.glb` | lod0 57,432 / lod1 6,921 / lod2 453 | 0.94 MB | 11 (9x 512x512, 1x 256x256, 1x 1024x1024) | 17.7 MiB |
-| `assets/landmarks/telephone-factory-lofts/telephone-factory-lofts.glb` | lod0 2,027 / lod1 723 | 0.57 MB | 11 (10x 512x512, 1x 1024x1024) | 18.7 MiB |
-| `assets/landmarks/studioplex/studioplex.glb` | lod0 7,079 / lod1 2,698 | 0.57 MB | 10 (9x 512x512, 1x 1024x1024) | 17.3 MiB |
-| `assets/landmarks/new-realm-brewing/new-realm-brewing.glb` | lod0 2,336 / lod1 529 | 0.51 MB | 10 (9x 512x512, 1x 1024x1024) | 17.3 MiB |
-| `assets/landmarks/bridge-north-ave/bridge-north-ave.glb` | lod0 1,444 / lod1 420 | 0.10 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
-| `assets/landmarks/bridge-ralph-mcgill/bridge-ralph-mcgill.glb` | lod0 828 / lod1 260 | 0.10 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
-| `assets/landmarks/bridge-ponce/bridge-ponce.glb` | lod0 844 / lod1 276 | 0.10 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
-| `assets/landmarks/bridge-freedom-parkway/bridge-freedom-parkway.glb` | lod0 7,706 / lod1 3,406 | 0.17 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
+| `assets/landmarks/ponce-city-market/ponce-city-market.glb` | lod0 32,520 / lod1 6,051 / lod2 341 (9 sections) | 0.79 MB | 13 (7x 512x512, 5x 256x256, 1x 64x64) | 11.0 MiB |
+| `assets/landmarks/telephone-factory-lofts/telephone-factory-lofts.glb` | lod0 3,769 / lod1 1,101 | 0.50 MB | 12 (8x 512x512, 4x 256x256) | 12.0 MiB |
+| `assets/landmarks/studioplex/studioplex.glb` | lod0 4,274 / lod1 1,593 | 0.44 MB | 11 (7x 512x512, 4x 256x256) | 10.7 MiB |
+| `assets/landmarks/new-realm-brewing/new-realm-brewing.glb` | lod0 2,352 / lod1 529 | 0.42 MB | 11 (7x 512x512, 4x 256x256) | 10.7 MiB |
+| `assets/landmarks/bridge-north-ave/bridge-north-ave.glb` | lod0 1,444 / lod1 420 | 0.09 MB | 4 (2x 512x512, 1x 128x128, 1x 256x256) | 3.1 MiB |
+| `assets/landmarks/bridge-ralph-mcgill/bridge-ralph-mcgill.glb` | lod0 828 / lod1 260 | 0.08 MB | 4 (2x 512x512, 1x 128x128, 1x 256x256) | 3.1 MiB |
+| `assets/landmarks/bridge-ponce/bridge-ponce.glb` | lod0 844 / lod1 276 | 0.08 MB | 4 (2x 512x512, 1x 128x128, 1x 256x256) | 3.1 MiB |
+| `assets/landmarks/bridge-freedom-parkway/bridge-freedom-parkway.glb` | lod0 7,706 / lod1 3,406 | 0.15 MB | 4 (2x 512x512, 1x 128x128, 1x 256x256) | 3.1 MiB |
 
 GPU memory is an estimate: RGBA8 with mipmaps (w x h x 4 x 4/3) per image in
 the file. All building GLBs use the same images (`lm_brick_*`, `lm_trim_*`,
@@ -72,46 +72,82 @@ together, not 18 MiB each). GLTFLoader does not share them across files by
 default.
 
 Textures: brick and trim are the CC0 Poly Haven scans in
-`assets/landmarks/textures/` (512 px); the buff brick, the lighter brick, and
-the concrete are recolored from them in code; the window atlas (1024 px color,
-512 px normal and roughness; 16 window cells: steel sash, storefront, door,
-screen, garage door, louver, brewhouse tanks behind glass) and the fence card
-(128 px PNG with alpha) are painted in code. No photo pixels.
+`assets/landmarks/textures/` (512 px; roughness stored at 256 px); the buff
+brick, the lighter red brick, and the concrete are recolored from them in
+code, and every red brick (PCM, PCM dark, Studioplex, New Realm, the
+Telephone Factory piers) is the one lighter red image times a glTF
+`baseColorFactor`, so the raw scan color is no longer in any file. The window
+atlas is painted at 1024 px and stored at 512 px (color, normal) and 256 px
+(roughness, `lm_window_emit`): 16 cells (steel sash, storefront, door,
+screen, garage door, louver, brewhouse tanks behind glass); the fence card
+(128 px PNG with alpha) is painted in code. No photo pixels.
+
+Night windows: `lm_window` and `lm_far_pcm` carry an emissive map (warm room
+light on the glass, none on the frames, dimmer behind blinds and curtains)
+and every window has a light key in TEXCOORD_1 u (a random 0..1 per window,
+0..0.5 for shops). `src/render/landmark-models.js` patches those materials
+with the facade rule of `geo-view.js`: a window glows when its key is under
+`windowLit * 0.6`, at `windowLit` strength, reading the `uLit` uniform that
+`weather-view.js` sets on the facade materials (found in the scene, so
+`main.js` is unchanged; `setWindowLit(v)` overrides it). In the day
+`windowLit` is 0 and nothing glows.
+
+LOD and shadows: PCM is split into a 3 x 3 grid of sections
+(`ponce-city-market_s<i>_lod<n>`, each node at its section center), each its
+own `THREE.LOD` (LOD1 at 90 m, LOD2 at 320 m from the section center), so
+only the sections near the camera use LOD0. Landmark meshes no longer cast
+shadows; each GLB gets one shadow proxy (its coarsest LOD merged into one
+position-only mesh, fences left out) that casts for it.
 
 ## The landmarks
 
 ### Ponce City Market (`ponce-city-market`)
 
 Full building, not only the tower: the 26-point footprint at 50 m (OSM
-`height`), 11 floors of 4.4 m of recessed steel-sash windows between brick
-pilasters (4 m bays), storefronts on the ground floor where the floor meets
-the ground, a cream cornice band and parapet, the roof with 7 brick stair
-and elevator bulkheads and rooftop units, the central tower (brick shaft,
-belvedere with tall windows, stone bands, hipped copper roof, cap, gold
-finial) at the img2threejs tower anchor, the rooftop sign frame (steel posts,
-rails, back braces) at the same spot and size as the game's rooftop sign,
-with the generic text "CITY MARKET" (no real lettering or logo), and a water
-tower on the east roof toward the trail.
+`height`), **9 floors** of 5.36 m (NRHP: nine stories plus basement in every
+section of the 1926 building and its 1966/1971 warehouse wings) of recessed
+tripartite steel-sash windows between brick pilasters (4 m bays),
+storefronts on the ground floor where the floor meets the ground, a cream
+cornice band and parapet, shaped parapets with a rounded center over the two
+end blocks of the Ponce de Leon Avenue facade, the roof with brick stair and
+elevator bulkheads and rooftop units, the central tower on the projecting
+central block of the Ponce facade (two brick stages with windows, a stage
+with two tall arched windows a side, stone bands, overhanging eaves, a
+pyramidal copper roof), and the rooftop sign frame (steel posts, rails, back
+braces) at the same spot and size as the game's rooftop sign, with the
+generic text "CITY MARKET" (no real lettering or logo). No rooftop water
+tower: the NRHP form puts the large water tank inside the tower.
 
-- LOD0 57,432 tris, LOD1 6,921 (flush windows, pilasters, bands), LOD2 453
-  (one tiling far-facade texture per wall).
+- LOD0 32,520 tris (was 57,432; no sill boxes, 9 instead of 11 floors),
+  LOD1 6,051 (flush windows, pilasters, bands), LOD2 341 (one tiling
+  far-facade texture per wall), each split over 9 sections.
+- The lower part: the one-story 1926 shipping room on the south side is its
+  own OSM footprint (`w619595557`), a generic building, now 7 m (one tall
+  retail floor) instead of 10 m by a height override in
+  `levels/beltline-eastside/heights.json`.
 - The model replaces both the img2threejs tower top and the game's rooftop
   "PONCE CITY MARKET" sign: drop that entry from `LANDMARKS` when the GLB is
   used, and claim the footprint (`claim: true`).
 - The water tower is modeled in Blender (about 600 tris); Meshy was not
   needed.
-- Not modeled: the lower wings of the real building (the game footprint is
-  one 50 m block; the model keeps the collider height), the real tower
-  height (not verified), and the rooftop park.
+- Not modeled: the rooftop park. The tower stage heights above the roof
+  (10.7 m of brick, 7.2 m arched stage, 5.2 m roof) are estimated from the
+  photo references, not sourced.
 
 ### Telephone Factory Lofts (`telephone-factory-lofts`)
 
 Buff brick with red brick piers and spandrels, wide steel multi-pane windows,
 stone belts at the sill lines, a round buff chimney, rooftop units, and a
-green canopy over the trail-side entry (reference: the former Western
-Electric building from the Ralph McGill trail bridge). Height 9.13 m from
-Overture: the real building has about 4 stories; with the slope the downhill
-walls show 3 floors and the uphill walls 2.
+green canopy over the trail-side entry, and the Art Deco entrance tower on
+the Ralph McGill Boulevard wall (brick shaft with a window strip, two
+setbacks, 23 m above the street) (reference: the former Western Electric
+building from the Ralph McGill trail bridge). **4 stories, 17.8 m** (4 x
+about 4.2 m factory floors + parapet), a height override (was 9.13 m from
+Overture), and the 75 ft (23 m) tower, from
+[Wikipedia: Telephone Factory Lofts](https://en.wikipedia.org/wiki/Telephone_Factory_Lofts):
+"a four-story main building, a single-story warehouse section, and a 75-foot
+Art Deco entrance tower". The game has one height per footprint, so the
+single-story warehouse section is 4 stories too.
 
 ### Studioplex (`studioplex`)
 
@@ -119,8 +155,10 @@ Red brick infill in an exposed concrete frame (concrete columns, floor beam,
 cornice), ground floor storefronts, black screens and a garage door, sparse
 upper windows, the 11 OSM courtyard holes as open light wells, and a steel
 entry canopy on the Auburn Avenue wall with the fictional letters "STUDIO
-YARDS". The OSM footprint runs past the level's south bound (z = 972.96), so
-the south end is outside the playable area.
+YARDS". The OSM footprint runs past the level's south bound (z = 972.96):
+the model is cut 1 m inside it (the cut is a wall like the others), and
+courtyard holes past the cut are dropped. `sites.json` now carries the level
+`bounds`.
 
 ### New Realm Brewing (`new-realm-brewing`)
 
@@ -231,9 +269,11 @@ AFTER (GLB): ![after](landmarks/bridge-ponce-after.jpg)
   its murals, or the mural should move to the model wall.
 - LOD1 is 9 to 35 % of LOD0 (PCM 12 %): the flush-window LOD1 keeps the bay
   grid, so less is lost at distance than the counts suggest.
-- Heights are the level's (OSM/Overture); the Telephone Factory Lofts and the
-  PCM wings and tower are not at their verified real heights.
-- Night: the windows have no emissive map; lit windows at night need the
-  game's window light or an emissive atlas.
+- Heights: sourced storeys (PCM 9 at 50 m, NRHP; Telephone Factory 4 at
+  17.8 m and its 23 m tower, Wikipedia; the PCM shipping room 1 story at 7 m,
+  NRHP). The PCM total height stays the OSM 50 m (no source found for the
+  roof height in meters).
+- The game's generic footprint of Studioplex still runs past the south bound
+  (the model is cut; `claimLandmarkModels()` hides the generic one).
 - Performance: measured in SwiftShader only (memory note: FPS must be
   measured on a real GPU).

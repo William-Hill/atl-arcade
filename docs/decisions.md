@@ -1069,3 +1069,30 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - In the pbr look, `main.js` calls `claimLandmarkModels()` (`src/level/geo/landmarks.js`) before the level meshes build: the four GLB buildings claim their footprints (no extrusion, facade kit, awnings or murals; the colliders stay), and the Ponce City Market entry loses its img2threejs tower and rooftop sign, which the full model replaces. `?landmarkglb=0` keeps the generic buildings; the toon look is unchanged.
 - `src/render/landmark-models.js` loads the eight GLBs as `THREE.LOD`s at their `sites.json` origins (only on the level the sites were built for). The files embed copies of the same brick, concrete and window images, so a GLTFLoader plugin keys every embedded image by its bytes and sampler and hands later files the first texture: each image is uploaded to the GPU once instead of once per file.
 - `muralWalls()` skips claimed footprints, so no mural shows through a landmark model (New Realm Brewing had one).
+
+## 2026-11-05: epic/assets — Beltline Eastside landmark fixes (heights, night windows, cost)
+
+- Heights from sources, not map data, where a source gives storeys: PCM 9
+  storeys at the OSM 50 m (NRHP form 16000769), the PCM one-story shipping
+  room 7 m and the Telephone Factory Lofts 4 storeys at 17.8 m plus a 23 m
+  entrance tower (Wikipedia). The two footprint heights are overrides in
+  `levels/beltline-eastside/heights.json`, so the colliders match the models.
+  The PCM rooftop water tower is removed: the NRHP form puts the tank inside
+  the tower.
+- PCM is split into 3 x 3 sections, each its own `THREE.LOD` from its own
+  center (LOD1 at 90 m, LOD2 at 320 m), instead of one LOD from the center
+  of a 180 m building; the LOD0 sill boxes are gone (the window reveal keeps
+  the sill line).
+- Landmark meshes do not cast shadows; one shadow proxy per GLB (the
+  coarsest LOD, merged, position only) casts for it. Shadows were ~28 calls
+  and ~115k triangles at the PCM trail camera.
+- Night windows: an emissive map on the window atlas plus a per-window light
+  key in TEXCOORD_1, lit by the facade rule of `geo-view.js`
+  (`key < windowLit * 0.6`, strength `windowLit`). `landmark-models.js`
+  reads the facade `uLit` uniform from the scene, so `main.js` and
+  `weather-view.js` are unchanged.
+- Texture memory: one red brick color image for every red brick (glTF color
+  factors), roughness and the window glow at 256 px, the window color atlas
+  at 512 px: about 11 MiB per building instead of 17-19 MiB.
+- Studioplex is cut 1 m inside the level's south bound in the generator
+  (`sites.json` carries the bounds).

@@ -111,6 +111,7 @@ def window_atlas():
     col = np.zeros((n, n, 3))
     hgt = np.zeros((n, n))
     rgh = np.zeros((n, n))
+    emi = np.zeros((n, n, 3))
     yy, xx = np.mgrid[0:c, 0:c].astype(float) / c
 
     def paint(idx, name, kind, cols, rows, frame, border=0.05, mull=0.022, seed=0, room=(0.10, 0.09, 0.08), blinds=0.0, curtains=False, lit=0.0, tanks=False, transom=None):
@@ -118,6 +119,7 @@ def window_atlas():
         CELL[name] = (cx, cy)
         rng = np.random.default_rng(seed)
         frame = np.array(frame)
+        dim = np.ones((c, c))
         f = (xx < border) | (xx > 1 - border) | (yy < border) | (yy > 1 - border)
         if kind in ("sash", "store"):
             for k in range(1, cols):
@@ -142,11 +144,13 @@ def window_atlas():
                     t = (np.abs(xx - tx) < 0.11) & (yy > 0.35)
                     shade = 0.55 + 0.45 * np.cos((xx - tx) / 0.11 * 1.4)
                     rc[t] = (np.array([0.62, 0.42, 0.26])[None, :] * shade[t][:, None])
+                    dim[t] = 0.5
             if curtains:
                 for side in (0, 1):
                     m = (xx < 0.22) if side == 0 else (xx > 0.78)
                     fold = 0.82 + 0.18 * np.sin(xx * 90)
                     rc[m] = (np.array([0.80, 0.78, 0.72]) * fold[m][:, None])
+                    dim[m] = 0.7
             if blinds:
                 for k in range(cols):
                     x0 = border + (1 - 2 * border) * k / cols
@@ -155,6 +159,7 @@ def window_atlas():
                     m = (xx >= x0) & (xx < x1) & (yy < border + drop)
                     slat = 0.85 + 0.15 * np.sin(yy * 500)
                     rc[m] = (np.array([0.78, 0.75, 0.68]) * slat[m][:, None])
+                    dim[m] = 0.45
             # Pane tint and the sky in the glass.
             pane = np.zeros((c, c))
             pk = rng.random((rows + 1, cols + 1))
@@ -165,6 +170,12 @@ def window_atlas():
             img = np.where(f[..., None], frame * (0.9 + 0.2 * noise(c, c, 8, seed + 2)[..., None]), glass)
             h = np.where(f, 1.0, 0.0)
             r = np.where(f, 0.55, 0.06)
+            # The night glow of the room (emissive map): warm, brighter under
+            # the ceiling lights, dimmer behind blinds and curtains, none on
+            # the frame. landmark-models.js scales it by the game's windowLit.
+            glow = (0.5 + 0.5 * noise(c, c, 3, seed + 5)) * (0.75 + 0.25 * (1 - yy)) * (1 + 0.3 * lit) * dim
+            e = np.array([1.0, 0.72, 0.42])[None, None, :] * np.clip(glow, 0, 1.2)[..., None] * 0.8
+            emi[sl_of(idx)] = np.where(f[..., None], 0.0, e)
         elif kind == "door":
             panel = (np.abs(xx - 0.5) < 0.38) & (yy > 0.08) & (yy < 0.45)
             img = np.where(panel[..., None], np.array([0.12, 0.11, 0.1]) + 0.4 * (1 - yy[..., None]) * 0.4, frame)
@@ -193,11 +204,15 @@ def window_atlas():
         hgt[sl] = blur(h, 1)
         rgh[sl] = r
 
+    def sl_of(idx):
+        cx, cy = idx % CELLS, idx // CELLS
+        return (slice(cy * c, (cy + 1) * c), slice(cx * c, (cx + 1) * c))
+
     steel = (0.50, 0.53, 0.50)
     dark = (0.07, 0.07, 0.075)
-    paint(0, "pcm_a", "sash", 4, 6, steel, seed=1)
-    paint(1, "pcm_b", "sash", 4, 6, steel, seed=2, blinds=0.5)
-    paint(2, "pcm_c", "sash", 4, 6, steel, seed=3, lit=0.6, room=(0.2, 0.17, 0.14))
+    paint(0, "pcm_a", "sash", 3, 6, steel, seed=1)
+    paint(1, "pcm_b", "sash", 3, 6, steel, seed=2, blinds=0.5)
+    paint(2, "pcm_c", "sash", 3, 6, steel, seed=3, lit=0.6, room=(0.2, 0.17, 0.14))
     paint(3, "pcm_store", "store", 3, 1, (0.10, 0.09, 0.08), border=0.04, mull=0.03, seed=4, lit=1.0, room=(0.28, 0.22, 0.16), transom=0.24)
     paint(4, "tel_a", "sash", 5, 6, (0.16, 0.16, 0.17), seed=5)
     paint(5, "tel_b", "sash", 5, 6, (0.16, 0.16, 0.17), seed=6, curtains=True)
@@ -212,14 +227,17 @@ def window_atlas():
     paint(14, "louver", "louver", 1, 1, (0.3, 0.3, 0.3), seed=15)
     paint(15, "realm_upper_b", "sash", 2, 2, dark, border=0.04, mull=0.03, seed=16, blinds=0.4)
     nrm = normal_from_height(hgt, 2.5)
-    return (new_image("lm_window_color", col),
+    # Painted at 1024, stored at 512 (color, normal) and 256 (roughness,
+    # glow): a window is 2-4 m wide, so 128 px per cell is ~3 cm per pixel.
+    return (new_image("lm_window_color", down2(col)),
             new_image("lm_window_normal", down2(nrm), srgb=False),
-            new_image("lm_window_rough", np.repeat(down2(rgh)[..., None], 3, -1), srgb=False))
+            new_image("lm_window_rough", np.repeat(down2(down2(rgh))[..., None], 3, -1), srgb=False),
+            new_image("lm_window_emit", down2(down2(emi))))
 
 
 def cell_uv(name):
     cx, cy = CELL[name]
-    e = 1.5 / ATLAS_N
+    e = 3.0 / ATLAS_N  # 1.5 px at the stored 512 px
     u0, u1 = cx / CELLS + e, (cx + 1) / CELLS - e
     v0, v1 = 1 - (cy + 1) / CELLS + e, 1 - cy / CELLS - e
     return u0, v0, u1, v1
@@ -240,12 +258,13 @@ def far_facade(bay, fh, ww, wh, sill):
     img = np.where(win[..., None], glass, img)
     sillm = (xx > x0 - 0.02) & (xx < x1 + 0.02) & (yy >= y1) & (yy < y1 + 0.025)
     img[sillm] = (0.72, 0.68, 0.6)
-    return new_image("lm_far_pcm_color", img)
+    glow = np.where(win[..., None], np.array([1.0, 0.72, 0.42]) * 0.6, 0.0)
+    return new_image("lm_far_pcm_color", img), new_image("lm_far_pcm_emit", down2(down2(glow)))
 
 
 # ---------- materials --------------------------------------------------------
 def material(name, color=None, normal=None, rough=None, tint=None, base=(0.5, 0.5, 0.5), metallic=0.0, roughness=0.6,
-             alpha=False, double=False, emission=None):
+             alpha=False, double=False, emission=None, emit_map=None):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -284,6 +303,11 @@ def material(name, color=None, normal=None, rough=None, tint=None, base=(0.5, 0.
         sep = nt.nodes.new("ShaderNodeSeparateColor")
         nt.links.new(tr.outputs["Color"], sep.inputs["Color"])
         nt.links.new(sep.outputs["Green"], bsdf.inputs["Roughness"])
+    if emit_map is not None:
+        te = nt.nodes.new("ShaderNodeTexImage")
+        te.image = emit_map
+        nt.links.new(te.outputs["Color"], bsdf.inputs["Emission Color"])
+        bsdf.inputs["Emission Strength"].default_value = 1.0
     if emission:
         bsdf.inputs["Emission Color"].default_value = (*emission[0], 1)
         bsdf.inputs["Emission Strength"].default_value = emission[1]
@@ -292,12 +316,12 @@ def material(name, color=None, normal=None, rough=None, tint=None, base=(0.5, 0.
 
 
 def setup_materials():
-    bc = file_image("lm_brick_color", f"{TEXDIR}/brick/color.jpg")
     bn = file_image("lm_brick_normal", f"{TEXDIR}/brick/normal.jpg", srgb=False)
-    br = file_image("lm_brick_rough", f"{TEXDIR}/brick/rough.jpg", srgb=False)
     tc = file_image("lm_trim_color", f"{TEXDIR}/trim/color.jpg")
     tn = file_image("lm_trim_normal", f"{TEXDIR}/trim/normal.jpg", srgb=False)
-    tr = file_image("lm_trim_rough", f"{TEXDIR}/trim/rough.jpg", srgb=False)
+    # Roughness at 256 px: it has no fine detail worth the 4x memory.
+    br = new_image("lm_brick_rough", down2(load_pixels(f"{TEXDIR}/brick/rough.jpg")), srgb=False)
+    tr = new_image("lm_trim_rough", down2(load_pixels(f"{TEXDIR}/trim/rough.jpg")), srgb=False)
     # Buff brick (the Telephone Factory) and concrete, recolored from the
     # CC0 scans so they keep the scan detail.
     red = load_pixels(f"{TEXDIR}/brick/color.jpg")
@@ -313,10 +337,15 @@ def setup_materials():
     out = np.clip(lin / lin.reshape(-1, 3).mean(0) * np.array([0.62, 0.305, 0.235]), 0, 1)
     light = np.where(out <= 0.0031308, out * 12.92, 1.055 * out ** (1 / 2.4) - 0.055)
     blc = new_image("lm_brick_light_color", light)
+    # The other red bricks reuse this image with a color factor (glTF
+    # baseColorFactor, linear), so a building has one red brick color map:
+    # the raw scan times t is the light brick times t * raw mean / light mean.
+    raw_mean = lin.reshape(-1, 3).mean(0)
+    as_light = lambda t: tuple(float(min(1.0, t[k] * raw_mean[k] / [0.62, 0.305, 0.235][k])) for k in range(3))
     trim = load_pixels(f"{TEXDIR}/trim/color.jpg")
     tl = trim.mean(-1, keepdims=True)
     cc = new_image("lm_concrete_color", np.array([0.60, 0.59, 0.56]) * (tl / tl.mean()) ** 1.3)
-    wc, wn, wr = window_atlas()
+    wc, wn, wr, we = window_atlas()
     # A chain-link style mesh card for the trail bridge fences (PNG, alpha).
     n = 128
     yy, xx = np.mgrid[0:n, 0:n].astype(float) / n
@@ -330,14 +359,14 @@ def setup_materials():
         "brick_pcm_dark": material("lm_brick_pcm_dark", blc, bn, br, tint=(0.88, 0.84, 0.82)),
         "sill": material("lm_sill", tc, tn, tr, tint=(0.78, 0.76, 0.72)),
         "brick_studio": material("lm_brick_studio", blc, bn, br, tint=(1.0, 0.9, 0.8)),
-        "brick_realm": material("lm_brick_realm", bc, bn, br, tint=(0.62, 0.55, 0.52)),
-        "brick_red": material("lm_brick_red", bc, bn, br, tint=(0.95, 0.8, 0.76)),
+        "brick_realm": material("lm_brick_realm", blc, bn, br, tint=as_light((0.62, 0.55, 0.52))),
+        "brick_red": material("lm_brick_red", blc, bn, br, tint=as_light((0.95, 0.8, 0.76))),
         "brick_buff": material("lm_brick_buff", bfc, bn, br),
         "trim": material("lm_trim", tc, tn, tr),
         "trim_cream": material("lm_trim_cream", tc, tn, tr, tint=(1.08, 1.05, 0.98)),
         "concrete": material("lm_concrete", cc, tn, tr),
         "roof": material("lm_roof", cc, tn, tr, tint=(0.6, 0.6, 0.6)),
-        "window": material("lm_window", wc, wn, wr),
+        "window": material("lm_window", wc, wn, wr, emit_map=we),
         "steel": material("lm_steel", base=(0.05, 0.055, 0.06), metallic=0.6, roughness=0.5),
         "steel_green": material("lm_steel_green", base=(0.11, 0.17, 0.15), metallic=0.5, roughness=0.55),
         "galv": material("lm_galvanized", base=(0.45, 0.47, 0.48), metallic=0.8, roughness=0.45),
@@ -392,9 +421,10 @@ def newell(pts):
 class MB:
     def __init__(self):
         self.v = []
-        self.f = []  # (indices, uvs, mat)
+        self.f = []  # (indices, uvs, mat, lit, anchor)
+        self.anchor = None  # (x, z): the section of the faces added now
 
-    def poly(self, pts, uvs, mat, n=None):
+    def poly(self, pts, uvs, mat, n=None, lit=None):
         nn = newell(pts)
         if dot(nn, nn) < 1e-10:
             return
@@ -402,7 +432,7 @@ class MB:
             pts, uvs = pts[::-1], uvs[::-1]
         i0 = len(self.v)
         self.v.extend(pts)
-        self.f.append((list(range(i0, i0 + len(pts))), list(uvs), mat))
+        self.f.append((list(range(i0, i0 + len(pts))), list(uvs), mat, lit, self.anchor))
 
     def quad_auto(self, pts, mat, n):
         """A planar quad with UVs in meters / the material tile, projected on
@@ -520,7 +550,7 @@ class MB:
             ids = [i0 + k for k in p.vertices]
             if extrude <= 0 and dot(newell([self.v[k] for k in ids]), (fx, 0, fz)) < 0:
                 ids = ids[::-1]
-            self.f.append((ids, [(0, 0)] * len(ids), mat))
+            self.f.append((ids, [(0, 0)] * len(ids), mat, None, self.anchor))
         bpy.data.objects.remove(ob)
         bpy.data.curves.remove(cu)
         bpy.data.meshes.remove(me)
@@ -535,10 +565,15 @@ def to_object(name, mb, M):
     verts = [(x, -z, y) for (x, y, z) in mb.v]
     me.from_pydata(verts, [], [f[0] for f in mb.f])
     uv = me.uv_layers.new(name="UVMap")
-    li = 0
+    # TEXCOORD_1: u = the light key of the window (lit when u < windowLit *
+    # 0.6 in landmark-models.js, the facade rule of geo-view.js).
+    lit = me.uv_layers.new(name="LitKey")
+    me.uv_layers.active = uv
     for p, f in zip(me.polygons, mb.f):
+        key = (f[3], 0.5) if f[3] is not None else (1.0, 0.5)
         for k in range(p.loop_total):
             uv.data[p.loop_start + k].uv = f[1][k]
+            lit.data[p.loop_start + k].uv = key
     for n in names:
         me.materials.append(M[n])
     idx = {n: i for i, n in enumerate(names)}
@@ -707,7 +742,7 @@ def facade(mb, site, spec, terr, lod, rng, ring, hole, ucum):
                 pts = [P(0, base, 0), P(L, base, 0), P(L, ycor, 0), P(0, ycor, 0)]
                 uvs = [(0, (ycor - base) / fh), (nb, (ycor - base) / fh), (nb, 0), (0, 0)]
                 uvs = [(u, 1 - v) for (u, v) in uvs]
-                mb.poly(pts, uvs, "far", N)
+                mb.poly(pts, uvs, "far", N, lit=0.3)
             else:
                 wq(0, L, base, ycor)
             wq(0, L, ycor, top, 0, spec.get("parapet_mat", wall))
@@ -746,12 +781,13 @@ def facade(mb, site, spec, terr, lod, rng, ring, hole, ucum):
                     cell = rng.choice(spec["cells"])
                 if ww < 0.8 or wy1 - wy0 < 0.8:
                     continue
-                wins.append((wy0, wy1, uc - ww / 2, uc + ww / 2, cell, store))
+                key = rng.random() * (0.5 if store else 1.0)
+                wins.append((wy0, wy1, uc - ww / 2, uc + ww / 2, cell, store, key))
             if lod == 1:
-                for wy0, wy1, wu0, wu1, cell, store in wins:
+                for wy0, wy1, wu0, wu1, cell, store, key in wins:
                     q0, v0, q1, v1 = cell_uv(cell)
                     pts = [P(wu0, wy0, 0.12), P(wu1, wy0, 0.12), P(wu1, wy1, 0.12), P(wu0, wy1, 0.12)]
-                    mb.poly(pts, [(q0, v0), (q1, v0), (q1, v1), (q0, v1)], "window", N)
+                    mb.poly(pts, [(q0, v0), (q1, v0), (q1, v1), (q0, v1)], "window", N, lit=key)
                 continue
             # Wall around the windows: side strips, then the column between.
             if not wins:
@@ -761,7 +797,7 @@ def facade(mb, site, spec, terr, lod, rng, ring, hole, ucum):
                 wq(u0, wu0, base, ycor)
                 wq(wu1, u1, base, ycor)
                 cur = base
-                for wy0, wy1, a0, a1, cell, store in sorted(wins):
+                for wy0, wy1, a0, a1, cell, store, key in sorted(wins):
                     span = spec.get("spandrel") if (cur > base and not store) else None
                     wq(wu0, wu1, cur, wy0, 0, span or wall)
                     if a0 > wu0 + 1e-3:
@@ -778,9 +814,7 @@ def facade(mb, site, spec, terr, lod, rng, ring, hole, ucum):
                     ts = tile_of(sm)
                     mb.poly([P(a0, wy0, 0), P(a1, wy0, 0), P(a1, wy0, d), P(a0, wy0, d)], [(a0 / ts, 0), (a1 / ts, 0), (a1 / ts, rd / ts), (a0 / ts, rd / ts)], sm, (0, 1, 0))
                     q0, v0, q1, v1 = cell_uv(cell)
-                    mb.poly([P(a0, wy0, d), P(a1, wy0, d), P(a1, wy1, d), P(a0, wy1, d)], [(q0, v0), (q1, v0), (q1, v1), (q0, v1)], "window", N)
-                    if spec.get("sills") and not store:
-                        strip_box(a0 - 0.08, a1 + 0.08, wy0 - 0.14, wy0, 0.07, sm, ("front", "top", "sides"))
+                    mb.poly([P(a0, wy0, d), P(a1, wy0, d), P(a1, wy1, d), P(a0, wy1, d)], [(q0, v0), (q1, v0), (q1, v1), (q0, v1)], "window", N, lit=key)
                     cur = wy1
                 wq(wu0, wu1, cur, ycor, 0, spec.get("spandrel") or wall)
         if lod < 2 and nb and spec.get("pilaster"):
@@ -802,10 +836,28 @@ def facade(mb, site, spec, terr, lod, rng, ring, hole, ucum):
     return ucum
 
 
-def building_shell(mb, site, spec, lod, rng, drop=0.9):
+def clip_ring(ring, zmax):
+    """The part of a ring with z <= zmax (Sutherland-Hodgman, one plane)."""
+    out = []
+    for i in range(len(ring)):
+        a, b = ring[i], ring[(i + 1) % len(ring)]
+        ia, ib = a[1] <= zmax, b[1] <= zmax
+        if ia:
+            out.append(a)
+        if ia != ib:
+            k = (zmax - a[1]) / (b[1] - a[1])
+            out.append((a[0] + (b[0] - a[0]) * k, zmax))
+    return out
+
+
+def building_shell(mb, site, spec, lod, rng, drop=0.9, zmax=None):
     terr = Terrain(site["terrain"])
     outer = clean(site["outer"])
     holes = [clean(h) for h in site["holes"]]
+    if zmax is not None:
+        # Cut at the level edge: the cut is a wall like the others.
+        outer = clean(clip_ring(outer, zmax))
+        holes = [h for h in holes if max(p[1] for p in h) < zmax - 1.0]
     ucum = facade(mb, site, spec, terr, lod, rng, outer, False, 0.0)
     for h in holes:
         ucum = facade(mb, site, spec, terr, lod, rng, h, True, ucum)
@@ -920,90 +972,165 @@ def bulkhead(mb, x, z, w, d, h, y, yaw, lod, wall):
 
 
 # ---------- landmarks ---------------------------------------------------------
+def prism(mb, ring, y0, y1, mat, top=True):
+    """Walls of a ring from y0 to y1, and a flat top."""
+    for a, b, L, t, n in edges(ring, False):
+        mb.quad_auto([(a[0], y0, a[1]), (b[0], y0, b[1]), (b[0], y1, b[1]), (a[0], y1, a[1])], mat, (n[0], 0, n[1]))
+    if top:
+        roof_poly(mb, [ring], y1, mat)
+
+
+def rect(c, t, w, d):
+    """A w (along t) x d rectangle centered on c, as a ring."""
+    n = (-t[1], t[0])
+    return [(c[0] + t[0] * su * w / 2 + n[0] * sv * d / 2, c[1] + t[1] * su * w / 2 + n[1] * sv * d / 2)
+            for su, sv in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+
+
+def flat_site(ring, base, top, terrain=None):
+    return {"top": top, "base": base, "outer": ring, "holes": [],
+            "terrain": terrain or {"x0": 0, "z0": 0, "step": 1, "cols": 2, "rows": 2, "h": [-99] * 4}}
+
+
+def shaped_parapet(mb, a, t, n, u0, u1, y0, mat, h1=1.0, h2=3.2, d=0.45):
+    """A raised parapet with a rounded center over an end block, on the wall
+    line a + t * u (n out of the building)."""
+    w = u1 - u0
+    um = (u0 + u1) / 2
+    prof = [(u0, 0), (u1, 0), (u1, h1), (um + w * 0.28, h1)]
+    for k in range(1, 8):
+        ang = math.pi * k / 8
+        prof.append((um + math.cos(ang) * w * 0.28, h1 + (h2 - h1) * math.sin(ang)))
+    prof += [(um - w * 0.28, h1), (u0, h1)]
+    P = lambda u, y, dd: (a[0] + t[0] * u - n[0] * dd, y0 + y, a[1] + t[1] * u - n[1] * dd)
+    tt = tile_of(mat)
+    mb.poly([P(u, y, 0) for u, y in prof], [(u / tt, (y0 + y) / tt) for u, y in prof], mat, (n[0], 0, n[1]))
+    mb.poly([P(u, y, d) for u, y in prof], [(u / tt, (y0 + y) / tt) for u, y in prof], mat, (-n[0], 0, -n[1]))
+    for i in range(2, len(prof)):
+        (ua, ya), (ub, yb) = prof[i], prof[(i + 1) % len(prof)]
+        if (i + 1) % len(prof) == 0:
+            break
+        mb.quad_auto([P(ua, ya, 0), P(ub, yb, 0), P(ub, yb, d), P(ua, ya, d)], "trim_cream", (0, 1, 0))
+
+
+PCM_FLOORS = 9  # NRHP 16000769: nine stories plus basement, all sections
+
+
 def pcm(site, lod):
     rng = random.Random(1926)
     mb = MB()
-    spec = dict(wall="brick_pcm", pier_mat="brick_pcm_dark", parapet=1.8, floor=4.4, bay=4.0, ww=2.7, wh=2.9, sill=0.75, min_pier=0.5,
-                cells=["pcm_a", "pcm_a", "pcm_b", "pcm_c"], store=True, store_cells=["pcm_store"], store_w=3.1, store_head=0.7,
-                pilaster=(0.7, 0.28), sills=True, cornice=(0.7, 0.35), cornice_mat="trim_cream", parapet_mat="trim_cream", reveal=0.28)
-    outer, holes = building_shell(mb, site, spec, lod, rng)
     top = site["top"]
+    fh = (top - 1.8) / PCM_FLOORS
+    spec = dict(wall="brick_pcm", pier_mat="brick_pcm_dark", parapet=1.8, floor=fh, bay=4.0, ww=2.9, wh=fh * 0.66, sill=fh * 0.17, min_pier=0.5,
+                cells=["pcm_a", "pcm_a", "pcm_b", "pcm_c"], store=True, store_cells=["pcm_store"], store_w=3.1, store_head=0.9,
+                pilaster=(0.8, 0.28), sills=False, cornice=(0.7, 0.35), cornice_mat="trim_cream", parapet_mat="trim_cream", reveal=0.28)
+    outer, holes = building_shell(mb, site, spec, lod, rng)
     roof = top - 0.9 if lod == 0 else top
-    ax, ay, az = site["anchor"]
-    # The tower: a brick shaft with windows, a belvedere with tall windows,
-    # a stone cornice, a hipped copper roof, a cap, and a gold finial.
-    s = 11.0
-    sq = [(ax - s / 2, az - s / 2), (ax + s / 2, az - s / 2), (ax + s / 2, az + s / 2), (ax - s / 2, az + s / 2)]
-    shaft = {"top": top + 13.0, "base": roof, "outer": sq, "holes": [], "terrain": {"x0": 0, "z0": 0, "step": 1, "cols": 2, "rows": 2, "h": [-99] * 4}}
-    tspec = dict(spec, parapet=0.8, floor=4.1, bay=3.6, ww=1.6, wh=2.6, sill=0.9, store=False, pilaster=(0.6, 0.2), cornice=(0.5, 0.25), parapet_mat="trim_cream", sills=True, min_wall=3)
-    facade(mb, shaft, tspec, Terrain(shaft["terrain"]), min(lod, 1) if lod < 2 else 2, rng, sq, False, 0.0)
-    b = 9.6
-    sq2 = [(ax - b / 2, az - b / 2), (ax + b / 2, az - b / 2), (ax + b / 2, az + b / 2), (ax - b / 2, az + b / 2)]
-    bel = {"top": top + 13.0 + 7.5, "base": top + 13.0, "outer": sq2, "holes": [], "terrain": shaft["terrain"]}
-    bspec = dict(tspec, parapet=1.2, floor=6.3, bay=3.2, ww=1.5, wh=4.2, sill=0.8, cells=["pcm_a"], pilaster=(0.5, 0.2), wall="brick_pcm", cornice=(0.6, 0.3))
-    facade(mb, bel, bspec, Terrain(bel["terrain"]), min(lod, 1) if lod < 2 else 2, rng, sq2, False, 0.0)
-    yb = top + 13.0
-    mb.box((ax, yb - 0.2, az), (s + 0.4, 0.6, s + 0.4), 0, "trim_cream")
-    yc = bel["top"]
-    mb.box((ax, yc - 0.1, az), (b + 1.6, 0.9, b + 1.6), 0, "trim_cream", skip=())
-    # Hipped roof: four slopes from the eave to a small flat top.
-    e, k, rh = (b + 2.2) / 2, 1.7, 3.4
-    y0 = yc + 0.8
-    ring0 = [(ax - e, az - e), (ax + e, az - e), (ax + e, az + e), (ax - e, az + e)]
-    ring1 = [(ax - k, az - k), (ax + k, az - k), (ax + k, az + k), (ax - k, az + k)]
+    # The Ponce de Leon Avenue facade (NRHP section 7): five blocks; the
+    # central block projects and carries the tower; the end blocks have
+    # shaped parapets. The central block is the short north edge pair of the
+    # OSM footprint at x 15.9..32.9.
+    north = [E for E in edges(outer, False) if E[4][1] < -0.9]
+    cb0, cb1 = (15.94, -85.1), (32.9, -83.89)
+    L = math.hypot(cb1[0] - cb0[0], cb1[1] - cb0[1])
+    t = ((cb1[0] - cb0[0]) / L, (cb1[1] - cb0[1]) / L)
+    inn = (-t[1], t[0])
+    s = 12.0
+    front = ((cb0[0] + cb1[0]) / 2, (cb0[1] + cb1[1]) / 2)
+    ax, az = front[0] + inn[0] * (s / 2 + 0.2), front[1] + inn[1] * (s / 2 + 0.2)
+    if lod < 2 and north:
+        west = min(north, key=lambda E: E[0][0])
+        east = max(north, key=lambda E: E[1][0])
+        mb.anchor = (west[0][0], west[0][1])
+        shaped_parapet(mb, west[0], west[3], west[4], 0.4, 12.4, top, "trim_cream")
+        mb.anchor = (east[1][0], east[1][1])
+        shaped_parapet(mb, east[0], east[3], east[4], east[2] - 12.4, east[2] - 0.4, top, "trim_cream")
+    mb.anchor = (ax, az)
+    # The tower: two brick stages with windows (the 10th floor and the water
+    # tank room), a stage with two tall arched windows per side, a cornice,
+    # and a pyramidal roof with overhanging eaves (NRHP section 7).
+    sq = rect((ax, az), t, s, s)
+    tl = min(lod, 1) if lod < 2 else 2
+    y_stage = top + 2 * fh
+    tspec = dict(spec, parapet=0.01, floor=fh, bay=3.0, ww=1.7, wh=fh * 0.6, sill=fh * 0.2, store=False, pilaster=(0.6, 0.2), cornice=(0.5, 0.25), min_wall=3)
+    facade(mb, flat_site(sq, roof, y_stage), tspec, Terrain(flat_site(sq, 0, 0)["terrain"]), tl, rng, sq, False, 0.0)
+    prism(mb, rect((ax, az), t, s + 0.5, s + 0.5), y_stage - 0.3, y_stage + 0.3, "trim_cream")
+    b = s - 0.6
+    sq2 = rect((ax, az), t, b, b)
+    y_eave = y_stage + 7.2
+    bspec = dict(tspec, floor=7.2, bay=b / 2, ww=1.5, wh=4.6, sill=1.2, cells=["pcm_a"], pilaster=(0.5, 0.2), cornice=(0.6, 0.3))
+    facade(mb, flat_site(sq2, y_stage + 0.3, y_eave), bspec, Terrain(flat_site(sq, 0, 0)["terrain"]), tl, rng, sq2, False, 0.0)
+    e = b + 3.0
+    ring0 = rect((ax, az), t, e, e)
+    prism(mb, ring0, y_eave, y_eave + 0.5, "trim_cream", top=False)
+    roof_poly(mb, [ring0], y_eave, "trim_cream")
+    apex = (ax, y_eave + 0.5 + 5.2, az)
     for i in range(4):
         j = (i + 1) % 4
-        pts = [(ring0[i][0], y0, ring0[i][1]), (ring0[j][0], y0, ring0[j][1]), (ring1[j][0], y0 + rh, ring1[j][1]), (ring1[i][0], y0 + rh, ring1[i][1])]
+        pts = [(ring0[i][0], y_eave + 0.5, ring0[i][1]), (ring0[j][0], y_eave + 0.5, ring0[j][1]), apex]
         mid = ((ring0[i][0] + ring0[j][0]) / 2 - ax, 0.6, (ring0[i][1] + ring0[j][1]) / 2 - az)
-        mb.poly(pts, [(0, 0), (2, 0), (1.6, 1), (0.4, 1)], "copper", mid)
-    mb.poly([(p[0], y0, p[1]) for p in ring0], [(0, 0)] * 4, "copper", (0, -1, 0))
-    mb.box((ax, y0 + rh, az), (2 * k + 0.2, 1.1, 2 * k + 0.2), 0, "copper", skip=("-y",))
-    if lod < 2:
-        mb.ring_band((ax, 0, az), 0.35, 0.12, y0 + rh + 1.1, y0 + rh + 2.6, 8, "gold")
-        mb.ring_band((ax, 0, az), 0.06, 0.06, y0 + rh + 2.6, y0 + rh + 5.5, 6, "gold")
+        mb.poly(pts, [(0, 0), (2, 0), (1, 1)], "copper", mid)
     # The rooftop sign on its steel frame (generic text, no logo).
     sg = site["sign"]
-    front = (math.sin(sg["yaw"]), math.cos(sg["yaw"]))
-    sign_frame(mb, (sg["at"][0], 0, sg["at"][2]), front, sg["width"], roof, 4.2, 2.6, "CITY MARKET", "letters", 0 if lod == 0 else 1)
-    # The water tower on the east roof, toward the trail.
+    mb.anchor = (sg["at"][0], sg["at"][2])
+    sfront = (math.sin(sg["yaw"]), math.cos(sg["yaw"]))
+    sign_frame(mb, (sg["at"][0], 0, sg["at"][2]), sfront, sg["width"], roof, 4.2, 2.6, "CITY MARKET", "letters", 0 if lod == 0 else 1)
     avoid = [(ax, az, 20), (sg["at"][0], sg["at"][2], 26)]
-    wt = free_spot(outer, holes, (48, 5), 8, avoid, rng)
-    water_tower(mb, (wt[0], 0, wt[1]), roof, lod)
-    avoid.append((wt[0], wt[1], 12))
-    # Stair and elevator bulkheads near the walls, then rooftop units.
+    # Stair and elevator bulkheads near the walls, then rooftop units. (No
+    # rooftop water tower: the tank is inside the tower.)
     if lod < 2:
         for i, want in enumerate([(-70, -60), (-60, 60), (10, 70), (60, -60), (-20, 10), (55, 60), (-75, 0)]):
             p = free_spot(outer, holes, want, 6, avoid, rng)
             if not p:
                 continue
             w, d, h = rng.uniform(8, 13), rng.uniform(6, 9), rng.uniform(4.5, 8.5)
+            mb.anchor = p
             bulkhead(mb, p[0], p[1], w, d, h, roof, 0.0, lod, "brick_pcm")
             avoid.append((p[0], p[1], 12))
         if lod == 0:
             for i in range(10):
                 p = free_spot(outer, holes, (rng.uniform(-80, 80), rng.uniform(-70, 70)), 5, avoid, rng, tries=60)
                 if p:
+                    mb.anchor = p
                     mb.box((p[0], roof, p[1]), (rng.uniform(2.5, 4), rng.uniform(1.4, 2.2), rng.uniform(2, 3)), 0, "mech", skip=("-y",))
                     avoid.append((p[0], p[1], 5))
+    mb.anchor = None
     return mb
+
+
+TFL_FLOORS = 4  # Wikipedia, Telephone Factory Lofts: a four-story main building
+TFL_TOWER = 23.0  # the 75 ft (23 m) Art Deco entrance tower, above the street
 
 
 def telephone(site, lod):
     rng = random.Random(1938)
     mb = MB()
     top = site["top"]
-    fh = 3.7
     ycor = top - 0.9
-    belts = [(ycor - fh * k - 2.9 - 0.25 + 0.05, ycor - fh * k - 2.9 + 0.05, 0.05, "trim") for k in range(1, 4)]
-    spec = dict(wall="brick_buff", pier_mat="brick_red", spandrel="brick_red", parapet=0.9, floor=fh, bay=4.3, ww=3.2, wh=2.35, sill=0.95, min_pier=0.45,
+    fh = ycor / TFL_FLOORS
+    belts = [(ycor - fh * k - 0.25 + 0.05, ycor - fh * k + 0.05, 0.05, "trim") for k in range(1, TFL_FLOORS)]
+    spec = dict(wall="brick_buff", pier_mat="brick_red", spandrel="brick_red", parapet=0.9, floor=fh, bay=4.3, ww=3.2, wh=fh * 0.66, sill=fh * 0.2, min_pier=0.45,
                 cells=["tel_a", "tel_a", "tel_b", "tel_c"], store=False, pilaster=(0.55, 0.06), sills=False, belts=belts, cornice=(0.3, 0.12), cornice_mat="trim", reveal=0.2)
     outer, holes = building_shell(mb, site, spec, lod, rng)
     roof = top - 0.9 if lod == 0 else top
-    p = free_spot(outer, holes, (-25, 10), 4, [], rng)
-    mb.ring_band((p[0], 0, p[1]), 1.1, 0.95, roof, roof + 5.5, 14 if lod == 0 else 8, "brick_buff")
-    mb.ring_band((p[0], 0, p[1]), 1.15, 1.15, roof + 5.5, roof + 5.9, 14 if lod == 0 else 8, "trim")
+    terr = Terrain(site["terrain"])
+    # The entrance tower on the Ralph McGill Boulevard (south) wall: a
+    # brick shaft with a strip of windows between piers, two setbacks.
+    E = max(edges(outer, False), key=lambda E: E[4][1] + E[2] / 400)
+    a, b, L, t, n = E
+    tw, td = 9.0, 7.0
+    c = (a[0] + t[0] * L / 2 + n[0] * (1.5 - td / 2), a[1] + t[1] * L / 2 + n[1] * (1.5 - td / 2))
+    g = terr(a[0] + t[0] * L / 2 + n[0] * 2, a[1] + t[1] * L / 2 + n[1] * 2)
+    ytop = g + TFL_TOWER
+    ring = rect(c, t, tw, td)
+    tspec = dict(spec, parapet=0.5, floor=fh, bay=3.0, ww=1.6, belts=[], pilaster=(0.7, 0.25), pier_mat="brick_buff", cornice=(0.3, 0.15), min_wall=3)
+    tl = min(lod, 1)
+    facade(mb, flat_site(ring, site["base"], ytop - 3.0, site["terrain"]), tspec, terr, tl, rng, ring, False, 0.0)
+    roof_poly(mb, [ring], ytop - 3.0, "trim")
+    prism(mb, rect(c, t, tw - 2.0, td - 1.6), ytop - 3.0, ytop - 1.2, "brick_buff")
+    prism(mb, rect(c, t, tw - 4.0, td - 3.2), ytop - 1.2, ytop, "trim")
     for want in ((10, -5), (25, 10), (-5, -20)):
-        q = free_spot(outer, holes, want, 5, [(p[0], p[1], 6)], rng)
+        q = free_spot(outer, holes, want, 5, [(c[0], c[1], 10)], rng)
         if q:
             mb.box((q[0], roof, q[1]), (3, 1.8, 2.4), 0.72, "mech", skip=("-y",))
     if lod < 2:
@@ -1012,7 +1139,6 @@ def telephone(site, lod):
         e = max(edges(outer, False), key=lambda E: E[4][0] * tx + E[4][1] * tz + E[2] / 400)
         a, b, L, t, n = e
         u = L / 2
-        terr = Terrain(site["terrain"])
         cx, cz = a[0] + t[0] * u + n[0] * 1.2, a[1] + t[1] * u + n[1] * 1.2
         y = terr(cx, cz) + 3.0
         mb.box((cx, y, cz), (4.0, 0.18, 2.4), math.atan2(n[0], n[1]), "steel_green", skip=())
@@ -1030,7 +1156,8 @@ def studioplex(site, lod):
                 cells=["studio_upper"], store=True, store_cells=["studio_store", "studio_store", "studio_screen", "garage"], store_w=4.3, store_head=0.45,
                 pilaster=(0.6, 0.16), sills=False, belts=[(gf - 0.5, gf, 0.16, "concrete")], cornice=(0.4, 0.16), cornice_mat="concrete", parapet_mat="concrete",
                 rule=upper, reveal=0.15)
-    outer, holes = building_shell(mb, site, spec, lod, rng, drop=0.5)
+    zmax = SITES["bounds"]["maxZ"] - site["origin"][2] - 1.0
+    outer, holes = building_shell(mb, site, spec, lod, rng, drop=0.5, zmax=zmax)
     roof = top - 0.5 if lod == 0 else top
     terr = Terrain(site["terrain"])
     # The entry canopy on the Auburn Avenue (north) wall, with fictional
@@ -1240,7 +1367,44 @@ BUILDERS = {
     "bridge-freedom-parkway": (bridges, "bridges", 2),
 }
 
-LOD_DIST = {"ponce-city-market": [0, 160, 450]}
+# Sourced storeys and heights (docs/landmarks.md has the full list).
+FACTS = {
+    "ponce-city-market": {"stories": 9, "source": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/16000769_text",
+                          "note": "NRHP registration form 16000769, section 7: nine stories plus basement in every section of the main building; central tower with windows on each floor holding the water tank, pyramidal roof; shaped parapets on the end blocks. Tower stage heights above the roof are estimated from the photo references. The one-story shipping room is a separate footprint (heights.json w619595557)."},
+    "telephone-factory-lofts": {"stories": 4, "towerHeight_m": 23.0, "source": "https://en.wikipedia.org/wiki/Telephone_Factory_Lofts",
+                                "note": "Four-story main building, single-story warehouse section, 75 ft (23 m) Art Deco entrance tower. Height override in levels/beltline-eastside/heights.json (w185605331): 17.8 m."},
+}
+LOD_DIST = {"ponce-city-market": [0, 90, 320]}
+# Buildings split into an n x n grid of sections, each its own LOD (from its
+# own center): a 180 m building otherwise shows LOD0 from anywhere near it.
+SECTIONS = {"ponce-city-market": 3}
+
+
+def split_sections(mb, site, n):
+    xs = [p[0] for p in site["outer"]]
+    zs = [p[1] for p in site["outer"]]
+    x0, z0 = min(xs), min(zs)
+    cw, cd = (max(xs) - x0) / n, (max(zs) - z0) / n
+    cells = {}
+    for f in mb.f:
+        if f[4] is not None:
+            kx, kz = f[4]
+        else:
+            kx = sum(mb.v[i][0] for i in f[0]) / len(f[0])
+            kz = sum(mb.v[i][2] for i in f[0]) / len(f[0])
+        i = min(n - 1, max(0, int((kx - x0) / cw)))
+        j = min(n - 1, max(0, int((kz - z0) / cd)))
+        cells.setdefault(j * n + i, []).append(f)
+    out = {}
+    for k in range(n * n):
+        cx, cz = x0 + (k % n + 0.5) * cw, z0 + (k // n + 0.5) * cd
+        sm = MB()
+        for f in cells.get(k, []):
+            i0 = len(sm.v)
+            sm.v.extend((mb.v[i][0] - cx, mb.v[i][1], mb.v[i][2] - cz) for i in f[0])
+            sm.f.append((list(range(i0, i0 + len(f[0]))), f[1], f[2], f[3], None))
+        out[k] = ((cx, cz), sm)
+    return out
 
 C = "https://commons.wikimedia.org/wiki/File:"
 REFS = {
@@ -1265,14 +1429,15 @@ def provenance(key, group, site, entry):
     else:
         src.update({"decks": [f"OpenStreetMap {d['osm']} {d['highway']} {d['width']} m" for d in site["decks"]], "deckHeights": "terrain.js bridgeDeck() on the OSM span"})
     return {
-        "asset": f"{key}.glb: procedural facsimile of {site.get('name') or site.get('title')} for the beltline-eastside level, one node per LOD ({', '.join(entry['triangles'])}), shared materials and tiling textures.",
+        "asset": f"{key}.glb: procedural facsimile of {site.get('name') or site.get('title')} for the beltline-eastside level, one node per LOD ({', '.join(entry['triangles'])})" + (f" in each of {entry['sections']} sections (<key>_s<i>_lod<n>, each node at its section center)" if entry["sections"] > 1 else "") + ", shared materials and tiling textures.",
         "date": TODAY,
         "tool": f"Blender {bpy.app.version_string}, headless (blender -b -P), glTF 2.0 exporter with Draco",
         "command": f"blender -b -P scripts/blender/landmarks.py -- --only {key}",
         "source": "scripts/blender/landmarks.py: footprint walls with bays of recessed windows, piers, belts, cornice, parapet, roof, and props, all from code. No photo pixels, scans of the real building, mesh extraction, or logos.",
         "prompt": "None. The script and sites.json are the full recipe.",
         "credits": "No paid generation credits (Meshy not used).",
-        "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_*, lm_fence_color, lm_far_pcm_color: painted in code by landmarks.py.",
+        "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_* (incl. lm_window_emit, the night glow), lm_fence_color, lm_far_pcm_*: painted in code by landmarks.py. TEXCOORD_1 u is the per-window light key.",
+        "facts": FACTS.get(key),
         "references": [{"title": t, "author": a, "license": l, "url": u, "use": "Visual reference for shapes and colors only; no pixels of the photo are in the asset."} for t, a, l, u in REFS.get(key, [])],
         "sign": SIGNS.get(key),
         "data": src,
@@ -1288,6 +1453,8 @@ def provenance(key, group, site, entry):
 def image_stats(objs):
     imgs = {}
     for o in objs:
+        if o.data is None:
+            continue
         for m in o.data.materials:
             for nd in m.node_tree.nodes:
                 if nd.type == "TEX_IMAGE" and nd.image:
@@ -1298,8 +1465,9 @@ def image_stats(objs):
 
 def main():
     M = setup_materials()
-    far = far_facade(4.0, 4.4, 2.7, 2.9, 0.75)
-    M["far"] = material("lm_far_pcm", far, roughness=0.8)
+    pfh = (SITES["buildings"]["ponce-city-market"]["top"] - 1.8) / PCM_FLOORS
+    far, far_e = far_facade(4.0, pfh, 2.9, pfh * 0.66, pfh * 0.17)
+    M["far"] = material("lm_far_pcm", far, roughness=0.8, emit_map=far_e)
     TILE["far"] = 1.0
     keys = ONLY.split(",") if ONLY else list(BUILDERS)
     summary = {}
@@ -1307,13 +1475,27 @@ def main():
         fn, group, nlod = BUILDERS[key]
         site = SITES[group][key]
         objs, tris = [], []
+        dists = LOD_DIST.get(key) or [0, 120 if group == "bridges" else 140]
         for lod in range(nlod):
             mb = fn(site, lod)
-            ob = to_object(f"{key}_lod{lod}", mb, M)
-            ob["lod"] = lod
-            ob["lodDistance"] = (LOD_DIST.get(key) or [0, 120 if group == "bridges" else 140])[lod]
-            objs.append(ob)
-            tris.append(sum(len(p.vertices) - 2 for p in ob.data.polygons))
+            if key in SECTIONS:
+                parts = [(f"{key}_s{k}_lod{lod}", c, sm) for k, (c, sm) in split_sections(mb, site, SECTIONS[key]).items()]
+            else:
+                parts = [(f"{key}_lod{lod}", None, mb)]
+            nt = 0
+            for name, c, sm in parts:
+                if sm.f:
+                    ob = to_object(name, sm, M)
+                    nt += sum(len(p.vertices) - 2 for p in ob.data.polygons)
+                else:
+                    ob = bpy.data.objects.new(name, None)  # an empty level: nothing at this distance
+                    bpy.context.scene.collection.objects.link(ob)
+                if c:
+                    ob.location = (c[0], -c[1], 0)
+                ob["lod"] = lod
+                ob["lodDistance"] = dists[lod]
+                objs.append(ob)
+            tris.append(nt)
         d = os.path.join(OUT, key)
         os.makedirs(d, exist_ok=True)
         path = os.path.join(d, f"{key}.glb")
@@ -1326,7 +1508,7 @@ def main():
                                   export_draco_texcoord_quantization=12, export_animations=False, export_cameras=False, export_lights=False)
         imgs, gpu = image_stats(objs)
         summary[key] = {"file": path, "bytes": os.path.getsize(path), "triangles": {f"lod{i}": t for i, t in enumerate(tris)},
-                        "lodDistance": [o["lodDistance"] for o in objs], "textures": {k: f"{v[0]}x{v[1]}" for k, v in sorted(imgs.items())},
+                        "lodDistance": dists, "sections": SECTIONS.get(key, 1) ** 2, "textures": {k: f"{v[0]}x{v[1]}" for k, v in sorted(imgs.items())},
                         "gpuTextureBytes": int(gpu), "origin": site["origin"]}
         print("LANDMARK", key, json.dumps(summary[key]))
         json.dump(provenance(key, group, site, summary[key]), open(os.path.join(d, "provenance.json"), "w"), indent=2)

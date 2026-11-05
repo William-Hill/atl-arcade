@@ -5,8 +5,9 @@
 //
 // Before the game boots, the preview claims the four landmark footprints
 // (landmarks.js `claim: true`: the extrusion, facade kit, and awnings skip
-// them; the colliders stay) and drops the img2threejs Ponce City Market tower
-// and its rooftop sign, which the full model replaces. After the game is
+// them; the colliders stay) and turns off the img2threejs Ponce City Market
+// tower and its rooftop sign, which the full model replaces. The three
+// claim-only entries also get minimap markers (preview only). After the game is
 // ready, it adds each GLB as a THREE.LOD at its site origin, yaw 0.
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -22,10 +23,17 @@ const only = params.get("glbonly")?.split(",") ?? null;
 const keys = [...Object.keys(sites.buildings), ...Object.keys(sites.bridges)].filter((k) => !only || only.includes(k));
 
 if (on) {
-  const pcm = LANDMARKS.findIndex((l) => l.id === "ponce-city-market");
-  if (pcm >= 0 && keys.includes("ponce-city-market")) LANDMARKS.splice(pcm, 1);
+  // The PCM entry stays (the minimap marks it), without its tower and sign:
+  // no anchor fits a 1e6 m inset, so landmarkPlacements() skips it.
+  const pcm = LANDMARKS.find((l) => l.id === "ponce-city-market");
+  if (pcm && keys.includes("ponce-city-market")) {
+    pcm.model = { ...pcm.model, inset: 1e6 };
+    delete pcm.sign;
+    pcm.claim = true;
+  }
   for (const k of keys) {
     const b = sites.buildings[k];
+    if (b && LANDMARKS.some((l) => l.buildingName === b.name)) continue;
     // No anchor fits a 1e6 m inset, so landmarkPlacements() skips the entry;
     // claimedIds() still claims the footprint.
     if (b) LANDMARKS.push({ id: `glb-${k}`, buildingName: b.name, claim: true, model: { side: [0, 1], inset: 1e6, base: "roof" } });

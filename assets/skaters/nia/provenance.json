@@ -1,7 +1,7 @@
 {
   "asset": "Nia \"Sway\" Ellis, the first skater (M1-01, #11)",
   "date": "2026-10-31",
-  "status": "shipped, animated (greybox clips in ATL and X Games style, not reviewed by skaters)",
+  "status": "shipped review candidate: corrected PBR body and forward motion, pending PR review",
   "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
   "source_image": "docs/characters/concept/nia/nia-tpose-front.png (see docs/characters/concept/nia/provenance.json)",
   "steps": [
@@ -122,5 +122,17 @@
     "file_size_bytes": 1598396,
     "base_color": "1024x1024 JPEG",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
+  },
+  "current_build": {
+    "date": "2026-11-05",
+    "triangles": 23472,
+    "joints": 65,
+    "clips": 25,
+    "source": "assets/skaters/nia/raw/forward-v2 (ignored build source)",
+    "method": "Keep corrected push/coast; append the existing clip set; preserve every action for glTF export.",
+    "added_clips": [
+      "dance_smoothquad"
+    ],
+    "tripo_motion": "assets/skaters/nia/raw/tripo-motion-v1/tripo_convert_8a663486-9228-4e65-abc7-9c14db3df2dd.fbx"
   }
 }

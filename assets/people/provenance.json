@@ -280,7 +280,7 @@
       },
       "blender": "scripts/blender/people.py stroller_dad (clips: walk and run from the rig, idle = Idle; shared, 0 credits: sit = Chair_Sit_Idle_M of elder_polo, cheer = Cheer_with_Both_Hands_Up of walker_sundress; push keyed in Blender (IK))",
       "result": {
-        "bytes": 803116,
+        "bytes": 802980,
         "triangles": {
           "lod0": 15542,
           "lod1": 1200

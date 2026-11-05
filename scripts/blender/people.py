@@ -156,6 +156,14 @@ def retarget(a, other, ratio):
         win = offs[max(0, k - half) : k + half + 1]
         off.x -= sum(o.x for o in win) / len(win) - offs[0].x
         off.y -= sum(o.y for o in win) / len(win) - offs[0].y
+    # The window is cut at the clip ends, so the two ends get different
+    # corrections: spread the leftover end gap linearly so the loop closes.
+    n = len(frames) - 1
+    if n > 0:
+        gap = frames[-1][2] - frames[0][2]
+        for k, (_, _, off) in enumerate(frames):
+            off.x -= gap.x * k / n
+            off.y -= gap.y * k / n
     for f, delta, off in frames:
         for pb in arm.pose.bones:
             if pb.name not in delta:

@@ -98,13 +98,13 @@ if (on) {
   window.__atl.scene.add(root);
   const assets = {};
   for (const [dir, m] of SETS) for (const [id, a] of Object.entries(m.assets)) assets[id] = { ...a, dir };
-  const layout = plazaLayout(assets).filter((p) => !only || only.includes(p.with ?? p.id));
+  const layout = plazaLayout(assets).filter((p) => !only || only.includes(p.id) || only.includes(p.with));
   const heightAt = (x, z) => {
     const s = window.__atl.level.sample(x, z);
     return typeof s === "number" ? s : (s?.height ?? 0);
   };
   const lift = params.get("pad") !== "0" ? 0.04 : 0;
-  if (params.get("pad") !== "0") {
+  if (params.get("pad") !== "0" && layout.length) {
     const xs = layout.map((p) => p.x);
     const zs = layout.map((p) => p.z);
     const w = Math.max(...xs) - Math.min(...xs) + 8;

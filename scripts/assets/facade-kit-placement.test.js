@@ -123,5 +123,17 @@ describe("facade kit placement", () => {
     const top4 = facadePlacements({ ring, style: s, base: 0, top: 17, front: null, mural: low, seed: 2 }).filter((o) => o.wallIndex === 2 && o.module === "window_brick_loft");
     expect(top4.length).toBeGreaterThan(0);
     for (const it of top4) expect(it.position[1]).toBeGreaterThan(13);
+
+    // Balconies on a mural's front wall keep its 0.3 m clearance too.
+    const ground = { edge: 2, t0: 0, t1: 24, y0: 0.8, y1: 4 };
+    let balconies = 0;
+    for (let seed = 1; seed <= 40; seed += 1) {
+      for (const it of facadePlacements({ ring, style: s, base: 0, top: 17, front: { edge: 2, wraps: [] }, mural: ground, seed })) {
+        if (it.module !== "balcony_juliet" || it.wallIndex !== 2) continue;
+        balconies += 1;
+        expect(it.position[1]).toBeGreaterThan(ground.y1 + 0.3);
+      }
+    }
+    expect(balconies).toBeGreaterThan(0);
   });
 });

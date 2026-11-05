@@ -252,7 +252,9 @@ export function facadePlacements({ ring, holes = [], style, base = 0, top, front
           if (onMural(i, a - (sx * mw) / 2, a + (sx * mw) / 2, yf + yOff, yf + yOff + sy * mh)) continue;
           if (inRange(sx, SCALE.window) && inRange(sy, SCALE.window)) add(windowModule, i, w, a, yf + yOff, 0, sx, sy);
           const r = rand();
-          if (f >= 1 && BALCONY[style.id] && fronts.has(i) && r < 0.18) add(BALCONY[style.id], i, w, a, yf, 0, Math.min(1.3, bl / MODULES[BALCONY[style.id]][0]));
+          const bal = BALCONY[style.id];
+          const bs = bal ? Math.min(1.3, bl / MODULES[bal][0]) : 1;
+          if (f >= 1 && bal && fronts.has(i) && r < 0.18 && !onMural(i, a - (bs * MODULES[bal][0]) / 2, a + (bs * MODULES[bal][0]) / 2, yf, yf + MODULES[bal][1])) add(bal, i, w, a, yf, 0, bs);
           else if (AC_UNITS.has(style.id) && !fronts.has(i) && r > 0.9 && !onMural(i, a + 0.2 * bl - 0.33, a + 0.2 * bl + 0.33, yf + yOff - 0.45, yf + yOff + 0.33)) add("ac_unit_wall", i, w, a + 0.2 * bl, yf + yOff - 0.45, 0);
         }
       }

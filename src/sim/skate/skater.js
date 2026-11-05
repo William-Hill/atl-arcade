@@ -29,8 +29,10 @@ export function createSkater(level, { position, yaw } = {}) {
   };
 }
 
-export function createSkaterEnv(level) {
-  return { grindables: level ? prepareGrindables(level) : [] };
+// `extra` adds grindables that are not level objects: the benches and the
+// curbs of a geodata level (src/level/ground.js createLevelEnv()).
+export function createSkaterEnv(level, extra = []) {
+  return { grindables: [...(level ? prepareGrindables(level) : []), ...extra] };
 }
 
 export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, k = { skate: SKATE, grind: GRIND }) {
@@ -104,7 +106,7 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
       if (m) {
         const dance = m.dances[counts[index] % m.dances.length];
         counts[index] += 1;
-        style = { id: m.id, button: index, name: dance.name, clip: dance.clip, time: 0, duration: styleDuration(m), points: m.points, anim: m.anim };
+        style = { id: m.id, button: index, name: dance.name, clip: dance.clip, time: 0, duration: styleDuration(m, skaterEnv.bpm), points: m.points, anim: m.anim };
       }
     }
   }

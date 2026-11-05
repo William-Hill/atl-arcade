@@ -1,0 +1,39 @@
+{
+  "note": "The #114 style-frame options. shot = a frame from scripts/art/shots-today.json (captured by pbr-frames.mjs); paintover = a mode of scripts/art/paintover.sh applied to that frame.",
+  "today": [
+    { "id": "trail", "title": "BeltLine trail, 13:30", "shot": "today-trail" },
+    { "id": "street", "title": "O4W storefronts + murals, 13:30", "shot": "today-street" },
+    { "id": "pcm", "title": "Ponce City Market, 13:30", "shot": "today-pcm" },
+    { "id": "skater", "title": "Skater close-up (Nia), 13:30", "shot": "today-skater" },
+    { "id": "dusk", "title": "Trail at dusk, 20:36", "shot": "today-dusk" },
+    { "id": "night", "title": "Street at night, 22:30", "shot": "today-night" }
+  ],
+  "subjects": [
+    { "id": "beltline-street", "title": "BeltLine street", "options": [
+      { "id": "a-today", "title": "A: today, 13:30", "shot": "today-trail" },
+      { "id": "b-golden", "title": "B: golden hour 19:12, warm grade", "shot": "trail-b-golden" },
+      { "id": "c-morning", "title": "C: morning 9:30, sky-lit fill", "shot": "trail-c-morning" },
+      { "id": "d-paintover-trail", "title": "D: paintover: green lawn, tonal range", "shot": "today-trail", "paintover": "day" },
+      { "id": "e-paintover-street", "title": "E: paintover: O4W storefront street", "shot": "today-street", "paintover": "day" }
+    ] },
+    { "id": "skater-close-up", "title": "Skater close-up", "options": [
+      { "id": "a-today", "title": "A: today, 13:30", "shot": "today-skater" },
+      { "id": "b-golden", "title": "B: golden hour 19:12, warm rim", "shot": "skater-b-golden" },
+      { "id": "c-skylit", "title": "C: overcast, sky-lit soft light", "shot": "skater-c-skylit" },
+      { "id": "d-paintover", "title": "D: paintover: green lawn, tonal range", "shot": "today-skater", "paintover": "day" }
+    ] },
+    { "id": "mural-wall", "title": "Mural wall", "options": [
+      { "id": "a-today", "title": "A: today, eye level, 13:30", "shot": "mural-a-today" },
+      { "id": "b-golden", "title": "B: golden hour 18:30, over the trees", "shot": "mural-b-golden" },
+      { "id": "c-o4w-morning", "title": "C: O4W mural, morning 10:00", "shot": "mural-c-o4w-morning" },
+      { "id": "d-paintover", "title": "D: paintover: bolder paint, tonal range", "shot": "mural-a-today", "paintover": "mural" }
+    ] },
+    { "id": "night", "title": "Night scene", "options": [
+      { "id": "a-today", "title": "A: today, street 22:30", "shot": "today-night" },
+      { "id": "b-bluehour", "title": "B: blue hour 21:00, more bloom", "shot": "night-b-bluehour" },
+      { "id": "c-wet", "title": "C: rain at 22:00 (today the rain sky reads day-gray)", "shot": "night-c-wet" },
+      { "id": "d-trail", "title": "D: trail at 22:30, more bloom", "shot": "night-d-trail" },
+      { "id": "e-paintover", "title": "E: paintover: lamp pools, hot signs", "shot": "today-night", "paintover": "night" }
+    ] }
+  ]
+}

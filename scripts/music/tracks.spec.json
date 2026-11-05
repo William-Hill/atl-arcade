@@ -1,0 +1,40 @@
+{
+  "tracks": [
+    {
+      "id": "day-trail",
+      "title": "Day Trail Bounce",
+      "bpm": 100,
+      "keyscale": "E minor",
+      "renderSeconds": 80,
+      "loopBars": 24,
+      "caption": "instrumental funk bounce, bright and sunny, slap bass, clean wah guitar, warm Rhodes, brass stabs, tight live drums with a steady kick and handclaps on two and four, upbeat summer skating music, no vocals"
+    },
+    {
+      "id": "peachtree-house",
+      "title": "Peachtree House",
+      "bpm": 125,
+      "keyscale": "A minor",
+      "renderSeconds": 80,
+      "loopBars": 32,
+      "caption": "instrumental soulful deep house, four-on-the-floor kick, open hi-hats, gospel organ chords, warm piano stabs, round sub bass, shakers, uplifting late-afternoon groove, no vocals"
+    },
+    {
+      "id": "porch-light",
+      "title": "Porch Light",
+      "bpm": 80,
+      "keyscale": "D minor",
+      "renderSeconds": 80,
+      "loopBars": 20,
+      "caption": "instrumental laid-back trap soul, mellow electric piano, soft 808 bass, crisp trap hi-hat rolls, snappy snare on three, lush pads, warm evening chill, smooth and positive, no vocals"
+    },
+    {
+      "id": "rink-night",
+      "title": "Rink Night",
+      "bpm": 120,
+      "keyscale": "G major",
+      "renderSeconds": 80,
+      "loopBars": 28,
+      "caption": "instrumental roller rink disco boogie, four-on-the-floor kick, octave disco bass, string section swells, funky rhythm guitar, synth brass, claps, joyful roller skate jam, no vocals"
+    }
+  ]
+}

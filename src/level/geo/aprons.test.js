@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { APRON, apronRing, storefrontAprons } from "./aprons.js";
+import { APRON, WALK_STRIP, apronRing, curbBox, shopWalk, storefrontAprons, walkStrip } from "./aprons.js";
 import { orientRing } from "./extrude.js";
 import { frontEdges } from "./facade-kit.js";
 import { pointInRings } from "./geo-ground.js";
@@ -118,12 +118,16 @@ describe("storefrontAprons", () => {
 
   it("paves only around storefront buildings", () => {
     const shops = (LEVEL.buildings ?? []).filter((b) => b.outer?.length >= 3 && b.height > 0 && STYLES[STYLE_INDEX[chooseStyle(b)]].storefront);
-    const strips = tiles.reduce((s, t) => s + t.mesh.indices.length, 0);
+    // The flat quads at the apron height: the strips, the corner squares,
+    // and the walks. The curbs are higher or vertical.
+    const y = (LEVEL.surfaces?.ground ?? 0) + APRON.lift;
+    const flat = tiles.flatMap((t) => triangles(t.mesh)).filter((tri) => [tri.a, tri.b, tri.c].every((q) => Math.abs(q[1] - y) < 1e-4));
     expect(shops.length).toBeGreaterThan(0);
-    expect(strips).toBeGreaterThan(0);
-    // One strip and at most one corner square for each wall.
+    expect(flat.length).toBeGreaterThan(0);
+    // One strip and at most one corner square for each wall, and one walk
+    // for each shop.
     const walls = shops.reduce((s, b) => s + b.outer.length, 0);
-    expect(strips / 6).toBeLessThanOrEqual(walls * 2);
+    expect(flat.length / 2).toBeLessThanOrEqual(walls * 2 + shops.length);
   });
 
   it("follows the terrain like the other ground pieces", () => {
@@ -135,7 +139,10 @@ describe("storefrontAprons", () => {
       for (let i = 0; i < d.positions.length; i += 3) {
         const x = d.positions[i];
         const z = d.positions[i + 2];
-        expect(d.positions[i + 1]).toBeCloseTo(ground + APRON.lift + (terrain.flat ? 0 : terrain.height(x, z)), 3);
+        // On the apron plane, up to the curb top.
+        const dy = d.positions[i + 1] - (ground + APRON.lift + (terrain.flat ? 0 : terrain.height(x, z)));
+        expect(dy).toBeGreaterThan(-5e-4);
+        expect(dy).toBeLessThan(WALK_STRIP.curb[1] + 5e-4);
       }
     }
   });
@@ -143,5 +150,75 @@ describe("storefrontAprons", () => {
   it("stays under the streets and the sidewalks", () => {
     expect(APRON.lift).toBeLessThan(LEVEL.surfaces.park);
     expect(APRON.lift).toBeGreaterThan(LEVEL.surfaces.ground);
+  });
+});
+
+describe("the walk from a shop door", () => {
+  // Wall 0 of RECT runs along +x at z = 6; its outward normal is +z.
+  const bay = 2;
+
+  it("runs from the front apron to the street edge, in front of the door bay", () => {
+    const front = { edge: 0, street: false, wraps: [], door: 3, walk: 14 };
+    const w = walkStrip(RECT, front, bay);
+    expect(w.d0).toBe(APRON.front);
+    expect(w.d1).toBe(14);
+    expect((w.a0 + w.a1) / 2).toBeCloseTo(3.5 * 2, 6);
+    expect(w.a1 - w.a0).toBeCloseTo(WALK_STRIP.width, 6);
+    expect(w.n[0]).toBeCloseTo(0, 6);
+    expect(w.n[1]).toBeCloseTo(1, 6);
+  });
+
+  it("builds no walk with no street, or a street at the apron edge", () => {
+    expect(walkStrip(RECT, { edge: 0, door: 2, walk: null }, bay)).toBeNull();
+    expect(walkStrip(RECT, { edge: 0, door: 2, walk: APRON.front + 0.2 }, bay)).toBeNull();
+    expect(walkStrip(RECT, null, bay)).toBeNull();
+  });
+
+  it("builds the walk over a park and the curbs on the apron edge and the walk sides", () => {
+    const m = empty();
+    const c = shopWalk(m, RECT, { edge: 0, door: 2, walk: 12 }, bay, APRON.lift);
+    // Two apron curb pieces (open at the walk) and two walk curbs.
+    expect(c).toEqual({ walk: 1, curb: 4 });
+    const tris = triangles(m);
+    const walk = tris.filter((t) => [t.a, t.b, t.c].every((q) => Math.abs(q[1] - WALK_STRIP.lift) < 1e-6));
+    expect(walk.length).toBe(2);
+    expect(WALK_STRIP.lift).toBeGreaterThan(LEVEL.surfaces.park);
+    expect(WALK_STRIP.lift).toBeLessThan(LEVEL.surfaces.street);
+    // Every curb vertex is on the apron or at the curb top, and no curb
+    // reaches the street.
+    for (let i = 0; i < m.positions.length; i += 3) {
+      const y = m.positions[i + 1];
+      const z = m.positions[i + 2];
+      expect([APRON.lift, WALK_STRIP.lift, APRON.lift + WALK_STRIP.curb[1]].some((v) => Math.abs(y - v) < 1e-6)).toBe(true);
+      if (y > WALK_STRIP.lift + 1e-6) expect(z - 6).toBeLessThanOrEqual(12 - WALK_STRIP.curbGap + 1e-6);
+    }
+  });
+
+  it("builds a closed curb box with its faces out", () => {
+    const m = empty();
+    expect(curbBox(m, [0, 0], [1, 0], [0, 1], 0, 2, 0, 0.2, 0, 0.1)).toBe(1);
+    // A top and 4 sides.
+    expect(m.indices.length / 3).toBe(10);
+    const tris = triangles(m);
+    // The top faces up, and each side faces away from the box center
+    // (1, 0.05, 0.1).
+    for (const t of tris) {
+      const u = [t.b[0] - t.a[0], t.b[1] - t.a[1], t.b[2] - t.a[2]];
+      const v = [t.c[0] - t.a[0], t.c[1] - t.a[1], t.c[2] - t.a[2]];
+      const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+      const c = [0, 1, 2].map((k) => (t.a[k] + t.b[k] + t.c[k]) / 3 - [1, 0.05, 0.1][k]);
+      expect(n[0] * c[0] + n[1] * c[1] + n[2] * c[2]).toBeGreaterThan(0);
+    }
+  });
+
+  it("gives the BeltLine shops walks to their streets", () => {
+    const fronts = frontEdges(LEVEL);
+    let walks = 0;
+    for (const b of LEVEL.buildings) {
+      const f = fronts.get(b.id);
+      if (!f) continue;
+      if (walkStrip(orientRing(b.outer, false), f, STYLES[STYLE_INDEX[chooseStyle(b)]].bay)) walks += 1;
+    }
+    expect(walks).toBeGreaterThan(20);
   });
 });

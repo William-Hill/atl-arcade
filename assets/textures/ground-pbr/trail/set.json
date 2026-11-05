@@ -1,0 +1,130 @@
+{
+  "setId": "trail",
+  "surfaceKind": "trail",
+  "asset": "concrete_floor",
+  "source": "https://polyhaven.com/a/concrete_floor",
+  "authors": {
+    "eye-candy.xyz": "All"
+  },
+  "license": "CC0 1.0",
+  "tileMeters": 2.08,
+  "meanLinear": [
+    0.8226,
+    0.6799,
+    0.408
+  ],
+  "palette": [
+    0.8245,
+    0.68,
+    0.408
+  ],
+  "roughMean": 0.8336,
+  "aoMean": 0.9159,
+  "tiers": {
+    "high": 1024,
+    "phone": 512
+  },
+  "maps": {
+    "albedo": "sRGB base color, light removed",
+    "normal": "OpenGL (+Y) tangent normal, u along world x, v along world z",
+    "orm": "R ambient occlusion, G roughness, B metalness (0)"
+  },
+  "delight": {
+    "gradientRemoved": 0.000663295683224355,
+    "slopeK": [
+      -0.0377,
+      -0.0455
+    ],
+    "aoK": 0.6412,
+    "flatten": {
+      "midBandScale": 0.6,
+      "clampSigma": 2.5
+    }
+  },
+  "seamFix": false,
+  "metricsAfter": {
+    "gradient": 0.0025,
+    "blotch": 0.0063,
+    "aoCorr": 0.0326,
+    "sideLight": 0.0009,
+    "seam": 0.9818,
+    "detail": 0.1627
+  },
+  "candidates": [
+    {
+      "asset": "concrete_floor_03",
+      "score": 0.3677,
+      "metrics": {
+        "gradient": 0.0113,
+        "blotch": 0.0308,
+        "aoCorr": 0.3575,
+        "sideLight": 0.0822,
+        "seam": 1.0094,
+        "detail": 0.3232
+      },
+      "chosen": false
+    },
+    {
+      "asset": "concrete_floor",
+      "score": 0.0731,
+      "metrics": {
+        "gradient": 0.0007,
+        "blotch": 0.0053,
+        "aoCorr": 0.0971,
+        "sideLight": 0.0111,
+        "seam": 0.9772,
+        "detail": 0.2041
+      },
+      "chosen": true
+    },
+    {
+      "asset": "anti_slip_concrete",
+      "score": 0.3893,
+      "metrics": {
+        "gradient": 0.0014,
+        "blotch": 0.0168,
+        "aoCorr": 0.5859,
+        "sideLight": 0.0572,
+        "seam": 1.0463,
+        "detail": 0.4066
+      },
+      "chosen": false
+    }
+  ],
+  "files": {
+    "albedo_high.jpg": 509683,
+    "albedo_high.ktx2": 1190233,
+    "normal_high.jpg": 416324,
+    "normal_high.ktx2": 1128061,
+    "orm_high.jpg": 219224,
+    "orm_high.ktx2": 807608,
+    "albedo_phone.jpg": 108388,
+    "albedo_phone.ktx2": 297824,
+    "normal_phone.jpg": 67778,
+    "normal_phone.ktx2": 238323,
+    "orm_phone.jpg": 44864,
+    "orm_phone.ktx2": 172925
+  },
+  "ktx2Quality": {
+    "albedo_high.ktx2": {
+      "psnr": 42.84
+    },
+    "normal_high.ktx2": {
+      "psnr": 41.24,
+      "meanAngleDeg": 1.205
+    },
+    "orm_high.ktx2": {
+      "psnr": 45.61
+    },
+    "albedo_phone.ktx2": {
+      "psnr": 45.41
+    },
+    "normal_phone.ktx2": {
+      "psnr": 45.09,
+      "meanAngleDeg": 0.798
+    },
+    "orm_phone.ktx2": {
+      "psnr": 46.24
+    }
+  }
+}

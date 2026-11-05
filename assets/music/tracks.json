@@ -1,0 +1,53 @@
+{
+  "sampleRate": 48000,
+  "tracks": [
+    {
+      "id": "day-trail",
+      "title": "Day Trail Bounce",
+      "file": "day-trail.ogg",
+      "fallback": "day-trail.m4a",
+      "bpm": 100,
+      "firstDownbeat": 0,
+      "bars": 24,
+      "loopStart": 0,
+      "loopEnd": 57.6,
+      "license": "MIT (ACE-Step 1.5 code and weights); output: original work for this repository, see LICENSE.md"
+    },
+    {
+      "id": "peachtree-house",
+      "title": "Peachtree House",
+      "file": "peachtree-house.ogg",
+      "fallback": "peachtree-house.m4a",
+      "bpm": 124,
+      "firstDownbeat": 0,
+      "bars": 31,
+      "loopStart": 0,
+      "loopEnd": 60.0,
+      "license": "MIT (ACE-Step 1.5 code and weights); output: original work for this repository, see LICENSE.md"
+    },
+    {
+      "id": "porch-light",
+      "title": "Porch Light",
+      "file": "porch-light.ogg",
+      "fallback": "porch-light.m4a",
+      "bpm": 80,
+      "firstDownbeat": 0,
+      "bars": 20,
+      "loopStart": 0,
+      "loopEnd": 60.0,
+      "license": "MIT (ACE-Step 1.5 code and weights); output: original work for this repository, see LICENSE.md"
+    },
+    {
+      "id": "rink-night",
+      "title": "Rink Night",
+      "file": "rink-night.ogg",
+      "fallback": "rink-night.m4a",
+      "bpm": 120,
+      "firstDownbeat": 0,
+      "bars": 28,
+      "loopStart": 0,
+      "loopEnd": 56.0,
+      "license": "MIT (ACE-Step 1.5 code and weights); output: original work for this repository, see LICENSE.md"
+    }
+  ]
+}

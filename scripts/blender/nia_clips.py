@@ -845,6 +845,8 @@ def setup_ik(arm):
             if o.name not in bpy.context.scene.collection.objects:
                 bpy.context.scene.collection.objects.link(o)
         tgt.matrix_world = arm.matrix_world @ foot.bone.matrix_local
+        if CFG.get("continuous_foot_rotation"):
+            tgt.rotation_mode = "QUATERNION"
         pole.location = arm.matrix_world @ (knee.head_local + Vector((0, -0.6, 0)))
         leg = arm.pose.bones[bone(full + "Leg")]
         for c in list(leg.constraints):
@@ -889,9 +891,15 @@ def apply_pose(arm, ik, pose, frame):
         for axis, deg in spec.get("rot", []):
             rq = Quaternion(Vector(axis), math.radians(deg)) @ rq
         m = Matrix.Translation(rest.to_translation() + Vector(spec["pos"])) @ (rq.to_matrix().to_4x4() @ rest.to_3x3().to_4x4())
+        previous_rotation = tgt.rotation_quaternion.copy()
         tgt.matrix_world = m
+        if CFG.get("continuous_foot_rotation"):
+            tgt.rotation_quaternion.make_compatible(previous_rotation)
         tgt.keyframe_insert("location", frame=frame)
-        tgt.keyframe_insert("rotation_euler", frame=frame)
+        tgt.keyframe_insert(
+            "rotation_quaternion" if CFG.get("continuous_foot_rotation") else "rotation_euler",
+            frame=frame,
+        )
     for pb in arm.pose.bones:
         pb.keyframe_insert("rotation_quaternion", frame=frame)
         if pb.name == bone("Hips"):
@@ -998,7 +1006,7 @@ def prune_static_channels(eps=1e-4):
     removed = 0
     for action in bpy.data.actions:
         for bag in action_fcurves(action):
-            for fc in list(bag.fcurves):
+            for fc in list(getattr(bag, "fcurves", [])):
                 values = [k.co[1] for k in fc.keyframe_points]
                 prop = fc.data_path.rsplit(".", 1)[-1]
                 if prop == "rotation_quaternion":
@@ -1011,7 +1019,7 @@ def prune_static_channels(eps=1e-4):
                     bag.fcurves.remove(fc)
                     removed += 1
             # The bake writes one key per frame, so linear keys are exact.
-            for fc in bag.fcurves:
+            for fc in getattr(bag, "fcurves", []):
                 for k in fc.keyframe_points:
                     k.interpolation = "LINEAR"
     return removed

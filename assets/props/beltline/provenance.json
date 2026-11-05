@@ -1,0 +1,271 @@
+{
+  "date": "2026-11-05",
+  "asset": "BeltLine props (#115): shared e-scooter, city bike and its dock, food cart, picnic table, patio umbrella, and one original public-art sculpture.",
+  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine, meshy-t2.5, smart topology); people: Meshy rigging (POST /openapi/v1/rigging) and library animations (POST /openapi/v1/animations); then Blender 5.2.3 LTS headless: scripts/blender/people.py (people), scripts/blender/people_props.py (props), scripts/blender/dog_rig.py (dog rig and clips keyed in Blender). Draco GLB export.",
+  "pipeline": "node scripts/assets/meshy-people-props.mjs --cap 400 (needs MESHY_API_KEY; raw downloads and task records in .meshy-raw/people/, git-ignored), then node scripts/assets/people-props-build.mjs",
+  "license": "Generated with the project owner's Meshy account; usage is governed by Meshy's terms of service for that account. Blender steps and keyed clips: original work for this project.",
+  "style": "Realistic mid-2010s Atlanta, positive everyday people, no branding (prompts forbid logos and text); the sculpture is an original abstract design, not a copy of any artwork.",
+  "verify": "scripts/assets/people-props-preview.html (in the game's pbr renderer) and node scripts/assets/people-props-shots.mjs",
+  "files": {
+    "e_scooter.glb": {
+      "prompt": "A generic shared electric kick scooter standing on its kickstand, slim deck, tall stem with handlebars, small front and rear wheels, plain design, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Matte teal painted aluminum stem and deck, black grip tape, black rubber wheels and grips, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 2500,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad50-fd54-76f1-b51f-783e0fd1cfcd",
+        "refine_task_id": "01a1ad51-7965-7799-b183-fdf371b8a125",
+        "seed": 4254186321
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py e_scooter --fit length --m 1.15 --long z --lod1 600",
+      "result": {
+        "bytes": 266148,
+        "triangles": {
+          "lod0": 2423,
+          "lod1": 600
+        },
+        "size_m": [
+          0.44,
+          1.091,
+          1.15
+        ]
+      }
+    },
+    "city_bike.glb": {
+      "prompt": "A generic step-through city bike, sturdy frame, front basket, fenders, chain guard, upright handlebars, comfortable saddle, two round spoked wheels, standing upright on a kickstand, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Glossy sky blue painted frame, black wire basket, silver fenders, black tires, brown saddle and grips, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 3000,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad52-4519-737c-8e28-9fd9721d1d7e",
+        "refine_task_id": "01a1ad53-1257-75f7-81bb-998aa47b32e1",
+        "seed": 3654014808
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py city_bike --fit length --m 1.8 --long z --lod1 800",
+      "result": {
+        "bytes": 400604,
+        "triangles": {
+          "lod0": 2776,
+          "lod1": 799
+        },
+        "size_m": [
+          0.632,
+          1.09,
+          1.8
+        ]
+      }
+    },
+    "bike_dock.glb": {
+      "prompt": "A single bike share docking post module on a flat steel base plate, rounded post with a wheel slot, small blank screen panel, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Light gray powder-coated steel, dark gray base plate, black blank screen, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 1500,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad54-a3aa-7556-81d2-97bb97840cf4",
+        "refine_task_id": "01a1ad55-20b9-7396-a096-f21d0dcc82cb",
+        "seed": 2763836651
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py bike_dock --fit height --m 1.1 --long x --lod1 400",
+      "result": {
+        "bytes": 219372,
+        "triangles": {
+          "lod0": 1426,
+          "lod1": 400
+        },
+        "size_m": [
+          1.486,
+          1.1,
+          0.512
+        ]
+      }
+    },
+    "food_cart.glb": {
+      "prompt": "A cheerful street food cart with a striped canvas awning, stainless steel counter, small wheels, blank chalkboard menu panel, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Teal and white striped canvas awning, brushed stainless steel counter, sunflower yellow cart body, black rubber wheels, blank black chalkboard, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 3000,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad55-9e30-731b-b4c1-20804d5e349f",
+        "refine_task_id": "01a1ad55-f530-7483-96ae-150d1485c9eb",
+        "seed": 2936837023
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py food_cart --fit length --m 2.2 --long x --lod1 800",
+      "result": {
+        "bytes": 283696,
+        "triangles": {
+          "lod0": 3072,
+          "lod1": 800
+        },
+        "size_m": [
+          2.2,
+          2.799,
+          1.83
+        ]
+      }
+    },
+    "picnic_table.glb": {
+      "prompt": "A wooden park picnic table with two attached benches, sturdy plank top, A-frame legs, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Warm weathered natural wood planks, dark galvanized bolts, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 1200,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad57-3ff7-71d1-92c4-64114f97b61d",
+        "refine_task_id": "01a1ad57-96ed-7385-895b-07fa851b0072",
+        "seed": 1201426453
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py picnic_table --fit length --m 1.8 --long x --lod1 400",
+      "result": {
+        "bytes": 230372,
+        "triangles": {
+          "lod0": 1130,
+          "lod1": 400
+        },
+        "size_m": [
+          1.8,
+          0.817,
+          1.504
+        ]
+      }
+    },
+    "patio_umbrella.glb": {
+      "prompt": "An open square patio market umbrella on a straight pole with a round weighted base, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Terracotta orange canvas, dark bronze aluminum pole, black weighted base, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 800,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad58-b31b-7166-97cc-0d608d8e8d76",
+        "refine_task_id": "01a1ad59-0aaa-719d-8213-ee922f94547d",
+        "seed": 2701664912
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py patio_umbrella --fit height --m 2.5 --long x --lod1 250",
+      "result": {
+        "bytes": 203172,
+        "triangles": {
+          "lod0": 452,
+          "lod1": 250
+        },
+        "size_m": [
+          3.34,
+          2.5,
+          3.296
+        ]
+      }
+    },
+    "sculpture_ribbon.glb": {
+      "prompt": "An original abstract public art sculpture for a city trail, a tall twisting ribbon of brushed steel rising in a double spiral from a low square concrete plinth, smooth and elegant, about four meters tall, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Brushed stainless steel ribbon with teal and warm gold painted inner faces, light gray concrete plinth, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 4000,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad59-fdfb-77f6-971a-4ec14920f83b",
+        "refine_task_id": "01a1ad5a-5328-758d-8a3d-e9e938962d9c",
+        "seed": 3257372561
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py sculpture_ribbon --fit height --m 4 --long x --lod1 1000",
+      "result": {
+        "bytes": 273024,
+        "triangles": {
+          "lod0": 4162,
+          "lod1": 1000
+        },
+        "size_m": [
+          1.44,
+          4,
+          1.212
+        ]
+      }
+    }
+  },
+  "credits_total": 105
+}

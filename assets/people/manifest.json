@@ -1,0 +1,481 @@
+{
+  "frame": "glTF model space: +y up, +z forward, origin at the ground center of the footprint, meters. Nodes <id>_lod0 / <id>_lod1, extras.lodDistance in m. People and the dog: one skin over both LODs, clips by game name.",
+  "assets": {
+    "walker_sundress": {
+      "file": "walker_sundress.glb",
+      "bytes": 500968,
+      "triangles": {
+        "lod0": 5862,
+        "lod1": 1200
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 25
+      },
+      "bounds": {
+        "min": [
+          -0.771,
+          0,
+          -0.14
+        ],
+        "max": [
+          0.771,
+          1.68,
+          0.14
+        ]
+      },
+      "size": [
+        1.542,
+        1.68,
+        0.28
+      ],
+      "clips": {
+        "walk": {
+          "frames": 24.8,
+          "fps": 30,
+          "source": "walking_man"
+        },
+        "run": {
+          "frames": 15.2,
+          "fps": 30,
+          "source": "running"
+        },
+        "cheer": {
+          "frames": 44.8,
+          "fps": 30,
+          "source": "Cheer_with_Both_Hands_Up"
+        },
+        "idle": {
+          "frames": 44.8,
+          "fps": 30,
+          "source": "Idle_02"
+        },
+        "sit": {
+          "frames": 256,
+          "fps": 30,
+          "source": "Chair_Sit_Idle_M",
+          "shared_from": "elder_polo"
+        }
+      },
+      "bones": 24,
+      "textures": [
+        "walker_sundress_base_color 1024x1024",
+        "walker_sundress_metal_rough 256x256",
+        "walker_sundress_normal 512x512"
+      ]
+    },
+    "elder_polo": {
+      "file": "elder_polo.glb",
+      "bytes": 616816,
+      "triangles": {
+        "lod0": 6334,
+        "lod1": 1200
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 25
+      },
+      "bounds": {
+        "min": [
+          -0.885,
+          0,
+          -0.218
+        ],
+        "max": [
+          0.885,
+          1.75,
+          0.218
+        ]
+      },
+      "size": [
+        1.77,
+        1.75,
+        0.436
+      ],
+      "clips": {
+        "walk": {
+          "frames": 24.8,
+          "fps": 30,
+          "source": "walking_man"
+        },
+        "run": {
+          "frames": 15.2,
+          "fps": 30,
+          "source": "running"
+        },
+        "sit": {
+          "frames": 256,
+          "fps": 30,
+          "source": "Chair_Sit_Idle_M"
+        },
+        "cheer": {
+          "frames": 40,
+          "fps": 30,
+          "source": "Cheer_with_One_Hand_Up"
+        },
+        "idle": {
+          "frames": 96,
+          "fps": 30,
+          "source": "Idle",
+          "shared_from": "dog_walker"
+        }
+      },
+      "bones": 24,
+      "textures": [
+        "elder_polo_base_color 1024x1024",
+        "elder_polo_metal_rough 256x256",
+        "elder_polo_normal 512x512"
+      ]
+    },
+    "jogger": {
+      "file": "jogger.glb",
+      "bytes": 760036,
+      "triangles": {
+        "lod0": 6319,
+        "lod1": 1200
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 25
+      },
+      "bounds": {
+        "min": [
+          -0.786,
+          0,
+          -0.183
+        ],
+        "max": [
+          0.786,
+          1.7,
+          0.183
+        ]
+      },
+      "size": [
+        1.572,
+        1.7,
+        0.366
+      ],
+      "clips": {
+        "walk": {
+          "frames": 24.8,
+          "fps": 30,
+          "source": "walking_man"
+        },
+        "run": {
+          "frames": 15.2,
+          "fps": 30,
+          "source": "running"
+        },
+        "rest": {
+          "frames": 168,
+          "fps": 30,
+          "source": "Catching_Breath"
+        },
+        "cheer": {
+          "frames": 224,
+          "fps": 30,
+          "source": "Victory_Cheer"
+        },
+        "idle": {
+          "frames": 44.8,
+          "fps": 30,
+          "source": "Idle_02",
+          "shared_from": "walker_sundress"
+        },
+        "sit": {
+          "frames": 256,
+          "fps": 30,
+          "source": "Chair_Sit_Idle_M",
+          "shared_from": "elder_polo"
+        }
+      },
+      "bones": 24,
+      "textures": [
+        "jogger_base_color 1024x1024",
+        "jogger_metal_rough 256x256",
+        "jogger_normal 512x512"
+      ]
+    },
+    "dog_walker": {
+      "file": "dog_walker.glb",
+      "bytes": 694932,
+      "triangles": {
+        "lod0": 5929,
+        "lod1": 1200
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 25
+      },
+      "bounds": {
+        "min": [
+          -0.77,
+          0,
+          -0.209
+        ],
+        "max": [
+          0.77,
+          1.65,
+          0.209
+        ]
+      },
+      "size": [
+        1.54,
+        1.65,
+        0.418
+      ],
+      "clips": {
+        "walk": {
+          "frames": 24.8,
+          "fps": 30,
+          "source": "walking_man"
+        },
+        "run": {
+          "frames": 15.2,
+          "fps": 30,
+          "source": "running"
+        },
+        "idle": {
+          "frames": 96,
+          "fps": 30,
+          "source": "Idle"
+        },
+        "cheer": {
+          "frames": 216,
+          "fps": 30,
+          "source": "Motivational_Cheer"
+        },
+        "sit": {
+          "frames": 256,
+          "fps": 30,
+          "source": "Chair_Sit_Idle_M",
+          "shared_from": "elder_polo"
+        }
+      },
+      "bones": 24,
+      "textures": [
+        "dog_walker_base_color 1024x1024",
+        "dog_walker_metal_rough 256x256",
+        "dog_walker_normal 512x512"
+      ]
+    },
+    "stroller_dad": {
+      "file": "stroller_dad.glb",
+      "bytes": 756480,
+      "triangles": {
+        "lod0": 6326,
+        "lod1": 1200
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 25
+      },
+      "bounds": {
+        "min": [
+          -0.888,
+          0,
+          -0.192
+        ],
+        "max": [
+          0.888,
+          1.82,
+          0.192
+        ]
+      },
+      "size": [
+        1.776,
+        1.82,
+        0.384
+      ],
+      "clips": {
+        "walk": {
+          "frames": 24.8,
+          "fps": 30,
+          "source": "walking_man"
+        },
+        "run": {
+          "frames": 15.2,
+          "fps": 30,
+          "source": "running"
+        },
+        "idle": {
+          "frames": 96,
+          "fps": 30,
+          "source": "Idle"
+        },
+        "push": {
+          "frames": 192,
+          "fps": 30,
+          "source": "Push_and_Walk_Forward"
+        },
+        "sit": {
+          "frames": 256,
+          "fps": 30,
+          "source": "Chair_Sit_Idle_M",
+          "shared_from": "elder_polo"
+        },
+        "cheer": {
+          "frames": 40,
+          "fps": 30,
+          "source": "Cheer_with_One_Hand_Up",
+          "shared_from": "elder_polo"
+        }
+      },
+      "bones": 24,
+      "textures": [
+        "stroller_dad_base_color 1024x1024",
+        "stroller_dad_metal_rough 256x256",
+        "stroller_dad_normal 512x512"
+      ]
+    },
+    "cyclist": {
+      "file": "cyclist.glb",
+      "bytes": 580884,
+      "triangles": {
+        "lod0": 6414,
+        "lod1": 1199
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 25
+      },
+      "bounds": {
+        "min": [
+          -0.413,
+          0,
+          -0.14
+        ],
+        "max": [
+          0.413,
+          1.75,
+          0.14
+        ]
+      },
+      "size": [
+        0.826,
+        1.75,
+        0.28
+      ],
+      "clips": {
+        "walk": {
+          "frames": 24.8,
+          "fps": 30,
+          "source": "walking_man"
+        },
+        "run": {
+          "frames": 15.2,
+          "fps": 30,
+          "source": "running"
+        },
+        "sit": {
+          "frames": 256,
+          "fps": 30,
+          "source": "Chair_Sit_Idle_M"
+        },
+        "idle": {
+          "frames": 96,
+          "fps": 30,
+          "source": "Idle"
+        },
+        "cheer": {
+          "frames": 44.8,
+          "fps": 30,
+          "source": "Cheer_with_Both_Hands_Up",
+          "shared_from": "walker_sundress"
+        },
+        "ride": {
+          "frames": 30,
+          "fps": 30,
+          "source": "keyed in Blender from the first frame of sit"
+        }
+      },
+      "bones": 24,
+      "textures": [
+        "cyclist_base_color 1024x1024",
+        "cyclist_metal_rough 256x256",
+        "cyclist_normal 512x512"
+      ]
+    },
+    "dog": {
+      "file": "dog.glb",
+      "bytes": 411300,
+      "triangles": {
+        "lod0": 3168,
+        "lod1": 700
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 20
+      },
+      "bounds": {
+        "min": [
+          -0.154,
+          0,
+          -0.45
+        ],
+        "max": [
+          0.154,
+          0.718,
+          0.45
+        ]
+      },
+      "size": [
+        0.308,
+        0.718,
+        0.9
+      ],
+      "clips": {
+        "walk": {
+          "frames": 24,
+          "fps": 30,
+          "source": "keyed in Blender"
+        },
+        "idle": {
+          "frames": 60,
+          "fps": 30,
+          "source": "keyed in Blender"
+        }
+      },
+      "bones": 14,
+      "textures": [
+        "dog_color 1024x1024",
+        "dog_metal_rough 512x512",
+        "dog_normal 512x512"
+      ]
+    },
+    "stroller": {
+      "file": "stroller.glb",
+      "bytes": 262204,
+      "triangles": {
+        "lod0": 2462,
+        "lod1": 599
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 20
+      },
+      "bounds": {
+        "min": [
+          -0.299,
+          0,
+          -0.475
+        ],
+        "max": [
+          0.299,
+          1.345,
+          0.475
+        ]
+      },
+      "size": [
+        0.598,
+        1.345,
+        0.95
+      ],
+      "textures": [
+        "stroller_color 1024x1024",
+        "stroller_metal_rough 512x512",
+        "stroller_normal 512x512"
+      ]
+    }
+  }
+}

@@ -56,12 +56,12 @@ show more floors than the uphill walls. Bridge structure follows
 |---|---|---|---|---|
 | `assets/landmarks/ponce-city-market/ponce-city-market.glb` | lod0 57,432 / lod1 6,921 / lod2 453 | 0.94 MB | 11 (9x 512x512, 1x 256x256, 1x 1024x1024) | 17.7 MiB |
 | `assets/landmarks/telephone-factory-lofts/telephone-factory-lofts.glb` | lod0 2,027 / lod1 723 | 0.57 MB | 11 (10x 512x512, 1x 1024x1024) | 18.7 MiB |
-| `assets/landmarks/studioplex/studioplex.glb` | lod0 5,339 / lod1 2,508 | 0.56 MB | 10 (9x 512x512, 1x 1024x1024) | 17.3 MiB |
+| `assets/landmarks/studioplex/studioplex.glb` | lod0 7,079 / lod1 2,698 | 0.57 MB | 10 (9x 512x512, 1x 1024x1024) | 17.3 MiB |
 | `assets/landmarks/new-realm-brewing/new-realm-brewing.glb` | lod0 2,336 / lod1 529 | 0.51 MB | 10 (9x 512x512, 1x 1024x1024) | 17.3 MiB |
 | `assets/landmarks/bridge-north-ave/bridge-north-ave.glb` | lod0 1,444 / lod1 420 | 0.10 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
 | `assets/landmarks/bridge-ralph-mcgill/bridge-ralph-mcgill.glb` | lod0 828 / lod1 260 | 0.10 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
 | `assets/landmarks/bridge-ponce/bridge-ponce.glb` | lod0 844 / lod1 276 | 0.10 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
-| `assets/landmarks/bridge-freedom-parkway/bridge-freedom-parkway.glb` | lod0 9,464 / lod1 4,070 | 0.18 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
+| `assets/landmarks/bridge-freedom-parkway/bridge-freedom-parkway.glb` | lod0 7,706 / lod1 3,406 | 0.17 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
 
 GPU memory is an estimate: RGBA8 with mipmaps (w x h x 4 x 4/3) per image in
 the file. All building GLBs use the same images (`lm_brick_*`, `lm_trim_*`,

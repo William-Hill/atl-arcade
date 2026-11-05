@@ -65,10 +65,10 @@
   },
   "studioplex": {
     "file": "assets/landmarks/studioplex/studioplex.glb",
-    "bytes": 560540,
+    "bytes": 574620,
     "triangles": {
-      "lod0": 5339,
-      "lod1": 2508
+      "lod0": 7079,
+      "lod1": 2698
     },
     "lodDistance": [
       0,
@@ -197,10 +197,10 @@
   },
   "bridge-freedom-parkway": {
     "file": "assets/landmarks/bridge-freedom-parkway/bridge-freedom-parkway.glb",
-    "bytes": 184476,
+    "bytes": 169328,
     "triangles": {
-      "lod0": 9464,
-      "lod1": 4070
+      "lod0": 7706,
+      "lod1": 3406
     },
     "lodDistance": [
       0,

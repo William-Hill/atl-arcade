@@ -1,6 +1,6 @@
 {
   "asset": "bridge-north-ave.glb: procedural facsimile of Eastside Trail over North Avenue for the beltline-eastside level, one node per LOD (lod0, lod1), shared materials and tiling textures.",
-  "date": "2026-11-04",
+  "date": "2026-11-05",
   "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco",
   "command": "blender -b -P scripts/blender/landmarks.py -- --only bridge-north-ave",
   "source": "scripts/blender/landmarks.py: footprint walls with bays of recessed windows, piers, belts, cornice, parapet, roof, and props, all from code. No photo pixels, scans of the real building, mesh extraction, or logos.",

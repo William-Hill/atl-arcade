@@ -635,9 +635,9 @@ def inside(ring, x, z):
     return c
 
 
-def dist_ring(ring, x, z):
+def dist_ring(ring, x, z, closed=True):
     best = 1e9
-    for i in range(len(ring)):
+    for i in range(len(ring) if closed else len(ring) - 1):
         (ax, az), (bx, bz) = ring[i], ring[(i + 1) % len(ring)]
         dx, dz = bx - ax, bz - az
         l2 = dx * dx + dz * dz or 1
@@ -725,6 +725,8 @@ def facade(mb, site, spec, terr, lod, rng, ring, hole, ucum):
             for li, (y0, y1) in enumerate(levels):
                 if y1 < ground + 0.5:
                     continue
+                if y1 - max(y0, ground) < 2.0:
+                    continue  # a sliver above the ground: no window, and it is not the lowest floor
                 store = spec.get("store") and lowest and (y0 - ground) < 1.8
                 lowest = False
                 rule = spec.get("rule")
@@ -786,8 +788,6 @@ def facade(mb, site, spec, terr, lod, rng, ring, hole, ucum):
             for i in range(nb + 1):
                 uc = min(max(i * L / nb, pw / 2), L - pw / 2)
                 strip_box(uc - pw / 2, uc + pw / 2, base, ycor, pd, pier, ("front", "sides"))
-        if lod == 1 and nb == 0:
-            pass
         if lod == 1 and nb:
             wq(0, L, base, ycor)
         # Belts at floor lines, the cornice, the parapet, and the coping.
@@ -1116,6 +1116,17 @@ def bridges(site, lod):
     mb = MB()
     terr = Terrain(site["terrain"])
     road = site["style"] == "road"
+
+    def on_other(me, x, z):
+        # True where (x, z) is on another deck of the group (the parallel
+        # carriageways and the sidewalk bridges overlap at their inner edges).
+        for o in site["decks"]:
+            if o is me:
+                continue
+            if dist_ring([(p[0], p[2]) for p in o["points"]], x, z, closed=False) < o["width"] / 2 + 0.3:
+                return True
+        return False
+
     for dk in site["decks"]:
         # Structure points every 3 m (6 m on LOD1): the deck line is smooth.
         k = 3 if lod == 0 else 6
@@ -1138,7 +1149,10 @@ def bridges(site, lod):
         fmat = "concrete" if road else "steel_green"
         for k in (1, -1):
             o = k * (w / 2 + 0.05)
+            free = [not on_other(dk, *[(O(i, o, 0)[0] + O(i + 1, o, 0)[0]) / 2, (O(i, o, 0)[2] + O(i + 1, o, 0)[2]) / 2]) for i in range(n - 1)]
             for i in range(n - 1):
+                if not free[i]:
+                    continue
                 q = [O(i, o, -0.15), O(i + 1, o, -0.15), O(i + 1, o, -depth), O(i, o, -depth)]
                 nn = (frames[i][1][0] * k, 0, frames[i][1][1] * k)
                 tt = tile_of(fmat)
@@ -1152,7 +1166,7 @@ def bridges(site, lod):
                 # Web stiffeners on the plate girders.
                 acc = 0.0
                 for i in range(1, n):
-                    if s[i] - acc >= 2.4:
+                    if s[i] - acc >= 2.4 and free[min(i, n - 2)]:
                         acc = s[i]
                         p0 = O(i, o + k * 0.06, -depth + 0.1)
                         p1 = O(i, o + k * 0.06, -0.25)
@@ -1163,11 +1177,13 @@ def bridges(site, lod):
             acc = -1e9
             hgt = 1.95 if trail_rail else 1.42
             for i in range(n):
-                if s[i] - acc >= post or i == n - 1:
+                if (s[i] - acc >= post or i == n - 1) and free[min(i, n - 2)]:
                     acc = s[i]
                     if lod == 0 or int(s[i] / post) % 2 == 0:
                         mb.beam(O(i, ro, 1.0), O(i, ro, hgt), 0.08, "galv", caps=lod == 0)
             for i in range(n - 1):
+                if not free[i]:
+                    continue
                 mb.beam(O(i, ro, hgt - 0.03), O(i + 1, ro, hgt - 0.03), 0.07, "galv", caps=False)
                 if trail_rail and lod == 0:
                     q = [O(i, ro, 1.02), O(i + 1, ro, 1.02), O(i + 1, ro, hgt - 0.06), O(i, ro, hgt - 0.06)]

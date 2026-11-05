@@ -1125,6 +1125,13 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
 - `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
 
+## 2026-11-05: epic/assets — skateable features as PBR GLBs (assets/skate-features)
+- 18 procedural Blender features (`scripts/blender/skate_features.py`): flat bars 3/6/9 m, round rails 3/6 m, down rails on 4 and 7 stairs, a kinked rail (3 down, landing, 3 down), concrete ledges 3/6 m, a granite-capped planter ledge, a manual pad, a quarter pipe, a kicker, a bank, a pyramid/funbox, a trail bench with a steel edge, and a block bench. No skatestoppers anywhere: the game welcomes skating. See `docs/skate-features.md`.
+- One material and one trim sheet (color 1024², normal 1024², ORM 512², strips tiling in U) for the whole set, external to the GLBs: one download, one GPU upload (about 12 MB), one material for batching. `shareSkateFeatureMaterial()` (`src/render/skate-feature-models.js`) undoes GLTFLoader's per-file copies.
+- Grind and collision data live in one manifest (`features.json`) in model space, in the `{ points }` spline format of `src/level/splines.js`; `src/level/skate-features.js` places it (position, yaw) as level objects for `prepareGrindables()` and as a ground sampler. Edges of ledges and coping keep their own `kind` (`ledge`, `coping`): grind.js grinds any spline, and only `rail` objects get capsule colliders in `physics/world.js`.
+- Only the planter (bushes) is over 1.5k triangles, so it is the only feature with a LOD1 (30 m). Whole set: about 0.55 MB download (GLBs 155 KB, textures 396 KB).
+- Meshy/Tripo not used (cap 0); every pixel is painted in code.
+
 
 ## 2026-11-05: epic/assets — murals only on blank walls
 - A mural was pasted over the shader's windows (an 8-storey glass wall facing the trail). Murals now go only on walls with no windows behind them.

@@ -13,8 +13,11 @@
     0.1836,
     0.1334
   ],
+  "roughMean": 0.6712,
   "files": {
     "diffuse": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_03/concrete_floor_03_diff_1k.jpg",
-    "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_03/concrete_floor_03_ao_1k.jpg"
+    "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_03/concrete_floor_03_ao_1k.jpg",
+    "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_03/concrete_floor_03_nor_gl_1k.jpg",
+    "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_03/concrete_floor_03_rough_1k.jpg"
   }
 }

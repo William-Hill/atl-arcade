@@ -274,6 +274,8 @@ body:not(.touch):has(#minimap) #photo-toggle {
 #minimap button:focus-visible { outline: 2px solid #ffd166; outline-offset: 1px; }
 #minimap .minimap-mode { left: 0; }
 #minimap .minimap-toggle { right: 0; }
+#minimap .minimap-expand { top: auto; bottom: 0; left: 0; }
+#minimap .minimap-canvas { pointer-events: auto; cursor: zoom-in; }
 #minimap[data-hidden="1"] .minimap-toggle { position: static; }
 
 body.touch #minimap {
@@ -510,4 +512,101 @@ body.results-open #touch-controls { display: none; }
     top: calc(84px + env(safe-area-inset-top));
     width: min(380px, calc(100vw - 2 * (232px + env(safe-area-inset-right))));
   }
+}
+
+/* The full map (src/ui/fullmap.js): the whole level over the game. It covers
+   the screen, over the HUD and the minimap, and stops the game. */
+#fullmap {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #1d2033;
+  color: var(--atl-paper);
+  font: 14px/1.3 system-ui, sans-serif;
+}
+#fullmap[hidden] { display: none; }
+#fullmap .fullmap-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+#fullmap .fullmap-canvas:active { cursor: grabbing; }
+#fullmap .fullmap-head {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  right: calc(12px + env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+#fullmap .fullmap-title,
+#fullmap .fullmap-hint,
+#fullmap .fullmap-info,
+#fullmap .fullmap-legend {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--hud-pill);
+}
+#fullmap .fullmap-title { font-weight: 800; font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+#fullmap .fullmap-hint { opacity: 0.9; }
+#fullmap button {
+  min-width: 44px;
+  height: 44px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 22px;
+  background: var(--hud-pill);
+  color: var(--atl-paper);
+  font: 700 20px/1 system-ui, sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#fullmap button:focus-visible { outline: 2px solid #ffd166; outline-offset: 2px; }
+#fullmap .fullmap-close { margin-left: auto; }
+#fullmap .fullmap-layer { font-size: 15px; }
+#fullmap .fullmap-tools {
+  position: absolute;
+  right: calc(12px + env(safe-area-inset-right));
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#fullmap .fullmap-info {
+  position: absolute;
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  border: 2px solid #ffd166;
+  font-weight: 700;
+  max-width: calc(100vw - 140px);
+}
+#fullmap .fullmap-info[hidden] { display: none; }
+#fullmap .fullmap-info { display: flex; align-items: center; gap: 12px; }
+#fullmap .fullmap-travel { height: 36px; font-size: 14px; padding: 0 14px; border-color: #ffd166; }
+#fullmap .fullmap-legend {
+  position: absolute;
+  left: calc(12px + env(safe-area-inset-left));
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 4px;
+  pointer-events: none;
+}
+#fullmap .fullmap-legend-row { display: flex; align-items: center; gap: 8px; }
+#fullmap .fullmap-key { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--atl-ink); }
+#fullmap .fullmap-key-you { background: var(--atl-paper); border-radius: 2px; transform: rotate(45deg) scale(0.8); outline: 2px solid var(--atl-pink); }
+#fullmap .fullmap-key-landmark { background: #ffd166; border-radius: 50%; }
+#fullmap .fullmap-key-park { background: #7ef0a0; clip-path: polygon(50% 0, 100% 100%, 0 100%); border: 0; }
+#fullmap .fullmap-key-trail { background: var(--atl-pink); height: 6px; border: 0; border-radius: 3px; }
+/* A small screen: no hint line, and the legend stays clear of the info. */
+@media (max-width: 700px) {
+  #fullmap .fullmap-hint { display: none; }
+  #fullmap .fullmap-title { min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #fullmap .fullmap-legend { display: none; }
 }

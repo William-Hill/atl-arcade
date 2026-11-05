@@ -1,0 +1,52 @@
+{
+  "file": "dusk.jpg",
+  "title": "Trail at dusk, 20:36",
+  "subject": "today",
+  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
+  "method": "in-game capture (no image model)",
+  "prompt": null,
+  "settings": {
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=20.6&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+    "cam": [
+      312,
+      2,
+      -175,
+      334,
+      3,
+      -80
+    ],
+    "params": {
+      "time": "20.6"
+    },
+    "tune": null,
+    "paintover": null,
+    "viewport": [
+      1280,
+      720
+    ],
+    "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
+    "build": "scripts/art/style-frames.mjs",
+    "renderer": {
+      "calls": 226,
+      "triangles": 803265,
+      "textures": 49,
+      "geometries": 94
+    },
+    "look": {
+      "toneMapping": 7,
+      "exposure": 0.9742918656037415,
+      "environment": 0.6,
+      "sun": 0.5849685646617382
+    },
+    "grade": {
+      "uContrast": 1.06,
+      "uSat": 1.05,
+      "uWarm": 0
+    },
+    "bloom": 0.28,
+    "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+  },
+  "credits": 0,
+  "date": "2026-11-05",
+  "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
+}

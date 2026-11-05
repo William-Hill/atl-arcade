@@ -1,0 +1,60 @@
+{
+  "file": "b-golden.jpg",
+  "title": "B: golden hour 18:30, over the trees",
+  "subject": "mural-wall",
+  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
+  "method": "in-game capture (no image model)",
+  "prompt": null,
+  "settings": {
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=18.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=81.13%2C9%2C435.4%2C105.4%2C6.59%2C447.56",
+    "cam": [
+      81.13,
+      9,
+      435.4,
+      105.4,
+      6.59,
+      447.56
+    ],
+    "params": {
+      "time": "18.5"
+    },
+    "tune": {
+      "look": {
+        "environment": 0.8
+      },
+      "grade": {
+        "uSat": 1.15,
+        "uContrast": 1.1
+      }
+    },
+    "paintover": null,
+    "viewport": [
+      1280,
+      720
+    ],
+    "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
+    "build": "scripts/art/style-frames.mjs",
+    "renderer": {
+      "calls": 166,
+      "triangles": 708629,
+      "textures": 38,
+      "geometries": 66
+    },
+    "look": {
+      "toneMapping": 7,
+      "exposure": 1.0976805,
+      "environment": 0.8,
+      "sun": 2.847
+    },
+    "grade": {
+      "uContrast": 1.1,
+      "uSat": 1.15,
+      "uWarm": 0
+    },
+    "bloom": 0.28,
+    "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+  },
+  "credits": 0,
+  "date": "2026-11-05",
+  "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
+}

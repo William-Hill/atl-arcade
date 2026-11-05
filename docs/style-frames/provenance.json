@@ -1,0 +1,18 @@
+{
+  "frames": [
+    {
+      "file": "contact-sheet.jpg",
+      "tool": "ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org montage of the style frames in this folder",
+      "method": "contact sheet of in-game captures and scripted paintovers (no image model)",
+      "prompt": null,
+      "settings": {
+        "build": "scripts/art/style-frames.mjs",
+        "manifest": "scripts/art/style-frames.json",
+        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+      },
+      "credits": 0,
+      "date": "2026-11-05",
+      "license": "Original work for ATL Arcade; see each frame's provenance.json."
+    }
+  ]
+}

@@ -171,6 +171,26 @@ for (const v of VIEWS) {
   });
 }
 
+// Street furniture at the OSM positions: four painted benches (OSM nodes
+// n4879462946 to n4879462949, all with backrest=yes) by the trail.
+test("a bench stands at a real OpenStreetMap bench position", async ({ page }) => {
+  const errors = collectErrors(page);
+  const env = createLevelEnv(LEVEL);
+  for (const id of ["n4879462946", "n4879462947", "n4879462948", "n4879462949"]) {
+    const osm = LEVEL.furniture.find((f) => f.id === id);
+    const prop = env.props.find((p) => p.osm === id);
+    expect(prop, `prop for ${id}`).toBeTruthy();
+    expect(prop.kind).toBe("bench_painted");
+    expect(Math.hypot(prop.x - osm.x, prop.z - osm.z)).toBeLessThan(0.01);
+  }
+  await open(page, "view=fixed&skater=capsule&cam=-116,5,-445,-129,0.5,-455");
+  const props = await page.evaluate(() => window.__atl.level.props);
+  expect(props.error).toBeNull();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: "e2e/__screenshots__/beltline-osm-benches.png" });
+  expect(errors).toEqual([]);
+});
+
 test("the screen shows the OpenStreetMap attribution (ODbL)", async ({ page }) => {
   await open(page, "view=fixed&skater=capsule");
   await expect(page.locator("#attribution")).toBeVisible();

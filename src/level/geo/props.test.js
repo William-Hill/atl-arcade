@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createGeoGroundSampler } from "./geo-ground.js";
 import { createLevelEnv } from "../ground.js";
-import { levelProps, PROP_SOLID, roofProps, streetProps, yawFrontToward, yawToward } from "./props.js";
+import { FURNITURE_PROP, levelProps, nearestWay, PLANTER, PROP_SOLID, planterSpots, roofProps, streetProps, yawFrontToward, yawToward } from "./props.js";
+import { doorBay, frontEdges } from "./facade-kit.js";
+import { walkStrip } from "./aprons.js";
+import { orientRing } from "./extrude.js";
+import { roofPlan } from "./roof-plan.js";
 import { chooseStyle, hash32, seededRandom, STYLES, wallColor } from "./styles.js";
 import { terrainOf } from "./terrain.js";
 
@@ -57,7 +61,8 @@ describe("prop placement", () => {
     const sidewalkIds = new Set(LEVEL.strips.filter((s) => s.kind === "sidewalk").map((s) => s.id));
     for (const p of props) {
       const g = sample(p.x, p.z);
-      const open = g.id === "ground" || areaIds.has(g.id) || (p.kind === "street_sign" && sidewalkIds.has(g.id));
+      // A median tree stands on its median (medians.js, #138).
+      const open = g.id === "ground" || areaIds.has(g.id) || (p.kind === "street_sign" && sidewalkIds.has(g.id)) || (p.median !== undefined && g.id === p.median);
       expect(open, `${p.kind} at ${p.x},${p.z} is on ${g.id}`).toBe(true);
     }
     const sorted = props.slice().sort((a, b) => a.x - b.x);
@@ -84,12 +89,87 @@ describe("prop placement", () => {
 
   it("makes the street props solid in the level env, and keeps the trail clear", () => {
     const env = createLevelEnv(LEVEL);
-    const tree = env.props.find((p) => p.kind === "tree_round");
+    const tree = env.props.find((p) => p.kind === "tree_round" && !p.median);
     const g = env.sampleGround(tree.x, tree.z);
     const ground = terrainOf(LEVEL).height(tree.x, tree.z);
     expect(g.height).toBeCloseTo(ground + PROP_SOLID.tree_round.h, 6);
     expect(createLevelEnv(LEVEL, { props: false }).sampleGround(tree.x, tree.z).height).toBeLessThan(ground + 0.1);
     expect(levelProps(LEVEL).length).toBe(env.props.length);
+  });
+
+  it("puts a prop at the OSM street furniture points first", () => {
+    const report = {};
+    const ps = streetProps(LEVEL, sample, null, report);
+    const f = report.furniture;
+    expect(f.points).toBe(LEVEL.furniture.length);
+    expect(f.placed + Object.values(f.refused).reduce((a, b) => a + b, 0)).toBe(f.points);
+    // Only the kinds with no kit prop, and a few points on pavement, are refused.
+    expect(f.placed).toBeGreaterThanOrEqual(40);
+    const noKit = LEVEL.furniture.filter((p) => !FURNITURE_PROP[p.kind]).length;
+    expect(f.refused["no-kit-prop"]).toBe(noKit);
+    const byId = new Map(LEVEL.furniture.map((p) => [p.id, p]));
+    const placed = ps.filter((p) => p.osm);
+    expect(placed.length).toBe(f.placed);
+    for (const p of placed) {
+      const src = byId.get(p.osm);
+      // The prop is the kit prop of its kind, at most 3 m from the OSM point.
+      expect(p.kind === "bench_painted" ? "bench" : p.kind).toBe(FURNITURE_PROP[src.kind]);
+      expect(Math.hypot(p.x - src.x, p.z - src.z)).toBeLessThanOrEqual(3.01);
+      if (p.kind === "bench" || p.kind === "bench_painted") {
+        // The bench front (+z turned by yaw) faces the nearest way.
+        const w = nearestWay(LEVEL.strips, p.x, p.z);
+        if (w.d > 0.1) expect(Math.sin(p.yaw) * (w.x - p.x) + Math.cos(p.yaw) * (w.z - p.z)).toBeGreaterThan(0);
+        expect(p.kind === "bench_painted").toBe(src.tags?.backrest === "yes");
+      }
+    }
+  });
+
+  it("makes each mapped point a prop in a small level, and the fixed rule fills only where OSM has nothing near", () => {
+    const trail = { id: "t", kind: "trail", width: 4, points: [[0, -200], [0, 200]] };
+    const base = { surfaces: LEVEL.surfaces, bounds: { minX: -300, maxX: 300, minZ: -300, maxZ: 300 }, strips: [trail], areas: [], buildings: [] };
+    const s = createGeoGroundSampler(base);
+    const furniture = [
+      { id: "n1", kind: "bench", x: 4, z: 0, tags: { backrest: "yes" } },
+      { id: "n2", kind: "waste_basket", x: -4, z: 10 },
+      // On the trail: it moves off the trail, away from the center line.
+      { id: "n3", kind: "bicycle_parking", x: 1, z: 40 },
+      { id: "n4", kind: "drinking_water", x: 4, z: 60 },
+    ];
+    const report = {};
+    const ps = streetProps({ ...base, furniture }, s, null, report);
+    const bench = ps.find((p) => p.osm === "n1");
+    expect(bench).toMatchObject({ kind: "bench_painted", x: 4, z: 0 });
+    // The front faces -x, toward the trail.
+    expect(Math.sin(bench.yaw)).toBeCloseTo(-1, 6);
+    expect(ps.find((p) => p.osm === "n2")).toMatchObject({ kind: "bin", x: -4, z: 10 });
+    const rack = ps.find((p) => p.osm === "n3");
+    expect(rack.kind).toBe("bike_rack");
+    expect(rack.x).toBeGreaterThan(2);
+    expect(report.furniture).toMatchObject({ points: 4, placed: 3, moved: 1, refused: { "no-kit-prop": 1 } });
+    // No fixed-rule bench within 30 m of the mapped bench, or bike rack within 90 m of the mapped rack.
+    for (const p of ps.filter((q) => !q.osm)) {
+      if (p.kind.startsWith("bench")) expect(Math.hypot(p.x - 4, p.z)).toBeGreaterThanOrEqual(30);
+      if (p.kind === "bike_rack") expect(Math.hypot(p.x - rack.x, p.z - rack.z)).toBeGreaterThanOrEqual(90);
+    }
+    // Without the OSM points, the fixed rule puts a bench near z = 0.
+    const plain = streetProps(base, s);
+    expect(plain.some((p) => p.kind.startsWith("bench") && Math.hypot(p.x, p.z) < 30)).toBe(true);
+    expect(plain.some((p) => p.osm)).toBe(false);
+  });
+
+  it("moves a mapped point off a street to the near street edge, not toward the far path", () => {
+    // A street at x = 0 (6 m wide) and a path 20 m to the west. The rack is
+    // on the street, 1 m from its west edge. It must move west, off the
+    // street, and not east across the street (away from the path).
+    const street = { id: "s", kind: "street", width: 6, points: [[0, -100], [0, 100]] };
+    const path = { id: "p", kind: "path", width: 2, points: [[-20, -100], [-20, 100]] };
+    const base = { surfaces: LEVEL.surfaces, bounds: { minX: -200, maxX: 200, minZ: -200, maxZ: 200 }, strips: [street, path], areas: [], buildings: [] };
+    const s = createGeoGroundSampler(base);
+    const report = {};
+    const ps = streetProps({ ...base, furniture: [{ id: "n9", kind: "bicycle_parking", x: -2, z: 0 }] }, s, null, report);
+    const rack = ps.find((p) => p.osm === "n9");
+    expect(rack, JSON.stringify(report.refusedPoints)).toBeTruthy();
+    expect(rack.x).toBeLessThan(-3);
   });
 
   it("turns templates the same way as the skater yaw", () => {
@@ -107,4 +187,68 @@ describe("prop placement", () => {
 it("only the brick styles get the brick scan detail on the facades", () => {
   const brick = STYLES.filter((s) => s.brick).map((s) => s.id);
   expect(brick).toEqual(["brick-loft", "brick-warehouse", "brick-market-hall"]);
+});
+
+describe("shop and roof props", () => {
+  const fronts = frontEdges(LEVEL);
+  const sample = createGeoGroundSampler(LEVEL);
+  const props = streetProps(LEVEL, sample, fronts);
+  const storefront = STYLES.find((s) => s.id === "storefront");
+
+  it("puts a planter at every second inner pier, but not at the door bay", () => {
+    // A 6-bay wall of 3.2 m along +x at z = 8; its outward normal is +z.
+    const b = { id: "w-planters", outer: [[0, 0], [19.2, 0], [19.2, 8], [0, 8]] };
+    const spots = planterSpots(b, storefront, { edge: 0, door: 1, wraps: [] });
+    // Inner piers 2 and 4; pier 2 is a pier of door bay 1.
+    expect(spots.length).toBe(1);
+    expect(spots[0].x).toBeCloseTo(4 * 3.2, 6);
+    expect(spots[0].z).toBeCloseTo(8 + PLANTER.out, 6);
+    expect(spots[0].yaw).toBeCloseTo(yawToward(1, 0), 6);
+    expect(planterSpots(b, storefront, null)).toEqual([]);
+  });
+
+  it("places planters on the shop aprons, as solid ledges", () => {
+    const planters = props.filter((p) => p.kind === "planter");
+    expect(planters.length).toBeGreaterThan(50);
+    for (const p of planters) {
+      expect(p.scale).toBe(PLANTER.scale);
+      const g = sample(p.x, p.z);
+      expect(g.id === "ground" || LEVEL.areas.some((a) => a.id === g.id)).toBe(true);
+    }
+    const env = createLevelEnv(LEVEL);
+    const p = env.props.find((q) => q.kind === "planter");
+    const ground = terrainOf(LEVEL).height(p.x, p.z);
+    expect(env.sampleGround(p.x, p.z).height).toBeCloseTo(ground + PROP_SOLID.planter.h, 6);
+  });
+
+  it("keeps the street props off the walks from the shop doors", () => {
+    const walks = [];
+    for (const b of LEVEL.buildings) {
+      const f = fronts.get(b.id);
+      if (!f) continue;
+      const w = walkStrip(orientRing(b.outer, false), f, STYLES.find((s) => s.id === chooseStyle(b)).bay);
+      if (w) walks.push(w);
+    }
+    expect(walks.length).toBeGreaterThan(10);
+    for (const p of props) {
+      if (p.kind === "street_sign") continue;
+      for (const w of walks) {
+        const dx = p.x - w.o[0];
+        const dz = p.z - w.o[1];
+        const a = dx * w.t[0] + dz * w.t[1];
+        const d = dx * w.n[0] + dz * w.n[1];
+        expect(a > w.a0 && a < w.a1 && d > w.d0 && d < w.d1, `${p.kind} at ${p.x},${p.z}`).toBe(false);
+      }
+    }
+  });
+
+  it("takes the roof props from the roof plan, square to the walls", () => {
+    const loft = LEVEL.buildings.find((b) => b.id === "w270469054");
+    const style = STYLES.find((s) => s.id === chooseStyle(loft));
+    const roof = roofProps(loft, style);
+    const plan = roofPlan(loft, style).parts.filter((p) => p.kind !== "vent");
+    expect(roof.map((p) => [p.kind, p.x, p.z, p.yaw])).toEqual(plan.map((p) => [p.kind, p.x, p.z, p.yaw]));
+    expect(roof.some((p) => p.kind === "roof_unit")).toBe(true);
+    expect(doorBay(fronts.get(loft.id), 8)).toBe(fronts.get(loft.id).door);
+  });
 });

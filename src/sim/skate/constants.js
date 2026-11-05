@@ -110,6 +110,7 @@ export const STYLE = {
         { clip: "dance_swagsurf", name: "Swag Surf" },
         { clip: "dance_snaplean", name: "Snap Lean" },
         { clip: "dance_crisscross", name: "Crisscross" },
+        { clip: "dance_smoothquad", name: "Smooth Quad" },
       ],
     },
     {

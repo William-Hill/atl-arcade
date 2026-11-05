@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { IDM, angleDelta, brakeLevel, idmAccel, idmStopAccel, laneCenters, onCrosswalk, runLaneOffsets, turnSignal } from "./cars.js";
+import {
+  IDM,
+  angleDelta,
+  brakeLevel,
+  idmAccel,
+  idmStopAccel,
+  laneCenters,
+  onCrosswalk,
+  runLaneOffsets,
+  turnSignal,
+} from "./cars.js";
 import { laneLayout } from "../level/geo/lanes.js";
 
 const DT = 1 / 60;
@@ -24,7 +34,11 @@ function simulate(cars, steps, { v0 = 8, frontV0 = () => v0 } = {}) {
       c.s += c.v * DT;
       minAcc = Math.min(minAcc, acc[k]);
     });
-    for (let k = 1; k < cars.length; k += 1) minGap = Math.min(minGap, cars[k - 1].s - cars[k - 1].len / 2 - (cars[k].s + cars[k].len / 2));
+    for (let k = 1; k < cars.length; k += 1)
+      minGap = Math.min(
+        minGap,
+        cars[k - 1].s - cars[k - 1].len / 2 - (cars[k].s + cars[k].len / 2),
+      );
   }
   return { minGap, minAcc };
 }
@@ -44,15 +58,23 @@ describe("IDM", () => {
   });
 
   it("holds the standstill gap s0 behind a stopped car and never touches it", () => {
-    const cars = [{ s: 100, v: 0, len: 4.6 }, { s: 0, v: 8, len: 4.6 }];
+    const cars = [
+      { s: 100, v: 0, len: 4.6 },
+      { s: 0, v: 8, len: 4.6 },
+    ];
     const { minGap } = simulate(cars, 60 * 60, { frontV0: () => 0 });
     expect(minGap).toBeGreaterThan(IDM.s0 - 0.2);
     expect(cars[1].v).toBeLessThan(0.05);
-    expect(cars[0].s - cars[0].len / 2 - (cars[1].s + cars[1].len / 2)).toBeCloseTo(IDM.s0, 0);
+    expect(
+      cars[0].s - cars[0].len / 2 - (cars[1].s + cars[1].len / 2),
+    ).toBeCloseTo(IDM.s0, 0);
   });
 
   it("keeps about s0 + v T at a steady speed", () => {
-    const cars = [{ s: 200, v: 6, len: 4.6 }, { s: 150, v: 6, len: 4.6 }];
+    const cars = [
+      { s: 200, v: 6, len: 4.6 },
+      { s: 150, v: 6, len: 4.6 },
+    ];
     simulate(cars, 60 * 120, { v0: 8, frontV0: () => 6 });
     const gap = cars[0].s - cars[0].len / 2 - (cars[1].s + cars[1].len / 2);
     expect(cars[1].v).toBeCloseTo(6, 1);
@@ -62,9 +84,16 @@ describe("IDM", () => {
   });
 
   it("stops a platoon of six behind a car that brakes, with no collision", () => {
-    const cars = Array.from({ length: 6 }, (_, k) => ({ s: 200 - k * 20, v: 7, len: k === 3 ? 12 : 4.6 }));
+    const cars = Array.from({ length: 6 }, (_, k) => ({
+      s: 200 - k * 20,
+      v: 7,
+      len: k === 3 ? 12 : 4.6,
+    }));
     // The front car brakes to a stop at 10 s, waits, and drives on.
-    const { minGap, minAcc } = simulate(cars, 60 * 60, { v0: 7.5, frontV0: (t) => (t > 10 && t < 20 ? 0 : 7.5) });
+    const { minGap, minAcc } = simulate(cars, 60 * 60, {
+      v0: 7.5,
+      frontV0: (t) => (t > 10 && t < 20 ? 0 : 7.5),
+    });
     expect(minGap).toBeGreaterThan(1);
     expect(minAcc).toBeGreaterThanOrEqual(-IDM.maxBrake);
     // All moving again at the end.
@@ -85,7 +114,12 @@ describe("IDM", () => {
   });
 
   it("stops at the point in a few seconds, not by an endless crawl", () => {
-    for (const [v0, line] of [[8, 80], [8, 20], [1, 4], [0, 6]]) {
+    for (const [v0, line] of [
+      [8, 80],
+      [8, 20],
+      [1, 4],
+      [0, 6],
+    ]) {
       let v = v0;
       let front = 0;
       let t = 0;
@@ -129,7 +163,10 @@ describe("lane centers", () => {
     expect(back[0]).toBeGreaterThan(back[1]);
     // The lane centers sit midway between the lane lines of lanes.js.
     const lines = [...L.lines, L.center].sort((a, b) => a - b);
-    for (const o of fwd) expect(lines.some((x) => Math.abs(Math.abs(o - x) - L.lane / 2) < 1e-9)).toBe(true);
+    for (const o of fwd)
+      expect(
+        lines.some((x) => Math.abs(Math.abs(o - x) - L.lane / 2) < 1e-9),
+      ).toBe(true);
     // The two directions never share a lane: forward right of the center.
     for (const o of fwd) expect(o).toBeGreaterThan(L.center);
     for (const o of back) expect(-o).toBeLessThan(L.center);

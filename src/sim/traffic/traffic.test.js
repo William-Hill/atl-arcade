@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { CAR_SIZE, MAIN_STREETS, TRAFFIC, carBodyDistance, carGroundSampler, createTraffic, oppositeSide, stepTraffic, streetHeightSampler, streetsOnly, trafficLanes } from "./traffic.js";
+import {
+  CAR_SIZE,
+  MAIN_STREETS,
+  TRAFFIC,
+  carBodyDistance,
+  carGroundSampler,
+  createTraffic,
+  oppositeSide,
+  stepTraffic,
+  streetHeightSampler,
+  streetsOnly,
+  trafficLanes,
+} from "./traffic.js";
 import { createGeoGroundSampler } from "../../level/geo/geo-ground.js";
-import { FLAT_GROUND, createSkateState, runScript } from "../skate/controller.js";
+import {
+  FLAT_GROUND,
+  createSkateState,
+  runScript,
+} from "../skate/controller.js";
 import { SKATE } from "../skate/constants.js";
 import { seededRandom } from "../../level/geo/styles.js";
 import beltline from "../../../levels/beltline-eastside/level.json" with { type: "json" };
@@ -13,21 +29,90 @@ const DT = 1 / 60;
 const TOWN = {
   bounds: { minX: -300, maxX: 300, minZ: -300, maxZ: 300 },
   spawn: { position: [0, 0, 250], yaw: 0 },
-  surfaces: { ground: 0, park: 0.02, street: 0.03, path: 0.05, trail: 0.07, sidewalk: 0.15 },
+  surfaces: {
+    ground: 0,
+    park: 0.02,
+    street: 0.03,
+    path: 0.05,
+    trail: 0.07,
+    sidewalk: 0.15,
+  },
   strips: [
-    { id: "a1", kind: "street", name: "Main Street", highway: "secondary", width: 12, points: [[-300, 0], [0, 0]] },
-    { id: "a2", kind: "street", name: "Main Street", highway: "secondary", width: 12, points: [[0, 0], [300, 0]] },
-    { id: "c1", kind: "street", name: "Cross Street", highway: "residential", width: 8, points: [[0, -300], [0, 0]] },
-    { id: "c2", kind: "street", name: "Cross Street", highway: "residential", width: 8, points: [[0, 0], [0, 300]] },
-    { id: "d1", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[-300, 100], [300, 100]] },
-    { id: "d2", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[300, 120], [-300, 120]] },
+    {
+      id: "a1",
+      kind: "street",
+      name: "Main Street",
+      highway: "secondary",
+      width: 12,
+      points: [
+        [-300, 0],
+        [0, 0],
+      ],
+    },
+    {
+      id: "a2",
+      kind: "street",
+      name: "Main Street",
+      highway: "secondary",
+      width: 12,
+      points: [
+        [0, 0],
+        [300, 0],
+      ],
+    },
+    {
+      id: "c1",
+      kind: "street",
+      name: "Cross Street",
+      highway: "residential",
+      width: 8,
+      points: [
+        [0, -300],
+        [0, 0],
+      ],
+    },
+    {
+      id: "c2",
+      kind: "street",
+      name: "Cross Street",
+      highway: "residential",
+      width: 8,
+      points: [
+        [0, 0],
+        [0, 300],
+      ],
+    },
+    {
+      id: "d1",
+      kind: "street",
+      name: "Divided Parkway",
+      highway: "trunk",
+      width: 10,
+      points: [
+        [-300, 100],
+        [300, 100],
+      ],
+    },
+    {
+      id: "d2",
+      kind: "street",
+      name: "Divided Parkway",
+      highway: "trunk",
+      width: 10,
+      points: [
+        [300, 120],
+        [-300, 120],
+      ],
+    },
   ],
 };
 const MAIN = [["Main Street"]];
 const GRID = [["Main Street"], ["Cross Street"]];
 
 function snapshot(t) {
-  return t.cars.map((c) => [c.lane, c.s.toFixed(6), c.speed.toFixed(6)].join(":")).join("|");
+  return t.cars
+    .map((c) => [c.lane, c.s.toFixed(6), c.speed.toFixed(6)].join(":"))
+    .join("|");
 }
 
 describe("lanes", () => {
@@ -58,7 +143,9 @@ describe("lanes", () => {
   });
 
   it("makes a divided road one-way, with the far carriageway on the driver's left", () => {
-    const [d1, d2] = TOWN.strips.filter((s) => s.name === "Divided Parkway").map((s) => s.points);
+    const [d1, d2] = TOWN.strips
+      .filter((s) => s.name === "Divided Parkway")
+      .map((s) => s.points);
     // Seen from d1 (+x), d2 is south (+z), on the right: d1 runs the other way.
     expect(oppositeSide(d1, [d2])).toBe("right");
     expect(oppositeSide(d2, [d1])).toBe("right");
@@ -67,8 +154,12 @@ describe("lanes", () => {
     expect(lanes).toHaveLength(4);
     expect(lanes.every((l) => l.oneway && l.laneCount === 2)).toBe(true);
     for (const k of [0, 1]) {
-      const north = lanes.find((l) => l.path.points[0][1] === 100 && l.laneIndex === k);
-      const south = lanes.find((l) => l.path.points[0][1] === 120 && l.laneIndex === k);
+      const north = lanes.find(
+        (l) => l.path.points[0][1] === 100 && l.laneIndex === k,
+      );
+      const south = lanes.find(
+        (l) => l.path.points[0][1] === 120 && l.laneIndex === k,
+      );
       // The north carriageway goes west, the south one goes east.
       expect(north.path.points[0][0]).toBe(300);
       expect(south.path.points[0][0]).toBe(-300);
@@ -101,7 +192,8 @@ describe("lanes", () => {
     const ponce = lanes.filter((l) => l.name.startsWith("Ponce"));
     expect(ponce.length).toBe(5);
     // Every lane center is inside the curbs, with room for a wide car.
-    for (const l of lanes) expect(Math.abs(l.offset)).toBeLessThanOrEqual(7 - 0.3 - 1.3 + 1e-9);
+    for (const l of lanes)
+      expect(Math.abs(l.offset)).toBeLessThanOrEqual(7 - 0.3 - 1.3 + 1e-9);
     expect(boxes.length).toBeGreaterThan(5);
     // Every lane end goes somewhere: no car is lost.
     for (const l of lanes) expect(lanes[l.next]).toBeDefined();
@@ -125,7 +217,9 @@ describe("traffic", () => {
     };
     expect(run()).toBe(run());
     const other = createTraffic(TOWN, { streets: GRID, perKm: 12, seed: 8 });
-    expect(snapshot(other)).not.toBe(snapshot(createTraffic(TOWN, { streets: GRID, perKm: 12, seed: 7 })));
+    expect(snapshot(other)).not.toBe(
+      snapshot(createTraffic(TOWN, { streets: GRID, perKm: 12, seed: 7 })),
+    );
   });
 
   it("drives at a calm speed, never over the cruise speed of the street", () => {
@@ -145,7 +239,11 @@ describe("traffic", () => {
     const st = lane.stops[0];
     let stoppedAt = null;
     let stoppedFor = 0;
-    for (let i = 0; i < 60 * 90 && car.s < st.sExit + 5 && car.lane === lane.id; i += 1) {
+    for (
+      let i = 0;
+      i < 60 * 90 && car.s < st.sExit + 5 && car.lane === lane.id;
+      i += 1
+    ) {
       stepTraffic(t, DT, null);
       if (car.speed === 0 && car.s < st.sStop) {
         stoppedAt ??= car.s + CAR_SIZE[car.kind].length / 2;
@@ -172,9 +270,17 @@ describe("traffic", () => {
           const size = CAR_SIZE[q.kind];
           const fx = Math.cos(q.yaw);
           const fz = -Math.sin(q.yaw);
-          for (const [u, v] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-            const x = q.x + (fx * u * size.length) / 2 - (fz * v * size.width) / 2;
-            const z = q.z + (fz * u * size.length) / 2 + (fx * v * size.width) / 2;
+          for (const [u, v] of [
+            [0, 0],
+            [1, 1],
+            [1, -1],
+            [-1, 1],
+            [-1, -1],
+          ]) {
+            const x =
+              q.x + (fx * u * size.length) / 2 - (fz * v * size.width) / 2;
+            const z =
+              q.z + (fz * u * size.length) / 2 + (fx * v * size.width) / 2;
             closest = Math.min(closest, carBodyDistance(p, x, z));
           }
         }
@@ -193,11 +299,63 @@ describe("a lane that links to its own start", () => {
   const LOOP = {
     ...TOWN,
     strips: [
-      { id: "d1a", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[-150, 100], [0, 100]] },
-      { id: "d1b", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[0, 100], [150, 100]] },
-      { id: "d2a", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[150, 120], [0, 120]] },
-      { id: "d2b", kind: "street", name: "Divided Parkway", highway: "trunk", width: 10, points: [[0, 120], [-150, 120]] },
-      { id: "x1", kind: "street", name: "Cross Street", highway: "residential", width: 8, points: [[0, 80], [0, 100], [0, 120], [0, 140]] },
+      {
+        id: "d1a",
+        kind: "street",
+        name: "Divided Parkway",
+        highway: "trunk",
+        width: 10,
+        points: [
+          [-150, 100],
+          [0, 100],
+        ],
+      },
+      {
+        id: "d1b",
+        kind: "street",
+        name: "Divided Parkway",
+        highway: "trunk",
+        width: 10,
+        points: [
+          [0, 100],
+          [150, 100],
+        ],
+      },
+      {
+        id: "d2a",
+        kind: "street",
+        name: "Divided Parkway",
+        highway: "trunk",
+        width: 10,
+        points: [
+          [150, 120],
+          [0, 120],
+        ],
+      },
+      {
+        id: "d2b",
+        kind: "street",
+        name: "Divided Parkway",
+        highway: "trunk",
+        width: 10,
+        points: [
+          [0, 120],
+          [-150, 120],
+        ],
+      },
+      {
+        id: "x1",
+        kind: "street",
+        name: "Cross Street",
+        highway: "residential",
+        width: 8,
+        points: [
+          [0, 80],
+          [0, 100],
+          [0, 120],
+          [0, 140],
+        ],
+      },
     ],
   };
 
@@ -216,7 +374,11 @@ describe("a lane that links to its own start", () => {
       stepTraffic(t, DT, null);
       if (car.s < last - 1) laps += 1;
       last = car.s;
-      if (car.speed === 0 && Math.abs(car.s + CAR_SIZE[car.kind].length / 2 - st.sStop) < 1) stopsPerLap.set(laps, true);
+      if (
+        car.speed === 0 &&
+        Math.abs(car.s + CAR_SIZE[car.kind].length / 2 - st.sStop) < 1
+      )
+        stopsPerLap.set(laps, true);
     }
     expect(laps).toBeGreaterThanOrEqual(2);
     expect(stopsPerLap.get(1)).toBe(true);
@@ -227,20 +389,53 @@ describe("a lane that links to its own start", () => {
 describe("car height", () => {
   it("eases over a step in the street, never more than maxClimb in one step", () => {
     // A 0.8 m step at x = 0 (a bridge joint).
-    const t = createTraffic(TOWN, { streets: MAIN, perKm: 1, heightAt: (x) => (x > 0 ? 0.8 : 0) });
+    const t = createTraffic(TOWN, {
+      streets: MAIN,
+      perKm: 1,
+      heightAt: (x) => (x > 0 ? 0.8 : 0),
+    });
     const car = t.cars[0];
     let last = car.y;
     let lane = car.lane;
     for (let i = 0; i < 60 * 60; i += 1) {
       stepTraffic(t, DT, null);
-      if (car.lane === lane) expect(Math.abs(car.y - last)).toBeLessThanOrEqual(TRAFFIC.maxClimb + 1e-9);
+      if (car.lane === lane)
+        expect(Math.abs(car.y - last)).toBeLessThanOrEqual(
+          TRAFFIC.maxClimb + 1e-9,
+        );
       last = car.y;
       lane = car.lane;
     }
   });
 
   it("takes the height from the streets only: never from a building over the street", () => {
-    const town = { ...TOWN, buildings: [{ id: "b1", outer: [[40, -3], [60, -3], [60, 3], [40, 3]], height: 12 }], areas: [{ id: "p1", kind: "park", outer: [[70, -3], [80, -3], [80, 3], [70, 3]] }] };
+    const town = {
+      ...TOWN,
+      buildings: [
+        {
+          id: "b1",
+          outer: [
+            [40, -3],
+            [60, -3],
+            [60, 3],
+            [40, 3],
+          ],
+          height: 12,
+        },
+      ],
+      areas: [
+        {
+          id: "p1",
+          kind: "park",
+          outer: [
+            [70, -3],
+            [80, -3],
+            [80, 3],
+            [70, 3],
+          ],
+        },
+      ],
+    };
     const streets = streetsOnly(town);
     expect(streets.buildings).toEqual([]);
     expect(streets.areas).toEqual([]);
@@ -295,10 +490,19 @@ describe("yield to the skater", () => {
   it("never brings a car into the 2 m circle around a skater who stands still", () => {
     const rand = seededRandom(11);
     for (let trial = 0; trial < 40; trial += 1) {
-      const t = createTraffic(TOWN, { streets: GRID, perKm: 14, seed: trial + 1 });
+      const t = createTraffic(TOWN, {
+        streets: GRID,
+        perKm: 14,
+        seed: trial + 1,
+      });
       // A spot on a street or near one: in a lane, at a curb, in the box.
-      const skater = rand() < 0.5 ? [(rand() - 0.5) * 400, 0, (rand() - 0.5) * 14] : [(rand() - 0.5) * 12, 0, (rand() - 0.5) * 400];
-      const start = Math.min(...t.cars.map((c) => carBodyDistance(c, skater[0], skater[2])));
+      const skater =
+        rand() < 0.5
+          ? [(rand() - 0.5) * 400, 0, (rand() - 0.5) * 14]
+          : [(rand() - 0.5) * 12, 0, (rand() - 0.5) * 400];
+      const start = Math.min(
+        ...t.cars.map((c) => carBodyDistance(c, skater[0], skater[2])),
+      );
       if (start < TRAFFIC.safeRadius) continue;
       for (let i = 0; i < 60 * 40; i += 1) {
         stepTraffic(t, DT, skater);
@@ -317,16 +521,28 @@ describe("yield to the skater", () => {
     for (let i = 0; i < 60 * 180; i += 1) {
       // A random walk at skate speed over the streets and the intersection.
       if (i % 30 === 0) heading += (rand() - 0.5) * 2;
-      skater[0] = Math.max(-150, Math.min(150, skater[0] + Math.cos(heading) * 6 * DT));
-      skater[2] = Math.max(-150, Math.min(150, skater[2] - Math.sin(heading) * 6 * DT));
-      const before = t.cars.map((c) => ({ x: c.x, z: c.z, gap: carBodyDistance(c, skater[0], skater[2]) }));
+      skater[0] = Math.max(
+        -150,
+        Math.min(150, skater[0] + Math.cos(heading) * 6 * DT),
+      );
+      skater[2] = Math.max(
+        -150,
+        Math.min(150, skater[2] - Math.sin(heading) * 6 * DT),
+      );
+      const before = t.cars.map((c) => ({
+        x: c.x,
+        z: c.z,
+        gap: carBodyDistance(c, skater[0], skater[2]),
+      }));
       stepTraffic(t, DT, skater);
       t.cars.forEach((c, k) => {
         if (c.x === before[k].x && c.z === before[k].z) return;
         moves += 1;
         const after = carBodyDistance(c, skater[0], skater[2]);
         // A move ends outside the circle, or it takes the car away.
-        expect(after >= TRAFFIC.safeRadius || after >= before[k].gap - 1e-9).toBe(true);
+        expect(
+          after >= TRAFFIC.safeRadius || after >= before[k].gap - 1e-9,
+        ).toBe(true);
       });
     }
     expect(moves).toBeGreaterThan(1000);
@@ -338,13 +554,19 @@ describe("cars as obstacles", () => {
   const sampler = carGroundSampler(FLAT_GROUND.sampleGround, parked);
 
   it("gives the car top inside the car body, and the ground outside", () => {
-    expect(sampler(10, 0)).toEqual({ height: CAR_SIZE.sedan.height, normal: [0, 1, 0], id: "car:sedan" });
+    expect(sampler(10, 0)).toEqual({
+      height: CAR_SIZE.sedan.height,
+      normal: [0, 1, 0],
+      id: "car:sedan",
+    });
     expect(sampler(10 + CAR_SIZE.sedan.length / 2 + 0.1, 0).id).toBe("flat");
     expect(sampler(10, CAR_SIZE.sedan.width / 2 + 0.1).id).toBe("flat");
   });
 
   it("leaves out a car high over the skater (on a bridge)", () => {
-    const high = carGroundSampler(FLAT_GROUND.sampleGround, [{ kind: "van", x: 0, z: 0, yaw: 0, y: 6 }]);
+    const high = carGroundSampler(FLAT_GROUND.sampleGround, [
+      { kind: "van", x: 0, z: 0, yaw: 0, y: 6 },
+    ]);
     expect(high(0, 0, 0).id).toBe("flat");
     expect(high(0, 0, 5).id).toBe("car:van");
   });
@@ -362,9 +584,16 @@ describe("cars as obstacles", () => {
     const s = createSkateState({ position: [0, 0, 0], yaw: 0 });
     s.speed = 6;
     s.velocity = [6, 0, 0];
-    const { state, states } = runScript(s, [{ frames: 90, input: { push: true } }], { env: { sampleGround: sampler }, trace: true });
+    const { state, states } = runScript(
+      s,
+      [{ frames: 90, input: { push: true } }],
+      { env: { sampleGround: sampler }, trace: true },
+    );
     const rear = 10 - CAR_SIZE.sedan.length / 2;
-    for (const st of states) expect(st.position[0]).toBeLessThanOrEqual(rear - SKATE.bodyRadius + 1e-6);
+    for (const st of states)
+      expect(st.position[0]).toBeLessThanOrEqual(
+        rear - SKATE.bodyRadius + 1e-6,
+      );
     expect(states.some((st) => st.bonked)).toBe(true);
     expect(state.position[0]).toBeGreaterThan(rear - 1);
   });
@@ -435,11 +664,17 @@ describe("lights, signals, and crosswalks", () => {
     expect(car.speed).toBe(0);
     expect(car.crossing).toBe(true);
     expect(t.crossingYields).toBeGreaterThan(0);
-    expect(front).toBeLessThanOrEqual(cw.s - cw.depth / 2 - TRAFFIC.crossingStop + 0.01);
-    expect(front).toBeGreaterThan(cw.s - cw.depth / 2 - TRAFFIC.crossingStop - 1.5);
+    expect(front).toBeLessThanOrEqual(
+      cw.s - cw.depth / 2 - TRAFFIC.crossingStop + 0.01,
+    );
+    expect(front).toBeGreaterThan(
+      cw.s - cw.depth / 2 - TRAFFIC.crossingStop - 1.5,
+    );
     // The skater leaves the crosswalk: the car drives on over it.
     for (let i = 0; i < 60 * 30; i += 1) stepTraffic(t, DT, null);
-    expect(car.s + CAR_SIZE[car.kind].length / 2 > cw.s || car.lane !== lane.id).toBe(true);
+    expect(
+      car.s + CAR_SIZE[car.kind].length / 2 > cw.s || car.lane !== lane.id,
+    ).toBe(true);
     expect(car.crossing).toBe(false);
   });
 });

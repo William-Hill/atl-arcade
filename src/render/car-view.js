@@ -19,16 +19,30 @@ export const BEAM_DISTANCE = 120;
 
 function carGeometry(t) {
   const geom = new THREE.BufferGeometry();
-  geom.setAttribute("position", new THREE.BufferAttribute(Float32Array.from(t.positions), 3));
-  geom.setAttribute("normal", new THREE.BufferAttribute(Float32Array.from(t.normals), 3));
-  geom.setAttribute("color", new THREE.BufferAttribute(Float32Array.from(t.colors), 3));
-  geom.setAttribute("paint", new THREE.BufferAttribute(Float32Array.from(t.paint), 1));
+  geom.setAttribute(
+    "position",
+    new THREE.BufferAttribute(Float32Array.from(t.positions), 3),
+  );
+  geom.setAttribute(
+    "normal",
+    new THREE.BufferAttribute(Float32Array.from(t.normals), 3),
+  );
+  geom.setAttribute(
+    "color",
+    new THREE.BufferAttribute(Float32Array.from(t.colors), 3),
+  );
+  geom.setAttribute(
+    "paint",
+    new THREE.BufferAttribute(Float32Array.from(t.paint), 1),
+  );
   geom.setIndex(new THREE.BufferAttribute(Uint32Array.from(t.indices), 1));
   return geom;
 }
 
 function rampTexture() {
-  const data = new Uint8Array([120, 120, 120, 255, 190, 190, 190, 255, 255, 255, 255, 255]);
+  const data = new Uint8Array([
+    120, 120, 120, 255, 190, 190, 190, 255, 255, 255, 255, 255,
+  ]);
   const tex = new THREE.DataTexture(data, 3, 1, THREE.RGBAFormat);
   tex.minFilter = THREE.NearestFilter;
   tex.magFilter = THREE.NearestFilter;
@@ -40,15 +54,20 @@ function rampTexture() {
 // A toon material where paint mixes the vertex color toward the instance
 // color: paint 1 is the body, paint 0 keeps glass, tires, and lights.
 function carMaterial() {
-  const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: rampTexture() });
+  const mat = new THREE.MeshToonMaterial({
+    vertexColors: true,
+    gradientMap: rampTexture(),
+  });
   mat.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader.replace("#include <common>", "#include <common>\nattribute float paint;").replace(
-      "#include <color_vertex>",
-      `vColor = vec4(color, 1.0);
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nattribute float paint;")
+      .replace(
+        "#include <color_vertex>",
+        `vColor = vec4(color, 1.0);
 #ifdef USE_BATCHING_COLOR
 vColor.rgb = mix(vColor.rgb, vColor.rgb * getBatchingColor(getIndirectIndex(gl_DrawID)).rgb, paint);
 #endif`,
-    );
+      );
   };
   mat.customProgramCacheKey = () => "cars-v1";
   return mat;
@@ -63,7 +82,10 @@ function beamTexture(n = 64) {
       const u = i / (n - 1); // along the beam: 0 at the car
       const v = (j / (n - 1)) * 2 - 1; // across
       const spread = 0.35 + 0.65 * u;
-      const a = Math.max(0, 1 - Math.abs(v) / spread) ** 1.5 * (1 - u) ** 1.2 * Math.min(1, u * 6);
+      const a =
+        Math.max(0, 1 - Math.abs(v) / spread) ** 1.5 *
+        (1 - u) ** 1.2 *
+        Math.min(1, u * 6);
       const k = (j * n + i) * 4;
       data[k] = data[k + 1] = data[k + 2] = Math.round(255 * a);
       data[k + 3] = 255;
@@ -83,19 +105,42 @@ function createLamps(moving) {
   const per = lampLayout(CAR_SIZE.sedan).length;
   const quad = new THREE.PlaneGeometry(1, 1);
   const lampMat = new THREE.MeshBasicMaterial({ toneMapped: false, fog: true });
-  const lamps = new THREE.InstancedMesh(quad, lampMat, Math.max(1, moving.length * per));
+  const lamps = new THREE.InstancedMesh(
+    quad,
+    lampMat,
+    Math.max(1, moving.length * per),
+  );
   lamps.name = "car-lamps";
   lamps.frustumCulled = false;
   lamps.count = 0;
   lamps.setColorAt(0, new THREE.Color());
-  const beamGeom = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2).translate(0.5, 0, 0);
-  const beamMat = new THREE.MeshBasicMaterial({ map: beamTexture(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
-  const beams = new THREE.InstancedMesh(beamGeom, beamMat, Math.max(1, moving.length));
+  const beamGeom = new THREE.PlaneGeometry(1, 1)
+    .rotateX(-Math.PI / 2)
+    .translate(0.5, 0, 0);
+  const beamMat = new THREE.MeshBasicMaterial({
+    map: beamTexture(),
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+  const beams = new THREE.InstancedMesh(
+    beamGeom,
+    beamMat,
+    Math.max(1, moving.length),
+  );
   beams.name = "car-beams";
   beams.frustumCulled = false;
   beams.count = 0;
   beams.setColorAt(0, new THREE.Color());
-  const colors = { head: new THREE.Color(LAMP.head), tail: new THREE.Color(LAMP.tail), signal: new THREE.Color(LAMP.signal) };
+  const colors = {
+    head: new THREE.Color(LAMP.head),
+    tail: new THREE.Color(LAMP.tail),
+    signal: new THREE.Color(LAMP.signal),
+  };
   const col = new THREE.Color();
   const car = new THREE.Matrix4();
   const local = new THREE.Matrix4();
@@ -105,8 +150,14 @@ function createLamps(moving) {
   const p = new THREE.Vector3();
   const one = new THREE.Vector3(1, 1, 1);
   const s3 = new THREE.Vector3();
-  const faceFront = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
-  const faceBack = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
+  const faceFront = new THREE.Quaternion().setFromAxisAngle(
+    new THREE.Vector3(0, 1, 0),
+    Math.PI / 2,
+  );
+  const faceBack = new THREE.Quaternion().setFromAxisAngle(
+    new THREE.Vector3(0, 1, 0),
+    -Math.PI / 2,
+  );
   const noTurn = new THREE.Quaternion();
   const info = { lamps: 0, beams: 0, lit: 0 };
   return {
@@ -123,24 +174,52 @@ function createLamps(moving) {
       for (const { car: c, pitch, d } of cars) {
         if (d > LAMP_DISTANCE) continue;
         let layout = layouts.get(c.kind);
-        if (!layout) layouts.set(c.kind, (layout = lampLayout(CAR_SIZE[c.kind])));
-        const lv = lampLevels({ lit, brake: c.brake ?? 0, signal: c.signal ?? 0, time, phase: (c.id * 0.37) % 1 });
+        if (!layout)
+          layouts.set(c.kind, (layout = lampLayout(CAR_SIZE[c.kind])));
+        const lv = lampLevels({
+          lit,
+          brake: c.brake ?? 0,
+          signal: c.signal ?? 0,
+          time,
+          phase: (c.id * 0.37) % 1,
+        });
         e.set(0, c.yaw, pitch);
         q.setFromEuler(e);
         car.compose(p.set(c.x, c.y, c.z), q, one);
         for (const L of layout) {
-          const level = L.type === "head" ? lv.head : L.type === "tail" ? lv.tail : L.side > 0 ? lv.left : lv.right;
+          const level =
+            L.type === "head"
+              ? lv.head
+              : L.type === "tail"
+                ? lv.tail
+                : L.side > 0
+                  ? lv.left
+                  : lv.right;
           if (level <= 0.01) continue;
-          local.compose(p.set(L.x, L.y, L.z), L.face > 0 ? faceFront : faceBack, s3.set(L.w, L.h, 1));
+          local.compose(
+            p.set(L.x, L.y, L.z),
+            L.face > 0 ? faceFront : faceBack,
+            s3.set(L.w, L.h, 1),
+          );
           lamps.setMatrixAt(n, out.multiplyMatrices(car, local));
-          lamps.setColorAt(n, col.copy(colors[L.type]).multiplyScalar(0.25 + 0.75 * level));
+          lamps.setColorAt(
+            n,
+            col.copy(colors[L.type]).multiplyScalar(0.25 + 0.75 * level),
+          );
           n += 1;
         }
         if (lv.beam > 0.05 && d < BEAM_DISTANCE) {
           const size = CAR_SIZE[c.kind];
-          local.compose(p.set(size.length / 2 + 0.3, 0.06, 0), noTurn, s3.set(9, 1, size.width * 1.6));
+          local.compose(
+            p.set(size.length / 2 + 0.3, 0.06, 0),
+            noTurn,
+            s3.set(9, 1, size.width * 1.6),
+          );
           beams.setMatrixAt(nb, out.multiplyMatrices(car, local));
-          beams.setColorAt(nb, col.setRGB(1, 0.92, 0.75).multiplyScalar(0.55 * lv.beam));
+          beams.setColorAt(
+            nb,
+            col.setRGB(1, 0.92, 0.75).multiplyScalar(0.55 * lv.beam),
+          );
           nb += 1;
         }
       }
@@ -160,11 +239,24 @@ function createLamps(moving) {
 // parked: [{ kind, color, x, y, z, yaw, pitch? }]. moving: the traffic
 // cars (src/sim/traffic/traffic.js). A new traffic state from the same seed
 // has the same cars in the same order, so update() takes the cars now.
-export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DISTANCE, drawDistance = CAR_DRAW_DISTANCE, pitchAt = null } = {}) {
+export function createCarView(
+  parked,
+  moving = [],
+  {
+    lod0Distance = CAR_LOD0_DISTANCE,
+    drawDistance = CAR_DRAW_DISTANCE,
+    pitchAt = null,
+  } = {},
+) {
   const templates = carTemplates();
   const all = [...parked, ...moving];
   const kinds = [...new Set(all.map((c) => c.kind))].sort();
-  const geoms = new Map(kinds.map((k) => [k, [carGeometry(templates[k]), carGeometry(templates[`${k}_lod1`])]]));
+  const geoms = new Map(
+    kinds.map((k) => [
+      k,
+      [carGeometry(templates[k]), carGeometry(templates[`${k}_lod1`])],
+    ]),
+  );
   let vertices = 0;
   let indices = 0;
   for (const pair of geoms.values()) {
@@ -174,7 +266,12 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
     }
   }
   const material = carMaterial();
-  const mesh = new THREE.BatchedMesh(Math.max(1, all.length), Math.max(1, vertices), Math.max(1, indices), material);
+  const mesh = new THREE.BatchedMesh(
+    Math.max(1, all.length),
+    Math.max(1, vertices),
+    Math.max(1, indices),
+    material,
+  );
   mesh.name = "cars";
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -205,11 +302,21 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
   const state = new Int8Array(all.length).fill(-2);
   all.forEach((c, i) => {
     const id = mesh.addInstance(ids.get(c.kind)[1]);
-    mesh.setColorAt(id, c.kind === "bus" ? white : palette[c.color % palette.length]);
+    mesh.setColorAt(
+      id,
+      c.kind === "bus" ? white : palette[c.color % palette.length],
+    );
     pose(id, c, c.pitch ?? 0);
     mesh.setVisibleAt(id, false);
   });
-  const info = { parked: parked.length, moving: moving.length, drawn: 0, lod0: 0, triangles: 0, models: 0 };
+  const info = {
+    parked: parked.length,
+    moving: moving.length,
+    drawn: 0,
+    lod0: 0,
+    triangles: 0,
+    models: 0,
+  };
   // The lamps ride on the car mesh (an identity transform), so the scene
   // takes them with it.
   const lamps = moving.length ? createLamps(moving) : null;
@@ -222,7 +329,9 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
     mesh,
     info,
     get drawCalls() {
-      return 1 + (models ? models.drawCalls : 0) + (lamps ? lamps.drawCalls : 0);
+      return (
+        1 + (models ? models.drawCalls : 0) + (lamps ? lamps.drawCalls : 0)
+      );
     },
     get models() {
       return models;
@@ -252,8 +361,13 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
         const d = Math.hypot(c.x - cx, c.z - cz);
         const lod = propLodFor(d, lod0Distance, drawDistance);
         // The GLB cars (with their own LODs) cover models.range; kit cars beyond.
-        const pitch = lod >= 0 ? (i < np ? (c.pitch ?? 0) : pitchAt ? pitchAt(c) : 0) : 0;
-        const glb = lod >= 0 && models?.has(i) && d < (models.range ?? lod0Distance) && models.set(i, c, pitch, d);
+        const pitch =
+          lod >= 0 ? (i < np ? (c.pitch ?? 0) : pitchAt ? pitchAt(c) : 0) : 0;
+        const glb =
+          lod >= 0 &&
+          models?.has(i) &&
+          d < (models.range ?? lod0Distance) &&
+          models.set(i, c, pitch, d);
         if (lod >= 0 && i >= np) inView.push({ car: c, pitch, d });
         if (!glb) models?.hide(i);
         if (lod >= 0) {

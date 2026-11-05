@@ -133,7 +133,8 @@ describe("tree placement on the BeltLine level", () => {
       for (const [ox, oz] of [[0, 0], [0.5, 0], [-0.5, 0], [0, 0.5], [0, -0.5]]) {
         const g = sample(p.x + ox, p.z + oz);
         expect(g, `tree at ${p.x},${p.z}`).not.toBe(null);
-        expect(g.id === "ground" || areaIds.has(g.id), `tree at ${p.x},${p.z} on ${g.id}`).toBe(true);
+        // A median tree stands on its median (medians.js, #138).
+        expect(g.id === "ground" || areaIds.has(g.id) || (p.median !== undefined && g.id === p.median), `tree at ${p.x},${p.z} on ${g.id}`).toBe(true);
       }
     }
   });

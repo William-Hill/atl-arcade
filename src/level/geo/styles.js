@@ -26,7 +26,7 @@ export const STYLES = [
     // The crown (facade-kit.js crownKit()): a raised center parapet `step`
     // meters over the parapet, and a stair bulkhead box on the roof
     // ([along, across, height] in meters).
-    crown: { step: 1.2, bulkhead: [3.0, 3.6, 2.8] },
+    crown: { step: 1.6, bulkhead: [3.0, 3.6, 2.8] },
     // Painted steel window frames: a mid sage, not darker than the brick.
     frame: [0.2, 0.3, 0.24],
   },
@@ -43,9 +43,9 @@ export const STYLES = [
     parapet: 1.1,
     storefront: true,
     awnings: 0.2,
-    roof: { water_tower: 0.25, roof_unit: 1 / 500 },
+    roof: { water_tower: 0.25, roof_unit: 1 / 500, solar: 0.4 },
     roofColor: [0.32, 0.31, 0.3],
-    crown: { step: 1.2, bulkhead: [3.0, 3.6, 2.8] },
+    crown: { step: 1.6, bulkhead: [3.0, 3.6, 2.8] },
     frame: [0.2, 0.3, 0.24],
   },
   {
@@ -59,7 +59,7 @@ export const STYLES = [
     parapet: 0.6,
     storefront: false,
     awnings: 0,
-    roof: { roof_unit: 1 / 250 },
+    roof: { roof_unit: 1 / 250, solar: 0.3 },
   },
   {
     id: "modern-apartment",
@@ -72,7 +72,7 @@ export const STYLES = [
     parapet: 0.5,
     storefront: true,
     awnings: 0,
-    roof: { roof_unit: 1 / 200 },
+    roof: { roof_unit: 1 / 200, solar: 0.5 },
   },
   {
     id: "glass-office",
@@ -85,7 +85,7 @@ export const STYLES = [
     parapet: 0.8,
     storefront: true,
     awnings: 0,
-    roof: { roof_unit: 1 / 300 },
+    roof: { roof_unit: 1 / 300, solar: 0.4 },
   },
   {
     id: "storefront",
@@ -137,7 +137,8 @@ export const STYLES = [
     parapet: 0.4,
     storefront: false,
     awnings: 0,
-    roof: { roof_unit: 1 / 600 },
+    // The industrial sheds get the old water towers of the Atlanta mills.
+    roof: { roof_unit: 1 / 600, water_tower: 0.5, solar: 0.6 },
   },
   {
     id: "parking-deck",
@@ -338,12 +339,14 @@ function districtOf(b, level) {
 const RESTYLEABLE = new Set(["modern-apartment", "stucco-apartment", "craftsman-house", "shotgun-house", "brick-loft", "brick-warehouse", "industrial-shed"]);
 
 // Picks the style for one building: a landmark name, then the OSM building
-// type, then the size and height, with the district mix for the stock that
-// can change hands. Deterministic for a building id.
+// type, then the OSM wall material (brick), then the size and height, with
+// the district mix for the stock that can change hands. Deterministic for a
+// building id.
 export function chooseStyle(b, level = null) {
   for (const [re, id] of BY_NAME) if (re.test(b.name ?? "")) return id;
   if (b.type && BY_TYPE[b.type]) return BY_TYPE[b.type];
   const area = footprintArea(b.outer);
+  if (b.material === "brick" && area >= 220) return area > 2500 ? "brick-warehouse" : "brick-loft";
   const r = hash32(b.id) % 100;
   let pick;
   if (area < 40) pick = "garage";
@@ -371,4 +374,34 @@ export function chooseStyle(b, level = null) {
 // The wall color for one building: one of the style's colors, by id.
 export function wallColor(style, id) {
   return style.walls[hash32(`${id}:wall`) % style.walls.length];
+}
+
+// The floor height range (m) that an OSM `building:levels` count must give
+// to count. Out of the range, the count does not match the height.
+export const LEVEL_FLOOR = [2.6, 6.5];
+
+// The floor count of a building with a wall height of `wall` m: the OSM
+// level count (`b.levels`) when it gives a floor height in LEVEL_FLOOR, else
+// the wall height over the style floor height. The facade shader
+// (extrude.js) and the kit (facade-kit.js) use the same count.
+export function floorCount(b, style, wall) {
+  const n = b?.levels;
+  if (Number.isInteger(n) && n > 0 && wall / n >= LEVEL_FLOOR[0] && wall / n <= LEVEL_FLOOR[1]) return n;
+  return Math.max(1, Math.round(wall / style.floorHeight));
+}
+
+// The house styles: a gable roof and a porch.
+export const HOUSE_STYLES = new Set(["craftsman-house", "shotgun-house"]);
+// The OSM roof shapes that the kit builds as a gable roof.
+const GABLE_SHAPES = new Set(["gabled", "hipped", "pyramidal", "half-hipped", "gambrel"]);
+
+// The roof form of a building: "gable" or "flat". The OSM `roof:shape`
+// (`b.roofShape`) comes first: "flat" keeps a house flat, and a gable
+// shape gives a gable to a building with a low parapet. Else a house gets
+// a gable and every other style a flat roof.
+export function roofForm(b, style) {
+  const shape = b?.roofShape;
+  if (shape === "flat") return "flat";
+  if (GABLE_SHAPES.has(shape) && (style.parapet ?? 0) <= 0.4) return "gable";
+  return HOUSE_STYLES.has(style.id) ? "gable" : "flat";
 }

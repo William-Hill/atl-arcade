@@ -1,0 +1,18 @@
+{
+  "kind": "craftsman-house",
+  "pick": 0,
+  "look": "pbr",
+  "views": {
+    "facade": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=craftsman-house&pick=0&labview=facade",
+    "street": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=craftsman-house&pick=0&labview=street",
+    "corner": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=craftsman-house&pick=0&labview=corner",
+    "mid": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=craftsman-house&pick=0&labview=mid",
+    "far": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=craftsman-house&pick=0&labview=far",
+    "aerial": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=craftsman-house&pick=0&labview=aerial"
+  },
+  "building": {
+    "id": "w1383647772",
+    "name": null,
+    "height": 7
+  }
+}

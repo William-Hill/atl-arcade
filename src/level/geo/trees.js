@@ -30,7 +30,7 @@
 //
 // Templates have the same shape as the street kit templates: { positions,
 // indices, colors, normals } plus `sway`, with +y up and the trunk base at
-// the origin. LOD1 is a low-poly copy for far tiles.
+// the origin. LOD1 is the far card set.
 //
 // With `cards` (the pbr look) a near tree also gets leaf cards: small quads
 // on the surface of each puff, which face out of the crown. The render cuts
@@ -184,15 +184,15 @@ function vertex(m, p, n, c, sway) {
 
 // Leaf cards for one puff. Each card is a square of side `size`, at a random
 // point on the puff surface, turned about its normal by a random angle.
-export const CARDS = { perPuff: 18, size: 0.95, out: 0.85, core: 0.78 };
+export const LEAF_CARDS = { perPuff: 18, size: 0.95, out: 0.85, core: 0.78 };
 function cards(m, center, radius, flatten, rand, ctx) {
-  for (let i = 0; i < CARDS.perPuff; i += 1) {
+  for (let i = 0; i < LEAF_CARDS.perPuff; i += 1) {
     // A uniform point on the sphere, a little more on the top and the sides.
     const y = rand() * 1.7 - 0.7;
     const a = rand() * Math.PI * 2;
     const r = Math.sqrt(Math.max(0, 1 - y * y));
     const s = [Math.cos(a) * r, y, Math.sin(a) * r];
-    const p = [center[0] + s[0] * radius * CARDS.out, center[1] + s[1] * radius * CARDS.out * flatten, center[2] + s[2] * radius * CARDS.out];
+    const p = [center[0] + s[0] * radius * LEAF_CARDS.out, center[1] + s[1] * radius * LEAF_CARDS.out * flatten, center[2] + s[2] * radius * LEAF_CARDS.out];
     const out = norm(sub(p, ctx.crown));
     const n = norm([out[0] * 0.7 + s[0] * 0.3, out[1] * 0.7 + s[1] * 0.3, out[2] * 0.7 + s[2] * 0.3]);
     // Two axes in the card plane, turned by a random angle.
@@ -200,7 +200,7 @@ function cards(m, center, radius, flatten, rand, ctx) {
     const t0 = norm(cross(n, ref));
     const b0 = cross(n, t0);
     const turn = rand() * Math.PI * 2;
-    const half = (radius * CARDS.size) / 2;
+    const half = (radius * LEAF_CARDS.size) / 2;
     const t = [0, 1, 2].map((k) => (t0[k] * Math.cos(turn) + b0[k] * Math.sin(turn)) * half);
     const b = [0, 1, 2].map((k) => (b0[k] * Math.cos(turn) - t0[k] * Math.sin(turn)) * half);
     const lift = clamp01((p[1] - ctx.bottom) / (ctx.top - ctx.bottom));
@@ -323,9 +323,10 @@ function puff(m, center, radius, flatten, sphere, rand, ctx) {
   for (const [a, b, c] of sphere.faces) m.indices.push(base + a, base + b, base + c);
 }
 
-// One tree template. `lod` 0 is detailed, 1 is for far tiles. `season`
-// picks the leaf colors; `cards` adds the leaf cards (the pbr look).
-export function treeTemplate(species, variant, lod = 0, { season = "summer", cards: withCards = false } = {}) {
+// One tree template. `lod` 0 is detailed, 1 is the far card set. `season`
+// picks the leaf colors; with `cards`, a detailed tree also gets the leaf
+// cards (the pbr look).
+export function treeTemplate(species, variant, lod = 0, season = "summer", { cards: withCards = false } = {}) {
   const sp = TREE_SPECIES[species];
   if (!sp) throw new Error(`trees: no species ${species}`);
   // The shape comes from the species and variant only. LOD1 uses the same
@@ -408,9 +409,8 @@ export function treeTemplate(species, variant, lod = 0, { season = "summer", car
     swayOf,
     colorAt,
   };
-  const sphere = SPHERES[lod === 0 ? 1 : 0];
   const leafy = withCards && lod === 0;
-  for (const c of centers) puff(m, [c[0], c[1], c[2]], leafy ? c[3] * CARDS.core : c[3], sp.flatten ?? 1, sphere, rand, ctx);
+  for (const c of centers) puff(m, [c[0], c[1], c[2]], leafy ? c[3] * LEAF_CARDS.core : c[3], sp.flatten ?? 1, SPHERES[1], rand, ctx);
   // The cards use their own random stream, so the trunk and the puffs keep
   // the same shape with and without cards.
   if (leafy) {
@@ -420,6 +420,7 @@ export function treeTemplate(species, variant, lod = 0, { season = "summer", car
   return packed(m, leafy);
 }
 
+// With `leafy`, the mesh keeps its leaf attribute (the leaf cards).
 function packed(m, leafy = false) {
   return {
     positions: Float32Array.from(m.positions),
@@ -482,15 +483,16 @@ function cardTree(species, sp, rand, grow, crown, halfW, halfH, top, swayOf, col
 }
 
 // Every tree template, keyed as treeKindFor() names them, with the LOD1
-// copies under `<name>_lod1` (the street kit convention). `season` is one
-// of SEASONS; another value gives summer. `cards` adds the leaf cards.
+// cards under `<name>_lod1` (the street kit convention). `season` is one of
+// SEASONS; another value gives summer. With `cards`, the detailed trees get
+// the leaf cards (the pbr look).
 export function treeTemplates({ season = "summer", cards = false } = {}) {
   const s = SEASONS.includes(season) ? season : "summer";
   const out = {};
   for (const species of Object.keys(TREE_SPECIES)) {
     for (let v = 0; v < TREE_VARIANTS; v += 1) {
-      out[`tree:${species}:${v}`] = treeTemplate(species, v, 0, { season: s, cards });
-      out[`tree:${species}:${v}_lod1`] = treeTemplate(species, v, 1, { season: s });
+      out[`tree:${species}:${v}`] = treeTemplate(species, v, 0, s, { cards });
+      out[`tree:${species}:${v}_lod1`] = treeTemplate(species, v, 1, s);
     }
   }
   return out;

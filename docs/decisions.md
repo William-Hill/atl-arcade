@@ -1124,3 +1124,9 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
 - `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
 - `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
+
+
+## 2026-11-05: epic/assets — murals only on blank walls
+- A mural was pasted over the shader's windows (an 8-storey glass wall facing the trail). Murals now go only on walls with no windows behind them.
+- `muralWalls()` skips glass offices, parking decks, buildings over `MURAL_MAX_FLOORS` (5) floors, and one-floor storefronts. Real mural walls are blank side walls of walk-ups, lofts and shops, not towers. The level goes from 38 murals to 30.
+- The mural wall is `FACE.blank` (facade kind 3) from `floor0` up. For a storefront `floor0` is 1, so its shop floor keeps its glass; otherwise it is 0. The facade shader draws no window, frame, sill, lintel or floor slab on a blank wall, and the facade kit puts no sills there. This costs no extra geometry: the one wall quad becomes two at most.

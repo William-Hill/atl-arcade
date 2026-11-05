@@ -182,13 +182,17 @@ vec3 roomColor(float h) {
 {
   int st = int(vFacade.x + 0.5);
   float kind = vFacade.w;
-  if (kind > 0.5 && kind < 1.5) {
+  // kind 1 is a wall, kind 3 a blank wall (a mural wall): no windows.
+  if ((kind > 0.5 && kind < 1.5) || kind > 2.5) {
+    bool blank = kind > 2.5;
     vec2 cell = fract(vFacade.yz);
     float level = floor(vFacade.z);
     vec4 a = uStyleA[st];
-    bool shop = level < 0.5 && a.z > 0.5;
+    bool shop = !blank && level < 0.5 && a.z > 0.5;
     // The shop glass ends at 0.13 of the floor: a stone kick plate is under it.
-    vec2 win = shop ? vec2(0.84, 0.66) : a.xy;
+    // A blank wall gets a window smaller than nothing, so no glass, frame,
+    // sill, lintel, or mullion.
+    vec2 win = blank ? vec2(-1.0) : shop ? vec2(0.84, 0.66) : a.xy;
     vec2 d = abs(cell - vec2(0.5, shop ? SHOP_CY : 0.55)) * 2.0;
     // Anti-aliased edges: blend over one screen pixel, not a hard step.
     vec2 aa = max(fwidth(vFacade.yz) * 2.0, vec2(1e-4));
@@ -338,7 +342,7 @@ vec3 roomColor(float h) {
     // A floor band at each slab, above the ground floor: a thin line a little
     // darker than the wall, so a tall building shows its floors. The slab
     // shadow deepens it when the sun is on the face.
-    float slab = level > 0.5 ? 1.0 - smoothstep(0.035, 0.035 + aa.y, cell.y) : 0.0;
+    float slab = (level > 0.5 && !blank) ? 1.0 - smoothstep(0.035, 0.035 + aa.y, cell.y) : 0.0;
     col *= 1.0 - (0.22 + 0.26 * sunFace) * slab;
     #endif
     col = mix(col, glass, inWin);
@@ -347,7 +351,7 @@ vec3 roomColor(float h) {
     // so the grid does not shimmer.
     float far = far0;
     // The trim area is in the mean, so the near and the far colors match.
-    vec3 mean = mix(mix(wallCol, uTrim[st], 0.08), uGlass[st] + vec3(0.09), win.x * win.y * 0.9);
+    vec3 mean = mix(mix(wallCol, uTrim[st], 0.08), uGlass[st] + vec3(0.09), max(win.x, 0.0) * max(win.y, 0.0) * 0.9);
     diffuseColor.rgb = mix(col, mean, far);
     facadeGlass = inWin * (1.0 - far);
     #ifdef PBR_LOOK
@@ -393,7 +397,7 @@ vec3 roomColor(float h) {
 }`,
       );
   };
-  mat.customProgramCacheKey = () => `facade-v8${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}`;
+  mat.customProgramCacheKey = () => `facade-v9${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}`;
   return mat;
 }
 

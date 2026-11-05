@@ -213,7 +213,8 @@ export function wallBox(m, o, t, n, a0, a1, y0, y1, out, color, style, bottom = 
 // `top` (buildingSpan() in terrain.js). Returns { sill, pier }.
 //
 // `mural` ({ edge, t0, t1, y0, y1 }, muralWalls() in geo-mesh.js) is a
-// mural on wall `edge`: no box goes on the mural or within MURAL_CLEAR of it.
+// mural on wall `edge`: no box goes on the mural or within MURAL_CLEAR of it,
+// and no sill goes on the blank floors (from `floor0` up) of that wall.
 export function wallDepth(m, ring, top, style, si, base = 0, mural = null) {
   const counts = { sill: 0, pier: 0 };
   const floors = Math.max(1, Math.round((top - base) / style.floorHeight));
@@ -239,6 +240,8 @@ export function wallDepth(m, ring, top, style, si, base = 0, mural = null) {
         const y = base + (level + WINDOW_CENTER - (wh + FRAME) / 2) * floorH;
         for (let k = 0; k < bays; k += 1) {
           const c = (k + 0.5) * bl;
+          // The mural wall is blank from mural.floor0 up: no window, no sill.
+          if (mural && mural.edge === i && level >= (mural.floor0 ?? 0)) continue;
           if (onMural(c - half, c + half, y - KIT.sill.height, y)) continue;
           wallBox(m, [px, pz], t, n, c - half, c + half, y - KIT.sill.height, y, KIT.sill.out, style.trim, si, true, true);
           counts.sill += 1;

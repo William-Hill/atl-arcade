@@ -1059,8 +1059,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The footway spur `w1118177210` goes from the footway deck (9.5 m) to the ground (4.8 m) in 10 m, as in the OSM data: a 47% ramp.
 - The ground sampler is about 1.4 times slower (deck heights now read the terrain).
 - Not checked: the low tier far terrain at the bridge ends.
-## 2026-11-04: The pbr look, leaf cards, and the art loop (rounds 0 to 2)
-
 ## 2026-11-04: Road detail (#138) and sidewalk detail (#136)
 
 ### Road detail (#138)
@@ -1207,13 +1205,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - LOD1 has no `wheels_roll` clip: the game never played it (car-models.js spins and steers the wheel instances itself).
 - Badge cleanup: `scripts/blender/vehicle_cleanup.json` boxes (glTF meters) on the taxi (grille chevron, rear emblem, trunk mark), sedan, pickup, hatchback, and bus (windshield signs, roof-box lettering). Texels are masked by their interpolated 3D position, not face centers, because plates and badges often sit on large faces. The fill is the median of a separate sample box. With `--patch` the script also writes the painted 1024 textures back into the LOD0 GLBs in place (another JPEG encode), so restore `assets/vehicles/*.glb` first; without it, re-runs only rebuild `vehicles_lod.glb`.
 
-## 2026-11-05: epic/assets — painted murals for the pbr look (assets/murals)
-- 16 original mural designs (dogwood, peach, magnolia, brown thrasher, heron and river, skyline silhouettes, the BeltLine trail, skaters, music, porch-row neighbors, a crowd wave, a night rink) are drawn from code with the Chromium 2D canvas (`scripts/assets/mural-atlas.mjs`, seed 1979), then a per-pixel paint pass adds brush strokes, a ragged dry-brush edge over painted brick or stucco, mortar show-through, weathering, and a roughness atlas. No image model, no Meshy (0 credits), no real murals, artists' styles, or brands.
-- Canvas, not Blender: the art is flat paint on a wall, and the 2D canvas gives exact lettering and shapes and runs in seconds; the storefront atlas uses the same tool.
-- Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
-- `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
-- `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
-
 ## 2026-11-05: epic/assets — skateable features as PBR GLBs (assets/skate-features)
 - 18 procedural Blender features (`scripts/blender/skate_features.py`): flat bars 3/6/9 m, round rails 3/6 m, down rails on 4 and 7 stairs, a kinked rail (3 down, landing, 3 down), concrete ledges 3/6 m, a granite-capped planter ledge, a manual pad, a quarter pipe, a kicker, a bank, a pyramid/funbox, a trail bench with a steel edge, and a block bench. No skatestoppers anywhere: the game welcomes skating. See `docs/skate-features.md`.
 - One material and one trim sheet (color 1024², normal 1024², ORM 512², strips tiling in U) for the whole set, external to the GLBs: one download, one GPU upload (about 12 MB), one material for batching. `shareSkateFeatureMaterial()` (`src/render/skate-feature-models.js`) undoes GLTFLoader's per-file copies.
@@ -1236,6 +1227,15 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The anchor that maps DOM time to audio time now takes the freshest scheduler reading of the last 500 ms (`envelopeAnchor`), because Chromium updates `currentTime` in chunks and a single reading is late by up to a chunk.
 - The results screen has a Music select. `localStorage["skate-atl.music"]` keeps the choice, and `?music=<id>` picks a track for one visit. Evidence: `reports/m2-music-alignment-day-trail.json` (output sample-matched to the grid, lag 0), `reports/m2-beat-alignment-peachtree-house.json` (32 taps at 124 BPM), and `reports/m0-07-beat-alignment.json` (click).
 - On this VM the PulseAudio null sink holds Chromium's audio clock still for about 1 s after `resume()`, and the clock runs a little fast or slow against `performance.now()`. Chromium also raises `outputLatency` (40 to about 51 ms) after the stream starts. The tap helper shared by `e2e/beat.spec.js` and `e2e/music.spec.js` (`e2e/beat-taps.js`) waits for the clock to move and reads each tap's target time from the anchor and latency at that moment; the base branch's test failed on this VM the same way (mean −220 ms, then +90 ms).
+
+## 2026-11-05: epic/city-look — full PBR ground sets (assets/textures/ground-pbr, #158)
+- Four sets for the surfaces the skater rides on: `sidewalk` (Poly Haven `brushed_concrete_03`), `brick` (`brick_pavement_02`), `asphalt` (`asphalt_pit_lane`), `trail` (`concrete_floor`). Each has albedo (sRGB, de-lit), OpenGL normal and ORM (R AO, G roughness, B metalness 0), 1024 px (high) and 512 px (phone). All CC0 scans, 0 paid credits; `provenance.json` per set. See `docs/ground-textures-pbr.md`.
+- Scans, not Blender procedurals: real joints, pores and wear at 2 m tiles for no credits; the scan is chosen per surface from 3 or 4 candidates by a score for baked light (gradient, AO-correlated shadow, side light), seams and blotches, then de-lit (large-scale luminance out, AO- and slope-correlated luminance out) and flattened in the mid band so no stain or patch of light bricks marks the repeat.
+- Asphalt is `asphalt_pit_lane`, not the lowest baked-light score `clean_asphalt`: that one has almost no aggregate and reads as flat paint at skating height (a `minDetail` floor in the score now rejects it). `asphalt_track` (the toon set) has light wear stripes that repeat every tile, `asphalt_02` long cracks.
+- Tile sizes and mapping follow the ground detail path of `main` (`vGroundXZ / tileMeters`, u along world x, v along world z, `DETAIL_NORMAL.ground`); the albedo means are `SURFACE_COLORS x GROUND_ALBEDO`, so the PBR sets keep the art direction of the current pbr look.
+- Not wired into `src/render/geo-view.js` (being merged). `scripts/assets/ground-pbr-preview.html` runs the game with the sets on its surface material; the geo-view change is written up in the doc.
+- KTX2: UASTC (RDO + Zstd), not ETC1S. ETC1S lost the brick joints (25.7 dB at 1024 px) and the legacy `toktx` ETC1S output failed `ktx validate`. UASTC transcodes to BC7/ASTC (1 byte a texel, 4x less GPU memory than RGBA8 from JPG) with no visible loss, but downloads more than the JPGs; kept as the option for GPUs with BC7/ASTC, JPG stays the default until the loader is in geo-view.
+- Seams: every resize wraps around the tile, and normal, AO and roughness get a narrow edge fix (smoothed edge step ramped out over 24 px, no pixel moves, no ghosting): the Poly Haven `brushed_concrete_03` normal stepped 2x at its wrap edge. The tile-edge step is now at or under the step at the inner JPG block edges for every map but the brick phone normal (1.3x, on a grout line).
 ### Sidewalk detail (#136)
 
 - Crossings: the build keeps the OSM footway and cycleway crossings in `level.crossings` (191 ways: id, points, `marked`).
@@ -1285,3 +1285,5 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Honest "today" frames come from the real renderer at fixed cameras (`scripts/art/pbr-frames.mjs`, `scripts/art/shots-today.json`): trail, O4W storefront street with murals, Ponce City Market, skater close-up, dusk, night (`docs/style-frames/today/`); the trail, skater and night frames are also option A of their style-frame subject.
 - Style frames (#114) use free methods only: in-game captures with URL params (time, weather) and a page-side runtime tune (`tuneLook`, grade and bloom uniforms, applied from the page, no game source change), plus scripted ImageMagick paintovers (`scripts/art/paintover.sh`) of the captures. No image model was used (0 credits): the paintovers already show the two biggest gaps (the pale hazy lawn and the compressed tonal range), and a generated frame would show a city the renderer cannot match. An image-model batch stays an option for the owner, with the cost shown first.
 - Frames ship as JPGs with one `<frame>.provenance.json` each and a folder `provenance.json` listing them in `docs/style-frames/<subject>/`, with a grouped contact sheet; the owner chooses the frames to keep, and the chosen ones go into the doc.
+
+

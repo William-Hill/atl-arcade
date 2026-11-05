@@ -305,8 +305,28 @@ function overlapsPed(state, self, x, z) {
   return false;
 }
 
+// The others (the crowd, the NPC skaters) and Nia as circles: { x, z, r }.
+function movers(others, nia) {
+  const list = others.map((o) => ({ x: o.x, z: o.z, r: o.radius ?? o.r ?? 0.4 }));
+  if (nia) list.push({ x: nia[0], z: nia[2], r: PEDS.niaRadius });
+  return list;
+}
+
+// True when a walker at (x, z) would touch one of the movers. With `from`
+// ([x, z], the walker now), only a move that also gets closer counts, so
+// a mover that walks into a walker never traps it.
+function touchesMover(list, x, z, from = null) {
+  for (const o of list) {
+    const d = Math.hypot(o.x - x, o.z - z);
+    if (d >= PEDS.radius + o.r) continue;
+    if (!from || d < Math.hypot(o.x - from[0], o.z - from[1])) return true;
+  }
+  return false;
+}
+
 // Puts walker `p` at a weighted spawn point between rMin and rMax m of the
-// focus, clear of the other walkers. Returns false when there is no room.
+// focus, clear of the other walkers, the crowd, the NPC skaters and Nia.
+// Returns false when there is no room.
 function spawn(state, p, rMin, rMax) {
   const rand = state.rand;
   const [fx, fz] = state.focus;
@@ -322,7 +342,7 @@ function spawn(state, p, rMin, rMax) {
     p.dir = rand() < 0.5 ? 1 : -1;
     p.offset = p.dir * r.lane + (rand() - 0.5) * 0.2;
     placePed(state, p);
-    if (!overlapsPed(state, p, p.x, p.z)) {
+    if (!overlapsPed(state, p, p.x, p.z) && !touchesMover(state.movers, p.x, p.z)) {
       p.live = true;
       p.cruise = lerp(rand(), PEDS.speed);
       p.speed = 0;
@@ -367,6 +387,7 @@ export function createPeds(level, { seed = 1, count = PED_COUNT.low, radius = PE
     heightAt: heightAt ?? ((x, z, y, r) => r.height),
     props: propIndex(propObstacles(props.filter((p) => !p.roof))),
     spawnCache: { key: null, set: null },
+    movers: [],
     peds: [],
     time: 0,
   };
@@ -402,6 +423,7 @@ function forEachNear(state, p, others, nia, fn) {
 // NPC skaters ({ x, z, radius }). Mutates and returns the state.
 export function stepPeds(state, dt, { focus = null, nia = null, others = [] } = {}) {
   state.time += dt;
+  state.movers = movers(others, nia);
   if (focus) {
     const jumped = Math.hypot(focus[0] - state.focus[0], focus[1] - state.focus[1]) > PEDS.jump;
     state.focus = [focus[0], focus[1]];
@@ -432,7 +454,7 @@ export function stepPeds(state, dt, { focus = null, nia = null, others = [] } = 
     let want = p.cruise;
     let target = p.dir * route.lane;
     let nearest = Infinity;
-    forEachNear(state, p, nia ? others : others, niaNear ? nia : null, (ox, oz, or, o) => {
+    forEachNear(state, p, others, niaNear ? nia : null, (ox, oz, or, o) => {
       const dx = ox - p.x;
       const dz = oz - p.z;
       const fwd = dx * p.fx + dz * p.fz;
@@ -462,8 +484,7 @@ export function stepPeds(state, dt, { focus = null, nia = null, others = [] } = 
     const end = s < 0.5 || s > route.path.length - 0.5;
     if (end) s = clamp(s, 0.5, route.path.length - 0.5);
     const [nx, nz] = pathOffsetPoint(route.path, s, offset);
-    const blockedByNia = nia && Math.hypot(nia[0] - nx, nia[2] - nz) < PEDS.radius + PEDS.niaRadius && Math.hypot(nia[0] - nx, nia[2] - nz) < Math.hypot(nia[0] - p.x, nia[2] - p.z);
-    if (overlapsPed(state, p, nx, nz) || blockedByNia) {
+    if (overlapsPed(state, p, nx, nz) || touchesMover(state.movers, nx, nz, [p.x, p.z])) {
       p.speed = 0;
       p.stuck = (p.stuck ?? 0) + dt;
     } else {

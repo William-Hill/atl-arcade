@@ -157,6 +157,32 @@ describe("stepPeds", () => {
     expect(Math.abs(p.offset - offset0) > 0.3 || p.dir !== Math.sign(offset0) || closest > 1).toBe(true);
   });
 
+  it("keeps clear of the crowd and the NPC skaters", () => {
+    const state = createPeds(level, { seed: 4, count: 200, radius: 150 });
+    run(state, 1, { focus: spawnAt });
+    // A crowd member stands on the line of each of 20 moving walkers, 2 m ahead.
+    const walking = state.peds.filter((q) => q.live && q.pause <= 0 && q.speed > 0.5).slice(0, 20);
+    const others = walking.map((q) => ({ x: q.x + q.fx * 2, z: q.z + q.fz * 2, radius: 0.4 }));
+    // A walker already on a crowd member when it appears may only move away.
+    const gap = (p, o) => Math.hypot(p.x - o.x, p.z - o.z) - PEDS.radius - o.radius;
+    const start = new Set(state.peds.flatMap((p) => others.filter((o) => gap(p, o) < 0).map((o) => `${p.id}:${others.indexOf(o)}`)));
+    let worst = Infinity;
+    for (let t = 0; t < 8; t += 1 / 30) {
+      stepPeds(state, 1 / 30, { focus: spawnAt, others });
+      for (const p of state.peds) if (p.live) others.forEach((o, i) => start.has(`${p.id}:${i}`) || (worst = Math.min(worst, gap(p, o))));
+    }
+    expect(worst).toBeGreaterThanOrEqual(-1e-6);
+  });
+
+  it("does not spawn on a crowd member", () => {
+    const state = createPeds(level, { seed: 6, count: 150, radius: 120 });
+    // A crowd member on every spawn candidate near the focus; then a fast travel there.
+    const far = [-98, -812];
+    const others = state.built.candidates.points.filter((c) => Math.hypot(c.x - far[0], c.z - far[1]) < 120).map((c) => ({ x: c.x, z: c.z, radius: 0.4 }));
+    stepPeds(state, 1 / 30, { focus: far, others });
+    for (const p of state.peds.filter((q) => q.live)) for (const o of others) expect(Math.hypot(p.x - o.x, p.z - o.z)).toBeGreaterThanOrEqual(PEDS.radius + o.radius - 1e-6);
+  });
+
   it("stops now and then near a hub", () => {
     const pcm = level.buildings.find((b) => b.name === "Ponce City Market");
     const at = pcm.outer[0];

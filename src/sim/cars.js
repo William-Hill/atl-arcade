@@ -35,7 +35,15 @@ export function idmAccel(v, v0, gap = Infinity, dv = 0, p = IDM) {
 // with a leader at rest whose rear is s0 - `rest` m past the point, so the
 // car comes to rest `rest` m short of it.
 export function idmStopAccel(v, v0, dist, rest = 0.3, p = IDM) {
-  return idmAccel(v, v0, dist - rest + p.s0, v, p);
+  const d = dist - rest;
+  let a = idmAccel(v, v0, d + p.s0, v, p);
+  // The IDM reaches a stop point only asymptotically: slower than creep
+  // the car rolls on at creep speed, and over the last half metre it
+  // brakes to rest at the point.
+  if (d > 0.5 && v < p.creep) a = Math.max(a, Math.min(p.a / 2, (p.creep - v) * 2));
+  else if (d > 0 && d <= 0.5) a = Math.min(a, -(v * v) / (2 * d));
+  else if (d <= 0) a = -p.maxBrake;
+  return Math.max(-p.maxBrake, Math.min(p.a, a));
 }
 
 // The lane centers of a street strip (offsets to the right of the strip

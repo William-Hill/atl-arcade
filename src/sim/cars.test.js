@@ -84,6 +84,22 @@ describe("IDM", () => {
     expect(line - front).toBeLessThan(0.6);
   });
 
+  it("stops at the point in a few seconds, not by an endless crawl", () => {
+    for (const [v0, line] of [[8, 80], [8, 20], [1, 4], [0, 6]]) {
+      let v = v0;
+      let front = 0;
+      let t = 0;
+      while (t < 30 && !(v < 0.05 && line - front < 0.6)) {
+        v = Math.max(0, v + idmStopAccel(v, 8, line - front) * DT);
+        front += v * DT;
+        t += DT;
+        expect(front).toBeLessThan(line);
+      }
+      expect(t).toBeLessThan(line / 3 + 8);
+      expect(line - front).toBeGreaterThan(0.1);
+    }
+  });
+
   it("brakes harder the closer a stopped leader is, up to the hard limit", () => {
     const far = idmAccel(8, 8, 60, 8);
     const near = idmAccel(8, 8, 15, 8);

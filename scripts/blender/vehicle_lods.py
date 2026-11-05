@@ -1,11 +1,11 @@
 """LOD1/LOD2 meshes and a shared 512 px texture atlas for the traffic vehicles.
 
-blender -b -P scripts/blender/vehicle_lods.py -- [--kinds sedan,taxi] [--out DIR] [--stats FILE] [--no-patch]
+blender -b -P scripts/blender/vehicle_lods.py -- [--kinds sedan,taxi] [--out DIR] [--stats FILE] [--patch]
 
 For each kind in assets/vehicles/<kind>.glb (the rigged LOD0 of
 vehicle_wheels.py):
 1. paints out the fictional badges and lettering in vehicle_cleanup.json on
-   the 1024 px textures and writes them back into <kind>.glb (geometry,
+   the 1024 px textures and, with --patch, writes them back into <kind>.glb (geometry,
    nodes and the wheels_roll clip are untouched);
 2. builds <kind>_lod1 (~35% of the triangles: body > steer_FL/FR >
    wheel_FL/FR, body > wheel_RL/RR, same pivots as LOD0) and <kind>_lod2
@@ -37,7 +37,7 @@ KINDS = ["sedan", "pickup", "bus", "hatchback", "van", "taxi", "box_truck"]
 kinds = arg("--kinds", ",".join(KINDS)).split(",")
 SRC = os.path.join(ROOT, "assets", "vehicles")
 OUT = os.path.abspath(arg("--out", SRC))
-PATCH = "--no-patch" not in argv
+PATCH = "--patch" in argv
 LOD1, LOD2, LOD2_WHEEL = 0.35, 0.10, 0.08
 ATLAS_W, ATLAS_H, PAD = 2048, 1024, 8
 # Atlas cells (x, y, w, h) in texels, y up from the bottom row like UV v.

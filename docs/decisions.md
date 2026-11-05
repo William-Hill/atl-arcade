@@ -1128,5 +1128,5 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 
 ## 2026-11-05: epic/assets — murals only on blank walls
 - A mural was pasted over the shader's windows (an 8-storey glass wall facing the trail). Murals now go only on walls with no windows behind them.
-- `muralWalls()` skips glass offices, parking decks, buildings over `MURAL_MAX_FLOORS` (5) floors, and one-floor storefronts. Real mural walls are blank side walls of walk-ups, lofts and shops, not towers. The level goes from 38 murals to 31.
+- `muralWalls()` skips glass offices, parking decks, buildings over `MURAL_MAX_FLOORS` (5) floors, and one-floor storefronts. Real mural walls are blank side walls of walk-ups, lofts and shops, not towers. The level goes from 38 murals to 30.
 - The mural wall is `FACE.blank` (facade kind 3) from `floor0` up. For a storefront `floor0` is 1, so its shop floor keeps its glass; otherwise it is 0. The facade shader draws no window, frame, sill, lintel or floor slab on a blank wall, and the facade kit puts no sills there. This costs no extra geometry: the one wall quad becomes two at most.

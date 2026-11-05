@@ -25,7 +25,9 @@ function grindName(id, seconds) {
 
 export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, beat = null) {
   const prev = run.skater;
-  const skater = stepSkater(prev, input, dt, env, skaterEnv);
+  // Style moves last a whole number of beats at the clock's BPM (per track, #110).
+  const moveEnv = beat && beat.bpm ? { ...skaterEnv, bpm: beat.bpm } : skaterEnv;
+  const skater = stepSkater(prev, input, dt, env, moveEnv);
   const time = run.time + dt;
   let combo = run.combo;
   const moves = [];

@@ -2,56 +2,11 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { loadavg } from "node:os";
 import { expect, test } from "@playwright/test";
 import { GRIND } from "../src/sim/skate/constants.js";
+import { measureTaps } from "./beat-taps.js";
 
 async function ready(page) {
   await page.goto("/?mute=1");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
-}
-
-// Dispatches `count` real keydown events timed to the next beats with the
-// same anchor mapping the game uses, and judges each event's timeStamp.
-async function measureTaps(page, count, pauseRender) {
-  return page.evaluate(
-    async ({ count, pauseRender }) => {
-      const clock = window.__atl.beat;
-      await clock.start();
-      await new Promise((r) => setTimeout(r, 400));
-      if (!clock.ctx || clock.ctx.state !== "running") return { error: `audio context state: ${clock.ctx && clock.ctx.state}` };
-      window.__atl.renderPaused = pauseRender;
-      const offsets = [];
-      const taps = [];
-      const first = Math.ceil(clock.now() / clock.beatLen) + 1;
-      await new Promise((resolve) => {
-        const onKey = (e) => {
-          if (e.code !== "KeyP") return;
-          const j = clock.judge(clock.inputTime(e.timeStamp));
-          offsets.push(j.offsetMs);
-          taps.push({ index: j.index, offsetMs: Number(j.offsetMs.toFixed(2)), tag: j.tag });
-          if (offsets.length === count) {
-            window.removeEventListener("keydown", onKey);
-            resolve();
-          }
-        };
-        window.addEventListener("keydown", onKey);
-        for (let i = 0; i < count; i += 1) {
-          const audio = clock.startTime + (first + i) * clock.beatLen + clock.totalOffsetSec;
-          const perf = clock.anchor.perf + (audio - clock.anchor.audio) * 1000;
-          // setTimeout fires a few ms late; wake early and spin to the exact time.
-          setTimeout(() => {
-            while (performance.now() < perf) {
-              /* spin */
-            }
-            window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyP", bubbles: true }));
-          }, Math.max(0, perf - performance.now() - 8));
-        }
-      });
-      window.__atl.renderPaused = false;
-      const mean = offsets.reduce((a, b) => a + b, 0) / offsets.length;
-      const sd = Math.sqrt(offsets.reduce((a, x) => a + (x - mean) ** 2, 0) / (offsets.length - 1));
-      return { mean, sd, within60: offsets.filter((o) => Math.abs(o) <= 60).length, taps, bpm: clock.bpm, latencyMs: clock.outputLatencySec * 1000 };
-    },
-    { count, pauseRender },
-  );
 }
 
 // The @beat-timing tag puts this test in its own Playwright project, which

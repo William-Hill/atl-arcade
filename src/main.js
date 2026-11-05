@@ -17,6 +17,7 @@ import { createMinimap } from "./ui/minimap.js";
 import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
 import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
+import { beatClockOptions, trackChoices, writeChoice } from "./audio/music-tracks.js";
 import { loadLevel, resolveLevelName } from "./level/levels.js";
 import { goalsFor } from "./level/goals.js";
 import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
@@ -483,7 +484,17 @@ function collectFactCard(id) {
   events.push({ tick: run.tick, type: "card", id, count: cardCount() });
   return true;
 }
-const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: () => resetSkater() }) : null;
+// Music (#110): the beat clock plays a track from assets/music/tracks.json;
+// the results screen picks it and localStorage keeps the choice.
+const beat = new BeatClock(beatClockOptions(params, window.localStorage));
+beat.muted = params.get("mute") === "1";
+beat.preload();
+const musicChoices = beat.tracks.length ? trackChoices(beat.tracks) : [];
+const onTrack = (id) => {
+  writeChoice(window.localStorage, id);
+  beat.setTrack(id).catch(() => {});
+};
+const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: () => resetSkater(), tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack }) : null;
 // The minimap (#86) on a geodata level. ?minimap=0 leaves it out, and
 // ?minimap=north or ?minimap=heading sets the mode.
 const minimapParam = params.get("minimap");
@@ -494,8 +505,6 @@ const events = [];
 // Beat clock: starts on the first key or pointer press (browser audio
 // policy). The beat never gates input; moves that land near a beat earn
 // the on-beat bonus and a PERFECT / GOOD tag.
-const beat = new BeatClock();
-beat.muted = params.get("mute") === "1";
 // Call start() on every gesture: a context made too early stays suspended
 // until a gesture resumes it.
 function startBeat() {

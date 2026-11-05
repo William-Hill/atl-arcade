@@ -14,6 +14,12 @@ export const CAR_MODEL_URLS = {
   sedan: new URL("../../assets/vehicles/sedan.glb", import.meta.url).href,
   pickup: new URL("../../assets/vehicles/pickup.glb", import.meta.url).href,
   bus: new URL("../../assets/vehicles/bus.glb", import.meta.url).href,
+  hatchback: new URL("../../assets/vehicles/hatchback.glb", import.meta.url)
+    .href,
+  van: new URL("../../assets/vehicles/van.glb", import.meta.url).href,
+  taxi: new URL("../../assets/vehicles/taxi.glb", import.meta.url).href,
+  box_truck: new URL("../../assets/vehicles/box_truck.glb", import.meta.url)
+    .href,
 };
 
 const WHEELS = ["wheel_FL", "wheel_FR", "wheel_RL", "wheel_RR"];

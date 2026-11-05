@@ -60,9 +60,11 @@ export const TRAFFIC = {
 // collides with the same box.
 export const CAR_SIZE = {
   sedan: { length: 4.6, width: 1.8, height: 1.45 },
-  hatchback: { length: 4.0, width: 1.75, height: 1.5 },
+  hatchback: { length: 4.1, width: 1.75, height: 1.55 },
   pickup: { length: 5.4, width: 2.0, height: 1.85 },
-  van: { length: 5.0, width: 2.0, height: 2.1 },
+  van: { length: 5.2, width: 2.4, height: 3.1 },
+  taxi: { length: 4.9, width: 1.95, height: 1.65 },
+  box_truck: { length: 7.5, width: 2.5, height: 3.9 },
   bus: { length: 12, width: 2.55, height: 3.1 },
 };
 
@@ -242,10 +244,12 @@ export function carBodyDistance(car, px, pz) {
 function pickKind(rand, busOk) {
   const r = rand();
   if (busOk && r < 0.12) return "bus";
-  if (r < 0.5) return "sedan";
-  if (r < 0.72) return "hatchback";
-  if (r < 0.85) return "pickup";
-  return "van";
+  if (r < 0.45) return "sedan";
+  if (r < 0.65) return "hatchback";
+  if (r < 0.77) return "pickup";
+  if (r < 0.87) return "van";
+  if (r < 0.94) return "taxi";
+  return "box_truck";
 }
 
 const flatHeight = () => 0;

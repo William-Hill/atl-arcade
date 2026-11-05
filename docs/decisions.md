@@ -1052,3 +1052,9 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Krog Street Tunnel is outside the level bounds: skipped.
 - Integration is for the parent session: claim the four footprints, drop the PCM img2threejs tower and rooftop sign entry, add the GLBs as THREE.LOD at their origin with yaw 0. `scripts/assets/landmarks-preview.html` does this as a preview only, without editing shared code.
 ||||||| d79d170
+
+## 2026-11-04: epic/assets — hatchback, van, taxi and box truck in traffic
+- The four PR #148 GLBs are near-LOD models in `src/render/car-models.js` (pbr look), next to sedan, pickup and bus. Farther cars draw the kit shapes.
+- `CAR_SIZE` follows the GLB bodies, so the skater's collision box matches what is drawn: hatchback 4.1 m long and 1.55 m tall; van 5.2 × 2.4 × 3.1 m (a high-roof van); taxi 4.9 × 1.95 × 1.65 m (the roof light sticks out above the box); box truck 7.5 × 2.5 × 3.9 m.
+- The car kit gains a yellow taxi (its own colors, no paint) and a box truck (painted cab, white box) with far shapes, so the procedural fallback and `?carglb=0` match the new kinds.
+- Traffic mix (`pickKind`): sedan 45%, hatchback 20%, pickup 12%, van 10%, taxi 7%, box truck 6%, plus the bus where allowed. Parking is unchanged (no parked taxis or trucks).

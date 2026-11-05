@@ -54,7 +54,7 @@ show more floors than the uphill walls. Bridge structure follows
 
 | File | LOD tris | Bytes | Textures | Est. GPU texture memory |
 |---|---|---|---|---|
-| `assets/landmarks/ponce-city-market/ponce-city-market.glb` | lod0 32,520 / lod1 6,051 / lod2 341 (9 sections) | 0.79 MB | 13 (7x 512x512, 5x 256x256, 1x 64x64) | 11.0 MiB |
+| `assets/landmarks/ponce-city-market/ponce-city-market.glb` | lod0 32,522 / lod1 6,053 / lod2 341 (4 sections) | 0.72 MB | 13 (7x 512x512, 5x 256x256, 1x 64x64) | 11.0 MiB |
 | `assets/landmarks/telephone-factory-lofts/telephone-factory-lofts.glb` | lod0 3,769 / lod1 1,101 | 0.50 MB | 12 (8x 512x512, 4x 256x256) | 12.0 MiB |
 | `assets/landmarks/studioplex/studioplex.glb` | lod0 4,274 / lod1 1,593 | 0.44 MB | 11 (7x 512x512, 4x 256x256) | 10.7 MiB |
 | `assets/landmarks/new-realm-brewing/new-realm-brewing.glb` | lod0 2,352 / lod1 529 | 0.42 MB | 11 (7x 512x512, 4x 256x256) | 10.7 MiB |
@@ -92,12 +92,18 @@ with the facade rule of `geo-view.js`: a window glows when its key is under
 `main.js` is unchanged; `setWindowLit(v)` overrides it). In the day
 `windowLit` is 0 and nothing glows.
 
-LOD and shadows: PCM is split into a 3 x 3 grid of sections
-(`ponce-city-market_s<i>_lod<n>`, each node at its section center), each its
-own `THREE.LOD` (LOD1 at 90 m, LOD2 at 320 m from the section center), so
-only the sections near the camera use LOD0. Landmark meshes no longer cast
+LOD and shadows: PCM is split into a 2 x 2 grid of sections
+(`ponce-city-market_s<i>_lod<n>`, each node at its section center; every
+wall goes whole to the section of its midpoint at every LOD, so mixed LODs
+leave no gaps), each its own `THREE.LOD` (LOD1 at 110 m, LOD2 at 320 m from
+the section center), so only the sections near the camera use LOD0.
+Materials that differ only by a color factor (PCM dark brick, sills, cream
+trim) are drawn as their base material with a vertex color (COLOR_0): fewer
+primitives, so fewer draw calls per section. Landmark meshes no longer cast
 shadows; each GLB gets one shadow proxy (its coarsest LOD merged into one
-position-only mesh, fences left out) that casts for it.
+position-only mesh, fences left out) that casts for it, on layer 7, which
+`landmark-models.js` enables on the shadow cameras of the scene's shadow
+lights, so the proxy costs no main-pass draw call.
 
 ## The landmarks
 
@@ -118,9 +124,9 @@ braces) at the same spot and size as the game's rooftop sign, with the
 generic text "CITY MARKET" (no real lettering or logo). No rooftop water
 tower: the NRHP form puts the large water tank inside the tower.
 
-- LOD0 32,520 tris (was 57,432; no sill boxes, 9 instead of 11 floors),
-  LOD1 6,051 (flush windows, pilasters, bands), LOD2 341 (one tiling
-  far-facade texture per wall), each split over 9 sections.
+- LOD0 32,522 tris (was 57,432; no sill boxes, 9 instead of 11 floors),
+  LOD1 6,053 (flush windows, pilasters, bands), LOD2 341 (one tiling
+  far-facade texture per wall), each split over 4 sections.
 - The lower part: the one-story 1926 shipping room on the south side is its
   own OSM footprint (`w619595557`), a generic building, now 7 m (one tall
   retail floor) instead of 10 m by a height override in

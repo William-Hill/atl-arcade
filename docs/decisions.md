@@ -1079,12 +1079,15 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
   `levels/beltline-eastside/heights.json`, so the colliders match the models.
   The PCM rooftop water tower is removed: the NRHP form puts the tank inside
   the tower.
-- PCM is split into 3 x 3 sections, each its own `THREE.LOD` from its own
-  center (LOD1 at 90 m, LOD2 at 320 m), instead of one LOD from the center
+- PCM is split into 2 x 2 sections, each its own `THREE.LOD` from its own
+  center (LOD1 at 110 m, LOD2 at 320 m), instead of one LOD from the center
   of a 180 m building; the LOD0 sill boxes are gone (the window reveal keeps
-  the sill line).
+  the sill line). 3 x 3 cut triangles the same but raised draw calls (150 ->
+  194 at the PCM trail camera: 8 sections x 5-11 materials), so 2 x 2 plus
+  vertex-color merged materials (dark brick, sill, cream trim) it is.
 - Landmark meshes do not cast shadows; one shadow proxy per GLB (the
-  coarsest LOD, merged, position only) casts for it. Shadows were ~28 calls
+  coarsest LOD, merged, position only) casts for it, on a layer only the
+  shadow cameras see (found in the scene by `landmark-models.js`). Shadows were ~28 calls
   and ~115k triangles at the PCM trail camera.
 - Night windows: an emissive map on the window atlas plus a per-window light
   key in TEXCOORD_1, lit by the facade rule of `geo-view.js`

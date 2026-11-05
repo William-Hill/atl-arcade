@@ -1124,3 +1124,91 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
 - `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
 - `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
+## 2026-11-05 — Body repair after rejected skater videos
+
+- Treat the earlier `raw/*-animated.glb` videos as rejected outputs.
+  Source bone names and animation counts did not prove correct deformation.
+- Marcus's failed automatic weights retained whole-part rigid assignments.
+  His jacket followed `Spine2`; both shorts legs followed `RightUpLeg`.
+  Adjacent parts separated by up to 0.73055 m in the exported motion.
+- Fit the body joints and use continuous weights across Marcus's parts.
+  Weld coincident vertices before reduction. Preserve UV coordinates on
+  face corners. This removes the surface defects introduced by reduction
+  of disconnected source vertices.
+- Share Nia's weights at part boundaries and bind each skate assembly to
+  its foot. Use quaternion foot targets for both new candidates.
+  Euler targets caused a 51.79-degree right-foot step in Nia's `coast`.
+- Keep candidates separate: `nia/raw/review-v4` and `marcus/raw/review-v6`.
+  Both have 65 joints and 24 clips. The game assets remain unchanged.
+- Sample separation across all 24 exported clips. The maximum increase is
+  0.00002 m for Nia and 0.00571 m for Marcus. The foot-step check also passes.
+  Render fresh MP4s from these GLBs at 30 fps. Verify encoded frame counts.
+- User approval, runtime checks, and Marcus's independent finger articulation
+  remain open. See `scripts/blender/SKATER-REPAIR.md` for commands and limits.
+
+## 2026-11-05 — Tripo PBR skater regeneration (multiview + parts)
+- Concept art: Codex imagegen chosen over AutoSprite for all 3 views of both
+  skaters (AutoSprite side views broke T-pose; Codex kept strict T + better
+  fabric detail). AutoSprite set kept as *-autosprite-*.png. 18 AS + 0 Codex cr.
+- Parts flow costs ~145 cr/char vs 115 est. (texture is now a separate 20-cr
+  step + 5-cr PBR pass). Remove Lighting toggle ON = no baked shading.
+- Rigged exports are FBX-only in the current Studio UI (Blender preset, 4k,
+  skeleton). GLB comes out of our Blender step anyway.
+- 18k-quad retopo (face-rig test) exceeds Tripo's auto-rig cap — rig fails
+  with no charge. Marcus kept as unrigged GLB + FBX for mixamo.com instead.
+- MetaHuman-in-three.js is license-legal since MetaHuman 5.6 EULA (any
+  engine); not pursued — decals stay the face plan.
+
+## 2026-11-05 — Forward strides and Nia's arm proportions
+
+- The user approved a 40-credit Tripo motion test. Both five-second motions are exported.
+  The user judged them as dances, not the required forward stride.
+- Preserve the Tripo exports under `raw/tripo-motion-v1/`.
+  Use them as dance references. They still need foot-motion cleanup before integration.
+- Separate the forward push from the coast. Use distinct motion profiles for each character.
+  Nia uses a two-second cycle. Marcus uses a 1.6-second cycle.
+- Correct Nia's source proportions in the mesh and skeleton.
+  Her arm span changes from 1.23 m to 1.51 m at a height of 1.70 m.
+  Her upper arms measure 0.26 m. Her forearms measure 0.23 m.
+- Calibrate the knee pole angles for each rig.
+  Place each skate from its sole geometry. Transfer the hips over the support skate before recovery.
+- Keep the new two-clip candidates under `raw/forward-v1/`.
+  The arm, knee, support, loop, separation, and foot-step checks pass.
+  The support check failed before correction on Marcus: 0.111 m offset. The corrected offset is 0.035 m.
+- The new forward work uses Blender scripts and costs no credits.
+  User review, the full clip rebuild, and game verification remain open.
+
+## 2026-11-05 — Blender corrections for forward v2
+
+- Use Blender for Nia's upper-body motion and Marcus's shorts and ankle deformation.
+  Preserve the Tripo geometry and the earlier review files.
+- Add Nia's arm stroke, elbow variation, and torso counter-rotation.
+  Keep her corrected arm proportions and existing leg paths.
+- Correct Marcus's hip joints and knee bend planes.
+  The old IK solve twisted his right thigh by 113 degrees without changing bone scale.
+  The new maximum axial leg twist is 12.64 degrees.
+- Spread the ankle bend through the boot cuffs and calves.
+  Fit the shorts weights while preserving the attachment seams.
+  Preserve the seed GLB, fitted weights, source hashes, and rebuild script.
+- Add an exported deformation check across every frame of both forward clips.
+  The v1 asset fails. The v2 asset passes the same limits.
+  Worst-frame 99th-percentile edge ratios fall from 2.80 to 1.20 for the shorts
+  and from 2.36 to 1.19 for the worst ankle.
+- Keep the candidates in `raw/forward-v2/`.
+  Render full front and side cycles with constant light and source hashes.
+  These remain review assets. Marcus's fingers and the full runtime clip set remain open.
+
+## 2026-11-05 — Runtime skater assets from the approved v2 review
+
+- Promote the reviewed v2 bodies into `assets/skaters/<name>/skater.glb` and
+  `skater-1024.glb`. The files remain below the 10 MB repository limit.
+- Keep the v2 forward push and coast. Append the existing gameplay clip set to
+  preserve game coverage. Set `use_fake_user` on imported actions so Blender
+  retains them through save and export.
+- Add Nia's `dance_smoothquad`, retargeted from the approved Tripo dance FBX
+  to her corrected 1.70 m body. Map it as a groove dance.
+- Raise the GLB checks to match the approved PBR assets: under 10 MB, under
+  45,000 triangles, 65 Mixamo joints, and ground bounds across all primitives.
+- Two five-second Tripo motion tests remain approved at 20 credits each.
+  The MCP exposes no text-to-motion tool and the carrier task returns 404, so
+  generation stays a follow-up Studio task.

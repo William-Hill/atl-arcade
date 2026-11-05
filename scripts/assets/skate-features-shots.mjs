@@ -15,8 +15,13 @@ const take = (k, d) => {
 };
 const out = take("--out", "docs/skate-features");
 const onlyTag = take("--only", null);
-const plaza = take("--plaza", "473,-7,0");
-const [px, pz] = plaza.split(",").map(Number);
+const plaza = take("--plaza", "311.5,-85.2,-1.403");
+const [px, pz, pyaw = 0] = plaza.split(",").map(Number);
+// Plaza space to world (the same yaw as toWorld in src/level/skate-features.js).
+const cy = Math.cos(pyaw);
+const sy = Math.sin(pyaw);
+const wx = (dx, dz) => px + dx * cy + dz * sy;
+const wz = (dx, dz) => pz - dx * sy + dz * cy;
 // [name, cam relative to the plaza: eye dx, eye height over the ground, eye dz, target dx, target height, target dz]
 const SHOTS = [
   ["plaza-wide", [0, 12, 30, 0, 0, 0]],
@@ -46,9 +51,14 @@ const browser = await chromium.launch({
 const log = [];
 try {
   for (const [name, c] of want) {
-    const cam = [px + c[0], c[1], pz + c[2], px + c[3], c[4], pz + c[5]].map(
-      (v) => +v.toFixed(2),
-    );
+    const cam = [
+      wx(c[0], c[2]),
+      c[1],
+      wz(c[0], c[2]),
+      wx(c[3], c[5]),
+      c[4],
+      wz(c[3], c[5]),
+    ].map((v) => +v.toFixed(2));
     for (const [tag, path] of tags) {
       // A fresh page per shot: a heavy pbr page can stall the next navigation.
       const page = await browser.newPage({

@@ -95,7 +95,7 @@
         }
       },
       "cleanup_2026_11_05": {
-        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key sedan)",
+        "script": "blender -b -P scripts/blender/vehicle_lods.py -- --patch (regions in scripts/blender/vehicle_cleanup.json, key sedan)",
         "painted": [
           "emblem in the front grille",
           "round emblem on the trunk",
@@ -199,7 +199,7 @@
       "note": "Third generation, two axles. 3.08 m wide with mirrors (about 2.6 m body) and 3.49 m high at 12 m long; CAR_SIZE.bus is 2.55 x 3.1. Earlier attempts (preview 01a1a7b6-7fbc-734a-a40b-e6f11538448f: a stubby coach; preview 01a1a7c0-b525-7447-aab2-2ee07a63b4d1: a tandem-axle coach, 4.0 m high) were discarded.",
       "rejected_attempt_credits": 30,
       "cleanup_2026_11_05": {
-        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key bus)",
+        "script": "blender -b -P scripts/blender/vehicle_lods.py -- --patch (regions in scripts/blender/vehicle_cleanup.json, key bus)",
         "painted": [
           "left sign under the windshield",
           "center sign under the windshield",
@@ -295,7 +295,7 @@
         }
       },
       "cleanup_2026_11_05": {
-        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key pickup)",
+        "script": "blender -b -P scripts/blender/vehicle_lods.py -- --patch (regions in scripts/blender/vehicle_cleanup.json, key pickup)",
         "painted": [
           "emblem in the front grille",
           "badge on the tailgate handle"
@@ -429,7 +429,7 @@
         "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
       },
       "cleanup_2026_11_05": {
-        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key hatchback)",
+        "script": "blender -b -P scripts/blender/vehicle_lods.py -- --patch (regions in scripts/blender/vehicle_cleanup.json, key hatchback)",
         "painted": [
           "chevron badge above the front grille"
         ]
@@ -699,7 +699,7 @@
         "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
       },
       "cleanup_2026_11_05": {
-        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key taxi)",
+        "script": "blender -b -P scripts/blender/vehicle_lods.py -- --patch (regions in scripts/blender/vehicle_cleanup.json, key taxi)",
         "painted": [
           "chevron badge above the front grille",
           "small emblem on the rear bumper",

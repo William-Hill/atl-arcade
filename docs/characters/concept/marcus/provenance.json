@@ -18,8 +18,58 @@
       "credits_spent": 3,
       "use": "The style target for the toon shading (M1-06) and the skater select art",
       "prompt": "Dynamic full-body action pose of an original cel-shaded game character, Jet Set Radio inspired style with bold ink outlines and flat color. A 28-year-old Black man roller skater doing a low crossover step on quad skates, arms out for balance, big smile. Brown skin, high-top fade, short neat beard. Short teal track jacket over a white tee, navy knee-length shorts, white knee pads. High-top black quad roller skates with teal wheels and white toe stops. No logos, no text."
+    },
+    {
+      "file": "marcus-pbr-front.png",
+      "date": "2026-11-05",
+      "tool": "Codex CLI 0.166.0-alpha.5.1 exec, built-in image_gen tool (model gpt-6-astra), session 01a1a983-0b83-7283-9886-139beba50893",
+      "credits_spent": 0,
+      "use": "The front view for Tripo multiview image-to-3D (PBR regeneration)",
+      "prompt": "Stylized-realistic PBR game character concept art, full-body front view, strict T-pose, arms straight out to the sides, palms down, legs apart. A 28-year-old Black man roller skater with brown skin, a high-top fade haircut, a short neat beard. Short teal nylon track jacket zipped over a white cotton tee, navy knee-length twill shorts, white knee pads, teal wristbands. High-top black leather quad roller skates with four teal urethane wheels each, metal trucks and white toe stops. Flat, even, shadowless studio lighting from all sides, no rim light, no cast shadows, no ambient occlusion, true material colors. Visible fabric texture, stitching and seams. Solid white background. No logos, no text."
+    },
+    {
+      "file": "marcus-pbr-left.png",
+      "date": "2026-11-05",
+      "tool": "Codex CLI exec, built-in image_gen tool, session 01a1a988-5de3-7d01-b6bf-156fb6b0c0d1, marcus-pbr-front.png attached as the reference",
+      "credits_spent": 0,
+      "use": "The left view for Tripo multiview image-to-3D",
+      "prompt": "Full-body left side view (profile, facing left) of the same character in the reference image, strict T-pose, same outfit, flat even shadowless studio lighting, solid white background, no logos, no text."
+    },
+    {
+      "file": "marcus-pbr-back.png",
+      "date": "2026-11-05",
+      "tool": "Codex CLI exec, built-in image_gen tool, session 01a1a988-a2c3-79f2-b55a-844c2bead0eb, marcus-pbr-front.png attached as the reference",
+      "credits_spent": 0,
+      "use": "The back view for Tripo multiview image-to-3D",
+      "prompt": "Full-body back view of the same character in the reference image, strict T-pose, same outfit, flat even shadowless studio lighting, solid white background, no logos, no text."
+    },
+    {
+      "file": "marcus-autosprite-front.png",
+      "date": "2026-11-05",
+      "tool": "Autosprite create_character, quality pro, prompt template on (white background)",
+      "autosprite_character_id": "cmw2ws12t00c512lyl3ib5f9z",
+      "credits_spent": 3,
+      "use": "Alternative front view, kept for the Codex comparison. Not used for Tripo.",
+      "prompt": "Stylized-realistic PBR game character, full-body front view, strict T-pose, arms straight out, palms down, legs apart. A 28-year-old Black man roller skater, brown skin, high-top fade haircut, short neat beard. Short teal nylon track jacket zipped over a white tee, navy knee-length twill shorts, white knee pads, teal wristbands. High-top black leather quad skates with four teal urethane wheels, metal trucks, white toe stops. Flat even shadowless lighting, no rim light, no cast shadows, true material colors, visible fabric texture and stitching. No logos, no text."
+    },
+    {
+      "file": "marcus-autosprite-left.png",
+      "date": "2026-11-05",
+      "tool": "Autosprite generate_pose on cmw2ws12t00c512lyl3ib5f9z, job cf_6d5c68f1-0caf-4ff8-bb52-1f75327d5723",
+      "credits_spent": 3,
+      "use": "Rejected: the arm is bent, not a strict T-pose. Not used for Tripo.",
+      "prompt": "Full-body left side view (profile, facing left), strict T-pose, same outfit, flat even shadowless studio lighting, white background."
+    },
+    {
+      "file": "marcus-autosprite-back.png",
+      "date": "2026-11-05",
+      "tool": "Autosprite generate_pose on cmw2ws12t00c512lyl3ib5f9z, job cf_6f2c4ba8-1144-4c61-b863-af0a75b41689",
+      "credits_spent": 3,
+      "use": "Alternative back view, kept for the Codex comparison. Not used for Tripo.",
+      "prompt": "Full-body back view, strict T-pose, same outfit, flat even shadowless studio lighting, white background."
     }
   ],
   "autosprite_credits_before": 1851,
-  "autosprite_credits_spent": 6
+  "autosprite_credits_spent": 15,
+  "pbr_regen_note": "2026-11-05: six views generated with Codex imagegen (chosen for Tripo) and six with Autosprite (kept for comparison). The Autosprite left view has a bent arm, not a strict T-pose."
 }

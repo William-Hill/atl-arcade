@@ -34,7 +34,7 @@ City Market) with `extras.lodDistance` (m): build a `THREE.LOD` from them.
 | Landmark | Source footprint | Height | Placement (x, y, z), yaw |
 |---|---|---|---|
 | ponce-city-market | OSM `w184803195`, 26 points, 182.84 x 177.32 m | 50 m (height); walls 0.06 to 53.98 m | (-235.78, 3.98, -852.11), 0 |
-| telephone-factory-lofts | OSM `w185605331`, 7 points, 81.02 x 84.13 m | 9.13 m (overture); walls 15.88 to 29.31 m | (224.75, 20.18, -366.25), 0 |
+| telephone-factory-lofts | OSM `w185605331`, 7 points, 81.02 x 84.13 m | 17.8 m (override; was 9.13 m Overture); walls 24.55 to 37.98 m | (224.75, 20.18, -366.25), 0 |
 | studioplex | OSM `r11742136`, 11 points, 11 holes, 71.79 x 164.03 m | 7.4 m (levels); walls 40.00 to 48.72 m | (-280.31, 41.32, 970.48), 0 |
 | new-realm-brewing | OSM `w961282227`, 4 points, 31.12 x 29.32 m | 12.1 m (overture); walls 20.23 to 33.23 m | (119.79, 21.13, -475.9), 0 |
 | bridge-north-ave | OSM `w741961708` (cycleway, 4.3 m), OSM `w83294497` (cycleway, 4.3 m) | deck 13.63 to 15.08 m | (-56.16, 13.63, -709.62), 0 |
@@ -134,8 +134,8 @@ tower: the NRHP form puts the large water tank inside the tower.
 - The model replaces both the img2threejs tower top and the game's rooftop
   "PONCE CITY MARKET" sign: drop that entry from `LANDMARKS` when the GLB is
   used, and claim the footprint (`claim: true`).
-- The water tower is modeled in Blender (about 600 tris); Meshy was not
-  needed.
+- No rooftop water tower: the NRHP form puts the large water tank inside
+  the tower, so the old rooftop tank prop is gone.
 - Not modeled: the rooftop park. The tower stage heights above the roof
   (10.7 m of brick, 7.2 m arched stage, 5.2 m roof) are estimated from the
   photo references, not sourced.

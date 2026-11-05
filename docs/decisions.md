@@ -1070,6 +1070,62 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - `src/render/landmark-models.js` loads the eight GLBs as `THREE.LOD`s at their `sites.json` origins (only on the level the sites were built for). The files embed copies of the same brick, concrete and window images, so a GLTFLoader plugin keys every embedded image by its bytes and sampler and hands later files the first texture: each image is uploaded to the GPU once instead of once per file.
 - `muralWalls()` skips claimed footprints, so no mural shows through a landmark model (New Realm Brewing had one).
 
+## 2026-11-05: epic/assets — Beltline Eastside landmark fixes (heights, night windows, cost)
+
+- Heights from sources, not map data, where a source gives storeys: PCM 9
+  storeys at the OSM 50 m (NRHP form 16000769), the PCM one-story shipping
+  room 7 m and the Telephone Factory Lofts 4 storeys at 17.8 m plus a 23 m
+  entrance tower (Wikipedia). The two footprint heights are overrides in
+  `levels/beltline-eastside/heights.json`, so the colliders match the models.
+  The PCM rooftop water tower is removed: the NRHP form puts the tank inside
+  the tower.
+- PCM is split into 2 x 2 sections, each its own `THREE.LOD` from its own
+  center (LOD1 at 110 m, LOD2 at 320 m), instead of one LOD from the center
+  of a 180 m building; the LOD0 sill boxes are gone (the window reveal keeps
+  the sill line). 3 x 3 cut triangles the same but raised draw calls (150 ->
+  194 at the PCM trail camera: 8 sections x 5-11 materials), so 2 x 2 plus
+  vertex-color merged materials (dark brick, sill, cream trim) it is.
+- Landmark meshes do not cast shadows; one shadow proxy per GLB (the
+  coarsest LOD, merged, position only) casts for it, on a layer only the
+  shadow cameras see (found in the scene by `landmark-models.js`). Shadows were ~28 calls
+  and ~115k triangles at the PCM trail camera.
+- Night windows: an emissive map on the window atlas plus a per-window light
+  key in TEXCOORD_1, lit by the facade rule of `geo-view.js`
+  (`key < windowLit * 0.6`, strength `windowLit`). `landmark-models.js`
+  reads the facade `uLit` uniform from the scene, so `main.js` and
+  `weather-view.js` are unchanged.
+- Texture memory: one red brick color image for every red brick (glTF color
+  factors), roughness and the window glow at 256 px, the window color atlas
+  at 512 px: about 11 MiB per building instead of 17-19 MiB.
+- Studioplex is cut at the level's south bound in the generator
+  (`sites.json` carries the bounds); a cut inside the bound would leave the
+  uncut claimed-footprint collider as an invisible wall.
+- PCM LOD2 window light is keyed per tiled UV cell (a hash of
+  `floor(vEmissiveMapUv)`), so far walls do not light all at once.
+
+
+## 2026-11-05: epic/assets — painted murals for the pbr look (assets/murals)
+- 16 original mural designs (dogwood, peach, magnolia, brown thrasher, heron and river, skyline silhouettes, the BeltLine trail, skaters, music, porch-row neighbors, a crowd wave, a night rink) are drawn from code with the Chromium 2D canvas (`scripts/assets/mural-atlas.mjs`, seed 1979), then a per-pixel paint pass adds brush strokes, a ragged dry-brush edge over painted brick or stucco, mortar show-through, weathering, and a roughness atlas. No image model, no Meshy (0 credits), no real murals, artists' styles, or brands.
+- Canvas, not Blender: the art is flat paint on a wall, and the 2D canvas gives exact lettering and shapes and runs in seconds; the storefront atlas uses the same tool.
+- Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
+- `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
+- `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
+## 2026-11-05: epic/assets — traffic vehicle LODs and a shared 512 px atlas
+- `scripts/blender/vehicle_lods.py` (Blender 5.2.3, no Meshy) builds, per kind, LOD1 (collapse decimate to ~35% of LOD0 triangles, same `body > steer_FL/FR > wheel_FL/FR`, `body > wheel_RL/RR` rig and pivots) and LOD2 (~10%, wheels merged into the body).
+- Packaging: one sibling file, `assets/vehicles/vehicles_lod.glb` (1.8 MB, Draco), with all 7 kinds' LOD1/LOD2 on one material. Why not inside each `<kind>.glb`: the low tiers would still download and upload the 1024 px LOD0 textures; why not 14 sibling GLBs: one shared atlas lets every far car of every kind draw in one BatchedMesh call instead of 7, and one request instead of 14.
+- Textures: a 2048x1024 atlas per role (base color, metallic-roughness, normal), 512x512 per kind and 1024x512 for the 12 m bus, 8 texel padding: 33.5 MB GPU for the whole fleet, vs 16.7 MB per kind for the 1024 sets. LOD0 keeps its 1024 sets on high.
+- Distances (`CAR_LOD_DISTANCES` in `src/render/car-models.js`): LOD0 < 25 m, LOD1 to 70 m, LOD2 to 140 m; kit cars only from 140 m to 240 m (they were used from 70 m). `?quality=low|phone` skips the 7 LOD0 GLBs and draws LOD1 near. `src/render/car-view.js` hands every car within `models.range` to the GLB view; `?carglb=0` keeps the kit cars as before.
+- LOD1 has no `wheels_roll` clip: the game never played it (car-models.js spins and steers the wheel instances itself).
+- Badge cleanup: `scripts/blender/vehicle_cleanup.json` boxes (glTF meters) on the taxi (grille chevron, rear emblem, trunk mark), sedan, pickup, hatchback, and bus (windshield signs, roof-box lettering). Texels are masked by their interpolated 3D position, not face centers, because plates and badges often sit on large faces. The fill is the median of a separate sample box. With `--patch` the script also writes the painted 1024 textures back into the LOD0 GLBs in place (another JPEG encode), so restore `assets/vehicles/*.glb` first; without it, re-runs only rebuild `vehicles_lod.glb`.
+
+## 2026-11-05: epic/assets — painted murals for the pbr look (assets/murals)
+- 16 original mural designs (dogwood, peach, magnolia, brown thrasher, heron and river, skyline silhouettes, the BeltLine trail, skaters, music, porch-row neighbors, a crowd wave, a night rink) are drawn from code with the Chromium 2D canvas (`scripts/assets/mural-atlas.mjs`, seed 1979), then a per-pixel paint pass adds brush strokes, a ragged dry-brush edge over painted brick or stucco, mortar show-through, weathering, and a roughness atlas. No image model, no Meshy (0 credits), no real murals, artists' styles, or brands.
+- Canvas, not Blender: the art is flat paint on a wall, and the 2D canvas gives exact lettering and shapes and runs in seconds; the storefront atlas uses the same tool.
+- Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
+- `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
+- `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
+
+
 ## 2026-11-05: epic/assets — murals only on blank walls
 - A mural was pasted over the shader's windows (an 8-storey glass wall facing the trail). Murals now go only on walls with no windows behind them.
 - `muralWalls()` skips glass offices, parking decks, buildings over `MURAL_MAX_FLOORS` (5) floors, and one-floor storefronts. Real mural walls are blank side walls of walk-ups, lofts and shops, not towers. The level goes from 38 murals to 31.

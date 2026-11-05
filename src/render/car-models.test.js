@@ -1,25 +1,28 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import {
+  CAR_LOD_DISTANCES,
   MAX_STEER,
+  carLodFor,
   createCarModelView,
+  nearestLevel,
   fitScale,
   rolled,
   steerAngle,
+  vehicleLod2,
   vehicleModel,
   yawDelta,
 } from "./car-models.js";
 import { CAR_SIZE } from "../sim/traffic/traffic.js";
 
 // A stand-in vehicle GLB scene: a 4 m body along z and four 0.3 m wheels.
-function fakeScene() {
+function fakeScene(prefix = "", mat = new THREE.MeshStandardMaterial()) {
   const scene = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial();
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(1.8, 1.2, 4).translate(0, 0.9, 0),
     mat,
   );
-  body.name = "body";
+  body.name = `${prefix}body`;
   scene.add(body);
   for (const [name, x, z] of [
     ["wheel_FL", -0.8, 1.4],
@@ -31,11 +34,11 @@ function fakeScene() {
       new THREE.CylinderGeometry(0.3, 0.3, 0.2).rotateZ(Math.PI / 2),
       mat,
     );
-    w.name = name;
+    w.name = `${prefix}${name}`;
     const front = name.includes("F");
     const parent = front ? new THREE.Group() : body;
     if (front) {
-      parent.name = name.replace("wheel", "steer");
+      parent.name = prefix + name.replace("wheel", "steer");
       parent.position.set(x, 0.3, z);
       body.add(parent);
     } else w.position.set(x, 0.3, z);
@@ -86,11 +89,12 @@ describe("car models", () => {
       { kind: "hatchback", x: 0, y: 0, z: 0, yaw: 0 },
     ];
     const view = createCarModelView({ sedan: model }, cars);
-    expect(view.drawCalls).toBe(1);
+    expect(view.drawCalls).toBe(0);
     expect(view.has(0)).toBe(true);
     expect(view.has(1)).toBe(false);
     view.beginFrame();
     expect(view.set(0, cars[0])).toBe(true);
+    expect(view.drawCalls).toBe(1);
     expect(view.info.drawn).toBe(1);
     const mesh = view.group.children[0];
     const m = new THREE.Matrix4();
@@ -120,5 +124,99 @@ describe("car models", () => {
     m.decompose(new THREE.Vector3(), qr, new THREE.Vector3());
     // The front wheel turns relative to the rear one (same spin).
     expect(qf.angleTo(qr)).toBeGreaterThan(0.01);
+  });
+
+  it("picks LOD0 near, LOD1 to 70 m, LOD2 farther, and none past the band", () => {
+    const { lod0, lod1, lod2 } = CAR_LOD_DISTANCES;
+    expect(carLodFor(0)).toBe(0);
+    expect(carLodFor(lod0 - 0.01)).toBe(0);
+    expect(carLodFor(lod0)).toBe(1);
+    expect(carLodFor(lod1 - 0.01)).toBe(1);
+    expect(carLodFor(lod1)).toBe(2);
+    expect(carLodFor(lod2 - 0.01)).toBe(2);
+    expect(carLodFor(lod2)).toBe(-1);
+    expect(carLodFor(NaN)).toBe(-1);
+    // The low tiers load no LOD0: LOD1 draws the near cars.
+    expect(carLodFor(5, { lod0: false })).toBe(1);
+    expect(carLodFor(80, { lod0: false })).toBe(2);
+    const distances = { lod0: 10, lod1: 20, lod2: 30 };
+    expect(carLodFor(15, { distances })).toBe(1);
+    expect(carLodFor(25, { distances })).toBe(2);
+  });
+
+  it("falls back to the nearest loaded level, the more detailed first", () => {
+    expect(nearestLevel(["a", "b", "c"], 1)).toBe(1);
+    expect(nearestLevel([null, "b", "c"], 0)).toBe(1);
+    expect(nearestLevel(["a", null, "c"], 1)).toBe(0);
+    expect(nearestLevel(["a", null, null], 2)).toBe(0);
+    expect(nearestLevel([null, null, null], 1)).toBe(-1);
+  });
+
+  it("switches a car between LOD0, LOD1 and LOD2 by distance", () => {
+    const atlas = new THREE.MeshStandardMaterial();
+    const lodScene = fakeScene("sedan_lod1_", atlas);
+    const lod2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 4), atlas);
+    lod2.name = "sedan_lod2";
+    lodScene.add(lod2);
+    const models = {
+      sedan: {
+        lod0: vehicleModel("sedan", fakeScene()),
+        lod1: vehicleModel("sedan", lodScene, "sedan_lod1_"),
+        lod2: vehicleLod2("sedan", lodScene),
+      },
+    };
+    expect(models.sedan.lod2.wheels).toHaveLength(0);
+    expect(models.sedan.lod2.scale).toBeCloseTo(models.sedan.lod0.scale, 5);
+    const car = { kind: "sedan", x: 0, y: 0, z: 0, yaw: 0 };
+    const view = createCarModelView(models, [car, { ...car, x: 4 }]);
+    // One batch for LOD0 of the kind, one for the shared LOD1/LOD2 atlas.
+    expect(view.group.children.map((m) => m.name)).toEqual([
+      "car-sedan",
+      "car-lods",
+    ]);
+    expect(view.range).toBe(CAR_LOD_DISTANCES.lod2);
+    const [near, far] = view.group.children;
+    const tris = (lod) => {
+      view.beginFrame();
+      view.set(0, car, 0, lod);
+      return view.info;
+    };
+    expect(tris(10).lods).toEqual([1, 0, 0]);
+    expect(near.visible && !far.visible).toBe(true);
+    expect(view.drawCalls).toBe(1);
+    const t0 = view.info.triangles;
+    expect(tris(40).lods).toEqual([0, 1, 0]);
+    expect(!near.visible && far.visible).toBe(true);
+    expect(tris(100).lods).toEqual([0, 0, 1]);
+    expect(view.info.triangles).toBeLessThan(t0);
+    // The second car keeps LOD0 drawn while the first is far.
+    view.set(1, car, 0, 5);
+    expect(near.visible && far.visible).toBe(true);
+    expect(view.drawCalls).toBe(2);
+    expect(view.set(0, car, 0, 500)).toBe(false);
+    view.hide(1);
+    expect(near.visible || far.visible).toBe(false);
+    expect(view.drawCalls).toBe(0);
+  });
+
+  it("draws LOD1 near when no LOD0 is loaded", () => {
+    const lodScene = fakeScene("taxi_lod1_");
+    const lod2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 4));
+    lod2.name = "taxi_lod2";
+    lodScene.add(lod2);
+    const car = { kind: "taxi", x: 0, y: 0, z: 0, yaw: 0 };
+    const view = createCarModelView(
+      {
+        taxi: {
+          lod0: null,
+          lod1: vehicleModel("taxi", lodScene, "taxi_lod1_"),
+          lod2: vehicleLod2("taxi", lodScene),
+        },
+      },
+      [car],
+    );
+    view.beginFrame();
+    expect(view.set(0, car, 0, 2)).toBe(true);
+    expect(view.info.lods).toEqual([0, 1, 0]);
   });
 });

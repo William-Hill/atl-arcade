@@ -1,12 +1,17 @@
 {
-  "asset": "ponce-city-market.glb: procedural facsimile of Ponce City Market for the beltline-eastside level, one node per LOD (lod0, lod1, lod2), shared materials and tiling textures.",
-  "date": "2026-11-04",
+  "asset": "ponce-city-market.glb: procedural facsimile of Ponce City Market for the beltline-eastside level, one node per LOD (lod0, lod1, lod2) in each of 4 sections (<key>_s<i>_lod<n>, each node at its section center), shared materials and tiling textures.",
+  "date": "2026-11-05",
   "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco",
   "command": "blender -b -P scripts/blender/landmarks.py -- --only ponce-city-market",
   "source": "scripts/blender/landmarks.py: footprint walls with bays of recessed windows, piers, belts, cornice, parapet, roof, and props, all from code. No photo pixels, scans of the real building, mesh extraction, or logos.",
   "prompt": "None. The script and sites.json are the full recipe.",
   "credits": "No paid generation credits (Meshy not used).",
-  "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_*, lm_fence_color, lm_far_pcm_color: painted in code by landmarks.py.",
+  "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_* (incl. lm_window_emit, the night glow), lm_fence_color, lm_far_pcm_*: painted in code by landmarks.py. TEXCOORD_1 u is the per-window light key.",
+  "facts": {
+    "stories": 9,
+    "source": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/16000769_text",
+    "note": "NRHP registration form 16000769, section 7: nine stories plus basement in every section of the main building; central tower with windows on each floor holding the water tank, pyramidal roof; shaped parapets on the end blocks. Tower stage heights above the roof are estimated from the photo references. The one-story shipping room is a separate footprint (heights.json w619595557)."
+  },
   "references": [
     {
       "title": "Ponce City Market from Historic Fourth Ward Park",
@@ -53,27 +58,29 @@
   },
   "lodDistance_m": [
     0,
-    160,
-    450
+    110,
+    320
   ],
   "triangles": {
-    "lod0": 57432,
-    "lod1": 6921,
-    "lod2": 453
+    "lod0": 32522,
+    "lod1": 6053,
+    "lod2": 341
   },
-  "bytes": 937204,
+  "bytes": 716832,
   "textureImages": {
     "lm_brick_light_color": "512x512",
     "lm_brick_normal": "512x512",
-    "lm_brick_rough": "512x512",
+    "lm_brick_rough": "256x256",
     "lm_concrete_color": "512x512",
     "lm_far_pcm_color": "256x256",
+    "lm_far_pcm_emit": "64x64",
     "lm_trim_color": "512x512",
     "lm_trim_normal": "512x512",
-    "lm_trim_rough": "512x512",
-    "lm_window_color": "1024x1024",
+    "lm_trim_rough": "256x256",
+    "lm_window_color": "512x512",
+    "lm_window_emit": "256x256",
     "lm_window_normal": "512x512",
-    "lm_window_rough": "512x512"
+    "lm_window_rough": "256x256"
   },
-  "gpuTextureBytes": 18524842
+  "gpuTextureBytes": 11556181
 }

@@ -1028,6 +1028,13 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Verified: styles.test.js (district mix keeps mid-size stock inside its palette; named buildings keep their style) and the full suite still passes.
 - Not done: district labels and storefront name decals (teleoperator's RUSSIAN HILL map labels / real-business signs), the e2e suite, and the FPS gate.
 
+## 2026-11-04: epic/assets — Blender facade kit (pbr look)
+
+- `scripts/blender/facade_kit.py` (Blender 5.2.3, headless, no Meshy) builds `assets/facades/facade-kit.glb`: 35 instanceable facade modules + 4 LOD1 nodes in one 400 KB Draco GLB, on **one material** with one procedural trim-sheet atlas (1024 color + 1024 normal + 512 ORM, 12.6 MB GPU with mips, shared). One material keeps a whole tile of modules at one draw call per module type with `InstancedMesh`.
+- Module sizes are the style's own facade-shader window frame at its nominal bay/floor (`window + FRAME` cells, `WINDOW_CENTER = 0.55`), and storefront widths match bays 2.6 / 3.2 / 4.5 minus the 0.36 m pier, so a module covers the shader window instead of fighting it; scaling within ±20–25% covers the other bay lengths.
+- Placement is a pure function, `scripts/assets/facade-kit-placement.js` (`facadePlacements`, with Vitest tests), driven by the existing `frontEdges()` storefront edges from OSM/Overture street lines, `chooseStyle`, and `buildingSpan`. It is **not wired into the game**; the parent session owns that (docs/facade-kit.md lists the steps, including which procedural kit parts to turn off).
+- In-context preview without touching shared files: `scripts/assets/facade-kit-preview.mjs` uses `?kit=0` and the existing `__atl.scene` / `__atl.cameraPosition` debug handles to add the kit as instanced meshes.
+
 ## 2026-11-04: epic/assets — four more traffic vehicles (hatchback, van, taxi, box truck)
 - Meshy text-to-3D (meshy-t2.5, smart topology, PBR) → `scripts/blender/street_props.py` → `scripts/blender/vehicle_wheels.py --round`, same rig as sedan/pickup/bus (`steer_FL/FR > wheel_FL/FR`, `wheel_RL/RR`, `wheels_roll`). Full commands, task IDs, and credits in `assets/vehicles/provenance.json`.
 - Meshy painted made-up emblems and lettering despite "no logos, no text" prompts. `street_props.py --paint scripts/blender/vehicle_paint.json --paint-key <name>` fills those texture boxes with the median color (flat normal), so no asset ships with brand-like marks. The taxi livery is a plain yellow body with a teal checker stripe and a blank roof light.
@@ -1051,7 +1058,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Sign texts are generic or fictional ("CITY MARKET", "STUDIO YARDS", "BREW HALL"); no real lettering or logos.
 - Krog Street Tunnel is outside the level bounds: skipped.
 - Integration is for the parent session: claim the four footprints, drop the PCM img2threejs tower and rooftop sign entry, add the GLBs as THREE.LOD at their origin with yaw 0. `scripts/assets/landmarks-preview.html` does this as a preview only, without editing shared code.
-||||||| d79d170
 
 ## 2026-11-04: epic/assets — hatchback, van, taxi and box truck in traffic
 - The four PR #148 GLBs are near-LOD models in `src/render/car-models.js` (pbr look), next to sedan, pickup and bus. Farther cars draw the kit shapes.

@@ -1027,3 +1027,10 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Named landmarks now map to real styles through BY_NAME (PCM → brick-warehouse, Krog → brick-market-hall), so the district mechanism cannot restyle the anchors themselves.
 - Verified: styles.test.js (district mix keeps mid-size stock inside its palette; named buildings keep their style) and the full suite still passes.
 - Not done: district labels and storefront name decals (teleoperator's RUSSIAN HILL map labels / real-business signs), the e2e suite, and the FPS gate.
+
+## 2026-11-04: epic/assets — four more traffic vehicles (hatchback, van, taxi, box truck)
+- Meshy text-to-3D (meshy-t2.5, smart topology, PBR) → `scripts/blender/street_props.py` → `scripts/blender/vehicle_wheels.py --round`, same rig as sedan/pickup/bus (`steer_FL/FR > wheel_FL/FR`, `wheel_RL/RR`, `wheels_roll`). Full commands, task IDs, and credits in `assets/vehicles/provenance.json`.
+- Meshy painted made-up emblems and lettering despite "no logos, no text" prompts. `street_props.py --paint scripts/blender/vehicle_paint.json --paint-key <name>` fills those texture boxes with the median color (flat normal), so no asset ships with brand-like marks. The taxi livery is a plain yellow body with a teal checker stripe and a blank roof light.
+- `vehicle_wheels.py --round` projects tire-rim vertices onto the fitted radius: Meshy tires are lumpy, and a rolling lumpy tire dipped ~2 cm into the ground. With it every wheel stays within 2.4 mm of the ground through the clip.
+- `--width-scale` in `street_props.py` narrows only the x width after scaling to length. The box truck uses `--width-scale 0.9` (it came out ~3.1 m wide at 7.5 m long; now 2.79 m); the other three use 1.0. The over-wide first hatchback was regenerated instead.
+- `scripts/assets/vehicles-in-context.mjs` previews GLBs in the real game (`look=pbr`, `cars=0`) next to a parked-car anchor without editing shared code; wiring the vehicles into traffic is left to the integration owner.

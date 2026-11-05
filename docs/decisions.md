@@ -1102,3 +1102,11 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
   uncut claimed-footprint collider as an invisible wall.
 - PCM LOD2 window light is keyed per tiled UV cell (a hash of
   `floor(vEmissiveMapUv)`), so far walls do not light all at once.
+
+
+## 2026-11-05: epic/assets — painted murals for the pbr look (assets/murals)
+- 16 original mural designs (dogwood, peach, magnolia, brown thrasher, heron and river, skyline silhouettes, the BeltLine trail, skaters, music, porch-row neighbors, a crowd wave, a night rink) are drawn from code with the Chromium 2D canvas (`scripts/assets/mural-atlas.mjs`, seed 1979), then a per-pixel paint pass adds brush strokes, a ragged dry-brush edge over painted brick or stucco, mortar show-through, weathering, and a roughness atlas. No image model, no Meshy (0 credits), no real murals, artists' styles, or brands.
+- Canvas, not Blender: the art is flat paint on a wall, and the 2D canvas gives exact lettering and shapes and runs in seconds; the storefront atlas uses the same tool.
+- Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
+- `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
+- `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.

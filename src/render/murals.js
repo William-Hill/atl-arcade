@@ -4,6 +4,17 @@ import { seededRandom } from "../level/geo/styles.js";
 // The mural atlas: 16 original designs (4 x 4) drawn on a canvas from a
 // seed. Murals, not graffiti: bold shapes, Atlanta motifs (peach, dogwood,
 // the skyline, the BeltLine), and clean lettering. No third-party art.
+//
+// The pbr look loads a painted atlas instead (assets/murals, made by
+// scripts/assets/mural-atlas.mjs): the same 16 cells and words, painted on
+// brick or stucco with brush strokes and a dry-brush edge. The canvas atlas
+// stays for the toon look and as the fallback (?murals=canvas, or when the
+// image fails to load).
+
+export const MURAL_ATLAS_URL = new URL("../../assets/murals/mural-atlas.jpg", import.meta.url).href;
+// Roughness / 0.85 in gray (MeshStandardMaterial reads green), for a
+// material with roughness ROUGHNESS.mural (look.js). See docs/murals.md.
+export const MURAL_ROUGHNESS_URL = new URL("../../assets/murals/mural-roughness.jpg", import.meta.url).href;
 
 const PALETTE = ["#ff6b35", "#ffd166", "#06d6a0", "#118ab2", "#ef476f", "#8338ec", "#f4a261", "#2a9d8f", "#fefae0", "#264653"];
 // The words name no neighborhood (issue #80): a mural can stand on any wall
@@ -134,7 +145,55 @@ function drawCell(ctx, s, cell) {
   ctx.fillText(word, s / 2, s * 0.17);
 }
 
-export function createMuralAtlas(size = 1024) {
+// Pure: "painted" (the assets/murals atlas) or "canvas" (drawn here).
+// `murals` is ?murals=canvas|painted. With no `look`, the look comes from
+// ?look and ?quality as in lookFor() (look.js); without them the GPU decides
+// the tier, which this module cannot see, so it keeps the canvas atlas.
+export function muralSource({ look = null, murals = null, lookParam = null, quality = null } = {}) {
+  if (murals === "canvas" || murals === "painted") return murals;
+  const l = look ?? (lookParam === "pbr" || lookParam === "toon" ? lookParam : quality === "high" ? "pbr" : "toon");
+  return l === "pbr" ? "painted" : "canvas";
+}
+
+function urlParams() {
+  const search = globalThis.location?.search ?? "";
+  return new URLSearchParams(search);
+}
+
+// The painted atlas as a texture. If the image fails, the texture gets the
+// canvas atlas.
+function loadPaintedAtlas(size) {
+  const tex = new THREE.TextureLoader().load(MURAL_ATLAS_URL, undefined, undefined, () => {
+    tex.image = drawCanvasAtlas(size);
+    tex.needsUpdate = true;
+  });
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  tex.userData.muralSource = "painted";
+  return tex;
+}
+
+// The roughness atlas for the painted murals (a linear texture).
+export function createMuralRoughness() {
+  const tex = new THREE.TextureLoader().load(MURAL_ROUGHNESS_URL);
+  tex.colorSpace = THREE.NoColorSpace;
+  return tex;
+}
+
+// `look` is the city look ("toon" or "pbr"); without it the URL decides
+// (muralSource).
+export function createMuralAtlas(size = 1024, { look = null } = {}) {
+  const params = urlParams();
+  const source = muralSource({ look, murals: params.get("murals"), lookParam: params.get("look"), quality: params.get("quality") });
+  if (source === "painted") return loadPaintedAtlas(size);
+  const tex = new THREE.CanvasTexture(drawCanvasAtlas(size));
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  tex.userData.muralSource = "canvas";
+  return tex;
+}
+
+function drawCanvasAtlas(size) {
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -149,8 +208,5 @@ export function createMuralAtlas(size = 1024) {
     drawCell(ctx, s, cell);
     ctx.restore();
   }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  return canvas;
 }

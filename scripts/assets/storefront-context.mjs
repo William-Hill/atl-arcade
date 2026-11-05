@@ -94,10 +94,11 @@ for (const i of [0, 3].filter((i) => i < used)) {
   const [px, pz] = at(a, 3.5);
   const gy = ground(px, pz);
   add("string_lights", "string_light_post", a, 3.5);
-  // Rotate the 4 m string to run along the normal and tilt it down to the hook.
+  // Rotate the 4 m string to run along the normal (local +x toward the wall)
+  // and tilt that end up to the wall hook.
   const [mx, mz] = at(a, (0.15 + 3.18) / 2);
   const hi = base + floorH - 0.35, lo = gy + 3.12;
-  items.push({ file: "string_lights", name: "string_lights_4m", x: mx, y: (hi + lo) / 2, z: mz, ry: ry + Math.PI / 2, tilt: -Math.atan2(hi - lo, 3.03), sx: Math.hypot(3.03, hi - lo) / 4 });
+  items.push({ file: "string_lights", name: "string_lights_4m", x: mx, y: (hi + lo) / 2, z: mz, ry: ry + Math.PI / 2, tilt: Math.atan2(hi - lo, 3.03), sx: Math.hypot(3.03, hi - lo) / 4 });
 }
 
 const [ex, ez] = at(W.len / 2 - Number(arg("--side", 3)), Number(arg("--back", 13)));

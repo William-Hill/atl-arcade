@@ -551,8 +551,8 @@ def umbrella(name, cols, mats, lod=0):
             p = [(r0 * math.cos(t0), r0 * math.sin(t0), z0), (r1 * math.cos(t0), r1 * math.sin(t0), z1), (r1 * math.cos(t1), r1 * math.sin(t1), z1), (r0 * math.cos(t1), r0 * math.sin(t1), z0)]
             if r0 == 0:
                 p = p[:3]
-            m.face(list(reversed(p)), FABRIC, c)
-            m.face([(x, y, zz - 0.006) for x, y, zz in p], FABRIC, under)
+            m.face(p, FABRIC, c)
+            m.face(list(reversed([(x, y, zz - 0.006) for x, y, zz in p])), FABRIC, under)
         # Valance flap.
         if lod == 0:
             p0 = (R * math.cos(t0), R * math.sin(t0), H)

@@ -1,7 +1,7 @@
 {
   "asset": "storefronts",
   "description": "Storefront dressing for the BeltLine Eastside level (pbr look): sign boards, blade signs, emissive neon signs, menu boards, sandwich boards, cafe barrier banners, patio furniture sets, market umbrellas, and string lights for invented Eastside businesses. No real business names, logos, or artwork.",
-  "generated": "2026-11-04",
+  "generated": "2026-11-05",
   "tool": {
     "geometry": "Blender 5.2.3 headless, scripts/blender/storefronts.py (procedural: boxes, swept tubes, extruded outlines; no imported meshes)",
     "signArt": "scripts/assets/storefront-atlas.mjs: Chromium 2D canvas via Playwright, original vector shapes and lettering drawn in code with system DejaVu fonts (Bitstream Vera license, free to embed in rasterized art); no image model, no photos, no third-party artwork",
@@ -84,7 +84,7 @@
     }
   ],
   "budget": {
-    "totalBytes": 669363,
+    "totalBytes": 669311,
     "gpuTextureBytesShared": 5592405,
     "note": "Every textured GLB references the one external storefront-atlas.jpg; with a shared texture (one GLTFLoader / cache) the GPU holds one 5.6 MB atlas for all files. Loaded with independent loaders, each textured file decodes its own copy."
   },
@@ -857,7 +857,7 @@
       }
     },
     "patio_umbrellas.glb": {
-      "bytes": 33180,
+      "bytes": 33128,
       "draco": true,
       "pieces": 4,
       "lod1": 4,

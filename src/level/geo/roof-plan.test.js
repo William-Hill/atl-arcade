@@ -126,4 +126,30 @@ describe("the roof plan", () => {
     }
     expect(parts).toBeGreaterThan(100);
   });
+
+  // Issue #135: the solar rows.
+  it("puts solar rows on a big flat roof, clear of the other parts", () => {
+    const OFFICE = STYLES.find((st) => st.id === "glass-office");
+    let rows = 0;
+    for (let k = 0; k < 20; k += 1) {
+      const plan = roofPlan({ id: `w-solar-${k}`, outer: rect(40, 18, turn), height: 20 }, OFFICE);
+      const solar = plan.parts.filter((p) => p.kind === "solar");
+      rows += solar.length;
+      for (const p of solar) {
+        expect(p.hc).toBeCloseTo(ROOF.solar.depth / 2);
+        expect(2 * p.ha).toBeGreaterThanOrEqual(ROOF.solar.minLength - 1e-9);
+        expect(2 * p.ha).toBeLessThanOrEqual(ROOF.solar.maxLength + 1e-9);
+        for (const q of plan.parts) {
+          if (q === p) continue;
+          // Square to the same axes: the boxes do not overlap.
+          const [du, dv] = [(q.x - p.x) * Math.cos(p.yaw) - (q.z - p.z) * Math.sin(p.yaw), (q.x - p.x) * Math.sin(p.yaw) + (q.z - p.z) * Math.cos(p.yaw)];
+          expect(Math.abs(du) >= p.ha + q.ha + ROOF.gap - 1e-6 || Math.abs(dv) >= p.hc + q.hc + ROOF.gap - 1e-6).toBe(true);
+        }
+      }
+    }
+    // The office rate is 0.5: about half of the 20 roofs get rows.
+    expect(rows).toBeGreaterThan(5);
+    // A house gets none.
+    expect(roofPlan({ id: "w-solar-house", outer: rect(40, 18, turn), height: 6 }, HOUSE).parts).toEqual([]);
+  });
 });

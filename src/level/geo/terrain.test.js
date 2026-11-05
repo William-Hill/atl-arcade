@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BRIDGE_CLEARANCE, PLINTH_DEPTH, bridgeDeck, buildingSpan, bridgeMiddle, createTerrain, decodeHeights, drapeMesh, encodeHeights, gradeTrail, raiseEmbankments, terrainOf } from "./terrain.js";
+import { BRIDGE_CLEARANCE, FOOTPRINT_GRADE, PLINTH_DEPTH, bridgeDeck, buildingSpan, bridgeMiddle, createTerrain, decodeHeights, drapeMesh, encodeHeights, gradeFootprints, gradeTrail, raiseEmbankments, terrainOf } from "./terrain.js";
 import { flatPolygon, stripMesh } from "./extrude.js";
 import { createGeoGroundSampler } from "./geo-ground.js";
 import { createSkateState, stepSkate } from "../../sim/skate/controller.js";
@@ -218,3 +218,55 @@ describe("buildingSpan on a slope", () => {
     expect(s).toEqual({ foot: 0, base: 0, ground: 0, top: 9 });
   });
 });
+
+// Issue #135: a pad under each building on a slope, so the plinths stay low.
+describe("gradeFootprints", () => {
+  // A 2 m grid that rises 0.2 m per meter along +x (a steep lot).
+  const cols = 41;
+  const rows = 21;
+  const heights = new Float32Array(cols * rows);
+  for (let j = 0; j < rows; j += 1) for (let i = 0; i < cols; i += 1) heights[j * cols + i] = i * 2 * 0.2;
+  const grid = { cell: 2, x0: 0, z0: 0, cols, rows, heights };
+  const house = { id: "h", outer: [[36, 16], [44, 16], [44, 24], [36, 24]] };
+  const span = (h) => {
+    const t = createTerrain({ ...grid, heights: h });
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const [x, z] of [[36, 16], [44, 16], [44, 24], [36, 24], [40, 16], [40, 24]]) {
+      lo = Math.min(lo, t.height(x, z));
+      hi = Math.max(hi, t.height(x, z));
+    }
+    return hi - lo;
+  };
+
+  it("levels the ground under a building on a slope", () => {
+    expect(span(heights)).toBeCloseTo(1.6, 3);
+    const { heights: out, graded } = gradeFootprints(grid, [house]);
+    expect(graded).toBe(1);
+    expect(span(out)).toBeLessThan(0.05);
+    // No node moves more than the cap, and the far ground keeps its height.
+    for (let k = 0; k < out.length; k += 1) expect(Math.abs(out[k] - heights[k])).toBeLessThanOrEqual(FOOTPRINT_GRADE.cap + 1e-6);
+    expect(out[10 * cols + 0]).toBe(heights[10 * cols + 0]);
+  });
+
+  it("does not move a node on a way, and skips a flat lot", () => {
+    const street = { id: "s", kind: "street", width: 6, points: [[46, 0], [46, 40]] };
+    const { heights: out } = gradeFootprints(grid, [house], [street]);
+    for (let j = 0; j < rows; j += 1) expect(out[j * cols + 23]).toBe(heights[j * cols + 23]);
+    const flat = new Float32Array(cols * rows).fill(3);
+    expect(gradeFootprints({ ...grid, heights: flat }, [house]).graded).toBe(0);
+  });
+
+  it("keeps the BeltLine plinths low", () => {
+    const level = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../levels/beltline-eastside/level.json"), "utf8"));
+    const plinths = level.buildings.map((b) => {
+      const s = buildingSpan(level, b);
+      return s.base - s.foot;
+    });
+    plinths.sort((a, b) => a - b);
+    // Before the grade: a median of 1.8 m, and 146 plinths over 3 m.
+    expect(plinths[Math.floor(plinths.length / 2)]).toBeLessThan(1.4);
+    expect(plinths.filter((p) => p > 3).length).toBeLessThan(60);
+  });
+});
+

@@ -579,6 +579,137 @@ export function gradeTrail(grid, strips) {
   return { heights, points: pts.length };
 }
 
+// Grades the ground under each building on a slope (issue #135). Without
+// it, buildingSpan() puts the ground floor on the highest ground, so a
+// building on a steep lot gets a very tall plinth on its low side.
+//
+// For each building with a drop of `minDrop` m or more along its walls, a
+// pad height P is the mean of the ground samples along the walls. Each grid
+// node within `reach` m of the footprint goes to P, and the nodes from
+// `reach` to `reach + blend` m blend back to the old ground. A node moves
+// `cap` m or less, so a big building on a hill keeps part of its slope and
+// a part of its plinth, as on a real building. Where two pads meet, a node
+// takes the mean of the pads, by weight. A node within `wayMargin` m of the
+// edge of a way (a street, a sidewalk, or a path in `strips`) keeps its
+// height, so the pads do not put a bump in a way. Run it after
+// gradeTrail(): a node within `trailMargin` m of the trail edge (the band
+// that gradeTrail() changes) keeps its height, so the trail does not
+// change. Pure: returns new heights.
+export const FOOTPRINT_GRADE = { minDrop: 1.0, cap: 2.5, reach: 8, blend: 8, step: 2, wayMargin: 1.5, trailMargin: TRAIL_GRADE.side + 2.5 };
+
+// True for each grid node within margin m of the edge of a way.
+function wayNodes(grid, strips, margin) {
+  const { cell, x0, z0, cols, rows } = grid;
+  const out = new Uint8Array(cols * rows);
+  for (const s of strips) {
+    const r = (s.width ?? 0) / 2 + margin;
+    for (let i = 0; i < s.points.length - 1; i += 1) {
+      const [ax, az] = s.points[i];
+      const [bx, bz] = s.points[i + 1];
+      const i0 = Math.max(0, Math.floor((Math.min(ax, bx) - r - x0) / cell));
+      const i1 = Math.min(cols - 1, Math.ceil((Math.max(ax, bx) + r - x0) / cell));
+      const j0 = Math.max(0, Math.floor((Math.min(az, bz) - r - z0) / cell));
+      const j1 = Math.min(rows - 1, Math.ceil((Math.max(az, bz) + r - z0) / cell));
+      const dx = bx - ax;
+      const dz = bz - az;
+      const l2 = dx * dx + dz * dz;
+      for (let j = j0; j <= j1; j += 1) {
+        for (let k = i0; k <= i1; k += 1) {
+          const x = x0 + k * cell;
+          const z = z0 + j * cell;
+          const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / l2)) : 0;
+          if (Math.hypot(x - (ax + t * dx), z - (az + t * dz)) <= r) out[j * cols + k] = 1;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+function ringDistance(x, z, ring) {
+  if (insideRing(x, z, ring)) return 0;
+  let best = Infinity;
+  for (let i = 0; i < ring.length; i += 1) {
+    const [ax, az] = ring[i];
+    const [bx, bz] = ring[(i + 1) % ring.length];
+    const dx = bx - ax;
+    const dz = bz - az;
+    const l2 = dx * dx + dz * dz;
+    const t = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / l2)) : 0;
+    best = Math.min(best, Math.hypot(x - (ax + t * dx), z - (az + t * dz)));
+  }
+  return best;
+}
+
+export function gradeFootprints(grid, buildings, strips = [], g = FOOTPRINT_GRADE) {
+  const t = createTerrain(grid);
+  const { cell, x0, z0, cols, rows } = grid;
+  const onWay = wayNodes(grid, strips.filter((s) => !s.bridge && s.kind !== "trail"), g.wayMargin);
+  const onTrail = wayNodes(grid, strips.filter((s) => s.kind === "trail"), g.trailMargin);
+  const heights = Float32Array.from(grid.heights);
+  const sumW = new Float32Array(cols * rows);
+  const sumWP = new Float32Array(cols * rows);
+  const maxW = new Float32Array(cols * rows);
+  let graded = 0;
+  for (const b of buildings) {
+    const ring = b.outer;
+    if (!(ring?.length >= 3)) continue;
+    let lo = Infinity;
+    let hi = -Infinity;
+    let sum = 0;
+    let n = 0;
+    for (let i = 0; i < ring.length; i += 1) {
+      const [px, pz] = ring[i];
+      const [qx, qz] = ring[(i + 1) % ring.length];
+      const k = Math.max(1, Math.ceil(Math.hypot(qx - px, qz - pz) / g.step));
+      for (let s = 0; s < k; s += 1) {
+        const h = t.height(px + ((qx - px) * s) / k, pz + ((qz - pz) * s) / k);
+        lo = Math.min(lo, h);
+        hi = Math.max(hi, h);
+        sum += h;
+        n += 1;
+      }
+    }
+    if (!(hi - lo >= g.minDrop)) continue;
+    graded += 1;
+    const pad = sum / n;
+    const r = g.reach + g.blend;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    for (const [x, z] of ring) {
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minZ = Math.min(minZ, z);
+      maxZ = Math.max(maxZ, z);
+    }
+    const i0 = Math.max(0, Math.floor((minX - r - x0) / cell));
+    const i1 = Math.min(cols - 1, Math.ceil((maxX + r - x0) / cell));
+    const j0 = Math.max(0, Math.floor((minZ - r - z0) / cell));
+    const j1 = Math.min(rows - 1, Math.ceil((maxZ + r - z0) / cell));
+    for (let j = j0; j <= j1; j += 1) {
+      for (let i = i0; i <= i1; i += 1) {
+        const d = ringDistance(x0 + i * cell, z0 + j * cell, ring);
+        if (d >= r) continue;
+        const k = d <= g.reach ? 1 : 1 - (d - g.reach) / g.blend;
+        const w = k * k * (3 - 2 * k);
+        const at = j * cols + i;
+        sumW[at] += w;
+        sumWP[at] += w * pad;
+        maxW[at] = Math.max(maxW[at], w);
+      }
+    }
+  }
+  for (let at = 0; at < heights.length; at += 1) {
+    if (!(sumW[at] > 0) || onWay[at] || onTrail[at]) continue;
+    const h = heights[at];
+    const delta = Math.max(-g.cap, Math.min(g.cap, sumWP[at] / sumW[at] - h));
+    heights[at] = h + delta * maxW[at];
+  }
+  return { heights, graded };
+}
+
 // Grades the ground at the bridge joints (issue #131). Near each joint J
 // (bridges.js) the ground goes on the deck line, level across the road:
 // from one cell diagonal before J to one cell diagonal past it, and to one

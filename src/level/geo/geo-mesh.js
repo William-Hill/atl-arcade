@@ -7,7 +7,7 @@
 
 import { FACE, extrudeFootprint, flatPolygon, mergeMeshes, orientRing, placeTemplate, stripMesh } from "./extrude.js";
 import { createGeoGroundSampler, surfaceTop } from "./geo-ground.js";
-import { BELT, STYLES, STYLE_INDEX, awningHeight, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
+import { BELT, STYLES, STYLE_INDEX, awningHeight, chooseStyle, floorCount, hash32, seededRandom, wallColor } from "./styles.js";
 import { BRIDGE, bridgeDeck, buildingSpan, coarseTerrainOf, drapeMesh, liftMesh, parapetBlocked, terrainOf } from "./terrain.js";
 import { JOIN_LIFT, streetJunctions } from "./junctions.js";
 import { medianMesh, medianStrips } from "./medians.js";
@@ -440,7 +440,7 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
     if (style.storefront) {
       // The same floors as the facade kit: the belt course is over the
       // ground floor when the building has two floors or more.
-      const floors = Math.max(1, Math.round((span.top - span.base) / style.floorHeight));
+      const floors = floorCount(b, style, span.top - span.base);
       const floorH = (span.top - span.base) / floors;
       if (style.awnings > 0) y0 = Math.max(y0, span.base + awningHeight(style) + 0.1);
       if (floors >= 2) y0 = Math.max(y0, span.base + floorH + BELT.height / 2 + 0.1);
@@ -650,8 +650,9 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     for (const b of level.buildings ?? []) {
       const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
       const color = wallColor(style, b.id);
-      const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, parapet: style.parapet, corniceColor: style.trim };
       const span = buildingSpan(level, b);
+      // The OSM level count, when it fits the height (styles.js floorCount()).
+      const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, floors: floorCount(b, style, span.top - span.base), parapet: style.parapet, corniceColor: style.trim };
       // The plinth is cast stone: the style trim, a little darker.
       const plinth = { bottom: span.foot, color: style.trim.map((c) => c * PLINTH_SHADE) };
       add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: roofColorOf(style, color), facade, plinth }));

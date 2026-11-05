@@ -12,6 +12,9 @@
 // - A shop front on the front wall of a storefront style: a painted sign
 //   band in each bay, blank cream boards, and awnings when no street wall
 //   has them.
+// - A porch on the front wall of a house (housePorch()): a deck, knee
+//   walls, posts, a shed roof, steps, and a door.
+// - Rows of solar panels on a flat roof (roofSolar(), from roof-plan.js).
 //
 // The output is a list of meshes { tile, mesh: { positions, indices,
 // colors, facade } }, one per GEO_TILE square, with the building tile keys
@@ -28,8 +31,8 @@
 import { FACE, orientRing } from "./extrude.js";
 import { createGeoGroundSampler, pointInRings } from "./geo-ground.js";
 import { AWNING_COLORS, GEO_TILE, buildingTest, muralWalls, streetTest, streetWalls } from "./geo-mesh.js";
-import { BELT, SIGN_COLORS, STYLES, STYLE_INDEX, awningHeight, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
-import { buildingSpan } from "./terrain.js";
+import { BELT, HOUSE_STYLES, SIGN_COLORS, STYLES, STYLE_INDEX, awningHeight, chooseStyle, floorCount, hash32, roofForm, seededRandom, wallColor } from "./styles.js";
+import { buildingSpan, terrainOf } from "./terrain.js";
 import { BULKHEAD, bulkheadBox, minRect, roofPlan } from "./roof-plan.js";
 
 export const KIT = {
@@ -73,6 +76,21 @@ export const KIT = {
   // warm glass lantern. `y` is the fraction of the floor, and `maxY` the cap
   // in meters over the base.
   sconce: { y: 0.62, maxY: 2.7, plate: [0.18, 0.34, 0.03], lamp: [0.13, 0.22, 0.13], plateColor: [0.24, 0.2, 0.16], lampColor: [1.0, 0.86, 0.58] },
+  // The porch of a house (housePorch()). The deck is `depth` m deep, as
+  // wide as `width` m or the wall, and `deck` m over the base. The shed
+  // roof falls `rise` m from the wall to the front, and has a clear height
+  // of `clear` m or more over the deck. The knee walls are `knee` m high
+  // and `kneeT` m thick. A front step is `run` m deep. The porch stands
+  // `margin` m or more from a way and from another building.
+  // A stair has one step for each `riser` m of drop (at least `steps`
+  // and at most `maxSteps`), down to the ground in front of the porch.
+  porch: { depth: 2.2, minDepth: 1.5, width: 5.4, minWidth: 2.6, deck: 0.45, rise: 0.35, clear: 2.0, slab: 0.12, overhang: 0.2, post: 0.18, knee: 0.85, kneeT: 0.14, beam: 0.18, stepWidth: 1.5, run: 0.3, steps: 2, maxSteps: 8, riser: 0.19, margin: 0.5, wood: [0.62, 0.58, 0.52], skirt: [0.36, 0.34, 0.33] },
+  // The house door on the porch: as the shop door, with no glass light.
+  houseDoor: { width: 0.95, height: 2.1, out: 0.05, trim: 0.1, trimOut: 0.08, head: 0.14 },
+  // A row of solar panels (roof-plan.js): the panels tilt `tilt` toward the
+  // south, the low edge is `foot` m over the roof, and a row has `modules`
+  // panels with a `gap` m joint between them.
+  solar: { tilt: (14 * Math.PI) / 180, foot: 0.25, module: 2.0, gap: 0.08, panel: [0.11, 0.17, 0.32], frame: [0.62, 0.64, 0.66] },
   // A vent stack on a flat roof (roof-plan.js): a pipe and a wider cap.
   vent: { pipe: 0.11, cap: 0.17, capHeight: 0.07, color: [0.74, 0.76, 0.78] },
   // The shop front: the sign band starts `pierGap` from each pier center
@@ -93,11 +111,13 @@ function hasCornice(style, height) {
 // the glass, and an upper-floor window is centered at 0.55 of the floor.
 const FRAME = 0.07;
 const WINDOW_CENTER = 0.55;
+// The lowest lintel or head (m), when the cornice makes it lower.
+const MIN_LINTEL = 0.1;
 // The clear margin (m) around a mural: no sill or pier goes there.
 const MURAL_CLEAR = 0.3;
 // The square size of the depth tiles, in meters.
 export const DEPTH_TILE = 50;
-const HOUSES = new Set(["craftsman-house", "shotgun-house"]);
+const HOUSES = HOUSE_STYLES;
 // Shingle colors: slate, warm brown, and dark green, as on Inman Park houses.
 const SHINGLES = [
   [0.3, 0.32, 0.36],
@@ -246,9 +266,13 @@ export function wallBox(m, o, t, n, a0, a1, y0, y1, out, color, style, bottom = 
 //
 // `mural` ({ edge, t0, t1, y0, y1 }, muralWalls() in geo-mesh.js) is a
 // mural on wall `edge`: no box goes on the mural or within MURAL_CLEAR of it.
-export function wallDepth(m, ring, top, style, si, base = 0, mural = null) {
+// `floors` is the floor count (styles.js floorCount()).
+//
+// On the top floor of a low building the lintel can go into the cornice.
+// Then the lintel gets lower: its top stays under the bed molding, and it
+// is at least `minLintel` m high, so it covers the top of the window frame.
+export function wallDepth(m, ring, top, style, si, base = 0, mural = null, floors = Math.max(1, Math.round((top - base) / style.floorHeight))) {
   const counts = { sill: 0, pier: 0, lintel: 0, head: 0 };
-  const floors = Math.max(1, Math.round((top - base) / style.floorHeight));
   const floorH = (top - base) / floors;
   const sills = !NO_SILLS.has(style.id);
   const piers = style.storefront && floors >= 2;
@@ -283,12 +307,16 @@ export function wallDepth(m, ring, top, style, si, base = 0, mural = null) {
         const L = KIT.lintel;
         const H = KIT.head;
         const lintelHalf = style.brick ? Math.min(((ww + FRAME) / 2 + L.extra) * bl + L.pad, bl / 2 - 0.02) : Math.min(((ww + FRAME) / 2) * bl + H.overhang, bl / 2 - 0.02);
-        const y1 = frameTop + (style.brick ? L.rise * floorH : H.height);
-        if (y1 > ceiling - 0.02) continue;
+        const h = style.brick ? L.rise * floorH : H.height;
+        const y1 = Math.min(frameTop + h, ceiling - 0.02);
+        const y0 = Math.min(frameTop, y1 - Math.min(h, MIN_LINTEL));
+        // No room: the window is under the cornice, or the lintel goes under
+        // the sill of the same window.
+        if (y0 < y - 0.02 || y1 - y0 < MIN_LINTEL - 1e-6) continue;
         for (let k = 0; k < bays; k += 1) {
           const c = (k + 0.5) * bl;
-          if (onMural(c - lintelHalf, c + lintelHalf, frameTop, y1)) continue;
-          wallBox(m, [px, pz], t, n, c - lintelHalf, c + lintelHalf, frameTop, y1, style.brick ? L.out : H.out, style.trim, si, true, true);
+          if (onMural(c - lintelHalf, c + lintelHalf, y0, y1)) continue;
+          wallBox(m, [px, pz], t, n, c - lintelHalf, c + lintelHalf, y0, y1, style.brick ? L.out : H.out, style.trim, si, true, true);
           if (style.brick) counts.lintel += 1;
           else counts.head += 1;
         }
@@ -761,8 +789,159 @@ export function roofVents(m, parts, top, si) {
   return count;
 }
 
+// The solar rows of a roof plan (roof-plan.js roofPlan()), into mesh `m`:
+// a tilted steel frame for each row, on the roof at `top`, and a dark face
+// for each panel on it. The panels face the south (+z) side of the row.
+// Returns the row count.
+export function roofSolar(m, parts, top, si) {
+  const S = KIT.solar;
+  let count = 0;
+  for (const p of parts) {
+    if (p.kind !== "solar") continue;
+    const u = [Math.cos(p.yaw), -Math.sin(p.yaw)];
+    // v is the short axis of the row; it points to the south half (+z).
+    let v = [-u[1], u[0]];
+    if (v[1] < 0) v = [-v[0], -v[1]];
+    const n = Math.max(1, Math.round((2 * p.ha) / S.module));
+    const w = (2 * p.ha) / n;
+    const lo = top + S.foot;
+    const hi = lo + 2 * p.hc * Math.tan(S.tilt);
+    const at = (a, c, y) => [p.x + u[0] * a + v[0] * c, y, p.z + u[1] * a + v[1] * c];
+    const up = [v[0] * Math.sin(S.tilt), Math.cos(S.tilt), v[1] * Math.sin(S.tilt)];
+    // The frame of the row: a light steel slab. The panels are a little
+    // over its top, with a frame joint between two panels.
+    const A = p.ha;
+    quad(m, at(-A, p.hc, lo), at(A, p.hc, lo), at(A, -p.hc, hi), at(-A, -p.hc, hi), S.frame, up, si);
+    quad(m, at(-A, p.hc, top), at(A, p.hc, top), at(A, p.hc, lo), at(-A, p.hc, lo), S.frame, [v[0], 0, v[1]], si);
+    quad(m, at(-A, -p.hc, top), at(A, -p.hc, top), at(A, -p.hc, hi), at(-A, -p.hc, hi), S.frame, [-v[0], 0, -v[1]], si);
+    quad(m, at(-A, p.hc, top), at(-A, -p.hc, top), at(-A, -p.hc, hi), at(-A, p.hc, lo), S.frame, [-u[0], 0, -u[1]], si);
+    quad(m, at(A, p.hc, top), at(A, -p.hc, top), at(A, -p.hc, hi), at(A, p.hc, lo), S.frame, [u[0], 0, u[1]], si);
+    // The panel faces, 2 cm over the frame top, from the high north edge
+    // (c = -hc) down to the low south edge (c = +hc).
+    const lift = 0.02 / Math.cos(S.tilt);
+    const e = S.gap / 2;
+    for (let k = 0; k < n; k += 1) {
+      const a0 = -A + k * w + e;
+      const a1 = a0 + w - S.gap;
+      quad(m, at(a0, p.hc - e, lo + lift), at(a1, p.hc - e, lo + lift), at(a1, -p.hc + e, hi + lift), at(a0, -p.hc + e, hi + lift), S.panel, up, si);
+    }
+    count += 1;
+  }
+  return count;
+}
+
+// The along span [a0, a1] of the porch on a front wall of length `len` with
+// `bays` bays and the door in bay `door`: as wide as KIT.porch.width,
+// centered on the door, and kept on the wall. Returns null when the wall is
+// too short for a porch.
+export function porchSpan(len, bays, door) {
+  const P = KIT.porch;
+  const w = Math.min(P.width, len - 0.4);
+  if (w < P.minWidth) return null;
+  const am = ((door + 0.5) * len) / bays;
+  const a0 = Math.min(Math.max(am - w / 2, 0.2), len - 0.2 - w);
+  return { a0, a1: a0 + w, door: am };
+}
+
+// The step count of a porch stair from the deck at `deck` down to the
+// ground at `ground`.
+export function porchSteps(deck, ground) {
+  const P = KIT.porch;
+  const n = Number.isFinite(ground) ? Math.ceil((deck - ground) / P.riser) - 1 : P.steps;
+  return Math.min(P.maxSteps, Math.max(P.steps, n));
+}
+
+// The porch of a house on the wall `front.edge`, into mesh `m` (a depth
+// tile). The porch and its stair are `front.clear` m deep or less
+// (houseFronts()), so they stay off the ways and the other buildings. The
+// stair goes down to `front.ground`, the ground in front of the porch. It has a deck on a skirt down
+// to `foot`, knee walls with a gap at the steps, a post at each front
+// corner and one in each gap side, a beam, a shed roof under the eave and
+// under the first floor windows, two steps, and a painted door. `wall` is
+// the wall color: the knee walls and the roof fascia match the house.
+// Returns 1 when it builds the porch, else 0.
+export function housePorch(m, ring, style, si, base, floorH, top, front, foot = base, wall = style.walls[0]) {
+  const P = KIT.porch;
+  if (!front || front.edge < 0 || front.edge >= ring.length) return 0;
+  const w = wallOf(ring, front.edge);
+  const { o, t, n, len } = w;
+  const bays = Math.max(1, Math.round(len / style.bay));
+  const span = porchSpan(len, bays, doorBay(front, bays));
+  if (!span) return 0;
+  const dt = base + P.deck;
+  const ground = Number.isFinite(front.ground) ? Math.min(front.ground, base) : Math.min(foot, base);
+  // The stair gets fewer steps when the full stair does not fit the clear
+  // depth. Then the last step is taller, down to the ground.
+  const room = Math.floor(((front.clear ?? Infinity) - P.minDepth - P.margin) / P.run + 1e-9);
+  const steps = Math.min(porchSteps(dt, front.ground), room);
+  if (steps < 1) return 0;
+  const run = steps * P.run;
+  const depth = Math.min(P.depth, (front.clear ?? Infinity) - run - P.margin);
+  if (depth < P.minDepth) return 0;
+  // The roof: under the eave of a gable roof and under the window sills of
+  // the second floor.
+  const eave = top - KIT.roof.overhang * Math.tan(KIT.roof.pitch);
+  const sill2 = floorH < top - base - 0.01 ? base + (1 + WINDOW_CENTER - (style.window[1] + FRAME) / 2) * floorH - KIT.sill.height : Infinity;
+  const yb = Math.min(base + floorH - 0.1, eave - 0.1, sill2 - 0.15);
+  const yf = yb - P.rise;
+  if (yf - P.beam - dt < P.clear) return 0;
+  const { a0, a1, door: am } = span;
+  const sw = P.stepWidth / 2;
+  const trim = style.trim;
+  // The deck, on a skirt to the ground.
+  solidBox(m, o, t, n, a0 + 0.06, a1 - 0.06, 0, depth - 0.06, Math.min(foot, ground) - 0.05, dt - 0.06, P.skirt, si, false);
+  solidBox(m, o, t, n, a0, a1, 0, depth + 0.04, dt - 0.06, dt, P.wood, si, false);
+  // The knee walls: the two sides, and the front with a gap at the steps.
+  const kt = P.kneeT;
+  const kTop = dt + P.knee;
+  const ps = P.post / 2;
+  solidBox(m, o, t, n, a0, a0 + kt, 0.02, depth - ps, dt, kTop, wall, si, false);
+  solidBox(m, o, t, n, a1 - kt, a1, 0.02, depth - ps, dt, kTop, wall, si, false);
+  solidBox(m, o, t, n, a0, am - sw - ps, depth - kt, depth, dt, kTop, wall, si, false);
+  solidBox(m, o, t, n, am + sw + ps, a1, depth - kt, depth, dt, kTop, wall, si, false);
+  // A trim cap on each knee wall.
+  for (const [b0, b1, d0, d1] of [[a0, a0 + kt, 0.02, depth - ps], [a1 - kt, a1, 0.02, depth - ps], [a0, am - sw - ps, depth - kt, depth], [am + sw + ps, a1, depth - kt, depth]]) {
+    solidBox(m, o, t, n, b0 - 0.03, b1 + 0.03, d0, d1 + 0.03, kTop, kTop + 0.06, trim, si, false);
+  }
+  // The posts: at the front corners and at each side of the steps.
+  const yBeam = yf - P.beam;
+  for (const a of [a0 + ps, am - sw - ps, am + sw + ps, a1 - ps]) solidBox(m, o, t, n, a - ps, a + ps, depth - 2 * ps, depth, dt, yBeam, trim, si, false);
+  // The beam over the posts.
+  solidBox(m, o, t, n, a0, a1, depth - 2 * ps, depth, yBeam, yf, trim, si);
+  // The shed roof: a slab from the wall at yb down to the front at yf.
+  const oh = P.overhang;
+  const at = (a, y, d) => [o[0] + t[0] * a + n[0] * d, y, o[1] + t[1] * a + n[1] * d];
+  const d1 = depth + oh;
+  const fall = (P.rise * d1) / depth;
+  const yE = yb - fall;
+  const T = P.slab;
+  const slope = [n[0] * (fall / d1), 1, n[1] * (fall / d1)];
+  const shingle = SHINGLES[(hash32(`${front.edge}:${Math.round(len * 10)}`) >>> 0) % SHINGLES.length];
+  quad(m, at(a0 - oh, yb + T, 0), at(a1 + oh, yb + T, 0), at(a1 + oh, yE + T, d1), at(a0 - oh, yE + T, d1), shingle, slope, si);
+  quad(m, at(a0 - oh, yb, 0), at(a1 + oh, yb, 0), at(a1 + oh, yE, d1), at(a0 - oh, yE, d1), trim, [0, -1, 0], si);
+  quad(m, at(a0 - oh, yE, d1), at(a1 + oh, yE, d1), at(a1 + oh, yE + T, d1), at(a0 - oh, yE + T, d1), trim, [n[0], 0, n[1]], si);
+  quad(m, at(a0 - oh, yb, 0), at(a0 - oh, yE, d1), at(a0 - oh, yE + T, d1), at(a0 - oh, yb + T, 0), trim, [-t[0], 0, -t[1]], si);
+  quad(m, at(a1 + oh, yb, 0), at(a1 + oh, yE, d1), at(a1 + oh, yE + T, d1), at(a1 + oh, yb + T, 0), trim, [t[0], 0, t[1]], si);
+  // The stair: from the deck down to the ground, each step `run` m out.
+  // Each step goes a little under the ground, so it meets a slope.
+  for (let k = 1; k <= steps; k += 1) {
+    const y = dt - (k * (dt - ground)) / (steps + 1);
+    solidBox(m, o, t, n, am - sw, am + sw, depth + (k - 1) * P.run, depth + k * P.run, ground - 0.2, y, P.wood, si, false);
+  }
+  // The door: a painted leaf with a trim surround, on the deck.
+  const D = KIT.houseDoor;
+  const half = D.width / 2;
+  const color = SIGN_COLORS[hash32(`${front.edge}:${Math.round(len * 100)}`) % SIGN_COLORS.length];
+  const y1 = Math.min(dt + D.height, yb - D.head - 0.05);
+  wallBox(m, o, t, n, am - half, am + half, dt, y1, D.out, color, si, false, true);
+  wallBox(m, o, t, n, am - half - D.trim, am - half, dt, y1, D.trimOut, trim, si, false, true);
+  wallBox(m, o, t, n, am + half, am + half + D.trim, dt, y1, D.trimOut, trim, si, false, true);
+  wallBox(m, o, t, n, am - half - D.trim, am + half + D.trim, y1, y1 + D.head, D.trimOut, trim, si, true, true);
+  return 1;
+}
+
 // The part counts of buildingKit() and facadeKit().
-const COUNT_KEYS = ["cornice", "coping", "belt", "roof", "sill", "pier", "crown", "bulkhead", "sign", "awning", "lintel", "head", "stack", "door", "step", "sconce", "vent"];
+const COUNT_KEYS = ["cornice", "coping", "belt", "roof", "sill", "pier", "crown", "bulkhead", "sign", "awning", "lintel", "head", "stack", "door", "step", "sconce", "vent", "porch", "solar"];
 
 // The kit parts for one building, into mesh `m`. Returns the part counts.
 // `span` ({ foot, base, top }, src/level/geo/terrain.js) is where the walls
@@ -771,7 +950,8 @@ const COUNT_KEYS = ["cornice", "coping", "belt", "roof", "sill", "pier", "crown"
 // vents) go into mesh `depth` (by default `m`).
 // `mural` is the mural of the building, if it has one (see wallDepth()).
 // `front` ({ edge, street, door }, frontEdges()) is the front wall. Without
-// it the building gets no shop front.
+// it the building gets no shop front. For a house, `front` is an entry of
+// houseFronts() ({ edge, door, clear }), and the house gets a porch.
 export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null, front = null) {
   const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
   const si = STYLE_INDEX[style.id];
@@ -782,18 +962,22 @@ export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, 
   const foot = span.foot ?? base;
   // The same floor count as extrudeFootprint(), so the belt course sits on
   // the line of the facade floors.
-  const floors = Math.max(1, Math.round((top - base) / style.floorHeight));
+  const floors = floorCount(b, style, top - base);
   const floorH = (top - base) / floors;
-  const d = wallDepth(depth, ring, top, style, si, base, mural);
+  const d = wallDepth(depth, ring, top, style, si, base, mural, floors);
   counts.sill = d.sill;
   counts.pier = d.pier;
   counts.lintel = d.lintel;
   counts.head = d.head;
-  if (HOUSES.has(style.id) && b.height <= KIT.roof.maxHeight) {
+  if (HOUSES.has(style.id) && front && !(mural && mural.edge === front.edge)) counts.porch = housePorch(depth, ring, style, si, base, floorH, top, front, foot, wallColor(style, b.id));
+  if (roofForm(b, style) === "gable" && b.height <= KIT.roof.maxHeight) {
     const shingle = SHINGLES[hash32(`${b.id}:roof`) % SHINGLES.length];
-    if (gableRoof(m, ring, top, wallColor(style, b.id), shingle, si)) counts.roof = 1;
-    return counts;
+    if (gableRoof(m, ring, top, wallColor(style, b.id), shingle, si)) {
+      counts.roof = 1;
+      return counts;
+    }
   }
+  if (HOUSES.has(style.id) && b.height <= KIT.roof.maxHeight) return counts;
   const p = style.parapet ?? 0;
   if (hasCornice(style, b.height)) {
     ledge(m, ring, top - KIT.cornice.height, top, KIT.cornice.out, style.trim, si);
@@ -806,7 +990,9 @@ export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, 
   }
   // The vent stacks of the roof plan. The roof units and the water tower
   // of the same plan are props (props.js roofProps()).
-  counts.vent = roofVents(depth, roofPlan(b, style).parts, top, si);
+  const plan = roofPlan(b, style).parts;
+  counts.vent = roofVents(depth, plan, top, si);
+  counts.solar = roofSolar(m, plan, top, si);
   if (p > 0) {
     ledge(m, ring, top + p, top + p + KIT.coping.height, KIT.coping.out, style.trim, si);
     counts.coping = 1;
@@ -910,10 +1096,82 @@ export function frontEdges(level) {
   return out;
 }
 
+// The porch test of a house (houseFronts()): the porch wall must have a
+// street, a sidewalk, a path, or the trail within `maxStreet` m. The clear
+// depth is tested from `start` m out to `far` m in `step` m steps, on the
+// two porch edges and on the door line.
+export const HOUSE_FRONT = { maxStreet: 30, start: 0.2, far: 5, step: 0.25 };
+
+// Pure: the clear depth in front of a wall, from `a0` to `a1` along it (and
+// on the line at `am`): the distance to the first way (`isStreet`) or the
+// first other building (`isBlocked`), the least over the 3 lines, or h.far
+// when nothing is in the way.
+export function wallClear(ring, edge, a0, a1, am, isStreet, isBlocked = () => false, h = HOUSE_FRONT) {
+  const { o, t, n } = wallOf(ring, edge);
+  let clear = h.far;
+  for (const a of [a0, am, a1]) {
+    const x0 = o[0] + t[0] * a;
+    const z0 = o[1] + t[1] * a;
+    for (let d = h.start; d < clear; d += h.step) {
+      const x = x0 + n[0] * d;
+      const z = z0 + n[1] * d;
+      if (isStreet(x, z) || isBlocked(x, z)) {
+        clear = d;
+        break;
+      }
+    }
+  }
+  return clear;
+}
+
+const houseCache = new WeakMap();
+
+// Pure: the porch wall of every house of a level with a gable roof form,
+// as a Map from the building id: { edge, street, door, walk, clear,
+// ground }. `ground` is the terrain height at the foot of the stair. The
+// wall is frontEdge(), and it must face a way within HOUSE_FRONT.maxStreet
+// m. `door` is the bay with the nearest way (frontWalk()). `clear` is the
+// clear depth in front of the porch (wallClear()), so the porch keeps off
+// the ways (the skate lines), the trail, and the other buildings. The Map
+// is kept for the level object; do not change it.
+export function houseFronts(level) {
+  const cached = houseCache.get(level);
+  if (cached && cached.buildings === level.buildings) return cached.fronts;
+  const sample = createGeoGroundSampler(level);
+  const isStreet = streetTest(level, sample);
+  const blockedFor = buildingTest(level, sample);
+  const terrain = terrainOf(level);
+  const out = new Map();
+  for (const b of level.buildings ?? []) {
+    const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
+    if (!(b.outer?.length >= 3) || !HOUSES.has(style.id)) continue;
+    const ring = orientRing(b.outer, false);
+    const blocked = blockedFor(b.id);
+    const f = frontEdge(ring, isStreet, blocked);
+    const walk = frontWalk(ring, f.edge, style.bay, isStreet, blocked);
+    if (!f.street && !(walk.walk !== null && walk.walk <= HOUSE_FRONT.maxStreet)) continue;
+    const { len } = wallOf(ring, f.edge);
+    const bays = Math.max(1, Math.round(len / style.bay));
+    const span = porchSpan(len, bays, doorBay(walk, bays));
+    if (!span) continue;
+    // The edge lines are under the roof overhang.
+    const oh = KIT.porch.overhang;
+    const clear = wallClear(ring, f.edge, span.a0 - oh, span.a1 + oh, span.door, isStreet, blocked);
+    // The ground at the foot of the stair, on the door line.
+    const w = wallOf(ring, f.edge);
+    const d = KIT.porch.depth + KIT.porch.steps * KIT.porch.run;
+    const ground = terrain.height(w.o[0] + w.t[0] * span.door + w.n[0] * d, w.o[1] + w.t[1] * span.door + w.n[1] * d);
+    out.set(b.id, { edge: f.edge, street: f.street, door: walk.door, walk: walk.walk, clear: Math.round(clear * 100) / 100, ground: Math.round(ground * 100) / 100 });
+  }
+  houseCache.set(level, { buildings: level.buildings, fronts: out });
+  return out;
+}
+
 // Returns { tiles: [{ tile, mesh }], one per building tile; depthTiles:
 // [{ tile, center: [x, z], mesh }], one per DEPTH_TILE square; counts }.
-// `fronts` is the Map of frontEdges(), to share it with the aprons.
-export function facadeKit(level, fronts = frontEdges(level)) {
+// `fronts` is the Map of frontEdges(), to share it with the aprons. The
+// houses get their porch walls from houseFronts().
+export function facadeKit(level, fronts = frontEdges(level), houses = houseFronts(level)) {
   const tiles = new Map();
   const depthTiles = new Map();
   const counts = Object.fromEntries(COUNT_KEYS.map((k) => [k, 0]));
@@ -927,7 +1185,7 @@ export function facadeKit(level, fronts = frontEdges(level)) {
     const dkey = `${Math.floor(x / DEPTH_TILE)},${Math.floor(z / DEPTH_TILE)}`;
     let dm = depthTiles.get(dkey);
     if (!dm) depthTiles.set(dkey, (dm = emptyMesh(true)));
-    const front = fronts.get(b.id) ?? null;
+    const front = fronts.get(b.id) ?? houses.get(b.id) ?? null;
     const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null, front);
     for (const k of Object.keys(counts)) counts[k] += c[k];
   }

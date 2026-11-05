@@ -26,6 +26,10 @@ export const ROOF = {
   tower: { size: [3, 3], clear: 1.2, minArea: 200 },
   // A vent stack: a small pipe with a cap (facade-kit.js roofVents()).
   vent: { size: [0.34, 0.34], height: [0.5, 0.9], clear: 0.6, perArea: 1 / 140, min: 2, max: 8 },
+  // A row of solar panels (facade-kit.js roofSolar()): `depth` m deep and
+  // up to `maxLength` m long, in rows `pitch` m apart. A roof gets up to
+  // `maxRows` rows when its area is `minArea` m^2 or more.
+  solar: { depth: 2.0, minLength: 4, maxLength: 14, pitch: 3.4, maxRows: 3, clear: 1.2, minArea: 160 },
   // The clear space between two parts.
   gap: 0.6,
   // The unit count is the roof area times the style rate, times this.
@@ -116,8 +120,10 @@ function yawOf(vx, vz) {
 
 // Pure: the roof plan of one building. Returns { bulkhead, parts }, where
 // each part is { kind, x, z, yaw, ha, hc } and a vent also has `height`.
-// `kind` is "water_tower", "roof_unit", or "vent". A style with no roof
-// rates (a house, a parking deck) gets no parts.
+// `kind` is "water_tower", "solar", "roof_unit", or "vent". A style with
+// no roof rates (a house, a parking deck) gets no parts. The solar rows
+// have their own seed, so they do not change the other parts of a roof
+// with no solar rows.
 export function roofPlan(b, style) {
   const out = { bulkhead: null, parts: [] };
   if (!(b.outer?.length >= 3)) return out;
@@ -126,7 +132,7 @@ export function roofPlan(b, style) {
   out.bulkhead = bulkheadBox(ring, style, hash32(`${b.id}:crown`));
   const r = minRect(ring);
   const roof = style.roof ?? {};
-  if (!r || !(roof.roof_unit > 0 || roof.water_tower > 0)) return out;
+  if (!r || !(roof.roof_unit > 0 || roof.water_tower > 0 || roof.solar > 0)) return out;
   const u = [r.ux, r.uz];
   const v = [-r.uz, r.ux];
   const rand = seededRandom(hash32(`${b.id}:roof`));
@@ -166,6 +172,28 @@ export function roofPlan(b, style) {
         if (fits(pa, pc, ha, hc, tw.clear)) {
           add("water_tower", pa, pc, ha, hc);
           break search;
+        }
+      }
+    }
+  }
+  // The solar rows: across the short axis, along the long axis.
+  const so = ROOF.solar;
+  const sRand = seededRandom(hash32(`${b.id}:solar`));
+  if (roof.solar > 0 && a >= so.minArea && sRand() < roof.solar) {
+    const len = Math.min(so.maxLength, r.long - 2 * so.clear);
+    if (len >= so.minLength) {
+      const ha = len / 2;
+      const hc = so.depth / 2;
+      const rows = Math.min(so.maxRows, Math.max(1, Math.floor((r.short - 2 * so.clear) / so.pitch)));
+      const shift = (sRand() - 0.5) * (r.long - len - 2 * so.clear);
+      for (let k = 0; k < rows; k += 1) {
+        const pc = (k - (rows - 1) / 2) * so.pitch;
+        // A row that does not fit gets shorter, down to minLength.
+        for (let h = ha; h >= so.minLength / 2; h -= 1) {
+          if (fits(shift, pc, h, hc, so.clear)) {
+            add("solar", shift, pc, h, hc);
+            break;
+          }
         }
       }
     }

@@ -1,9 +1,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEPTH_TILE, FRONT, KIT, WALK, buildingKit, crownKit, crownPanel, doorBay, facadeKit, frontEdge, frontEdges, frontWalk, gableRoof, ledge, minRect, offsetRing, roofVents, shopEntrance, shopFront, solidBox, stairBulkhead, wallBox, wallDepth } from "./facade-kit.js";
+import { DEPTH_TILE, FRONT, HOUSE_FRONT, KIT, WALK, buildingKit, crownKit, crownPanel, doorBay, facadeKit, frontEdge, frontEdges, frontWalk, gableRoof, houseFronts, housePorch, ledge, minRect, offsetRing, porchSpan, roofSolar, roofVents, shopEntrance, shopFront, solidBox, stairBulkhead, wallBox, wallClear, wallDepth } from "./facade-kit.js";
+import { streetTest } from "./geo-mesh.js";
+import { createGeoGroundSampler } from "./geo-ground.js";
+import { buildingSpan } from "./terrain.js";
 import { roofPlan } from "./roof-plan.js";
-import { SIGN_COLORS, STYLES } from "./styles.js";
+import { SIGN_COLORS, STYLES, chooseStyle, floorCount } from "./styles.js";
 import { orientRing } from "./extrude.js";
 import { muralWalls } from "./geo-mesh.js";
 import { labBuildings } from "./lab.js";
@@ -606,8 +609,13 @@ describe("the facade relief", () => {
     const m = empty();
     // 4 floors of 4.2 m, walls of 5 and 3 bays.
     const c = wallDepth(m, ring, 16.8, LOFT, 0);
-    // Floors 1 and 2 on each wall; the top floor lintel is under the cornice.
-    expect(c.lintel).toBe((5 + 3) * 2 * 2);
+    // Floors 1, 2, and 3 on each wall. The top floor lintel is lower: its
+    // top stays under the bed molding of the cornice (issue #135).
+    expect(c.lintel).toBe((5 + 3) * 2 * 3);
+    const ceiling = 16.8 - KIT.cornice.height - KIT.bed.height;
+    let top = -Infinity;
+    for (let i = 1; i < m.positions.length; i += 3) top = Math.max(top, m.positions[i]);
+    expect(top).toBeLessThanOrEqual(ceiling - 0.02 + 1e-6);
     expect(c.head).toBe(0);
     const [ww, wh] = LOFT.window;
     // The lintel bottom is the frame top, as the shader paints it
@@ -633,8 +641,9 @@ describe("the facade relief", () => {
     const c = wallDepth(empty(), ring, 12.8, stucco, 0);
     expect(c.head).toBeGreaterThan(0);
     expect(c.lintel).toBe(0);
-    // One head for each sill, but not on the top floor under the cornice.
-    expect(c.head).toBeLessThan(c.sill);
+    // One head for each sill, also on the top floor: it gets lower under
+    // the cornice (issue #135).
+    expect(c.head).toBe(c.sill);
     expect(wallDepth(empty(), ring, 30, STYLES.find((st) => st.id === "glass-office"), 0).head).toBe(0);
   });
 
@@ -760,5 +769,134 @@ describe("the facade relief", () => {
       if (f.walk !== null) walks += 1;
     }
     expect(walks).toBeGreaterThan(fronts.size / 2);
+  });
+});
+
+// Issue #135: porches on the houses, solar rows on the flat roofs, and the
+// OSM level counts.
+describe("the house porches", () => {
+  const HOUSE = STYLES.find((st) => st.id === "craftsman-house");
+  // A 12 m x 9 m house. Wall 2 runs from (12, 9) to (0, 9) in the outer
+  // winding (orientRing()), so its outward normal is +z.
+  const ring = orientRing([[0, 0], [12, 0], [12, 9], [0, 9]], false);
+  const edge = ring.findIndex((p, i) => {
+    const q = ring[(i + 1) % ring.length];
+    return p[1] === 9 && q[1] === 9;
+  });
+
+  it("centers the porch on the door bay and keeps it on the wall", () => {
+    const s = porchSpan(12, 4, 1);
+    expect(s.a1 - s.a0).toBeCloseTo(KIT.porch.width);
+    expect(s.a0).toBeGreaterThanOrEqual(0.2 - 1e-9);
+    expect(s.door).toBeCloseTo(4.5);
+    // A wall too short for the narrowest porch gets none.
+    expect(porchSpan(2.5, 1, 0)).toBeNull();
+  });
+
+  it("measures the clear depth to the first way or building", () => {
+    const isStreet = (x, z) => z > 13;
+    expect(wallClear(ring, edge, 2, 8, 5, isStreet)).toBeCloseTo(4, 0);
+    const isBlocked = (x, z) => x > 6 && z > 11;
+    expect(wallClear(ring, edge, 2, 8, 5, () => false, isBlocked)).toBeLessThanOrEqual(2 + HOUSE_FRONT.step);
+    expect(wallClear(ring, edge, 2, 8, 5, () => false)).toBe(HOUSE_FRONT.far);
+  });
+
+  it("builds a porch in front of the wall, under the eave, with room to stand", () => {
+    const m = empty();
+    const front = { edge, door: 1, clear: HOUSE_FRONT.far };
+    expect(housePorch(m, ring, HOUSE, 0, 0, 3.5, 7, front)).toBe(1);
+    const P = KIT.porch;
+    const eave = 7 - KIT.roof.overhang * Math.tan(KIT.roof.pitch);
+    let maxY = -Infinity;
+    let maxZ = -Infinity;
+    for (let i = 0; i < m.positions.length; i += 3) {
+      maxY = Math.max(maxY, m.positions[i + 1]);
+      maxZ = Math.max(maxZ, m.positions[i + 2]);
+      // Nothing goes into the house.
+      expect(m.positions[i + 2]).toBeGreaterThanOrEqual(9 - 1e-6);
+    }
+    expect(maxY).toBeLessThanOrEqual(eave + 1e-6);
+    expect(maxZ).toBeLessThanOrEqual(9 + P.depth + P.steps * P.run + P.overhang + 1e-6);
+    // About 160 triangles: it fits the depth tile budget.
+    expect(m.indices.length / 3).toBeLessThan(220);
+  });
+
+  it("gives no porch when the way is too near or the walls are too low", () => {
+    // Room for the deck but not for one step.
+    const front = { edge, door: 1, clear: KIT.porch.minDepth + KIT.porch.run + KIT.porch.margin - 0.1 };
+    expect(housePorch(empty(), ring, HOUSE, 0, 0, 3.5, 7, front)).toBe(0);
+    expect(housePorch(empty(), ring, HOUSE, 0, 0, 2.4, 2.4, { edge, door: 1, clear: 5 })).toBe(0);
+  });
+
+  it("puts each BeltLine porch off the ways and the other buildings", () => {
+    const houses = houseFronts(LEVEL);
+    expect(houseFronts(LEVEL)).toBe(houses);
+    const sample = createGeoGroundSampler(LEVEL);
+    const isStreet = streetTest(LEVEL, sample);
+    const byId = new Map(LEVEL.buildings.map((b) => [b.id, b]));
+    // In the footprint of another building. A point out of the level (a
+    // house at the level edge) is not in a footprint.
+    const blockedFor = (self) => (x, z) => {
+      const g = sample(x, z);
+      return Boolean(g && byId.has(g.id) && g.id !== self);
+    };
+    let porches = 0;
+    for (const [id, front] of houses) {
+      const b = byId.get(id);
+      const span = buildingSpan(LEVEL, b);
+      const style = STYLES.find((st) => st.id === chooseStyle(b));
+      const floors = floorCount(b, style, span.top - span.base);
+      const m = empty();
+      const ring = orientRing(b.outer, false);
+      if (!housePorch(m, ring, style, 0, span.base, (span.top - span.base) / floors, span.top, front, span.foot)) continue;
+      porches += 1;
+      const blocked = blockedFor(id);
+      for (let i = 0; i < m.positions.length; i += 3) {
+        const x = m.positions[i];
+        const z = m.positions[i + 2];
+        expect(isStreet(x, z), `porch of ${id} on a way`).toBe(false);
+        expect(blocked(x, z), `porch of ${id} in another building`).toBe(false);
+      }
+    }
+    expect(porches).toBeGreaterThan(150);
+  });
+});
+
+describe("the solar rows and the level counts", () => {
+  it("builds a frame and the panels of each solar row, on the roof", () => {
+    const m = empty();
+    const parts = [{ kind: "solar", x: 0, z: 0, yaw: 0, ha: 4, hc: 1 }, { kind: "vent", x: 5, z: 5, yaw: 0, ha: 0.17, hc: 0.17, height: 0.6 }];
+    expect(roofSolar(m, parts, 10, 0)).toBe(1);
+    // 5 frame quads and 4 panels of 2 m.
+    expect(m.indices.length / 3).toBe((5 + 4) * 2);
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let i = 1; i < m.positions.length; i += 3) {
+      lo = Math.min(lo, m.positions[i]);
+      hi = Math.max(hi, m.positions[i]);
+    }
+    expect(lo).toBeCloseTo(10);
+    expect(hi).toBeLessThan(10 + KIT.solar.foot + 2 * Math.tan(KIT.solar.tilt) + 0.05);
+    // The panels face up and to the south (+z).
+    const panel = normals(m).filter((t) => t.n[1] > 0 && t.c[1] > 10 + KIT.solar.foot);
+    expect(panel.length).toBeGreaterThan(0);
+    for (const t of panel) expect(t.n[2]).toBeGreaterThan(0);
+  });
+
+  it("uses the OSM level count for the floors of the kit", () => {
+    const LOFT = STYLES.find((st) => st.id === "brick-loft");
+    const outer = [[0, 0], [17, 0], [17, 10.2], [0, 10.2]];
+    // 12 m with the style floors is 3 floors; the OSM tag says 2.
+    const b = { id: "t-levels", height: 12, outer, type: "industrial", name: "Ford Factory" };
+    const three = buildingKit(empty(), b, { base: 0, top: 12 });
+    const two = buildingKit(empty(), { ...b, levels: 2 }, { base: 0, top: 12 });
+    expect(LOFT.floorHeight).toBe(4.2);
+    expect(two.sill).toBeLessThan(three.sill);
+  });
+
+  it("puts the solar rows on BeltLine roofs and keeps the kit budgets", () => {
+    const { counts } = facadeKit(LEVEL);
+    expect(counts.solar).toBeGreaterThan(40);
+    expect(counts.porch).toBeGreaterThan(150);
   });
 });

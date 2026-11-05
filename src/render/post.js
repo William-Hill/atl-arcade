@@ -199,12 +199,12 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   // foot, the inside corners, and under the trees.
   gtao.updateGtaoMaterial({ radius: 2.5, distanceExponent: 1.5, thickness: 4, scale: 1.2, samples: 12 });
   gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
-  gtao.blendIntensity = grade ? 1.0 : 0.9;
+  const pbr = look === "pbr";
+  gtao.blendIntensity = pbr ? 1.0 : 0.9;
   composer.addPass(gtao);
 
   // The pbr look drops the ink lines and the halftone dots — the Jet Set
   // Radio effect — and grades instead. The toon look keeps the ink pass.
-  const pbr = look === "pbr";
   let ink = null;
   let grade = null;
   if (pbr) {
@@ -221,7 +221,6 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
 
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.28, 0.5, 0.92);
   composer.addPass(bloom);
-  if (grade) composer.addPass(new ShaderPass(GradeShader));
   composer.addPass(new OutputPass());
 
   function sync() {

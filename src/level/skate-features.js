@@ -33,10 +33,14 @@ export function toModel(x, z, placement) {
 }
 
 // The grind edges of a placed feature, as level objects for prepareGrindables().
+// Every edge is kind "rail" (the manifest kind is kept in `edge`), so
+// createPhysicsWorld() gives each a thin capsule instead of throwing on a
+// spline-only ledge/bench/coping object.
 export function featureLevelObjects(feature, placement) {
   return feature.grind.map((e) => ({
     id: `${placement.id}:${e.id}`,
-    kind: e.kind,
+    kind: "rail",
+    edge: e.kind,
     feature: placement.id,
     radius: e.radius,
     spline: { points: e.points.map((p) => toWorld(p, placement)) },

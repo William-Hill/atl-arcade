@@ -754,7 +754,10 @@ def planter(lod):
         edge("back", "ledge", [(-ox, gy, -oz + 0.01), (ox, gy, -oz + 0.01)], 0.02),
         edge("left", "ledge", [(-ox + 0.01, gy, -oz), (-ox + 0.01, gy, oz)], 0.02),
         edge("right", "ledge", [(ox - 0.01, gy, -oz), (ox - 0.01, gy, oz)], 0.02)],
-        "solids": [solid(-ox, ox, 0, H, -oz, oz)], "surfaces": []}
+        # The cap ring and the soil inside it, so the open center rides at soil height.
+        "solids": [solid(-ox, ox, 0, H, iz, oz, "cap_front"), solid(-ox, ox, 0, H, -oz, -iz, "cap_back"),
+                   solid(-ox, -ix, 0, H, -iz, iz, "cap_left"), solid(ix, ox, 0, H, -iz, iz, "cap_right"),
+                   solid(-ix, ix, 0, soil, -iz, iz, "soil")], "surfaces": []}
     return b, data
 
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import manifest from "../../assets/skate-features/features.json";
+import { createPhysicsWorld, initPhysics } from "../physics/world.js";
 import { prepareGrindables } from "../sim/skate/grind.js";
 import {
   featureFootprint,
@@ -149,5 +150,34 @@ describe("placing a feature", () => {
     });
     const zs = fp.map((p) => p[1]);
     expect(Math.max(...zs) - Math.min(...zs)).toBeCloseTo(6, 2);
+  });
+
+  it("rides the planter soil inside the granite cap", () => {
+    const placement = { id: "p", position: [0, 0, 0], yaw: 0 };
+    const f = F.ledge_planter;
+    expect(featureSurfaceAt(f, placement, 0, 0).height).toBeCloseTo(0.4, 5);
+    expect(
+      featureSurfaceAt(f, placement, 0, f.bounds.max[2] - 0.05).height,
+    ).toBeCloseTo(0.5, 5);
+    expect(
+      featureSurfaceAt(f, placement, f.bounds.min[0] + 0.05, 0).height,
+    ).toBeCloseTo(0.5, 5);
+  });
+
+  it("builds a physics world from every feature's grind objects", async () => {
+    const R = await initPhysics();
+    const objects = Object.keys(F).flatMap((id, i) =>
+      featureLevelObjects(F[id], {
+        id,
+        position: [i * 10, 0, 0],
+        yaw: i * 0.3,
+      }),
+    );
+    expect(new Set(objects.map((o) => o.edge))).toEqual(
+      new Set(["rail", "ledge", "bench", "coping"]),
+    );
+    const { world } = createPhysicsWorld(R, { objects });
+    expect(world).toBeTruthy();
+    expect(prepareGrindables({ objects })).toHaveLength(objects.length);
   });
 });

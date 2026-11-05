@@ -2,6 +2,7 @@
 # Render takes for every track id and seed given: render-all.sh OUT "id:seed id:seed ..."
 set -u
 out=$1; shift
+mkdir -p "$out" || exit 1
 for job in $1; do
   id=${job%%:*}; seed=${job##*:}
   [ -f "$out/$id-s$seed.wav" ] && continue

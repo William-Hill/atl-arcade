@@ -78,9 +78,17 @@ export class BeatClock {
     if (this.wantsMusic) this.bytes(this.track).catch(() => {});
   }
 
+  // Caches the fetch; a failed one is dropped so a later choice retries it.
   bytes(track) {
-    if (!this.buffers.has(track.id)) this.buffers.set(track.id, this.loadTrack(track));
-    return this.buffers.get(track.id);
+    let p = this.buffers.get(track.id);
+    if (!p) {
+      p = Promise.resolve().then(() => this.loadTrack(track));
+      this.buffers.set(track.id, p);
+      p.catch(() => {
+        if (this.buffers.get(track.id) === p) this.buffers.delete(track.id);
+      });
+    }
+    return p;
   }
 
   async decode(track) {
@@ -158,13 +166,13 @@ export class BeatClock {
       return;
     }
     let buffer = null;
+    let failed = null;
     if (next && this.wantsMusic) {
       this.musicState = "loading";
       try {
         buffer = await this.decode(next);
       } catch (err) {
-        if (this.track === next) this.fallBackToClick(err);
-        return;
+        failed = err;
       }
       if (this.track !== next || !this.ctx) return;
     }
@@ -176,16 +184,37 @@ export class BeatClock {
     this.music = null;
     this.pending = { at, bpm, click: !buffer };
     if (buffer) this.startSource(buffer, next, at, 0);
-    else this.musicState = "off";
+    else if (failed) {
+      // The old music stops at the bar line and the click takes over there.
+      this.musicState = "failed";
+      this.error = String(failed);
+    } else this.musicState = "off";
   }
 
   // The public grid (startTime, bpm) moves at the pending bar line.
   applyPending() {
     const p = this.pending;
     if (p && this.ctx && this.ctx.currentTime >= p.at) {
+      this.schedulePending(p);
       this.startTime = p.at;
       this.bpm = p.bpm;
       this.pending = null;
+    }
+  }
+
+  // Moves the click scheduler onto the pending grid. A late tick (stalled
+  // main thread, throttled tab) skips the beats already in the past.
+  schedulePending(p) {
+    const s = this.sched;
+    if (!s || p.scheduled) return;
+    Object.assign(s, { time: p.at, index: 0, bpm: p.bpm, click: p.click });
+    p.scheduled = true;
+    const len = beatLength(s.bpm);
+    const late = this.ctx.currentTime - s.time;
+    if (late > 0) {
+      const n = Math.ceil(late / len - 1e-9);
+      s.time += n * len;
+      s.index += n;
     }
   }
 
@@ -233,10 +262,7 @@ export class BeatClock {
       const p = this.pending;
       // The pending change is on a bar line of the old grid, at least one
       // schedule-ahead window away, so the loop lands on it exactly.
-      if (p && !p.scheduled && s.time >= p.at - 1e-6) {
-        Object.assign(s, { time: p.at, index: 0, bpm: p.bpm, click: p.click });
-        p.scheduled = true;
-      }
+      if (p && !p.scheduled && s.time >= p.at - 1e-6) this.schedulePending(p);
       const len = beatLength(s.bpm);
       if (!this.muted && s.click) {
         this.kick(s.time, s.index % 4 === 0);

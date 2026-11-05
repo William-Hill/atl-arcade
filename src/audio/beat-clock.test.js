@@ -151,6 +151,70 @@ describe("BeatClock with a music track", () => {
     expect(clock.judge(clock.now()).index).toBe(1);
   });
 
+  it("retries a track whose download failed once", async () => {
+    const ctx = musicContext();
+    let loads = 0;
+    clock = new BeatClock({
+      audioContextFactory: () => ctx,
+      tracks: TRACKS,
+      trackId: "day",
+      loadTrack: async () => {
+        loads += 1;
+        if (loads === 1) throw new Error("503");
+        return new ArrayBuffer(8);
+      }
+    });
+    await clock.start();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(clock.musicState).toBe("failed");
+    await clock.setTrack("day");
+    expect(loads).toBe(2);
+    expect(clock.musicState).toBe("playing");
+  });
+
+  it("stops the old music at the bar line when the new track fails, so only the click plays", async () => {
+    const ctx = musicContext();
+    clock = new BeatClock({
+      audioContextFactory: () => ctx,
+      tracks: TRACKS,
+      trackId: "day",
+      loadTrack: async (t) => {
+        if (t.id === "house") throw new Error("404");
+        return new ArrayBuffer(8);
+      }
+    });
+    await clock.start();
+    await new Promise((r) => setTimeout(r, 0));
+    const old = ctx.sources.find((s) => s.loop);
+    const start0 = clock.startTime;
+    ctx.currentTime = start0 + 10;
+    await clock.setTrack("house");
+    expect(clock.musicState).toBe("failed");
+    expect(old.stopped).toBeCloseTo(start0 + 12, 9);
+    expect(clock.pending).toMatchObject({ at: start0 + 12, bpm: 125, click: true });
+    expect(ctx.sources.filter((s) => s.loop)).toHaveLength(1);
+  });
+
+  it("moves the click scheduler to the new grid even when a tick misses the bar line", async () => {
+    const ctx = musicContext();
+    clock = new BeatClock({ audioContextFactory: () => ctx, tracks: TRACKS, trackId: null, loadTrack: async () => new ArrayBuffer(8) });
+    await clock.start();
+    clearInterval(clock.timer);
+    const start0 = clock.startTime;
+    ctx.currentTime = start0 + 10;
+    clock.schedule();
+    await clock.setTrack("house");
+    const at = start0 + 12;
+    expect(clock.pending.at).toBeCloseTo(at, 9);
+    ctx.currentTime = at + 0.2; // the next tick is late
+    clock.schedule();
+    expect(clock.pending).toBeNull();
+    expect(clock.sched.bpm).toBe(125);
+    expect(clock.sched.click).toBe(false);
+    expect(clock.sched.time).toBeGreaterThanOrEqual(at + 0.2);
+    expect((clock.sched.time - at) / 0.48).toBeCloseTo(Math.round((clock.sched.time - at) / 0.48), 9);
+  });
+
   it("records a choice made before start", async () => {
     clock = new BeatClock({ tracks: TRACKS, trackId: "day", loadTrack: async () => new ArrayBuffer(8) });
     await clock.setTrack("house");

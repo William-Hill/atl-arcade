@@ -1049,3 +1049,13 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Neon, lamp lenses, and bulbs use `sf_neon` with emissive strength 3 to cross the pbr bloom threshold (0.92); light sign backgrounds were darkened so they do not bloom in the pbr sun.
 - Grid: 3.5-4.5 m ground floors, 3-6 m bays, board centered on the kit sign band (`facade-kit.js`), patio on the 3.5 m apron. Details in `docs/storefronts.md`.
 - Invented businesses only (`scripts/assets/storefront-businesses.json`); no real names or logos.
+
+
+## 2026-11-04: Landmark facsimiles for the BeltLine Eastside (assets)
+
+- Ponce City Market (full building), Telephone Factory Lofts, Studioplex, New Realm Brewing, and the Eastside Trail bridges (North Avenue, Ralph McGill, Ponce de Leon, Freedom Parkway) are procedural Blender models (`scripts/blender/landmarks.py`) on the real OSM footprints at the game's heights and ground (`scripts/assets/landmark-sites.mjs` → `assets/landmarks/sites.json`, from the game's own `buildingSpan`/`bridgeDeck`). One Draco GLB per landmark with LOD nodes that share materials and tiling textures. See `docs/landmarks.md`.
+- Why Blender and not img2threejs or Meshy: the footprints are large and exact (PCM is 183 x 177 m, 26 points); a generator that walks the footprint fits them exactly, keeps triangles low (recessed windows from a shared 1024 px atlas), and can be rerun. Meshy (credit cap 30) was not needed: the water tower is about 600 Blender tris.
+- Sign texts are generic or fictional ("CITY MARKET", "STUDIO YARDS", "BREW HALL"); no real lettering or logos.
+- Krog Street Tunnel is outside the level bounds: skipped.
+- Integration is for the parent session: claim the four footprints, drop the PCM img2threejs tower and rooftop sign entry, add the GLBs as THREE.LOD at their origin with yaw 0. `scripts/assets/landmarks-preview.html` does this as a preview only, without editing shared code.
+||||||| d79d170

@@ -1,0 +1,62 @@
+{
+  "asset": "studioplex.glb: procedural facsimile of Studioplex for the beltline-eastside level, one node per LOD (lod0, lod1), shared materials and tiling textures.",
+  "date": "2026-11-05",
+  "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco",
+  "command": "blender -b -P scripts/blender/landmarks.py -- --only studioplex",
+  "source": "scripts/blender/landmarks.py: footprint walls with bays of recessed windows, piers, belts, cornice, parapet, roof, and props, all from code. No photo pixels, scans of the real building, mesh extraction, or logos.",
+  "prompt": "None. The script and sites.json are the full recipe.",
+  "credits": "No paid generation credits (Meshy not used).",
+  "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_*, lm_fence_color, lm_far_pcm_color: painted in code by landmarks.py.",
+  "references": [
+    {
+      "title": "Studioplex o4w atlanta",
+      "author": "Keizers",
+      "license": "CC BY-SA 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Studioplex_o4w_atlanta.JPG",
+      "use": "Visual reference for shapes and colors only; no pixels of the photo are in the asset."
+    }
+  ],
+  "sign": "STUDIO YARDS (fictional)",
+  "data": {
+    "level": "beltline-eastside",
+    "attribution": "Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright. Heights: Overture Maps Foundation. Elevation: USGS 3DEP. Street names: City of Atlanta Department of City Planning",
+    "sites": "assets/landmarks/sites.json (scripts/assets/landmark-sites.mjs)",
+    "footprint": "OpenStreetMap r11742136 (11 points, 11 holes)",
+    "height_m": 7.4,
+    "heightSource": "levels",
+    "ground_m": 41.32,
+    "wallBase_m": 40.0,
+    "top_m": 48.72
+  },
+  "placement": {
+    "position": [
+      -280.31,
+      41.32,
+      970.48
+    ],
+    "yaw": 0,
+    "axes": "glTF axes = level axes (+x east, +y up, +z south)"
+  },
+  "lodDistance_m": [
+    0,
+    140
+  ],
+  "triangles": {
+    "lod0": 7079,
+    "lod1": 2698
+  },
+  "bytes": 574620,
+  "textureImages": {
+    "lm_brick_light_color": "512x512",
+    "lm_brick_normal": "512x512",
+    "lm_brick_rough": "512x512",
+    "lm_concrete_color": "512x512",
+    "lm_trim_color": "512x512",
+    "lm_trim_normal": "512x512",
+    "lm_trim_rough": "512x512",
+    "lm_window_color": "1024x1024",
+    "lm_window_normal": "512x512",
+    "lm_window_rough": "512x512"
+  },
+  "gpuTextureBytes": 18175317
+}

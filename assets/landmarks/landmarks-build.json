@@ -1,0 +1,222 @@
+{
+  "ponce-city-market": {
+    "file": "assets/landmarks/ponce-city-market/ponce-city-market.glb",
+    "bytes": 937204,
+    "triangles": {
+      "lod0": 57432,
+      "lod1": 6921,
+      "lod2": 453
+    },
+    "lodDistance": [
+      0,
+      160,
+      450
+    ],
+    "textures": {
+      "lm_brick_light_color": "512x512",
+      "lm_brick_normal": "512x512",
+      "lm_brick_rough": "512x512",
+      "lm_concrete_color": "512x512",
+      "lm_far_pcm_color": "256x256",
+      "lm_trim_color": "512x512",
+      "lm_trim_normal": "512x512",
+      "lm_trim_rough": "512x512",
+      "lm_window_color": "1024x1024",
+      "lm_window_normal": "512x512",
+      "lm_window_rough": "512x512"
+    },
+    "gpuTextureBytes": 18524842,
+    "origin": [
+      -235.78,
+      3.98,
+      -852.11
+    ]
+  },
+  "telephone-factory-lofts": {
+    "file": "assets/landmarks/telephone-factory-lofts/telephone-factory-lofts.glb",
+    "bytes": 572380,
+    "triangles": {
+      "lod0": 2027,
+      "lod1": 723
+    },
+    "lodDistance": [
+      0,
+      140
+    ],
+    "textures": {
+      "lm_brick_buff_color": "512x512",
+      "lm_brick_color": "512x512",
+      "lm_brick_normal": "512x512",
+      "lm_brick_rough": "512x512",
+      "lm_concrete_color": "512x512",
+      "lm_trim_color": "512x512",
+      "lm_trim_normal": "512x512",
+      "lm_trim_rough": "512x512",
+      "lm_window_color": "1024x1024",
+      "lm_window_normal": "512x512",
+      "lm_window_rough": "512x512"
+    },
+    "gpuTextureBytes": 19573418,
+    "origin": [
+      224.75,
+      20.18,
+      -366.25
+    ]
+  },
+  "studioplex": {
+    "file": "assets/landmarks/studioplex/studioplex.glb",
+    "bytes": 574620,
+    "triangles": {
+      "lod0": 7079,
+      "lod1": 2698
+    },
+    "lodDistance": [
+      0,
+      140
+    ],
+    "textures": {
+      "lm_brick_light_color": "512x512",
+      "lm_brick_normal": "512x512",
+      "lm_brick_rough": "512x512",
+      "lm_concrete_color": "512x512",
+      "lm_trim_color": "512x512",
+      "lm_trim_normal": "512x512",
+      "lm_trim_rough": "512x512",
+      "lm_window_color": "1024x1024",
+      "lm_window_normal": "512x512",
+      "lm_window_rough": "512x512"
+    },
+    "gpuTextureBytes": 18175317,
+    "origin": [
+      -280.31,
+      41.32,
+      970.48
+    ]
+  },
+  "new-realm-brewing": {
+    "file": "assets/landmarks/new-realm-brewing/new-realm-brewing.glb",
+    "bytes": 510120,
+    "triangles": {
+      "lod0": 2336,
+      "lod1": 529
+    },
+    "lodDistance": [
+      0,
+      140
+    ],
+    "textures": {
+      "lm_brick_color": "512x512",
+      "lm_brick_normal": "512x512",
+      "lm_brick_rough": "512x512",
+      "lm_concrete_color": "512x512",
+      "lm_trim_color": "512x512",
+      "lm_trim_normal": "512x512",
+      "lm_trim_rough": "512x512",
+      "lm_window_color": "1024x1024",
+      "lm_window_normal": "512x512",
+      "lm_window_rough": "512x512"
+    },
+    "gpuTextureBytes": 18175317,
+    "origin": [
+      119.79,
+      21.13,
+      -475.9
+    ]
+  },
+  "bridge-north-ave": {
+    "file": "assets/landmarks/bridge-north-ave/bridge-north-ave.glb",
+    "bytes": 103684,
+    "triangles": {
+      "lod0": 1444,
+      "lod1": 420
+    },
+    "lodDistance": [
+      0,
+      120
+    ],
+    "textures": {
+      "lm_concrete_color": "512x512",
+      "lm_fence_color": "128x128",
+      "lm_trim_normal": "512x512",
+      "lm_trim_rough": "512x512"
+    },
+    "gpuTextureBytes": 4281685,
+    "origin": [
+      -56.16,
+      13.63,
+      -709.62
+    ]
+  },
+  "bridge-ralph-mcgill": {
+    "file": "assets/landmarks/bridge-ralph-mcgill/bridge-ralph-mcgill.glb",
+    "bytes": 98996,
+    "triangles": {
+      "lod0": 828,
+      "lod1": 260
+    },
+    "lodDistance": [
+      0,
+      120
+    ],
+    "textures": {
+      "lm_concrete_color": "512x512",
+      "lm_fence_color": "128x128",
+      "lm_trim_normal": "512x512",
+      "lm_trim_rough": "512x512"
+    },
+    "gpuTextureBytes": 4281685,
+    "origin": [
+      225.35,
+      22.12,
+      -302.65
+    ]
+  },
+  "bridge-ponce": {
+    "file": "assets/landmarks/bridge-ponce/bridge-ponce.glb",
+    "bytes": 98796,
+    "triangles": {
+      "lod0": 844,
+      "lod1": 276
+    },
+    "lodDistance": [
+      0,
+      120
+    ],
+    "textures": {
+      "lm_concrete_color": "512x512",
+      "lm_fence_color": "128x128",
+      "lm_trim_normal": "512x512",
+      "lm_trim_rough": "512x512"
+    },
+    "gpuTextureBytes": 4281685,
+    "origin": [
+      -124.51,
+      12.34,
+      -957.27
+    ]
+  },
+  "bridge-freedom-parkway": {
+    "file": "assets/landmarks/bridge-freedom-parkway/bridge-freedom-parkway.glb",
+    "bytes": 169328,
+    "triangles": {
+      "lod0": 7706,
+      "lod1": 3406
+    },
+    "lodDistance": [
+      0,
+      120
+    ],
+    "textures": {
+      "lm_concrete_color": "512x512",
+      "lm_fence_color": "128x128",
+      "lm_trim_normal": "512x512",
+      "lm_trim_rough": "512x512"
+    },
+    "gpuTextureBytes": 4281685,
+    "origin": [
+      356.66,
+      29.75,
+      -13.44
+    ]
+  }
+}

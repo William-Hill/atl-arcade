@@ -1,0 +1,58 @@
+{
+  "asset": "bridge-freedom-parkway.glb: procedural facsimile of John Lewis Freedom Parkway and Stone Mountain Trail over the Eastside Trail for the beltline-eastside level, one node per LOD (lod0, lod1), shared materials and tiling textures.",
+  "date": "2026-11-05",
+  "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco",
+  "command": "blender -b -P scripts/blender/landmarks.py -- --only bridge-freedom-parkway",
+  "source": "scripts/blender/landmarks.py: footprint walls with bays of recessed windows, piers, belts, cornice, parapet, roof, and props, all from code. No photo pixels, scans of the real building, mesh extraction, or logos.",
+  "prompt": "None. The script and sites.json are the full recipe.",
+  "credits": "No paid generation credits (Meshy not used).",
+  "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_*, lm_fence_color, lm_far_pcm_color: painted in code by landmarks.py.",
+  "references": [
+    {
+      "title": "Gathering space beneath Freedom Parkway along the Atlanta BeltLine Eastside Trail",
+      "author": "Marc Merlin",
+      "license": "CC BY-SA 4.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Gathering_space_beneath_Freedom_Parkway_along_the_Atlanta_BeltLine_Eastside_Trail.jpg",
+      "use": "Visual reference for shapes and colors only; no pixels of the photo are in the asset."
+    }
+  ],
+  "sign": null,
+  "data": {
+    "level": "beltline-eastside",
+    "attribution": "Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright. Heights: Overture Maps Foundation. Elevation: USGS 3DEP. Street names: City of Atlanta Department of City Planning",
+    "sites": "assets/landmarks/sites.json (scripts/assets/landmark-sites.mjs)",
+    "decks": [
+      "OpenStreetMap w156324719 trunk 14 m",
+      "OpenStreetMap w156324725 trunk 14 m",
+      "OpenStreetMap w29094065 trunk 14 m",
+      "OpenStreetMap w29094070 trunk 14 m",
+      "OpenStreetMap w44851092 cycleway 3 m"
+    ],
+    "deckHeights": "terrain.js bridgeDeck() on the OSM span"
+  },
+  "placement": {
+    "position": [
+      356.66,
+      29.75,
+      -13.44
+    ],
+    "yaw": 0,
+    "axes": "glTF axes = level axes (+x east, +y up, +z south)"
+  },
+  "lodDistance_m": [
+    0,
+    120
+  ],
+  "triangles": {
+    "lod0": 7706,
+    "lod1": 3406
+  },
+  "bytes": 169328,
+  "textureImages": {
+    "lm_concrete_color": "512x512",
+    "lm_fence_color": "128x128",
+    "lm_trim_normal": "512x512",
+    "lm_trim_rough": "512x512"
+  },
+  "gpuTextureBytes": 4281685
+}

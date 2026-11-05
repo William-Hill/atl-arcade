@@ -143,6 +143,17 @@ function facadeLit(scene) {
 }
 
 const SHADOW_MATERIAL = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+// The shadow proxies move to this layer, which only the shadow cameras see,
+// once the shadow lights are found: then they cost no main-pass draw call.
+export const SHADOW_LAYER = 7;
+
+function shadowLights(scene) {
+  const out = [];
+  scene.traverse((o) => {
+    if (o.isLight && o.castShadow && o.shadow?.camera) out.push(o);
+  });
+  return out;
+}
 
 export function createLandmarkModels(
   levelName,
@@ -160,14 +171,21 @@ export function createLandmarkModels(
   let source = null;
   let lastLook = -Infinity;
   const patched = new Set();
+  const proxies = [];
+  let lightsDone = false;
   const follow = (renderer, scene) => {
-    if (manual) return;
     const now = performance.now();
-    if (!source && now - lastLook > 2000) {
+    if ((!source || !lightsDone) && now - lastLook > 2000) {
       lastLook = now;
-      source = facadeLit(scene);
+      if (!source) source = facadeLit(scene);
+      const lights = lightsDone ? [] : shadowLights(scene);
+      if (lights.length) {
+        for (const l of lights) l.shadow.camera.layers.enable(SHADOW_LAYER);
+        for (const p of proxies) p.layers.set(SHADOW_LAYER);
+        lightsDone = true;
+      }
     }
-    lit.value = source ? source.value : 0;
+    if (!manual) lit.value = source ? source.value : 0;
   };
   const ready = import("../../assets/landmarks/sites.json").then((mod) => {
     const sites = mod.default ?? mod;
@@ -230,6 +248,8 @@ export function createLandmarkModels(
           shadow.castShadow = true;
           shadow.receiveShadow = false;
           shadow.position.set(...site.origin);
+          if (lightsDone) shadow.layers.set(SHADOW_LAYER);
+          proxies.push(shadow);
           root.add(shadow);
           info.shadowTriangles += g.index.count / 3;
         }

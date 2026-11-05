@@ -264,7 +264,7 @@ def far_facade(bay, fh, ww, wh, sill):
 
 # ---------- materials --------------------------------------------------------
 def material(name, color=None, normal=None, rough=None, tint=None, base=(0.5, 0.5, 0.5), metallic=0.0, roughness=0.6,
-             alpha=False, double=False, emission=None, emit_map=None):
+             alpha=False, double=False, emission=None, emit_map=None, vcol=False):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
@@ -283,6 +283,16 @@ def material(name, color=None, normal=None, rough=None, tint=None, base=(0.5, 0.
             nt.links.new(out, mix.inputs["A"])
             mix.inputs["B"].default_value = (*tint, 1)
             out = mix.outputs["Result"]
+        if vcol:
+            va = nt.nodes.new("ShaderNodeVertexColor")
+            va.layer_name = "Col"
+            mv = nt.nodes.new("ShaderNodeMix")
+            mv.data_type = "RGBA"
+            mv.blend_type = "MULTIPLY"
+            mv.inputs["Factor"].default_value = 1.0
+            nt.links.new(out, mv.inputs["A"])
+            nt.links.new(va.outputs["Color"], mv.inputs["B"])
+            out = mv.outputs["Result"]
         nt.links.new(out, bsdf.inputs["Base Color"])
         if alpha:
             rnd = nt.nodes.new("ShaderNodeMath")
@@ -355,14 +365,14 @@ def setup_materials():
     frame = np.ones((n, n, 3)) * np.array([0.62, 0.64, 0.65])
     fence = new_image("lm_fence_color", frame, alpha=wire)
     M = {
-        "brick_pcm": material("lm_brick_pcm", blc, bn, br),
+        "brick_pcm": material("lm_brick_pcm", blc, bn, br, vcol=True),
         "brick_pcm_dark": material("lm_brick_pcm_dark", blc, bn, br, tint=(0.88, 0.84, 0.82)),
         "sill": material("lm_sill", tc, tn, tr, tint=(0.78, 0.76, 0.72)),
         "brick_studio": material("lm_brick_studio", blc, bn, br, tint=(1.0, 0.9, 0.8)),
         "brick_realm": material("lm_brick_realm", blc, bn, br, tint=as_light((0.62, 0.55, 0.52))),
         "brick_red": material("lm_brick_red", blc, bn, br, tint=as_light((0.95, 0.8, 0.76))),
         "brick_buff": material("lm_brick_buff", bfc, bn, br),
-        "trim": material("lm_trim", tc, tn, tr),
+        "trim": material("lm_trim", tc, tn, tr, vcol=True),
         "trim_cream": material("lm_trim_cream", tc, tn, tr, tint=(1.08, 1.05, 0.98)),
         "concrete": material("lm_concrete", cc, tn, tr),
         "roof": material("lm_roof", cc, tn, tr, tint=(0.6, 0.6, 0.6)),
@@ -559,7 +569,14 @@ class MB:
         return sum(len(f[0]) - 2 for f in self.f)
 
 
+# Materials that differ from another only by a color factor are drawn as that
+# one with a vertex color (COLOR_0): fewer primitives, so fewer draw calls.
+VC_MERGE = {"brick_pcm_dark": ("brick_pcm", (0.88, 0.84, 0.82)), "sill": ("trim", (0.78, 0.76, 0.72)),
+            "trim_cream": ("trim", (1.0, 1.0, 0.98))}
+
+
 def to_object(name, mb, M):
+    mb.f = [(f[0], f[1], VC_MERGE[f[2]][0], f[3], f[4], VC_MERGE[f[2]][1]) if f[2] in VC_MERGE else (*f[:5], None) for f in mb.f]
     names = sorted({f[2] for f in mb.f})
     me = bpy.data.meshes.new(name)
     verts = [(x, -z, y) for (x, y, z) in mb.v]
@@ -569,11 +586,15 @@ def to_object(name, mb, M):
     # 0.6 in landmark-models.js, the facade rule of geo-view.js).
     lit = me.uv_layers.new(name="LitKey")
     me.uv_layers.active = uv
+    col = me.color_attributes.new("Col", "FLOAT_COLOR", "CORNER")
+    me.color_attributes.active_color = col
     for p, f in zip(me.polygons, mb.f):
         key = (f[3], 0.5) if f[3] is not None else (1.0, 0.5)
+        c = (*f[5], 1.0) if f[5] else (1.0, 1.0, 1.0, 1.0)
         for k in range(p.loop_total):
             uv.data[p.loop_start + k].uv = f[1][k]
             lit.data[p.loop_start + k].uv = key
+            col.data[p.loop_start + k].color = c
     for n in names:
         me.materials.append(M[n])
     idx = {n: i for i, n in enumerate(names)}
@@ -1374,10 +1395,10 @@ FACTS = {
     "telephone-factory-lofts": {"stories": 4, "towerHeight_m": 23.0, "source": "https://en.wikipedia.org/wiki/Telephone_Factory_Lofts",
                                 "note": "Four-story main building, single-story warehouse section, 75 ft (23 m) Art Deco entrance tower. Height override in levels/beltline-eastside/heights.json (w185605331): 17.8 m."},
 }
-LOD_DIST = {"ponce-city-market": [0, 90, 320]}
+LOD_DIST = {"ponce-city-market": [0, 110, 320]}
 # Buildings split into an n x n grid of sections, each its own LOD (from its
 # own center): a 180 m building otherwise shows LOD0 from anywhere near it.
-SECTIONS = {"ponce-city-market": 3}
+SECTIONS = {"ponce-city-market": 2}
 
 
 def split_sections(mb, site, n):

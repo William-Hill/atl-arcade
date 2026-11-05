@@ -1,7 +1,7 @@
 {
   "ponce-city-market": {
     "file": "assets/landmarks/ponce-city-market/ponce-city-market.glb",
-    "bytes": 789976,
+    "bytes": 728004,
     "triangles": {
       "lod0": 32520,
       "lod1": 6051,
@@ -9,10 +9,10 @@
     },
     "lodDistance": [
       0,
-      90,
+      110,
       320
     ],
-    "sections": 9,
+    "sections": 4,
     "textures": {
       "lm_brick_light_color": "512x512",
       "lm_brick_normal": "512x512",
@@ -37,7 +37,7 @@
   },
   "telephone-factory-lofts": {
     "file": "assets/landmarks/telephone-factory-lofts/telephone-factory-lofts.glb",
-    "bytes": 497604,
+    "bytes": 498324,
     "triangles": {
       "lod0": 3769,
       "lod1": 1101
@@ -70,7 +70,7 @@
   },
   "studioplex": {
     "file": "assets/landmarks/studioplex/studioplex.glb",
-    "bytes": 440396,
+    "bytes": 441664,
     "triangles": {
       "lod0": 4274,
       "lod1": 1593
@@ -102,7 +102,7 @@
   },
   "new-realm-brewing": {
     "file": "assets/landmarks/new-realm-brewing/new-realm-brewing.glb",
-    "bytes": 419444,
+    "bytes": 421144,
     "triangles": {
       "lod0": 2352,
       "lod1": 529
@@ -134,7 +134,7 @@
   },
   "bridge-north-ave": {
     "file": "assets/landmarks/bridge-north-ave/bridge-north-ave.glb",
-    "bytes": 85224,
+    "bytes": 86956,
     "triangles": {
       "lod0": 1444,
       "lod1": 420
@@ -159,7 +159,7 @@
   },
   "bridge-ralph-mcgill": {
     "file": "assets/landmarks/bridge-ralph-mcgill/bridge-ralph-mcgill.glb",
-    "bytes": 80532,
+    "bytes": 82260,
     "triangles": {
       "lod0": 828,
       "lod1": 260
@@ -184,7 +184,7 @@
   },
   "bridge-ponce": {
     "file": "assets/landmarks/bridge-ponce/bridge-ponce.glb",
-    "bytes": 80336,
+    "bytes": 82064,
     "triangles": {
       "lod0": 844,
       "lod1": 276
@@ -209,7 +209,7 @@
   },
   "bridge-freedom-parkway": {
     "file": "assets/landmarks/bridge-freedom-parkway/bridge-freedom-parkway.glb",
-    "bytes": 150612,
+    "bytes": 151876,
     "triangles": {
       "lod0": 7706,
       "lod1": 3406

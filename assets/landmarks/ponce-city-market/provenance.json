@@ -1,5 +1,5 @@
 {
-  "asset": "ponce-city-market.glb: procedural facsimile of Ponce City Market for the beltline-eastside level, one node per LOD (lod0, lod1, lod2) in each of 9 sections (<key>_s<i>_lod<n>, each node at its section center), shared materials and tiling textures.",
+  "asset": "ponce-city-market.glb: procedural facsimile of Ponce City Market for the beltline-eastside level, one node per LOD (lod0, lod1, lod2) in each of 4 sections (<key>_s<i>_lod<n>, each node at its section center), shared materials and tiling textures.",
   "date": "2026-11-05",
   "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco",
   "command": "blender -b -P scripts/blender/landmarks.py -- --only ponce-city-market",
@@ -58,7 +58,7 @@
   },
   "lodDistance_m": [
     0,
-    90,
+    110,
     320
   ],
   "triangles": {
@@ -66,7 +66,7 @@
     "lod1": 6051,
     "lod2": 341
   },
-  "bytes": 789976,
+  "bytes": 728004,
   "textureImages": {
     "lm_brick_light_color": "512x512",
     "lm_brick_normal": "512x512",

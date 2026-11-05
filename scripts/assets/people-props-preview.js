@@ -98,6 +98,7 @@ if (on) {
     const d = Math.max(...zs) - Math.min(...zs) + 7;
     const geo = new THREE.PlaneGeometry(w, d, Math.ceil(w), Math.ceil(d));
     geo.rotateX(-Math.PI / 2);
+    geo.translate((Math.max(...xs) + Math.min(...xs)) / 2, 0, (Math.max(...zs) + Math.min(...zs)) / 2);
     const pos = geo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
       const [wx, wz] = toWorld(pos.getX(i), pos.getZ(i));

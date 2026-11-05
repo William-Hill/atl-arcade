@@ -37,6 +37,7 @@ LOD1_DISTANCE = 25.0
 TEX = {"Base Color": 1024, "Normal": 512, "Metallic": 256, "Roughness": 256}
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
+bpy.context.scene.render.fps = 30
 
 
 def import_glb(path):
@@ -178,7 +179,7 @@ def ride_clip():
     strip = tr.strips.new("ride", 1, act)
     if hasattr(strip, "action_slot") and act.slots:
         strip.action_slot = act.slots[0]
-    tracks["ride"] = {"frames": n, "source": "keyed in Blender from the first frame of sit"}
+    tracks["ride"] = {"frames": n, "source": "keyed in Blender: sit pose, hands forward, pedaling legs"}
 
 
 if "--ride" in argv:

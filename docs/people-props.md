@@ -24,7 +24,7 @@ Meshy-generated models for the pbr look (#133, #115): models only. Nothing in th
 - LOD: one `SkinnedMesh` per LOD (`<id>_lod0` about 6k triangles, `<id>_lod1` 1.2k) bound to the same skeleton; show lod1 past `lodDistance` (25 m people, 20 m dog/props). Past about 80 m keep the existing box figures (`src/render/npc-view.js`).
 - Budget: load each GLB once and `SkeletonUtils.clone()` per instance (as `src/render/npc-skaters-view.js` does for Nia/Marcus); clones share geometry and textures, so the GPU cost is per person type (6 × about 1.6 MB of textures), not per pedestrian. Cap full models at about 8 near the camera (3 on low quality): about 50k triangles and 8 skinned draw calls, plus lod1s.
 - `sit`: the pelvis lowers to chair height with no seat in the model; put the root on the ground at the front edge of a bench or the `picnic_table` bench, facing away from it.
-- `push` (stroller_dad): parent the `stroller` about 0.6 m ahead along +z. `dog_walker`: the `dog` walks about 1.2 m ahead and 0.5 m to the side (no leash mesh). `cyclist` `ride` is a held seated pose: parent the person to the `city_bike` so the pelvis is over the saddle, and spin nothing (the bike is static).
+- `push` (stroller_dad): parent the `stroller` about 0.6 m ahead along +z. `dog_walker`: the `dog` walks about 1.2 m ahead and 0.5 m to the side (no leash mesh). `cyclist` `ride` is a 1 s seated pedaling loop keyed in Blender (hands forward, legs half a turn apart): parent the person to the `city_bike` so the pelvis is over the saddle; the bike itself is static (no spinning wheels or cranks).
 
 ## Street furniture (assets/props/street)
 

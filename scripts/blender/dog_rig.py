@@ -23,6 +23,7 @@ src, dst = argv[0], argv[1]
 opt = lambda k, d=None: argv[argv.index(k) + 1] if k in argv else d
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
+bpy.context.scene.render.fps = 30
 bpy.ops.import_scene.gltf(filepath=src)
 meshes = sorted((o for o in bpy.data.objects if o.type == "MESH"), key=lambda o: o.name)
 for o in meshes:

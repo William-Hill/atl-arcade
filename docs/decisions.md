@@ -1294,5 +1294,5 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Meshy rigs only humanoids, so the dog gets a 14-bone armature and walk/idle clips keyed in Blender (`scripts/blender/dog_rig.py`), 0 credits.
 - People: about 6k triangles (lod0) and 1.2k (lod1 at 25 m) on one skin, 1K base color, 0.5-0.75 MB per GLB. Props: 0.4-4k triangles with lod1s at 20 m (sculpture 60 m). The 19 GLBs total 7.1 MB; none is over 0.8 MB.
 - Not wired into the game here: the crowd simulation (`src/sim/npc/crowd.js`) has walk-only types and no sit/stand/goal states, and the placement files (`src/level/geo/*`, `src/render/geo-view.js`) are being merged by another session. `docs/people-props.md` says how to place each asset; `scripts/assets/people-props-preview.html` shows them in the pbr renderer.
-- The cyclist's `ride` is a held seated frame, not a pedaling clip, and the bike is static. Good enough at crowd distance; a real pedaling clip is the first upgrade if cyclists pass close to the camera.
+- The cyclist's `ride` is a seated pedaling loop keyed in Blender over the sit pose (0 credits), and the bike is static (no spinning wheels or cranks). Good enough at crowd distance; wheel and crank bones are the first upgrade if cyclists pass close to the camera.
 ||||||| e204431

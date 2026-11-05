@@ -42,7 +42,7 @@
       },
       "blender": "scripts/blender/people.py walker_sundress (clips: walk and run from the rig, idle = Idle_02, cheer = Cheer_with_Both_Hands_Up; shared, 0 credits: sit = Chair_Sit_Idle_M of elder_polo)",
       "result": {
-        "bytes": 500968,
+        "bytes": 534492,
         "triangles": {
           "lod0": 5862,
           "lod1": 1200
@@ -89,7 +89,7 @@
       },
       "blender": "scripts/blender/people.py elder_polo (clips: walk and run from the rig, sit = Chair_Sit_Idle_M, cheer = Cheer_with_One_Hand_Up; shared, 0 credits: idle = Idle of dog_walker)",
       "result": {
-        "bytes": 616816,
+        "bytes": 654644,
         "triangles": {
           "lod0": 6334,
           "lod1": 1200
@@ -136,7 +136,7 @@
       },
       "blender": "scripts/blender/people.py jogger (clips: walk and run from the rig, rest = Catching_Breath, cheer = Victory_Cheer; shared, 0 credits: idle = Idle_02 of walker_sundress, sit = Chair_Sit_Idle_M of elder_polo)",
       "result": {
-        "bytes": 760036,
+        "bytes": 835612,
         "triangles": {
           "lod0": 6319,
           "lod1": 1200
@@ -183,7 +183,7 @@
       },
       "blender": "scripts/blender/people.py dog_walker (clips: walk and run from the rig, idle = Idle, cheer = Motivational_Cheer; shared, 0 credits: sit = Chair_Sit_Idle_M of elder_polo)",
       "result": {
-        "bytes": 694932,
+        "bytes": 748112,
         "triangles": {
           "lod0": 5929,
           "lod1": 1200
@@ -230,7 +230,7 @@
       },
       "blender": "scripts/blender/people.py stroller_dad (clips: walk and run from the rig, push = Push_and_Walk_Forward, idle = Idle; shared, 0 credits: sit = Chair_Sit_Idle_M of elder_polo, cheer = Cheer_with_One_Hand_Up of elder_polo)",
       "result": {
-        "bytes": 756480,
+        "bytes": 822148,
         "triangles": {
           "lod0": 6326,
           "lod1": 1200
@@ -277,7 +277,7 @@
       },
       "blender": "scripts/blender/people.py cyclist (clips: walk and run from the rig, sit = Chair_Sit_Idle_M, idle = Idle; shared, 0 credits: cheer = Cheer_with_Both_Hands_Up of walker_sundress; ride keyed in Blender)",
       "result": {
-        "bytes": 580884,
+        "bytes": 618732,
         "triangles": {
           "lod0": 6414,
           "lod1": 1199
@@ -314,7 +314,7 @@
       },
       "blender": "scripts/blender/people_props.py dog --fit length --m 0.9 --long z --lod1 700; then scripts/blender/dog_rig.py",
       "result": {
-        "bytes": 411300,
+        "bytes": 411292,
         "triangles": {
           "lod0": 3168,
           "lod1": 700

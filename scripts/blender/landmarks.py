@@ -1188,7 +1188,9 @@ def studioplex(site, lod):
                 cells=["studio_upper"], store=True, store_cells=["studio_store", "studio_store", "studio_screen", "garage"], store_w=4.3, store_head=0.45,
                 pilaster=(0.6, 0.16), sills=False, belts=[(gf - 0.5, gf, 0.16, "concrete")], cornice=(0.4, 0.16), cornice_mat="concrete", parapet_mat="concrete",
                 rule=upper, reveal=0.15)
-    zmax = SITES["bounds"]["maxZ"] - site["origin"][2] - 1.0
+    # Cut at the bound itself: the claimed footprint keeps its full collider,
+    # so a cut inside the bound would leave an invisible wall.
+    zmax = SITES["bounds"]["maxZ"] - site["origin"][2]
     outer, holes = building_shell(mb, site, spec, lod, rng, drop=0.5, zmax=zmax)
     roof = top - 0.5 if lod == 0 else top
     terr = Terrain(site["terrain"])

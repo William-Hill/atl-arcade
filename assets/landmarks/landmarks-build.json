@@ -70,10 +70,10 @@
   },
   "studioplex": {
     "file": "assets/landmarks/studioplex/studioplex.glb",
-    "bytes": 441664,
+    "bytes": 441840,
     "triangles": {
-      "lod0": 4274,
-      "lod1": 1593
+      "lod0": 4298,
+      "lod1": 1601
     },
     "lodDistance": [
       0,

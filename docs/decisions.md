@@ -1097,5 +1097,8 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Texture memory: one red brick color image for every red brick (glTF color
   factors), roughness and the window glow at 256 px, the window color atlas
   at 512 px: about 11 MiB per building instead of 17-19 MiB.
-- Studioplex is cut 1 m inside the level's south bound in the generator
-  (`sites.json` carries the bounds).
+- Studioplex is cut at the level's south bound in the generator
+  (`sites.json` carries the bounds); a cut inside the bound would leave the
+  uncut claimed-footprint collider as an invisible wall.
+- PCM LOD2 window light is keyed per tiled UV cell (a hash of
+  `floor(vEmissiveMapUv)`), so far walls do not light all at once.

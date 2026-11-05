@@ -43,10 +43,10 @@
     140
   ],
   "triangles": {
-    "lod0": 4274,
-    "lod1": 1593
+    "lod0": 4298,
+    "lod1": 1601
   },
-  "bytes": 441664,
+  "bytes": 441840,
   "textureImages": {
     "lm_brick_light_color": "512x512",
     "lm_brick_normal": "512x512",

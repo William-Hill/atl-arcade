@@ -56,7 +56,7 @@ show more floors than the uphill walls. Bridge structure follows
 |---|---|---|---|---|
 | `assets/landmarks/ponce-city-market/ponce-city-market.glb` | lod0 32,522 / lod1 6,053 / lod2 341 (4 sections) | 0.72 MB | 13 (7x 512x512, 5x 256x256, 1x 64x64) | 11.0 MiB |
 | `assets/landmarks/telephone-factory-lofts/telephone-factory-lofts.glb` | lod0 3,769 / lod1 1,101 | 0.50 MB | 12 (8x 512x512, 4x 256x256) | 12.0 MiB |
-| `assets/landmarks/studioplex/studioplex.glb` | lod0 4,274 / lod1 1,593 | 0.44 MB | 11 (7x 512x512, 4x 256x256) | 10.7 MiB |
+| `assets/landmarks/studioplex/studioplex.glb` | lod0 4,298 / lod1 1,601 | 0.44 MB | 11 (7x 512x512, 4x 256x256) | 10.7 MiB |
 | `assets/landmarks/new-realm-brewing/new-realm-brewing.glb` | lod0 2,352 / lod1 529 | 0.42 MB | 11 (7x 512x512, 4x 256x256) | 10.7 MiB |
 | `assets/landmarks/bridge-north-ave/bridge-north-ave.glb` | lod0 1,444 / lod1 420 | 0.09 MB | 4 (2x 512x512, 1x 128x128, 1x 256x256) | 3.1 MiB |
 | `assets/landmarks/bridge-ralph-mcgill/bridge-ralph-mcgill.glb` | lod0 828 / lod1 260 | 0.08 MB | 4 (2x 512x512, 1x 128x128, 1x 256x256) | 3.1 MiB |
@@ -162,7 +162,8 @@ cornice), ground floor storefronts, black screens and a garage door, sparse
 upper windows, the 11 OSM courtyard holes as open light wells, and a steel
 entry canopy on the Auburn Avenue wall with the fictional letters "STUDIO
 YARDS". The OSM footprint runs past the level's south bound (z = 972.96):
-the model is cut 1 m inside it (the cut is a wall like the others), and
+the model is cut at the bound (the cut is a wall like the others; cutting
+inside it would leave the uncut footprint collider as an invisible wall), and
 courtyard holes past the cut are dropped. `sites.json` now carries the level
 `bounds`.
 

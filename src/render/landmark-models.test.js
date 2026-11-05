@@ -48,4 +48,13 @@ describe("landmark models", () => {
     expect(shader.vertexShader).toContain("vLitKey = uv1.x");
     expect(shader.fragmentShader).toContain("step(vLitKey, uLit * 0.6)");
   });
+
+  it("keys each tiled window cell of a far material apart", () => {
+    const m = new THREE.MeshStandardMaterial({ name: "lm_far_pcm" });
+    windowLightPatch(m, { value: 0 });
+    const shader = { uniforms: {}, vertexShader: "#include <common>\n#include <begin_vertex>", fragmentShader: "#include <common>\n#include <emissivemap_fragment>" };
+    m.onBeforeCompile(shader);
+    expect(shader.fragmentShader).toContain("floor(vEmissiveMapUv)");
+    expect(m.customProgramCacheKey()).toBe("landmark-window-light-cell");
+  });
 });

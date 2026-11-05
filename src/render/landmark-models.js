@@ -110,7 +110,12 @@ export function mergedPositions(meshes) {
 // (TEXCOORD_1 u, painted per window by landmarks.py) is lit when it is under
 // windowLit * 0.6 (shops 0.95 are keyed lower), and the emissive map glows by
 // windowLit. In the day windowLit is 0, so the windows do not glow.
-export function windowLightPatch(material, lit) {
+// perCell: the emissive map tiles one window per UV cell (PCM LOD2), so each
+// cell gets its own key from a hash of the cell.
+export function windowLightPatch(material, lit, perCell = /far/.test(material.name)) {
+  const key = perCell
+    ? "fract(vLitKey + fract(sin(dot(floor(vEmissiveMapUv), vec2(12.9898, 78.233))) * 43758.5453))"
+    : "vLitKey";
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uLit = lit;
     shader.vertexShader = shader.vertexShader
@@ -123,10 +128,10 @@ export function windowLightPatch(material, lit) {
       .replace("#include <common>", "#include <common>\nuniform float uLit;\nvarying float vLitKey;")
       .replace(
         "#include <emissivemap_fragment>",
-        "#include <emissivemap_fragment>\ntotalEmissiveRadiance *= step(vLitKey, uLit * 0.6) * uLit * 1.1;",
+        `#include <emissivemap_fragment>\ntotalEmissiveRadiance *= step(${key}, uLit * 0.6) * uLit * 1.1;`,
       );
   };
-  material.customProgramCacheKey = () => "landmark-window-light";
+  material.customProgramCacheKey = () => (perCell ? "landmark-window-light-cell" : "landmark-window-light");
   material.needsUpdate = true;
 }
 

@@ -27,7 +27,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/sedan.glb <out> 4.6",
       "triangles": 11034,
       "triangles_from_meshy": 11035,
-      "bytes": 607772,
+      "bytes": 604492,
       "bounds_m": {
         "x": [
           -0.984,
@@ -93,6 +93,15 @@
             ]
           }
         }
+      },
+      "cleanup_2026_11_05": {
+        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key sedan)",
+        "painted": [
+          "emblem in the front grille",
+          "round emblem on the trunk",
+          "model lettering on the trunk",
+          "lettering on the rear bumper"
+        ]
       }
     },
     "bus.glb": {
@@ -114,7 +123,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bus3/bus.glb <out> 12",
       "triangles": 14016,
       "triangles_from_meshy": 14023,
-      "bytes": 619072,
+      "bytes": 612004,
       "bounds_m": {
         "x": [
           -1.542,
@@ -188,7 +197,16 @@
         "note": "The front tires sit partly behind the front skirt, so the front axle fits its own radius (0.416 m) and the rear the shared one (0.476 m)."
       },
       "note": "Third generation, two axles. 3.08 m wide with mirrors (about 2.6 m body) and 3.49 m high at 12 m long; CAR_SIZE.bus is 2.55 x 3.1. Earlier attempts (preview 01a1a7b6-7fbc-734a-a40b-e6f11538448f: a stubby coach; preview 01a1a7c0-b525-7447-aab2-2ee07a63b4d1: a tandem-axle coach, 4.0 m high) were discarded.",
-      "rejected_attempt_credits": 30
+      "rejected_attempt_credits": 30,
+      "cleanup_2026_11_05": {
+        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key bus)",
+        "painted": [
+          "left sign under the windshield",
+          "center sign under the windshield",
+          "right sign under the windshield",
+          "lettering on the roof box"
+        ]
+      }
     },
     "pickup.glb": {
       "prompt": "Realistic mid-2010s full-size crew cab pickup truck, generic unbranded design, dark red paint, empty open truck bed, black grille, tinted windows, black tires with steel wheels, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
@@ -209,7 +227,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/pickup.glb <out> 5.4",
       "triangles": 10614,
       "triangles_from_meshy": 10616,
-      "bytes": 548472,
+      "bytes": 546676,
       "bounds_m": {
         "x": [
           -1.168,
@@ -275,6 +293,13 @@
             ]
           }
         }
+      },
+      "cleanup_2026_11_05": {
+        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key pickup)",
+        "painted": [
+          "emblem in the front grille",
+          "badge on the tailgate handle"
+        ]
       }
     },
     "hatchback.glb": {
@@ -300,7 +325,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4b/hatchback.glb <out> 4.1 --paint scripts/blender/vehicle_paint.json --paint-key hatchback",
       "triangles": 10253,
       "triangles_from_meshy": 10254,
-      "bytes": 543656,
+      "bytes": 542996,
       "bounds_m": {
         "x": [
           -0.978,
@@ -402,6 +427,12 @@
           }
         },
         "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
+      },
+      "cleanup_2026_11_05": {
+        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key hatchback)",
+        "painted": [
+          "chevron badge above the front grille"
+        ]
       }
     },
     "van.glb": {
@@ -554,7 +585,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4/taxi.glb <out> 4.9 --paint scripts/blender/vehicle_paint.json --paint-key taxi",
       "triangles": 11876,
       "triangles_from_meshy": 11878,
-      "bytes": 677716,
+      "bytes": 677272,
       "bounds_m": {
         "x": [
           -1.111,
@@ -666,6 +697,14 @@
           }
         },
         "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
+      },
+      "cleanup_2026_11_05": {
+        "script": "blender -b -P scripts/blender/vehicle_lods.py (regions in scripts/blender/vehicle_cleanup.json, key taxi)",
+        "painted": [
+          "chevron badge above the front grille",
+          "small emblem on the rear bumper",
+          "triangle mark on the trunk lid"
+        ]
       }
     },
     "box_truck.glb": {
@@ -794,6 +833,96 @@
         },
         "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
       }
+    },
+    "vehicles_lod.glb": {
+      "date": "2026-11-05",
+      "tool": "Blender 5.2.3 LTS headless, no generative tool (0 Meshy credits)",
+      "script": "blender -b -P scripts/blender/vehicle_lods.py -- (reads the 7 rigged LOD0 GLBs in this folder)",
+      "source": "Derived from sedan.glb, pickup.glb, bus.glb, hatchback.glb, van.glb, taxi.glb, box_truck.glb (the Meshy models above, same license).",
+      "contents": "Per kind <kind>_lod1_* (collapse decimate to ~35% of LOD0 triangles; body > steer_FL/FR > wheel_FL/FR, body > wheel_RL/RR with the LOD0 pivots) and <kind>_lod2 (~10%, body and wheels merged into one mesh). All on one material vehicle_atlas: 2048x1024 JPEG base color, metallic-roughness and normal atlases (512x512 per kind, 1024x512 for the bus, 8 texel padding). Draco, no animation (src/render/car-models.js spins and steers the wheels itself).",
+      "triangles": {
+        "sedan": {
+          "lod0": 11034,
+          "lod1": 3860,
+          "lod2": 1062
+        },
+        "pickup": {
+          "lod0": 10614,
+          "lod1": 3712,
+          "lod2": 1010
+        },
+        "bus": {
+          "lod0": 14016,
+          "lod1": 4903,
+          "lod2": 1330
+        },
+        "hatchback": {
+          "lod0": 10253,
+          "lod1": 3587,
+          "lod2": 969
+        },
+        "van": {
+          "lod0": 10028,
+          "lod1": 3507,
+          "lod2": 948
+        },
+        "taxi": {
+          "lod0": 11876,
+          "lod1": 4154,
+          "lod2": 1108
+        },
+        "box_truck": {
+          "lod0": 14349,
+          "lod1": 5020,
+          "lod2": 1366
+        }
+      },
+      "atlas_rects": {
+        "sedan": [
+          0,
+          0,
+          512,
+          512
+        ],
+        "pickup": [
+          512,
+          0,
+          512,
+          512
+        ],
+        "bus": [
+          1024,
+          512,
+          1024,
+          512
+        ],
+        "hatchback": [
+          1024,
+          0,
+          512,
+          512
+        ],
+        "van": [
+          1536,
+          0,
+          512,
+          512
+        ],
+        "taxi": [
+          0,
+          512,
+          512,
+          512
+        ],
+        "box_truck": [
+          512,
+          512,
+          512,
+          512
+        ]
+      },
+      "bytes": 1776644,
+      "credits": 0
     }
   },
   "credits": "150 Meshy credits in total. Session 1: 75 (45 for sedan, bus, pickup and 30 for two discarded bus attempts). Session 2 (hatchback, van, taxi, box_truck, cap 75): 75 = 60 for the four vehicles plus 15 for one discarded hatchback; Meshy balance 6378 before, 6303 after.",
@@ -809,5 +938,5 @@
       "reason": "microcar proportions: at 4.1 m long it came out 2.52 m wide and 2.18 m tall (taller than the pickup); regenerated with explicit length/width/height ratios"
     }
   ],
-  "paint": "Meshy painted made-up emblems and lettering on some bodies despite the prompt; street_props.py --paint fills those texels (boxes in scripts/blender/vehicle_paint.json) with the median color of the region and a flat normal."
+  "paint": "Meshy painted made-up emblems and lettering on some bodies despite the prompt; street_props.py --paint fills those texels (boxes in scripts/blender/vehicle_paint.json) with the median color of the region and a flat normal. On 2026-11-05 scripts/blender/vehicle_lods.py painted out the remaining badges and lettering (taxi grille chevron, rear emblem and trunk mark; sedan grille, trunk and bumper marks; pickup grille and tailgate; hatchback badge; bus windshield signs and roof-box lettering) by texel world position, regions in scripts/blender/vehicle_cleanup.json."
 }

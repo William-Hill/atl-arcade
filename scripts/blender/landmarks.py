@@ -714,6 +714,16 @@ def roof_poly(mb, rings, y, mat):
 
 # ---------- facades -----------------------------------------------------------
 def facade(mb, site, spec, terr, lod, rng, ring, hole, ucum):
+    # Every face of a wall goes to the section of the wall (or of the set
+    # anchor, e.g. the tower), at every LOD, so mixed LODs leave no gaps.
+    keep = mb.anchor
+    try:
+        return _facade(mb, site, spec, terr, lod, rng, ring, hole, ucum, keep)
+    finally:
+        mb.anchor = keep
+
+
+def _facade(mb, site, spec, terr, lod, rng, ring, hole, ucum, keep):
     """The walls of one ring: bays of windows between piers, floor by floor,
     cornice, parapet, coping. Windows stay above the local ground."""
     top, base = site["top"], site["base"]
@@ -728,6 +738,7 @@ def facade(mb, site, spec, terr, lod, rng, ring, hole, ucum):
     wall, pier = spec["wall"], spec.get("pier_mat", spec["wall"])
     rd = spec.get("reveal", 0.25)
     for a, b, L, t, n in edges(ring, hole):
+        mb.anchor = keep or ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
         P = lambda u, y, d: (a[0] + t[0] * u + n[0] * d, y, a[1] + t[1] * u + n[1] * d)
         N = (n[0], 0, n[1])
         T = (t[0], 0, t[1])

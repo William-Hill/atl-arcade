@@ -1,10 +1,10 @@
 {
   "ponce-city-market": {
     "file": "assets/landmarks/ponce-city-market/ponce-city-market.glb",
-    "bytes": 728004,
+    "bytes": 716832,
     "triangles": {
-      "lod0": 32520,
-      "lod1": 6051,
+      "lod0": 32522,
+      "lod1": 6053,
       "lod2": 341
     },
     "lodDistance": [

@@ -139,6 +139,7 @@ const opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const out = opt("--out", ".meshy-raw");
 const only = opt("--only", Object.keys(ASSETS).join(",")).split(",");
 cap = Number(opt("--cap", "Infinity"));
+if (Number.isNaN(cap) || cap < 0) throw new Error("--cap must be a nonnegative number");
 startBalance = await balance();
 console.log(`balance ${startBalance}, cap ${cap}`);
 await mkdir(out, { recursive: true });

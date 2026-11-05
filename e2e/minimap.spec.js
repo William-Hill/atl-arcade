@@ -53,12 +53,13 @@ test("the desktop map shows the trail, the landmarks, and the skater arrow", asy
   await page.locator("#minimap").screenshot({ path: "e2e/__screenshots__/minimap-desktop-close.png" });
 });
 
-test("N changes the mode, M hides and shows the map, and the choice stays after a reload", async ({ page }) => {
+test("N changes the mode, the × button hides and shows the map, and the choice stays after a reload", async ({ page }) => {
   await ready(page);
   await page.keyboard.press("KeyN");
   expect(await page.evaluate(() => window.__atl.minimap.state.mode)).toBe("heading");
   await expect(page.locator("#minimap .minimap-mode")).toHaveAttribute("aria-pressed", "true");
-  await page.keyboard.press("KeyM");
+  // M opens the full map now (e2e/fullmap.spec.js); the × button hides the minimap.
+  await page.locator("#minimap .minimap-toggle").click();
   await expect(page.locator("#minimap canvas")).toBeHidden();
   await expect(page.locator("#minimap .minimap-toggle")).toHaveText("Map");
   await page.reload();

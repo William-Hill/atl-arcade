@@ -8,12 +8,14 @@
 //   --name <name>                  the level name. Default: the folder name.
 //   --title <text>                 the display name.
 //   --refresh                      fetch again, even when a cache exists.
+//   --refresh-furniture            fetch only the street furniture again.
 //   --offline                      never fetch; fail when the cache is missing.
 //   --sources <file>               the building source file. Default:
 //                                  data/buildings/<name>.json when it exists.
 //
 // The first run fetches from the Overpass API and writes the raw answer to
-// <out>/raw/overpass.json. Later runs read that file, so the script runs
+// <out>/raw/overpass.json, and the street furniture points to
+// <out>/raw/street-furniture.json. Later runs read those files, so the script runs
 // offline. The output is <out>/level.json: buildings (footprints with
 // heights), strips (streets, sidewalks, paths, the BeltLine trail), and areas
 // (parks), in local meters with the origin at the bbox center.
@@ -26,7 +28,7 @@ import { pathToFileURL } from "node:url";
 import polygonClipping from "polygon-clipping";
 import { bboxCenter, createProjection, parseBbox } from "../src/level/geo/projection.js";
 import { cleanRing, signedArea } from "../src/level/geo/extrude.js";
-import { decodeHeights, encodeHeights, gradeBridgeEnds, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
+import { decodeHeights, encodeHeights, gradeBridgeEnds, gradeFootprints, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
 import { shortName } from "../src/level/geo/signs.js";
 import { createStreetNamer } from "./street-names.mjs";
 
@@ -113,6 +115,43 @@ export function overpassQuery(b) {
     ");",
     "out body geom;",
   ].join("\n");
+}
+
+// The street furniture points (issue: props at real OSM positions). A
+// separate query and cache (raw/street-furniture.json), so a fetch of the
+// furniture does not fetch the buildings again.
+export const FURNITURE_TAGS = {
+  amenity: ["bench", "waste_basket", "bicycle_parking", "drinking_water"],
+  highway: ["street_lamp"],
+  barrier: ["bollard"],
+};
+
+export function furnitureQuery(b) {
+  const box = `${b.south},${b.west},${b.north},${b.east}`;
+  const lines = Object.entries(FURNITURE_TAGS).map(([k, vs]) => `  node["${k}"~"^(${vs.join("|")})$"](${box});`);
+  return ["[out:json][timeout:60];", "(", ...lines, ");", "out body;"].join("\n");
+}
+
+// The tags that the props use. The other tags stay in the raw file.
+const FURNITURE_KEEP = ["backrest", "material", "colour", "seats", "covered", "bicycle_parking", "capacity", "direction"];
+
+// Turns the raw furniture answer into level points: [{ id, kind, x, z, tags }].
+// `kind` is the OSM value (bench, waste_basket, ...). Points outside the box
+// are left out. Sorted by id.
+export function furniturePoints(raw, proj, box) {
+  const out = [];
+  for (const e of raw?.elements ?? []) {
+    if (e.type !== "node" || !e.tags) continue;
+    const kind = Object.entries(FURNITURE_TAGS).map(([k, vs]) => (vs.includes(e.tags[k]) ? e.tags[k] : null)).find(Boolean);
+    if (!kind) continue;
+    const [x, z] = proj.toLocal(e.lat, e.lon).map(round);
+    if (!inBox([x, z], box)) continue;
+    const item = { id: `n${e.id}`, kind, x, z };
+    const tags = Object.fromEntries(FURNITURE_KEEP.filter((k) => e.tags[k] !== undefined).map((k) => [k, e.tags[k]]));
+    if (Object.keys(tags).length) item.tags = tags;
+    out.push(item);
+  }
+  return out.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
 async function fetchOverpass(query) {
@@ -203,6 +242,45 @@ export function classifyWay(tags) {
     return { kind: "street", width: tagWidth ?? width };
   }
   return null;
+}
+
+// The lane tags of a street way (#138), for the road markings
+// (src/level/geo/markings.js): the lane count, the lanes in each direction,
+// one way, the turn lanes (as the OSM value, "left|through;right"), and the
+// sides with a painted bike lane ("left", "right", or "both").
+// A tag that is not there gives no field.
+export function laneTags(tags) {
+  const out = {};
+  const count = (v) => {
+    const n = Number(v);
+    return Number.isInteger(n) && n > 0 ? n : null;
+  };
+  if (count(tags.lanes)) out.lanes = count(tags.lanes);
+  if (count(tags["lanes:forward"])) out.lanesForward = count(tags["lanes:forward"]);
+  if (count(tags["lanes:backward"])) out.lanesBackward = count(tags["lanes:backward"]);
+  if (tags.oneway === "yes") out.oneway = true;
+  const forward = tags["turn:lanes"] ?? tags["turn:lanes:forward"];
+  if (forward) out.turnLanes = forward;
+  if (tags["turn:lanes:backward"]) out.turnLanesBackward = tags["turn:lanes:backward"];
+  const lane = (v) => v === "lane" || v === "track";
+  let left = lane(tags["cycleway:left"]) || lane(tags["cycleway:both"]) || lane(tags.cycleway);
+  let right = lane(tags["cycleway:right"]) || lane(tags["cycleway:both"]) || lane(tags.cycleway);
+  // On a one-way street, "cycleway=lane" is on the right side only.
+  if (out.oneway && lane(tags.cycleway) && !lane(tags["cycleway:left"]) && !lane(tags["cycleway:both"])) left = false;
+  if (left && right) out.cycleway = "both";
+  else if (left) out.cycleway = "left";
+  else if (right) out.cycleway = "right";
+  return out;
+}
+
+// A crossing of a footway over a street (#136): { id, points, marked }.
+// `marked` is true when the crossing has paint (crossing=marked, zebra,
+// or crossing:markings other than "no" or "surface").
+export function crossingOf(tags) {
+  if (!((tags.highway === "footway" && tags.footway === "crossing") || (tags.highway === "cycleway" && tags.cycleway === "crossing"))) return null;
+  const m = tags["crossing:markings"];
+  const marked = m ? m !== "no" && m !== "surface" : tags.crossing === "marked" || tags.crossing === "zebra";
+  return { marked };
 }
 
 const round = (n) => Math.round(n * 100) / 100 + 0; // + 0 turns -0 into 0.
@@ -309,7 +387,8 @@ function inBox([x, z], box) {
 // `cityStreets` is raw/city-streets.json (scripts/city-streets.mjs). With it,
 // the street names come from the City of Atlanta centerlines (issue #78,
 // scripts/street-names.mjs).
-export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, sources = null, cityStreets = null }) {
+// `furniture` is raw/street-furniture.json: the OSM street furniture points.
+export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, sources = null, cityStreets = null, furniture = null }) {
   const origin = bboxCenter(bbox);
   const proj = createProjection(origin);
   const project = (g) => g.map(({ lat, lon }) => proj.toLocal(lat, lon).map(round));
@@ -320,6 +399,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
   const buildings = [];
   const strips = [];
   const areas = [];
+  const crossings = [];
   const counts = { override: 0, height: 0, levels: 0, overture: 0, "overture-capped": 0, default: 0 };
 
   function addPolygon(target, id, outerRings, innerRings, extra) {
@@ -346,6 +426,10 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       continue;
     }
     if (e.type !== "way" || !e.geometry) continue;
+    const crossing = crossingOf(tags);
+    if (crossing) {
+      for (const [i, points] of clipPolyline(project(e.geometry), box).entries()) crossings.push({ id: i ? `${id}-${i}` : id, points, marked: crossing.marked });
+    }
     const cls = classifyWay(tags);
     if (!cls) continue;
     const pieces = clipPolyline(project(e.geometry), box);
@@ -353,6 +437,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       const item = { id: pieces.length > 1 ? `${id}-${i}` : id, kind: cls.kind, width: round(cls.width), points };
       if (tags.name) item.name = tags.name;
       if (tags.highway) item.highway = tags.highway;
+      if (cls.kind === "street") Object.assign(item, laneTags(tags));
       // A bridge deck runs from the ground at one end to the ground at the
       // other (src/level/geo/terrain.js), over the ways under it.
       if (tags.bridge && tags.bridge !== "no") {
@@ -395,6 +480,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       const extra = { height: round(height), heightSource: source };
       if (tags.name) extra.name = tags.name;
       if (tags.building !== "yes") extra.type = tags.building;
+      Object.assign(extra, buildingTags(tags));
       const items = [];
       addPolygon(items, id, outers, inners, extra);
       for (const item of items) {
@@ -424,12 +510,16 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
   buildings.sort(byId);
   strips.sort(byId);
   areas.sort(byId);
+  crossings.sort(byId);
 
   // Raise the bridge approaches that the grid smooths (src/level/geo/terrain.js).
   let embankments = [];
   if (terrain) {
-    // First a rail grade on the trail, then the embankments at the bridge ends.
-    const graded = gradeTrail({ ...terrain, heights: decodeHeights(terrain.data, terrain.cols * terrain.rows) }, strips).heights;
+    // First a rail grade on the trail, then a pad under each building on a
+    // slope (#135; it keeps the trail band), then the embankments at the
+    // bridge ends.
+    const railed = gradeTrail({ ...terrain, heights: decodeHeights(terrain.data, terrain.cols * terrain.rows) }, strips).heights;
+    const graded = gradeFootprints({ ...terrain, heights: railed }, buildings, strips).heights;
     const r = raiseEmbankments({ ...terrain, heights: graded }, strips);
     embankments = r.changes;
     // Last, the ground at the bridge joints goes on the deck line (#131).
@@ -460,19 +550,42 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       ...(cityStreets ? { streetNames: nameCounts } : {}),
       strips: Object.fromEntries(["street", "sidewalk", "path", "trail"].map((k) => [k, strips.filter((s) => s.kind === k).length])),
       areas: areas.length,
+      crossings: crossings.length,
     },
     buildings,
     strips,
     areas,
+    // The footway crossings over the streets (#136): the curb ramps go at their ends.
+    crossings,
     // Greybox-style objects (rails, ledges, ramps). Empty until M1-04.
     objects: [],
   };
+  if (furniture) {
+    // The OSM street furniture points. src/level/geo/props.js puts a prop at each.
+    level.furniture = furniturePoints(furniture, proj, box);
+    level.stats.furniture = Object.fromEntries(Object.values(FURNITURE_TAGS).flat().map((k) => [k, level.furniture.filter((f) => f.kind === k).length]));
+  }
   if (terrain) {
     level.terrain = terrain;
     level.stats.bridges = strips.filter((st) => st.bridge).length;
     level.stats.embankments = embankments.length;
   }
   return level;
+}
+
+// The OSM tags that the facade kit reads (issue #135): the floor count, the
+// roof shape, the wall material, and the shop or the amenity in the
+// building with its name. The game filters the shop names
+// (src/level/geo/shop-signs.js); the level keeps the OSM values.
+export function buildingTags(tags) {
+  const out = {};
+  const levels = Number(tags["building:levels"]);
+  if (Number.isInteger(levels) && levels > 0) out.levels = levels;
+  if (tags["roof:shape"]) out.roofShape = tags["roof:shape"];
+  if (tags["building:material"]) out.material = tags["building:material"];
+  const use = tags.shop ? { key: "shop", value: tags.shop } : tags.amenity ? { key: "amenity", value: tags.amenity } : null;
+  if (use) out.use = tags.name ? { ...use, name: tags.name } : use;
+  return out;
 }
 
 // OSM footprints with no walls down to the ground (issue #57): a roof is an
@@ -600,6 +713,40 @@ export function trailSpawn(strips) {
   return { position: p, yaw: Math.round(Math.atan2(-dz, dx) * 1000) / 1000 };
 }
 
+// Reads the cached Overpass answer when its query matches, or fetches it and
+// writes the answer and its meta file.
+async function cachedOverpass(rawFile, metaFile, query, bbox, args) {
+  if (existsSync(rawFile) && existsSync(metaFile) && !args.refresh) {
+    const meta = JSON.parse(readFileSync(metaFile, "utf8"));
+    if (meta.query === query) {
+      // Valid JSON is not enough: a cut or edited file must have the
+      // elements list, or it counts as a miss.
+      const cached = JSON.parse(readFileSync(rawFile, "utf8"));
+      if (Array.isArray(cached?.elements)) {
+        console.log(`build-block: cache hit ${rawFile} (fetched ${meta.fetchedAt})`);
+        return cached;
+      }
+      console.log(`build-block: ${rawFile} has no elements list; fetch again`);
+    } else console.log(`build-block: the cached query in ${metaFile} differs; fetch again`);
+  }
+  if (args.offline) throw new Error(`build-block: --offline and no matching cache at ${rawFile}`);
+  console.log(`build-block: fetch ${rawFile} from Overpass`);
+  const { json, endpoint } = await fetchOverpass(query);
+  writeFileSync(rawFile, JSON.stringify(json));
+  const meta = {
+    source: "OpenStreetMap via the Overpass API",
+    license: "ODbL 1.0",
+    attribution: "(c) OpenStreetMap contributors",
+    endpoint,
+    fetchedAt: new Date().toISOString(),
+    osmBase: json.osm3s?.timestamp_osm_base ?? null,
+    bbox,
+    query,
+  };
+  writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
+  return json;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   // The value options need a value: "--out" with nothing after it is an error,
@@ -623,31 +770,18 @@ async function main() {
   const query = overpassQuery(bbox);
   mkdirSync(rawDir, { recursive: true });
 
-  let raw = null;
-  if (existsSync(rawFile) && existsSync(metaFile) && !args.refresh) {
-    const meta = JSON.parse(readFileSync(metaFile, "utf8"));
-    if (meta.query === query) {
-      raw = JSON.parse(readFileSync(rawFile, "utf8"));
-      console.log(`build-block: cache hit ${rawFile} (fetched ${meta.fetchedAt})`);
-    } else console.log("build-block: the cached query differs from this bbox; fetch again");
-  }
-  if (!raw) {
-    if (args.offline) throw new Error(`build-block: --offline and no matching cache at ${rawFile}`);
-    console.log("build-block: fetch from Overpass");
-    const { json, endpoint } = await fetchOverpass(query);
-    raw = json;
-    writeFileSync(rawFile, JSON.stringify(raw));
-    const meta = {
-      source: "OpenStreetMap via the Overpass API",
-      license: "ODbL 1.0",
-      attribution: "(c) OpenStreetMap contributors",
-      endpoint,
-      fetchedAt: new Date().toISOString(),
-      osmBase: raw.osm3s?.timestamp_osm_base ?? null,
-      bbox,
-      query,
-    };
-    writeFileSync(metaFile, `${JSON.stringify(meta, null, 2)}\n`);
+  const raw = await cachedOverpass(rawFile, metaFile, query, bbox, args);
+  // The street furniture: its own query and cache. --refresh-furniture
+  // fetches only the furniture again.
+  // With --offline and no furniture cache, the level builds with no
+  // furniture, as before the furniture query.
+  const furnitureArgs = { ...args, refresh: args.refresh || args["refresh-furniture"] };
+  const furnitureFile = resolve(rawDir, "street-furniture.json");
+  let furniture = null;
+  if (args.offline && !existsSync(furnitureFile)) console.log(`build-block: --offline and no ${furnitureFile}; no street furniture`);
+  else {
+    furniture = await cachedOverpass(furnitureFile, resolve(rawDir, "street-furniture-fetch.json"), furnitureQuery(bbox), bbox, furnitureArgs);
+    console.log(`build-block: ${furniture.elements.length} street furniture points`);
   }
 
   // Building heights from Overture (scripts/overture-heights.py), when present.
@@ -673,7 +807,7 @@ async function main() {
   const cityStreetsFile = resolve(rawDir, "city-streets.json");
   const cityStreets = existsSync(cityStreetsFile) ? JSON.parse(readFileSync(cityStreetsFile, "utf8")) : null;
   if (cityStreets) console.log(`build-block: ${cityStreets.segments.length} city centerline segments from ${cityStreetsFile}`);
-  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, sources, cityStreets });
+  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, sources, cityStreets, furniture });
   const outFile = resolve(outDir, "level.json");
   writeFileSync(outFile, `${JSON.stringify(level)}\n`);
   console.log(`build-block: wrote ${outFile}`);

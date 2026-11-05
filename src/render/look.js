@@ -22,7 +22,13 @@ export const LOOKS = {
     hemisphereSky: 0xcfe8ff,
     hemisphereGround: 0x5a6a48,
     sun: 1.5,
+    // The sun direction (from the target to the light, m) and its color.
+    sunOffset: [30, 50, 20],
+    sunColor: 0xfff1d6,
     environment: 0,
+    // The darkening of the ink outline (src/render/post.js).
+    ink: 0.85,
+    grade: false,
   },
   pbr: {
     toneMapping: "Neutral",
@@ -32,10 +38,102 @@ export const LOOKS = {
     // the shade (direction change 6).
     hemisphereSky: 0xe6eef6,
     hemisphereGround: 0x5a6a48,
-    sun: 3.2,
+    // A lower, warmer sun than the toon look (27 degrees over the horizon,
+    // not 54): long shadows, light that grazes the walls, so the relief and
+    // the normal maps show, and less light on flat ground, so the grass does
+    // not go white. The azimuth is the same as the toon sun.
+    sun: 3.8,
+    sunOffset: [50, 30, 33],
+    sunColor: 0xffd7a3,
     environment: 0.6,
+    // A thin contact line, not a cel outline: the relief of the normal maps
+    // and the AO carry the shapes.
+    ink: 0.3,
+    grade: true,
   },
 };
+
+// The surface detail of the pbr look: the strength of the normal map of
+// each CC0 scan (1 is the scan as it is). The toon look gets no normal maps,
+// because its 3-step ramp turns the small slopes into noise.
+export const DETAIL_NORMAL = {
+  brick: 1.4,
+  stone: 0.9,
+  // In the order of the ground sets in src/render/geo-view.js (GROUND).
+  ground: [1.0, 0.8, 0.9, 1.2],
+};
+// The albedo of each ground set in the pbr look, as a factor on the art
+// color, in the order of GROUND. The sun of the pbr look (3.2) falls full on
+// flat ground, and the art colors are for the toon ramp, so a light grass
+// went near white. Real grass reflects about 10 to 20 % of the light.
+//
+// Each factor is RGB. The asphalt is darker and less blue than its art
+// color, and the slab sidewalk is near its art color, so a road and a
+// sidewalk differ at once in value (about 3 to 1 in linear light).
+export const GROUND_ALBEDO = [
+  [0.62, 0.62, 0.54],
+  [1.0, 1.0, 0.98],
+  [0.85, 0.85, 0.85],
+  [0.55, 0.55, 0.55],
+];
+// The roughness of a painted steel window frame (semi-gloss).
+export const FRAME_ROUGHNESS = 0.45;
+
+// GLSL: tilt the view-space normal n by a normal map sample s (0 to 1, the
+// OpenGL convention). tu is the view-space direction in which the map u
+// grows, and tv the direction in which v grows. k scales the slope.
+export const DETAIL_GLSL = /* glsl */ `
+vec3 detailNormal(vec3 n, vec3 tu, vec3 tv, vec3 s, float k) {
+  vec3 m = s * 2.0 - 1.0;
+  m.xy *= k;
+  vec3 t = normalize(tu - n * dot(tu, n));
+  vec3 b = normalize(tv - n * dot(tv, n) - t * dot(tv, t));
+  return normalize(t * m.x + b * m.y + n * max(m.z, 0.05));
+}`;
+
+// Pure: the same tilt as DETAIL_GLSL, for the tests. Vectors are [x, y, z].
+export function detailNormal(n, tu, tv, s, k) {
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const sub = (a, b, f) => a.map((v, i) => v - b[i] * f);
+  const norm = (a) => {
+    const l = Math.hypot(...a);
+    return a.map((v) => v / l);
+  };
+  const m = s.map((v) => v * 2 - 1);
+  m[0] *= k;
+  m[1] *= k;
+  const t = norm(sub(tu, n, dot(tu, n)));
+  const b = norm(sub(sub(tv, n, dot(tv, n)), t, dot(tv, t)));
+  const mz = Math.max(m[2], 0.05);
+  return norm([0, 1, 2].map((i) => t[i] * m[0] + b[i] * m[1] + n[i] * mz));
+}
+
+// The color grade of the pbr look, on the linear color before the tone
+// mapping (src/render/post.js). Contrast turns around a mid gray of 0.18,
+// saturation keeps the luma, and the shadows get a little cool and the
+// lights a little warm, as in a sunny photo.
+export const GRADE = {
+  contrast: 1.1,
+  saturation: 1.12,
+  shadowTint: [0.96, 0.99, 1.05],
+  lightTint: [1.04, 1.0, 0.95],
+  // The luma range over which the tint goes from shadow to light.
+  split: [0.04, 0.5],
+};
+
+// Pure: the grade of one linear color [r, g, b].
+export function gradeColor(c, g = GRADE) {
+  const l0 = luma(c);
+  // Contrast on the luma only, so the hue stays.
+  const l1 = l0 > 0 ? 0.18 * Math.pow(l0 / 0.18, g.contrast) : 0;
+  const k = l0 > 0 ? l1 / l0 : 0;
+  let o = c.map((v) => v * k);
+  const l = luma(o);
+  o = o.map((v) => Math.max(0, l + (v - l) * g.saturation));
+  const t = Math.min(1, Math.max(0, (l - g.split[0]) / (g.split[1] - g.split[0])));
+  const w = t * t * (3 - 2 * t);
+  return o.map((v, i) => v * (g.shadowTint[i] + (g.lightTint[i] - g.shadowTint[i]) * w));
+}
 
 // Roughness for each material in the pbr look. Glass is a mask in the facade
 // shader: a window pixel gets `glass`, the wall around it gets `wall`.
@@ -58,6 +156,12 @@ export const ENV_LIGHT = {
   props: 0.6,
   mural: 0.7,
 };
+
+// Pure: the sun elevation of a look, in degrees over the horizon.
+export function sunElevation(look) {
+  const [x, y, z] = LOOKS[look].sunOffset;
+  return (Math.atan2(y, Math.hypot(x, z)) * 180) / Math.PI;
+}
 
 // Pure: the look for a URL value and a quality tier.
 export function lookFor(param, quality) {

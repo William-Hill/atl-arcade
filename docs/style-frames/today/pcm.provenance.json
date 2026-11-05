@@ -1,0 +1,50 @@
+{
+  "file": "pcm.jpg",
+  "title": "Ponce City Market, 13:30",
+  "subject": "today",
+  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
+  "method": "in-game capture (no image model)",
+  "prompt": null,
+  "settings": {
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-98%2C2.5%2C-812%2C-190%2C22%2C-858",
+    "cam": [
+      -98,
+      2.5,
+      -812,
+      -190,
+      22,
+      -858
+    ],
+    "params": {},
+    "tune": null,
+    "paintover": null,
+    "viewport": [
+      1280,
+      720
+    ],
+    "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
+    "build": "scripts/art/style-frames.mjs",
+    "renderer": {
+      "calls": 134,
+      "triangles": 300229,
+      "textures": 48,
+      "geometries": 54
+    },
+    "look": {
+      "toneMapping": 7,
+      "exposure": 1.0976805,
+      "environment": 0.6,
+      "sun": 2.847
+    },
+    "grade": {
+      "uContrast": 1.06,
+      "uSat": 1.05,
+      "uWarm": 0
+    },
+    "bloom": 0.28,
+    "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+  },
+  "credits": 0,
+  "date": "2026-11-05",
+  "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
+}

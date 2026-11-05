@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildPropMeshes } from "./geo-mesh.js";
 import { levelProps } from "./props.js";
-import { CARDS, SEASONS, TREE_SPECIES, TREE_VARIANTS, isTreeKind, seasonColors, treeKindFor, treeTemplate, treeTemplates, withProceduralTrees } from "./trees.js";
+import { LEAF_CARDS, SEASONS, TREE_SPECIES, TREE_VARIANTS, isTreeKind, seasonColors, treeKindFor, treeTemplate, treeTemplates, withProceduralTrees } from "./trees.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
 const SPECIES = Object.keys(TREE_SPECIES);
@@ -185,17 +185,17 @@ describe("procedural trees", () => {
 describe("leaf cards", () => {
   it("adds cards to a near tree only when asked", () => {
     const plain = treeTemplate("oak", 0, 0);
-    const leafy = treeTemplate("oak", 0, 0, { cards: true });
-    const far = treeTemplate("oak", 0, 1, { cards: true });
+    const leafy = treeTemplate("oak", 0, 0, "summer", { cards: true });
+    const far = treeTemplate("oak", 0, 1, "summer", { cards: true });
     expect(plain.leaf).toBeUndefined();
     expect(far.leaf).toBeUndefined();
     expect(leafy.leaf.length).toBe((leafy.positions.length / 3) * 3);
     const cardVerts = leafy.leaf.filter((_, i) => i % 3 === 2 && leafy.leaf[i] > 0).length;
-    expect(cardVerts).toBe(TREE_SPECIES.oak.puffs[0] * CARDS.perPuff * 4);
+    expect(cardVerts).toBe(TREE_SPECIES.oak.puffs[0] * LEAF_CARDS.perPuff * 4);
   });
 
   it("gives each card a seed in (0, 1] and corners in 0..1", () => {
-    const t = treeTemplate("magnolia", 1, 0, { cards: true });
+    const t = treeTemplate("magnolia", 1, 0, "summer", { cards: true });
     for (let i = 0; i < t.leaf.length; i += 3) {
       if (t.leaf[i + 2] === 0) continue;
       expect(t.leaf[i + 2]).toBeGreaterThan(0);
@@ -207,15 +207,15 @@ describe("leaf cards", () => {
 
   it("keeps the trunk the same with and without cards", () => {
     const plain = treeTemplate("pine", 2, 0);
-    const leafy = treeTemplate("pine", 2, 0, { cards: true });
+    const leafy = treeTemplate("pine", 2, 0, "summer", { cards: true });
     // The trunk and branch tubes come first, before the puffs.
     const n = 24;
     expect(Array.from(leafy.positions.slice(0, n))).toEqual(Array.from(plain.positions.slice(0, n)));
   });
 
   it("is the same in every run (seeded)", () => {
-    const a = treeTemplate("myrtle", 0, 0, { cards: true });
-    const b = treeTemplate("myrtle", 0, 0, { cards: true });
+    const a = treeTemplate("myrtle", 0, 0, "summer", { cards: true });
+    const b = treeTemplate("myrtle", 0, 0, "summer", { cards: true });
     expect(Array.from(a.positions)).toEqual(Array.from(b.positions));
     expect(Array.from(a.leaf)).toEqual(Array.from(b.leaf));
   });

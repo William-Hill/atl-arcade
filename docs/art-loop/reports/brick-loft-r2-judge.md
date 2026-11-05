@@ -32,7 +32,7 @@ Short verdict: the trim colors are now correct. Cream reads cream, sage reads sa
 
 - **What is wrong.** The shop front is in shade, so no relief shadow shows (`facade.png`). The sills, the lintels, the cornice, and the awnings float. The wall meets the ground with no dark line (`street.png`, y 455 to 465).
 - **Reference.** The F-16 San Francisco build bakes AO into its facades. Spider-Man 2 and Forza Horizon 5 keep a dark contact line under every ledge, even in full shade.
-- **Technique.** In `createFacadeMaterial()` in `src/render/geo-view.js`, darken the wall by about 25 % in a 0.15 m band under each sill, lintel, and the cornice, and by 35 % in a 0.6 m band over the ground line. Give the kit parts in `src/level/geo/facade-kit.js` a vertex color AO on the underside. As a second step, add a screen-space AO pass (N8AO or GTAO) to `src/render/post.js` for the `pbr` look at `quality=high`.
+- **Technique.** In `createFacadeMaterial()` in `src/render/geo-view.js`, darken the wall by about 25 % in a 0.15 m band under each sill, lintel, and the cornice, and by 35 % in a 0.6 m band over the ground line. Give the kit parts in `src/level/geo/facade-kit.js` a vertex color AO on the underside. As a second step, tune the existing `GTAOPass` in `createPost()` in `src/render/post.js` for the `pbr` look at `quality=high` (radius, scale, and blend intensity). Do not add a second AO pass: it would do the same work twice and darken the image.
 
 ### 3. Remove the window speckle again
 
@@ -44,7 +44,7 @@ Short verdict: the trim colors are now correct. Cream reads cream, sage reads sa
 
 - **What is wrong.** The grass in the foreground of `street.png` samples at 244,241,215. It reads as white sand, not grass. In round 1 it sampled at 182,199,188 (`brick-loft-0-pbr-r1/street.png`). The lawns in `mid.png` and `aerial.png` are also pale and gray-lime.
 - **Reference.** Forza Horizon 5 and THPS 1+2 keep grass a mid-value, saturated green. It frames the buildings, it does not compete with them.
-- **Technique.** The warm ground disc and the whiter hemisphere in `src/render/look.js` lift the surface too. Give the ground and surface materials their own `envMapIntensity`, lower than the walls, or scale the hemisphere term on the surface material. Target a lit grass pixel near 120,160,95.
+- **Technique.** The warm ground disc and the whiter hemisphere in `src/render/look.js` lift the surface too. `createSurfaceMaterial()` already gets `ENV_LIGHT.ground`, which is separate from the wall value. Lower `ENV_LIGHT.ground` in `src/render/look.js`, or scale the hemisphere term on the surface material. Target a lit grass pixel near 120,160,95.
 
 ### 5. Make the crown read as a crown
 
@@ -62,7 +62,7 @@ Short verdict: the trim colors are now correct. Cream reads cream, sage reads sa
 
 - **What is wrong.** The shop floor is 8 equal glass bays (`street.png`, `mid.png`). No door, no step, no planter, no wall lamp. The sign boards are blank cream bars.
 - **Reference.** THPS 1+2 puts a door, a step, and a planter ledge at every shop. These are also skate lines.
-- **Technique.** As round 1 fix 7: a door bay in `createFacadeMaterial()` and a 0.15 m step in `shopFront()` in `src/level/geo/facade-kit.js`. Place a planter at every second pier of the front wall, on the apron, in `src/level/geo/props.js`. Put a short shop name on the boards with the sign text path in `src/level/geo/signs.js`.
+- **Technique.** As round 1 fix 7: a door bay in `createFacadeMaterial()` and a 0.15 m step in `shopFront()` in `src/level/geo/facade-kit.js`. Place a planter at every second pier of the front wall, on the apron, in `src/level/geo/props.js`. Keep the sign boards and the name panel blank: the round 0 direction (`brick-loft-r0-direction.md`, "Do not") forbids text on them, and this report does not lift that rule.
 
 ### 8. Raise the sign colors
 

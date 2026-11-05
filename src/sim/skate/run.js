@@ -23,6 +23,13 @@ function grindName(id, seconds) {
   return seconds >= 1.5 ? `Long ${what}` : what;
 }
 
+// Fast travel (src/level/geo/travel.js): the same run with the skater at a
+// new place, at rest. The combo ends, so a jump does not carry points; the
+// score, the time, and the fact cards stay.
+export function teleportRun(run, level, { position, yaw }) {
+  return { ...run, skater: createSkater(level, { position, yaw }), combo: createCombo(), moves: [], banked: 0 };
+}
+
 export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, beat = null) {
   const prev = run.skater;
   // Style moves last a whole number of beats at the clock's BPM (per track, #110).

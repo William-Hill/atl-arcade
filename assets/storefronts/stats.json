@@ -1,0 +1,813 @@
+{
+ "sign_boards.glb": {
+  "bytes": 91092,
+  "textured": true,
+  "nodes": {
+   "sign_board_bakery": {
+    "triangles": 252,
+    "size_m": [
+     2.45,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_bakery_wide": {
+    "triangles": 440,
+    "size_m": [
+     3.65,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_bbq": {
+    "triangles": 252,
+    "size_m": [
+     2.45,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_bbq_wide": {
+    "triangles": 440,
+    "size_m": [
+     3.65,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_books": {
+    "triangles": 252,
+    "size_m": [
+     2.45,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_books_wide": {
+    "triangles": 440,
+    "size_m": [
+     3.65,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_brewery": {
+    "triangles": 252,
+    "size_m": [
+     2.45,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_brewery_wide": {
+    "triangles": 440,
+    "size_m": [
+     3.65,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_coffee": {
+    "triangles": 252,
+    "size_m": [
+     2.45,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_coffee_wide": {
+    "triangles": 440,
+    "size_m": [
+     3.65,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_creamery": {
+    "triangles": 60,
+    "size_m": [
+     2.45,
+     0.095,
+     0.65
+    ]
+   },
+   "sign_board_creamery_wide": {
+    "triangles": 152,
+    "size_m": [
+     3.65,
+     0.095,
+     0.65
+    ]
+   },
+   "sign_board_pizza": {
+    "triangles": 60,
+    "size_m": [
+     2.45,
+     0.095,
+     0.65
+    ]
+   },
+   "sign_board_pizza_wide": {
+    "triangles": 152,
+    "size_m": [
+     3.65,
+     0.095,
+     0.65
+    ]
+   },
+   "sign_board_records": {
+    "triangles": 60,
+    "size_m": [
+     2.45,
+     0.095,
+     0.65
+    ]
+   },
+   "sign_board_records_wide": {
+    "triangles": 152,
+    "size_m": [
+     3.65,
+     0.095,
+     0.65
+    ]
+   },
+   "sign_board_skate": {
+    "triangles": 60,
+    "size_m": [
+     2.45,
+     0.095,
+     0.65
+    ]
+   },
+   "sign_board_skate_wide": {
+    "triangles": 152,
+    "size_m": [
+     3.65,
+     0.095,
+     0.65
+    ]
+   },
+   "sign_board_taqueria": {
+    "triangles": 252,
+    "size_m": [
+     2.45,
+     0.475,
+     1.04
+    ]
+   },
+   "sign_board_taqueria_wide": {
+    "triangles": 440,
+    "size_m": [
+     3.65,
+     0.475,
+     1.04
+    ]
+   }
+  },
+  "unique_triangles": 5000
+ },
+ "blade_signs.glb": {
+  "bytes": 42912,
+  "textured": true,
+  "nodes": {
+   "blade_sign_bakery": {
+    "triangles": 204,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   },
+   "blade_sign_bbq": {
+    "triangles": 248,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   },
+   "blade_sign_books": {
+    "triangles": 204,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   },
+   "blade_sign_brewery": {
+    "triangles": 248,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   },
+   "blade_sign_coffee": {
+    "triangles": 300,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   },
+   "blade_sign_creamery": {
+    "triangles": 300,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   },
+   "blade_sign_pizza": {
+    "triangles": 204,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   },
+   "blade_sign_records": {
+    "triangles": 300,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   },
+   "blade_sign_skate": {
+    "triangles": 248,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   },
+   "blade_sign_taqueria": {
+    "triangles": 300,
+    "size_m": [
+     0.1,
+     1.015,
+     0.723
+    ]
+   }
+  },
+  "unique_triangles": 2556
+ },
+ "neon_signs.glb": {
+  "bytes": 21716,
+  "textured": true,
+  "nodes": {
+   "neon_sign_bbq": {
+    "triangles": 120,
+    "size_m": [
+     1.15,
+     0.12,
+     0.55
+    ]
+   },
+   "neon_sign_brewery": {
+    "triangles": 120,
+    "size_m": [
+     1.15,
+     0.12,
+     0.55
+    ]
+   },
+   "neon_sign_coffee": {
+    "triangles": 120,
+    "size_m": [
+     1.15,
+     0.12,
+     0.55
+    ]
+   },
+   "neon_sign_creamery": {
+    "triangles": 120,
+    "size_m": [
+     1.15,
+     0.12,
+     0.55
+    ]
+   },
+   "neon_sign_open": {
+    "triangles": 120,
+    "size_m": [
+     1.15,
+     0.12,
+     0.55
+    ]
+   },
+   "neon_sign_pizza": {
+    "triangles": 120,
+    "size_m": [
+     1.15,
+     0.12,
+     0.55
+    ]
+   },
+   "neon_sign_records": {
+    "triangles": 120,
+    "size_m": [
+     1.15,
+     0.12,
+     0.55
+    ]
+   },
+   "neon_sign_taqueria": {
+    "triangles": 120,
+    "size_m": [
+     1.15,
+     0.12,
+     0.55
+    ]
+   }
+  },
+  "unique_triangles": 960
+ },
+ "menu_boards.glb": {
+  "bytes": 29052,
+  "textured": true,
+  "nodes": {
+   "menu_board_bakery": {
+    "triangles": 168,
+    "size_m": [
+     0.7,
+     0.355,
+     1.49
+    ]
+   },
+   "menu_board_bbq": {
+    "triangles": 168,
+    "size_m": [
+     0.7,
+     0.355,
+     1.49
+    ]
+   },
+   "menu_board_coffee": {
+    "triangles": 168,
+    "size_m": [
+     0.7,
+     0.355,
+     1.49
+    ]
+   },
+   "menu_board_creamery": {
+    "triangles": 72,
+    "size_m": [
+     0.7,
+     0.085,
+     1.075
+    ]
+   },
+   "menu_board_pizza": {
+    "triangles": 72,
+    "size_m": [
+     0.7,
+     0.085,
+     1.075
+    ]
+   },
+   "menu_board_taqueria": {
+    "triangles": 168,
+    "size_m": [
+     0.7,
+     0.355,
+     1.49
+    ]
+   }
+  },
+  "unique_triangles": 816
+ },
+ "sandwich_boards.glb": {
+  "bytes": 19608,
+  "textured": true,
+  "nodes": {
+   "sandwich_board_books": {
+    "triangles": 120,
+    "size_m": [
+     0.62,
+     0.481,
+     0.995
+    ]
+   },
+   "sandwich_board_coffee": {
+    "triangles": 120,
+    "size_m": [
+     0.62,
+     0.481,
+     0.995
+    ]
+   },
+   "sandwich_board_records": {
+    "triangles": 120,
+    "size_m": [
+     0.62,
+     0.481,
+     0.995
+    ]
+   },
+   "sandwich_board_skate": {
+    "triangles": 120,
+    "size_m": [
+     0.62,
+     0.481,
+     0.995
+    ]
+   }
+  },
+  "unique_triangles": 480
+ },
+ "cafe_barriers.glb": {
+  "bytes": 36920,
+  "textured": true,
+  "nodes": {
+   "cafe_barrier_bakery": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   },
+   "cafe_barrier_bbq": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   },
+   "cafe_barrier_books": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   },
+   "cafe_barrier_brewery": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   },
+   "cafe_barrier_coffee": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   },
+   "cafe_barrier_creamery": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   },
+   "cafe_barrier_pizza": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   },
+   "cafe_barrier_records": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   },
+   "cafe_barrier_skate": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   },
+   "cafe_barrier_taqueria": {
+    "triangles": 208,
+    "size_m": [
+     1.98,
+     0.4,
+     1.0
+    ]
+   }
+  },
+  "unique_triangles": 2080
+ },
+ "patio_furniture.glb": {
+  "bytes": 35396,
+  "textured": false,
+  "nodes": {
+   "patio_chair_bistro_green": {
+    "triangles": 284,
+    "size_m": [
+     0.415,
+     0.449,
+     0.874
+    ]
+   },
+   "patio_chair_bistro_green_lod1": {
+    "triangles": 78,
+    "size_m": [
+     0.42,
+     0.42,
+     0.87
+    ]
+   },
+   "patio_chair_bistro_red": {
+    "triangles": 284,
+    "size_m": [
+     0.415,
+     0.449,
+     0.874
+    ]
+   },
+   "patio_chair_bistro_red_lod1": {
+    "triangles": 78,
+    "size_m": [
+     0.42,
+     0.42,
+     0.87
+    ]
+   },
+   "patio_chair_bistro_teal": {
+    "triangles": 284,
+    "size_m": [
+     0.415,
+     0.449,
+     0.874
+    ]
+   },
+   "patio_chair_bistro_teal_lod1": {
+    "triangles": 78,
+    "size_m": [
+     0.42,
+     0.42,
+     0.87
+    ]
+   },
+   "patio_chair_slat": {
+    "triangles": 156,
+    "size_m": [
+     0.44,
+     0.435,
+     0.88
+    ]
+   },
+   "patio_chair_slat_lod1": {
+    "triangles": 96,
+    "size_m": [
+     0.44,
+     0.435,
+     0.88
+    ]
+   },
+   "patio_picnic": {
+    "triangles": 156,
+    "size_m": [
+     1.8,
+     1.5,
+     0.777
+    ]
+   },
+   "patio_picnic_lod1": {
+    "triangles": 108,
+    "size_m": [
+     1.8,
+     1.5,
+     0.777
+    ]
+   },
+   "patio_set_bistro_green": {
+    "triangles": 788,
+    "instances": [
+     "patio_chair_bistro_green",
+     "patio_chair_bistro_green",
+     "patio_table_bistro"
+    ]
+   },
+   "patio_set_bistro_red": {
+    "triangles": 788,
+    "instances": [
+     "patio_chair_bistro_red",
+     "patio_chair_bistro_red",
+     "patio_table_bistro"
+    ]
+   },
+   "patio_set_bistro_teal": {
+    "triangles": 788,
+    "instances": [
+     "patio_chair_bistro_teal",
+     "patio_chair_bistro_teal",
+     "patio_table_bistro"
+    ]
+   },
+   "patio_set_four": {
+    "triangles": 740,
+    "instances": [
+     "patio_chair_slat",
+     "patio_chair_slat",
+     "patio_chair_slat",
+     "patio_chair_slat",
+     "patio_table_four"
+    ]
+   },
+   "patio_set_four_lod1": {
+    "triangles": 444,
+    "instances": [
+     "patio_chair_slat_lod1",
+     "patio_chair_slat_lod1",
+     "patio_chair_slat_lod1",
+     "patio_chair_slat_lod1",
+     "patio_table_four_lod1"
+    ]
+   },
+   "patio_table_bistro": {
+    "triangles": 220,
+    "size_m": [
+     0.593,
+     0.593,
+     0.74
+    ]
+   },
+   "patio_table_bistro_lod1": {
+    "triangles": 88,
+    "size_m": [
+     0.6,
+     0.6,
+     0.74
+    ]
+   },
+   "patio_table_four": {
+    "triangles": 116,
+    "size_m": [
+     0.8,
+     0.79,
+     0.75
+    ]
+   },
+   "patio_table_four_lod1": {
+    "triangles": 60,
+    "size_m": [
+     0.8,
+     0.8,
+     0.75
+    ]
+   }
+  },
+  "unique_triangles": 2086
+ },
+ "patio_umbrellas.glb": {
+  "bytes": 33128,
+  "textured": false,
+  "nodes": {
+   "patio_umbrella_marigold": {
+    "triangles": 224,
+    "size_m": [
+     2.4,
+     2.4,
+     2.9
+    ]
+   },
+   "patio_umbrella_marigold_lod1": {
+    "triangles": 72,
+    "size_m": [
+     2.4,
+     2.4,
+     2.9
+    ]
+   },
+   "patio_umbrella_sage": {
+    "triangles": 224,
+    "size_m": [
+     2.4,
+     2.4,
+     2.9
+    ]
+   },
+   "patio_umbrella_sage_lod1": {
+    "triangles": 72,
+    "size_m": [
+     2.4,
+     2.4,
+     2.9
+    ]
+   },
+   "patio_umbrella_teal": {
+    "triangles": 224,
+    "size_m": [
+     2.4,
+     2.4,
+     2.9
+    ]
+   },
+   "patio_umbrella_teal_lod1": {
+    "triangles": 72,
+    "size_m": [
+     2.4,
+     2.4,
+     2.9
+    ]
+   },
+   "patio_umbrella_tomato": {
+    "triangles": 224,
+    "size_m": [
+     2.4,
+     2.4,
+     2.9
+    ]
+   },
+   "patio_umbrella_tomato_lod1": {
+    "triangles": 72,
+    "size_m": [
+     2.4,
+     2.4,
+     2.9
+    ]
+   }
+  },
+  "unique_triangles": 1184
+ },
+ "string_lights.glb": {
+  "bytes": 29188,
+  "textured": true,
+  "nodes": {
+   "string_light_post": {
+    "triangles": 204,
+    "size_m": [
+     0.46,
+     0.58,
+     3.3
+    ]
+   },
+   "string_light_post_lod1": {
+    "triangles": 48,
+    "size_m": [
+     0.46,
+     0.58,
+     3.3
+    ]
+   },
+   "string_lights_4m": {
+    "triangles": 864,
+    "size_m": [
+     4.002,
+     0.061,
+     0.355
+    ]
+   },
+   "string_lights_4m_lod1": {
+    "triangles": 112,
+    "size_m": [
+     4.002,
+     0.07,
+     0.335
+    ]
+   },
+   "string_lights_6m": {
+    "triangles": 1200,
+    "size_m": [
+     6.002,
+     0.061,
+     0.477
+    ]
+   },
+   "string_lights_6m_lod1": {
+    "triangles": 144,
+    "size_m": [
+     6.002,
+     0.07,
+     0.457
+    ]
+   },
+   "string_lights_9m": {
+    "triangles": 1704,
+    "size_m": [
+     9.002,
+     0.061,
+     0.658
+    ]
+   },
+   "string_lights_9m_lod1": {
+    "triangles": 192,
+    "size_m": [
+     9.002,
+     0.07,
+     0.638
+    ]
+   }
+  },
+  "unique_triangles": 4468
+ }
+}

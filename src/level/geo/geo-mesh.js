@@ -382,6 +382,11 @@ export function bridgeMeshes(level, s) {
 // (facade-kit.js) puts no sill or pier in that span. On a storefront style
 // the mural starts above the awnings and the belt course, so no ledge
 // crosses it.
+// Murals go on low walls (a real mural wall is a blank side wall of a
+// walk-up, a loft, or a shop), not on towers, glass, or open decks.
+export const MURAL_MAX_FLOORS = 5;
+const MURAL_SKIP_STYLES = new Set(["glass-office", "parking-deck"]);
+
 export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
   const trails = (level.strips ?? []).filter((s) => s.kind === "trail").map((s) => s.points);
   const out = [];
@@ -391,6 +396,12 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
   const claimed = claimedIds(level);
   for (const b of buildings) {
     if (b.height < 5 || claimed.has(b.id)) continue;
+    const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
+    if (MURAL_SKIP_STYLES.has(style.id)) continue;
+    const span = buildingSpan(level, b);
+    const floors = Math.max(1, Math.round((span.top - span.base) / style.floorHeight));
+    // A storefront keeps its shop floor: one floor is no blank wall.
+    if (floors > MURAL_MAX_FLOORS || (style.storefront && floors < 2)) continue;
     const ring = orientRing(b.outer, false);
     let best = null;
     for (let i = 0; i < ring.length; i += 1) {
@@ -419,14 +430,11 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
     const ma = [px + (qx - px) * t, pz + (qz - pz) * t];
     const mb = [qx - (qx - px) * t, qz - (qz - pz) * t];
     const g = Math.max(terrain.height(ma[0], ma[1]), terrain.height(mb[0], mb[1]));
-    const span = buildingSpan(level, b);
     const y1 = Math.min(g + h, span.top - 0.6);
     let y0 = g + 0.8;
-    const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
     if (style.storefront) {
       // The same floors as the facade kit: the belt course is over the
       // ground floor when the building has two floors or more.
-      const floors = Math.max(1, Math.round((span.top - span.base) / style.floorHeight));
       const floorH = (span.top - span.base) / floors;
       if (style.awnings > 0) y0 = Math.max(y0, span.base + awningHeight(style) + 0.1);
       if (floors >= 2) y0 = Math.max(y0, span.base + floorH + BELT.height / 2 + 0.1);
@@ -441,6 +449,8 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
       y1,
       cell: hash32(`${b.id}:mural`) % MURAL_CELLS,
       edge: best.edge,
+      // The wall has no windows from this floor up (FACE.blank).
+      floor0: style.storefront ? 1 : 0,
       t0: (best.len - w) / 2,
       t1: (best.len + w) / 2,
     });
@@ -605,17 +615,22 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     // mesh still merges as "claimed", so the physics keeps its collider
     // and the render skips it (geo-view.js).
     const claimed = claimedIds(level);
+    const murals = muralWalls(level);
+    const muralOf = new Map(murals.map((mw) => [mw.id, mw]));
     for (const b of level.buildings ?? []) {
       const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
       const color = wallColor(style, b.id);
-      const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, parapet: style.parapet, corniceColor: style.trim };
+      const mural = muralOf.get(b.id);
+      // The mural wall is blank: no windows behind the mural.
+      const blank = mural ? { edge: mural.edge, from: mural.floor0 } : null;
+      const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, parapet: style.parapet, corniceColor: style.trim, blank };
       const span = buildingSpan(level, b);
       const bucket = claimed.has(b.id) ? "claimed" : "building";
       add(bucket, b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: roofColorOf(style, color), facade }));
       const aw = awningsFor(b, style, isStreet);
       if (aw.indices.length) add(bucket, b, span.base ? liftMesh(aw, () => span.base) : aw);
     }
-    for (const m of muralWalls(level)) add("mural", { points: [m.a] }, muralMesh(m));
+    for (const m of murals) add("mural", { points: [m.a] }, muralMesh(m));
   } else {
     const claimed = claimedIds(level);
     for (const b of level.buildings ?? []) {

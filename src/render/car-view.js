@@ -102,8 +102,8 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
     mesh.setVisibleAt(id, false);
   });
   const info = { parked: parked.length, moving: moving.length, drawn: 0, lod0: 0, triangles: 0, models: 0 };
-  // The rigged GLB cars (src/render/car-models.js) replace the near (LOD0)
-  // kit shape of their kinds once they load.
+  // The GLB cars (src/render/car-models.js, LOD0 to LOD2) replace the kit
+  // shapes of their kinds within models.range once they load.
   let models = null;
   return {
     mesh,
@@ -130,10 +130,11 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
       models?.beginFrame();
       for (let i = 0; i < all.length; i += 1) {
         const c = i < np ? parked[i] : (movingNow[i - np] ?? all[i]);
-        const lod = propLodFor(Math.hypot(c.x - cx, c.z - cz), lod0Distance, drawDistance);
-        const glb = lod === 0 && models?.has(i);
-        if (glb) models.set(i, c, i < np ? (c.pitch ?? 0) : pitchAt ? pitchAt(c) : 0);
-        else models?.hide(i);
+        const d = Math.hypot(c.x - cx, c.z - cz);
+        const lod = propLodFor(d, lod0Distance, drawDistance);
+        // The GLB cars (with their own LODs) cover models.range; kit cars beyond.
+        const glb = lod >= 0 && models?.has(i) && d < (models.range ?? lod0Distance) && models.set(i, c, i < np ? (c.pitch ?? 0) : pitchAt ? pitchAt(c) : 0, d);
+        if (!glb) models?.hide(i);
         if (lod >= 0) {
           drawn += 1;
           if (!glb) tris += triangles.get(c.kind)[lod];

@@ -30,7 +30,10 @@ Tiers: `high` 1024 px, `phone` 512 px. Rebuild with
 diffuse, AO, OpenGL normal, roughness), scores each for light baked into the
 albedo (a gradient across the tile, shadow in the joints that follows the
 AO, a side light that follows the normal slope), for edge seams, and for
-blotches that read as a repeat, and keeps the best. Then:
+blotches that read as a repeat, and keeps the best. Every resize wraps
+around the tile (Lanczos on a 3 x 3 copy), and the normal, AO and roughness
+get a narrow edge fix (the smoothed step across the wrap edge ramped out over
+24 px; the Poly Haven normals step at the edge), so every map tiles. Then:
 
 1. De-light: divide out the large-scale luminance (wrap-around blur at 1/6
    tile), then fit the high-pass log luminance to log AO and to the normal

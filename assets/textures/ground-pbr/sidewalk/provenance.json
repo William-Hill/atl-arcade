@@ -1,5 +1,5 @@
 {
-  "tool": "scripts/ground-pbr.py (Poly Haven API download; candidate scoring; de-light; palette scale; ORM pack; Pillow resize; ktx create 4.3 KTX2)",
+  "tool": "scripts/ground-pbr.py (Poly Haven API download; candidate scoring; de-light; palette scale; ORM pack; Pillow wrap-around resize; edge fix; ktx create 4.3 KTX2)",
   "prompt": null,
   "date": "2026-11-05",
   "license": "CC0 1.0",

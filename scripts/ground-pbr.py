@@ -104,8 +104,20 @@ def fetch(url):
     return f.read_bytes()
 
 
+def wrap_resize(img, size):
+    """Lanczos resize of a tiling image, wrapping (not clamping) at the edges, so
+    the resized tile still tiles."""
+    w, h = img.size
+    big = Image.new(img.mode, (3 * w, 3 * h))
+    for i in range(3):
+        for j in range(3):
+            big.paste(img, (i * w, j * h))
+    big = big.resize((3 * size, 3 * size), Image.LANCZOS)
+    return big.crop((size, size, 2 * size, 2 * size))
+
+
 def load(url, size, mode="RGB"):
-    img = Image.open(io.BytesIO(fetch(url))).convert(mode).resize((size, size), Image.LANCZOS)
+    img = wrap_resize(Image.open(io.BytesIO(fetch(url))).convert(mode), size)
     return np.asarray(img, dtype=np.float64) / 255
 
 
@@ -229,13 +241,35 @@ def make_seamless(a, ratio):
     return a * (1 - w) + sh * w, True
 
 
+def fix_edges(a, k=24, sigma=3.0):
+    """Narrow seam fix for a map whose wrap edges step (the Poly Haven normals do):
+    take the edge mismatch, smooth it along the edge so no noise is added, and
+    ramp it out over k px on both sides. Pixels do not move, so the maps stay
+    aligned and features are not ghosted."""
+    a = a.copy()
+    x = np.arange(-int(3 * sigma), int(3 * sigma) + 1)
+    g = np.exp(-x * x / (2 * sigma * sigma))
+    g /= g.sum()
+    f = np.clip(1 - np.arange(k) / k, 0, 1) * 0.5
+    for _ in range(2):
+        d = a[0] - a[-1]
+        pad = len(x) // 2
+        dp = np.concatenate([d[-pad:], d, d[:pad]], axis=0)
+        ds = np.apply_along_axis(lambda c: np.convolve(c, g, "valid"), 0, dp)
+        for i in range(k):
+            a[i] -= ds * f[i]
+            a[-1 - i] += ds * f[i]
+        a = np.swapaxes(a, 0, 1)
+    return np.clip(a, 0, 1)
+
+
 def save_jpg(path, arr, q=90):
     Image.fromarray((np.clip(arr, 0, 1) * 255 + 0.5).astype(np.uint8)).save(path, quality=q, subsampling=0)
 
 
 def resize(arr, size):
     img = Image.fromarray((np.clip(arr, 0, 1) * 255 + 0.5).astype(np.uint8))
-    return np.asarray(img.resize((size, size), Image.LANCZOS), dtype=np.float64) / 255
+    return np.asarray(wrap_resize(img, size), dtype=np.float64) / 255
 
 
 def psnr(a, b):
@@ -298,6 +332,9 @@ def build(surface, cfg, toktx):
         nor = make_seamless(nor, 2)[0]
         rough = make_seamless(rough, 2)[0]
         ao = make_seamless(ao, 2)[0] if ao is not None else None
+    # Always: a no-op where the edges already match.
+    nor, rough = fix_edges(nor), fix_edges(rough)
+    ao = fix_edges(ao) if ao is not None else None
     # Palette: scale each channel so the mean linear color is the pbr palette color.
     albedo = np.clip(albedo * (np.array(cfg["palette"]) / albedo.reshape(-1, 3).mean(axis=0)), 0, 1)
     after = {k: round(v, 4) for k, v in measure(albedo, ao, nor).items()}
@@ -357,7 +394,7 @@ def build(surface, cfg, toktx):
     }
     (out / "set.json").write_text(json.dumps(meta, indent=2) + "\n")
     prov = {
-        "tool": "scripts/ground-pbr.py (Poly Haven API download; candidate scoring; de-light; palette scale; ORM pack; Pillow resize; ktx create 4.3 KTX2)",
+        "tool": "scripts/ground-pbr.py (Poly Haven API download; candidate scoring; de-light; palette scale; ORM pack; Pillow wrap-around resize; edge fix; ktx create 4.3 KTX2)",
         "prompt": None,
         "date": date.today().isoformat(),
         "license": "CC0 1.0",

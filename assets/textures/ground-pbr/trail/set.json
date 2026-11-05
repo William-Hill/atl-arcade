@@ -30,12 +30,12 @@
     "orm": "R ambient occlusion, G roughness, B metalness (0)"
   },
   "delight": {
-    "gradientRemoved": 0.0006651317486569135,
+    "gradientRemoved": 0.000663295683224355,
     "slopeK": [
-      -0.0378,
-      -0.0456
+      -0.0377,
+      -0.0455
     ],
-    "aoK": 0.6411,
+    "aoK": 0.6412,
     "flatten": {
       "midBandScale": 0.6,
       "clampSigma": 2.5
@@ -45,9 +45,10 @@
   "metricsAfter": {
     "gradient": 0.0025,
     "blotch": 0.0063,
-    "aoCorr": 0.0325,
-    "sideLight": 0.0011,
-    "seam": 1.019
+    "aoCorr": 0.0326,
+    "sideLight": 0.0009,
+    "seam": 0.9818,
+    "detail": 0.1627
   },
   "candidates": [
     {
@@ -58,19 +59,21 @@
         "blotch": 0.0308,
         "aoCorr": 0.3575,
         "sideLight": 0.0822,
-        "seam": 1.0487
+        "seam": 1.0094,
+        "detail": 0.3232
       },
       "chosen": false
     },
     {
       "asset": "concrete_floor",
-      "score": 0.0732,
+      "score": 0.0731,
       "metrics": {
         "gradient": 0.0007,
         "blotch": 0.0053,
         "aoCorr": 0.0971,
-        "sideLight": 0.0112,
-        "seam": 1.0132
+        "sideLight": 0.0111,
+        "seam": 0.9772,
+        "detail": 0.2041
       },
       "chosen": true
     },
@@ -82,24 +85,25 @@
         "blotch": 0.0168,
         "aoCorr": 0.5859,
         "sideLight": 0.0572,
-        "seam": 1.0811
+        "seam": 1.0463,
+        "detail": 0.4066
       },
       "chosen": false
     }
   ],
   "files": {
-    "albedo_high.jpg": 509707,
-    "albedo_high.ktx2": 1189989,
-    "normal_high.jpg": 416011,
-    "normal_high.ktx2": 1122363,
-    "orm_high.jpg": 219189,
-    "orm_high.ktx2": 807484,
-    "albedo_phone.jpg": 108357,
-    "albedo_phone.ktx2": 297778,
-    "normal_phone.jpg": 67647,
-    "normal_phone.ktx2": 237533,
-    "orm_phone.jpg": 44853,
-    "orm_phone.ktx2": 173063
+    "albedo_high.jpg": 509683,
+    "albedo_high.ktx2": 1190233,
+    "normal_high.jpg": 416324,
+    "normal_high.ktx2": 1128061,
+    "orm_high.jpg": 219224,
+    "orm_high.ktx2": 807608,
+    "albedo_phone.jpg": 108388,
+    "albedo_phone.ktx2": 297824,
+    "normal_phone.jpg": 67778,
+    "normal_phone.ktx2": 238323,
+    "orm_phone.jpg": 44864,
+    "orm_phone.ktx2": 172925
   },
   "ktx2Quality": {
     "albedo_high.ktx2": {
@@ -107,20 +111,20 @@
     },
     "normal_high.ktx2": {
       "psnr": 41.24,
-      "meanAngleDeg": 1.204
+      "meanAngleDeg": 1.205
     },
     "orm_high.ktx2": {
-      "psnr": 45.62
+      "psnr": 45.61
     },
     "albedo_phone.ktx2": {
-      "psnr": 45.42
+      "psnr": 45.41
     },
     "normal_phone.ktx2": {
-      "psnr": 45.1,
-      "meanAngleDeg": 0.797
+      "psnr": 45.09,
+      "meanAngleDeg": 0.798
     },
     "orm_phone.ktx2": {
-      "psnr": 46.23
+      "psnr": 46.24
     }
   }
 }

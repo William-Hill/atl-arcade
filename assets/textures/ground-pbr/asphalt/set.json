@@ -30,10 +30,10 @@
     "orm": "R ambient occlusion, G roughness, B metalness (0)"
   },
   "delight": {
-    "gradientRemoved": 0.0030423620545264535,
+    "gradientRemoved": 0.0030410834525023433,
     "slopeK": [
-      -0.4813,
-      -0.1883
+      -0.4814,
+      -0.1882
     ],
     "aoK": 3.8957,
     "flatten": {
@@ -45,9 +45,9 @@
   "metricsAfter": {
     "gradient": 0.0094,
     "blotch": 0.0195,
-    "aoCorr": 0.0128,
-    "sideLight": 0.0066,
-    "seam": 0.9816,
+    "aoCorr": 0.0129,
+    "sideLight": 0.0064,
+    "seam": 0.9455,
     "detail": 0.3349
   },
   "candidates": [
@@ -59,7 +59,7 @@
         "blotch": 0.0044,
         "aoCorr": 0.0024,
         "sideLight": 0.0273,
-        "seam": 1.0632,
+        "seam": 0.9933,
         "detail": 0.1621
       },
       "chosen": false
@@ -72,25 +72,25 @@
         "blotch": 0.012,
         "aoCorr": 0.4568,
         "sideLight": 0.061,
-        "seam": 0.9704,
+        "seam": 0.937,
         "detail": 0.4196
       },
       "chosen": true
     }
   ],
   "files": {
-    "albedo_high.jpg": 610606,
-    "albedo_high.ktx2": 1240987,
-    "normal_high.jpg": 636941,
-    "normal_high.ktx2": 1260239,
-    "orm_high.jpg": 295538,
-    "orm_high.ktx2": 985009,
-    "albedo_phone.jpg": 132653,
-    "albedo_phone.ktx2": 305693,
-    "normal_phone.jpg": 126625,
-    "normal_phone.ktx2": 305747,
-    "orm_phone.jpg": 61782,
-    "orm_phone.ktx2": 226004
+    "albedo_high.jpg": 610601,
+    "albedo_high.ktx2": 1240463,
+    "normal_high.jpg": 637217,
+    "normal_high.ktx2": 1272826,
+    "orm_high.jpg": 295623,
+    "orm_high.ktx2": 984961,
+    "albedo_phone.jpg": 132663,
+    "albedo_phone.ktx2": 306393,
+    "normal_phone.jpg": 126738,
+    "normal_phone.ktx2": 304612,
+    "orm_phone.jpg": 61787,
+    "orm_phone.ktx2": 226222
   },
   "ktx2Quality": {
     "albedo_high.ktx2": {
@@ -98,7 +98,7 @@
     },
     "normal_high.ktx2": {
       "psnr": 36.26,
-      "meanAngleDeg": 2.17
+      "meanAngleDeg": 2.171
     },
     "orm_high.ktx2": {
       "psnr": 45.02
@@ -107,8 +107,8 @@
       "psnr": 42.51
     },
     "normal_phone.ktx2": {
-      "psnr": 38.53,
-      "meanAngleDeg": 1.65
+      "psnr": 38.52,
+      "meanAngleDeg": 1.651
     },
     "orm_phone.ktx2": {
       "psnr": 45.63

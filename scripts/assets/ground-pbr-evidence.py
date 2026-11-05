@@ -9,7 +9,8 @@ Writes into <shots dir>:
 - tiling-<set>.png: each map tiled 3 x 3, to see seams and repeats.
 - pair-trail.png, pair-street.png: BEFORE (the game) | AFTER (the preview).
 - evidence.json and evidence.md: the seam ratio of every map (the step
-  across the tile edge over the mean step inside: about 1 is seamless), the
+  across the tile edge over the step across the inner 8 px JPG block edges,
+  the fair baseline for a JPG: 1 or less is seamless), the
   repeat score, the rendered JPG vs KTX2 PSNR, and the download and GPU
   memory per set and tier.
 """
@@ -49,7 +50,9 @@ def arr(p):
 
 
 def seam_ratio(a):
-    inner = (np.abs(np.diff(a, axis=0)).mean() + np.abs(np.diff(a, axis=1)).mean()) / 2
+    # The tile edge is a JPG 8 x 8 block edge, so compare it with the inner block edges.
+    n = a.shape[0]
+    inner = (np.abs(a[7 : n - 1 : 8] - a[8::8]).mean() + np.abs(a[:, 7 : n - 1 : 8] - a[:, 8::8]).mean()) / 2
     edge = (np.abs(a[0] - a[-1]).mean() + np.abs(a[:, 0] - a[:, -1]).mean()) / 2
     return round(float(edge / inner), 3)
 

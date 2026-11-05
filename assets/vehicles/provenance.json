@@ -3,10 +3,10 @@
   "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine), then Blender 5.2.3 LTS headless (scripts/blender/street_props.py): join, weld UV seams, drop floating parts, recalc normals, smooth by angle 30 deg, scale to meters, origin at bottom center, +z forward / +y up, Draco GLB export",
   "pipeline": "node scripts/assets/meshy-street-props.mjs (needs MESHY_API_KEY in env; raw downloads go to .meshy-raw/, git-ignored)",
   "license": "Generated with the project owner's Meshy account; usage is governed by Meshy's terms of service for that account.",
-  "format": "GLB, POSITION + NORMAL + TEXCOORD_0, PBR material with 3 JPEG textures, KHR_draco_mesh_compression (needs a DRACOLoader, as in src/render/skater-model.js). sedan and pickup: body plus 4 wheel meshes and the wheels_roll clip; the rest: one mesh",
+  "format": "GLB, POSITION + NORMAL + TEXCOORD_0, PBR material with 3 JPEG textures, KHR_draco_mesh_compression (needs a DRACOLoader, as in src/render/skater-model.js). sedan, pickup, bus, hatchback, van, taxi, box_truck: body plus 4 wheel meshes and the wheels_roll clip",
   "style": "Realistic mid-2010s Atlanta street, no branding (prompts forbid logos and text)",
   "verify": "node scripts/assets/street-props-check.mjs --out preview.png <glb...> loads the files in headless Chromium with GLTFLoader + DRACOLoader",
-  "asset": "Street traffic vehicles for Skate ATL: sedan, bus, pickup. Lengths match CAR_SIZE in src/sim/traffic/traffic.js.",
+  "asset": "Street traffic vehicles for Skate ATL: sedan, bus, pickup, hatchback, van, taxi (fictional livery: yellow with a teal checker band, blank roof sign), box truck (plain white, no brand). Lengths match CAR_SIZE in src/sim/traffic/traffic.js where it has the kind; taxi 4.9 m and box truck 7.5 m are new kinds.",
   "files": {
     "sedan.glb": {
       "prompt": "Realistic mid-2010s midsize four-door sedan car, generic unbranded design, dark blue metallic paint, tinted glass windows, black tires with silver alloy wheels, headlights and red taillights, closed doors, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
@@ -276,7 +276,538 @@
           }
         }
       }
+    },
+    "hatchback.glb": {
+      "prompt": "Realistic mid-2010s compact five-door hatchback car like a typical European compact family car, low and long body, length about two and a half times its width and about three times its height, low roofline, long hood, sloped rear hatch, bright teal metallic paint, tinted glass windows, smooth plain grille, black tires with silver alloy wheels, headlights and red taillights, closed doors, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Bright teal metallic car paint, dark tinted glass, plain black mesh grille with no emblem, black rubber tires, silver alloy rims, black plastic trim, clear headlights, red taillights, blank license plate, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 12000,
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1a8b4-6a78-721a-b4e5-5b975c0f1560",
+        "refine_task_id": "01a1a8b4-e754-7145-ab84-535e67b68ac0",
+        "seed": 41700975
+      },
+      "credits": 15,
+      "credits_detail": {
+        "preview": 5,
+        "refine": 10
+      },
+      "generated_at": "2026-11-04T22:37:16.058Z",
+      "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4b/hatchback.glb <out> 4.1 --paint scripts/blender/vehicle_paint.json --paint-key hatchback",
+      "triangles": 10253,
+      "triangles_from_meshy": 10254,
+      "bytes": 543656,
+      "bounds_m": {
+        "x": [
+          -0.978,
+          0.978
+        ],
+        "y": [
+          0.0,
+          1.551
+        ],
+        "z": [
+          -2.05,
+          2.05
+        ]
+      },
+      "scale_applied": 4.2863,
+      "width_scale": 1.0,
+      "removed_parts": {},
+      "painted_out": [
+        {
+          "note": "made-up emblem on the grille",
+          "faces": 89,
+          "texels": 10795
+        },
+        {
+          "note": "made-up emblem and lettering on the rear hatch",
+          "faces": 326,
+          "texels": 40219
+        }
+      ],
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "gpu_texture_memory_mib": 16,
+      "blender_wheels": "blender -b -P scripts/blender/vehicle_wheels.py -- <street_props output> <out> --round",
+      "rig": {
+        "nodes": "body > steer_FL > wheel_FL, body > steer_FR > wheel_FR, body > wheel_RL, body > wheel_RR",
+        "usage": "rotate steer_* about y to steer; spin wheel_* about local x (positive rolls forward, toward +z)",
+        "animation": "wheels_roll: one wheel turn per second, linear, loopable",
+        "round_tires": "tread vertices beyond 0.9 r moved onto the tire circle (--round)",
+        "body_triangles": 7512,
+        "wheels": {
+          "wheel_FL": {
+            "triangles": 563,
+            "radius_m": 0.294,
+            "width_m": 0.13,
+            "center_m": [
+              -0.754,
+              0.294,
+              1.207
+            ]
+          },
+          "wheel_FR": {
+            "triangles": 592,
+            "radius_m": 0.294,
+            "width_m": 0.146,
+            "center_m": [
+              0.748,
+              0.294,
+              1.207
+            ]
+          },
+          "wheel_RL": {
+            "triangles": 844,
+            "radius_m": 0.294,
+            "width_m": 0.36,
+            "center_m": [
+              -0.639,
+              0.294,
+              -1.305
+            ]
+          },
+          "wheel_RR": {
+            "triangles": 742,
+            "radius_m": 0.294,
+            "width_m": 0.387,
+            "center_m": [
+              0.628,
+              0.294,
+              -1.305
+            ]
+          }
+        }
+      },
+      "verify": {
+        "wheel_bottom_y_m": {
+          "wheel_FL": {
+            "min": 0,
+            "max": 0.0004
+          },
+          "wheel_FR": {
+            "min": 0,
+            "max": 0.0004
+          },
+          "wheel_RL": {
+            "min": 0,
+            "max": 0.0004
+          },
+          "wheel_RR": {
+            "min": 0,
+            "max": 0.0004
+          }
+        },
+        "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
+      }
+    },
+    "van.glb": {
+      "prompt": "Realistic mid-2010s full-size passenger and cargo van, generic unbranded design, tall boxy body with a high roof, short sloped hood, sliding side door, side windows, two rear doors, light silver gray paint, tinted glass, black tires with steel wheels, exactly two axles, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Light silver gray car paint, dark tinted glass, black rubber tires, gray steel wheels, black plastic bumpers and trim, clear headlights, red taillights, blank license plate, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 12000,
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1a8af-a3c1-7055-aaf3-21dbab627684",
+        "refine_task_id": "01a1a8af-e503-77e3-839c-88f640a3662a",
+        "seed": 562524232
+      },
+      "credits": 15,
+      "credits_detail": {
+        "preview": 5,
+        "refine": 10
+      },
+      "generated_at": "2026-11-04T22:31:32.858Z",
+      "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4/van.glb <out> 5.2 --paint scripts/blender/vehicle_paint.json --paint-key van",
+      "triangles": 10028,
+      "triangles_from_meshy": 10032,
+      "bytes": 634148,
+      "bounds_m": {
+        "x": [
+          -1.255,
+          1.255
+        ],
+        "y": [
+          0.0,
+          3.122
+        ],
+        "z": [
+          -2.6,
+          2.6
+        ]
+      },
+      "scale_applied": 5.4418,
+      "width_scale": 1.0,
+      "removed_parts": {
+        "speck": {
+          "parts": 1,
+          "faces": 1
+        }
+      },
+      "painted_out": [
+        {
+          "note": "made-up oval emblem on the grille",
+          "faces": 67,
+          "texels": 21000
+        }
+      ],
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "gpu_texture_memory_mib": 16,
+      "blender_wheels": "blender -b -P scripts/blender/vehicle_wheels.py -- <street_props output> <out> --round",
+      "rig": {
+        "nodes": "body > steer_FL > wheel_FL, body > steer_FR > wheel_FR, body > wheel_RL, body > wheel_RR",
+        "usage": "rotate steer_* about y to steer; spin wheel_* about local x (positive rolls forward, toward +z)",
+        "animation": "wheels_roll: one wheel turn per second, linear, loopable",
+        "round_tires": "tread vertices beyond 0.9 r moved onto the tire circle (--round)",
+        "body_triangles": 7424,
+        "wheels": {
+          "wheel_FL": {
+            "triangles": 582,
+            "radius_m": 0.37,
+            "width_m": 0.17,
+            "center_m": [
+              -0.942,
+              0.37,
+              1.523
+            ]
+          },
+          "wheel_FR": {
+            "triangles": 609,
+            "radius_m": 0.37,
+            "width_m": 0.181,
+            "center_m": [
+              0.937,
+              0.37,
+              1.523
+            ]
+          },
+          "wheel_RL": {
+            "triangles": 691,
+            "radius_m": 0.37,
+            "width_m": 0.186,
+            "center_m": [
+              -0.934,
+              0.37,
+              -1.496
+            ]
+          },
+          "wheel_RR": {
+            "triangles": 722,
+            "radius_m": 0.37,
+            "width_m": 0.186,
+            "center_m": [
+              0.934,
+              0.37,
+              -1.496
+            ]
+          }
+        }
+      },
+      "verify": {
+        "wheel_bottom_y_m": {
+          "wheel_FL": {
+            "min": 0,
+            "max": 0.0006
+          },
+          "wheel_FR": {
+            "min": 0,
+            "max": 0.0007
+          },
+          "wheel_RL": {
+            "min": 0,
+            "max": 0.0011
+          },
+          "wheel_RR": {
+            "min": 0,
+            "max": 0.0011
+          }
+        },
+        "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
+      }
+    },
+    "taxi.glb": {
+      "prompt": "Realistic mid-2010s full-size four-door sedan taxi cab, generic unbranded design, bright sunflower yellow paint with a thin teal checkered stripe along both sides, small plain blank white roof light box on top, tinted glass windows, black tires with silver wheels, headlights and red taillights, closed doors, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Bright sunflower yellow car paint, thin teal and white checkered side stripe, plain blank white roof light box, dark tinted glass, black rubber tires, silver rims, black plastic trim, blank license plate, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 12000,
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1a8b0-62b1-7033-a1a5-62c9dc4680d8",
+        "refine_task_id": "01a1a8b0-e034-719d-b549-5890f313ea1a",
+        "seed": 940744623
+      },
+      "credits": 15,
+      "credits_detail": {
+        "preview": 5,
+        "refine": 10
+      },
+      "generated_at": "2026-11-04T22:32:40.880Z",
+      "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4/taxi.glb <out> 4.9 --paint scripts/blender/vehicle_paint.json --paint-key taxi",
+      "triangles": 11876,
+      "triangles_from_meshy": 11878,
+      "bytes": 677716,
+      "bounds_m": {
+        "x": [
+          -1.111,
+          1.111
+        ],
+        "y": [
+          0.0,
+          2.171
+        ],
+        "z": [
+          -2.45,
+          2.45
+        ]
+      },
+      "scale_applied": 5.141,
+      "width_scale": 1.0,
+      "removed_parts": {},
+      "painted_out": [
+        {
+          "note": "made-up emblem on the grille",
+          "faces": 188,
+          "texels": 14235
+        },
+        {
+          "note": "made-up emblem on the trunk lid",
+          "faces": 51,
+          "texels": 6317
+        },
+        {
+          "note": "made-up lettering on the left rear door",
+          "faces": 8,
+          "texels": 21066
+        },
+        {
+          "note": "made-up lettering on the right rear door",
+          "faces": 54,
+          "texels": 34032
+        }
+      ],
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "gpu_texture_memory_mib": 16,
+      "blender_wheels": "blender -b -P scripts/blender/vehicle_wheels.py -- <street_props output> <out> --round",
+      "rig": {
+        "nodes": "body > steer_FL > wheel_FL, body > steer_FR > wheel_FR, body > wheel_RL, body > wheel_RR",
+        "usage": "rotate steer_* about y to steer; spin wheel_* about local x (positive rolls forward, toward +z)",
+        "animation": "wheels_roll: one wheel turn per second, linear, loopable",
+        "round_tires": "tread vertices beyond 0.9 r moved onto the tire circle (--round)",
+        "body_triangles": 8093,
+        "wheels": {
+          "wheel_FL": {
+            "triangles": 965,
+            "radius_m": 0.34,
+            "width_m": 0.163,
+            "center_m": [
+              -0.891,
+              0.34,
+              1.482
+            ]
+          },
+          "wheel_FR": {
+            "triangles": 987,
+            "radius_m": 0.34,
+            "width_m": 0.178,
+            "center_m": [
+              0.884,
+              0.34,
+              1.482
+            ]
+          },
+          "wheel_RL": {
+            "triangles": 886,
+            "radius_m": 0.34,
+            "width_m": 0.161,
+            "center_m": [
+              -0.892,
+              0.34,
+              -1.324
+            ]
+          },
+          "wheel_RR": {
+            "triangles": 945,
+            "radius_m": 0.34,
+            "width_m": 0.181,
+            "center_m": [
+              0.882,
+              0.34,
+              -1.324
+            ]
+          }
+        }
+      },
+      "verify": {
+        "wheel_bottom_y_m": {
+          "wheel_FL": {
+            "min": 0,
+            "max": 0.0019
+          },
+          "wheel_FR": {
+            "min": 0,
+            "max": 0.0019
+          },
+          "wheel_RL": {
+            "min": 0,
+            "max": 0.0019
+          },
+          "wheel_RR": {
+            "min": 0,
+            "max": 0.0011
+          }
+        },
+        "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
+      }
+    },
+    "box_truck.glb": {
+      "prompt": "Realistic medium-duty generic delivery box truck, mid-2010s design, conventional cab with a short hood, large plain white rectangular cargo box behind the cab, box taller than the cab, roll-up rear door, exactly two axles: single front wheels and dual rear wheels, round black tires with plain steel hubs fully visible in open wheel arches, white cab, dark tinted windows, black bumpers, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "White painted cab, plain clean white cargo box with thin gray panel seams, gray roll-up rear door, dark tinted glass, black rubber tires, gray steel hubs, black bumpers and grille, blank license plate, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 14000,
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1a8b1-9890-7491-8d4e-e43dce9e98bb",
+        "refine_task_id": "01a1a8b2-15ed-75fc-99bb-26605a39e8cd",
+        "seed": 2407109183
+      },
+      "credits": 15,
+      "credits_detail": {
+        "preview": 5,
+        "refine": 10
+      },
+      "generated_at": "2026-11-04T22:33:58.943Z",
+      "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4/box_truck.glb <out> 7.5 --width-scale 0.9 --paint scripts/blender/vehicle_paint.json --paint-key box_truck",
+      "triangles": 14349,
+      "triangles_from_meshy": 14353,
+      "bytes": 739220,
+      "bounds_m": {
+        "x": [
+          -1.395,
+          1.395
+        ],
+        "y": [
+          0.0,
+          4.006
+        ],
+        "z": [
+          -3.75,
+          3.75
+        ]
+      },
+      "scale_applied": 7.8367,
+      "width_scale": 0.9,
+      "removed_parts": {
+        "speck": {
+          "parts": 2,
+          "faces": 2
+        }
+      },
+      "painted_out": [
+        {
+          "note": "made-up lettering on the cab front",
+          "faces": 12,
+          "texels": 5043
+        }
+      ],
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "gpu_texture_memory_mib": 16,
+      "blender_wheels": "blender -b -P scripts/blender/vehicle_wheels.py -- <street_props output> <out> --round",
+      "rig": {
+        "nodes": "body > steer_FL > wheel_FL, body > steer_FR > wheel_FR, body > wheel_RL, body > wheel_RR",
+        "usage": "rotate steer_* about y to steer; spin wheel_* about local x (positive rolls forward, toward +z)",
+        "animation": "wheels_roll: one wheel turn per second, linear, loopable",
+        "round_tires": "tread vertices beyond 0.9 r moved onto the tire circle (--round)",
+        "body_triangles": 11027,
+        "wheels": {
+          "wheel_FL": {
+            "triangles": 611,
+            "radius_m": 0.532,
+            "width_m": 0.186,
+            "center_m": [
+              -0.94,
+              0.532,
+              2.419
+            ]
+          },
+          "wheel_FR": {
+            "triangles": 601,
+            "radius_m": 0.532,
+            "width_m": 0.186,
+            "center_m": [
+              0.964,
+              0.532,
+              2.419
+            ]
+          },
+          "wheel_RL": {
+            "triangles": 1055,
+            "radius_m": 0.516,
+            "width_m": 0.389,
+            "center_m": [
+              -0.839,
+              0.516,
+              -2.206
+            ]
+          },
+          "wheel_RR": {
+            "triangles": 1055,
+            "radius_m": 0.516,
+            "width_m": 0.389,
+            "center_m": [
+              0.863,
+              0.516,
+              -2.206
+            ]
+          }
+        }
+      },
+      "verify": {
+        "wheel_bottom_y_m": {
+          "wheel_FL": {
+            "min": 0,
+            "max": 0.0024
+          },
+          "wheel_FR": {
+            "min": 0,
+            "max": 0.0024
+          },
+          "wheel_RL": {
+            "min": 0,
+            "max": 0.0002
+          },
+          "wheel_RR": {
+            "min": 0,
+            "max": 0.0002
+          }
+        },
+        "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
+      }
     }
   },
-  "credits": "75 Meshy credits (5 per preview + 10 per refine): 45 for the three vehicles here and 30 for two discarded bus attempts"
+  "credits": "150 Meshy credits in total. Session 1: 75 (45 for sedan, bus, pickup and 30 for two discarded bus attempts). Session 2 (hatchback, van, taxi, box_truck, cap 75): 75 = 60 for the four vehicles plus 15 for one discarded hatchback; Meshy balance 6378 before, 6303 after.",
+  "discarded": [
+    {
+      "name": "hatchback (first attempt)",
+      "date": "2026-11-04",
+      "prompt": "Realistic mid-2010s compact five-door hatchback car, generic unbranded design, short rounded nose, steep rear hatch, bright teal metallic paint, tinted glass windows, black tires with silver alloy wheels, headlights and red taillights, closed doors, complete single vehicle, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Bright teal metallic car paint, dark tinted glass, black rubber tires, silver alloy rims, black plastic trim, clear headlights, red taillights, blank license plate, no logos, no badges, no text, no lettering, no branding",
+      "preview_task_id": "01a1a8ae-6d0f-77df-93f0-15f11fce298d",
+      "refine_task_id": "01a1a8ae-ea99-74af-95a4-68e573f7582d",
+      "credits": 15,
+      "reason": "microcar proportions: at 4.1 m long it came out 2.52 m wide and 2.18 m tall (taller than the pickup); regenerated with explicit length/width/height ratios"
+    }
+  ],
+  "paint": "Meshy painted made-up emblems and lettering on some bodies despite the prompt; street_props.py --paint fills those texels (boxes in scripts/blender/vehicle_paint.json) with the median color of the region and a flat normal."
 }

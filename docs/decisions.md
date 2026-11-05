@@ -1028,6 +1028,22 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Verified: styles.test.js (district mix keeps mid-size stock inside its palette; named buildings keep their style) and the full suite still passes.
 - Not done: district labels and storefront name decals (teleoperator's RUSSIAN HILL map labels / real-business signs), the e2e suite, and the FPS gate.
 
+## 2026-11-04: epic/assets — four more traffic vehicles (hatchback, van, taxi, box truck)
+- Meshy text-to-3D (meshy-t2.5, smart topology, PBR) → `scripts/blender/street_props.py` → `scripts/blender/vehicle_wheels.py --round`, same rig as sedan/pickup/bus (`steer_FL/FR > wheel_FL/FR`, `wheel_RL/RR`, `wheels_roll`). Full commands, task IDs, and credits in `assets/vehicles/provenance.json`.
+- Meshy painted made-up emblems and lettering despite "no logos, no text" prompts. `street_props.py --paint scripts/blender/vehicle_paint.json --paint-key <name>` fills those texture boxes with the median color (flat normal), so no asset ships with brand-like marks. The taxi livery is a plain yellow body with a teal checker stripe and a blank roof light.
+- `vehicle_wheels.py --round` projects tire-rim vertices onto the fitted radius: Meshy tires are lumpy, and a rolling lumpy tire dipped ~2 cm into the ground. With it every wheel stays within 2.4 mm of the ground through the clip.
+- `--width-scale` in `street_props.py` narrows only the x width after scaling to length. The box truck uses `--width-scale 0.9` (it came out ~3.1 m wide at 7.5 m long; now 2.79 m); the other three use 1.0. The over-wide first hatchback was regenerated instead.
+- `scripts/assets/vehicles-in-context.mjs` previews GLBs in the real game (`look=pbr`, `cars=0`) next to a parked-car anchor without editing shared code; wiring the vehicles into traffic is left to the integration owner.
+
+## 2026-11-04: storefront dressing (assets/storefronts)
+
+- Procedural Blender 5.2.3 (`scripts/blender/storefronts.py`) for every piece, no Meshy: signs need exact sizes and UVs on the shared atlas, and the patio props came out clean from primitives, so the 45-credit Meshy cap went unused (0 credits).
+- One shared 1024 JPEG atlas (`storefront-atlas.jpg`) for all sign art, painted with the Chromium 2D canvas from code (original icons and DejaVu lettering); GLBs reference it as an external image, so it downloads once. Props use vertex colors and no textures.
+- Neon, lamp lenses, and bulbs use `sf_neon` with emissive strength 3 to cross the pbr bloom threshold (0.92); light sign backgrounds were darkened so they do not bloom in the pbr sun.
+- Grid: 3.5-4.5 m ground floors, 3-6 m bays, board centered on the kit sign band (`facade-kit.js`), patio on the 3.5 m apron. Details in `docs/storefronts.md`.
+- Invented businesses only (`scripts/assets/storefront-businesses.json`); no real names or logos.
+
+
 ## 2026-11-04: Landmark facsimiles for the BeltLine Eastside (assets)
 
 - Ponce City Market (full building), Telephone Factory Lofts, Studioplex, New Realm Brewing, and the Eastside Trail bridges (North Avenue, Ralph McGill, Ponce de Leon, Freedom Parkway) are procedural Blender models (`scripts/blender/landmarks.py`) on the real OSM footprints at the game's heights and ground (`scripts/assets/landmark-sites.mjs` → `assets/landmarks/sites.json`, from the game's own `buildingSpan`/`bridgeDeck`). One Draco GLB per landmark with LOD nodes that share materials and tiling textures. See `docs/landmarks.md`.
@@ -1035,3 +1051,4 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Sign texts are generic or fictional ("CITY MARKET", "STUDIO YARDS", "BREW HALL"); no real lettering or logos.
 - Krog Street Tunnel is outside the level bounds: skipped.
 - Integration is for the parent session: claim the four footprints, drop the PCM img2threejs tower and rooftop sign entry, add the GLBs as THREE.LOD at their origin with yaw 0. `scripts/assets/landmarks-preview.html` does this as a preview only, without editing shared code.
+||||||| d79d170

@@ -1025,6 +1025,9 @@ export function gradeWays(grid, strips, { pinned: given = null, ...opts } = {}) 
 // m/s^2, under the push, and she can push up anything that is not a wall (a
 // rise over SKATE.maxStep in one step). The trail and the ways (10% or less)
 // are under the limit, so it changes nothing on them.
+// Near-cliffs: with the bent normal the controller's wall probe (a rise
+// over SKATE.maxStep within the body ring, about 77% or more) now reads a
+// cliff face as a wall, so the skater bonks off it instead of rolling back.
 export const GRADE_LIMIT = 0.3;
 
 export function limitGrade(n, max = GRADE_LIMIT) {

@@ -7,8 +7,8 @@
 // With ?peopleprops=0 it is the plain game (the BEFORE view).
 //
 // After the game is ready it lays the assets out on a concrete pad (rows
-// along the plaza's x: people with the dog and the stroller, street
-// furniture, BeltLine props) and plays each person's clip (its default
+// along the plaza's x: people, each with the prop it uses (COMPANIONS),
+// street furniture, BeltLine props) and plays each person's clip (its default
 // below, or ?clip= for all of them) with one AnimationMixer per model. The
 // LOD level is picked per frame by camera distance (extras.lodDistance), or
 // forced with ?lod=0|1. The default plaza is the clear lot beside the
@@ -33,8 +33,17 @@ export const DEFAULT_CLIP = {
   cyclist: "ride",
   dog: "walk",
 };
+// Props staged with a person (x, z offset in the person's frame, m): the
+// stroller under the push grip, the bike under the ride (same origin), the
+// table at the sit pose's bench, the dog at the walker's side.
+export const COMPANIONS = {
+  stroller_dad: [["stroller", 0, 0.64]],
+  cyclist: [["city_bike", 0, 0]],
+  elder_polo: [["picnic_table", 0.18, 0.31]],
+  dog_walker: [["dog", 0.75, 0.25]],
+};
 export const ROWS = [
-  ["walker_sundress", "elder_polo", "jogger", "dog_walker", "dog", "stroller_dad", "stroller", "cyclist"],
+  ["walker_sundress", "elder_polo", "jogger", "dog_walker", "stroller_dad", "cyclist"],
   ["drinking_fountain", "bollard", "traffic_cone", "barricade"],
   ["e_scooter", "city_bike", "bike_dock", "food_cart", "picnic_table", "patio_umbrella", "sculpture_ribbon"],
 ];
@@ -59,10 +68,14 @@ export function plazaLayout(assets, rows = ROWS, gap = 1.6, rowGap = 5) {
   const out = [];
   rows.forEach((row, r) => {
     const ids = row.filter((id) => assets[id]);
-    const widths = ids.map((id) => Math.max(assets[id].size[0], 0.6));
+    const widths = ids.map((id) =>
+      Math.max(assets[id].size[0], 0.6, ...(COMPANIONS[id] ?? []).filter(([c]) => assets[c]).map(([c, dx]) => assets[c].size[0] + 2 * Math.abs(dx))),
+    );
     let x = -(widths.reduce((a, b) => a + b, 0) + gap * (ids.length - 1)) / 2;
     ids.forEach((id, i) => {
-      out.push({ id, x: x + widths[i] / 2, z: ((rows.length - 1) / 2 - r) * rowGap });
+      const at = { id, x: x + widths[i] / 2, z: ((rows.length - 1) / 2 - r) * rowGap };
+      out.push(at);
+      for (const [c, dx, dz] of COMPANIONS[id] ?? []) if (assets[c]) out.push({ id: c, x: at.x + dx, z: at.z + dz, with: id });
       x += widths[i] + gap;
     });
   });
@@ -85,7 +98,7 @@ if (on) {
   window.__atl.scene.add(root);
   const assets = {};
   for (const [dir, m] of SETS) for (const [id, a] of Object.entries(m.assets)) assets[id] = { ...a, dir };
-  const layout = plazaLayout(assets).filter((p) => !only || only.includes(p.id));
+  const layout = plazaLayout(assets).filter((p) => !only || only.includes(p.with ?? p.id));
   const heightAt = (x, z) => {
     const s = window.__atl.level.sample(x, z);
     return typeof s === "number" ? s : (s?.height ?? 0);
@@ -113,7 +126,7 @@ if (on) {
   const mixers = [];
   const lods = [];
   await Promise.all(
-    layout.map(async ({ id, x, z }) => {
+    layout.map(async ({ id, x, z, with: host }) => {
       const a = assets[id];
       try {
         const gltf = await loader.loadAsync(GLB_URLS[`../../assets/${a.dir}/${a.file}`]);
@@ -121,7 +134,7 @@ if (on) {
         const [wx, wz] = toWorld(x, z);
         model.position.set(wx, heightAt(wx, wz) + lift, wz);
         model.rotation.y = pyaw;
-        model.name = `people-props-${id}`;
+        model.name = host ? `people-props-${id}-with-${host}` : `people-props-${id}`;
         const levels = [];
         model.traverse((o) => {
           if (o.isMesh) {
@@ -141,7 +154,7 @@ if (on) {
           mixers.push(mixer);
         }
         root.add(model);
-        info.models.push({ id, position: [wx, model.position.y, wz].map((v) => +v.toFixed(2)), clip: clip?.name ?? null, clips: gltf.animations.map((c) => c.name), levels: levels.filter(Boolean).map((l) => l.mesh.name) });
+        info.models.push({ id, ...(host ? { with: host } : {}), position: [wx, model.position.y, wz].map((v) => +v.toFixed(2)), clip: clip?.name ?? null, clips: gltf.animations.map((c) => c.name), levels: levels.filter(Boolean).map((l) => l.mesh.name) });
       } catch (err) {
         info.errors.push(`${id}: ${err.message}`);
       }

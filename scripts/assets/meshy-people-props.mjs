@@ -4,6 +4,7 @@
 // Needs MESHY_API_KEY. Raw downloads and task records go to .meshy-raw/people/
 // (git-ignored).
 //   node scripts/assets/meshy-people-props.mjs [--only a,b] [--out .meshy-raw/people] [--cap 400] [--dry]
+//     [--model meshy-7.1 --polycount 15000 --no-anim]
 // --cap is a hard limit on the credits of this whole batch: the records of
 // every earlier run count, and a task that could take the total past the
 // cap does not start. Credits come from each task's consumed_credits (the
@@ -20,6 +21,8 @@ const PERSON =
 
 // Planned price of each step (docs.meshy.ai/en/api/pricing, meshy-t2.5).
 export const PRICE = { preview: 5, refine: 10, rig: 5, action: 3 };
+// Standard models (meshy-6, meshy-7.1): the preview mesh costs 20.
+export const PRICE_STANDARD = { ...PRICE, preview: 20 };
 
 // people: rigged with Meshy (walk and run come free with the rig), plus
 // library actions (ids from docs.meshy.ai/en/api/animation-library).
@@ -168,6 +171,13 @@ const out = opt("--out", ".meshy-raw/people");
 const cap = Number(opt("--cap", "400"));
 const dry = args.includes("--dry");
 const only = opt("--only", Object.keys(ASSETS).join(",")).split(",");
+// --model meshy-7.1 --polycount 15000: a standard (not smart-topology) model,
+// remeshed to that many triangles. --no-anim: rig only (the library clips are
+// shared from the first batch's same-skeleton actions).
+const model = opt("--model", "meshy-t2.5");
+const polycount = opt("--polycount", null);
+const noAnim = args.includes("--no-anim");
+const price = model.startsWith("meshy-t") ? PRICE : PRICE_STANDARD;
 if (Number.isNaN(cap) || cap < 0) throw new Error("--cap must be a nonnegative number");
 
 async function allRecords() {
@@ -191,47 +201,49 @@ async function generate(name, spec) {
   const rec = existsSync(recPath) ? JSON.parse(await readFile(recPath, "utf8")) : { name };
   const save = () => writeFile(recPath, JSON.stringify(rec, null, 2));
   if (!rec.preview) {
-    await guard(name, "preview", PRICE.preview);
-    const req = { mode: "preview", prompt: spec.prompt, model_type: "smart-topology", ai_model: "meshy-t2.5", topology: "triangle", target_polycount: spec.polycount, target_formats: ["glb"] };
+    await guard(name, "preview", price.preview);
+    const req = model.startsWith("meshy-t")
+      ? { mode: "preview", prompt: spec.prompt, model_type: "smart-topology", ai_model: model, topology: "triangle", target_polycount: Number(polycount ?? spec.polycount), target_formats: ["glb"] }
+      : { mode: "preview", prompt: spec.prompt, model_type: "standard", ai_model: model, should_remesh: true, topology: "triangle", target_polycount: Number(polycount ?? spec.polycount), target_formats: ["glb"] };
     if (spec.person) req.pose_mode = "t-pose";
     const { result } = await call("POST", "/v2/text-to-3d", req);
-    rec.preview = { id: result, request: req, planned: PRICE.preview };
+    rec.preview = { id: result, request: req, planned: price.preview };
     await save();
   }
   const pv = await waitTask(`/v2/text-to-3d/${rec.preview.id}`, `${name} preview`);
-  rec.preview.credits = pv.consumed_credits ?? PRICE.preview;
+  rec.preview.credits = pv.consumed_credits ?? price.preview;
   rec.preview.seed = pv.seed;
   await save();
   if (!rec.refine) {
-    await guard(name, "refine", PRICE.refine);
+    await guard(name, "refine", price.refine);
     const req = { mode: "refine", preview_task_id: rec.preview.id, enable_pbr: true, texture_prompt: spec.texture, texture_resolution: "2k", target_formats: ["glb"] };
     const { result } = await call("POST", "/v2/text-to-3d", req);
-    rec.refine = { id: result, request: req, planned: PRICE.refine };
+    rec.refine = { id: result, request: req, planned: price.refine };
     await save();
   }
   const rf = await waitTask(`/v2/text-to-3d/${rec.refine.id}`, `${name} refine`);
-  rec.refine.credits = rf.consumed_credits ?? PRICE.refine;
+  rec.refine.credits = rf.consumed_credits ?? price.refine;
   rec.refine.finished_at = new Date(rf.finished_at).toISOString();
   await download(rf.model_urls.glb, join(out, `${name}.glb`));
   rec.glb = `${name}.glb`;
   await save();
   if (spec.person) {
     if (!rec.rig) {
-      await guard(name, "rig", PRICE.rig);
+      await guard(name, "rig", price.rig);
       const req = { input_task_id: rec.refine.id, height_meters: spec.person.height };
       const { result } = await call("POST", "/v1/rigging", req);
-      rec.rig = { id: result, request: req, planned: PRICE.rig };
+      rec.rig = { id: result, request: req, planned: price.rig };
       await save();
     }
     const rg = await waitTask(`/v1/rigging/${rec.rig.id}`, `${name} rig`);
-    rec.rig.credits = rg.consumed_credits ?? PRICE.rig;
+    rec.rig.credits = rg.consumed_credits ?? price.rig;
     await download(rg.result.rigged_character_glb_url, join(out, `${name}_rigged.glb`));
     await download(rg.result.basic_animations.walking_glb_url, join(out, `${name}_walk.glb`));
     await download(rg.result.basic_animations.running_glb_url, join(out, `${name}_run.glb`));
     await save();
-    const ids = Object.values(spec.person.actions);
+    const ids = noAnim ? [] : Object.values(spec.person.actions);
     if (ids.length && !rec.anim) {
-      const cost = PRICE.action * ids.length;
+      const cost = price.action * ids.length;
       await guard(name, "anim", cost);
       const req = { rig_task_id: rec.rig.id, action_ids: ids, post_process: { operation_type: "change_fps", fps: 30 } };
       const { result } = await call("POST", "/v1/animations", req);
@@ -255,7 +267,7 @@ if (!main) {
   let total = 0;
   for (const n of only) {
     const s = ASSETS[n];
-    const c = PRICE.preview + PRICE.refine + (s.person ? PRICE.rig + PRICE.action * Object.keys(s.person.actions).length : 0);
+    const c = price.preview + price.refine + (s.person ? price.rig + (noAnim ? 0 : price.action * Object.keys(s.person.actions).length) : 0);
     total += c;
     console.log(n.padEnd(20), c);
   }

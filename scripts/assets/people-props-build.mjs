@@ -13,17 +13,21 @@ const args = process.argv.slice(2);
 const opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d);
 const blender = opt("--blender", process.env.BLENDER ?? "/home/ubuntu/tools/blender");
 const RAW = ".meshy-raw/people";
+// People remade on meshy-7.1 (15k triangles, rig only): their skins come from
+// here, their library clips still from the first batch's actions in RAW.
+const RAW2 = ".meshy-raw/people-v2";
+const remade = (id) => existsSync(`${RAW2}/${id}_rigged.glb`);
 const DATE = new Date().toISOString().slice(0, 10);
 
 // Clip names in the game: walk, run (free with the Meshy rig), idle, sit,
 // cheer, push, rest, ride. Shared clips come from another person's library
 // actions (same 24-bone Meshy skeleton): no credits.
 const PEOPLE = {
-  walker_sundress: { clips: { idle: "Idle_02", cheer: "Cheer_with_Both_Hands_Up" }, share: { elder_polo: { sit: "Chair_Sit_Idle_M" } } },
-  elder_polo: { clips: { sit: "Chair_Sit_Idle_M", cheer: "Cheer_with_One_Hand_Up" }, share: { dog_walker: { idle: "Idle" } } },
-  jogger: { clips: { rest: "Catching_Breath", cheer: "Victory_Cheer" }, share: { walker_sundress: { idle: "Idle_02" }, elder_polo: { sit: "Chair_Sit_Idle_M" } } },
+  walker_sundress: { clips: { cheer: "Cheer_with_Both_Hands_Up" }, share: { elder_polo: { sit: "Chair_Sit_Idle_M" }, dog_walker: { idle: "Idle" } } },
+  elder_polo: { clips: { sit: "Chair_Sit_Idle_M" }, share: { dog_walker: { idle: "Idle" }, walker_sundress: { cheer: "Cheer_with_Both_Hands_Up" } } },
+  jogger: { clips: { rest: "Catching_Breath", cheer: "Victory_Cheer" }, share: { dog_walker: { idle: "Idle" }, elder_polo: { sit: "Chair_Sit_Idle_M" } } },
   dog_walker: { clips: { idle: "Idle", cheer: "Motivational_Cheer" }, share: { elder_polo: { sit: "Chair_Sit_Idle_M" } } },
-  stroller_dad: { clips: { push: "Push_and_Walk_Forward", idle: "Idle" }, share: { elder_polo: { sit: "Chair_Sit_Idle_M", cheer: "Cheer_with_One_Hand_Up" } } },
+  stroller_dad: { clips: { idle: "Idle" }, share: { elder_polo: { sit: "Chair_Sit_Idle_M" }, walker_sundress: { cheer: "Cheer_with_Both_Hands_Up" } }, push: true },
   cyclist: { clips: { sit: "Chair_Sit_Idle_M", idle: "Idle" }, share: { walker_sundress: { cheer: "Cheer_with_Both_Hands_Up" } }, ride: true },
 };
 // fit: the dimension scaled to m; long: the glTF axis the longest horizontal
@@ -64,8 +68,9 @@ for (const id of only) {
     mkdirSync("assets/people", { recursive: true });
     const clips = ["walk=walk", "run=run", ...Object.entries(p.clips).map(([g, a]) => `${g}=${a}`)].join(",");
     const share = Object.entries(p.share ?? {}).flatMap(([who, c]) => Object.entries(c).map(([g, a]) => `${who}:${g}=${a}`)).join(",");
-    const a = [RAW, id, `assets/people/${id}.glb`, "--clips", clips, "--stats", `${RAW}/stats/${id}.json`];
+    const a = [remade(id) ? RAW2 : RAW, id, `assets/people/${id}.glb`, "--clips", clips, "--actions", RAW, "--stats", `${RAW}/stats/${id}.json`];
     if (share) a.push("--share", share);
+    if (p.push) a.push("--push");
     if (p.ride) a.push("--ride");
     run("scripts/blender/people.py", a);
   } else if (PROPS[id]) {
@@ -93,8 +98,8 @@ for (const dir of Object.keys(DIRS)) {
   const prov = {
     date: DATE,
     asset: DIRS[dir],
-    tool: "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine, meshy-t2.5, smart topology); people: Meshy rigging (POST /openapi/v1/rigging) and library animations (POST /openapi/v1/animations); then Blender 5.2.3 LTS headless: scripts/blender/people.py (people), scripts/blender/people_props.py (props), scripts/blender/dog_rig.py (dog rig and clips keyed in Blender). Draco GLB export.",
-    pipeline: "node scripts/assets/meshy-people-props.mjs --cap 400 (needs MESHY_API_KEY; raw downloads and task records in .meshy-raw/people/, git-ignored), then node scripts/assets/people-props-build.mjs",
+    tool: "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine; props: meshy-t2.5, smart topology; people: meshy-7.1 standard, remeshed to 15k triangles, first made on meshy-t2.5 at 6k); people: Meshy rigging (POST /openapi/v1/rigging) and library animations (POST /openapi/v1/animations); then Blender 5.2.3 LTS headless: scripts/blender/people.py (people), scripts/blender/people_props.py (props), scripts/blender/dog_rig.py (dog rig and clips keyed in Blender). Draco GLB export.",
+    pipeline: "node scripts/assets/meshy-people-props.mjs --cap 400 (needs MESHY_API_KEY; raw downloads and task records in .meshy-raw/people/, git-ignored); people remade with --only <the six> --out .meshy-raw/people-v2 --cap 400 --model meshy-7.1 --polycount 15000 --no-anim; then node scripts/assets/people-props-build.mjs",
     license: "Generated with the project owner's Meshy account; usage is governed by Meshy's terms of service for that account. Blender steps and keyed clips: original work for this project.",
     style: "Realistic mid-2010s Atlanta, positive everyday people, no branding (prompts forbid logos and text); the sculpture is an original abstract design, not a copy of any artwork.",
     verify: "scripts/assets/people-props-preview.html (in the game's pbr renderer) and node scripts/assets/people-props-shots.mjs",
@@ -102,7 +107,8 @@ for (const dir of Object.keys(DIRS)) {
   };
   for (const id of ids) {
     const s = JSON.parse(readFileSync(`${RAW}/stats/${id}.json`, "utf8"));
-    const rec = JSON.parse(readFileSync(`${RAW}/${id}.json`, "utf8"));
+    const rec1 = JSON.parse(readFileSync(`${RAW}/${id}.json`, "utf8"));
+    const rec = PEOPLE[id] && remade(id) ? JSON.parse(readFileSync(`${RAW2}/${id}.json`, "utf8")) : rec1;
     const bytes = statSync(`assets/${dir}/${id}.glb`).size;
     if (bytes > 10e6) throw new Error(`${id}.glb is ${bytes} bytes (over 10 MB)`);
     const bounds = s.bounds_m.min ? s.bounds_m : { min: [s.bounds_m.x[0], s.bounds_m.y[0], s.bounds_m.z[0]], max: [s.bounds_m.x[1], s.bounds_m.y[1], s.bounds_m.z[1]] };
@@ -119,6 +125,12 @@ for (const dir of Object.keys(DIRS)) {
     };
     const steps = ["preview", "refine", "rig", "anim"].filter((k) => rec[k]);
     const credits = Object.fromEntries(steps.map((k) => [k === "anim" ? "animation" : k, rec[k].credits]));
+    // A remade person: its clips were bought with the first body, which the
+    // remake replaced (both spends are counted).
+    if (rec !== rec1) {
+      if (rec1.anim) credits.animation = rec1.anim.credits;
+      credits.first_body_replaced = ["preview", "refine", "rig"].reduce((t, k) => t + (rec1[k]?.credits ?? 0), 0);
+    }
     prov.files[`${id}.glb`] = {
       prompt: ASSETS[id].prompt,
       texture_prompt: ASSETS[id].texture,
@@ -130,12 +142,13 @@ for (const dir of Object.keys(DIRS)) {
         refine_task_id: rec.refine.id,
         seed: rec.preview.seed,
         ...(rec.rig ? { rig_task_id: rec.rig.id, height_meters: rec.rig.request.height_meters } : {}),
-        ...(rec.anim ? { animation_task_id: rec.anim.id, action_ids: rec.anim.actions } : {}),
+        ...(rec1.anim ? { animation_task_id: rec1.anim.id, action_ids: rec1.anim.actions } : {}),
+        ...(rec !== rec1 ? { first_body: { ai_model: rec1.preview.request.ai_model, target_polycount: rec1.preview.request.target_polycount, preview_task_id: rec1.preview.id, refine_task_id: rec1.refine.id, rig_task_id: rec1.rig.id, replaced: "too blocky up close (6k triangles)" } } : {}),
       },
       generated: rec.refine.finished_at?.slice(0, 10),
       credits: { ...credits, total: Object.values(credits).reduce((a, b) => a + b, 0) },
       blender: PEOPLE[id]
-        ? `scripts/blender/people.py ${id} (clips: walk and run from the rig, ${Object.entries(PEOPLE[id].clips).map(([g, a]) => `${g} = ${a}`).join(", ")}${PEOPLE[id].share ? `; shared, 0 credits: ${Object.entries(PEOPLE[id].share).flatMap(([w, c]) => Object.entries(c).map(([g, a]) => `${g} = ${a} of ${w}`)).join(", ")}` : ""}${PEOPLE[id].ride ? "; ride keyed in Blender" : ""})`
+        ? `scripts/blender/people.py ${id} (clips: walk and run from the rig, ${Object.entries(PEOPLE[id].clips).map(([g, a]) => `${g} = ${a}`).join(", ")}${PEOPLE[id].share ? `; shared, 0 credits: ${Object.entries(PEOPLE[id].share).flatMap(([w, c]) => Object.entries(c).map(([g, a]) => `${g} = ${a} of ${w}`)).join(", ")}` : ""}${PEOPLE[id].push ? "; push keyed in Blender (IK)" : ""}${PEOPLE[id].ride ? "; ride keyed in Blender (IK)" : ""})`
         : `scripts/blender/people_props.py ${id} --fit ${PROPS[id].fit} --m ${PROPS[id].m} --long ${PROPS[id].long}${PROPS[id].yaw ? ` --yaw ${PROPS[id].yaw}` : ""} --lod1 ${PROPS[id].lod1}${PROPS[id].rig ? "; then scripts/blender/dog_rig.py" : ""}`,
       result: { bytes, triangles: s.triangles, size_m: manifest.assets[id].size },
     };

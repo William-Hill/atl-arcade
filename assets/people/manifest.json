@@ -3,9 +3,9 @@
   "assets": {
     "walker_sundress": {
       "file": "walker_sundress.glb",
-      "bytes": 534492,
+      "bytes": 773568,
       "triangles": {
-        "lod0": 5862,
+        "lod0": 15624,
         "lod1": 1200
       },
       "lodDistance": {
@@ -14,20 +14,20 @@
       },
       "bounds": {
         "min": [
-          -0.771,
+          -0.645,
           0,
-          -0.14
+          -0.168
         ],
         "max": [
-          0.771,
+          0.645,
           1.68,
-          0.14
+          0.168
         ]
       },
       "size": [
-        1.542,
+        1.29,
         1.68,
-        0.28
+        0.336
       ],
       "clips": {
         "walk": {
@@ -43,18 +43,20 @@
         "cheer": {
           "frames": 56,
           "fps": 30,
-          "source": "Cheer_with_Both_Hands_Up"
-        },
-        "idle": {
-          "frames": 56,
-          "fps": 30,
-          "source": "Idle_02"
+          "source": "Cheer_with_Both_Hands_Up",
+          "shared_from": "walker_sundress"
         },
         "sit": {
           "frames": 320,
           "fps": 30,
           "source": "Chair_Sit_Idle_M",
           "shared_from": "elder_polo"
+        },
+        "idle": {
+          "frames": 120,
+          "fps": 30,
+          "source": "Idle",
+          "shared_from": "dog_walker"
         }
       },
       "bones": 24,
@@ -66,9 +68,9 @@
     },
     "elder_polo": {
       "file": "elder_polo.glb",
-      "bytes": 654644,
+      "bytes": 910276,
       "triangles": {
-        "lod0": 6334,
+        "lod0": 15570,
         "lod1": 1200
       },
       "lodDistance": {
@@ -77,20 +79,20 @@
       },
       "bounds": {
         "min": [
-          -0.885,
+          -0.584,
           0,
-          -0.218
+          -0.272
         ],
         "max": [
-          0.885,
+          0.584,
           1.75,
-          0.218
+          0.272
         ]
       },
       "size": [
-        1.77,
+        1.168,
         1.75,
-        0.436
+        0.544
       ],
       "clips": {
         "walk": {
@@ -106,18 +108,20 @@
         "sit": {
           "frames": 320,
           "fps": 30,
-          "source": "Chair_Sit_Idle_M"
-        },
-        "cheer": {
-          "frames": 50,
-          "fps": 30,
-          "source": "Cheer_with_One_Hand_Up"
+          "source": "Chair_Sit_Idle_M",
+          "shared_from": "elder_polo"
         },
         "idle": {
           "frames": 120,
           "fps": 30,
           "source": "Idle",
           "shared_from": "dog_walker"
+        },
+        "cheer": {
+          "frames": 56,
+          "fps": 30,
+          "source": "Cheer_with_Both_Hands_Up",
+          "shared_from": "walker_sundress"
         }
       },
       "bones": 24,
@@ -129,9 +133,9 @@
     },
     "jogger": {
       "file": "jogger.glb",
-      "bytes": 835612,
+      "bytes": 966168,
       "triangles": {
-        "lod0": 6319,
+        "lod0": 15610,
         "lod1": 1200
       },
       "lodDistance": {
@@ -140,20 +144,20 @@
       },
       "bounds": {
         "min": [
-          -0.786,
+          -0.768,
           0,
-          -0.183
+          -0.142
         ],
         "max": [
-          0.786,
+          0.768,
           1.7,
-          0.183
+          0.142
         ]
       },
       "size": [
-        1.572,
+        1.536,
         1.7,
-        0.366
+        0.284
       ],
       "clips": {
         "walk": {
@@ -169,18 +173,20 @@
         "rest": {
           "frames": 210,
           "fps": 30,
-          "source": "Catching_Breath"
+          "source": "Catching_Breath",
+          "shared_from": "jogger"
         },
         "cheer": {
           "frames": 280,
           "fps": 30,
-          "source": "Victory_Cheer"
+          "source": "Victory_Cheer",
+          "shared_from": "jogger"
         },
         "idle": {
-          "frames": 56,
+          "frames": 120,
           "fps": 30,
-          "source": "Idle_02",
-          "shared_from": "walker_sundress"
+          "source": "Idle",
+          "shared_from": "dog_walker"
         },
         "sit": {
           "frames": 320,
@@ -198,9 +204,9 @@
     },
     "dog_walker": {
       "file": "dog_walker.glb",
-      "bytes": 748112,
+      "bytes": 983108,
       "triangles": {
-        "lod0": 5929,
+        "lod0": 15547,
         "lod1": 1200
       },
       "lodDistance": {
@@ -209,20 +215,20 @@
       },
       "bounds": {
         "min": [
-          -0.77,
+          -0.735,
           0,
-          -0.209
+          -0.158
         ],
         "max": [
-          0.77,
+          0.735,
           1.65,
-          0.209
+          0.158
         ]
       },
       "size": [
-        1.54,
+        1.47,
         1.65,
-        0.418
+        0.316
       ],
       "clips": {
         "walk": {
@@ -238,12 +244,14 @@
         "idle": {
           "frames": 120,
           "fps": 30,
-          "source": "Idle"
+          "source": "Idle",
+          "shared_from": "dog_walker"
         },
         "cheer": {
           "frames": 270,
           "fps": 30,
-          "source": "Motivational_Cheer"
+          "source": "Motivational_Cheer",
+          "shared_from": "dog_walker"
         },
         "sit": {
           "frames": 320,
@@ -261,9 +269,9 @@
     },
     "stroller_dad": {
       "file": "stroller_dad.glb",
-      "bytes": 822148,
+      "bytes": 803116,
       "triangles": {
-        "lod0": 6326,
+        "lod0": 15542,
         "lod1": 1200
       },
       "lodDistance": {
@@ -272,20 +280,20 @@
       },
       "bounds": {
         "min": [
-          -0.888,
+          -0.811,
           0,
-          -0.192
+          -0.181
         ],
         "max": [
-          0.888,
+          0.811,
           1.82,
-          0.192
+          0.181
         ]
       },
       "size": [
-        1.776,
+        1.622,
         1.82,
-        0.384
+        0.362
       ],
       "clips": {
         "walk": {
@@ -301,12 +309,8 @@
         "idle": {
           "frames": 120,
           "fps": 30,
-          "source": "Idle"
-        },
-        "push": {
-          "frames": 240,
-          "fps": 30,
-          "source": "Push_and_Walk_Forward"
+          "source": "Idle",
+          "shared_from": "stroller_dad"
         },
         "sit": {
           "frames": 320,
@@ -315,10 +319,15 @@
           "shared_from": "elder_polo"
         },
         "cheer": {
-          "frames": 50,
+          "frames": 56,
           "fps": 30,
-          "source": "Cheer_with_One_Hand_Up",
-          "shared_from": "elder_polo"
+          "source": "Cheer_with_Both_Hands_Up",
+          "shared_from": "walker_sundress"
+        },
+        "push": {
+          "frames": 31,
+          "fps": 30,
+          "source": "keyed in Blender: the walk, hands on the stroller handle (two-bone IK)"
         }
       },
       "bones": 24,
@@ -330,10 +339,10 @@
     },
     "cyclist": {
       "file": "cyclist.glb",
-      "bytes": 618732,
+      "bytes": 766208,
       "triangles": {
-        "lod0": 6414,
-        "lod1": 1199
+        "lod0": 15667,
+        "lod1": 1200
       },
       "lodDistance": {
         "lod0": 0,
@@ -341,20 +350,20 @@
       },
       "bounds": {
         "min": [
-          -0.413,
+          -0.899,
           0,
-          -0.14
+          -0.149
         ],
         "max": [
-          0.413,
+          0.899,
           1.75,
-          0.14
+          0.149
         ]
       },
       "size": [
-        0.826,
+        1.798,
         1.75,
-        0.28
+        0.298
       ],
       "clips": {
         "walk": {
@@ -370,12 +379,14 @@
         "sit": {
           "frames": 320,
           "fps": 30,
-          "source": "Chair_Sit_Idle_M"
+          "source": "Chair_Sit_Idle_M",
+          "shared_from": "cyclist"
         },
         "idle": {
           "frames": 120,
           "fps": 30,
-          "source": "Idle"
+          "source": "Idle",
+          "shared_from": "cyclist"
         },
         "cheer": {
           "frames": 56,
@@ -386,7 +397,7 @@
         "ride": {
           "frames": 30,
           "fps": 30,
-          "source": "keyed in Blender: sit pose, hands forward, pedaling legs"
+          "source": "keyed in Blender: on the city bike, hands on the grips, feet on the pedals (two-bone IK)"
         }
       },
       "bones": 24,

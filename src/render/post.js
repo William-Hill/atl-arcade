@@ -196,8 +196,10 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   // The tree leaf cards (src/render/leaf-cut.js): AO and ink see the leaves.
   withLeafCut(gtao.normalMaterial);
   // World units are meters: a 2.5 m radius darkens the ground at a wall
-  // foot, the inside corners, and under the trees.
-  gtao.updateGtaoMaterial({ radius: 2.5, distanceExponent: 1.5, thickness: 4, scale: 1.2, samples: 12 });
+  // foot, the inside corners, and under the trees. A 1 m thickness: only
+  // geometry within 1 m in depth occludes, so a person or a pole in front of
+  // open ground leaves no dark halo on it.
+  gtao.updateGtaoMaterial({ radius: 2.5, distanceExponent: 1.5, thickness: 1, scale: 1.2, samples: 12 });
   gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
   const pbr = look === "pbr";
   gtao.blendIntensity = pbr ? 1.0 : 0.9;

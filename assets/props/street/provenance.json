@@ -1,8 +1,8 @@
 {
   "date": "2026-11-05",
   "asset": "Street furniture the kit was missing: drinking fountain and bollard (the OSM amenity=drinking_water and barrier=bollard kinds), plus construction cone and barricade.",
-  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine, meshy-t2.5, smart topology); people: Meshy rigging (POST /openapi/v1/rigging) and library animations (POST /openapi/v1/animations); then Blender 5.2.3 LTS headless: scripts/blender/people.py (people), scripts/blender/people_props.py (props), scripts/blender/dog_rig.py (dog rig and clips keyed in Blender). Draco GLB export.",
-  "pipeline": "node scripts/assets/meshy-people-props.mjs --cap 400 (needs MESHY_API_KEY; raw downloads and task records in .meshy-raw/people/, git-ignored), then node scripts/assets/people-props-build.mjs",
+  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine; props: meshy-t2.5, smart topology; people: meshy-7.1 standard, remeshed to 15k triangles, first made on meshy-t2.5 at 6k); people: Meshy rigging (POST /openapi/v1/rigging) and library animations (POST /openapi/v1/animations); then Blender 5.2.3 LTS headless: scripts/blender/people.py (people), scripts/blender/people_props.py (props), scripts/blender/dog_rig.py (dog rig and clips keyed in Blender). Draco GLB export.",
+  "pipeline": "node scripts/assets/meshy-people-props.mjs --cap 400 (needs MESHY_API_KEY; raw downloads and task records in .meshy-raw/people/, git-ignored); people remade with --only <the six> --out .meshy-raw/people-v2 --cap 400 --model meshy-7.1 --polycount 15000 --no-anim; then node scripts/assets/people-props-build.mjs",
   "license": "Generated with the project owner's Meshy account; usage is governed by Meshy's terms of service for that account. Blender steps and keyed clips: original work for this project.",
   "style": "Realistic mid-2010s Atlanta, positive everyday people, no branding (prompts forbid logos and text); the sculpture is an original abstract design, not a copy of any artwork.",
   "verify": "scripts/assets/people-props-preview.html (in the game's pbr renderer) and node scripts/assets/people-props-shots.mjs",

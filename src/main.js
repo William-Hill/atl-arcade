@@ -16,7 +16,7 @@ import { createHud } from "./ui/hud.js";
 import { createMinimap } from "./ui/minimap.js";
 import { createFullMap } from "./ui/fullmap.js";
 import { isoTilesFor } from "./ui/iso-tiles.js";
-import { travelSpot } from "./level/geo/travel.js";
+import { travelSpot, landingProbe } from "./level/geo/travel.js";
 import { ISO, isoBasis, isoCameraPose, levelIsoGrid, tileCenter } from "./level/geo/iso-map.js";
 import { mapLandmarks } from "./ui/minimap-math.js";
 import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
@@ -614,9 +614,10 @@ function fastTravel(x, z) {
   const spot = travelSpot(level, x, z);
   if (!spot) return null;
   const ground = terrainOf(level).height(spot.x, spot.z);
-  // The top surface over the spot: a bridge deck when the strip is a deck
-  // (the spot is on a strip, so never on a roof).
-  const y = env.sampleGround(spot.x, spot.z, ground + 40)?.height ?? ground;
+  // The top surface of the spot's own strip: the deck when the strip is a
+  // bridge, the road under it otherwise (the spot is on a strip, so never on
+  // a roof).
+  const y = env.sampleGround(spot.x, spot.z, landingProbe(level, spot, ground))?.height ?? ground;
   run = teleportRun(run, level, { position: [spot.x, y, spot.z], yaw: spot.yaw });
   skater = run.skater;
   if (follow) follow.reset(skater);

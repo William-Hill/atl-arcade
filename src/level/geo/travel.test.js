@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { TRAVEL, travelSpot } from "./travel.js";
+import { TRAVEL, travelSpot, landingProbe } from "./travel.js";
 import { heading } from "../../sim/skate/controller.js";
 
 const LEVEL = {
@@ -56,5 +56,16 @@ describe("travelSpot", () => {
       expect(inside(spot.x, spot.z, b.outer), b.id).toBe(false);
     }
     expect(TRAVEL.kinds).toContain("street");
+  });
+});
+
+describe("landingProbe", () => {
+  const level = { strips: [{ id: "deck", kind: "street", bridge: true, points: [] }, { id: "road", kind: "street", points: [] }] };
+  it("reaches the deck on a bridge strip", () => {
+    expect(landingProbe(level, { strip: "deck" }, 10)).toBe(50);
+  });
+  it("stays at the terrain on a road under a bridge", () => {
+    expect(landingProbe(level, { strip: "road" }, 10)).toBe(10);
+    expect(landingProbe(level, { strip: null }, 10)).toBe(10);
   });
 });

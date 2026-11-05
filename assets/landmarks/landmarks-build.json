@@ -1,7 +1,7 @@
 {
   "ponce-city-market": {
     "file": "assets/landmarks/ponce-city-market/ponce-city-market.glb",
-    "bytes": 919960,
+    "bytes": 937204,
     "triangles": {
       "lod0": 57432,
       "lod1": 6921,
@@ -65,7 +65,7 @@
   },
   "studioplex": {
     "file": "assets/landmarks/studioplex/studioplex.glb",
-    "bytes": 543296,
+    "bytes": 560540,
     "triangles": {
       "lod0": 5339,
       "lod1": 2508

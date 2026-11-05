@@ -305,9 +305,13 @@ def setup_materials():
     buff = np.array([0.80, 0.67, 0.47]) * (lum / lum.mean()) ** 0.8
     buff = 0.88 * buff + 0.12 * red * (buff.mean() / red.mean())
     bfc = new_image("lm_brick_buff_color", buff)
-    # A lighter, less saturated red brick for the big brick masses: under the
-    # pbr sky light the scan color reads too dark and too red on 50 m walls.
-    light = np.clip((lum + 0.5 * (red - lum)) * 1.32, 0, 1)
+    # A lighter red brick for the big brick masses, matching the game's
+    # brick-warehouse wall tone.
+    # Same rule as the game's facade shader (geo-view.js): the scan detail
+    # (scan / scan mean, in linear) times the brick-warehouse wall color.
+    lin = np.where(red <= 0.04045, red / 12.92, ((red + 0.055) / 1.055) ** 2.4)
+    out = np.clip(lin / lin.reshape(-1, 3).mean(0) * np.array([0.62, 0.305, 0.235]), 0, 1)
+    light = np.where(out <= 0.0031308, out * 12.92, 1.055 * out ** (1 / 2.4) - 0.055)
     blc = new_image("lm_brick_light_color", light)
     trim = load_pixels(f"{TEXDIR}/trim/color.jpg")
     tl = trim.mean(-1, keepdims=True)

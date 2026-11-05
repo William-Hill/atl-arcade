@@ -14,10 +14,10 @@ const SHOTS = [
   ["pcm-wide", [-30, 48, -872, -232, 24, -850]],
   ["telephone-factory-lofts", [208, 9, -312, 238, 3, -362]],
   ["new-realm-brewing", [64, 14, -424, 120, 8, -476]],
-  ["studioplex", [-232, 9, 856, -282, 2, 920]],
+  ["studioplex", [-226, 6, 878, -282, 3, 906]],
   ["bridge-freedom-parkway", [337, 1.7, 42, 338, 5, -30]],
   ["bridge-north-ave", [-12, 3, -716, -56, 1, -708]],
-  ["bridge-ralph-mcgill", [256, 3, -334, 224, 2, -302]],
+  ["bridge-ralph-mcgill", [196, 2.5, -266, 226, 1, -304]],
   ["bridge-ponce", [-88, 4, -962, -124, 1, -952]],
 ];
 const want = args.length ? SHOTS.filter(([n]) => args.includes(n)) : SHOTS;

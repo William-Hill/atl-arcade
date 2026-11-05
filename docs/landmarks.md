@@ -54,9 +54,9 @@ show more floors than the uphill walls. Bridge structure follows
 
 | File | LOD tris | Bytes | Textures | Est. GPU texture memory |
 |---|---|---|---|---|
-| `assets/landmarks/ponce-city-market/ponce-city-market.glb` | lod0 57,432 / lod1 6,921 / lod2 453 | 0.92 MB | 11 (9x 512x512, 1x 256x256, 1x 1024x1024) | 17.7 MiB |
+| `assets/landmarks/ponce-city-market/ponce-city-market.glb` | lod0 57,432 / lod1 6,921 / lod2 453 | 0.94 MB | 11 (9x 512x512, 1x 256x256, 1x 1024x1024) | 17.7 MiB |
 | `assets/landmarks/telephone-factory-lofts/telephone-factory-lofts.glb` | lod0 2,027 / lod1 723 | 0.57 MB | 11 (10x 512x512, 1x 1024x1024) | 18.7 MiB |
-| `assets/landmarks/studioplex/studioplex.glb` | lod0 5,339 / lod1 2,508 | 0.55 MB | 10 (9x 512x512, 1x 1024x1024) | 17.3 MiB |
+| `assets/landmarks/studioplex/studioplex.glb` | lod0 5,339 / lod1 2,508 | 0.56 MB | 10 (9x 512x512, 1x 1024x1024) | 17.3 MiB |
 | `assets/landmarks/new-realm-brewing/new-realm-brewing.glb` | lod0 2,336 / lod1 529 | 0.51 MB | 10 (9x 512x512, 1x 1024x1024) | 17.3 MiB |
 | `assets/landmarks/bridge-north-ave/bridge-north-ave.glb` | lod0 1,444 / lod1 420 | 0.10 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
 | `assets/landmarks/bridge-ralph-mcgill/bridge-ralph-mcgill.glb` | lod0 828 / lod1 260 | 0.10 MB | 4 (3x 512x512, 1x 128x128) | 4.1 MiB |
@@ -161,7 +161,10 @@ claimed and the GLBs added; preview only, no shared code changed). Same
 camera, `quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed`,
 `npcs=0&cars=0`, headless Chromium (SwiftShader).
 
-Lineup (LOD0 / LOD1 / LOD2): ![lineup](landmarks/lineup-buildings.jpg)
+Lineup (rows LOD0 / LOD1 / LOD2; GLTFLoader + DRACOLoader load check):
+
+![lineup](landmarks/lineup-buildings.jpg)
+
 ![bridges](landmarks/lineup-bridges.jpg)
 
 ### Ponce City Market from the trail

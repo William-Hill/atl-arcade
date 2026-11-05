@@ -1,4 +1,4 @@
-// The asset lab capture for the art loop (agents/asset-judge.md).
+// The asset lab capture for the art loop (docs/art-loop/judge.md).
 //
 // It runs only when LAB_KIND is set, so the normal e2e run skips it:
 //
@@ -27,7 +27,8 @@ test(`asset lab: ${KIND} pick ${PICK}, ${LOOK} look`, async ({ page }) => {
   });
   page.on("pageerror", (err) => errors.push(String(err)));
   await page.setViewportSize({ width: 1280, height: 720 });
-  const dir = `reports/lab/${KIND}-${PICK}-${LOOK}`;
+  // LAB_OUT sets another folder, so a new capture keeps an older one.
+  const dir = process.env.LAB_OUT ?? `reports/lab/${KIND}-${PICK}-${LOOK}`;
   mkdirSync(dir, { recursive: true });
   const info = { kind: KIND, pick: PICK, look: LOOK, views: {} };
   for (const view of VIEWS) {

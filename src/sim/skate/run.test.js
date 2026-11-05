@@ -73,6 +73,16 @@ describe("style moves", () => {
     expect(a.duration).not.toBe(b.duration);
   });
 
+  it("times style moves in beats at the beat clock's BPM (per-track music, #110)", () => {
+    let r = createRun(GREYBOX);
+    r.skater.speed = 5;
+    const beat = { bpm: 125, judge: () => null };
+    const fast = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv, beat).skater.style;
+    const base = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv).skater.style;
+    expect(fast.duration).toBeCloseTo((STYLE.moves[0].beats * 60) / 125);
+    expect(base.duration).toBeCloseTo(styleDuration(STYLE.moves[0]));
+  });
+
   it("needs speed and cancels when the skater leaves the ground", () => {
     let r = createRun(GREYBOX);
     r = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv);
@@ -160,5 +170,22 @@ describe("run signals for the loop and the HUD", () => {
     expect(r.skater.respawned).toBe(true);
     expect(r.combo.active).toBe(false);
     expect(r.combo.bails).toBe(1);
+  });
+});
+
+describe("teleportRun", async () => {
+  const { createRun, teleportRun } = await import("./run.js");
+
+  it("moves the skater to rest at the new place, and keeps the score and the time", () => {
+    const level = { spawn: { position: [0, 0, 0], yaw: 0 } };
+    const run = { ...createRun(level, { position: [0, 0, 0], yaw: 0 }), time: 12, score: 345 };
+    const next = teleportRun(run, level, { position: [50, 2, -30], yaw: 1 });
+    expect(next.skater.position).toEqual([50, 2, -30]);
+    expect(next.skater.yaw).toBe(1);
+    expect(next.skater.speed).toBe(0);
+    expect(next.time).toBe(12);
+    expect(next.score).toBe(345);
+    expect(next.moves).toEqual([]);
+    expect(run.skater.position).toEqual([0, 0, 0]);
   });
 });

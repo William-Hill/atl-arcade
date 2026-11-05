@@ -7,13 +7,14 @@
 //   facade?: number[] }.
 // `facade` has 4 numbers per vertex: [style, u, v, kind]. u counts window
 // bays along a wall, v counts floors up a wall, and kind is FACE.roof,
-// FACE.wall, or FACE.cornice. The facade shader draws windows from it.
+// FACE.wall, FACE.cornice, or FACE.blank (a wall with no windows: the
+// wall of a mural). The facade shader draws windows from it.
 // Faces do not share vertices across a corner, so a flat-shaded or toon
 // material gets one normal per face.
 
 import earcut from "earcut";
 
-export const FACE = { roof: 0, wall: 1, cornice: 2 };
+export const FACE = { roof: 0, wall: 1, cornice: 2, blank: 3 };
 const NO_FACADE = [0, 0, 0, FACE.roof];
 
 // Signed area in the x-z plane. Positive is counterclockwise when x points
@@ -100,49 +101,73 @@ export function flatPolygon(outer, holes = [], y = 0, { color = null, mesh = nul
 // for an outer ring and into the hole for a hole. With `facade`
 // ({ style, bay, floors, kind }) each wall gets a whole number of window
 // bays (at least 1) of about `bay` meters, and v runs 0 to `floors`.
-function walls(m, ring, y0, y1, color, facade = null) {
+// `blank` ({ edge, from }) makes wall `edge` FACE.blank from floor `from`
+// up; the floors under it keep their windows.
+function walls(m, ring, y0, y1, color, facade = null, blank = null) {
   for (let i = 0; i < ring.length; i += 1) {
-    const [px, pz] = ring[i];
-    const [qx, qz] = ring[(i + 1) % ring.length];
-    let fa = NO_FACADE;
-    let fb = NO_FACADE;
-    let fc = NO_FACADE;
-    let fd = NO_FACADE;
-    if (facade) {
-      const len = Math.hypot(qx - px, qz - pz);
-      const bays = Math.max(1, Math.round(len / facade.bay));
-      const v0 = facade.v0 ?? 0;
-      const v1 = facade.v1 ?? facade.floors;
-      fa = [facade.style, 0, v0, facade.kind];
-      fb = [facade.style, bays, v0, facade.kind];
-      fc = [facade.style, bays, v1, facade.kind];
-      fd = [facade.style, 0, v1, facade.kind];
+    const p = ring[i];
+    const q = ring[(i + 1) % ring.length];
+    if (facade && blank && blank.edge === i) {
+      const floors = facade.v1 ?? facade.floors;
+      const from = Math.min(Math.max(blank.from, 0), floors);
+      const yb = y0 + ((y1 - y0) * from) / floors;
+      if (from > 0) wallQuad(m, p, q, y0, yb, color, { ...facade, v0: 0, v1: from });
+      if (from < floors) wallQuad(m, p, q, yb, y1, color, { ...facade, v0: from, v1: floors, kind: FACE.blank });
+      continue;
     }
-    const a = pushVertex(m, px, y0, pz, color, fa);
-    const b = pushVertex(m, qx, y0, qz, color, fb);
-    const c = pushVertex(m, qx, y1, qz, color, fc);
-    const d = pushVertex(m, px, y1, pz, color, fd);
-    m.indices.push(a, b, d, b, c, d);
+    wallQuad(m, p, q, y0, y1, color, facade);
   }
+}
+
+function wallQuad(m, [px, pz], [qx, qz], y0, y1, color, facade) {
+  let fa = NO_FACADE;
+  let fb = NO_FACADE;
+  let fc = NO_FACADE;
+  let fd = NO_FACADE;
+  if (facade) {
+    const len = Math.hypot(qx - px, qz - pz);
+    const bays = Math.max(1, Math.round(len / facade.bay));
+    const v0 = facade.v0 ?? 0;
+    const v1 = facade.v1 ?? facade.floors;
+    fa = [facade.style, 0, v0, facade.kind];
+    fb = [facade.style, bays, v0, facade.kind];
+    fc = [facade.style, bays, v1, facade.kind];
+    fd = [facade.style, 0, v1, facade.kind];
+  }
+  const a = pushVertex(m, px, y0, pz, color, fa);
+  const b = pushVertex(m, qx, y0, qz, color, fb);
+  const c = pushVertex(m, qx, y1, qz, color, fc);
+  const d = pushVertex(m, px, y1, pz, color, fd);
+  m.indices.push(a, b, d, b, c, d);
 }
 
 // A building: walls from `base` to `top` and a flat roof. The roof can have
 // its own color.
 //
-// With `facade` ({ style, bay, floorHeight, parapet, corniceColor }) the
-// mesh gets the facade attribute: the walls count bays and floors for the
+// With `facade` ({ style, bay, floorHeight, floors, parapet, corniceColor, blank })
+// the mesh gets the facade attribute: the walls count bays and floors for the
 // window shader, and a parapet of `parapet` meters rises above the roof
-// with its outer face marked as cornice and an inner face.
-export function extrudeFootprint({ outer, holes = [], base = 0, top }, { color = null, roofColor = null, mesh = null, facade = null } = {}) {
+// with its outer face marked as cornice and an inner face. `blank`
+// ({ edge, from }, see walls()) is a windowless outer wall.
+//
+// With `plinth` ({ bottom, color }) and `facade`, a plain wall (a cornice
+// face, no windows) goes from `bottom` up to `base`: the base of a building
+// on a slope (terrain.js buildingSpan()).
+export function extrudeFootprint({ outer, holes = [], base = 0, top }, { color = null, roofColor = null, mesh = null, facade = null, plinth = null } = {}) {
   const m = mesh ?? emptyMesh(Boolean(color), Boolean(facade));
   const o = orient(outer, false);
   if (o.length < 3 || !(top > base)) return m;
   const hs = holes.map((h) => orient(h, true)).filter((h) => h.length >= 3);
   if (facade) {
-    const floors = Math.max(1, Math.round((top - base) / facade.floorHeight));
+    const floors = facade.floors ?? Math.max(1, Math.round((top - base) / facade.floorHeight));
     const wall = { style: facade.style, bay: facade.bay, floors, kind: FACE.wall };
-    walls(m, o, base, top, color, wall);
+    walls(m, o, base, top, color, wall, facade.blank ?? null);
     for (const h of hs) walls(m, h, base, top, color, wall);
+    if (plinth && base > plinth.bottom) {
+      const face = { style: facade.style, bay: facade.bay, floors: 1, kind: FACE.cornice };
+      walls(m, o, plinth.bottom, base, plinth.color ?? color, face);
+      for (const h of hs) walls(m, h, plinth.bottom, base, plinth.color ?? color, face);
+    }
     const parapet = facade.parapet ?? 0;
     if (parapet > 0) {
       const trim = facade.corniceColor ?? color;

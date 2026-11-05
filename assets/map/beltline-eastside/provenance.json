@@ -1,0 +1,16 @@
+{
+  "tool": "scripts/bake-iso-map.mjs (the game renderer, Three.js, headless Chromium, orthographic camera) and scripts/iso-pyramid.py (Pillow resize)",
+  "prompt": null,
+  "generativeModel": null,
+  "sources": [
+    "OpenStreetMap contributors (ODbL 1.0)",
+    "Overture Maps Foundation (heights)",
+    "USGS 3DEP (elevation)",
+    "City of Atlanta Department of City Planning (street names)",
+    "Poly Haven CC0 scans (surface detail)"
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+  "look": "pbr",
+  "date": "2026-11-04",
+  "note": "A render of the game level, not generated art. The map data credits of the level apply."
+}

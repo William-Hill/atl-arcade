@@ -4,11 +4,13 @@
 // then the landmark icons and the skater arrow. The 3D scene is not drawn
 // a second time. The math is in src/ui/minimap-math.js.
 //
-// Keys: M shows or hides the map. N changes north up and heading up.
+// Keys: N changes north up and heading up. M opens the full map
+// (src/ui/fullmap.js); the expand button and a click on the map open it too.
+// The × button hides the minimap.
 
 import { MINIMAP, cropRect, mapFrame, mapLandmarks, needsRedraw, projectToView, stripWidth, stripsInOrder, viewTransform, worldToMap } from "./minimap-math.js";
 
-const COLORS = {
+export const COLORS = {
   ground: "#1d2033",
   park: "#2f6b45",
   sidewalk: "#3a3e55",
@@ -48,8 +50,8 @@ function ringPath(ctx, frame, ring) {
   ctx.closePath();
 }
 
-// Draws the level to a new canvas, one time.
-function drawBase(level, frame, landmarkNames) {
+// Draws the level to a new canvas, one time. The full map uses it too.
+export function drawMapBase(level, frame, landmarkNames) {
   const base = document.createElement("canvas");
   base.width = frame.width;
   base.height = frame.height;
@@ -97,7 +99,7 @@ function drawBase(level, frame, landmarkNames) {
 
 // A landmark: a gold disc with its initials. A park: a green tree mark.
 // The two kinds have different shapes, so they do not differ by color only.
-function drawIcon(ctx, icon, x, y, s) {
+export function drawIcon(ctx, icon, x, y, s) {
   ctx.save();
   ctx.translate(x, y);
   ctx.lineWidth = 2 * s;
@@ -126,7 +128,7 @@ function drawIcon(ctx, icon, x, y, s) {
   ctx.restore();
 }
 
-function drawArrow(ctx, x, y, angle, s) {
+export function drawArrow(ctx, x, y, angle, s) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
@@ -155,7 +157,8 @@ function button(className, parent) {
 
 // `parent` gets the map. `mode` ("north" | "heading") and `hidden` override
 // the saved choice (for tests and links).
-export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMAP.viewMeters } = {}) {
+// `onExpand` opens the full map (the expand button, a click on the map).
+export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMAP.viewMeters, onExpand = null } = {}) {
   const prefs = readPrefs();
   const state = {
     mode: mode ?? (prefs.mode === "heading" ? "heading" : "north"),
@@ -164,7 +167,7 @@ export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMA
   };
   const frame = mapFrame(level.bounds);
   const icons = mapLandmarks(level);
-  const base = drawBase(level, frame, new Set(icons.filter((i) => i.kind === "landmark").map((i) => i.name)));
+  const base = drawMapBase(level, frame, new Set(icons.filter((i) => i.kind === "landmark").map((i) => i.name)));
 
   const root = document.createElement("div");
   root.id = "minimap";
@@ -173,6 +176,11 @@ export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMA
   canvas.setAttribute("role", "img");
   const modeBtn = button("minimap-mode", root);
   const hideBtn = button("minimap-toggle", root);
+  const expandBtn = onExpand ? button("minimap-expand", root) : null;
+  if (expandBtn) {
+    expandBtn.textContent = "⤢";
+    expandBtn.setAttribute("aria-label", "Open the full map (M key)");
+  }
   root.prepend(canvas);
   parent.appendChild(root);
   const ctx = canvas.getContext("2d");
@@ -194,8 +202,9 @@ export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMA
     modeBtn.textContent = state.mode === "heading" ? "▲" : "N";
     modeBtn.setAttribute("aria-label", state.mode === "heading" ? "Map: heading up. Change to north up (N key)" : "Map: north up. Change to heading up (N key)");
     modeBtn.setAttribute("aria-pressed", String(state.mode === "heading"));
+    if (expandBtn) expandBtn.hidden = state.hidden;
     hideBtn.textContent = state.hidden ? "Map" : "×";
-    hideBtn.setAttribute("aria-label", state.hidden ? "Show the map (M key)" : "Hide the map (M key)");
+    hideBtn.setAttribute("aria-label", state.hidden ? "Show the minimap" : "Hide the minimap");
     hideBtn.setAttribute("aria-expanded", String(!state.hidden));
     label();
     last = null;
@@ -220,10 +229,16 @@ export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMA
   };
   modeBtn.addEventListener("click", tap(() => setMode(state.mode === "north" ? "heading" : "north")));
   hideBtn.addEventListener("click", tap(() => setHidden(!state.hidden)));
+  if (expandBtn) {
+    expandBtn.addEventListener("click", tap(() => onExpand()));
+    canvas.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onExpand();
+    });
+  }
   const onKey = (e) => {
     if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.code === "KeyM") setHidden(!state.hidden);
-    else if (e.code === "KeyN" && !state.hidden) setMode(state.mode === "north" ? "heading" : "north");
+    if (e.code === "KeyN" && !state.hidden) setMode(state.mode === "north" ? "heading" : "north");
   };
   window.addEventListener("keydown", onKey);
 

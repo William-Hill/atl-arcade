@@ -1,0 +1,52 @@
+{
+  "tool": "scripts/ground-pbr.py (Poly Haven API download; candidate scoring; de-light; palette scale; ORM pack; Pillow resize; ktx create 4.3 KTX2)",
+  "prompt": null,
+  "date": "2026-11-05",
+  "license": "CC0 1.0",
+  "credits": [
+    {
+      "asset": "brick_pavement_02",
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "url": "https://polyhaven.com/a/brick_pavement_02",
+      "files": {
+        "diffuse": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brick_pavement_02/brick_pavement_02_diff_2k.jpg",
+        "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brick_pavement_02/brick_pavement_02_ao_2k.jpg",
+        "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brick_pavement_02/brick_pavement_02_nor_gl_2k.jpg",
+        "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brick_pavement_02/brick_pavement_02_rough_2k.jpg"
+      },
+      "resolution": "2k"
+    }
+  ],
+  "candidates": [
+    "red_brick_pavers",
+    "herringbone_brick",
+    "brick_pavement_02",
+    "square_brick_paving"
+  ],
+  "settings": {
+    "work": 1024,
+    "tiers": {
+      "high": 1024,
+      "phone": 512
+    },
+    "jpgQuality": 90,
+    "jpgSubsampling": "4:4:4",
+    "ktx2": {
+      "albedo": "UASTC q2 rdo 1.0 zstd 19 sRGB",
+      "normal/orm": "UASTC q2 rdo 0.5 zstd 19 linear"
+    },
+    "palette": [
+      0.62,
+      0.305,
+      0.235
+    ],
+    "flatten": [
+      0.85,
+      2.5
+    ]
+  },
+  "paidCredits": 0,
+  "note": "Scanned photo textures (CC0), processed; not generated art."
+}

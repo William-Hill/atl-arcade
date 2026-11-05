@@ -1,0 +1,138 @@
+{
+  "setId": "brick",
+  "surfaceKind": null,
+  "asset": "brick_pavement_02",
+  "source": "https://polyhaven.com/a/brick_pavement_02",
+  "authors": {
+    "Charlotte Baglioni": "All"
+  },
+  "license": "CC0 1.0",
+  "tileMeters": 2.0,
+  "meanLinear": [
+    0.6039,
+    0.305,
+    0.235
+  ],
+  "palette": [
+    0.62,
+    0.305,
+    0.235
+  ],
+  "roughMean": 0.8803,
+  "aoMean": 0.8734,
+  "tiers": {
+    "high": 1024,
+    "phone": 512
+  },
+  "maps": {
+    "albedo": "sRGB base color, light removed",
+    "normal": "OpenGL (+Y) tangent normal, u along world x, v along world z",
+    "orm": "R ambient occlusion, G roughness, B metalness (0)"
+  },
+  "delight": {
+    "gradientRemoved": 0.014320581399773718,
+    "slopeK": [
+      -0.0824,
+      -0.1709
+    ],
+    "aoK": 1.0023,
+    "flatten": {
+      "midBandScale": 0.15,
+      "clampSigma": 2.5
+    }
+  },
+  "seamFix": false,
+  "metricsAfter": {
+    "gradient": 0.0037,
+    "blotch": 0.0152,
+    "aoCorr": -0.0234,
+    "sideLight": 0.0005,
+    "seam": 0.8044
+  },
+  "candidates": [
+    {
+      "asset": "red_brick_pavers",
+      "score": 1.4554,
+      "metrics": {
+        "gradient": 0.0082,
+        "blotch": 0.0187,
+        "aoCorr": -0.1487,
+        "sideLight": 0.0676,
+        "seam": 2.5176
+      },
+      "chosen": false
+    },
+    {
+      "asset": "herringbone_brick",
+      "score": 0.3712,
+      "metrics": {
+        "gradient": 0.0335,
+        "blotch": 0.08,
+        "aoCorr": 0.0031,
+        "sideLight": 0.0756,
+        "seam": 1.177
+      },
+      "chosen": false
+    },
+    {
+      "asset": "brick_pavement_02",
+      "score": 0.3115,
+      "metrics": {
+        "gradient": 0.0143,
+        "blotch": 0.0502,
+        "aoCorr": 0.2239,
+        "sideLight": 0.0419,
+        "seam": 0.6865
+      },
+      "chosen": true
+    },
+    {
+      "asset": "square_brick_paving",
+      "score": 0.7396,
+      "metrics": {
+        "gradient": 0.0075,
+        "blotch": 0.026,
+        "aoCorr": -0.4587,
+        "sideLight": 0.0923,
+        "seam": 1.7653
+      },
+      "chosen": false
+    }
+  ],
+  "files": {
+    "albedo_high.jpg": 665138,
+    "albedo_high.ktx2": 1245162,
+    "normal_high.jpg": 596738,
+    "normal_high.ktx2": 1272451,
+    "orm_high.jpg": 298844,
+    "orm_high.ktx2": 932741,
+    "albedo_phone.jpg": 146961,
+    "albedo_phone.ktx2": 314362,
+    "normal_phone.jpg": 139679,
+    "normal_phone.ktx2": 303328,
+    "orm_phone.jpg": 72597,
+    "orm_phone.ktx2": 209496
+  },
+  "ktx2Quality": {
+    "albedo_high.ktx2": {
+      "psnr": 39.07
+    },
+    "normal_high.ktx2": {
+      "psnr": 36.24,
+      "meanAngleDeg": 2.059
+    },
+    "orm_high.ktx2": {
+      "psnr": 43.35
+    },
+    "albedo_phone.ktx2": {
+      "psnr": 41.77
+    },
+    "normal_phone.ktx2": {
+      "psnr": 36.54,
+      "meanAngleDeg": 1.894
+    },
+    "orm_phone.ktx2": {
+      "psnr": 41.93
+    }
+  }
+}

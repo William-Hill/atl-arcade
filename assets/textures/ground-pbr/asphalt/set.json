@@ -1,0 +1,138 @@
+{
+  "setId": "asphalt",
+  "surfaceKind": "street",
+  "asset": "clean_asphalt",
+  "source": "https://polyhaven.com/a/clean_asphalt",
+  "authors": {
+    "Dimitrios Savva": "All"
+  },
+  "license": "CC0 1.0",
+  "tileMeters": 2.1,
+  "meanLinear": [
+    0.2108,
+    0.217,
+    0.2376
+  ],
+  "palette": [
+    0.2108,
+    0.217,
+    0.2376
+  ],
+  "roughMean": 0.6602,
+  "aoMean": 0.8916,
+  "tiers": {
+    "high": 1024,
+    "phone": 512
+  },
+  "maps": {
+    "albedo": "sRGB base color, light removed",
+    "normal": "OpenGL (+Y) tangent normal, u along world x, v along world z",
+    "orm": "R ambient occlusion, G roughness, B metalness (0)"
+  },
+  "delight": {
+    "gradientRemoved": 0.0004756125573581574,
+    "slopeK": [
+      -0.0763,
+      0.2156
+    ],
+    "aoK": 0.0107,
+    "flatten": {
+      "midBandScale": 0.5,
+      "clampSigma": 2.0
+    }
+  },
+  "seamFix": false,
+  "metricsAfter": {
+    "gradient": 0.0003,
+    "blotch": 0.0026,
+    "aoCorr": 0.0018,
+    "sideLight": 0.0008,
+    "seam": 1.0732
+  },
+  "candidates": [
+    {
+      "asset": "asphalt_track",
+      "score": 0.3174,
+      "metrics": {
+        "gradient": 0.0032,
+        "blotch": 0.0069,
+        "aoCorr": 0.357,
+        "sideLight": 0.1123,
+        "seam": 1.0365
+      },
+      "chosen": false
+    },
+    {
+      "asset": "clean_asphalt",
+      "score": 0.0393,
+      "metrics": {
+        "gradient": 0.0005,
+        "blotch": 0.0044,
+        "aoCorr": 0.0024,
+        "sideLight": 0.0273,
+        "seam": 1.0632
+      },
+      "chosen": true
+    },
+    {
+      "asset": "asphalt_pit_lane",
+      "score": 0.3254,
+      "metrics": {
+        "gradient": 0.003,
+        "blotch": 0.012,
+        "aoCorr": 0.4568,
+        "sideLight": 0.061,
+        "seam": 0.9704
+      },
+      "chosen": false
+    },
+    {
+      "asset": "asphalt_02",
+      "score": 0.7688,
+      "metrics": {
+        "gradient": 0.0216,
+        "blotch": 0.0744,
+        "aoCorr": 0.1869,
+        "sideLight": 0.4401,
+        "seam": 1.0627
+      },
+      "chosen": false
+    }
+  ],
+  "files": {
+    "albedo_high.jpg": 355193,
+    "albedo_high.ktx2": 1022757,
+    "normal_high.jpg": 290225,
+    "normal_high.ktx2": 978776,
+    "orm_high.jpg": 334268,
+    "orm_high.ktx2": 1083136,
+    "albedo_phone.jpg": 60060,
+    "albedo_phone.ktx2": 197738,
+    "normal_phone.jpg": 34505,
+    "normal_phone.ktx2": 118969,
+    "orm_phone.jpg": 58826,
+    "orm_phone.ktx2": 219429
+  },
+  "ktx2Quality": {
+    "albedo_high.ktx2": {
+      "psnr": 49.58
+    },
+    "normal_high.ktx2": {
+      "psnr": 45.24,
+      "meanAngleDeg": 0.77
+    },
+    "orm_high.ktx2": {
+      "psnr": 44.49
+    },
+    "albedo_phone.ktx2": {
+      "psnr": 47.95
+    },
+    "normal_phone.ktx2": {
+      "psnr": 47.02,
+      "meanAngleDeg": 0.649
+    },
+    "orm_phone.ktx2": {
+      "psnr": 45.68
+    }
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "setId": "sidewalk",
+  "surfaceKind": "sidewalk",
+  "asset": "brushed_concrete_03",
+  "source": "https://polyhaven.com/a/brushed_concrete_03",
+  "authors": {
+    "Amal Kumar": "All"
+  },
+  "license": "CC0 1.0",
+  "tileMeters": 2.0,
+  "meanLinear": [
+    0.7351,
+    0.7316,
+    0.7401
+  ],
+  "palette": [
+    0.74,
+    0.74,
+    0.7546
+  ],
+  "roughMean": 0.8542,
+  "aoMean": 0.8955,
+  "tiers": {
+    "high": 1024,
+    "phone": 512
+  },
+  "maps": {
+    "albedo": "sRGB base color, light removed",
+    "normal": "OpenGL (+Y) tangent normal, u along world x, v along world z",
+    "orm": "R ambient occlusion, G roughness, B metalness (0)"
+  },
+  "delight": {
+    "gradientRemoved": 0.0012777982790992666,
+    "slopeK": [
+      -0.0009,
+      0.0042
+    ],
+    "aoK": 0.6236,
+    "flatten": {
+      "midBandScale": 0.5,
+      "clampSigma": 2.5
+    }
+  },
+  "seamFix": false,
+  "metricsAfter": {
+    "gradient": 0.0039,
+    "blotch": 0.0102,
+    "aoCorr": 0.0151,
+    "sideLight": 0.0002,
+    "seam": 0.9577
+  },
+  "candidates": [
+    {
+      "asset": "brushed_concrete_03",
+      "score": 0.142,
+      "metrics": {
+        "gradient": 0.0013,
+        "blotch": 0.0108,
+        "aoCorr": 0.2283,
+        "sideLight": 0.0011,
+        "seam": 0.8624
+      },
+      "chosen": true
+    },
+    {
+      "asset": "concrete_pavement",
+      "score": 0.2874,
+      "metrics": {
+        "gradient": 0.0014,
+        "blotch": 0.0103,
+        "aoCorr": 0.037,
+        "sideLight": 0.0516,
+        "seam": 1.3911
+      },
+      "chosen": false
+    },
+    {
+      "asset": "concrete_pavement_03",
+      "score": 0.2648,
+      "metrics": {
+        "gradient": 0.0176,
+        "blotch": 0.0774,
+        "aoCorr": -0.0391,
+        "sideLight": 0.0336,
+        "seam": 1.206
+      },
+      "chosen": false
+    },
+    {
+      "asset": "concrete_floor_worn_02",
+      "score": 0.157,
+      "metrics": {
+        "gradient": 0.0019,
+        "blotch": 0.0147,
+        "aoCorr": 0.0816,
+        "sideLight": 0.0792,
+        "seam": 1.0072
+      },
+      "chosen": false
+    }
+  ],
+  "files": {
+    "albedo_high.jpg": 561468,
+    "albedo_high.ktx2": 1152309,
+    "normal_high.jpg": 754352,
+    "normal_high.ktx2": 1236651,
+    "orm_high.jpg": 351822,
+    "orm_high.ktx2": 908779,
+    "albedo_phone.jpg": 125860,
+    "albedo_phone.ktx2": 293298,
+    "normal_phone.jpg": 157240,
+    "normal_phone.ktx2": 296404,
+    "orm_phone.jpg": 87341,
+    "orm_phone.ktx2": 218723
+  },
+  "ktx2Quality": {
+    "albedo_high.ktx2": {
+      "psnr": 44.06
+    },
+    "normal_high.ktx2": {
+      "psnr": 33.73,
+      "meanAngleDeg": 2.929
+    },
+    "orm_high.ktx2": {
+      "psnr": 40.2
+    },
+    "albedo_phone.ktx2": {
+      "psnr": 45.55
+    },
+    "normal_phone.ktx2": {
+      "psnr": 35.31,
+      "meanAngleDeg": 2.449
+    },
+    "orm_phone.ktx2": {
+      "psnr": 39.59
+    }
+  }
+}

@@ -1,6 +1,6 @@
 """Split the wheels out of a cleaned vehicle GLB (from street_props.py) and rig them.
 
-blender -b -P scripts/blender/vehicle_wheels.py -- IN.glb OUT.glb [--stats OUT.json] [--render OUT.png]
+blender -b -P scripts/blender/vehicle_wheels.py -- IN.glb OUT.glb [--stats OUT.json] [--render OUT.png] [--round]
 
 Meshy fuses wheels into the body. This finds each axle from the ground
 contact patches, fits the tire circle (tangent to the ground) to the outer
@@ -10,6 +10,9 @@ with its origin on the axle. Node tree in the GLB:
   body
     steer_FL > wheel_FL     steer_FR > wheel_FR   (front axle: rotate steer_* about y)
     wheel_RL, wheel_RR      (more rear axles: wheel_R2L, wheel_R2R, ...)
+
+--round moves the tread vertices (beyond 0.9 of the tire radius) onto the
+tire circle, so a lumpy Meshy tire stays on the ground through a full turn.
 
 Spin wheel_* about its local x (positive = rolling forward, toward +z).
 The GLB also carries a looping clip "wheels_roll" (one turn per second).
@@ -26,6 +29,7 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 src, dst = argv[0], argv[1]
 opt = lambda k, d=None: argv[argv.index(k) + 1] if k in argv else d
 stats_path, render_path = opt("--stats"), opt("--render")
+round_tires = "--round" in argv
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=src)
@@ -131,6 +135,11 @@ for w in wheels:
         nf.material_index = f.material_index
         nf.smooth = f.smooth
     sub.verts.index_update()
+    if round_tires:
+        for v in sub.verts:
+            d = math.hypot(v.co.y, v.co.z)
+            if d > 0.9 * w["radius"]:
+                v.co.y, v.co.z = v.co.y * w["radius"] / d, v.co.z * w["radius"] / d
     uv_src = bm.loops.layers.uv.active
     if uv_src:
         uv_dst = sub.loops.layers.uv.new(uv_src.name)

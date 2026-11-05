@@ -46,10 +46,26 @@ for (const url of FILES) {
   model.traverse((o) => /^(wheel|steer)_/.test(o.name) && nodes.push(o.name));
   // Rigged vehicles: steer the front wheels and pose the roll clip a sixth of a turn in.
   model.traverse((o) => o.name.startsWith("steer_") && (o.rotation.y = 0.4));
+  // With the clip playing and the front wheels steered, each wheel's lowest
+  // point must stay on the ground (y = 0) through a full turn.
+  const wheelGround = {};
   if (gltf.animations.length) {
     const mixer = new THREE.AnimationMixer(model);
     for (const clip of gltf.animations) mixer.clipAction(clip).play();
-    mixer.update(1 / 6);
+    const wheels = [];
+    model.traverse((o) => /^wheel_/.test(o.name) && wheels.push(o));
+    for (let i = 0; i < 12; i++) {
+      mixer.update(i ? 1 / 12 : 0);
+      model.updateMatrixWorld(true);
+      for (const w of wheels) {
+        const y = new THREE.Box3().setFromObject(w, true).min.y;
+        const g = (wheelGround[w.name] ??= { min: Infinity, max: -Infinity });
+        g.min = Math.min(g.min, y);
+        g.max = Math.max(g.max, y);
+      }
+    }
+    for (const g of Object.values(wheelGround)) (g.min = +g.min.toFixed(4)), (g.max = +g.max.toFixed(4));
+    mixer.setTime(1 / 6);
   }
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model, true);
@@ -59,7 +75,7 @@ for (const url of FILES) {
   model.position.x = x + size.z / 2;
   x += size.z + 1.5;
   scene.add(model);
-  result.files.push({ url, triangles, vertices, size: size.toArray().map((v) => +v.toFixed(3)), minY: +box.min.y.toFixed(3), textures: [...textures], nodes, animations: gltf.animations.map((a) => `${a.name} ${a.duration.toFixed(2)}s ${a.tracks.length} tracks`), draco: !!gltf.parser.json.extensionsUsed?.includes("KHR_draco_mesh_compression") });
+  result.files.push({ url, triangles, vertices, size: size.toArray().map((v) => +v.toFixed(3)), minY: +box.min.y.toFixed(3), textures: [...textures], nodes, animations: gltf.animations.map((a) => `${a.name} ${a.duration.toFixed(2)}s ${a.tracks.length} tracks`), wheelGround, draco: !!gltf.parser.json.extensionsUsed?.includes("KHR_draco_mesh_compression") });
 }
 const cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 500);
 cam.position.set(x / 2, x * 0.35, x * 0.95);

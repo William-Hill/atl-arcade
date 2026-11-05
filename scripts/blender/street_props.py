@@ -1,12 +1,19 @@
 """Clean a raw Meshy GLB and export a Draco GLB in real-world meters.
 
 blender -b -P scripts/blender/street_props.py -- IN.glb OUT.glb LENGTH_M [--flip] [--tex 2048] [--stats OUT.json] [--render OUT.png]
+    [--width-scale S] [--paint SPEC.json --paint-key NAME]
 
 Steps: join meshes, apply transforms, drop stray loose parts, merge doubles,
 recalculate normals outward, smooth by angle, turn the longest horizontal
 axis to glTF z (front at +z with the glTF convention), scale so that axis is
 LENGTH_M, put the base on y = 0 centered on x = z = 0, cap textures, and
 export with Draco.
+
+--width-scale S scales x (across the vehicle) only, which keeps the wheels
+round about their axles. --paint fills texture regions (made-up emblems or
+lettering from Meshy) with their median color and a flat normal: SPEC.json
+has { NAME: [ { "box": { "x": [a, b], "y": [a, b], "z": [a, b] }, "note": ... } ] },
+boxes in output glTF meters, and every face whose center is in a box is filled.
 """
 import json
 import math
@@ -22,6 +29,8 @@ flip = "--flip" in argv
 opt = lambda k, d=None: argv[argv.index(k) + 1] if k in argv else d
 tex_max = int(opt("--tex", "1024"))
 stats_path = opt("--stats")
+width_scale = float(opt("--width-scale", "1"))
+paint = json.load(open(opt("--paint")))[opt("--paint-key")] if opt("--paint") else []
 render_path = opt("--render")
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -117,8 +126,75 @@ lo = Vector([min(v.co[k] for v in me.vertices) for k in range(3)])
 hi = Vector([max(v.co[k] for v in me.vertices) for k in range(3)])
 s = length / (hi.y - lo.y)
 center = Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z))
-me.transform(Matrix.Scale(s, 4) @ Matrix.Translation(-center))
+me.transform(Matrix.Diagonal((width_scale, 1, 1, 1)) @ Matrix.Scale(s, 4) @ Matrix.Translation(-center))
 me.update()
+
+def paint_regions(regions):
+    """Fill the texels under the faces in each box with the region's median color."""
+    import numpy as np
+
+    mat = me.materials[0]
+    links = {l.to_socket.name: l.from_node for l in mat.node_tree.links if l.to_node.type == "BSDF_PRINCIPLED"}
+    def image_of(node):
+        while node and node.type != "TEX_IMAGE":
+            node = next((l.from_node for l in mat.node_tree.links if l.to_node == node), None)
+        return node.image if node else None
+    base = image_of(links.get("Base Color"))
+    normal = image_of(links.get("Normal"))
+    mr = image_of(links.get("Roughness") or links.get("Metallic"))
+    uv = me.uv_layers.active.data
+    done = []
+    for reg in regions:
+        b = reg["box"]
+        faces = []
+        for p in me.polygons:
+            c = p.center  # glTF (x, y, z) = Blender (x, z, -y)
+            g = (c.x, c.z, -c.y)
+            if all(b[k][0] <= g[i] <= b[k][1] for i, k in enumerate("xyz")):
+                faces.append(p)
+        w, h = base.size
+        mask = np.zeros((h, w), bool)
+        for p in faces:
+            pts = [uv[li].uv for li in p.loop_indices]
+            for t in range(1, len(pts) - 1):
+                tri = np.array([pts[0], pts[t], pts[t + 1]]) * (w, h)
+                x0, y0 = np.floor(tri.min(0)).astype(int)
+                x1, y1 = np.ceil(tri.max(0)).astype(int)
+                xs, ys = np.meshgrid(np.arange(max(x0, 0), min(x1 + 1, w)), np.arange(max(y0, 0), min(y1 + 1, h)))
+                px, py = xs + 0.5, ys + 0.5
+                (ax, ay), (bx, by), (cx, cy) = tri
+                d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+                if abs(d) < 1e-12:
+                    continue
+                l1 = ((by - cy) * (px - cx) + (cx - bx) * (py - cy)) / d
+                l2 = ((cy - ay) * (px - cx) + (ax - cx) * (py - cy)) / d
+                inside = (l1 >= -0.02) & (l2 >= -0.02) & (1 - l1 - l2 >= -0.02)
+                mask[ys[inside], xs[inside]] = True
+        core = mask.copy()
+        for _ in range(2):  # grow 2 texels so the fill covers the seams
+            g = mask.copy()
+            g[1:] |= mask[:-1]; g[:-1] |= mask[1:]; g[:, 1:] |= mask[:, :-1]; g[:, :-1] |= mask[:, 1:]
+            mask = g
+        for img, flat in ((base, None), (mr, None), (normal, (0.5, 0.5, 1.0))):
+            if img is None or core.sum() == 0:
+                continue
+            iw, ih = img.size
+            px = np.empty(iw * ih * 4, np.float32)
+            img.pixels.foreach_get(px)
+            px = px.reshape(ih, iw, 4)
+            m, cm = mask, core
+            if (iw, ih) != (w, h):  # masks are in base color texels
+                yi = (np.arange(ih) * h // ih)[:, None]; xi = (np.arange(iw) * w // iw)[None, :]
+                m, cm = mask[yi, xi], core[yi, xi]
+            fill = flat if flat else np.median(px[cm][:, :3], axis=0)
+            px[m, :3] = fill
+            img.pixels.foreach_set(px.ravel())
+            img.update()
+        done.append({"note": reg.get("note"), "faces": len(faces), "texels": int(mask.sum())})
+    return done
+
+
+painted = paint_regions(paint) if paint else []
 
 for img in bpy.data.images:
     if img.size[0] > tex_max or img.size[1] > tex_max:
@@ -150,6 +226,8 @@ stats = {
     "vertices": len(me.vertices),
     "removed_parts": {r: {"parts": sum(1 for x in removed if x["reason"] == r), "faces": sum(x["faces"] for x in removed if x["reason"] == r)} for r in ("outside", "speck", "plate")},
     "scale": s,
+    "width_scale": width_scale,
+    "painted": painted,
     # glTF axes: x = Blender x, y = Blender z, z = -Blender y.
     "bounds_m": {"x": [round(lo[0], 3), round(hi[0], 3)], "y": [round(lo[2], 3), round(hi[2], 3)], "z": [round(-hi[1], 3), round(-lo[1], 3)]},
     "textures": sorted({f"{i.name} {i.size[0]}x{i.size[1]}" for i in bpy.data.images if i.size[0]}),

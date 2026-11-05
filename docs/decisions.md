@@ -1059,3 +1059,36 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The footway spur `w1118177210` goes from the footway deck (9.5 m) to the ground (4.8 m) in 10 m, as in the OSM data: a 47% ramp.
 - The ground sampler is about 1.4 times slower (deck heights now read the terrain).
 - Not checked: the low tier far terrain at the bridge ends.
+
+## 2026-11-04: Road detail (#138) and sidewalk detail (#136)
+
+### Road detail (#138)
+
+- Lane tags: `scripts/build-block.mjs` keeps the OSM lane tags of each street (`laneTags()`): `lanes`, `lanesForward`, `lanesBackward`, `oneway`, `turnLanes` (turn:lanes or turn:lanes:forward), `turnLanesBackward`, and `cycleway` (the sides with a painted bike lane). 78 streets have a lane count, 27 have turn lanes, 10 have a bike lane, and 101 are one way. The rebuild from the cache changes only these fields and the new `crossings` list.
+- Lanes (`src/level/geo/lanes.js` `laneLayout()`): with a lane tag, the lane count comes from OSM and a lane is at most 3.6 m. The room that is left is a shoulder outside the edge lines. John Lewis Freedom Parkway now has 2 lanes on each carriageway (OSM `lanes=2`), not 4. A street with no lane tag keeps the lane lines of before.
+- Turn arrows: from `turnLanes`, one white arrow in each lane, 3 m before the stop bar (or the line cut), on the forward lanes at the strip end and on the backward lanes at the strip start.
+- Bike lanes: a green band (1.5 m) inside the curb band on each tagged side.
+- Decals: manhole covers (each 45 m on average), storm drains at the curb before each junction, and asphalt patches (each 70 m on average), seeded by the strip id. They are in the marking mesh, so they cost no draw call. Their colors are surface kinds in `SURFACE_COLORS`, so the pbr surface shader gives them the asphalt scan and the asphalt albedo (`GROUND_OF` in `src/render/geo-view.js`).
+- Marking cost on the BeltLine level: 20,474 triangles (budget test: 12,000 to 25,000).
+- Junctions (`src/level/geo/junctions.js`): each at-grade street strip is split at its junction nodes, and each piece stops where its edges clear the other arms (`armTrim()`). One patch fills each junction: the convex hull of the arm end corners, the arm corners at the node, and the bend corners before the trim. The patch is 4 mm over the street top. Two strips that meet end to end with no junction get a disk at the joint. The ground sampler sees each patch as a street. On the BeltLine level: 344 junctions, 751 pieces, 107 joint disks. The test samples a grid of 0.5 m around each junction: no gap, and under 0.2% of the points are on two pieces (where two junctions are closer than the trims; the patch draws over them).
+- Medians (`src/level/geo/medians.js`): the two carriageways of John Lewis Freedom Parkway are 14 m strips with center lines about 12 m apart, so they overlap. The median is the band between the two yellow edge lines, less 0.45 m on each side: a raised grass island (the sidewalk height) with a concrete rim. 8 medians, 1,060 m in all, and 56 median trees (one each 18 m on a median 2.4 m wide or more). The Ponce de Leon Ave carriageways get no median: no run of 3 samples passes the test there.
+- Not done: a narrower carriageway. A width from the lane count (9.6 m for 2 lanes) gives a real median, but it changes the bridge decks and the trail grade under the Parkway. Then `src/sim/npc/skaters.test.js` (Rae bonks twice) and the Freedom Parkway gap test fail. Do this in its own issue, with the bridge grade.
+- Bridge line ends: a line end that a bridge deck trims gets a square end, not the miter of a joint (`endsOf()` in `roadMarkings()`).
+- The bridge center line test now uses the Highland Ave NE bridge: the Parkway carriageways are one way, so they have no center line.
+
+### Sidewalk detail (#136)
+
+- Crossings: the build keeps the OSM footway and cycleway crossings in `level.crossings` (191 ways: id, points, `marked`).
+- Cuts and ramps (`src/level/geo/curbs.js`): the part of a sidewalk whose center line goes across a street (at more than 30 degrees, not a service road) is cut out, and the last 1.5 m on each side is an end ramp (8% slope). At each crosswalk end and each OSM crossing end, a sidewalk along the street gets a 2.4 m cross ramp from its back edge down to the curb. On the BeltLine level: 108 cuts, 267 end ramps, and 166 cross ramps (127 from OSM crossings). The Overpass query fetches ways only (no `kerb` nodes), and 1 way has a `kerb` tag, so the ramps come from the crossings only.
+- Physics: the ground sampler has each ramp as a slope that wins over the sidewalk it cuts, and each sidewalk as its pieces. The curb stays 12 cm (0.15 m sidewalk over a 0.03 m street), under `SKATE.maxStep`.
+- Grind features (`src/level/geo/grindables.js`): each street prop at an OSM bench is a ledge (`ledge:bench:<node id>`, 22), and the street side edge of each sidewalk piece is a ledge (`ledge:curb:<way id>:<k>`, 195). `createLevelEnv()` returns them, and `createSkaterEnv(level, extra)` adds them. `findSnap()` skips a grindable with a ground box far from the skater.
+- Tests (`src/level/geo/curbs.test.js`): the skater rolls up 5 or more curb cuts from the street with no bonk and no fall, pops 3 or more curbs onto the sidewalk with no bonk, and grinds 3 or more OSM benches and a curb.
+- Paving: the sidewalk already has the concrete slab scan with its joints (pbr look). No brick: the level has no historic district tag yet.
+- Not done: tree pits and bus stops. The sidewalks are 2 m wide (the default), so a tree pit leaves no room to walk, and the furniture query has no bus stops. Planters, benches, bike racks, bins, and lamps are as before.
+
+### Evidence and limits
+
+- Vitest: 850 tests pass (one full run had a 5 s timeout in `facade-kit.test.js` at a load average of 18; the test takes 3.2 s alone on this branch and 3.5 s on main).
+- `e2e/beltline.spec.js` and `e2e/phone-tier.spec.js` pass. `e2e/streets.spec.js` loads the high tier and the low tier with no console error and with the bench and curb ledges, and takes the pictures in `reports/streets/before/` (main: 4 intersections and a crosswalk) and `reports/streets/after/` (the same, and a sidewalk). The iso map is baked again (153 tiles).
+- Not verified: the median FPS gate (55). `npm run playtest:beltline` gave 15 FPS and 20 FPS at load averages of 19 to 22. The same harness on main, in a second worktree, did not load in 30 s at that load, so there is no comparison. Measure the gate again on a quiet machine.
+- The level setup (`createLevelEnv()`) takes about 400 ms, against about 210 ms on main: the sidewalk layout (about 100 ms), the medians, the junctions, and the ledges. Each one is computed once for each level object.

@@ -453,6 +453,12 @@ const GROUND_OF = {
   path: [1, 0.8],
   sidewalk: [1, 0.8],
   trail: [2, 0.7],
+  // The street decals (#138) get the asphalt scan, with less detail on the
+  // cast iron and the paint of a bike lane.
+  patchDark: [0, 0.8],
+  patchLight: [0, 0.8],
+  iron: [0, 0.4],
+  bike: [0, 0.5],
 };
 
 // The surface shader: a toon material whose art color (the vertex color of

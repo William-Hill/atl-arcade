@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { MARKING_COLORS, MARKING_SIZES, edgeLineOffset, medianSide, laneLineOffsets, mergeMarkings, roadMarkings } from "./markings.js";
+import { MARKING_COLORS, MARKING_SIZES, arrowShapes, edgeLineOffset, laneLayout, medianSide, laneLineOffsets, mergeMarkings, roadMarkings } from "./markings.js";
 
 const LEVEL = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../levels/beltline-eastside/level.json"), "utf8"));
 
@@ -25,9 +25,11 @@ describe("road markings", () => {
     // Two lines, each cut once at the cross street (the driveway does not cut it).
     expect(count(m, MARKING_COLORS.yellow)).toBe(4);
     for (let i = 0; i < m.positions.length; i += 3) {
-      // The paint is 2 cm over the street, the curb band 1.2 cm.
-      const curb = m.colors[i] === Math.fround(MARKING_COLORS.curb[0]);
-      expect(m.positions[i + 1]).toBeCloseTo(curb ? 0.042 : 0.05, 5);
+      // The paint is 2 cm over the street, the curb band 1.2 cm, the iron
+      // decals (manholes, drains) 1.6 cm, and the asphalt patches 0.7 cm.
+      const is = (k) => m.colors[i] === Math.fround(MARKING_COLORS[k][0]) && m.colors[i + 1] === Math.fround(MARKING_COLORS[k][1]);
+      const y = is("curb") ? 0.042 : is("iron") ? 0.046 : is("patchDark") || is("patchLight") ? 0.037 : 0.05;
+      expect(m.positions[i + 1]).toBeCloseTo(y, 5);
       // No line within the cross street.
       if (m.colors[i] === Math.fround(MARKING_COLORS.yellow[0])) expect(Math.abs(m.positions[i]) >= 4 + 2 - 1e-4 || Math.abs(m.positions[i + 2]) > 1).toBe(true);
     }
@@ -247,5 +249,88 @@ describe("marking cost on the BeltLine level", () => {
     // 8,416 triangles before the edge lines, lane lines, stop bars, and curb bands.
     expect(tris).toBeGreaterThan(12000);
     expect(tris).toBeLessThan(25000);
+  });
+});
+
+describe("lanes from the OSM tags (#138)", () => {
+  it("gives the Freedom Parkway carriageway 2 lanes, not 4", () => {
+    const L = laneLayout({ width: 14, lanes: 2, oneway: true }, true);
+    expect(L.forward).toBe(2);
+    expect(L.backward).toBe(0);
+    expect(L.lane).toBeCloseTo(MARKING_SIZES.laneMax, 6);
+    expect(L.lines).toHaveLength(1);
+    expect(L.center).toBeNull();
+    // The edge lines bound the 2 lanes, with a shoulder outside each.
+    expect(L.edges[1] - L.edges[0]).toBeCloseTo(2 * MARKING_SIZES.laneMax - MARKING_SIZES.edgeLine, 6);
+  });
+
+  it("splits a two-way street by lanes:forward and lanes:backward", () => {
+    const L = laneLayout({ width: 16.5, lanes: 5, lanesForward: 3, lanesBackward: 2 }, false);
+    expect(L.forward).toBe(3);
+    expect(L.backward).toBe(2);
+    expect(L.lines).toHaveLength(3);
+    // The center line is between the 2 backward lanes and the 3 forward lanes.
+    expect(L.center).toBeCloseTo(L.edges[0] - MARKING_SIZES.edgeLine / 2 + 2 * L.lane, 6);
+  });
+
+  it("puts a green bike lane inside the curb band on each tagged side", () => {
+    const L = laneLayout({ width: 14, lanes: 2, oneway: true, cycleway: "right" }, true);
+    expect(L.bikes).toEqual([{ offset: 7 - MARKING_SIZES.curb - MARKING_SIZES.bike / 2, width: MARKING_SIZES.bike }]);
+    expect(L.edges[1]).toBeLessThan(7 - MARKING_SIZES.curb - MARKING_SIZES.bike);
+    const q = marks([street("a", "trunk", 14, [[0, 0], [120, 0]], { lanes: 2, oneway: true, cycleway: "right" })]);
+    const bike = q.filter((x) => x.color === "bike");
+    expect(bike.length).toBe(1);
+    // The right of the +x direction is +z.
+    for (const z of bike[0].zs) expect(z).toBeGreaterThan(0);
+  });
+
+  it("keeps the old lane lines on a street with no lane tag", () => {
+    expect(laneLayout({ width: 14 }, false).lines.sort((a, b) => a - b)).toEqual([-3.5, 3.5]);
+  });
+});
+
+describe("turn arrows (#138)", () => {
+  it("make a straight, a left, and a right arrow", () => {
+    expect(arrowShapes("through")).toHaveLength(2);
+    expect(arrowShapes("left")).toHaveLength(3);
+    expect(arrowShapes("through;right")).toHaveLength(4);
+    expect(arrowShapes("none")).toHaveLength(0);
+    expect(arrowShapes("")).toHaveLength(0);
+    // A left arrow points to the left (+b).
+    expect(Math.max(...arrowShapes("left").flat().map(([, b]) => b))).toBeGreaterThan(1);
+  });
+
+  it("puts one arrow in each lane before the stop bar, pointing to the node", () => {
+    const q = marks([
+      street("a", "secondary", 14, [[-80, 0], [0, 0]], { name: "Main St NE", lanes: 2, oneway: true, turnLanes: "left|through;right" }),
+      street("b", "secondary", 12, [[0, -60], [0, 0], [0, 60]], { name: "Cross St NE" }),
+    ]);
+    // The arrow quads: white, short, and on street a (x < 0, |z| < 7).
+    // The crosswalk and the stop bar end 10.45 m from the node.
+    // A lane dash is 3 m long and 0.11 m wide; an arrow part is shorter or wider.
+    const span = (v) => Math.max(...v) - Math.min(...v);
+    const arrows = q.filter((x) => x.color === "white" && x.xs.every((v) => v < -10.6 && v > -40) && span(x.zs) < 1.5 && !(span(x.zs) < 0.12 && span(x.xs) > 2.9));
+    expect(arrows.length).toBeGreaterThan(4);
+    // The heads are before the crosswalk and the stop bar, near the node.
+    const xs = arrows.flatMap((x) => x.xs);
+    expect(Math.max(...xs)).toBeLessThan(-10.55 - MARKING_SIZES.arrowBack + 1e-3);
+    expect(Math.min(...xs)).toBeGreaterThan(-10.55 - MARKING_SIZES.arrowBack - 3.4 - 1e-3);
+    // Two lanes: the left lane (north, -z, for traffic to +x) and the right lane (+z).
+    expect(arrows.some((x) => x.zs.every((z) => z < 0))).toBe(true);
+    expect(arrows.some((x) => x.zs.every((z) => z > 0))).toBe(true);
+  });
+});
+
+describe("decals (#138)", () => {
+  it("put manholes and drains on a long street, at finite places, the same on each run", () => {
+    const strips = [
+      street("a", "secondary", 12, [[-200, 0], [0, 0], [200, 0]], { name: "Main St NE" }),
+      street("b", "residential", 8, [[0, -100], [0, 0], [0, 100]], { name: "Cross St NE" }),
+    ];
+    const q = marks(strips);
+    const iron = q.filter((x) => x.color === "iron");
+    expect(iron.length).toBeGreaterThan(8);
+    for (const x of iron) for (const v of [...x.xs, ...x.zs]) expect(Number.isFinite(v)).toBe(true);
+    expect(marks(strips)).toEqual(q);
   });
 });

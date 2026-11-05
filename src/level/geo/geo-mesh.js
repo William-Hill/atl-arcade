@@ -9,6 +9,9 @@ import { FACE, extrudeFootprint, flatPolygon, mergeMeshes, orientRing, placeTemp
 import { createGeoGroundSampler, surfaceTop } from "./geo-ground.js";
 import { BELT, STYLES, STYLE_INDEX, awningHeight, chooseStyle, hash32, seededRandom, wallColor } from "./styles.js";
 import { BRIDGE, bridgeDeck, buildingSpan, coarseTerrainOf, drapeMesh, liftMesh, parapetBlocked, terrainOf } from "./terrain.js";
+import { JOIN_LIFT, streetJunctions } from "./junctions.js";
+import { medianMesh, medianStrips } from "./medians.js";
+import { piecePoints, rampMesh, sidewalkLayout } from "./curbs.js";
 import { approachTrims, bridgeLayout, bridgeLayouts, densify, parapetRuns, ribbonEdges, slicePolyline, trimPolyline } from "./bridges.js";
 
 export const GEO_TILE = 125; // m. Small enough that the camera culls most of the draped terrain.
@@ -41,6 +44,15 @@ export const SURFACE_COLORS = {
   path: [0.8, 0.77, 0.7],
   sidewalk: [0.74, 0.74, 0.77],
   trail: [0.97, 0.8, 0.48],
+  // The street decals (markings.js, #138). Each one is its own color, so the
+  // surface shader gives it the asphalt scan and the asphalt albedo
+  // (render/geo-view.js GROUND_OF): asphalt patches a little darker and a
+  // little lighter than the street, cast iron (manholes and drains), and the
+  // green of a bike lane.
+  patchDark: [0.29, 0.3, 0.37],
+  patchLight: [0.39, 0.4, 0.48],
+  iron: [0.17, 0.17, 0.19],
+  bike: [0.3, 0.72, 0.45],
 };
 
 // Building wall colors: a warm, bright palette (Jet Set Radio style). The
@@ -163,7 +175,10 @@ export function streetWalls(ring, isStreet) {
 // level, to share one sampler between tests.
 export function streetTest(level, sample = createGeoGroundSampler(level)) {
   const stripKind = new Map((level.strips ?? []).map((s) => [s.id, s.kind]));
-  return (x, z) => STREET_KINDS.has(stripKind.get(sample(x, z)?.id));
+  return (x, z) => {
+    const id = sample(x, z)?.id;
+    return STREET_KINDS.has(stripKind.get(id)) || Boolean(id?.startsWith("junction:"));
+  };
 }
 
 // A test for a level: `blockedFor(id)(x, z)` is true when the point is in
@@ -572,7 +587,24 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
   // approach road mesh stops at the joint (bridges.js).
   const trims = terrain.flat ? new Map() : approachTrims(level.strips ?? []);
   const endDisks = terrain.flat ? new Set() : jointEnds(level);
+  // The streets: split and trimmed at the junctions, with one patch at each
+  // junction and a disk at each joint (junctions.js, #138).
+  const J = streetJunctions(level, { flat: terrain.flat });
+  const streetTopY = (level.strips ?? []).some((s) => s.kind === "street") ? surfaceTop(level, "street") : 0;
+  for (const p of J.pieces) add("surface", p.strip, drape(stripMesh(p.points, p.width, streetTopY, { bottom: 0, color: SURFACE_COLORS.street })));
+  for (const j of J.junctions) add("surface", { points: [[j.x, j.z]] }, drape(flatPolygon(j.ring, [], streetTopY + JOIN_LIFT, { color: SURFACE_COLORS.street })));
+  for (const j of J.joints) {
+    const ring = [];
+    for (let k = 0; k < 16; k += 1) ring.push([j.x + Math.cos((k / 16) * Math.PI * 2) * j.r, j.z + Math.sin((k / 16) * Math.PI * 2) * j.r]);
+    add("surface", { points: [[j.x, j.z]] }, drape(flatPolygon(ring, [], streetTopY, { color: SURFACE_COLORS.street })));
+  }
+  // The raised grass medians of the divided roads (medians.js).
+  if (level.surfaces?.sidewalk !== undefined) {
+    for (const m of medianStrips(level)) add("surface", m, drape(medianMesh(m, surfaceTop(level, "sidewalk"), { grass: SURFACE_COLORS.park, curb: SURFACE_COLORS.sidewalk })));
+  }
+  const walks = sidewalkLayout(level);
   for (const s of level.strips ?? []) {
+    if (s.kind === "street" && !(s.bridge && !terrain.flat)) continue;
     const top = surfaceTop(level, s.kind);
     const curb = s.kind === "sidewalk";
     if (s.bridge && !terrain.flat) {
@@ -584,7 +616,22 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     const trim = trims.get(s.id);
     const points = trimPolyline(s.points, trim);
     if (!points) continue;
-    const m = stripMesh(points, s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind] });
+    const lay = s.kind === "sidewalk" ? walks.get(s.id) : null;
+    let m;
+    if (lay) {
+      // A sidewalk: its pieces (cut where it crosses a street) and its curb
+      // ramps (curbs.js, #136). The approach trims of a bridge still apply.
+      m = { positions: [], indices: [], colors: [] };
+      const total = s.points.reduce((acc, p, i) => (i ? acc + Math.hypot(p[0] - s.points[i - 1][0], p[1] - s.points[i - 1][1]) : 0), 0);
+      const lo = trim?.start ?? 0;
+      const hi = total - (trim?.end ?? 0);
+      for (const [a, b] of lay.pieces) {
+        const r = [Math.max(a, lo), Math.min(b, hi)];
+        if (r[1] - r[0] < 0.05) continue;
+        stripMesh(piecePoints(s.points, r), s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind], mesh: m });
+      }
+      for (const r of lay.ramps) if (r.s0 >= lo && r.s1 <= hi) rampMesh(r, SURFACE_COLORS.sidewalk, 0, m);
+    } else m = stripMesh(points, s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind] });
     // Two strips that meet end to end near a bridge get a joint disk, as at
     // an inner point, so a turn at the meeting point leaves no wedge.
     for (const [cut, p] of [[trim?.start, s.points[0]], [trim?.end, s.points[s.points.length - 1]]]) {

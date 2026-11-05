@@ -17,6 +17,8 @@ import { BRICK_TONE, DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, FRAME_ROUGHNESS, GRO
 import { TREE_UNIFORMS, createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
 import { bakeTreeImpostors } from "./tree-impostors.js";
 import { getDracoLoader } from "./skater-model.js";
+import { facadeKitPlacements } from "../level/geo/facade-kit-glb.js";
+import { createFacadeKitView, loadFacadeKit } from "./facade-kit-view.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import stoneInfo from "../../assets/landmarks/textures/trim/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
@@ -998,7 +1000,9 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
 // `aprons: false` leaves out the concrete aprons of the shops (aprons.js).
 // `season` sets the tree colors: "spring", "summer" (the default), or "fall".
 // `look` picks the material set ("toon" or "pbr", src/render/look.js).
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer", look = "toon" } = {}) {
+// With `kitGlb` the pbr look loads the Blender facade kit (facade-kit-view.js)
+// into the depth tiles, and the procedural kit leaves out what it replaces.
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer", look = "toon", kitGlb = false } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -1036,7 +1040,20 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   // The facade kit (cornices, copings, belt courses, house roofs) joins the
   // render copy of its building tile in the same way.
   const shopBoards = [];
-  const kitParts = kit ? facadeKit(level, fronts, shopBoards) : { tiles: [], depthTiles: [], counts: {} };
+  const signList = kit ? shopSigns(level, fronts) : [];
+  const glbKit = kit && depth && kitGlb && look === "pbr" ? facadeKitPlacements(level, fronts, { signs: signList }) : null;
+  const kitParts = kit ? facadeKit(level, fronts, shopBoards, undefined, glbKit?.covers ?? null) : { tiles: [], depthTiles: [], counts: {} };
+  if (glbKit) shopBoards.push(...glbKit.boards);
+  // The GLB modules load after the level shows; facadeGlb.ready settles then.
+  const facadeGlb = { on: glbKit !== null, loaded: false, instances: glbKit?.instances ?? 0, tiles: glbKit?.tiles.size ?? 0, near: 0, lod1: 0, drawCalls: 0, triangles: 0, ready: Promise.resolve() };
+  let glbView = null;
+  if (glbKit) {
+    facadeGlb.ready = loadFacadeKit().then((nodes) => {
+      glbView = createFacadeKitView(nodes, glbKit.tiles, { depthDistance });
+      root.add(glbView.root);
+      facadeGlb.loaded = true;
+    });
+  }
   const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));
   for (const { material, tile, mesh } of meshes) {
     // A "claimed" mesh is the footprint of a landmark with claim: true —
@@ -1085,7 +1102,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   }
   const facadeDepth = { tiles: depthTiles.length, near: 0, nearTriangles: 0 };
   // The shop name boards from the OSM shop and amenity tags (issue #135).
-  const signs = kit ? createShopSigns(shopSigns(level, fronts), (params) => litMaterial(look, params, { gradientMap, roughness: 0.7, envLight: ENV_LIGHT.props })) : null;
+  const signs = kit ? createShopSigns(signList, (params) => litMaterial(look, params, { gradientMap, roughness: 0.7, envLight: ENV_LIGHT.props })) : null;
   if (signs) root.add(signs.group);
 
   // Kit props load after the level shows. All props are one batch (one
@@ -1145,6 +1162,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     // from the camera to the nearest far tile (Infinity with none).
     terrainLod,
     facadeDepth,
+    facadeGlb,
     shopSigns: signs ? { count: signs.count, names: signs.names } : { count: 0, names: [] },
     addProps,
     // Shows each prop at one level of detail by its distance from the
@@ -1178,6 +1196,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       }
       facadeDepth.near = near;
       facadeDepth.nearTriangles = nearTriangles;
+      if (glbView) {
+        glbView.update(cameraPosition);
+        Object.assign(facadeGlb, { near: glbView.info.near, lod1: glbView.info.lod1, drawCalls: glbView.info.drawCalls, triangles: glbView.info.triangles });
+      }
       if (signs) signs.update(cameraPosition);
       if (propBatch) {
         propBatch.update(cameraPosition);

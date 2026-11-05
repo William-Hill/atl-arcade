@@ -1,6 +1,7 @@
 // Placement of the facade kit (assets/facades/facade-kit.glb) on real
 // OSM/Overture footprints. Pure: no Three.js, no game state. The parent
-// session wires it in (see docs/facade-kit.md); nothing in src/ calls it yet.
+// game wires it in for the pbr look (src/level/geo/facade-kit-glb.js,
+// src/render/facade-kit-view.js; see docs/facade-kit.md).
 //
 // facadePlacements() returns instances { module, wall, position: [x, y, z],
 // rotationY, scale: [sx, sy, 1], tint } in game meters (+y up). The module
@@ -176,16 +177,20 @@ function edgeDistance(ring, x, z) {
 // of the building or null; mural: the building's muralWalls() entry
 // ({ edge, t0, t1, y0, y1 }) or null, kept clear like wallDepth() does;
 // seed: a stable integer (hash32(b.id)).
-export function facadePlacements({ ring, holes = [], style, base = 0, top, front = null, mural = null, seed = 1 }) {
+// floors: the floor count of the facade shader (styles.js floorCount(), which
+// follows the OSM level count); by default the nominal split below.
+export function facadePlacements({ ring, holes = [], style, base = 0, top, front = null, mural = null, seed = 1, floors: floorsIn = null }) {
   const out = [];
   if (!(ring?.length >= 3) || !(top > base)) return out;
   const rand = rng(seed);
   const height = top - base;
   // Same floor split as facadeKit()/extrudeFootprint(): whole floors, stretched to fit.
-  const floors = Math.max(1, Math.round(height / style.floorHeight));
+  const floors = floorsIn ?? Math.max(1, Math.round(height / style.floorHeight));
   const floorH = height / floors;
-  const add = (module, wall, w, a, y, d, sx = 1, sy = 1, tint = null) => {
-    out.push({ module, wall: w, position: [w.o[0] + w.t[0] * a + w.n[0] * d, y, w.o[1] + w.t[1] * a + w.n[1] * d], rotationY: wallYaw(w.t), scale: [sx, sy, 1], tint, wallIndex: wall });
+  // `at` is the slot on the wall grid ({ bay, floor } or { line }), so the
+  // game can turn off the procedural part the module replaces.
+  const add = (module, wall, w, a, y, d, sx = 1, sy = 1, tint = null, at = null) => {
+    out.push({ module, wall: w, position: [w.o[0] + w.t[0] * a + w.n[0] * d, y, w.o[1] + w.t[1] * a + w.n[1] * d], rotationY: wallYaw(w.t), scale: [sx, sy, 1], tint, wallIndex: wall, ...at });
   };
   const fronts = new Set(front && front.edge >= 0 ? [front.edge, ...(front.wraps ?? [])] : []);
   const shop = style.storefront && fronts.size > 0;
@@ -215,12 +220,14 @@ export function facadePlacements({ ring, holes = [], style, base = 0, top, front
       const k = storefrontFor(wOpen);
       const sx = wOpen / MODULES[`storefront_glass_${k}`][0];
       const sy = (SIGN_Y0 * floorH - 0.04) / MODULES[`storefront_glass_${k}`][1];
-      const door = Math.floor(bays / 2);
+      // The door bay of frontEdges() (the bay nearest the street, as
+      // doorBay() in facade-kit.js), else the center bay.
+      const door = Number.isInteger(front.door) && front.door >= 0 && front.door < bays ? front.door : Math.floor(bays / 2);
       for (const b of shopBays) {
         const a = (b + 0.5) * bl;
         if (onMural(i, a - bl / 2, a + bl / 2, base, base + floorH)) continue;
-        if (inRange(sx, SCALE.storefront) && inRange(sy, SCALE.storefront)) add(`storefront_${b === door && i === front.edge ? "door" : "glass"}_${k}`, i, w, a, base, 0, sx, sy);
-        if (b % 2 === 0 || i !== front.edge) add("trim_sign_board", i, w, a, base + SIGN_Y0 * floorH, 0.07, 1, 1, "trim");
+        if (inRange(sx, SCALE.storefront) && inRange(sy, SCALE.storefront)) add(`storefront_${b === door && i === front.edge ? "door" : "glass"}_${k}`, i, w, a, base, 0, sx, sy, null, { bay: b, floor: 0 });
+        if (b % 2 === 0 || i !== front.edge) add("trim_sign_board", i, w, a, base + SIGN_Y0 * floorH, 0.07, 1, 1, "trim", { bay: b });
         const awn = i === front.edge && (style.awnings ?? 0) > 0 && rand() < Math.max(style.awnings, 0.5);
         const asx = wOpen / MODULES.awning_fabric[0];
         if (awn && inRange(asx, SCALE.awning)) {
@@ -228,7 +235,7 @@ export function facadePlacements({ ring, holes = [], style, base = 0, top, front
           add(metal ? "awning_metal" : "awning_fabric", i, w, a, base + SIGN_Y0 * floorH - 0.02, 0, asx, 1, metal ? null : "awning");
         }
       }
-      for (let b = 1; b < bays; b += 1) if ((shopBays.includes(b) || shopBays.includes(b - 1)) && !onMural(i, b * bl - 0.2, b * bl + 0.2, base, base + floorH)) add("trim_pilaster", i, w, b * bl, base, 0, 1, floorH - 0.14);
+      for (let b = 1; b < bays; b += 1) if ((shopBays.includes(b) || shopBays.includes(b - 1)) && !onMural(i, b * bl - 0.2, b * bl + 0.2, base, base + floorH)) add("trim_pilaster", i, w, b * bl, base, 0, 1, floorH - 0.14, null, { line: b });
       if (floors >= 2) run(out, "belt_course_segment", i, w, base + floorH - 0.13, add);
     }
 
@@ -250,7 +257,7 @@ export function facadePlacements({ ring, holes = [], style, base = 0, top, front
           if (b === fireBay && f >= 1) continue;
           // The frame's own bounds, as wallDepth() tests the sill's.
           if (onMural(i, a - (sx * mw) / 2, a + (sx * mw) / 2, yf + yOff, yf + yOff + sy * mh)) continue;
-          if (inRange(sx, SCALE.window) && inRange(sy, SCALE.window)) add(windowModule, i, w, a, yf + yOff, 0, sx, sy);
+          if (inRange(sx, SCALE.window) && inRange(sy, SCALE.window)) add(windowModule, i, w, a, yf + yOff, 0, sx, sy, null, { bay: b, floor: f });
           const r = rand();
           const bal = BALCONY[style.id];
           const bs = bal ? Math.min(1.3, bl / MODULES[bal][0]) : 1;

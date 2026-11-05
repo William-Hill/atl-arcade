@@ -193,7 +193,7 @@ if (params.get("dev") === "1" || params.get("debug") === "1") document.body.clas
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: params.get("kitglb") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
@@ -903,6 +903,10 @@ window.__atl = {
     },
     get facadeDepth() {
       return geo && levelView.facadeDepth ? { ...levelView.facadeDepth } : null;
+    },
+    // The Blender facade kit of the pbr look (?kitglb=0 leaves it out).
+    get facadeGlb() {
+      return geo && levelView.facadeGlb ? { ...levelView.facadeGlb } : null;
     },
     get landmarks() {
       return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null } : null;

@@ -117,3 +117,15 @@ gives an edge. The paint pass shades the mortar grooves into the color.
 
 `--size 1024` halves the texel density and brings the GPU cost back to
 5.6 MB, if a lower tier ever needs the painted atlas.
+
+Measured on the four shot cameras (`window.__atl.rendererInfo`, SwiftShader,
+`docs/murals/shots-before.json` / `shots-after.json`): calls, triangles,
+textures, and geometries are identical BEFORE and AFTER (for example
+w887718742: 240 calls, 844,323 triangles, 38 textures, 106 geometries).
+
+## Shots
+
+`node scripts/assets/murals-shots.mjs --tag before` on a317613 and
+`--tag after` on this branch take the same cameras; the labeled pairs are
+`docs/murals/BEFORE-AFTER-*.jpg`, the designs are in
+`docs/murals/contact-sheet.jpg`.

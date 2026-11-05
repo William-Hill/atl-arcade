@@ -6,7 +6,8 @@
   "source": "scripts/blender/landmarks.py: footprint walls with bays of recessed windows, piers, belts, cornice, parapet, roof, and props, all from code. No photo pixels, scans of the real building, mesh extraction, or logos.",
   "prompt": "None. The script and sites.json are the full recipe.",
   "credits": "No paid generation credits (Meshy not used).",
-  "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_*, lm_fence_color, lm_far_pcm_color: painted in code by landmarks.py.",
+  "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_* (incl. lm_window_emit, the night glow), lm_fence_color, lm_far_pcm_*: painted in code by landmarks.py. TEXCOORD_1 u is the per-window light key.",
+  "facts": null,
   "references": [
     {
       "title": "Gathering space beneath Freedom Parkway along the Atlanta BeltLine Eastside Trail",
@@ -47,12 +48,12 @@
     "lod0": 7706,
     "lod1": 3406
   },
-  "bytes": 169328,
+  "bytes": 151876,
   "textureImages": {
     "lm_concrete_color": "512x512",
     "lm_fence_color": "128x128",
     "lm_trim_normal": "512x512",
-    "lm_trim_rough": "512x512"
+    "lm_trim_rough": "256x256"
   },
-  "gpuTextureBytes": 4281685
+  "gpuTextureBytes": 3233109
 }

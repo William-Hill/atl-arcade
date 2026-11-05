@@ -1,12 +1,13 @@
 {
   "asset": "new-realm-brewing.glb: procedural facsimile of New Realm Brewing for the beltline-eastside level, one node per LOD (lod0, lod1), shared materials and tiling textures.",
-  "date": "2026-11-04",
+  "date": "2026-11-05",
   "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco",
   "command": "blender -b -P scripts/blender/landmarks.py -- --only new-realm-brewing",
   "source": "scripts/blender/landmarks.py: footprint walls with bays of recessed windows, piers, belts, cornice, parapet, roof, and props, all from code. No photo pixels, scans of the real building, mesh extraction, or logos.",
   "prompt": "None. The script and sites.json are the full recipe.",
   "credits": "No paid generation credits (Meshy not used).",
-  "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_*, lm_fence_color, lm_far_pcm_color: painted in code by landmarks.py.",
+  "textures": "lm_brick_*, lm_trim_*: the CC0 Poly Haven scans in assets/landmarks/textures/ (see its provenance.json), recolored in code for the buff brick and concrete; lm_window_* (incl. lm_window_emit, the night glow), lm_fence_color, lm_far_pcm_*: painted in code by landmarks.py. TEXCOORD_1 u is the per-window light key.",
+  "facts": null,
   "references": [],
   "sign": "BREW HALL (generic)",
   "data": {
@@ -34,21 +35,22 @@
     140
   ],
   "triangles": {
-    "lod0": 2336,
+    "lod0": 2352,
     "lod1": 529
   },
-  "bytes": 510120,
+  "bytes": 421144,
   "textureImages": {
-    "lm_brick_color": "512x512",
+    "lm_brick_light_color": "512x512",
     "lm_brick_normal": "512x512",
-    "lm_brick_rough": "512x512",
+    "lm_brick_rough": "256x256",
     "lm_concrete_color": "512x512",
     "lm_trim_color": "512x512",
     "lm_trim_normal": "512x512",
-    "lm_trim_rough": "512x512",
-    "lm_window_color": "1024x1024",
+    "lm_trim_rough": "256x256",
+    "lm_window_color": "512x512",
+    "lm_window_emit": "256x256",
     "lm_window_normal": "512x512",
-    "lm_window_rough": "512x512"
+    "lm_window_rough": "256x256"
   },
-  "gpuTextureBytes": 18175317
+  "gpuTextureBytes": 11184810
 }

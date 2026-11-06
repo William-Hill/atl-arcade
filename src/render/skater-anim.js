@@ -39,6 +39,7 @@ export const CLIPS = {
   dance_swagsurf: { tempo: true },
   dance_snaplean: { tempo: true },
   dance_crisscross: { tempo: true },
+  dance_smoothquad: { tempo: true },
   dance_spin: { tempo: true },
   dance_sitspin: { tempo: true },
 };

@@ -1,7 +1,8 @@
 import * as THREE from "three";
 
-// Renders one object as a white silhouette on black into a small target and
-// returns the mask (1 byte per pixel). The camera sits in front of the
+// Renders the meshes of one object as a white silhouette on black into a
+// small target and returns the mask (1 byte per pixel). Other meshes under
+// the root (outline hulls, skates) keep their own material. The camera sits in front of the
 // object, in its local frame: the skater faces local +x.
 export function createSilhouette(renderer, size = 96) {
   const target = new THREE.WebGLRenderTarget(size, size);
@@ -12,11 +13,12 @@ export function createSilhouette(renderer, size = 96) {
   const look = new THREE.Vector3();
   const clear = new THREE.Color();
 
-  return function render(root, mesh) {
+  return function render(root, meshes) {
+    const list = Array.isArray(meshes) ? meshes : [meshes];
     root.updateMatrixWorld(true);
     // The renderer updates a skeleton once per frame. This render can come
     // after the main render in the same frame, so update the bones here.
-    if (mesh.skeleton) mesh.skeleton.update();
+    for (const mesh of list) if (mesh.skeleton) mesh.skeleton.update();
     eye.set(3.4, 0.9, 0).applyMatrix4(root.matrixWorld);
     look.set(0, 0.85, 0).applyMatrix4(root.matrixWorld);
     camera.position.copy(eye);
@@ -24,12 +26,11 @@ export function createSilhouette(renderer, size = 96) {
     camera.lookAt(look);
     camera.updateMatrixWorld(true);
 
-    const material = mesh.material;
-    const castShadow = mesh.castShadow;
+    const materials = list.map((mesh) => mesh.material);
     renderer.getClearColor(clear);
     const alpha = renderer.getClearAlpha();
     const prevTarget = renderer.getRenderTarget();
-    mesh.material = white;
+    for (const mesh of list) mesh.material = white;
     renderer.setClearColor(0x000000, 1);
     renderer.setRenderTarget(target);
     renderer.clear();
@@ -37,8 +38,7 @@ export function createSilhouette(renderer, size = 96) {
     renderer.readRenderTargetPixels(target, 0, 0, size, size, pixels);
     renderer.setRenderTarget(prevTarget);
     renderer.setClearColor(clear, alpha);
-    mesh.material = material;
-    mesh.castShadow = castShadow;
+    list.forEach((mesh, i) => (mesh.material = materials[i]));
 
     const mask = new Uint8Array(size * size);
     for (let i = 0; i < mask.length; i += 1) mask[i] = pixels[i * 4] > 127 ? 1 : 0;

@@ -1196,6 +1196,14 @@ window.__atl = {
         get drawCalls() {
           return carView.drawCalls;
         },
+        // The draw calls of the lamp layer (lamp quads and headlight pools,
+        // 0 to 2) and of the GLB cars: drawCalls minus both is the kit body.
+        get lampCalls() {
+          return carView.lamps ? carView.lamps.drawCalls : 0;
+        },
+        get modelCalls() {
+          return carView.models ? carView.models.drawCalls : 0;
+        },
         get drawn() {
           return carView.info.drawn;
         },
@@ -1375,10 +1383,11 @@ window.__atl = {
       skaterView.freezePose(frozen);
     },
     // The shader program key of the skater material ("skater-face",
-    // "skater-toon-rim", or both).
+    // "skater-toon-rim", or both): the head material when the skater has
+    // face decals.
     get materialKey() {
       const m = skaterView.model;
-      return m ? m.skinnedMesh.material.customProgramCacheKey() : null;
+      return m ? (m.face?.meshes[0] ?? m.skinnedMesh).material.customProgramCacheKey() : null;
     },
     // The model yaw offset: PI when the skater rides backward.
     get facing() {
@@ -1387,14 +1396,14 @@ window.__atl = {
     // The skater mask from a camera in front of it (for the T-pose check).
     silhouette() {
       const m = skaterView.model;
-      return m ? Array.from(silhouette(skaterView.group, m.skinnedMesh)) : null;
+      return m ? Array.from(silhouette(skaterView.group, m.skinnedMeshes)) : null;
     },
     // The same mask with the skeleton in the bind pose (the T-pose).
     tposeSilhouette() {
       const m = skaterView.model;
       if (!m) return null;
       m.skinnedMesh.skeleton.pose();
-      const mask = Array.from(silhouette(skaterView.group, m.skinnedMesh));
+      const mask = Array.from(silhouette(skaterView.group, m.skinnedMeshes));
       skaterView.sync(skater, 0);
       return mask;
     },

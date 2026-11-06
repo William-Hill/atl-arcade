@@ -70,11 +70,32 @@ async function loadDecal(url) {
   return tex;
 }
 
-// Adds the face decal to the mesh material. Returns { set(eyes, mouth),
-// eyes, mouth }, or null when the skater has no face decals.
-export async function attachFace(mesh, name = "nia") {
+// Pure: true when the geometry has a front vertex (z > 0) inside one of the
+// rects [x0, x1, y0, y1] (bind-pose meters).
+export function coversRect(position, rects) {
+  for (let i = 0; i < position.count; i += 1) {
+    const z = position.getZ(i);
+    if (z <= 0) continue;
+    const x = position.getX(i);
+    const y = position.getY(i);
+    for (const [x0, x1, y0, y1] of rects) if (x >= x0 && x <= x1 && y >= y0 && y <= y1) return true;
+  }
+  return false;
+}
+
+// Adds the face decal to the materials of the meshes. A glTF mesh with many
+// primitives loads as many meshes (one per material, #167), so the decal
+// goes to each mesh that has front vertices under the eye or mouth rect: the
+// head, and the skin under the mouth. Accepts one mesh or an array.
+// Returns { set(eyes, mouth), eyes, mouth, meshes }, or null when the skater
+// has no face decals.
+export async function attachFace(meshes, name = "nia") {
   const spec = FACE_DECALS[name];
   if (!spec) return null;
+  const list = Array.isArray(meshes) ? meshes : [meshes];
+  const under = list.filter((m) => coversRect(m.geometry.attributes.position, [spec.eyes.rect, spec.mouth.rect]));
+  // With no mesh under the rects, the first mesh gets the decal (as before #167).
+  const targets = under.length > 0 ? under : list.slice(0, 1);
   const [eyesTex, mouthTex] = await Promise.all([loadDecal(spec.eyes.url), loadDecal(spec.mouth.url)]);
   const uniforms = {
     uFaceEyes: { value: eyesTex },
@@ -84,22 +105,24 @@ export async function attachFace(mesh, name = "nia") {
     uFaceCells: { value: new THREE.Vector2(spec.eyes.states.length, spec.mouth.states.length) },
     uFaceState: { value: new THREE.Vector2(0, 0) },
   };
-  const material = mesh.material.clone();
-  material.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, uniforms);
-    shader.vertexShader = DECL_VERTEX + shader.vertexShader
-      .replace("#include <beginnormal_vertex>", "#include <beginnormal_vertex>\nvFaceNz = objectNormal.z;")
-      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFacePos = position;");
-    shader.fragmentShader = DECL_FRAGMENT + shader.fragmentShader
-      .replace("#include <map_fragment>", `#include <map_fragment>\n${APPLY_FRAGMENT}`)
-      .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>\n${APPLY_ROUGHNESS}`)
-      .replace("#include <metalnessmap_fragment>", `#include <metalnessmap_fragment>\n${APPLY_METALNESS}`)
-      .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>\n${APPLY_NORMAL}`);
-  };
-  material.customProgramCacheKey = () => "skater-face";
-  mesh.material = material;
+  for (const mesh of targets) {
+    const material = mesh.material.clone();
+    material.onBeforeCompile = (shader) => {
+      Object.assign(shader.uniforms, uniforms);
+      shader.vertexShader = DECL_VERTEX + shader.vertexShader
+        .replace("#include <beginnormal_vertex>", "#include <beginnormal_vertex>\nvFaceNz = objectNormal.z;")
+        .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFacePos = position;");
+      shader.fragmentShader = DECL_FRAGMENT + shader.fragmentShader
+        .replace("#include <map_fragment>", `#include <map_fragment>\n${APPLY_FRAGMENT}`)
+        .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>\n${APPLY_ROUGHNESS}`)
+        .replace("#include <metalnessmap_fragment>", `#include <metalnessmap_fragment>\n${APPLY_METALNESS}`)
+        .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>\n${APPLY_NORMAL}`);
+    };
+    material.customProgramCacheKey = () => "skater-face";
+    mesh.material = material;
+  }
 
-  const face = { eyes: spec.eyes.states[0], mouth: spec.mouth.states[0] };
+  const face = { eyes: spec.eyes.states[0], mouth: spec.mouth.states[0], meshes: targets };
   face.set = (eyes, mouth) => {
     const e = spec.eyes.states.indexOf(eyes);
     const m = spec.mouth.states.indexOf(mouth);

@@ -234,7 +234,7 @@ User approval, the full clip rebuild, and game verification remain open.
 
 ## Runtime v2: Marcus hands, knee pads, and wristbands (#168)
 
-`skater_runtime.py` reads `raw/runtime-v1` and writes `raw/runtime-v2` and the runtime GLB.
+`skater_runtime.py` reads `raw/forward-v2` and writes `raw/runtime-v2` and the runtime GLB. (In #168 it read `raw/runtime-v1`.)
 For Marcus, it applies three corrections before the export:
 
 1. `skater_hands.py` moves the 40 finger joints onto the hand mesh.
@@ -279,3 +279,54 @@ Limits:
   rotate each finger about the armature forward axis. The splayed pinky
   turns partly to the side in a fist. The clip rebuild (#170) corrects the
   curl axis.
+
+## Runtime v2: all clips on the v2 bodies (#170)
+
+Runtime v1 appended 22 clips keyed on the old review rigs. The knees of
+those clips pointed up to 178 degrees away from forward on Marcus, and Nia's
+knees came within 6 mm of each other. `skater_runtime.py` now drops those
+clips and keys the 22 clips of `nia_clips.py` on the v2 body:
+
+- It keeps `push` and `coast` from `raw/forward-v2`.
+- It calibrates the knee pole angle of each leg on a bent idle pose.
+- The knee pole turns with the foot yaw. A `pole` key in a pose turns the
+  knees with the body instead.
+- At each leg key, it turns the pole about the hip-ankle axis until the knee
+  bend points over the skate. One pole angle does not fit every leg shape.
+- `at()` foot x values scale with the hip width (`stance` in SKATER_CFG).
+- A fist curls each finger about its own axis (`CURL`).
+
+Build both skaters:
+
+```sh
+BLENDER=/Applications/Blender.app/Contents/MacOS/Blender
+FBX=assets/skaters/nia/raw/tripo-motion-v1/tripo_convert_8a663486-9228-4e65-abc7-9c14db3df2dd.fbx
+for n in nia marcus; do
+  R=assets/skaters/$n/raw/runtime-v2
+  "$BLENDER" -b --factory-startup --python-exit-code 1 \
+    -P scripts/blender/skater_runtime.py -- --name $n
+  "$BLENDER" -b --factory-startup --python-exit-code 1 \
+    -P scripts/blender/skater_motion_retarget.py -- --name $n --fbx "$FBX" \
+    --out $R --base $R/$n-runtime.blend --preserve-actions \
+    --clip dance_smoothquad --glb assets/skaters/$n/skater.glb --blend $R/$n-runtime.blend
+  "$BLENDER" -b --factory-startup --python-exit-code 1 \
+    -P scripts/blender/skater_texture_variant.py -- \
+    --in $R/$n-runtime.blend --out assets/skaters/$n/skater-1024.glb
+done
+```
+
+Nia's .blend links its textures from `raw/nia-tripo-pbr/`. Copy that
+folder with the other raw files, or the GLB has no textures (about 1 MB).
+
+Both skaters now have 25 clips, with `dance_smoothquad` from the approved
+Tripo smooth quad dance. Marcus did not have this clip before, and the
+contact-sheet test failed on it.
+
+Knee check (`skater_motion_audit.py`, every frame): 20 of 25 clips pass for
+each skater. The audit cannot measure `air_liukang`: the kick leg stays
+straight, so it has no bend direction. The failures are deliberate leg shapes:
+`dance_crisscross` and `grind_unity` cross the legs, `grind_frontside` turns
+the body 90 degrees to the rail, and Marcus's `dance_sitspin` extends one
+leg nearly straight. Nia's `ride_back` swizzle brings the knees to 0.083 m
+and fails the 0.1 m limit. The check does not assess artistic quality.
+Real skaters must review the move set before release.

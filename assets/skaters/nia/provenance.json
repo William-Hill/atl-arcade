@@ -1,6 +1,6 @@
 {
   "asset": "Nia \"Sway\" Ellis, the first skater (M1-01, #11)",
-  "date": "2026-10-31",
+  "date": "2026-11-05",
   "status": "shipped review candidate: corrected PBR body and forward motion, pending PR review",
   "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
   "source_image": "docs/characters/concept/nia/nia-tpose-front.png (see docs/characters/concept/nia/provenance.json)",
@@ -106,6 +106,29 @@
         "No new generation and no credits. The mesh, the rig, the joint names, and the 24 clips are the same as skater.glb (src/render/skater-model.test.js checks them)."
       ],
       "result": "assets/skaters/nia/skater-1024.glb, 1,598,396 bytes (skater.glb is 2,735,736 bytes), the same triangles, joints, and clips"
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_runtime.py (nia_clips.py with the forward IK), skater_motion_retarget.py, skater_texture_variant.py",
+      "date": "2026-11-05",
+      "issue": "#170",
+      "prompt": "Rebuild all clips on the v2 body. Drop the legacy clip transfer. Use the knee-pole and twist fixes of skater_forward_motion.py for every clip.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_runtime.py -- --name nia; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_motion_retarget.py -- --name nia --fbx assets/skaters/nia/raw/tripo-motion-v1/tripo_convert_8a663486-9228-4e65-abc7-9c14db3df2dd.fbx --out assets/skaters/nia/raw/runtime-v2 --base assets/skaters/nia/raw/runtime-v2/nia-runtime.blend --preserve-actions --clip dance_smoothquad --glb assets/skaters/nia/skater.glb --blend assets/skaters/nia/raw/runtime-v2/nia-runtime.blend; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_texture_variant.py -- --in assets/skaters/nia/raw/runtime-v2/nia-runtime.blend --out assets/skaters/nia/skater-1024.glb",
+      "actions": [
+        "Started from raw/forward-v2/nia-forward.blend: the corrected v2 body with the reviewed push and coast clips.",
+        "Removed the 22 legacy clips that runtime v1 appended from the old review rig.",
+        "Keyed 22 clips of nia_clips.py on the v2 rig: calibrated knee pole angles {'L': 24, 'R': -10}, knee poles that turn with the foot yaw, quaternion foot targets, and at() foot x scaled by hip width (stance 1.000).",
+        "At each of 240 leg keys, turned the knee pole about the hip-ankle axis until the knee bend points over the skate (largest residual 0.01 degrees).",
+        "Fists curl each finger about its own axis (finger direction crossed with the palm normal).",
+        "Retargeted dance_smoothquad from the approved Tripo smooth quad dance (no new credits). Same source as runtime v1."
+      ],
+      "result": "assets/skaters/nia/skater.glb, 6,306,628 bytes; skater-1024.glb, 5,420,932 bytes; 65 joints, 25 clips",
+      "local_files_not_in_git": [
+        "assets/skaters/nia/raw/runtime-v2/nia-runtime.blend",
+        "assets/skaters/nia/raw/runtime-v2/build.json",
+        "assets/skaters/nia/raw/runtime-v2/motion-audit.json",
+        "assets/skaters/nia/raw/runtime-v2/rig-audit.json"
+      ],
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 115,
@@ -113,13 +136,13 @@
   "tripo_credits_after": 2885,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2639720,
+  "file_size_bytes": 6306628,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
-  "animations": 24,
+  "animations": 25,
   "phone_variant": {
     "file": "assets/skaters/nia/skater-1024.glb",
-    "file_size_bytes": 1598396,
+    "file_size_bytes": 5420932,
     "base_color": "1024x1024 JPEG",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
   },
@@ -128,8 +151,8 @@
     "triangles": 23472,
     "joints": 65,
     "clips": 25,
-    "source": "assets/skaters/nia/raw/forward-v2 (ignored build source)",
-    "method": "Keep corrected push/coast; append the existing clip set; preserve every action for glTF export.",
+    "source": "assets/skaters/nia/raw/forward-v2 + raw/runtime-v2 (ignored build sources)",
+    "method": "Keep the forward push and coast. Key the other 22 clips on the v2 rig with the forward IK. Retarget dance_smoothquad from the approved Tripo dance.",
     "added_clips": [
       "dance_smoothquad"
     ],

@@ -86,10 +86,18 @@ const wasmGzip = {
   },
 };
 
-const server = await preview({ plugins: [wasmGzip], build: { outDir: dist }, preview: { port, strictPort: true }, logLevel: "error" });
-const base = `http://localhost:${port}`;
+const server = await preview({ plugins: [wasmGzip], build: { outDir: dist }, preview: { host: "127.0.0.1", port, strictPort: true }, logLevel: "error" });
+// Localhost only: the server is not open to the network.
+const base = `http://127.0.0.1:${port}`;
 const launchArgs = ["--no-sandbox", "--disable-dev-shm-usage", "--autoplay-policy=no-user-gesture-required", ...(gpu ? ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] : ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"])];
-const browser = await chromium.launch({ headless: true, args: launchArgs });
+// Closes the server when the browser does not start (a missing Chromium).
+let browser;
+try {
+  browser = await chromium.launch({ headless: true, args: launchArgs });
+} catch (e) {
+  await new Promise((r) => server.httpServer.close(r));
+  throw e;
+}
 
 // --append adds the runs to the ones already in --out (a second pass).
 const runs = args.includes("--append") && out && existsSync(resolve(ROOT, out)) ? JSON.parse(readFileSync(resolve(ROOT, out), "utf8")).runs : [];
@@ -244,6 +252,9 @@ if (budgetPath) {
   // hold only for the ride of the baseline (15 s).
   if (seconds !== 15) console.warn(`the budget is for a 15 s ride; this ride is ${seconds} s, so the draw calls and triangles come from another place`);
   const budget = JSON.parse(readFileSync(resolve(ROOT, budgetPath), "utf8"));
+  // A ride stopped by --max-wall reads the draw calls and triangles at
+  // another place on the trail, so its caps compare with less accuracy.
+  for (const r of runs) if (!r.finished) console.warn(`${r.quality}/${r.look} run ${r.run}: the ride stopped after ${r.wallSeconds} s of wall time; the draw calls and triangles come from where it stopped`);
   const over = checkBudget(runs, budget);
   for (const o of over) console.error(`OVER BUDGET ${o}`);
   if (over.length) process.exit(1);

@@ -13,7 +13,9 @@
     "e2e": "playwright test",
     "playtest": "node scripts/playtest.mjs",
     "playtest:beltline": "node scripts/playtest.mjs --level beltline-eastside",
-    "loadcheck": "node scripts/load-check.mjs"
+    "loadcheck": "node scripts/load-check.mjs",
+    "perf": "node scripts/perf.mjs --out docs/perf/baseline.json --md docs/perf/baseline.md",
+    "perf:check": "node scripts/perf.mjs --out reports/perf/perf.json --budget docs/perf/budget.json"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

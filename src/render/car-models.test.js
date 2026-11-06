@@ -4,6 +4,8 @@ import {
   CAR_LOD_DISTANCES,
   MAX_STEER,
   carLodFor,
+  lampLayout,
+  lampLevels,
   createCarModelView,
   nearestLevel,
   fitScale,
@@ -218,5 +220,65 @@ describe("car models", () => {
     view.beginFrame();
     expect(view.set(0, car, 0, 2)).toBe(true);
     expect(view.info.lods).toEqual([0, 1, 0]);
+  });
+});
+
+describe("car lamps", () => {
+  it("puts two head lamps on the front, two tail lamps on the back, and a signal at each corner", () => {
+    const size = CAR_SIZE.sedan;
+    const L = lampLayout(size);
+    const of = (type) => L.filter((l) => l.type === type);
+    expect(of("head")).toHaveLength(2);
+    expect(of("tail")).toHaveLength(2);
+    expect(of("signal")).toHaveLength(4);
+    for (const l of of("head")) expect(l.x).toBeGreaterThan(size.length / 2);
+    for (const l of of("tail")) expect(l.x).toBeLessThan(-size.length / 2);
+    for (const l of L) {
+      expect(Math.abs(l.z)).toBeLessThan(size.width / 2);
+      expect(l.y).toBeGreaterThan(0.3);
+      expect(l.y).toBeLessThan(size.height);
+      // Left of the driver (side +1) is -z.
+      expect(Math.sign(l.z)).toBe(-l.side);
+    }
+  });
+
+  it("keeps the lamps of tall vehicles at bumper height", () => {
+    for (const kind of ["bus", "van", "box_truck"])
+      for (const l of lampLayout(CAR_SIZE[kind])) expect(l.y).toBeLessThan(1);
+  });
+
+  it("turns the headlights up at night with the weather window factor", () => {
+    expect(lampLevels({ lit: 0 }).head).toBeLessThan(0.2);
+    expect(lampLevels({ lit: 1 }).head).toBe(1);
+    expect(lampLevels({ lit: 0.5 }).head).toBeGreaterThan(
+      lampLevels({ lit: 0.2 }).head,
+    );
+    expect(lampLevels({ lit: 0 }).beam).toBe(0);
+    expect(lampLevels({ lit: 1 }).beam).toBe(1);
+  });
+
+  it("brightens the brake lamps on deceleration over the night tail glow", () => {
+    const night = lampLevels({ lit: 1 }).tail;
+    expect(lampLevels({ lit: 1, brake: 0.5 }).tail).toBeGreaterThan(night);
+    expect(lampLevels({ lit: 1, brake: 1 }).tail).toBe(1);
+    expect(lampLevels({ lit: 0, brake: 1 }).tail).toBe(1);
+    expect(lampLevels({ lit: 0 }).tail).toBeLessThan(0.2);
+  });
+
+  it("blinks the signal on its side only, half the time", () => {
+    let left = 0;
+    let right = 0;
+    for (let i = 0; i < 1000; i += 1) {
+      const lv = lampLevels({ signal: 1, time: i / 100 });
+      left += lv.left;
+      right += lv.right;
+    }
+    expect(right).toBe(0);
+    expect(left / 1000).toBeCloseTo(0.5, 1);
+    expect(lampLevels({ signal: -1, time: 0 }).right).toBe(1);
+    expect(lampLevels({ signal: 0, time: 0 })).toMatchObject({
+      left: 0,
+      right: 0,
+    });
   });
 });

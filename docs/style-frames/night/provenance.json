@@ -3,6 +3,7 @@
     {
       "file": "a-today.jpg",
       "title": "A: today, street 22:30",
+      "lookAt": "blue-gray, no light on the ground",
       "subject": "night",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
@@ -22,6 +23,7 @@
         },
         "tune": null,
         "paintover": null,
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -46,21 +48,22 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
       "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
     },
     {
-      "file": "b-bluehour.jpg",
-      "title": "B: blue hour 21:00, more bloom",
+      "file": "b-neon.jpg",
+      "title": "B: NEON NIGHT",
+      "lookAt": "purple sky, magenta/cyan sign glow, lamp pools",
       "subject": "night",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
-      "method": "in-game capture (no image model)",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"neon\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "method": "in-game capture + scripted paintover (no image model)",
       "prompt": null,
       "settings": {
-        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=21.0&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-80%2C2.5%2C640%2C-120%2C5%2C615",
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=22.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-80%2C2.5%2C640%2C-120%2C5%2C615",
         "cam": [
           -80,
           2.5,
@@ -70,14 +73,11 @@
           615
         ],
         "params": {
-          "time": "21.0"
+          "time": "22.5"
         },
-        "tune": {
-          "bloom": {
-            "strength": 0.5
-          }
-        },
-        "paintover": null,
+        "tune": null,
+        "paintover": "neon",
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -85,65 +85,8 @@
         "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
         "build": "scripts/art/style-frames.mjs",
         "renderer": {
-          "calls": 216,
-          "triangles": 720489,
-          "textures": 39,
-          "geometries": 94
-        },
-        "look": {
-          "toneMapping": 7,
-          "exposure": 0.9242113774918985,
-          "environment": 0.6,
-          "sun": 0
-        },
-        "grade": {
-          "uContrast": 1.06,
-          "uSat": 1.05,
-          "uWarm": 0
-        },
-        "bloom": 0.5,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
-      },
-      "credits": 0,
-      "date": "2026-11-05",
-      "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
-    },
-    {
-      "file": "c-wet.jpg",
-      "title": "C: rain at 22:00 (today the rain sky reads day-gray)",
-      "subject": "night",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
-      "method": "in-game capture (no image model)",
-      "prompt": null,
-      "settings": {
-        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=22.0&weather=rain&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-80%2C2.5%2C640%2C-120%2C5%2C615",
-        "cam": [
-          -80,
-          2.5,
-          640,
-          -120,
-          5,
-          615
-        ],
-        "params": {
-          "time": "22.0",
-          "weather": "rain"
-        },
-        "tune": {
-          "bloom": {
-            "strength": 0.5
-          }
-        },
-        "paintover": null,
-        "viewport": [
-          1280,
-          720
-        ],
-        "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
-        "build": "scripts/art/style-frames.mjs",
-        "renderer": {
-          "calls": 218,
-          "triangles": 724187,
+          "calls": 220,
+          "triangles": 723229,
           "textures": 39,
           "geometries": 95
         },
@@ -158,19 +101,74 @@
           "uSat": 1.05,
           "uWarm": 0
         },
-        "bloom": 0.5,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "bloom": 0.28,
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
       "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
     },
     {
-      "file": "d-trail.jpg",
-      "title": "D: trail at 22:30, more bloom",
+      "file": "c-wet.jpg",
+      "title": "C: WET STREET",
+      "lookAt": "shop lights mirrored in a dark wet street",
       "subject": "night",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
-      "method": "in-game capture (no image model)",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"wet\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "method": "in-game capture + scripted paintover (no image model)",
+      "prompt": null,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=22.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-80%2C2.5%2C640%2C-120%2C5%2C615",
+        "cam": [
+          -80,
+          2.5,
+          640,
+          -120,
+          5,
+          615
+        ],
+        "params": {
+          "time": "22.5"
+        },
+        "tune": null,
+        "paintover": "wet",
+        "paintoverEnv": null,
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
+        "build": "scripts/art/style-frames.mjs",
+        "renderer": {
+          "calls": 220,
+          "triangles": 723229,
+          "textures": 39,
+          "geometries": 95
+        },
+        "look": {
+          "toneMapping": 7,
+          "exposure": 0.924,
+          "environment": 0.6,
+          "sun": 0
+        },
+        "grade": {
+          "uContrast": 1.06,
+          "uSat": 1.05,
+          "uWarm": 0
+        },
+        "bloom": 0.28,
+        "commit": "e204431"
+      },
+      "credits": 0,
+      "date": "2026-11-05",
+      "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
+    },
+    {
+      "file": "d-neon-trail.jpg",
+      "title": "D: NEON NIGHT, BeltLine trail",
+      "lookAt": "trail lit by lamp pools, dark lawn",
+      "subject": "night",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"neon\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "method": "in-game capture + scripted paintover (no image model)",
       "prompt": null,
       "settings": {
         "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=22.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
@@ -190,7 +188,8 @@
             "strength": 0.5
           }
         },
-        "paintover": null,
+        "paintover": "neon",
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -215,15 +214,16 @@
           "uWarm": 0
         },
         "bloom": 0.5,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
       "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
     },
     {
-      "file": "e-paintover.jpg",
-      "title": "E: paintover: lamp pools, hot signs",
+      "file": "e-lamp-pools.jpg",
+      "title": "E: WARM LAMPS",
+      "lookAt": "warm 4000 K pools, hot sign cores",
       "subject": "night",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"night\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
       "method": "in-game capture + scripted paintover (no image model)",
@@ -243,6 +243,7 @@
         },
         "tune": null,
         "paintover": "night",
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -267,7 +268,7 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",

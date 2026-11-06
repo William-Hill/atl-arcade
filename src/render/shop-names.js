@@ -62,7 +62,7 @@ function decalQuad(g, center, n, up, w, h, row, rows) {
     [w / 2, h / 2],
     [-w / 2, h / 2],
   ];
-  const base = g.attributes.position.count;
+  const base = (g.index.count / 6) * 4; // the quads written so far
   const pos = g.attributes.position.array;
   const uv = g.attributes.uv.array;
   const nor = g.attributes.normal.array;
@@ -118,11 +118,7 @@ const DISTRICT_ANCHORS = [
 // facade kit collects (facade-kit.js signBay()).
 export function shopNamesMesh(boards, level, look = "toon") {
   const { tex, rows } = makeAtlas();
-  const quads = [];
-  for (const b of boards) {
-    const row = hash32(`${Math.round(b.x * 4)},${Math.round(b.z * 4)}`) % SHOP_NAMES.length;
-    quads.push({ c: [b.x, b.y, b.z], n: [b.nx, b.nz], up: [0, 1, 0], w: b.w * 0.96, h: b.h * 0.8, row });
-  }
+  const quads = boardQuads(boards);
   // The district name on the trail near each anchor (the teleoperator map
   // labels): flat, along the trail, where a runner reads it.
   for (const a of DISTRICT_ANCHORS) {
@@ -136,6 +132,44 @@ export function shopNamesMesh(boards, level, look = "toon") {
     quads.push({ c: [near.x, y, near.z], n: [0, -1], up: [-near.tx, 0, -near.tz], w: 10, h: 1.9, row: SHOP_NAMES.length + a.label });
   }
   if (!quads.length) return null;
+  const mesh = decalMesh(quads, rows, namesMaterial(look, tex));
+  mesh.frustumCulled = false;
+  return mesh;
+}
+
+// The shop-name decals of the GLB sign boards (facade-kit-view.js) in one
+// BatchedMesh: a unit quad per atlas row, an instance per board, so each name
+// hides with its board. Returns { mesh, ids } (ids[i]: the instance of
+// boards[i]), or null without boards.
+export function boardNamesBatch(boards, look = "pbr") {
+  if (!boards.length) return null;
+  const { tex, rows } = makeAtlas();
+  const quads = boardQuads(boards);
+  const used = [...new Set(quads.map((q) => q.row))];
+  const mesh = new THREE.BatchedMesh(quads.length, used.length * 4, used.length * 6, namesMaterial(look, tex));
+  mesh.name = "shop-names-glb";
+  mesh.sortObjects = false;
+  const geometryOf = new Map(used.map((row) => [row, mesh.addGeometry(decalMesh([{ c: [0, 0, 0], n: [0, 1], up: [0, 1, 0], w: 1, h: 1, row }], rows, null).geometry.translate(0, 0, -0.03))]));
+  const m4 = new THREE.Matrix4();
+  const ids = quads.map((q) => {
+    const id = mesh.addInstance(geometryOf.get(q.row));
+    const [nx, nz] = q.n;
+    m4.set(nz * q.w, 0, nx, q.c[0] + nx * 0.03, 0, q.h, 0, q.c[1], -nx * q.w, 0, nz, q.c[2] + nz * 0.03, 0, 0, 0, 1);
+    mesh.setMatrixAt(id, m4);
+    return id;
+  });
+  return { mesh, ids };
+}
+
+function boardQuads(boards) {
+  return boards.map((b) => ({ c: [b.x, b.y, b.z], n: [b.nx, b.nz], up: [0, 1, 0], w: b.w * 0.96, h: b.h * 0.8, row: hash32(`${Math.round(b.x * 4)},${Math.round(b.z * 4)}`) % SHOP_NAMES.length }));
+}
+
+function namesMaterial(look, tex) {
+  return litMaterial(look, { map: tex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }, { roughness: ROUGHNESS.props, envLight: 0.6 });
+}
+
+export function decalMesh(quads, rows, mat) {
   const g = new THREE.BufferGeometry();
   const n = quads.length * 4;
   g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
@@ -153,7 +187,7 @@ export function shopNamesMesh(boards, level, look = "toon") {
       const k = g.index.count - 6;
       const t = idx[k + 1]; idx[k + 1] = idx[k + 2]; idx[k + 2] = t;
       const t2 = idx[k + 4]; idx[k + 4] = idx[k + 5]; idx[k + 5] = t2;
-      const base = g.attributes.position.count - 4;
+      const base = (g.index.count / 6) * 4 - 4;
       for (let i = 0; i < 4; i += 1) {
         const j = (base + i) * 3;
         g.attributes.normal.array[j] = 0;
@@ -164,9 +198,7 @@ export function shopNamesMesh(boards, level, look = "toon") {
       decalQuad(g, q.c, q.n, q.up, q.w, q.h, q.row, rows);
     }
   }
-  const mat = litMaterial(look, { map: tex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }, { roughness: ROUGHNESS.props, envLight: 0.6 });
   const mesh = new THREE.Mesh(g, mat);
   mesh.name = "shop-names";
-  mesh.frustumCulled = false;
   return mesh;
 }

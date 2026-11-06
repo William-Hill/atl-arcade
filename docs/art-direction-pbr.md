@@ -252,35 +252,44 @@ not image-model output. Rebuild: `node scripts/art/pbr-frames.mjs` then
 
 Today (`docs/style-frames/today/`): `trail.jpg` (BeltLine trail, 13:30), `street.jpg` (O4W storefronts + murals, 13:30), `pcm.jpg` (Ponce City Market, 13:30), `skater.jpg` (Skater close-up (Nia), 13:30), `dusk.jpg` (Trail at dusk, 20:36), `night.jpg` (Street at night, 22:30).
 
+Option A of each subject is the game today; B–E each push one clear direction
+(hot noon, golden hour, overcast, neon night, wet street) so the choice is between
+looks, not small tweaks. The first round used in-game time-of-day and grade
+changes; they barely differ from today (the pbr sun, sky and grade change little
+between 9:30 and 19:12), which is itself a #160 finding, so they were replaced by
+heavier paintovers. Paintovers recolor the lawn, darken the lilac asphalt,
+replace the sky and regrade; they cannot add geometry or new lights.
+
 **BeltLine street** (`docs/style-frames/beltline-street/`):
 
-- `a-today.jpg` — today, 13:30 (`today-trail`)
-- `b-golden.jpg` — golden hour 19:12, warm grade (`trail-b-golden`)
-- `c-morning.jpg` — morning 9:30, sky-lit fill (`trail-c-morning`)
-- `d-paintover-trail.jpg` — paintover: green lawn, tonal range (paintover `day` of `today-trail`)
-- `e-paintover-street.jpg` — paintover: O4W storefront street (paintover `day` of `today-street`)
+- `a-today.jpg` — today, 13:30: pale mint lawn, flat light, no deep shadows (`today-trail`)
+- `b-hot-noon.jpg` — HOT NOON: green lawn, deep blue sky, hard dark shadows (paintover `hot` of `today-trail`)
+- `c-golden.jpg` — GOLDEN HOUR: orange light, olive lawn, violet shadows, sun glare (paintover `golden` of `today-trail`)
+- `d-overcast.jpg` — OVERCAST SOFT: white sky, soft shadows, rich green (paintover `soft` of `today-trail`)
+- `e-hot-street.jpg` — HOT NOON, O4W storefronts: dark asphalt, green lawn, blue sky over the shops (paintover `hot` of `today-street`)
 
 **Skater close-up** (`docs/style-frames/skater-close-up/`):
 
-- `a-today.jpg` — today, 13:30 (`today-skater`)
-- `b-golden.jpg` — golden hour 19:12, warm rim (`skater-b-golden`)
-- `c-skylit.jpg` — overcast, sky-lit soft light (`skater-c-skylit`)
-- `d-paintover.jpg` — paintover: green lawn, tonal range (paintover `day` of `today-skater`)
+- `a-today.jpg` — today, 13:30: skater blends into the pale ground (`today-skater`)
+- `b-hot-noon.jpg` — HOT NOON: skater pops on saturated green and blue (paintover `hot` of `today-skater`)
+- `c-golden.jpg` — GOLDEN HOUR: warm skin and outfit, long violet shadow (paintover `golden` of `today-skater`)
+- `d-overcast.jpg` — OVERCAST SOFT: soft light, outfit colors read true (paintover `soft` of `today-skater`)
 
 **Mural wall** (`docs/style-frames/mural-wall/`):
 
-- `a-today.jpg` — today, eye level, 13:30 (`mural-a-today`)
-- `b-golden.jpg` — golden hour 18:30, over the trees (`mural-b-golden`)
-- `c-o4w-morning.jpg` — O4W mural, morning 10:00 (`mural-c-o4w-morning`)
-- `d-paintover.jpg` — paintover: bolder paint, tonal range (paintover `mural` of `mural-a-today`)
+- `a-today.jpg` — today, 13:30: pale sky, lilac asphalt, mural reads flat (`mural-a-today`)
+- `b-hot-noon.jpg` — HOT NOON: deep blue sky frames the mural, dark asphalt (paintover `hot` of `mural-a-today`)
+- `c-golden.jpg` — GOLDEN HOUR: sunset sky, mural warmed, violet shadows (paintover `golden` of `mural-a-today`)
+- `d-overcast.jpg` — OVERCAST SOFT: white sky, mural colors at full strength (paintover `soft` of `mural-a-today`)
+- `e-hot-o4w.jpg` — HOT NOON, O4W mural: same direction on a second wall (paintover `hot` of `mural-c-o4w-morning`)
 
 **Night scene** (`docs/style-frames/night/`):
 
-- `a-today.jpg` — today, street 22:30 (`today-night`)
-- `b-bluehour.jpg` — blue hour 21:00, more bloom (`night-b-bluehour`)
-- `c-wet.jpg` — rain at 22:00 (today the rain sky reads day-gray) (`night-c-wet`)
-- `d-trail.jpg` — trail at 22:30, more bloom (`night-d-trail`)
-- `e-paintover.jpg` — paintover: lamp pools, hot signs (paintover `night` of `today-night`)
+- `a-today.jpg` — today, street 22:30: blue-gray, no light on the ground (`today-night`)
+- `b-neon.jpg` — NEON NIGHT: purple sky, magenta/cyan sign glow, lamp pools (paintover `neon` of `today-night`)
+- `c-wet.jpg` — WET STREET: shop lights mirrored in a dark wet street (paintover `wet` of `today-night`)
+- `d-neon-trail.jpg` — NEON NIGHT, BeltLine trail: trail lit by lamp pools, dark lawn (paintover `neon` of `night-d-trail`)
+- `e-lamp-pools.jpg` — WARM LAMPS: warm 4000 K pools, hot sign cores (paintover `night` of `today-night`)
 
 ## Follow-ups that use this doc
 

@@ -1380,7 +1380,46 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Style frames (#114) use free methods only: in-game captures with URL params (time, weather) and a page-side runtime tune (`tuneLook`, grade and bloom uniforms, applied from the page, no game source change), plus scripted ImageMagick paintovers (`scripts/art/paintover.sh`) of the captures. No image model was used (0 credits): the paintovers already show the two biggest gaps (the pale hazy lawn and the compressed tonal range), and a generated frame would show a city the renderer cannot match. An image-model batch stays an option for the owner, with the cost shown first.
 - Frames ship as JPGs with one `<frame>.provenance.json` each and a folder `provenance.json` listing them in `docs/style-frames/<subject>/`, with a grouped contact sheet; the owner chooses the frames to keep, and the chosen ones go into the doc.
 
+## 2026-11-05: epic/city-look — style frames, round two: one clear direction per option (#114)
 
+- The owner found the first round of options too close to tell apart: in-game time-of-day and grade changes barely move the pbr look (a #160 finding in its own right), and the first paintovers were mild.
+- Round two keeps option A as the game today and makes B–E one clear direction each: hot noon, golden hour, overcast soft, neon night, wet street, warm lamps. They are heavier scripted ImageMagick paintovers of the same captures (`scripts/art/paintover.sh` modes `hot`, `golden`, `soft`, `neon`, `wet`): lawn recolor, lilac asphalt darkened, sky replaced, regrade. 0 credits; no image model.
+- Each contact-sheet tile carries a "Look at:" line naming what changed; the per-frame provenance records the paintover mode and its tuning variables.
+
+## 2026-11-05: epic/city-look — traffic lane following (IDM), lamps, signals, crosswalk yields
+- Lanes: `trafficLanes()` (`src/sim/traffic/traffic.js`) now builds one lane per travel lane of `laneLayout()` (`src/level/geo/lanes.js`), at the lane centers between the painted lines (`runLaneOffsets()` in `src/sim/cars.js`), curb lane first. The BeltLine level goes from 9 to 15 lanes (54 to 68 moving cars) (Ponce de Leon 3 + 2, North Avenue and John Lewis 1 + 1 each, Freedom Parkway one-way). Cars stay in their lane: no lane changes yet.
+- Following: the Intelligent Driver Model (`idmAccel()`, a 1.5, b 2.5, s0 3 m, T 1.4 s, delta 4, hard limit 6 m/s²) replaces the target-speed rule. Stop lines, crosswalks, and the yield point before the skater are fixed points (`idmStopAccel()`): the IDM toward a virtual car at rest, plus a 1 m/s creep and a kinematic last half metre, because the plain IDM reaches a stop point only asymptotically. A car on a two-way street slows to 3 m/s for its U-turn, and spawns no faster than a calm stop before the next stop line allows.
+- Crosswalks: each lane keeps the `crosswalksOf()` crosswalks on its path. A car stops 1 m before a crosswalk with the skater on it (even on the far half, out of the car lane) and waits; the intersection stop also waits for a clear far crosswalk. The 2 m hard rule and the in-lane yield are unchanged. Calm traffic only (AGENTS.md): cars never threaten the skater.
+- State for the view: `accel`, `brake` (`brakeLevel()`: 0 cruising, 0.4 to 1 on deceleration over 0.3 m/s², 0.8 at rest), `signal` (`turnSignal()` on the heading change over the next 30 m, with hysteresis; U-turns signal left), and `crossing`.
+- Lamps: the vehicle GLBs share one atlas material, so the lamps are their own unlit layer (`lampLayout()`, `lampLevels()` in `src/render/car-models.js`; `createLamps()` in `src/render/car-view.js`): head, tail/brake and amber corner signal quads on every moving car within 240 m, and an additive headlight pool on the street within 120 m. Headlights are dim running lamps by day and full at night by the weather window factor (`weatherView.state.windowLit`, the facade `uLit`), passed from `src/main.js`; no weather file changed. Brake lamps brighten over the tail glow. Signals blink at 1.5 Hz with a per-car phase. Cost: 2 draw calls at night (1 by day), 2 triangles per lamp.
+
+### Evidence
+- Vitest: `src/sim/cars.test.js` (free road, standstill gap, the IDM equilibrium gap, a 6-car platoon behind a braking car with no collision, stop points without overshoot or crawl, lane centers from lane tags, signals, brake levels, crosswalk test), new `traffic.test.js` cases (brake lamps at a stop line, U-turn signal and speed, crosswalk stop with the skater out of the lane), `car-models.test.js` lamp cases.
+- Playwright (headless Chromium, `?level=beltline-eastside&quality=high&view=fixed`, same cameras before and after), screenshots in `reports/traffic-flow/`. Cars: draw calls 4 to 6 at night, 4 to 5 by day; triangles at the North Avenue camera 33,978 to 38,421 (the car mix in view differs by the new spawn, lamps add under 1,000); download 50.96 to 51.08 MB (code only, no new assets). Skater on the North Avenue crosswalk: both approaching cars stopped 6.2 m from the skater (`crossingYields` 2) with the brake lamps on.
+
+### Limits
+- No lane changes or merges, no traffic lights (stop-sign style boxes as before). Parked cars have no lamps. Headless frame rate makes the sim slow in wall time, so browser yield checks wait longer.
+
+
+## 2026-11-05: epic/city-look — the Blender facade kit in the pbr look
+
+### Decisions
+
+- The pbr look draws `assets/facades/facade-kit.glb` (docs/facade-kit.md, "In the game"): `src/level/geo/facade-kit-glb.js` (pure) runs `facadePlacements()` on every building that is not a claimed landmark footprint, from `frontEdges()`, `chooseStyle()`, `buildingSpan()`, `muralWalls()` and `floorCount()`; `main.js` loads the GLB while the meshes build (a failed load keeps the whole procedural kit) and `src/render/facade-kit-view.js` draws the kit. The toon look keeps the whole procedural kit. `?kit=0` drops both kits, `?depth=0` both depth-tile kits, and `?kitglb=0` the GLB kit only (the BEFORE of the evidence).
+- Cost: the whole GLB kit is one `BatchedMesh` (all nodes share the kit material), the shop names on its sign boards a second one, so it adds 2 draw calls at any camera. One `InstancedMesh` per module per 50 m tile cost 30–112 draw calls at the test cameras. Culling is per building, not per tile: a building is drawn while its procedural depth tile is (tile center closer than `DEPTH_DISTANCE`, 120 m) or while the building is closer than 120 m (the far wall of a long building), and it switches to far geometry past `LOD1_DISTANCE` (30 m, was 60; the `_lod1` nodes, else `farGeometry()`, the street-facing and large horizontal faces, about 40% of a frame), and drops the small trim (`TRIM`) past `TRIM_DISTANCE` (35 m). Past 120 m the shader facade alone is drawn, as before. Without `WEBGL_multi_draw` the batch would draw once per instance, so the GLB stays off there (the prop batch has the same dependency).
+- The window and shop glass panes of the GLB are cut out at load (`withoutGlass()`, the atlas glass strip), so the facade shader's glass and room interiors show through the frames; the GLB panes were flat dark glass over them. The door glass stays.
+- The procedural kit leaves out what the GLB replaces, per slot (`kitCovers()`): the sill, lintel and head of a window with a GLB frame, the pier on a bay line with a GLB pilaster, the sign band of a bay with GLB shop glass, and the procedural door where there is a GLB door (the step and the lamps stay, the lamps on the pilaster face). The shader shop glass and windows stay: the modules frame them (their panes cut out).
+- Kept procedural (`GLB_SKIP`): the awnings (they match the street awnings), and the cornice, coping and belt course. Those are in the building tiles, drawn at every distance; the GLB runs in the depth tiles would leave the roof line bare past 120 m.
+- The shop-name decals (`shop-names.js`) go on the GLB sign boards; a GLB sign board under a named shop sign (`shop-signs.js`) is left out. `decalQuad()` wrote each quad past the end of its buffers (it started at the buffer capacity), so no shop name drew before; it now writes quad by quad (`shop-names.test.js`).
+- `facadePlacements()` takes `floors` (the shader's floor count, OSM levels included, so the frames stay on the shader windows) and the door bay of `frontEdges()`, and tags each module with its slot (`bay`, `floor`, `line`).
+
+### Evidence
+
+- See the PR: labeled BEFORE (`?kitglb=0`) / AFTER shots from the same cameras (`node scripts/assets/facade-kit-wired.mjs OUT_DIR`), with the costs.
+
+### Limits
+
+- The GLB kit has no colliders, like the rest of the kit.
 
 ## 2026-11-05: epic/city-look — Meshy pedestrians, street furniture and BeltLine props (#133, #115)
 - The owner set a hard cap of 400 Meshy credits; the lean list cost 351: six rigged people at 26 each (meshy-t2.5 preview 5 + refine 10, rigging 5, two library clips at 3), and 13 static props at 15 each (dog, stroller, drinking fountain, bollard, cone, barricade, e-scooter, city bike, bike dock, food cart, picnic table, umbrella, one original sculpture). `scripts/assets/meshy-people-props.mjs` checks its task log before every paid call and refuses a task that would pass the cap.

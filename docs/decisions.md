@@ -1604,3 +1604,13 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - `?peds=<n>` sets the count (0 to 400). `?peds=0` still turns the walkers off.
 - The trail crowd (40, 0.2 ms), the traffic (68 moving cars, 0.9 ms) and the NPC skaters (5, 1.3 ms) do not change.
 - Not verified: the FPS on a real phone, and the FPS in the browser at 60 Hz (the test browser window was not in view).
+
+## 2026-11-06 — Settings menu for the render tiers (#94)
+
+- O or the SETTINGS button opens a menu: the render tier (Auto, Low, Phone, High), the look (Auto, Toon, PBR), the walker count, and the shadow, ink outline and bloom switches. The game stops while it is open.
+- Order: a URL flag (`?quality`, `?look`, `?peds`) wins, then the saved choice, then the device default. The logic is pure in `src/ui/settings.js`; the menu is `src/ui/settings-menu.js`.
+- Saved in `localStorage` under `atl.settings.v1`. Every read and write is in try/catch. With no storage the menu still works for the page and says so. The music choice now uses the same safe storage: a blocked `localStorage` used to stop the game from loading.
+- The ink and the bloom switch at once (`src/render/post-toggles.js`). The tier, the look, the walkers and the shadows build the scene, so they apply with a reload: the menu says which change needs it and shows "Reload now". That reload drops the URL flags of the changed settings, so the saved choice wins.
+- Device default (`qualityFor`): a software GPU gets low; a phone user agent or a touch device with a small screen gets phone; a CPU with 2 cores or less gets phone; every other device gets high. The user agent and core count rules are new.
+- The menu is a native `<dialog>` with `showModal()`: the focus stays in it, Escape closes it, and the focus goes back to the button. Every control has a label. The text contrast is 11:1 or more, and the buttons are 44 px tall.
+- Not verified: a real phone, and a real GPU (the test browser uses SwiftShader, so its auto tier is low).

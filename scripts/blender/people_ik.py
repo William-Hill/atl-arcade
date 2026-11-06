@@ -12,10 +12,11 @@ from mathutils import Matrix, Vector
 
 # Measured on assets/people/stroller.glb and assets/props/beltline/city_bike.glb.
 STROLLER_HANDLE = (0.19, 1.08, 0.20)  # stroller origin 0.64 m in front of the person
-BIKE_SADDLE = (0.0, 0.97, -0.30)
-BIKE_GRIP = (0.26, 1.0, 0.28)  # swept-back grips, behind the stem
-BIKE_PEDAL = (0.14, 0.36, -0.16)  # ankle circle center
-PEDAL_R = 0.16
+BIKE_SADDLE = (0.0, 0.94, -0.30)
+BIKE_GRIP = (0.26, 0.98, 0.25)  # swept-back grips, behind the stem
+BIKE_PEDAL = (0.14, 0.36, 0.0)  # ankle circle center, 7 cm over the crank axle
+PEDAL_R = 0.137  # the crank arm (prop_wheels.py)
+PUSH_LEAN = (8, 6, 4)  # leaning into the handle
 ARM_POLE = (0.7, 0.4, -0.6)  # elbows bend down, out and back
 LEG_POLE = (0.15, 0.6, 1.5)  # knees bend forward
 
@@ -49,6 +50,23 @@ def two_bone(arm, upper, lower, end, target_w, pole_w):
     _swing(arm, U, a, b - a, elbow - a)
     b, c = L.head.copy(), E.head.copy()
     _swing(arm, L, b, c - b, t - b)
+
+
+def _solo(arm):
+    """Mute the NLA tracks (the clips made so far) so sampling an action
+    gives that action alone; returns the call that unmutes them. Without it
+    the walk sampled for push came out mixed with the other tracks, and the
+    far hand left the handle for half the loop."""
+    tracks = list(arm.animation_data.nla_tracks)
+    muted = [t.mute for t in tracks]
+    for t in tracks:
+        t.mute = True
+
+    def restore():
+        for t, m in zip(tracks, muted):
+            t.mute = m
+
+    return restore
 
 
 def _set_action(arm, act):
@@ -95,17 +113,31 @@ def _mirror(p, k):
     return (p[0] * k, p[1], p[2])
 
 
+def _lean(arm, degs, names=("Spine02", "Spine01", "Spine")):
+    """Bend the spine forward about the side axis, degs per bone."""
+    for name, deg in zip(names, degs):
+        pb = arm.pose.bones[name]
+        r = Matrix.Rotation(math.radians(deg), 4, "X")
+        pb.matrix = Matrix.Translation(pb.head) @ r @ Matrix.Translation(-pb.head) @ pb.matrix
+        bpy.context.view_layer.update()
+
+
 def push_clip(arm):
     """The walk with both hands on the stroller handle (the arms stop
     swinging), one walk cycle."""
     walk = bpy.data.actions["walk"]
     f0, f1 = (round(x) for x in walk.frame_range)
-    frames = {}
+    solo = _solo(arm)
+    frames, miss = {}, {}
     for f in range(f0, f1 + 1):
         _apply(arm, _sample(arm, walk, f))
+        _lean(arm, PUSH_LEAN)
         for s, k in (("Left", 1), ("Right", -1)):
             two_bone(arm, f"{s}Arm", f"{s}ForeArm", f"{s}Hand", B(_mirror(STROLLER_HANDLE, k)), B(_mirror(ARM_POLE, k)))
+            miss[s] = max(miss.get(s, 0), (arm.matrix_world @ arm.pose.bones[f"{s}Hand"].head - B(_mirror(STROLLER_HANDLE, k))).length)
         frames[f - f0 + 1] = _grab(arm)
+    solo()
+    print("push: hand miss m", {k: round(v, 3) for k, v in miss.items()})
     return _key(arm, "push", frames), f1 - f0
 
 
@@ -113,6 +145,7 @@ def ride_clip(arm, lean=(24, 20, 14), n=30):
     """On the city bike: hips on the saddle, back leaning forward, hands on
     the grips, ankles turning the pedals half a turn apart, 1 s loop."""
     idle = bpy.data.actions["idle"]
+    solo, miss = _solo(arm), {}
     base = _sample(arm, idle, round(idle.frame_range[0]))
     spine = ("Spine02", "Spine01", "Spine")
     frames = {}
@@ -131,7 +164,13 @@ def ride_clip(arm, lean=(24, 20, 14), n=30):
         for s, k in (("Left", 1), ("Right", -1)):
             two_bone(arm, f"{s}Arm", f"{s}ForeArm", f"{s}Hand", B(_mirror(BIKE_GRIP, k)), B(_mirror(ARM_POLE, k)))
             ph = 2 * math.pi * (f - 1) / n + (0 if k == 1 else math.pi)
-            ankle = (BIKE_PEDAL[0] * k, BIKE_PEDAL[1] + PEDAL_R * math.sin(ph), BIKE_PEDAL[2] + PEDAL_R * math.cos(ph))
+            # ph 0 is the top of the turn, then forward (+z): pedaling forward;
+            # city_bike's crank turns with the same phase (prop_wheels.py).
+            ankle = (BIKE_PEDAL[0] * k, BIKE_PEDAL[1] + PEDAL_R * math.cos(ph), BIKE_PEDAL[2] + PEDAL_R * math.sin(ph))
             two_bone(arm, f"{s}UpLeg", f"{s}Leg", f"{s}Foot", B(ankle), B(_mirror(LEG_POLE, k)))
+            for bone, t in ((f"{s}Hand", B(_mirror(BIKE_GRIP, k))), (f"{s}Foot", B(ankle))):
+                miss[bone] = max(miss.get(bone, 0), (arm.matrix_world @ arm.pose.bones[bone].head - t).length)
         frames[f] = _grab(arm)
+    solo()
+    print("ride: miss m", {k: round(v, 3) for k, v in miss.items()})
     return _key(arm, "ride", frames), n

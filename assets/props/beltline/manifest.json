@@ -3,10 +3,12 @@
   "assets": {
     "e_scooter": {
       "file": "e_scooter.glb",
-      "bytes": 266148,
+      "bytes": 273744,
       "triangles": {
-        "lod0": 2423,
-        "lod1": 600
+        "lod0": 1494,
+        "lod1": 567,
+        "wheel_rear": 447,
+        "wheel_front": 482
       },
       "lodDistance": {
         "lod0": 0,
@@ -29,6 +31,33 @@
         1.091,
         1.15
       ],
+      "clips": {
+        "roll": {
+          "frames": 30,
+          "fps": 30,
+          "source": "keyed in Blender: wheel_rear, wheel_front turning (prop_wheels.py)"
+        }
+      },
+      "parts": {
+        "wheel_rear": {
+          "axle_m": [
+            0,
+            0.146,
+            -0.424
+          ],
+          "triangles": 447,
+          "turns": 3
+        },
+        "wheel_front": {
+          "axle_m": [
+            0,
+            0.147,
+            0.423
+          ],
+          "triangles": 482,
+          "turns": 3
+        }
+      },
       "textures": [
         "e_scooter_color 1024x1024",
         "e_scooter_metal_rough 512x512",
@@ -37,10 +66,13 @@
     },
     "city_bike": {
       "file": "city_bike.glb",
-      "bytes": 400604,
+      "bytes": 409220,
       "triangles": {
-        "lod0": 2776,
-        "lod1": 799
+        "lod0": 2310,
+        "lod1": 754,
+        "wheel_rear": 204,
+        "wheel_front": 196,
+        "crank": 66
       },
       "lodDistance": {
         "lod0": 0,
@@ -63,6 +95,43 @@
         1.09,
         1.8
       ],
+      "clips": {
+        "ride": {
+          "frames": 30,
+          "fps": 30,
+          "source": "keyed in Blender: wheel_rear, wheel_front, crank turning (prop_wheels.py)"
+        }
+      },
+      "parts": {
+        "wheel_rear": {
+          "axle_m": [
+            0,
+            0.342,
+            -0.563
+          ],
+          "triangles": 204,
+          "turns": 2
+        },
+        "wheel_front": {
+          "axle_m": [
+            0,
+            0.332,
+            0.563
+          ],
+          "triangles": 196,
+          "turns": 2
+        },
+        "crank": {
+          "axle_m": [
+            0,
+            0.288,
+            -0.002
+          ],
+          "triangles": 66,
+          "turns": 1,
+          "crank_m": 0.137
+        }
+      },
       "textures": [
         "city_bike_color 1024x1024",
         "city_bike_metal_rough 512x512",

@@ -3,7 +3,7 @@
 // the real game renderer (pbr look: the game's sun, sky, environment,
 // shadows and post), without touching the shared game code. Open
 // /scripts/assets/people-props-preview.html?<the usual game params>
-// [&plaza=x,z,yaw] [&clip=walk] [&lod=1] [&only=id,id] [&pad=0].
+// [&plaza=x,z,yaw] [&clip=walk] [&lod=1] [&only=id,id] [&pad=0] [&t=0.25].
 // With ?peopleprops=0 it is the plain game (the BEFORE view).
 //
 // After the game is ready it lays the assets out on a concrete pad (rows
@@ -11,7 +11,10 @@
 // street furniture, BeltLine props) and plays each person's clip (its default
 // below, or ?clip= for all of them) with one AnimationMixer per model. The
 // LOD level is picked per frame by camera distance (extras.lodDistance), or
-// forced with ?lod=0|1. The default plaza is the clear lot beside the
+// forced with ?lod=0|1. ?t= holds every clip at that time (s), for shots.
+// The wheels of the bike, scooter and stroller turn only under a rider or
+// pusher (or with ?clip=); the dog walker holds the dog on a leash (LEASH,
+// src/render/leash.js). The default plaza is the clear lot beside the
 // Beltline trail that the skate-feature preview uses.
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -21,6 +24,7 @@ import dracoWasmUrl from "three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?
 import people from "../../assets/people/manifest.json";
 import street from "../../assets/props/street/manifest.json";
 import beltline from "../../assets/props/beltline/manifest.json";
+import { leashPoints } from "../../src/render/leash.js";
 
 export const PLAZA = "311.5,-85.2,-1.403";
 // The clip each model plays by default.
@@ -32,7 +36,14 @@ export const DEFAULT_CLIP = {
   stroller_dad: "push",
   cyclist: "ride",
   dog: "walk",
+  stroller: "push",
+  city_bike: "ride",
+  e_scooter: "roll",
 };
+// Wheeled props: parked (still) unless staged with a person.
+export const PARKED = ["stroller", "city_bike", "e_scooter"];
+// The walker's hand to the dog's collar (bones), and the leash length, m.
+export const LEASH = { walker: ["dog_walker", "LeftHand"], dog: ["dog", "neck"], length: 1.1 };
 // Props staged with a person (x, z offset in the person's frame, m): the
 // stroller under the push grip, the bike under the ride (same origin), the
 // table at the sit pose's bench, the dog at the walker's side.
@@ -61,6 +72,7 @@ const on = params.get("peopleprops") !== "0";
 const only = params.get("only")?.split(",") ?? null;
 const forceClip = params.get("clip");
 const forceLod = params.has("lod") ? Number(params.get("lod")) : null;
+const holdAt = params.has("t") ? Number(params.get("t")) : null;
 const [px, pz, pyaw] = (params.get("plaza") ?? PLAZA).split(",").map(Number);
 
 // Rows along x, centered, 1.6 m gaps; rows 5 m apart along z (first row at +z).
@@ -125,6 +137,7 @@ if (on) {
   }
   const mixers = [];
   const lods = [];
+  const placed = {};
   await Promise.all(
     layout.map(async ({ id, x, z, with: host }) => {
       const a = assets[id];
@@ -146,7 +159,8 @@ if (on) {
         });
         lods.push({ model, levels: levels.filter(Boolean) });
         let clip = null;
-        if (gltf.animations.length) {
+        placed[host ? `${id}@${host}` : id] = model;
+        if (gltf.animations.length && (host || forceClip || !PARKED.includes(id))) {
           const want = forceClip ?? DEFAULT_CLIP[id] ?? "idle";
           clip = gltf.animations.find((c) => c.name === want) ?? gltf.animations[0];
           const mixer = new THREE.AnimationMixer(model);
@@ -166,13 +180,33 @@ if (on) {
   probe.frustumCulled = false;
   probe.onBeforeRender = (_r, _s, c) => (cam = c);
   root.add(probe);
+  let leash = null;
+  const hand = placed[LEASH.walker[0]]?.getObjectByName(LEASH.walker[1]);
+  const collar = placed[`${LEASH.dog[0]}@${LEASH.walker[0]}`]?.getObjectByName(LEASH.dog[1]);
+  if (hand && collar) {
+    const mesh = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ color: 0x8a2f2a, roughness: 0.7 }));
+    mesh.name = "people-props-leash";
+    mesh.castShadow = true;
+    mesh.frustumCulled = false;
+    root.add(mesh);
+    leash = { hand, collar, mesh, a: new THREE.Vector3(), b: new THREE.Vector3(), pts: [] };
+    info.leash = true;
+  }
   const v = new THREE.Vector3();
   let last = performance.now();
   info.lodShown = {};
   const tick = (now) => {
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
-    for (const m of mixers) m.update(dt);
+    for (const m of mixers) holdAt === null ? m.update(dt) : m.setTime(holdAt);
+    if (leash) {
+      root.updateMatrixWorld();
+      leash.hand.getWorldPosition(leash.a);
+      leash.collar.getWorldPosition(leash.b);
+      const pts = leashPoints(leash.a, leash.b, LEASH.length, 12, leash.pts);
+      leash.mesh.geometry.dispose();
+      leash.mesh.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(p.x, p.y, p.z))), 16, 0.006, 5);
+    }
     for (const { model, levels } of lods) {
       const d = cam ? model.getWorldPosition(v).distanceTo(cam.position) : 0;
       let k = 0;

@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-05",
+  "date": "2026-11-06",
   "asset": "BeltLine props (#115): shared e-scooter, city bike and its dock, food cart, picnic table, patio umbrella, and one original public-art sculpture.",
   "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine; props: meshy-t2.5, smart topology; people: meshy-7.1 standard, remeshed to 15k triangles, first made on meshy-t2.5 at 6k); people: Meshy rigging (POST /openapi/v1/rigging) and library animations (POST /openapi/v1/animations); then Blender 5.2.3 LTS headless: scripts/blender/people.py (people), scripts/blender/people_props.py (props), scripts/blender/dog_rig.py (dog rig and clips keyed in Blender). Draco GLB export.",
   "pipeline": "node scripts/assets/meshy-people-props.mjs --cap 400 (needs MESHY_API_KEY; raw downloads and task records in .meshy-raw/people/, git-ignored); people remade with --only <the six> --out .meshy-raw/people-v2 --cap 400 --model meshy-7.1 --polycount 15000 --no-anim; then node scripts/assets/people-props-build.mjs",
@@ -30,12 +30,14 @@
         "refine": 10,
         "total": 15
       },
-      "blender": "scripts/blender/people_props.py e_scooter --fit length --m 1.15 --long z --lod1 600",
+      "blender": "scripts/blender/people_props.py e_scooter --fit length --m 1.15 --long z --lod1 600; then scripts/blender/prop_wheels.py (roll: wheel_rear, wheel_front turning)",
       "result": {
-        "bytes": 266148,
+        "bytes": 273744,
         "triangles": {
-          "lod0": 2423,
-          "lod1": 600
+          "lod0": 1494,
+          "lod1": 567,
+          "wheel_rear": 447,
+          "wheel_front": 482
         },
         "size_m": [
           0.44,
@@ -67,12 +69,15 @@
         "refine": 10,
         "total": 15
       },
-      "blender": "scripts/blender/people_props.py city_bike --fit length --m 1.8 --long z --lod1 800",
+      "blender": "scripts/blender/people_props.py city_bike --fit length --m 1.8 --long z --lod1 800; then scripts/blender/prop_wheels.py (ride: wheel_rear, wheel_front, crank turning)",
       "result": {
-        "bytes": 400604,
+        "bytes": 409220,
         "triangles": {
-          "lod0": 2776,
-          "lod1": 799
+          "lod0": 2310,
+          "lod1": 754,
+          "wheel_rear": 204,
+          "wheel_front": 196,
+          "crank": 66
         },
         "size_m": [
           0.632,

@@ -269,7 +269,7 @@
     },
     "stroller_dad": {
       "file": "stroller_dad.glb",
-      "bytes": 802980,
+      "bytes": 803464,
       "triangles": {
         "lod0": 15542,
         "lod1": 1200
@@ -339,7 +339,7 @@
     },
     "cyclist": {
       "file": "cyclist.glb",
-      "bytes": 766208,
+      "bytes": 759188,
       "triangles": {
         "lod0": 15667,
         "lod1": 1200
@@ -456,10 +456,12 @@
     },
     "stroller": {
       "file": "stroller.glb",
-      "bytes": 262204,
+      "bytes": 269092,
       "triangles": {
-        "lod0": 2462,
-        "lod1": 599
+        "lod0": 1564,
+        "lod1": 589,
+        "wheels_rear": 469,
+        "wheels_front": 429
       },
       "lodDistance": {
         "lod0": 0,
@@ -482,6 +484,33 @@
         1.345,
         0.95
       ],
+      "clips": {
+        "push": {
+          "frames": 30,
+          "fps": 30,
+          "source": "keyed in Blender: wheels_rear, wheels_front turning (prop_wheels.py)"
+        }
+      },
+      "parts": {
+        "wheels_rear": {
+          "axle_m": [
+            0,
+            0.168,
+            -0.328
+          ],
+          "triangles": 469,
+          "turns": 1
+        },
+        "wheels_front": {
+          "axle_m": [
+            0,
+            0.145,
+            0.373
+          ],
+          "triangles": 429,
+          "turns": 1
+        }
+      },
       "textures": [
         "stroller_color 1024x1024",
         "stroller_metal_rough 512x512",

@@ -36,8 +36,20 @@ const SHOTS = [
   ["people-cheer", [0, 2.2, 10.5, 0, 0.9, 5], "clip=cheer"],
   ["people-lod1", [0, 2.2, 10.5, 0, 0.9, 5], "lod=1"],
   ["far", [0, 6, 45, 0, 1, 0]],
+  // Close-ups at a held clip time (t=): the cyclist and the bike side on, the
+  // stroller, the dog walker and the dog.
+  ["cyclist", [11.4, 1.3, 5.3, 8.21, 0.6, 5], "t=0"],
+  ["stroller", [6.5, 1.8, 8.3, 4.9, 0.7, 5.3], "t=0"],
+  ["dog-leash", [3.2, 1.6, 8.1, 2.0, 0.7, 5.1], "t=0"],
 ];
-const want = args.length ? SHOTS.filter(([n]) => args.includes(n)) : SHOTS;
+const want = args.length
+  ? args.flatMap((a) => {
+      const [n, q] = a.split(":");
+      const shot = SHOTS.find(([m]) => m === n);
+      if (!shot) return [];
+      return q ? [[`${n}-${q.replace(/[=&]/g, "")}`, shot[1], q]] : [shot];
+    })
+  : SHOTS;
 const BASE =
   "level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&skater=capsule&npcs=0&cars=0&peds=0";
 mkdirSync(out, { recursive: true });

@@ -34,13 +34,13 @@ const PEOPLE = {
 // side turns to; yaw: then turned about up so the front is at +z.
 export const PROPS = {
   dog: { dir: "people", fit: "length", m: 0.9, long: "z", lod1: 700, rig: "dog" },
-  stroller: { dir: "people", fit: "length", m: 0.95, long: "z", yaw: 180, lod1: 600 },
+  stroller: { dir: "people", fit: "length", m: 0.95, long: "z", yaw: 180, lod1: 600, spin: { clip: "push", frames: 30, parts: [{ name: "wheels_rear", c: [-0.35, 0.17], r: 0.18, rin: 0.04, x: [0.18, 0.3], turns: 1 }, { name: "wheels_front", c: [0.42, 0.15], r: 0.16, rin: 0.04, x: [0.18, 0.3], turns: 1 }] } },
   drinking_fountain: { dir: "props/street", fit: "height", m: 1.0, long: "x", lod1: 400 },
   bollard: { dir: "props/street", fit: "height", m: 0.9, long: "x", lod1: 120, tex: 512 },
   traffic_cone: { dir: "props/street", fit: "height", m: 0.7, long: "x", lod1: 120, tex: 512 },
   barricade: { dir: "props/street", fit: "length", m: 1.2, long: "x", lod1: 300 },
-  e_scooter: { dir: "props/beltline", fit: "length", m: 1.15, long: "z", lod1: 600 },
-  city_bike: { dir: "props/beltline", fit: "length", m: 1.8, long: "z", lod1: 800 },
+  e_scooter: { dir: "props/beltline", fit: "length", m: 1.15, long: "z", lod1: 600, spin: { clip: "roll", frames: 30, parts: [{ name: "wheel_rear", c: [-0.42, 0.14], r: 0.16, rin: 0.03, x: [0, 0.05], turns: 3 }, { name: "wheel_front", c: [0.43, 0.14], r: 0.16, rin: 0.03, x: [0, 0.05], turns: 3 }] } },
+  city_bike: { dir: "props/beltline", fit: "length", m: 1.8, long: "z", lod1: 800, spin: { clip: "ride", frames: 30, parts: [{ name: "wheel_rear", c: [-0.575, 0.33], r: 0.36, rin: 0.07, x: [0, 0.05], turns: 2 }, { name: "wheel_front", c: [0.575, 0.33], r: 0.36, rin: 0.07, x: [0, 0.05], turns: 2 }, { name: "crank", c: [0, 0.29], r: 0.2, rin: 0, x: [0.09, 0.2], turns: 1, top: true }] } },
   bike_dock: { dir: "props/beltline", fit: "height", m: 1.1, long: "x", lod1: 400 },
   food_cart: { dir: "props/beltline", fit: "length", m: 2.2, long: "x", lod1: 800 },
   picnic_table: { dir: "props/beltline", fit: "length", m: 1.8, long: "x", lod1: 400 },
@@ -76,11 +76,17 @@ for (const id of only) {
   } else if (PROPS[id]) {
     const p = PROPS[id];
     mkdirSync(`assets/${p.dir}`, { recursive: true });
-    const out = p.rig ? `${RAW}/${id}_static.glb` : `assets/${p.dir}/${id}.glb`;
+    const out = p.rig || p.spin ? `${RAW}/${id}_static.glb` : `assets/${p.dir}/${id}.glb`;
     const s = run("scripts/blender/people_props.py", [`${RAW}/${id}.glb`, out, id, "--fit", p.fit, "--m", String(p.m), "--long", p.long, "--yaw", String(p.yaw ?? 0), "--lod1", String(p.lod1), "--lod1-distance", String(p.lod1Distance ?? 20), "--tex", String(p.tex ?? 1024), "--stats", `${RAW}/stats/${id}.json`]);
     if (p.rig === "dog") {
       const r = run("scripts/blender/dog_rig.py", [out, `assets/${p.dir}/${id}.glb`]);
       writeFileSync(`${RAW}/stats/${id}.json`, JSON.stringify({ ...s, bones: r.bones, clips: r.clips }, null, 2));
+    }
+    if (p.spin) {
+      writeFileSync(`${RAW}/stats/${id}_spin.json`, JSON.stringify(p.spin));
+      const r = run("scripts/blender/prop_wheels.py", [out, `assets/${p.dir}/${id}.glb`, id, `${RAW}/stats/${id}_spin.json`]);
+      const source = `keyed in Blender: ${Object.keys(r.parts).join(", ")} turning (prop_wheels.py)`;
+      writeFileSync(`${RAW}/stats/${id}.json`, JSON.stringify({ ...s, triangles: r.triangles, clips: { [r.clip]: { frames: r.frames, source } }, parts: r.parts }, null, 2));
     }
   } else throw new Error(`unknown asset ${id}`);
   console.log("built", id);
@@ -121,6 +127,7 @@ for (const dir of Object.keys(DIRS)) {
       size: bounds.max.map((v, k) => +(v - bounds.min[k]).toFixed(3)),
       ...(s.clips ? { clips: Object.fromEntries(Object.entries(s.clips).map(([k, v]) => [k, { frames: v.frames, fps: 30, source: v.source, ...(v.shared_from ? { shared_from: v.shared_from.replace("_actions.glb", "") } : {}) }])) } : {}),
       ...(s.bones ? { bones: s.bones } : {}),
+      ...(s.parts ? { parts: s.parts } : {}),
       textures: s.textures.filter((t) => t.startsWith(id)),
     };
     const steps = ["preview", "refine", "rig", "anim"].filter((k) => rec[k]);
@@ -149,7 +156,7 @@ for (const dir of Object.keys(DIRS)) {
       credits: { ...credits, total: Object.values(credits).reduce((a, b) => a + b, 0) },
       blender: PEOPLE[id]
         ? `scripts/blender/people.py ${id} (clips: walk and run from the rig, ${Object.entries(PEOPLE[id].clips).map(([g, a]) => `${g} = ${a}`).join(", ")}${PEOPLE[id].share ? `; shared, 0 credits: ${Object.entries(PEOPLE[id].share).flatMap(([w, c]) => Object.entries(c).map(([g, a]) => `${g} = ${a} of ${w}`)).join(", ")}` : ""}${PEOPLE[id].push ? "; push keyed in Blender (IK)" : ""}${PEOPLE[id].ride ? "; ride keyed in Blender (IK)" : ""})`
-        : `scripts/blender/people_props.py ${id} --fit ${PROPS[id].fit} --m ${PROPS[id].m} --long ${PROPS[id].long}${PROPS[id].yaw ? ` --yaw ${PROPS[id].yaw}` : ""} --lod1 ${PROPS[id].lod1}${PROPS[id].rig ? "; then scripts/blender/dog_rig.py" : ""}`,
+        : `scripts/blender/people_props.py ${id} --fit ${PROPS[id].fit} --m ${PROPS[id].m} --long ${PROPS[id].long}${PROPS[id].yaw ? ` --yaw ${PROPS[id].yaw}` : ""} --lod1 ${PROPS[id].lod1}${PROPS[id].rig ? "; then scripts/blender/dog_rig.py" : ""}${PROPS[id].spin ? `; then scripts/blender/prop_wheels.py (${PROPS[id].spin.clip}: ${PROPS[id].spin.parts.map((q) => q.name).join(", ")} turning)` : ""}`,
       result: { bytes, triangles: s.triangles, size_m: manifest.assets[id].size },
     };
   }

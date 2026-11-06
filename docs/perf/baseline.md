@@ -8,7 +8,9 @@ Issue: #185. Branch base: `epic/city-look`. Date: 2026-11-06.
 npm run perf
 ```
 
-This builds `dist/`, serves it with `vite preview` (WASM gzipped, as on Vercel), and opens `?level=beltline-eastside` in headless Chromium for each tier (`low`, `phone`, `high`) and each look (`pbr`, `toon`). Each run rides the same 15 s of the trail from the spawn (the playtest's trail script, `src/playtest/trail-script.js`), and writes `docs/perf/baseline.json` and the tables below. Add a second pass with `node scripts/perf.mjs --no-build --append --out docs/perf/baseline.json --md docs/perf/baseline.md`.
+`npm run perf` writes `reports/perf/perf.json` (gitignored). To refresh this baseline (2 runs per tier and look, about 40 minutes with the software GPU), run `npm run perf:baseline`.
+
+The script builds `dist/`, serves it with `vite preview` (WASM gzipped, as on Vercel), and opens `?level=beltline-eastside` in headless Chromium for each tier (`low`, `phone`, `high`) and each look (`pbr`, `toon`). Each run rides the same 15 s of the trail from the spawn (the playtest's trail script, `src/playtest/trail-script.js`), and writes the JSON (and, with `--md`, the tables below). `--append` adds a pass to an existing JSON.
 
 To check a PR against the budget (exit 1 when a cap is over):
 
@@ -81,7 +83,7 @@ Cost by system (`?perf=1`, CPU ms on the main thread). A sim system (skater, wal
 
 ### Caps (checked by `npm run perf:check`)
 
-`docs/perf/budget.json` caps the numbers that do not depend on the machine, about 10% over this baseline. A PR that goes over a cap fails the check. To raise a cap, the PR changes `budget.json` and says why in `docs/decisions.md`.
+`docs/perf/budget.json` caps the numbers that do not depend on the machine, about 10% over this baseline. The draw calls and triangles come from the last frame of the ride, so the caps hold only for the default 15 s ride (a 5 s ride ends at another place with 194 draw calls on low toon). A PR that goes over a cap fails the check. To raise a cap, the PR changes `budget.json` and says why in `docs/decisions.md`.
 
 | Tier | Draw calls | Triangles | Textures | Heap MB | Download MB | JS MB |
 |---|---|---|---|---|---|---|

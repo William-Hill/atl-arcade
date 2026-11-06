@@ -240,6 +240,9 @@ if (md) {
   console.log(`wrote ${md}`);
 }
 if (budgetPath) {
+  // The draw calls and triangles are read at the end of the ride, so the caps
+  // hold only for the ride of the baseline (15 s).
+  if (seconds !== 15) console.warn(`the budget is for a 15 s ride; this ride is ${seconds} s, so the draw calls and triangles come from another place`);
   const budget = JSON.parse(readFileSync(resolve(ROOT, budgetPath), "utf8"));
   const over = checkBudget(runs, budget);
   for (const o of over) console.error(`OVER BUDGET ${o}`);

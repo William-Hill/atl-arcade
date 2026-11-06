@@ -1,0 +1,160 @@
+{
+  "date": "2026-11-05",
+  "asset": "Street furniture the kit was missing: drinking fountain and bollard (the OSM amenity=drinking_water and barrier=bollard kinds), plus construction cone and barricade.",
+  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine; props: meshy-t2.5, smart topology; people: meshy-7.1 standard, remeshed to 15k triangles, first made on meshy-t2.5 at 6k); people: Meshy rigging (POST /openapi/v1/rigging) and library animations (POST /openapi/v1/animations); then Blender 5.2.3 LTS headless: scripts/blender/people.py (people), scripts/blender/people_props.py (props), scripts/blender/dog_rig.py (dog rig and clips keyed in Blender). Draco GLB export.",
+  "pipeline": "node scripts/assets/meshy-people-props.mjs --cap 400 (needs MESHY_API_KEY; raw downloads and task records in .meshy-raw/people/, git-ignored); people remade with --only <the six> --out .meshy-raw/people-v2 --cap 400 --model meshy-7.1 --polycount 15000 --no-anim; then node scripts/assets/people-props-build.mjs",
+  "license": "Generated with the project owner's Meshy account; usage is governed by Meshy's terms of service for that account. Blender steps and keyed clips: original work for this project.",
+  "style": "Realistic mid-2010s Atlanta, positive everyday people, no branding (prompts forbid logos and text); the sculpture is an original abstract design, not a copy of any artwork.",
+  "verify": "scripts/assets/people-props-preview.html (in the game's pbr renderer) and node scripts/assets/people-props-shots.mjs",
+  "files": {
+    "drinking_fountain.glb": {
+      "prompt": "A modern outdoor public drinking fountain on a park trail, single stainless steel pedestal with a bowl and a bottle filler spout, concrete footing, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Brushed stainless steel, dark gray powder-coated steel post, light gray concrete footing, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 1500,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad4c-51fe-774f-aa4a-0c3deea5b0c6",
+        "refine_task_id": "01a1ad4c-cd99-73d8-a22a-50f464fde417",
+        "seed": 1401201163
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py drinking_fountain --fit height --m 1 --long x --lod1 400",
+      "result": {
+        "bytes": 279292,
+        "triangles": {
+          "lod0": 1580,
+          "lod1": 400
+        },
+        "size_m": [
+          0.386,
+          1,
+          0.386
+        ]
+      }
+    },
+    "bollard.glb": {
+      "prompt": "A simple cylindrical steel sidewalk bollard with a rounded top, one reflective band near the top, city streetscape, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Dark charcoal powder-coated steel, one thin silver reflective band, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 400,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad4d-4cf6-7668-8f49-87bb1bdb52e0",
+        "refine_task_id": "01a1ad4d-f02f-7391-96a8-9a991389bba8",
+        "seed": 4178065082
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py bollard --fit height --m 0.9 --long x --lod1 120",
+      "result": {
+        "bytes": 36324,
+        "triangles": {
+          "lod0": 394,
+          "lod1": 120
+        },
+        "size_m": [
+          0.204,
+          0.9,
+          0.204
+        ]
+      }
+    },
+    "traffic_cone.glb": {
+      "prompt": "A standard orange traffic cone with two white reflective bands and a square black rubber base, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Bright orange plastic, white reflective bands, black rubber base, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 400,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad4e-9451-74e7-932f-1235419de809",
+        "refine_task_id": "01a1ad4e-ea0c-7769-871b-76e148de572c",
+        "seed": 1612609784
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py traffic_cone --fit height --m 0.7 --long x --lod1 120",
+      "result": {
+        "bytes": 69460,
+        "triangles": {
+          "lod0": 424,
+          "lod1": 118
+        },
+        "size_m": [
+          0.35,
+          0.7,
+          0.348
+        ]
+      }
+    },
+    "barricade.glb": {
+      "prompt": "A folding A-frame construction barricade with two orange and white striped horizontal boards on white plastic legs, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Orange and white diagonal stripes on the boards, white plastic legs, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 1000,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad4f-6801-71b4-85f8-77563d75532c",
+        "refine_task_id": "01a1ad50-324c-76d3-b465-1a74dfa41369",
+        "seed": 2588919411
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py barricade --fit length --m 1.2 --long x --lod1 300",
+      "result": {
+        "bytes": 256592,
+        "triangles": {
+          "lod0": 911,
+          "lod1": 299
+        },
+        "size_m": [
+          1.2,
+          0.776,
+          0.692
+        ]
+      }
+    }
+  },
+  "credits_total": 60
+}

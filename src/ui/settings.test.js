@@ -8,6 +8,7 @@ import {
   normalizeSettings,
   paramFor,
   readSettings,
+  applicableKeys,
   reloadHref,
   reloadKeys,
   safeStorage,
@@ -128,6 +129,24 @@ describe("reloads", () => {
     expect(u.searchParams.get("quality")).toBe(null);
     expect(u.searchParams.get("look")).toBe("pbr");
     expect(u.searchParams.get("level")).toBe("beltline");
+  });
+
+  it("carries the choice in the URL flags when storage did not keep it", () => {
+    const href = reloadHref("https://x.test/?level=beltline&quality=high&peds=10", ["quality", "look", "peds", "shadows"], { quality: "low", look: "toon", peds: "auto", shadows: true });
+    const u = new URL(href);
+    expect(u.searchParams.get("quality")).toBe("low");
+    expect(u.searchParams.get("look")).toBe("toon");
+    expect(u.searchParams.get("peds")).toBe(null);
+    expect(u.searchParams.get("shadows")).toBe(null);
+    expect(u.searchParams.get("level")).toBe("beltline");
+  });
+});
+
+describe("applicableKeys", () => {
+  it("keeps every key with storage, and only the URL-flag keys without it", () => {
+    expect(applicableKeys(["quality", "shadows"], true)).toEqual(["quality", "shadows"]);
+    expect(applicableKeys(["quality", "shadows"], false)).toEqual(["quality"]);
+    expect(applicableKeys(["shadows"], false)).toEqual([]);
   });
 });
 

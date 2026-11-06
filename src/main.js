@@ -763,7 +763,7 @@ const settingsMenu = createSettingsMenu({
   post: () => ({ kind: post ? post.kind : null, look }),
   onSave: (s) => writeSettings(settingsStorage, s),
   onLive: (s) => setPostToggles(post, s),
-  reload: (keys) => window.location.assign(reloadHref(window.location.href, keys)),
+  reload: (keys, carry) => window.location.assign(reloadHref(window.location.href, keys, carry)),
   canOpen: () => !photo.isOpen && !fullmap?.isOpen,
   onChange: () => input.reset(),
 });

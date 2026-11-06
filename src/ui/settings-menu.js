@@ -7,7 +7,7 @@
 // once; the tier, the look, the walkers and the shadows need a reload, and
 // the menu says so and offers a "Reload now" button.
 
-import { PED_CHOICES, TIERS, effectiveSettings, liveToggles, normalizeSettings, reloadKeys, tierPeds } from "./settings.js";
+import { PED_CHOICES, TIERS, applicableKeys, effectiveSettings, liveToggles, normalizeSettings, reloadKeys, tierPeds } from "./settings.js";
 
 export const SETTINGS_KEY_CODE = "KeyO";
 
@@ -62,7 +62,12 @@ body:not(.touch):has(#minimap) #settings-toggle { right: calc(16px + 180px + 10p
 body.photo-open #settings-toggle { visibility: hidden; }
 /* On a touch screen the photo button sits at the top center; this one sits
    to its right. */
-body.touch #settings-toggle { bottom: auto; top: calc(40px + env(safe-area-inset-top)); right: auto; left: calc(50% + 56px); }
+body.touch #settings-toggle { bottom: auto; top: calc(30px + env(safe-area-inset-top)); right: auto; left: calc(50% + 56px); min-height: 44px; }
+/* Tap targets of 44 px on a touch screen (WCAG 2.5.5). The button above
+   starts 10 px higher than the photo button, so its 44 px end above the map. */
+body.touch #settings-menu .settings-option, body.touch #settings-menu select { min-height: 44px; }
+body.touch #settings-menu .settings-option { align-items: center; }
+body.touch #settings-menu .settings-option input { margin: 0; }
 `;
 
 function el(tag, parent, props = {}) {
@@ -85,13 +90,18 @@ function option(parent, { type, name, value, id, title, hint }) {
 // (choiceFrom()). sources: sourcesOf(). autoQuality: the device tier.
 // post(): { kind, look } of the running chain, for the live toggles.
 // onSave(settings): saves. onLive(settings): applies the ink and the bloom.
-// reload(keys): reloads the page. canOpen(): false while photo mode or the
+// reload(keys, carry): reloads the page; `carry` is the choice when storage
+// did not keep it, else null. canOpen(): false while photo mode or the
 // full map is open. onChange(open).
 export function createSettingsMenu({ root = document.body, running, choice, sources, autoQuality, post = () => ({ kind: null, look: running.look }), onSave = () => {}, onLive = () => {}, reload = () => {}, canOpen = () => true, onChange = () => {} }) {
   if (!document.getElementById("settings-menu-style")) el("style", document.head, { id: "settings-menu-style", textContent: STYLE });
 
   let state = normalizeSettings(choice);
   let pending = [];
+  // False after a save fails: then a reload carries the choice in the URL
+  // flags, and the shadows (no URL flag) cannot apply.
+  let stored = true;
+  let blocked = [];
 
   const toggleButton = el("button", root, { id: "settings-toggle", type: "button", innerHTML: "SETTINGS<kbd>O</kbd>", title: "Settings (O)" });
   toggleButton.setAttribute("aria-label", "Settings");
@@ -176,7 +186,9 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
       o.small.textContent = live[key] ? "Applies at once." : key === "bloom" ? "Needs the High tier." : p.look === "pbr" && p.kind === "full" ? "The PBR look has no ink outlines." : "Needs the Phone or High tier.";
     }
 
-    pending = reloadKeys(running, next);
+    const wanted = reloadKeys(running, next);
+    pending = applicableKeys(wanted, stored);
+    blocked = wanted.filter((k) => !pending.includes(k));
     reloadButton.hidden = pending.length === 0;
     toggleButton.setAttribute("aria-expanded", String(dialog.open));
   }
@@ -189,11 +201,14 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
   function change(patch, key) {
     state = normalizeSettings({ ...state, ...patch });
     const saved = onSave(state) !== false;
+    stored = saved;
     if (key === "ink" || key === "bloom") onLive(state);
     show();
-    const stored = saved ? "Saved." : "Your browser does not keep settings, so this lasts for this page only.";
-    if (pending.length) say(`${stored} Reload to apply ${pending.map((k) => KEY_TEXT[k]).join(", ")}.`, true);
-    else say(`${stored} Applied.`, false);
+    const note = saved ? "Saved." : "Your browser does not keep settings, so this lasts for this page only.";
+    const list = blocked.map((k) => KEY_TEXT[k]).join(", ");
+    const cannot = blocked.length ? ` ${list[0].toUpperCase()}${list.slice(1)} cannot apply without saved settings.` : "";
+    if (pending.length) say(`${note} Reload to apply ${pending.map((k) => KEY_TEXT[k]).join(", ")}.${cannot}`, true);
+    else say(`${note}${cannot || " Applied."}`, Boolean(cannot));
   }
 
   function open() {
@@ -224,7 +239,7 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
 
   toggleButton.addEventListener("click", () => toggle());
   closeButton.addEventListener("click", () => close());
-  reloadButton.addEventListener("click", () => reload(pending));
+  reloadButton.addEventListener("click", () => reload(pending, stored ? null : { ...state }));
   // The browser closes the dialog on Escape ("cancel") and returns the focus
   // to the button that opened it.
   dialog.addEventListener("close", () => {

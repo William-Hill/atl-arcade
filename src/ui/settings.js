@@ -129,10 +129,24 @@ export function reloadKeys(running, next) {
 
 // Pure: the page address for a reload that applies `keys`: their URL flags
 // go, so the saved choice wins after the reload. The other flags stay.
-export function reloadHref(href, keys) {
+// `carry` is the menu choice when storage did not keep it: then each key
+// with a URL flag carries its choice in that flag ("auto" removes it).
+export function reloadHref(href, keys, carry = null) {
   const url = new URL(href);
-  for (const k of keys) if (URL_FLAGS[k]) url.searchParams.delete(URL_FLAGS[k]);
+  for (const k of keys) {
+    const flag = URL_FLAGS[k];
+    if (!flag) continue;
+    const v = carry ? carry[k] : "auto";
+    if (v == null || v === "auto") url.searchParams.delete(flag);
+    else url.searchParams.set(flag, String(v));
+  }
   return url.toString();
+}
+
+// Pure: the keys a reload can apply. Without storage, only a key with a URL
+// flag can go to the next page.
+export function applicableKeys(keys, saved) {
+  return saved ? [...keys] : keys.filter((k) => URL_FLAGS[k]);
 }
 
 // Pure: which live toggles the running post chain has. `post` is "full",

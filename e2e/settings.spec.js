@@ -71,6 +71,11 @@ test("the menu opens, shows the auto tier, and a tier change applies on a reload
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
   await expect(page.locator("#settings-toggle")).toBeFocused();
+  // Space is the jump key: with the focus on the button it must not open the
+  // menu again.
+  await page.keyboard.press("Space");
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => window.__atl.settings.isOpen)).toBe(false);
 
   // A URL flag wins over the saved tier.
   await ready(page, "&quality=low");
@@ -95,6 +100,15 @@ test("the menu works when localStorage throws", async ({ page }) => {
   await page.keyboard.press("KeyO");
   await page.locator("#settings-quality-high").check();
   await expect(page.locator("#settings-status")).toContainText("this page only");
+  // With no storage, the reload carries the choice in the URL flag.
+  await page.locator("#settings-reload").click();
+  await page.waitForURL(/quality=high/, { timeout: 30000 });
+  // The shadows have no URL flag, so they cannot apply without storage.
+  await ready(page, "&quality=low");
+  await page.keyboard.press("KeyO");
+  await page.locator("#settings-shadows").check();
+  await expect(page.locator("#settings-status")).toContainText("cannot apply without saved settings");
+  await expect(page.locator("#settings-reload")).toBeHidden();
   expect(errors.filter((e) => !/localStorage|SecurityError|blocked/.test(e))).toEqual([]);
 });
 
@@ -119,6 +133,10 @@ test.describe("phone width", () => {
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(vw);
     await page.screenshot({ path: "e2e/__screenshots__/settings-phone.png" });
+    // Tap targets of 44 px or more (WCAG 2.5.5).
+    for (const sel of ["#settings-toggle", "#settings-close", "#settings-peds", "#settings-menu .settings-option"]) {
+      for (const b of await page.locator(sel).all()) expect((await b.boundingBox()).height, sel).toBeGreaterThanOrEqual(44);
+    }
     await page.locator("#settings-close").tap();
     await expect(menu).toBeHidden();
     expect(errors).toEqual([]);

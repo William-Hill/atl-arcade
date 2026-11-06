@@ -38,7 +38,7 @@ function collectErrors(page) {
 
 test("the follow camera keeps the skater on screen for a whole lap", async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto("/?level=greybox&level=greybox");
+  await page.goto("/?level=greybox");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
   expect(await page.evaluate(() => window.__atl.view)).toBe("follow");
 
@@ -69,7 +69,7 @@ test("the follow camera keeps the skater on screen for a whole lap", async ({ pa
 });
 
 test("the follow camera does not clip through a building wall", async ({ page }) => {
-  await page.goto("/?level=greybox&level=greybox");
+  await page.goto("/?level=greybox");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
 
   // Stand on the north sidewalk facing south (yaw -pi/2), so the ideal
@@ -92,7 +92,7 @@ test("the follow camera does not clip through a building wall", async ({ page })
 });
 
 test("the follow camera rides the quarter pipe without snapping or flipping", async ({ page }) => {
-  await page.goto("/?level=greybox&level=greybox");
+  await page.goto("/?level=greybox");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
 
   // Push east into the 3 m quarter pipe, launch off the lip, roll back down.
@@ -135,7 +135,7 @@ test("a mouse drag turns the follow camera, and it goes back behind the skater",
   // The waits for the skater model (60 s) and a still camera (6 s) are longer than the default 30 s.
   test.setTimeout(90000);
   const errors = collectErrors(page);
-  await page.goto("/?level=greybox&level=greybox");
+  await page.goto("/?level=greybox");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
   // The skater GLB downloads in parallel with the level (#74), so the page
   // can be ready before the model and the camera settle. Wait for the model,

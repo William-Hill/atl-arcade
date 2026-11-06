@@ -14,7 +14,7 @@ const SCRIPT = [
 test("the skater slides along a greybox building on a shallow approach", async ({ page }) => {
   const errors = [];
   page.on("pageerror", (err) => errors.push(String(err)));
-  await page.goto("/?level=greybox&level=greybox");
+  await page.goto("/?level=greybox");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
 
   const result = await page.evaluate(async (script) => {

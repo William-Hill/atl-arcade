@@ -213,7 +213,7 @@ describe("the pbr detail and the ink", () => {
     for (const rgb of GROUND_ALBEDO) {
       expect(rgb).toHaveLength(3);
       for (const c of rgb) {
-        expect(c).toBeGreaterThan(0.3);
+        expect(c).toBeGreaterThan(0.1);
         expect(c).toBeLessThanOrEqual(1);
       }
     }
@@ -274,5 +274,18 @@ describe("the sun of each look", () => {
   it("gives the pbr sun a warmer color than the toon sun", () => {
     const rb = (c) => ((c >> 16) & 255) - (c & 255);
     expect(rb(LOOKS.pbr.sunColor)).toBeGreaterThan(rb(LOOKS.toon.sunColor));
+  });
+});
+
+describe("the pbr sun scale (#160)", () => {
+  it("brightens the weather sun in the pbr look only, so a sunlit wall gets a highlight", () => {
+    expect(LOOKS.pbr.sunScale).toBeGreaterThan(1);
+    expect(LOOKS.pbr.sunScale).toBeLessThan(2);
+    expect(LOOKS.toon.sunScale).toBeUndefined();
+    // A 0.6 albedo wall in the weather noon sun (3.0), with the exposure at
+    // noon (1.05 x 1.05): its radiance before the tone curve.
+    const radiance = (sun) => (0.6 / Math.PI) * sun * 1.05 * 1.05;
+    expect(radiance(3.0)).toBeLessThan(0.7);
+    expect(radiance(3.0 * LOOKS.pbr.sunScale)).toBeGreaterThan(0.8);
   });
 });

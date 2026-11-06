@@ -12,6 +12,7 @@ import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { seasonColors, treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
 import { createMuralAtlas } from "./murals.js";
+import { ALBEDO, ALBEDO_GLSL, FACADE_FADE, MATERIAL_CLASSES, windowColorGlsl, windowMean } from "./pbr-palette.js";
 import { createPropBatch } from "./prop-batch.js";
 import { BRICK_TONE, DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, FRAME_ROUGHNESS, GROUND_ALBEDO, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
 import { TREE_UNIFORMS, createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
@@ -189,6 +190,11 @@ uniform vec4 uSun;
 // and the glass roughness of that window.
 float facadeGlass = 0.0;
 float facadeGlassRough = ${ROUGHNESS.glass.toFixed(3)};
+// The fine-detail fade by screen size (pbr look, #160): 0 near, 1 where a
+// window cell is under FACADE_FADE.fine pixels.
+float facadeFine = 0.0;
+${ALBEDO_GLSL}
+${windowColorGlsl()}
 float facadeHash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
 float roomHash(vec3 p) { return facadeHash(p); }
 #ifdef DETAIL
@@ -257,6 +263,17 @@ vec3 roomColor(float h) {
     float mull = win.x > 0.5 ? (1.0 - smoothstep(0.025 - aa.x, 0.025 + aa.x, abs(cell.x - 0.5))) * inWin : 0.0;
     vec3 glass = uGlass[st] + vec3(0.18 * cell.y) + vec3(0.12) * (1.0 - smoothstep(0.0, 0.25, abs(cell.x - cell.y * 0.6 - 0.2)));
     #ifdef PBR_LOOK
+    // The screen size of a window cell (px). Under FACADE_FADE.bold pixels
+    // the window is one flat bold color and the room is not drawn; under
+    // FACADE_FADE.fine pixels the fine detail fades out (pbr-palette.js
+    // screenFade()).
+    float cellPx = 2.0 / max(max(aa.x, aa.y), 1e-4);
+    float boldK = 1.0 - smoothstep(${FACADE_FADE.bold[1].toFixed(1)}, ${FACADE_FADE.bold[0].toFixed(1)}, cellPx);
+    facadeFine = 1.0 - smoothstep(${FACADE_FADE.fine[1].toFixed(1)}, ${FACADE_FADE.fine[0].toFixed(1)}, cellPx);
+    #else
+    float boldK = 0.0;
+    #endif
+    #ifdef PBR_LOOK
     // Each window pane is a little different: its tint and how sharp its
     // reflection is. A real facade reads as a patchwork, not a grid.
     float paneH = facadeHash(vec3(floor(vFacade.yz), float(st) * 7.0 + vFacade.x));
@@ -272,7 +289,7 @@ vec3 roomColor(float h) {
     }
     #ifdef INTERIOR
     vec3 roomGlow = vec3(0.0);
-    {
+    if (boldK < 0.999) {
       // A view-space frame for the wall: T along the wall (the way u grows),
       // U up, and N out of the wall.
       vec3 N = normalize(vNormal);
@@ -363,6 +380,14 @@ vec3 roomColor(float h) {
       glass = col;
     }
     #endif
+    #ifdef PBR_LOOK
+    // The bold far window: one flat color per window (pbr-palette.js
+    // WINDOW_COLORS); the smooth glass still reflects the sky.
+    if (boldK > 0.0) {
+      float bh = facadeHash(vec3(floor(vFacade.yz), float(st) + dot(vWallSeed, vec3(5.0, 9.0, 0.37)) + 53.0));
+      glass = mix(glass, boldWindow(bh), boldK);
+    }
+    #endif
     // The window reveal (issue #135): the glass sits back in the wall, so
     // the head casts a shadow band on the top of the glass and each jamb a
     // thinner band on its side. The bands are in meters, so a tall shop
@@ -398,6 +423,7 @@ vec3 roomColor(float h) {
     // The lintel shadow: a band on the wall and the window top under the
     // lintel line.
     float lshade = (!shop && a.w > 0.5) ? (1.0 - smoothstep(fw.x + 0.04 - aa.x, fw.x + 0.04 + aa.x, d.x)) * (1.0 - smoothstep(0.05 - aa.y, 0.05 + aa.y, abs(cell.y - (lintelY - 0.055)))) : 0.0;
+    sunFace *= 1.0 - facadeFine;
     col *= 1.0 - 0.3 * lshade * sunFace;
     // The sill shadow: a band on the wall under each sill.
     float sshade = (1.0 - smoothstep(fw.x - aa.x, fw.x + aa.x, d.x)) * (1.0 - smoothstep(0.055 - aa.y, 0.055 + aa.y, abs(cell.y - (sillY - 0.06))));
@@ -406,7 +432,7 @@ vec3 roomColor(float h) {
     // darker than the wall, so a tall building shows its floors. The slab
     // shadow deepens it when the sun is on the face.
     float slab = (level > 0.5 && !blank) ? 1.0 - smoothstep(0.035, 0.035 + aa.y, cell.y) : 0.0;
-    col *= 1.0 - (0.22 + 0.26 * sunFace) * slab;
+    col *= 1.0 - (0.22 + 0.26 * sunFace) * slab * (1.0 - facadeFine);
     #endif
     col = mix(col, glass, inWin);
     col = mix(col, uFrame[st], mull * 0.9);
@@ -414,14 +440,19 @@ vec3 roomColor(float h) {
     // so the grid does not shimmer.
     float far = far0;
     // The trim area is in the mean, so the near and the far colors match.
+    #ifdef PBR_LOOK
+    // The far mean uses the bold window mean, so the bold windows fade into it.
+    vec3 mean = mix(mix(wallCol, uTrim[st], 0.08), vec3(${windowMean().map((v) => v.toFixed(4)).join(", ")}), max(win.x, 0.0) * max(win.y, 0.0) * 0.9);
+    #else
     vec3 mean = mix(mix(wallCol, uTrim[st], 0.08), uGlass[st] + vec3(0.09), max(win.x, 0.0) * max(win.y, 0.0) * 0.9);
+    #endif
     diffuseColor.rgb = mix(col, mean, far);
     facadeGlass = inWin * (1.0 - far);
     #ifdef DETAIL
     {
       float stonePart = clamp(max(max(sill, lintel), kick), 0.0, 1.0);
       float wallPart = (1.0 - inFrame) * (1.0 - stonePart);
-      float near = 1.0 - far;
+      float near = (1.0 - far) * (1.0 - facadeFine);
       facadeM = vFacade.yz * uStyleM[st];
       facadeKBrick = a.w > 0.5 ? wallPart * near : 0.0;
       facadeKStone = (a.w > 0.5 ? stonePart : wallPart + stonePart) * near;
@@ -434,6 +465,9 @@ vec3 roomColor(float h) {
     diffuseColor.rgb *= 0.74;
     float albL = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(albL), 0.1);
+    // The albedo ceiling (#157, pbr-palette.js ALBEDO): no wall over 0.6
+    // linear, so pale stucco and white trim do not bleach under the sun.
+    diffuseColor.rgb = albedoCeiling(diffuseColor.rgb, ${ALBEDO.ceiling.toFixed(3)});
     #endif
     #ifdef PBR_LOOK
     // Ground contact: darker at the base of the wall (look.js wallOcclusion).
@@ -450,7 +484,8 @@ vec3 roomColor(float h) {
       float litWin = step(wh, uLit * (shop ? 0.95 : 0.6));
       vec3 glowC = wh < 0.5 ? vec3(1.0, 0.76, 0.48) : vec3(0.82, 0.88, 1.0);
       #ifdef INTERIOR
-      totalEmissiveRadiance += glowC * litWin * inWin * (1.0 - far) * uLit * 0.12;
+      // A bold far window has no room glow, so it takes the full flat light.
+      totalEmissiveRadiance += glowC * litWin * inWin * (1.0 - far) * uLit * mix(0.12, 0.55, boldK);
       #else
       totalEmissiveRadiance += glowC * litWin * inWin * (1.0 - far) * uLit * 0.55;
       #endif
@@ -481,7 +516,7 @@ roughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);`,
   // cell (gen-city), so adjacent panes catch the sky differently.
   float wu = facadeHash(vec3(floor(vFacade.yz), vFacade.x + 11.0));
   float wv = facadeHash(vec3(floor(vFacade.yz), vFacade.x + 29.0));
-  normal = normalize(normal + vec3(wu - 0.5, wv - 0.5, 0.0) * 0.06 * facadeGlass);
+  normal = normalize(normal + vec3(wu - 0.5, wv - 0.5, 0.0) * 0.06 * facadeGlass * (1.0 - facadeFine));
 }`,
       )
       .replace(
@@ -506,7 +541,7 @@ roughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);`,
 #endif`,
       );
   };
-  mat.customProgramCacheKey = () => `facade-v10${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}${detail ? "-detail" : ""}`;
+  mat.customProgramCacheKey = () => `facade-v11${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}${detail ? "-detail" : ""}`;
   return mat;
 }
 
@@ -666,7 +701,9 @@ vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   // Sample every set at the top level, so the mipmap level is correct.
 ${GROUND.map((_, i) => `  float r${i} = texture2D(uGroundRough${i}, vGroundXZ / uGroundTile${i}).r;`).join("\n")}
   float rg = groundSet < -0.5 ? roughnessFactor : groundSet < 0.5 ? r0 : groundSet < 1.5 ? r1 : groundSet < 2.5 ? r2 : r3;
-  roughnessFactor = mix(roughnessFactor, max(rg, ${GROUND_MIN_ROUGHNESS.toFixed(3)}), groundK);
+  // Grass is the roughest ground (0.92, docs/style-sheet-pbr.md): a smoother
+  // lawn caught the grazing sky and went mint-gray.
+  roughnessFactor = mix(roughnessFactor, max(rg, groundSet > 2.5 ? ${MATERIAL_CLASSES.grass.roughness[0].toFixed(3)} : ${GROUND_MIN_ROUGHNESS.toFixed(3)}), groundK);
 }
 #endif
 roughnessFactor *= mix(1.0, 0.3, uWet);`,

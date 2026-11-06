@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { litMaterial } from "./look.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 // Street name signs: a post with two green blades, white letters, as on an
@@ -83,7 +84,7 @@ function bladeGeometry(length, row, atlasRows, widthPx) {
 }
 
 // `signs` are the placements of kind "street_sign": { x, y, z, names, yaws }.
-export function createStreetSigns(signs, { gradientMap = null } = {}) {
+export function createStreetSigns(signs, { gradientMap = null, look = "toon" } = {}) {
   const group = new THREE.Group();
   group.name = "street-signs";
   // No signs (?props=0, or a level with no named crossings): the same shape
@@ -120,7 +121,8 @@ export function createStreetSigns(signs, { gradientMap = null } = {}) {
       parts.push(g.index ? g.toNonIndexed() : g);
     });
   }
-  const material = new THREE.MeshToonMaterial({ map: tex, gradientMap });
+  // Sign paint on a metal blade (pbr: painted metal, rough enough to read).
+  const material = litMaterial(look, { map: tex }, { gradientMap, roughness: 0.55, envLight: 0.6 });
   const meshes = [];
   for (const [key, parts] of [...tiles].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
     const geom = mergeGeometries(parts.map((g) => (g.index ? g.toNonIndexed() : g)));

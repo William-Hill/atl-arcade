@@ -48,7 +48,7 @@ try {
     page.on("pageerror", (e) => console.log("PAGEERROR:", e.message));
     const t0 = Date.now();
     await page.goto(`http://localhost:${port}/?${q}`, { waitUntil: "commit" });
-    await page.waitForFunction(() => window.__atl?.ready && window.__atl.frames > 8, null, { timeout: 300000 });
+    await page.waitForFunction(() => window.__atl?.ready && window.__atl.frames > 8, null, { timeout: 1200000 });
     if (shot.tune) {
       await page.evaluate((t) => {
         const apply = () => {
@@ -70,12 +70,12 @@ try {
     }
     await page.waitForTimeout(5000);
     const f = await page.evaluate(() => window.__atl.frames);
-    await page.waitForFunction((f0) => window.__atl.frames > f0 + 6, f, { timeout: 300000 });
+    await page.waitForFunction((f0) => window.__atl.frames > f0 + 6, f, { timeout: 1200000 });
     // Frames show the world only: hide the HUD, the hints and the minimap.
     await page.addStyleTag({ content: "* { visibility: hidden !important; } #stage { visibility: visible !important; }" });
     await page.waitForTimeout(500);
     const file = `${out}/${shot.name}.png`;
-    await page.screenshot({ path: file, timeout: 300000 });
+    await page.screenshot({ path: file, timeout: 1200000 });
     const info = await page.evaluate(() => ({ renderer: window.__atl.rendererInfo, look: window.__atl.tuneLook(), grade: Object.fromEntries(Object.entries(window.__atl.post?.grade?.uniforms ?? {}).filter(([k]) => k !== "tDiffuse").map(([k, u]) => [k, u.value])), bloom: window.__atl.post?.bloom?.strength ?? null, weather: window.__atl.weather ? { kind: window.__atl.weather.kind, elevation: window.__atl.weather.elevation } : null }));
     const entry = { name: shot.name, commit, url: `/?${q}`, tune: shot.tune ?? null, ...info, seconds: Math.round((Date.now() - t0) / 1000) };
     log.push(entry);

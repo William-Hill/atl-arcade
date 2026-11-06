@@ -1386,6 +1386,39 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Round two keeps option A as the game today and makes B–E one clear direction each: hot noon, golden hour, overcast soft, neon night, wet street, warm lamps. They are heavier scripted ImageMagick paintovers of the same captures (`scripts/art/paintover.sh` modes `hot`, `golden`, `soft`, `neon`, `wet`): lawn recolor, lilac asphalt darkened, sky replaced, regrade. 0 credits; no image model.
 - Each contact-sheet tile carries a "Look at:" line naming what changed; the per-frame provenance records the paintover mode and its tuning variables.
 
+## 2026-11-06: epic/city-look — pbr materials, Atlanta palette and look pass (#157, #160)
+
+(This entry is placed here, not at the end of the file, so it does not conflict with the open PRs that add entries at the end.)
+
+### Decisions
+
+- No toon material in `?look=pbr`. The procedural cars, the crowd NPCs, the street sign blades, the landmark sign boards and the landmark far LOD now use `litMaterial(look, ...)` (metal/rough under pbr). `window.__atl.materials` lists the material types and any toon material left; at the six standard cameras it lists none. `MeshBasicMaterial` stays only for lamps, fact cards, tree impostors and the shadow blob (unlit by design).
+- New pure module `src/render/pbr-palette.js`: albedo ceiling (0.6 linear) and floor, roughness and metalness per material class, the palette, accent, grade tint and fog tint per district, the grade by time of day, the height fog formula, the env light by sky luma, the bloom threshold by daylight, the bold far-window colors and the material audit. The shaders use GLSL copies of the same formulas. The values are in `docs/style-sheet-pbr.md`.
+- New `src/render/pbr-look.js` writes the light each frame: the grade pass uniforms (time of day × the district at the camera, blended over 120 m past each anchor radius), the fog tint, the skater rim, the pbr sun (weather sun × 1.4), the bloom threshold, and a new env map baked from the sky when its colors move. `?pbrgrade=0` turns it off; `?heightfog=0` keeps the stock fog.
+- Env light: before, the env map was baked once from the noon sky, so dusk and night were lit by a noon sky (the blue-gray dusk and night of the art direction). Now the map follows the sky, and its light falls only with the square root of the sky luma (cap × 3), with a ground bounce floor of 0.15 (`envForSky()`).
+- Sun: the weather sun (3.0 peak) is set for the toon ramp; under pbr a 0.6 albedo wall reached about 186 of 255 and no day frame had a highlight. The pbr look scales it by 1.4. The bloom threshold goes to 2.4 in the day, so no sunlit surface glows (0.92 at night).
+- Grade pass: contrast on the luma around 0.18 (as `gradeColor()` in look.js intended; the old shader turned around 0.5 in linear HDR), saturation, split tone, black lift, district tint. Day 1.14 contrast, golden hour warm, dusk cool with lifted blacks, night warm split.
+- Height fog: the stock fog chunks are replaced in the pbr look only. The fog is thinner high up (× 0.55) and full under the eye, with a light ground haze, and full at the far plane at every height, so the far cut never shows. The fog color takes 40 % of the district fog tint by day.
+- Far windows: a window cell under 34 px goes to one flat bold color (deep blue, teal, indigo, sky, one warm pane in five); under 16 px the interior room is not computed at all. Fine detail (scan relief, sill, lintel and slab bands, pane wobble) fades from 48 to 20 px per cell. The far facade mean uses the bold window mean.
+- Ground: grass gets a per-channel albedo factor (lawn `#628a46`, park `#548d3f`, in the `#4f7a3a`–`#6f9a4a` target) and a roughness floor of 0.92; the mint-gray haze is gone. Asphalt goes to about 0.09 linear with no lilac cast.
+- Skater: a rim light from the horizon color (no ink pass), 0.55 by day, 0.8 at golden hour, 0.3 at night, chained after the NPC outfit hook; a roughness floor of 0.42 on non-metal skater materials (no plastic skin).
+- Not changed: the GTAO settings and pass (open PR #166 changes those lines), the facade kit placement (PR #174), the pedestrians, the terrain (PR #172). The style wall colors in `styles.js` are shared with the toon look and are not re-authored; the pbr shader caps them at the ceiling and keeps the hue.
+
+### Evidence
+
+- Vitest: `src/render/pbr-palette.test.js` (44 tests: ceiling, palette limits, ground greens and asphalt, classes, character roughness, window colors, screen fades, district weights, time grade continuity, grade formula, height fog, env by sky, bloom, material audit, the skater rim and hook chain) and a sun-scale test in `look.test.js`. Full suite: 1 failure, the known base failure in `src/level/geo/styles.test.js` (it fails the same way on `epic/city-look` adf3577). Some heavy tests time out at 5 s when a headless browser runs at the same time; they pass with a longer timeout.
+- `npm run build` passes.
+- Playwright headless before/after at the six standard cameras, 1280×720: `reports/pbr-look-pass/` (README with the table, `before-after.jpg`). Draw calls are the same at every camera (358, 218, 144, 526, 404, 226); triangles are the same or lower (Ponce City Market −72).
+- Tonal range (luma p2 / p50 / p98): trail 14/135/215 → 0/148/235, skater 14/148/221 → 0/164/230 (both meet the day gate p2 ≤ 20, p98 ≥ 230); street 17/135/189 → 14/148/196 and Ponce City Market 14/70/198 → 20/84/210 (better, not yet at 230); dusk 12/48/180 → 0/50/189; night 13/37/183 → 7/26/179.
+
+### Limits
+
+- Not verified: the 55 FPS median on the high tier (#157). The cloud machine has no GPU (SwiftShader). Measure on a real GPU.
+- Phone tier: the default phone look is toon, and every change is behind the pbr look. Measured (SwiftShader, 640×360, trail camera, mean of 4 frames, two runs each): draw calls 86 → 86, triangles 194,291 → 194,291, frame time 106 and 342 ms before, 97 and 91 ms after (noisy on a shared CPU, not worse). Phone-tier decision for the pbr look: it stays off by default on the phone tier (`lookFor()`); `?look=pbr` still works there and on the low tier (checked: no page error, no toon material).
+- `?look=toon`, `?quality=low` and `?quality=phone` load with no page error after the change.
+- The street and Ponce City Market day frames do not reach p98 230 (the pale sky fills their top half).
+- The olive pants of Nia now sit on a mid-green lawn; the rim and the value step keep her readable, but an outfit color review is a follow-up.
+
 ## 2026-11-05: epic/city-look — traffic lane following (IDM), lamps, signals, crosswalk yields
 - Lanes: `trafficLanes()` (`src/sim/traffic/traffic.js`) now builds one lane per travel lane of `laneLayout()` (`src/level/geo/lanes.js`), at the lane centers between the painted lines (`runLaneOffsets()` in `src/sim/cars.js`), curb lane first. The BeltLine level goes from 9 to 15 lanes (54 to 68 moving cars) (Ponce de Leon 3 + 2, North Avenue and John Lewis 1 + 1 each, Freedom Parkway one-way). Cars stay in their lane: no lane changes yet.
 - Following: the Intelligent Driver Model (`idmAccel()`, a 1.5, b 2.5, s0 3 m, T 1.4 s, delta 4, hard limit 6 m/s²) replaces the target-speed rule. Stop lines, crosswalks, and the yield point before the skater are fixed points (`idmStopAccel()`): the IDM toward a virtual car at rest, plus a 1 m/s creep and a kinematic last half metre, because the plain IDM reaches a stop point only asymptotically. A car on a two-way street slows to 3 m/s for its U-turn, and spawns no faster than a calm stop before the next stop line allows.

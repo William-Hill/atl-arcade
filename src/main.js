@@ -67,6 +67,9 @@ import { createCarView } from "./render/car-view.js";
 import { createCarModelView, loadCarModels } from "./render/car-models.js";
 import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
 import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
+import { createPbrLook, installHeightFog } from "./render/pbr-look.js";
+import { materialAudit } from "./render/pbr-palette.js";
+import { districtAnchors } from "./level/geo/styles.js";
 import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
 import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
 import { createFactCardsView } from "./render/fact-cards-view.js";
@@ -160,6 +163,8 @@ if (geo) {
   sky = tier.post !== "full" || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
   if (sky) scene.add(sky.mesh);
   if (look === "pbr") {
+    // The height fog (src/render/pbr-look.js): before the first material compiles.
+    if (params.get("heightfog") !== "0") installHeightFog();
     // The sky environment map: ambient light and reflections. A tier with
     // no sky dome gets one made only for the map.
     const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection });
@@ -237,12 +242,12 @@ if (geo && params.get("weather") !== "0") {
 
 // Street name signs at the real intersections (src/level/geo/signs.js).
 // ?signs=0 leaves them out.
-const streetSigns = geo && params.get("signs") !== "0" ? createStreetSigns(env.props.filter((p) => p.kind === "street_sign")) : null;
+const streetSigns = geo && params.get("signs") !== "0" ? createStreetSigns(env.props.filter((p) => p.kind === "street_sign"), { look }) : null;
 if (streetSigns) scene.add(streetSigns.group);
 
 // Landmark models on the real roofs (img2threejs towers, rooftop signs).
 // ?landmarks=0 leaves them out.
-const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(level, { renderer }) : null;
+const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(level, { renderer, look }) : null;
 if (landmarks) {
   scene.add(landmarks.root);
   landmarks.ready.catch((err) => console.error(err));
@@ -269,7 +274,7 @@ if (geo && params.get("props") !== "0") {
 const npcSeed = Number(params.get("npcseed") ?? 1) || 1;
 const npcsOn = geo && params.get("npcs") !== "0";
 let crowd = npcsOn ? createCrowd(level, { seed: npcSeed }) : null;
-const npcView = crowd ? createNpcView(crowd) : null;
+const npcView = crowd ? createNpcView(crowd, { look }) : null;
 if (npcView) {
   npcView.sync(crowd);
   scene.add(npcView.group);
@@ -316,7 +321,7 @@ if (meshyProps) {
   meshyProps.ready.catch((err) => console.error(err));
 }
 let traffic = carsOn && params.get("traffic") !== "0" ? makeTraffic() : null;
-const carView = carsOn ? createCarView(parked, traffic ? traffic.cars : [], { pitchAt: (c) => carPitch(c, (x, z) => carHeight(x, z, c.y)) }) : null;
+const carView = carsOn ? createCarView(parked, traffic ? traffic.cars : [], { pitchAt: (c) => carPitch(c, (x, z) => carHeight(x, z, c.y)), look }) : null;
 if (carView) {
   carView.update({ x: level.spawn.position[0], z: level.spawn.position[2] }, traffic?.cars);
   scene.add(carView.mesh);
@@ -509,6 +514,10 @@ let post = tier.post === "full" ? createPost(renderer, scene, camera, postOption
 // Photo mode's tilt-shift blur (src/render/tilt-shift.js): on the full
 // chain only, and off in play.
 let tiltShift = post && post.kind === "full" ? addTiltShift(post, camera, renderer) : null;
+// The pbr look's per-frame light (src/render/pbr-look.js): the grade by
+// time of day and district, the fog tint, the env map bake, the skater rim.
+// ?pbrgrade=0 keeps the fixed day values (for a before/after check).
+const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: districtAnchors(level), getPost: () => post }) : null;
 function draw() {
   renderer.info.reset();
   if (post) post.render();
@@ -841,6 +850,8 @@ function frame(now) {
   if (levelView.update) levelView.update(isoFocus ?? camera.position);
   if (sky) sky.update(camera, now / 1000);
   if (weatherView) weatherView.update(elapsed, camera);
+  // The pbr light pass (#160): grade, fog tint, env map, rim. After the weather.
+  if (pbrLook) pbrLook.update(camera.position, weatherView?.state ?? null, elapsed);
   if (rain) rain.update(camera, now / 1000, weatherView?.state, renderer.domElement.height);
   if (streetSigns) streetSigns.update(isoFocus ?? camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
@@ -1352,6 +1363,14 @@ window.__atl = {
   skaterScreenHeight,
   get fov() {
     return camera.fov;
+  },
+  // The material types in the scene and any toon material left (#157).
+  get materials() {
+    return materialAudit(scene);
+  },
+  // The pbr light pass state: the district, the grade, the env bakes.
+  get pbrLook() {
+    return pbrLook ? JSON.parse(JSON.stringify(pbrLook.info)) : null;
   },
   get rendererInfo() {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };

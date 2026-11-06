@@ -129,11 +129,37 @@
         "assets/skaters/nia/raw/runtime-v2/rig-audit.json"
       ],
       "credits_spent": 0
+    },
+    {
+      "tool": "Tripo Studio 3D Workspace, Animate, text to motion (studio.tripo3d.ai, driven through Claude in Chrome); Blender 5.2.2 LTS, scripts/blender/skater_motion_retarget.py",
+      "date": "2026-11-05",
+      "issue": "#169",
+      "project": "Nia carrier task 72bfc452-df28-4e58-83bb-e89a35341a9a",
+      "settings": "Duration 5 s. Export FBX, Blender preset, 4k, Export Skeleton on, one animation per file.",
+      "motions": [
+        {
+          "clip": "dance_laffytaffy",
+          "tripo_name": "Dancing in Place",
+          "prompt": "A quad roller skater dances the Atlanta Laffy Taffy groove in place: a relaxed knee bounce on each beat, smooth shoulder rolls, and loose arm swings, upbeat and friendly.",
+          "source_fbx": "assets/skaters/nia/raw/tripo-motion-v2/laffy-taffy/tripo_convert_75c21621-6a1b-4741-9de3-6eb7bf639922.fbx",
+          "review_glb": "assets/skaters/nia/raw/tripo-motion-v2/laffy-taffy/nia-dance_laffytaffy.glb"
+        },
+        {
+          "clip": "skate_crossover",
+          "tripo_name": "Skating Turn",
+          "prompt": "A quad roller skater glides forward with bent knees, then does smooth crossover steps to turn left, the right skate crossing over the left, arms out for balance, then glides out of the turn.",
+          "source_fbx": "assets/skaters/nia/raw/tripo-motion-v2/skating-turn/tripo_convert_44bafd1e-08fc-42b5-891d-8ac490e55891.fbx",
+          "review_glb": "assets/skaters/nia/raw/tripo-motion-v2/skating-turn/nia-skate_crossover.glb"
+        }
+      ],
+      "result": "Two review clips on the v2 body. Not in the runtime GLB. Owner and real-skater review open.",
+      "credits_spent": 40,
+      "credits_note": "40 Tripo credits for both motions (20 each), approved by the owner. Balance 2755 before, 2715 after. Retarget and export cost 0."
     }
   ],
-  "credits_spent_total": 115,
-  "tripo_credits_before": 3000,
-  "tripo_credits_after": 2885,
+  "credits_spent_total": 155,
+  "tripo_credits_before": 2755,
+  "tripo_credits_after": 2715,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
   "file_size_bytes": 6306628,

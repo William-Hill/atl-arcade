@@ -123,7 +123,7 @@ const look = geo ? lookFor(params.get("look"), quality) : "toon";
 const landmarkGlbs = look === "pbr" && params.get("landmarks") !== "0" && params.get("landmarkglb") !== "0";
 if (landmarkGlbs) claimLandmarkModels();
 // The pbr look's Blender facade kit (src/render/facade-kit-view.js) loads while
-// the meshes build. ?kitglb=0 or a failed load keeps the full procedural kit.
+// the meshes build. ?kitglb=0, a failed load or a slow one keeps the full procedural kit.
 const facadeKitNodes = look === "pbr" && tier.detail && params.get("kit") !== "0" && params.get("kitglb") !== "0" && params.get("depth") !== "0"
   ? loadFacadeKit().catch((err) => { console.warn("facade kit GLB failed to load; the procedural kit stays", err); return null; })
   : null;
@@ -199,7 +199,10 @@ if (params.get("dev") === "1" || params.get("debug") === "1") document.body.clas
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitNodes, depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
+// The level does not wait on a slow facade GLB: past ?kitwait=<ms> (3 s) after
+// the meshes are built, the full procedural kit goes in instead.
+const facadeKitReady = (nodes, ms = numParam("kitwait") ?? 3000) => nodes && Promise.race([nodes, new Promise((done) => setTimeout(() => { console.warn(`facade kit GLB not loaded in ${ms} ms; the procedural kit stays`); done(null); }, ms))]);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 

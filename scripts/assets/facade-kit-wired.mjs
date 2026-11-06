@@ -66,6 +66,11 @@ try {
   const failed = await open(page, street, false);
   rows.push({ kind: "glbfail", after: failed, kit: await kitCounts(), fullKit });
   await page.unroute(/facade-kit.*\.glb/);
+  // A slow GLB download (8 s, past ?kitwait=1000): the level does not wait, the procedural kit stays whole.
+  await page.route(/facade-kit.*\.glb/, async (r) => { await new Promise((d) => setTimeout(d, 8000)); await r.continue().catch(() => {}); });
+  const slow = await open(page, `${street}&kitwait=1000`, false);
+  rows.push({ kind: "glbslow", after: slow, kit: await kitCounts(), fullKit });
+  await page.unroute(/facade-kit.*\.glb/);
 } finally {
   writeFileSync(resolve(outDir, "wired.json"), JSON.stringify({ glbFileBytes: statSync("assets/facades/facade-kit.glb").size, rows, errors }, null, 2));
   await browser.close();

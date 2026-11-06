@@ -87,4 +87,14 @@ describe("facade kit view", () => {
     view.update({ x: 150, z: 25 });
     expect(view.info.shown).toBe(0);
   });
+
+  it("shows a long building near its far wall, its depth tile out of range", () => {
+    const view = createFacadeKitView(NODES, [{ ...BUILDING, center: [0, 0], radius: 100, tile: [275, -175] }], { depthDistance: 120 });
+    view.update({ x: -90, z: 0 });
+    expect(view.info.shown).toBeGreaterThan(0);
+    // Without a tile, by the building distance alone (115 m from its edge).
+    const untiled = createFacadeKitView(NODES, [{ ...BUILDING, center: [0, 0], radius: 5 }], { depthDistance: 120 });
+    untiled.update({ x: 120, z: 0 });
+    expect(untiled.info.shown).toBeGreaterThan(0);
+  });
 });

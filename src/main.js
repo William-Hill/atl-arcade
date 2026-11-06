@@ -126,7 +126,8 @@ const landmarkGlbs = look === "pbr" && params.get("landmarks") !== "0" && params
 if (landmarkGlbs) claimLandmarkModels();
 // The pbr look's Blender facade kit (src/render/facade-kit-view.js) loads while
 // the meshes build. ?kitglb=0, a failed load or a slow one keeps the full procedural kit.
-const facadeKitNodes = look === "pbr" && tier.detail && params.get("kit") !== "0" && params.get("kitglb") !== "0" && params.get("depth") !== "0"
+// One BatchedMesh: one draw call with WEBGL_multi_draw (as the prop batch), one per instance without.
+const facadeKitNodes = look === "pbr" && tier.detail && renderer.extensions.has("WEBGL_multi_draw") && params.get("kit") !== "0" && params.get("kitglb") !== "0" && params.get("depth") !== "0"
   ? loadFacadeKit().catch((err) => { console.warn("facade kit GLB failed to load; the procedural kit stays", err); return null; })
   : null;
 

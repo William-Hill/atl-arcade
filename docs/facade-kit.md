@@ -114,7 +114,7 @@ shader's own window (src/render/geo-view.js) instead of fighting it.
 6. **Scale limits.** Never scale past `extras.kit.scaleX/scaleY`; skip the
    module instead (the shader window still shows). z is never scaled.
 7. **Tint.** `tint: true` modules are near-white in the atlas; set the
-   instance color (`InstancedMesh.setColorAt`) to `style.trim` (trim) or the
+   instance color (`setColorAt`) to `style.trim` (trim) or the
    building's awning color (`AWNING_COLORS[seed % n]`).
 8. **Roof.** Roof units sit on `top` (`buildingSpan().top`), at least 1.5 m
    plus their own clearance from every wall, not overlapping each other, in
@@ -172,13 +172,12 @@ Per building:
 
 Wiring guidance (done as described in "In the game" below):
 
-- One `InstancedMesh` per module per depth tile (`DEPTH_TILE = 50`);
-  `byModule()` groups the list. All share the one material, so at most ~39
-  draw calls per tile, in practice 10–20. Merge tiles if draw calls matter
-  more than culling.
+- All modules share the one material, so they can go in one `BatchedMesh`
+  (one draw call with `WEBGL_multi_draw`); `byModule()` groups the list if
+  one `InstancedMesh` per module is wanted instead.
 - `<module>_lod1` past `LOD1_DISTANCE = 30` m; drop the small wall modules
-  (AC units, lamps, downspout parts, sign boards) past ~120 m; past the
-  existing `lod0` distance the shader facade alone is enough.
+  (AC units, lamps, downspout parts) at range; past the existing depth
+  distance the shader facade alone is enough.
 - Where the kit is on, turn off the procedural parts it replaces on those
   walls: sills (`wallDepth`), piers and sign bands (`shopFront`), and the
   `KIT.awning` awnings. The preview does it the blunt way with `?kit=0`
@@ -207,14 +206,17 @@ Wiring guidance (done as described in "In the game" below):
   `main.js` while the meshes build. All the modules of the level are in one
   `BatchedMesh` (one draw call: every node shares the kit material), and the
   shop names on the GLB sign boards in a second one. Culling is per
-  building (its distance: center distance minus footprint radius): closer
-  than `DEPTH_DISTANCE` (120 m, with the procedural depth tiles) it is
-  drawn; past `LOD1_DISTANCE` (30 m) it uses the `_lod1` nodes, and for the
+  building: it is drawn while its procedural depth tile is (the tile center
+  closer than `DEPTH_DISTANCE`, 120 m: the procedural parts it covers are
+  left out there), and while the building itself (center distance minus
+  footprint radius) is closer than 120 m, for the far wall of a long
+  building. Past `LOD1_DISTANCE` (30 m) it uses the `_lod1` nodes, and for the
   other modules `farGeometry()` (the faces toward the street and the large
   horizontal faces: about 40% of a window frame); the small trim (`TRIM`:
   AC units, downspout parts, lamps, pilaster caps, roof vents and units,
   ladders) only closer than `TRIM_DISTANCE` (35 m). The BatchedMesh also
-  frustum-culls per instance.
+  frustum-culls per instance. Without `WEBGL_multi_draw` a BatchedMesh draws
+  once per instance, so `main.js` then keeps the procedural kit.
 - The glass panes of the `window_*` and `storefront_glass_*` nodes (the
   atlas glass strip) are cut out at load (`withoutGlass()`), so the facade
   shader's glass and room interiors show through the GLB frames, as in the

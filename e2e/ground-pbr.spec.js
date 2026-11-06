@@ -44,6 +44,15 @@ for (const cfg of CONFIGS) {
       if (msg.type() === "error") errors.push(msg.text());
     });
     page.on("pageerror", (err) => errors.push(String(err)));
+    // The ground textures that the page downloads (the resource timing
+    // buffer fills up before they load, so read the responses).
+    const textures = [];
+    page.on("response", async (res) => {
+      const url = res.url();
+      if (!/\/assets\/ground\//.test(url) || /\.json/.test(url)) return;
+      const body = await res.body().catch(() => null);
+      textures.push({ file: new URL(url).pathname.replace(/^.*\/assets\/ground\//, ""), bytes: body ? body.length : null });
+    });
     await page.goto(`/?level=beltline-eastside&mute=1&quality=${cfg.quality}&look=${cfg.look}&governor=0&view=fixed&minimap=0&skater=capsule&weather=0&cars=0&traffic=0&peds=0&npcs=0&skaters=0`);
     await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 150000 });
     await page.waitForFunction(() => window.__atl.level.props && (window.__atl.level.props.loaded || window.__atl.level.props.error), null, { timeout: 150000 });
@@ -72,13 +81,7 @@ for (const cfg of CONFIGS) {
       out.views[v.name] = await page.evaluate(() => window.__atl.rendererInfo);
       await page.screenshot({ path: `${DIR}/${cfg.name}-${v.name}.png` });
     }
-    // The ground textures that the page downloaded (bytes on the wire).
-    out.groundTextures = await page.evaluate(() =>
-      performance
-        .getEntriesByType("resource")
-        .filter((e) => /\/assets\/ground\//.test(e.name) && !/\.json/.test(e.name))
-        .map((e) => ({ file: new URL(e.name).pathname.replace(/^.*\/assets\/ground\//, ""), bytes: e.encodedBodySize || e.transferSize })),
-    );
+    out.groundTextures = textures;
     out.groundTextureBytes = out.groundTextures.reduce((n, e) => n + e.bytes, 0);
     metrics[cfg.name] = out;
     writeFileSync(`${DIR}/metrics.json`, `${JSON.stringify(metrics, null, 2)}\n`);

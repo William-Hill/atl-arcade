@@ -4,12 +4,13 @@ import { expect, test } from "@playwright/test";
 // #158: the PBR ground sets. For each tier and look it saves pictures of the
 // BeltLine trail, a street, a sidewalk, and a brick path, and writes the
 // ground texture bytes and the draw calls of each view to
-// reports/ground-pbr/<set>/metrics.json (GROUND_SHOTS=before|after, default
-// after). The views are fixed coordinates and the spec only reads
-// window.__atl hooks that are older than #158, so the same spec runs on the
-// build before the change.
+// reports/ground-pbr/<set>/metrics.json (GROUND_SHOTS=before|after). The
+// spec runs only with GROUND_SHOTS set: it takes a long time on the software
+// GPU and it writes over the evidence in reports/. The views are fixed
+// coordinates and the spec only reads window.__atl hooks that are older than
+// #158, so the same spec runs on the build before the change.
 
-const SET = process.env.GROUND_SHOTS ?? "after";
+const SET = process.env.GROUND_SHOTS;
 const DIR = `reports/ground-pbr/${SET}`;
 
 // name, camera (x, z), height over the ground (m), look at (x, z).
@@ -34,6 +35,8 @@ const CONFIGS = [
 ];
 
 const metrics = {};
+
+test.skip(!SET, "set GROUND_SHOTS=before|after to take the ground pictures");
 
 for (const cfg of CONFIGS) {
   test(`ground pictures and metrics: ${cfg.name}`, async ({ page }) => {

@@ -39,6 +39,8 @@ flipY off reads it the same way as the 2D maps with flipY on.
 
 assets/ground/<set>/provenance.json gets the tool, the source, the
 authors, the license, and the date for each set.
+assets/ground/pbr/provenance.json gets the source, the authors, and the
+license of each layer of the strips.
 """
 
 import argparse
@@ -257,6 +259,18 @@ def main():
         print(f"{tier}: {sizes[tier]['bytes']} total {sizes[tier]['totalBytes']} B, GPU {sizes[tier]['totalGpuBytes'] / 2**20:.1f} MiB")
     out = {"layers": list(SETS), "tiers": sizes, "sets": meta}
     (OUT / "sets.json").write_text(json.dumps(out, indent=2) + "\n")
+    # The provenance of the strips, next to the strips: one entry per layer.
+    prov = {
+        "tool": "scripts/ground-textures-pbr.py (Poly Haven API download, candidate scores, low-pass delight, resize, ORM pack, WebP)",
+        "prompt": None,
+        "license": "CC0 1.0",
+        "date": today,
+        "files": sorted({f"{m}-{n}.webp" for s in TIERS.values() for m, n in s.items()}),
+        "layers": [{"layer": i, "set": e["id"], "asset": e["asset"], "source": e["source"], "credits": e["authors"], "license": e["license"]} for i, e in enumerate(meta)],
+        "details": "assets/ground/<set>/provenance.json (download URLs and candidate scores)",
+        "note": "Scanned photo textures, not generated art.",
+    }
+    (OUT / "provenance.json").write_text(json.dumps(prov, indent=2) + "\n")
 
 
 if __name__ == "__main__":

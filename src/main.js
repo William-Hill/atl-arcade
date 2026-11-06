@@ -77,8 +77,12 @@ import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
 import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
 import { createFactCardsView } from "./render/fact-cards-view.js";
 import { createFactPopup } from "./ui/fact-popup.js";
+import { NO_PERF, createFrameCost } from "./perf/frame-cost.js";
 
 const params = new URLSearchParams(window.location.search);
+// ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
+// reads __atl.perf). Off by default: NO_PERF does nothing.
+const perf = params.get("perf") === "1" ? createFrameCost(() => performance.now()) : NO_PERF;
 // The player settings (#94, src/ui/settings.js): a URL flag wins, then the
 // saved choice, then the device default.
 const settingsStorage = safeStorage();
@@ -667,17 +671,27 @@ function sampleInput() {
 function simulate(dt) {
   // After the run ends the skater gets no input and rolls to a stop.
   const sampled = sampleInput();
+  perf.begin("skater");
   run = stepRun(run, goals && goals.ended ? {} : sampled, dt, env, skaterEnv, beat.running ? beat : null);
+  perf.end("skater");
   skater = run.skater;
   if (goals && !goals.ended) {
     goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
     if (goals.ended) events.push({ tick: run.tick, type: "run-end", ...goalsJson(goals, goalDef) });
   }
+  perf.begin("crowd");
   if (crowd) crowd = stepCrowd(crowd, dt, skater.position, npcSkaters ? skaterObstacles(npcSkaters) : []);
+  perf.end("crowd");
+  perf.begin("traffic");
   if (traffic) traffic = stepTraffic(traffic, dt, skater.position);
+  perf.end("traffic");
+  perf.begin("walkers");
   if (peds) stepPeds(peds, dt, { focus: [camera.position.x, camera.position.z], nia: skater.position, others: [...(crowd ? crowd.npcs : []), ...(npcSkaters ? skaterObstacles(npcSkaters) : [])] });
+  perf.end("walkers");
+  perf.begin("npcSkaters");
   if (npcSkaters) npcSkaters = stepNpcSkaters(npcSkaters, dt, env, skaterEnv, { player: skater.position, crowd: crowd ? crowd.npcs : [], beat: beat.running ? { time: beat.now(), bpm: beat.bpm } : null });
+  perf.end("npcSkaters");
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
   if (run.banked) {
     events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
@@ -861,9 +875,11 @@ function frame(now) {
     const stepped = advance(stepper, elapsed);
     stepper = stepped.stepper;
     for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
+    perf.steps(stepped.steps);
     ticks += stepped.steps;
   }
 
+  perf.begin("views");
   skaterView.sync(skater, paused ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
   if (photo.isOpen) {
     photo.update(Math.min(elapsed, 0.1));
@@ -899,17 +915,29 @@ function frame(now) {
   if (pbrLook) pbrLook.update(camera.position, weatherView?.state ?? null, elapsed);
   if (rain) rain.update(camera, now / 1000, weatherView?.state, renderer.domElement.height);
   if (streetSigns) streetSigns.update(isoFocus ?? camera.position);
+  if (meshyProps) meshyProps.update(camera.position);
+  perf.end("views");
+  perf.begin("crowdView");
   if (npcView) npcView.sync(crowd, camera.position);
+  perf.end("crowdView");
+  perf.begin("walkersView");
   if (pedModels) pedModels.update(peds, camera.position, paused ? 0 : Math.min(elapsed, 0.1));
   if (pedsView) pedsView.sync(peds, pedModels?.skip);
-  if (meshyProps) meshyProps.update(camera.position);
+  perf.end("walkersView");
+  perf.begin("trafficView");
   if (carView) carView.update(camera.position, traffic?.cars, { lit: weatherView?.state.windowLit ?? 0, time: now / 1000 });
+  perf.end("trafficView");
   if (npcSkatersView && !npcWarm && npcSkatersView.loaded + npcSkatersView.failed === npcSkaters.npcs.length) {
     npcWarm = true;
     npcSkatersView.warm(renderer, camera, scene).catch(() => {});
   }
+  perf.begin("npcSkatersView");
   if (npcSkatersView) npcSkatersView.sync(npcSkaters, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null, camera.position);
+  perf.end("npcSkatersView");
+  perf.begin("render");
   draw();
+  perf.end("render");
+  perf.frame();
   frames += 1;
   if (frames === 1) {
     loader.hide();
@@ -1434,6 +1462,9 @@ window.__atl = {
   get pbrLook() {
     return pbrLook ? JSON.parse(JSON.stringify(pbrLook.info)) : null;
   },
+  // The per-system frame cost (?perf=1): reset(), then report() gives the
+  // mean and p95 ms per frame for each system. Null without ?perf=1.
+  perf: perf.enabled ? { reset: () => perf.reset(), report: () => perf.report() } : null,
   get rendererInfo() {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   },

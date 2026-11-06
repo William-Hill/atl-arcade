@@ -62,7 +62,7 @@ function decalQuad(g, center, n, up, w, h, row, rows) {
     [w / 2, h / 2],
     [-w / 2, h / 2],
   ];
-  const base = g.attributes.position.count;
+  const base = (g.index.count / 6) * 4; // the quads written so far
   const pos = g.attributes.position.array;
   const uv = g.attributes.uv.array;
   const nor = g.attributes.normal.array;
@@ -160,7 +160,7 @@ function namesMaterial(look, tex) {
   return litMaterial(look, { map: tex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }, { roughness: ROUGHNESS.props, envLight: 0.6 });
 }
 
-function decalMesh(quads, rows, mat) {
+export function decalMesh(quads, rows, mat) {
   const g = new THREE.BufferGeometry();
   const n = quads.length * 4;
   g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
@@ -178,7 +178,7 @@ function decalMesh(quads, rows, mat) {
       const k = g.index.count - 6;
       const t = idx[k + 1]; idx[k + 1] = idx[k + 2]; idx[k + 2] = t;
       const t2 = idx[k + 4]; idx[k + 4] = idx[k + 5]; idx[k + 5] = t2;
-      const base = g.attributes.position.count - 4;
+      const base = (g.index.count / 6) * 4 - 4;
       for (let i = 0; i < 4; i += 1) {
         const j = (base + i) * 3;
         g.attributes.normal.array[j] = 0;

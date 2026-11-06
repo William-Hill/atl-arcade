@@ -1390,7 +1390,7 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The GLB tiles are visible with the procedural depth tiles (closer than `DEPTH_DISTANCE` = 120 m), and a tile uses the `_lod1` nodes past `LOD1_DISTANCE` (60 m, by tile center). Past 120 m the shader facade alone is drawn, as before.
 - The procedural kit leaves out what the GLB replaces, per slot (`kitCovers()`): the sill, lintel and head of a window with a GLB frame, the pier on a bay line with a GLB pilaster, the sign band of a bay with GLB shop glass, and the procedural door where there is a GLB door (the step and the lamps stay, the lamps on the pilaster face). The shader shop glass and windows stay: the modules frame them and have no face on the wall plane.
 - Kept procedural (`GLB_SKIP`): the awnings (they match the street awnings), and the cornice, coping and belt course. Those are in the building tiles, drawn at every distance; the GLB runs in the depth tiles would leave the roof line bare past 120 m.
-- The shop-name decals (`shop-names.js`) go on the GLB sign boards; a GLB sign board under a named shop sign (`shop-signs.js`) is left out.
+- The shop-name decals (`shop-names.js`) go on the GLB sign boards; a GLB sign board under a named shop sign (`shop-signs.js`) is left out. `decalQuad()` wrote each quad past the end of its buffers (it started at the buffer capacity), so no shop name drew before; it now writes quad by quad (`shop-names.test.js`).
 - `facadePlacements()` takes `floors` (the shader's floor count, OSM levels included, so the frames stay on the shader windows) and the door bay of `frontEdges()`, and tags each module with its slot (`bay`, `floor`, `line`).
 
 ### Evidence

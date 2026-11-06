@@ -1541,3 +1541,10 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 
 - A URL with no `level` opens `beltline-eastside` (`DEFAULT_LEVEL` in `src/level/levels.js`). This replaces "The greybox stays the default" in the M1 shell entry.
 - The greybox is the debug level. Open it with `?level=greybox`. The e2e specs that need the greybox ask for it by name.
+## 2026-11-06 — Fewer walkers (performance)
+
+- The owner reported too many NPCs and a slow game. The walker step (`stepPeds`) was the main cost: 320 walkers on the high tier took 7.0 ms per frame in Node, 140 took 1.6 ms, and 120 took 1.3 ms.
+- New counts in `PED_COUNT` (`src/sim/peds.js`): high 120 (was 320), low 70 (was 140), phone 50 (was 110).
+- `?peds=<n>` sets the count (0 to 400). `?peds=0` still turns the walkers off.
+- The trail crowd (40, 0.2 ms), the traffic (68 moving cars, 0.9 ms) and the NPC skaters (5, 1.3 ms) do not change.
+- Not verified: the FPS on a real phone, and the FPS in the browser at 60 Hz (the test browser window was not in view).

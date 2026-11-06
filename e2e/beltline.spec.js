@@ -198,7 +198,7 @@ test("the screen shows the OpenStreetMap attribution (ODbL)", async ({ page }) =
 });
 
 test("the greybox page shows no map attribution", async ({ page }) => {
-  await page.goto("/?view=fixed");
+  await page.goto("/?level=greybox&view=fixed");
   await page.waitForFunction(() => window.__atl && window.__atl.ready, null, { timeout: 20000 });
   await expect(page.locator("#attribution")).toBeHidden();
 });

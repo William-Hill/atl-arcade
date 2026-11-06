@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { PEDS, createPeds, hubDensity, pedHubs, pedMinGap, pedRoutes, stepPeds } from "./peds.js";
+import { PEDS, PED_COUNT, createPeds, hubDensity, pedCount, pedHubs, pedMinGap, pedRoutes, stepPeds } from "./peds.js";
 import { createGeoGroundSampler } from "../level/geo/geo-ground.js";
 import { pathOffsetPoint } from "./npc/path.js";
 
@@ -203,5 +203,24 @@ describe("stepPeds", () => {
     stepPeds(state, 0.1, { focus: spawnAt });
     const d = Math.hypot(p.x - x, p.z - z);
     if (d > 0) expect(p.phase).not.toBe(phase);
+  });
+});
+
+describe("pedCount", () => {
+  it("uses the tier count when the URL has no number", () => {
+    expect(pedCount("high", null)).toBe(PED_COUNT.high);
+    expect(pedCount("phone", "")).toBe(PED_COUNT.phone);
+    expect(pedCount("low", "many")).toBe(PED_COUNT.low);
+    expect(pedCount("unknown", null)).toBe(PED_COUNT.low);
+  });
+  it("turns the walkers off with 0 and clamps a set count", () => {
+    expect(pedCount("high", "0")).toBe(0);
+    expect(pedCount("high", "45")).toBe(45);
+    expect(pedCount("high", "-3")).toBe(0);
+    expect(pedCount("high", "5000")).toBe(400);
+  });
+  it("keeps the high tier at 120 walkers or fewer", () => {
+    expect(PED_COUNT.high).toBeLessThanOrEqual(120);
+    expect(PED_COUNT.phone).toBeLessThanOrEqual(PED_COUNT.low);
   });
 });

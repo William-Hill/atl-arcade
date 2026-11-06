@@ -24,7 +24,7 @@ export const FIRE_ESCAPE_RISE = 4.2;
 // The clear margin (m) around a mural, as MURAL_CLEAR in facade-kit.js.
 export const MURAL_CLEAR = 0.3;
 // Draw LOD1 (the <module>_lod1 node) past this camera distance (m).
-export const LOD1_DISTANCE = 60;
+export const LOD1_DISTANCE = 30;
 
 // Nominal sizes [x, y, z] (m) of the modules, from extras.kit.size.
 export const MODULES = {

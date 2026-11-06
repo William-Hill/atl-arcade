@@ -67,11 +67,14 @@ export function boardOf(it) {
 // Pure: the GLB kit of a level. `fronts` is frontEdges(); `signs` the shop
 // signs (shopSigns()). Claimed landmark footprints get nothing (their model
 // draws the building). Returns { tiles: Map(tile -> { center, list }),
-// covers: Map(id -> kitCovers()), instances }; a tile's `boards` are the
-// shop-name boards of its GLB sign boards (boardOf()).
+// covers: Map(id -> kitCovers()), buildings, instances }; a tile's `boards`
+// are the shop-name boards of its GLB sign boards (boardOf()). `buildings`
+// has the same placements per building: { id, center: [x, z], radius, list,
+// boards }, for distance culling by building (facade-kit-view.js).
 export function facadeKitPlacements(level, fronts, { signs = [], claimed = claimedIds(level), murals = new Map(muralWalls(level).map((m) => [m.id, m])) } = {}) {
   const tiles = new Map();
   const covers = new Map();
+  const buildings = [];
   const signsOf = new Map(signs.map((s) => [s.id, s]));
   let instances = 0;
   for (const b of level.buildings ?? []) {
@@ -90,9 +93,18 @@ export function facadeKitPlacements(level, fronts, { signs = [], claimed = claim
     let tile = tiles.get(key);
     if (!tile) tiles.set(key, (tile = { center: [(i + 0.5) * DEPTH_TILE, (j + 0.5) * DEPTH_TILE], list: [], boards: [] }));
     const trim = style.trim;
-    for (const it of list) tile.list.push({ ...it, wall: undefined, color: it.tint === "trim" ? trim : null });
-    for (const it of list) if (it.module === "trim_sign_board") tile.boards.push(boardOf(it));
+    const items = list.map((it) => ({ ...it, wall: undefined, color: it.tint === "trim" ? trim : null }));
+    const boards = list.filter((it) => it.module === "trim_sign_board").map(boardOf);
+    tile.list.push(...items);
+    tile.boards.push(...boards);
+    let cx = 0;
+    let cz = 0;
+    for (const p of b.outer) { cx += p[0]; cz += p[1]; }
+    cx /= b.outer.length;
+    cz /= b.outer.length;
+    const radius = Math.max(...b.outer.map((p) => Math.hypot(p[0] - cx, p[1] - cz)));
+    buildings.push({ id: b.id, center: [cx, cz], radius, list: items, boards });
     instances += list.length;
   }
-  return { tiles, covers, instances };
+  return { tiles, covers, buildings, instances };
 }

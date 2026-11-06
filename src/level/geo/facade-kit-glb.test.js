@@ -34,6 +34,16 @@ describe("the GLB facade kit on the BeltLine level", () => {
     expect([...GLB.tiles.values()].some((t) => t.boards.length > 0)).toBe(true);
   });
 
+  it("lists the same placements per building, with a center and radius covering its ring", () => {
+    expect(GLB.buildings.reduce((s, b) => s + b.list.length, 0)).toBe(GLB.instances);
+    expect(GLB.buildings.length).toBe(GLB.covers.size);
+    const byId = new Map(LEVEL.buildings.map((b) => [b.id, b]));
+    for (const b of GLB.buildings) {
+      expect(b.boards.length).toBe(b.list.filter((it) => it.module === "trim_sign_board").length);
+      for (const p of byId.get(b.id).outer) expect(Math.hypot(p[0] - b.center[0], p[1] - b.center[1])).toBeLessThanOrEqual(b.radius + 1e-9);
+    }
+  });
+
   it("dresses no claimed landmark footprint", () => {
     const claimed = new Set(LEVEL.buildings.slice(0, 50).map((b) => b.id));
     const g = facadeKitPlacements(LEVEL, FRONTS, { signs: SIGNS, claimed });

@@ -137,19 +137,28 @@ export function shopNamesMesh(boards, level, look = "toon") {
   return mesh;
 }
 
-// The shop-name decals of grouped boards (the GLB sign boards of each depth
-// tile, facade-kit-view.js): Map(key -> mesh), one shared atlas material.
-export function boardNamesMeshes(groups, look = "pbr") {
+// The shop-name decals of the GLB sign boards (facade-kit-view.js) in one
+// BatchedMesh: a unit quad per atlas row, an instance per board, so each name
+// hides with its board. Returns { mesh, ids } (ids[i]: the instance of
+// boards[i]), or null without boards.
+export function boardNamesBatch(boards, look = "pbr") {
+  if (!boards.length) return null;
   const { tex, rows } = makeAtlas();
-  const mat = namesMaterial(look, tex);
-  const out = new Map();
-  for (const [key, boards] of groups) {
-    if (!boards.length) continue;
-    const mesh = decalMesh(boardQuads(boards), rows, mat);
-    mesh.geometry.computeBoundingSphere();
-    out.set(key, mesh);
-  }
-  return out;
+  const quads = boardQuads(boards);
+  const used = [...new Set(quads.map((q) => q.row))];
+  const mesh = new THREE.BatchedMesh(quads.length, used.length * 4, used.length * 6, namesMaterial(look, tex));
+  mesh.name = "shop-names-glb";
+  mesh.sortObjects = false;
+  const geometryOf = new Map(used.map((row) => [row, mesh.addGeometry(decalMesh([{ c: [0, 0, 0], n: [0, 1], up: [0, 1, 0], w: 1, h: 1, row }], rows, null).geometry.translate(0, 0, -0.03))]));
+  const m4 = new THREE.Matrix4();
+  const ids = quads.map((q) => {
+    const id = mesh.addInstance(geometryOf.get(q.row));
+    const [nx, nz] = q.n;
+    m4.set(nz * q.w, 0, nx, q.c[0] + nx * 0.03, 0, q.h, 0, q.c[1], -nx * q.w, 0, nz, q.c[2] + nz * 0.03, 0, 0, 0, 1);
+    mesh.setMatrixAt(id, m4);
+    return id;
+  });
+  return { mesh, ids };
 }
 
 function boardQuads(boards) {

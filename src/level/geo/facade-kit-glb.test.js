@@ -40,6 +40,8 @@ describe("the GLB facade kit on the BeltLine level", () => {
     const byId = new Map(LEVEL.buildings.map((b) => [b.id, b]));
     for (const b of GLB.buildings) {
       expect(b.boards.length).toBe(b.list.filter((it) => it.module === "trim_sign_board").length);
+      const [x, z] = byId.get(b.id).outer[0];
+      expect(b.tile).toEqual([(Math.floor(x / DEPTH_TILE) + 0.5) * DEPTH_TILE, (Math.floor(z / DEPTH_TILE) + 0.5) * DEPTH_TILE]);
       for (const p of byId.get(b.id).outer) expect(Math.hypot(p[0] - b.center[0], p[1] - b.center[1])).toBeLessThanOrEqual(b.radius + 1e-9);
     }
   });

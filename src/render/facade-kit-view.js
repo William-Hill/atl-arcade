@@ -1,7 +1,7 @@
 // The Blender facade kit (assets/facades/facade-kit.glb) in the pbr look: one
 // BatchedMesh holds every module of the level (one draw call; all the nodes
 // share the kit material), culled by building: a building shows its modules
-// closer than DEPTH_DISTANCE (with the procedural depth tiles), the
+// with its procedural depth tile (tile center closer than DEPTH_DISTANCE), the
 // `<module>_lod1` nodes (or farGeometry()) past LOD1_DISTANCE, the small trim (TRIM) only
 // closer than TRIM_DISTANCE. The glass panes of the windows and shop glass
 // are cut out of the nodes, so the facade shader's rooms show through.
@@ -142,7 +142,7 @@ export function createFacadeKitView(nodes, buildings, { depthDistance = 120, lod
     }
     const boards = names ? names.ids.slice(boardIndex, boardIndex + b.boards.length) : [];
     boardIndex += b.boards.length;
-    view.push({ center: b.center, radius: b.radius, items, boards, state: 0, triangles: 0, shown: 0 });
+    view.push({ center: b.center, radius: b.radius, tile: b.tile ?? b.center, items, boards, state: 0, triangles: 0, shown: 0 });
   }
   if (names) for (const id of names.ids) names.mesh.setVisibleAt(id, false);
   // State of a building: 0 hidden, 1 far (far geometry, no trim), 2 far with
@@ -178,8 +178,11 @@ export function createFacadeKitView(nodes, buildings, { depthDistance = 120, lod
       let near = 0;
       let lod1 = 0;
       for (const t of view) {
+        // Shown with its procedural depth tile (same tile center, same
+        // distance), since the procedural parts it covers are left out there.
+        const shownTile = Math.hypot(t.tile[0] - cameraPosition.x, t.tile[1] - cameraPosition.z) < depthDistance;
         const d = Math.max(0, Math.hypot(t.center[0] - cameraPosition.x, t.center[1] - cameraPosition.z) - t.radius);
-        const state = stateAt(d);
+        const state = shownTile ? stateAt(Math.min(d, depthDistance - 1e-6)) : 0;
         if (state !== t.state) apply(t, state);
         if (state !== 0) near += 1;
         if (state === 1 || state === 2) lod1 += 1;

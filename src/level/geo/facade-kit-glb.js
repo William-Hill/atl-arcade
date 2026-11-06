@@ -69,8 +69,9 @@ export function boardOf(it) {
 // draws the building). Returns { tiles: Map(tile -> { center, list }),
 // covers: Map(id -> kitCovers()), buildings, instances }; a tile's `boards`
 // are the shop-name boards of its GLB sign boards (boardOf()). `buildings`
-// has the same placements per building: { id, center: [x, z], radius, list,
-// boards }, for distance culling by building (facade-kit-view.js).
+// has the same placements per building: { id, center: [x, z], radius, tile
+// (its depth tile center), list, boards }, for culling by building
+// (facade-kit-view.js).
 export function facadeKitPlacements(level, fronts, { signs = [], claimed = claimedIds(level), murals = new Map(muralWalls(level).map((m) => [m.id, m])) } = {}) {
   const tiles = new Map();
   const covers = new Map();
@@ -103,7 +104,7 @@ export function facadeKitPlacements(level, fronts, { signs = [], claimed = claim
     cx /= b.outer.length;
     cz /= b.outer.length;
     const radius = Math.max(...b.outer.map((p) => Math.hypot(p[0] - cx, p[1] - cz)));
-    buildings.push({ id: b.id, center: [cx, cz], radius, list: items, boards });
+    buildings.push({ id: b.id, center: [cx, cz], radius, tile: tile.center, list: items, boards });
     instances += list.length;
   }
   return { tiles, covers, buildings, instances };

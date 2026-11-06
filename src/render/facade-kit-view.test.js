@@ -78,4 +78,13 @@ describe("facade kit view", () => {
     expect(at(130)).toMatchObject({ shown: 0, drawCalls: 0, triangles: 0, near: 0 });
     expect(at(10)).toMatchObject({ shown: 3, triangles: 8 });
   });
+
+  it("shows and hides a building with its procedural depth tile", () => {
+    const view = createFacadeKitView(NODES, [{ ...BUILDING, center: [2, 2], radius: 1, tile: [25, 25] }], { depthDistance: 120 });
+    // 115 m from the tile center, past 120 m from the building: the depth tile is drawn, so the frames are too.
+    view.update({ x: 140, z: 25 });
+    expect(view.info.shown).toBeGreaterThan(0);
+    view.update({ x: 150, z: 25 });
+    expect(view.info.shown).toBe(0);
+  });
 });

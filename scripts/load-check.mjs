@@ -84,14 +84,29 @@ try {
     if (r) r.bytes = e.encodedDataLength;
   });
 
+  // The long tasks (over 50 ms) on the main thread, up to the first game frame (#98).
+  await page.addInitScript(() => {
+    window.__longTasks = [];
+    try {
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) window.__longTasks.push({ start: Math.round(e.startTime), ms: Math.round(e.duration) });
+      }).observe({ type: "longtask", buffered: true });
+    } catch {
+      // No long task API: the list stays empty.
+    }
+  });
   const t0 = Date.now();
-  await page.goto(`${base}/?level=beltline-eastside&mute=1`, { waitUntil: "commit" });
+  await page.goto(`${base}/?level=beltline-eastside&mute=1${arg("query", "")}`, { waitUntil: "commit" });
   const fcp = await page
     .waitForFunction(() => performance.getEntriesByName("first-contentful-paint")[0]?.startTime ?? null, null, { timeout: 120000, polling: 50 })
     .then((h) => h.jsonValue());
   const loadScreen = await page.evaluate(() => Boolean(document.getElementById("loader")));
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 0, null, { timeout: 180000, polling: 50 });
   const firstFrame = Date.now() - t0;
+  const longTasks = await page.evaluate(() => {
+    const ff = performance.getEntriesByName("atl:first-frame")[0]?.startTime ?? Infinity;
+    return window.__longTasks.filter((t) => t.start < ff);
+  });
   await page.waitForFunction(() => window.__atl.skaterModel && window.__atl.skaterModel.loaded, null, { timeout: 180000, polling: 50 });
   const skaterReady = Date.now() - t0;
   await page.waitForTimeout(2000);
@@ -110,6 +125,8 @@ try {
     quality: await page.evaluate(() => window.__atl.quality),
     // The startup steps (performance marks in src/main.js), in ms from the start.
     marks: await page.evaluate(() => Object.fromEntries(performance.getEntriesByType("mark").filter((m) => m.name.startsWith("atl:")).map((m) => [m.name.slice(4), Math.round(m.startTime)]))),
+    // Long tasks before the first game frame: the count, the sum, the longest.
+    longTasks: { count: longTasks.length, totalMs: longTasks.reduce((a, t) => a + t.ms, 0), maxMs: longTasks.reduce((a, t) => Math.max(a, t.ms), 0), list: longTasks },
     requests: files.length,
     transferMB: +(total / 1048576).toFixed(2),
     top5: [...files].sort((a, b) => b.bytes - a.bytes).slice(0, 5).map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024) })),

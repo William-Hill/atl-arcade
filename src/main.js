@@ -28,9 +28,9 @@ import { goalsFor } from "./level/goals.js";
 import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
 import { createResults } from "./ui/results.js";
 import { createLevelEnv } from "./level/ground.js";
-import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
+import { meshWorkerCount, startGeoMeshBuild, startLevelProps } from "./level/geo/geo-mesh-async.js";
 import { terrainOf } from "./level/geo/terrain.js";
-import { createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
+import { FAR_TERRAIN_BUILD, createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
 import { createLandmarkModels } from "./render/landmark-models.js";
 import { claimLandmarkModels } from "./level/geo/landmarks.js";
@@ -85,6 +85,8 @@ const settingsStorage = safeStorage();
 const savedSettings = readSettings(settingsStorage);
 const qualityParam = paramFor("quality", params, savedSettings);
 const deviceFacts = readDevice();
+// A number URL parameter, or undefined.
+const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
 // Start the slow downloads at once, in parallel with the level (#74): the
 // physics WASM and the skater GLB. A test that started the GLB after the
 // physics gave the same first frame (the WASM compile, not the link, is the
@@ -104,8 +106,6 @@ const level = await loadLevel(params.get("level"));
 performance.mark("atl:level");
 loader.step("level");
 const geo = isGeoLevel(level);
-const env = createLevelEnv(level, { props: params.get("props") !== "0" });
-const skaterEnv = createSkaterEnv(level, env.grindables);
 
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
@@ -142,10 +142,26 @@ const facadeKitNodes = look === "pbr" && tier.detail && renderer.extensions.has(
   ? loadFacadeKit().catch((err) => { console.warn("facade kit GLB failed to load; the procedural kit stays", err); return null; })
   : null;
 
+// The level builds in Web Workers (#98), while this thread makes the lights
+// and the sky, and the physics WASM compiles: the meshes (built once and
+// shared with the physics, split over up to 2 workers), the low tier's far
+// surface tiles, and the street prop placements, one more worker each. One
+// core stays for this thread. ?meshworker=0 builds them all here, as before;
+// ?meshshards=<n> sets the mesh worker count (for perf checks).
+const meshWorkers = params.get("meshworker") !== "0" ? undefined : null;
+const meshFallback = (why) => why && console.warn("level worker failed; building on the main thread", why);
+const farTerrain = geo && quality === "low" && params.get("farterrain") !== "0";
+const levelPropsOn = params.get("props") !== "0";
+const meshShards = numParam("meshshards") ?? meshWorkerCount(navigator.hardwareConcurrency - (farTerrain ? 1 : 0) - (geo && levelPropsOn ? 1 : 0));
+const meshBuild = geo ? startGeoMeshBuild(level, {}, { workers: meshShards, claimLandmarks: landmarkGlbs, createWorker: meshWorkers, onFallback: meshFallback }) : null;
+const farBuild = farTerrain ? startGeoMeshBuild(level, FAR_TERRAIN_BUILD, { claimLandmarks: landmarkGlbs, createWorker: meshWorkers, onFallback: meshFallback }) : null;
+const propsBuild = geo && levelPropsOn ? startLevelProps(level, { createWorker: meshWorkers, onFallback: meshFallback }) : null;
+// A worker boots only while this thread is free, so the next long step
+// waits until the workers have loaded (at most 2 s).
+await Promise.all([meshBuild?.ready, farBuild?.ready, propsBuild?.ready]);
+
 // A geodata level gets a day sky, a far fog, and a sun that follows the
-// skater. Its meshes are built once and shared with the physics.
-const geoMeshes = geo ? buildGeoMeshes(level) : null;
-performance.mark("atl:meshes");
+// skater.
 let geoLights = null;
 let sky = null;
 if (geo) {
@@ -214,11 +230,15 @@ if (attribution && level.attribution) {
 if (params.get("dev") === "1" || params.get("debug") === "1") document.body.classList.add("dev");
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
-const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
 // The level does not wait on a slow facade GLB: past ?kitwait=<ms> (3 s) after
 // the meshes are built, the full procedural kit goes in instead.
 const facadeKitReady = (nodes, ms = numParam("kitwait") ?? 3000) => nodes && Promise.race([nodes, new Promise((done) => setTimeout(() => { console.warn(`facade kit GLB not loaded in ${ms} ms; the procedural kit stays`); done(null); }, ms))]);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
+// The skate env: the ground sampler, the props, the grindables.
+const env = createLevelEnv(level, { props: levelPropsOn, placed: propsBuild && (await propsBuild.props) });
+const skaterEnv = createSkaterEnv(level, env.grindables);
+const geoMeshes = geo ? await meshBuild.meshes : null;
+performance.mark("atl:meshes");
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 

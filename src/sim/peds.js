@@ -61,8 +61,9 @@ export const PEDS = {
 };
 
 // The pool size and the pool radius (m) by quality tier. The fog hides the
-// pool edge (fogNear in src/render/quality.js). The step cost grows faster
-// than the count: 120 walkers take about 1.3 ms per frame, 320 take 7 ms.
+// pool edge (fogNear in src/render/quality.js). With the grid and the
+// far-step (#189), 120 walkers take about 0.3 ms per step in Node (npm run
+// perf:sim) and 0.5 to 0.6 ms in the browser; 320 take about 0.65 ms in Node.
 // `?peds=<n>` sets another count.
 export const PED_COUNT = { low: 70, phone: 50, high: 120 };
 

@@ -13,6 +13,7 @@ export const IDM = {
   T: 1.4, // s
   delta: 4,
   maxBrake: 6, // m/s^2, the hard limit (TRAFFIC.hardBrake)
+  creep: 1, // m/s, the roll-on speed toward a stop point
 };
 
 // The IDM acceleration (m/s^2) of a car at speed v (m/s) with desired speed
@@ -43,8 +44,11 @@ export function idmStopAccel(v, v0, dist, rest = 0.3, p = IDM) {
   // brakes to rest at the point.
   if (d > 0.5 && v < p.creep)
     a = Math.max(a, Math.min(p.a / 2, (p.creep - v) * 2));
-  else if (d > 0 && d <= 0.5) a = Math.min(a, -(v * v) / (2 * d));
-  else if (d <= 0) a = -p.maxBrake;
+  else if (d > 0 && d <= 0.5) {
+    a = Math.min(a, -(v * v) / (2 * d));
+    // A car at rest short of the point still closes the last few dm.
+    if (v < 0.2 && d > 0.15) a = Math.max(a, (0.3 - v) * 2);
+  } else if (d <= 0) a = -p.maxBrake;
   return Math.max(-p.maxBrake, Math.min(p.a, a));
 }
 

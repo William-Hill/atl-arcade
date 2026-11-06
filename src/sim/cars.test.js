@@ -113,6 +113,19 @@ describe("IDM", () => {
     expect(line - front).toBeLessThan(0.6);
   });
 
+  it("rolls on from rest just short of the point into the stop-line wait", () => {
+    for (const start of [0.65, 0.7, 0.8]) {
+      let v = 0;
+      let front = 0;
+      for (let i = 0; i < 60 * 5 && start - front >= 0.6; i += 1) {
+        v = Math.max(0, v + idmStopAccel(v, 8, start - front) * DT);
+        front += v * DT;
+      }
+      expect(start - front).toBeLessThan(0.6);
+      expect(start - front).toBeGreaterThan(0.1);
+    }
+  });
+
   it("stops at the point in a few seconds, not by an endless crawl", () => {
     for (const [v0, line] of [
       [8, 80],

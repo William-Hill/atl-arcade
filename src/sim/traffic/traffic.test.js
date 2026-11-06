@@ -626,6 +626,60 @@ describe("lights, signals, and crosswalks", () => {
     expect(cruisedDark).toBe(true);
   });
 
+  it("lights the brakes on every forced stop (skater guard, blocked lane)", () => {
+    const rand = seededRandom(7);
+    const t = createTraffic(TOWN, { streets: GRID, perKm: 14, seed: 4 });
+    const skater = [10, 0, 2];
+    let heading = 0;
+    let stops = 0;
+    for (let i = 0; i < 60 * 120; i += 1) {
+      if (i % 30 === 0) heading += (rand() - 0.5) * 2;
+      skater[0] = Math.max(
+        -150,
+        Math.min(150, skater[0] + Math.cos(heading) * 6 * DT),
+      );
+      skater[2] = Math.max(
+        -150,
+        Math.min(150, skater[2] - Math.sin(heading) * 6 * DT),
+      );
+      const before = t.cars.map((c) => c.speed);
+      stepTraffic(t, DT, skater);
+      t.cars.forEach((c, k) => {
+        expect(c.accel).toBeCloseTo((c.speed - before[k]) / DT, 6);
+        if (c.speed === 0) {
+          if (before[k] > 0) stops += 1;
+          expect(c.brake).toBeGreaterThan(0);
+        }
+      });
+    }
+    expect(stops).toBeGreaterThan(0);
+  });
+
+  it("lights the brakes when a blocked next lane stops it at the lane end", () => {
+    const t = createTraffic(TOWN, { streets: MAIN, perKm: 1 });
+    const [car, other] = t.cars;
+    t.cars = [car, other];
+    const lane = t.lanes[car.lane];
+    const nextLane = t.lanes[lane.next];
+    car.s = lane.length - 0.01;
+    car.speed = 4;
+    car.next = lane.stops.length;
+    car.box = -1;
+    other.lane = nextLane.id;
+    // Within the gap the next lane needs free, but 2 m clear of the car.
+    other.s =
+      lane.nextS +
+      CAR_SIZE[car.kind].length / 2 +
+      CAR_SIZE[other.kind].length / 2 +
+      2;
+    other.speed = 0;
+    other.next = nextLane.stops.length;
+    stepTraffic(t, DT, null);
+    expect(car.speed).toBe(0);
+    expect(car.accel).toBeCloseTo(-4 / DT, 6);
+    expect(car.brake).toBeGreaterThan(0.4);
+  });
+
   it("signals left before the U-turn at the end of a two-way street", () => {
     const t = createTraffic(TOWN, { streets: MAIN, perKm: 1 });
     const car = t.cars[0];

@@ -755,9 +755,6 @@ export function stepTraffic(state, dt, skater = null) {
     if (hold) acc = -T.hardBrake;
     car.speed = Math.max(0, Math.min(v0, v + acc * dt));
     if (hold && car.speed < 0.3) car.speed = 0;
-    car.accel = (car.speed - v) / dt;
-    car.brake = brakeLevel(car.accel, car.speed);
-
     // Never into the car ahead.
     let ds = Math.min(car.speed * dt, Math.max(0, lead.gap - 0.5));
 
@@ -796,6 +793,10 @@ export function stepTraffic(state, dt, skater = null) {
         car.yielding = true;
       }
     }
+    // After every branch that sets the speed, so a forced stop lights the
+    // brake lamps too.
+    car.accel = (car.speed - v) / dt;
+    car.brake = brakeLevel(car.accel, car.speed);
 
     if (ds > 0) {
       let s = car.s + ds;

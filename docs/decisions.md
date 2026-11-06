@@ -1414,7 +1414,8 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 ### Limits
 
 - Not verified: the 55 FPS median on the high tier (#157). The cloud machine has no GPU (SwiftShader). Measure on a real GPU.
-- Phone tier: the default phone look is toon, and every change is behind the pbr look, so the phone frame cost does not change by construction; the phone-tier decision for the pbr look stays: pbr only on the high tier unless `?look=pbr`.
+- Phone tier: the default phone look is toon, and every change is behind the pbr look. Measured (SwiftShader, 640×360, trail camera, mean of 4 frames, two runs each): draw calls 86 → 86, triangles 194,291 → 194,291, frame time 106 and 342 ms before, 97 and 91 ms after (noisy on a shared CPU, not worse). Phone-tier decision for the pbr look: it stays off by default on the phone tier (`lookFor()`); `?look=pbr` still works there and on the low tier (checked: no page error, no toon material).
+- `?look=toon`, `?quality=low` and `?quality=phone` load with no page error after the change.
 - The street and Ponce City Market day frames do not reach p98 230 (the pale sky fills their top half).
 - The olive pants of Nia now sit on a mid-green lawn; the rim and the value step keep her readable, but an outfit color review is a follow-up.
 

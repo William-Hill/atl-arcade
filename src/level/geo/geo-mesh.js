@@ -54,7 +54,16 @@ export const SURFACE_COLORS = {
   patchLight: [0.39, 0.4, 0.48],
   iron: [0.17, 0.17, 0.19],
   bike: [0.3, 0.72, 0.45],
+  // A path with an OSM brick or paver surface (#158). Within 0.015 of the
+  // path color, so the toon look shows it as a path; the pbr surface shader
+  // tells the two apart (distance > 0.01) and gives it the brick set.
+  brick: [0.8, 0.77, 0.685],
 };
+
+// Pure: the art color of a strip: its surface, else its kind.
+export function stripColor(s) {
+  return SURFACE_COLORS[s.surface] ?? SURFACE_COLORS[s.kind];
+}
 
 // Building wall colors: a warm, bright palette (Jet Set Radio style). The
 // roof is a lighter tint of the wall, or the style roof color.
@@ -297,7 +306,7 @@ export function bridgeMeshes(level, s) {
   const L = bridgeLayout(level, s);
   const h = s.width / 2;
   const pw = BRIDGE.parapetWidth;
-  const color = SURFACE_COLORS[s.kind];
+  const color = stripColor(s);
   // The deck top, from joint to joint: a row each 1.5 m, so it follows the
   // arch, with mitered turns. The whole top is draped on the deck height
   // (bridgeDeck), cut on the terrain triangles like the approach road it
@@ -648,17 +657,17 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
       for (const [a, b] of lay.pieces) {
         const r = [Math.max(a, lo), Math.min(b, hi)];
         if (r[1] - r[0] < 0.05) continue;
-        stripMesh(piecePoints(s.points, r), s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind], mesh: m });
+        stripMesh(piecePoints(s.points, r), s.width, top, { curb, bottom: 0, color: stripColor(s), mesh: m });
       }
       for (const r of lay.ramps) if (r.s0 >= lo && r.s1 <= hi) rampMesh(r, SURFACE_COLORS.sidewalk, 0, m);
-    } else m = stripMesh(points, s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind] });
+    } else m = stripMesh(points, s.width, top, { curb, bottom: 0, color: stripColor(s) });
     // Two strips that meet end to end near a bridge get a joint disk, as at
     // an inner point, so a turn at the meeting point leaves no wedge.
     for (const [cut, p] of [[trim?.start, s.points[0]], [trim?.end, s.points[s.points.length - 1]]]) {
       if (cut > 0 || !endDisks.has(`${s.kind}:${p[0]},${p[1]}`)) continue;
       const ring = [];
       for (let k = 0; k < 16; k += 1) ring.push([p[0] + Math.cos((k / 16) * Math.PI * 2) * (s.width / 2), p[1] + Math.sin((k / 16) * Math.PI * 2) * (s.width / 2)]);
-      flatPolygon(ring, [], top, { color: SURFACE_COLORS[s.kind], mesh: m });
+      flatPolygon(ring, [], top, { color: stripColor(s), mesh: m });
     }
     add("surface", s, drape(m));
   }

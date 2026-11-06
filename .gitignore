@@ -14,3 +14,4 @@ landmarks/*/ref/reference-4000.jpg
 .meshy-raw/
 .vercel
 .env*
+.cache/

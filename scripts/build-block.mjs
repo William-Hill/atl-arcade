@@ -222,6 +222,10 @@ export function buildingHeight(tags, overture = null, override = null) {
   return { height: DEFAULT_HEIGHT[t] ?? FALLBACK_HEIGHT, source: "default" };
 }
 
+// The OSM surface values of a brick or paver footway (#158): the pbr look
+// gives these paths the brick ground set. The kind stays "path".
+export const BRICK_SURFACES = new Set(["paving_stones", "sett", "brick", "bricks"]);
+
 // Classifies a highway way. Returns { kind, width } or null to skip it.
 export function classifyWay(tags) {
   const hw = tags.highway;
@@ -438,6 +442,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       if (tags.name) item.name = tags.name;
       if (tags.highway) item.highway = tags.highway;
       if (cls.kind === "street") Object.assign(item, laneTags(tags));
+      if (cls.kind === "path" && BRICK_SURFACES.has(tags.surface)) item.surface = "brick";
       // A bridge deck runs from the ground at one end to the ground at the
       // other (src/level/geo/terrain.js), over the ways under it.
       if (tags.bridge && tags.bridge !== "no") {

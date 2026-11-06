@@ -55,6 +55,8 @@ import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
+import { PED_COUNT, PED_RADIUS, createPeds, pedMinGap, stepPeds } from "./sim/peds.js";
+import { createPedsView } from "./render/peds-view.js";
 import { carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSampler, streetsOnly } from "./sim/traffic/traffic.js";
 import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
 import { parkedCars } from "./sim/traffic/parking.js";
@@ -275,6 +277,16 @@ const parked = carsOn
   ? parkedCars(level, levelSample, { heightAt: (x, z) => carHeight(x, z, -Infinity) }).map((c) => ({ ...c, pitch: carPitch(c, (x, z) => carHeight(x, z, c.y)) }))
   : [];
 const makeTraffic = () => createTraffic(level, { seed: carSeed, heightAt: carHeight });
+// Walkers on the trail, the sidewalks and the street edges, more of them
+// near the shops and the landmarks (src/sim/peds.js). ?peds=0 leaves them out.
+const pedsOn = geo && params.get("peds") !== "0";
+// The walker heights come from the level less the buildings, so a walker
+// at a footprint edge stays on the sidewalk, not on the roof.
+const pedHeight = pedsOn ? streetHeightSampler(createGeoGroundSampler({ ...level, buildings: [] }), (x, z) => (levelTerrain && !levelTerrain.flat ? levelTerrain.height(x, z) : 0)) : null;
+const makePeds = () => createPeds(level, { seed: npcSeed, count: PED_COUNT[quality], radius: PED_RADIUS[quality], heightAt: pedHeight, props: env.props });
+let peds = pedsOn ? makePeds() : null;
+const pedsView = peds ? createPedsView(peds, { look }) : null;
+if (pedsView) scene.add(pedsView.group);
 let traffic = carsOn && params.get("traffic") !== "0" ? makeTraffic() : null;
 const carView = carsOn ? createCarView(parked, traffic ? traffic.cars : [], { pitchAt: (c) => carPitch(c, (x, z) => carHeight(x, z, c.y)) }) : null;
 if (carView) {
@@ -595,6 +607,7 @@ function simulate(dt) {
   }
   if (crowd) crowd = stepCrowd(crowd, dt, skater.position, npcSkaters ? skaterObstacles(npcSkaters) : []);
   if (traffic) traffic = stepTraffic(traffic, dt, skater.position);
+  if (peds) stepPeds(peds, dt, { focus: [camera.position.x, camera.position.z], nia: skater.position, others: [...(crowd ? crowd.npcs : []), ...(npcSkaters ? skaterObstacles(npcSkaters) : [])] });
   if (npcSkaters) npcSkaters = stepNpcSkaters(npcSkaters, dt, env, skaterEnv, { player: skater.position, crowd: crowd ? crowd.npcs : [], beat: beat.running ? { time: beat.now(), bpm: beat.bpm } : null });
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
   if (run.banked) {
@@ -644,6 +657,7 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   }
   if (crowd) crowd = createCrowd(level, { seed: npcSeed });
   if (traffic) traffic = makeTraffic();
+  if (peds) peds = makePeds();
   if (npcSkaters) npcSkaters = createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] });
   events.length = 0;
   if (follow) follow.reset(skater);
@@ -798,6 +812,7 @@ function frame(now) {
   if (rain) rain.update(camera, now / 1000, weatherView?.state, renderer.domElement.height);
   if (streetSigns) streetSigns.update(isoFocus ?? camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
+  if (pedsView) pedsView.sync(peds);
   if (carView) carView.update(camera.position, traffic?.cars, { lit: weatherView?.state.windowLit ?? 0, time: now / 1000 });
   if (npcSkatersView && !npcWarm && npcSkatersView.loaded + npcSkatersView.failed === npcSkaters.npcs.length) {
     npcWarm = true;
@@ -1000,6 +1015,24 @@ window.__atl = {
             v.project(camera);
             return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1;
           }).map((n) => n.id);
+        },
+      }
+    : null,
+  // The walkers (src/sim/peds.js), or null on the greybox and with ?peds=0.
+  peds: pedsView
+    ? {
+        get count() {
+          return peds.peds.filter((p) => p.live).length;
+        },
+        get minGap() {
+          return pedMinGap(peds);
+        },
+        drawCalls: pedsView.drawCalls,
+        get triangles() {
+          return pedsView.triangles;
+        },
+        get list() {
+          return peds.peds.filter((p) => p.live).map((p) => ({ id: p.id, kind: peds.routes[p.route].kind, x: p.x, y: p.y, z: p.z, speed: p.speed, phase: p.phase }));
         },
       }
     : null,

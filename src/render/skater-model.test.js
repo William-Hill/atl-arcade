@@ -17,9 +17,11 @@ describe.each(Object.entries(SKATERS))("the %s skater GLB", (name, [minH, maxH])
   const GLB = new URL(`../../assets/skaters/${name}/skater.glb`, import.meta.url);
   const gltf = readGlbJson(GLB);
 
-  it("is under 3 MB and uses Draco", () => {
+  // #187: Draco meshes and WebP textures (scripts/assets/compress-skaters.mjs).
+  it("is under 10 MB and uses Draco and WebP", () => {
     expect(statSync(GLB).size).toBeLessThan(10 * 1024 * 1024);
-    expect(gltf.extensionsRequired).toEqual(["KHR_draco_mesh_compression"]);
+    expect([...gltf.extensionsRequired].sort()).toEqual(["EXT_texture_webp", "KHR_draco_mesh_compression"]);
+    expect(gltf.images.every((i) => i.mimeType === "image/webp")).toBe(true);
   });
 
   it("has one skinned mesh under 20,000 triangles", () => {
@@ -56,9 +58,14 @@ describe.each(Object.keys(SKATERS))("the %s phone GLB", (name) => {
   const small = readGlbJson(SMALL);
   const tris = (g) => g.accessors[g.meshes[0].primitives[0].indices].count / 3;
 
-  it("is smaller than the full GLB and uses Draco", () => {
+  it("is smaller than the full GLB and uses Draco and WebP", () => {
     expect(statSync(SMALL).size).toBeLessThan(statSync(FULL).size);
-    expect(small.extensionsRequired).toEqual(["KHR_draco_mesh_compression"]);
+    expect([...small.extensionsRequired].sort()).toEqual(["EXT_texture_webp", "KHR_draco_mesh_compression"]);
+  });
+
+  // #187: the two phone skaters were 10.6 MB of the 15.1 MB phone download.
+  it("is under 3 MB", () => {
+    expect(statSync(SMALL).size).toBeLessThan(3 * 1024 * 1024);
   });
 
   it("has the same triangles, joints, and clips as the full GLB", () => {

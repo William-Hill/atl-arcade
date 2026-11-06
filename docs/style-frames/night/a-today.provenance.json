@@ -1,6 +1,7 @@
 {
   "file": "a-today.jpg",
   "title": "A: today, street 22:30",
+  "lookAt": "blue-gray, no light on the ground",
   "subject": "night",
   "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
   "method": "in-game capture (no image model)",
@@ -20,6 +21,7 @@
     },
     "tune": null,
     "paintover": null,
+    "paintoverEnv": null,
     "viewport": [
       1280,
       720
@@ -44,7 +46,7 @@
       "uWarm": 0
     },
     "bloom": 0.28,
-    "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+    "commit": "e204431"
   },
   "credits": 0,
   "date": "2026-11-05",

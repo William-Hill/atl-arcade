@@ -822,7 +822,7 @@ function frame(now) {
   if (streetSigns) streetSigns.update(isoFocus ?? camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
   if (pedsView) pedsView.sync(peds);
-  if (carView) carView.update(camera.position, traffic?.cars);
+  if (carView) carView.update(camera.position, traffic?.cars, { lit: weatherView?.state.windowLit ?? 0, time: now / 1000 });
   if (npcSkatersView && !npcWarm && npcSkatersView.loaded + npcSkatersView.failed === npcSkaters.npcs.length) {
     npcWarm = true;
     npcSkatersView.warm(renderer, camera, scene).catch(() => {});
@@ -1088,7 +1088,14 @@ window.__atl = {
           return traffic ? traffic.yields : 0;
         },
         get list() {
-          return traffic ? traffic.cars.map((c) => ({ id: c.id, kind: c.kind, lane: c.lane, x: c.x, y: c.y, z: c.z, yaw: c.yaw, speed: c.speed, yielding: c.yielding })) : [];
+          return traffic ? traffic.cars.map((c) => ({ id: c.id, kind: c.kind, lane: c.lane, x: c.x, y: c.y, z: c.z, yaw: c.yaw, speed: c.speed, yielding: c.yielding, crossing: c.crossing, brake: c.brake, signal: c.signal })) : [];
+        },
+        // Yields at crosswalks, and the lamps drawn ({ lamps, beams, lit }).
+        get crossingYields() {
+          return traffic ? traffic.crossingYields : 0;
+        },
+        get lamps() {
+          return carView.lamps ? { ...carView.lamps.info } : null;
         },
         parkedList: parked.map((c) => ({ kind: c.kind, x: c.x, y: c.y, z: c.z, yaw: c.yaw })),
         // The ground sample at (x, z) with the cars, for the tests.

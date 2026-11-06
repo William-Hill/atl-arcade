@@ -6,7 +6,7 @@
   "settings": {
     "build": "scripts/art/style-frames.mjs",
     "manifest": "scripts/art/style-frames.json",
-    "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+    "commit": "e204431"
   },
   "credits": 0,
   "date": "2026-11-05",

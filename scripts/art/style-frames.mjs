@@ -40,13 +40,14 @@ function build(dir, o, subject) {
   let img = src;
   if (o.paintover) {
     img = join(tmp, `${subject}-${o.id}.png`);
-    execFileSync("scripts/art/paintover.sh", [o.paintover, src, img]);
+    execFileSync("scripts/art/paintover.sh", [o.paintover, src, img], { env: { ...process.env, ...(o.env ?? {}) } });
   }
   const jpg = join(dir, `${o.id}.jpg`);
   execFileSync("convert", [img, "-strip", "-quality", "84", "-sampling-factor", "4:2:0", jpg]);
   const prov = {
     file: `${o.id}.jpg`,
     title: o.title,
+    lookAt: o.lookAt ?? null,
     subject,
     tool: o.paintover
       ? `Skate ATL game renderer (Three.js ${three}, ?look=pbr, Chromium SwiftShader via Playwright ${pw}) + scripts/art/paintover.sh "${o.paintover}" (${im})`
@@ -59,6 +60,7 @@ function build(dir, o, subject) {
       params: shot.params ?? {},
       tune: shot.tune ?? null,
       paintover: o.paintover ?? null,
+      paintoverEnv: o.env ?? null,
       viewport: [1280, 720],
       capture: "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
       build: "scripts/art/style-frames.mjs",
@@ -74,13 +76,14 @@ function build(dir, o, subject) {
   };
   writeFileSync(join(dir, `${o.id}.provenance.json`), JSON.stringify(prov, null, 2) + "\n");
   (folders[dir] ??= []).push(prov);
-  return { jpg, title: o.title };
+  return { jpg, title: o.title, look: o.lookAt };
 }
 
 function tile(t, w = 480) {
   const f = join(tmp, `tile-${Math.random().toString(36).slice(2)}.png`);
-  execFileSync("convert", [t.jpg, "-resize", `${w}x`, "-gravity", "south", "-background", "#111", "-splice", "0x34",
-    "-font", FONT, "-pointsize", "16", "-fill", "#fff", "-annotate", "+0+7", t.title, f]);
+  const look = t.look ? ["-pointsize", "14", "-fill", "#ffcf6b", "-annotate", "+0+6", `Look at: ${t.look}`] : [];
+  execFileSync("convert", [t.jpg, "-resize", `${w}x`, "-gravity", "south", "-background", "#111", "-splice", t.look ? "0x56" : "0x34",
+    "-font", FONT, "-pointsize", "16", "-fill", "#fff", "-annotate", t.look ? "+0+30" : "+0+7", t.title, ...look, f]);
   return f;
 }
 function row(title, tiles) {

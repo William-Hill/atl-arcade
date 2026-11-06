@@ -1,23 +1,25 @@
 {
-  "file": "d-paintover-trail.jpg",
-  "title": "D: paintover: green lawn, tonal range",
+  "file": "e-hot-street.jpg",
+  "title": "E: HOT NOON, O4W storefronts",
+  "lookAt": "dark asphalt, green lawn, blue sky over the shops",
   "subject": "beltline-street",
-  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"day\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"hot\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
   "method": "in-game capture + scripted paintover (no image model)",
   "prompt": null,
   "settings": {
-    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-80%2C2.5%2C640%2C-120%2C5%2C615",
     "cam": [
-      312,
-      2,
-      -175,
-      334,
-      3,
-      -80
+      -80,
+      2.5,
+      640,
+      -120,
+      5,
+      615
     ],
     "params": {},
     "tune": null,
-    "paintover": "day",
+    "paintover": "hot",
+    "paintoverEnv": null,
     "viewport": [
       1280,
       720
@@ -25,10 +27,10 @@
     "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
     "build": "scripts/art/style-frames.mjs",
     "renderer": {
-      "calls": 222,
-      "triangles": 735349,
-      "textures": 49,
-      "geometries": 93
+      "calls": 212,
+      "triangles": 716611,
+      "textures": 39,
+      "geometries": 95
     },
     "look": {
       "toneMapping": 7,
@@ -42,7 +44,7 @@
       "uWarm": 0
     },
     "bloom": 0.28,
-    "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+    "commit": "e204431"
   },
   "credits": 0,
   "date": "2026-11-05",

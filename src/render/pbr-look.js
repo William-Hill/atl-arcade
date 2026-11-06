@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { HEIGHT_FOG, districtLook, districtWeights, timeGrade } from "./pbr-palette.js";
+import { HEIGHT_FOG, bloomThreshold, districtLook, districtWeights, envForSky, timeGrade } from "./pbr-palette.js";
 import { ENV_SKY, LOOKS, createSkyEnvironment } from "./look.js";
 import { SKATER_RIM } from "./toon.js";
 
@@ -14,6 +14,7 @@ import { SKATER_RIM } from "./toon.js";
 //   night is not lit by a noon sky
 // - the skater rim (src/render/toon.js SKATER_RIM)
 // - the sun: the weather sun times LOOKS.pbr.sunScale
+// - the bloom threshold: high in the day, so no sunlit surface glows
 //
 // installHeightFog() changes the Three.js fog chunks, so every material with
 // fog gets the height fog. Call it once, before the first material compiles,
@@ -51,8 +52,6 @@ export function installHeightFog(f = HEIGHT_FOG) {
 const ENV_REBAKE = { step: 0.025, seconds: 2 };
 // The warm white half of the rim color.
 const RIM_WARM = new THREE.Color(1, 0.95, 0.88);
-// The env ground disc at night, as a part of its day value.
-const ENV_GROUND_NIGHT = 0.12;
 const envGround = new THREE.Color();
 
 export function createPbrLook({ scene, renderer, sky = null, geoLights = null, anchors = [], getPost = () => null }) {
@@ -61,6 +60,7 @@ export function createPbrLook({ scene, renderer, sky = null, geoLights = null, a
   const fogTint = new THREE.Color();
   let baked = sky ? snapshot(sky) : null;
   let sinceBake = 0;
+  let env = { intensity: 1, ground: 1 };
   let bakes = 0;
   const info = { district: "trail", weights: { trail: 1 }, grade: null, envBakes: 0, envIntensity: scene.environmentIntensity };
 
@@ -69,14 +69,21 @@ export function createPbrLook({ scene, renderer, sky = null, geoLights = null, a
     return [u.uZenith.value.r, u.uZenith.value.g, u.uZenith.value.b, u.uHorizon.value.r, u.uHorizon.value.g, u.uHorizon.value.b, u.uCover?.value ?? 0];
   }
 
-  function rebake(day) {
+  // The mean luma of the sky zenith and horizon colors (linear).
+  function skyLuma(v) {
+    const l = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return 0.5 * (l(v[0], v[1], v[2]) + l(v[3], v[4], v[5]));
+  }
+
+  function rebake() {
     const old = scene.environment;
-    // The ground disc is the bounce of the sunlit street; at night it is
-    // the dim city glow, not a sunlit pavement.
-    envGround.set(ENV_SKY.ground).multiplyScalar(Math.max(ENV_GROUND_NIGHT, day));
+    baked = snapshot(sky);
+    env = envForSky(skyLuma(baked));
+    // The ground disc is the bounce of the street: a sunlit pavement in the
+    // day, the dim city glow at night.
+    envGround.set(ENV_SKY.ground).multiplyScalar(env.ground);
     scene.environment = createSkyEnvironment(renderer, sky, { ground: envGround });
     if (old) old.dispose();
-    baked = snapshot(sky);
     sinceBake = 0;
     bakes += 1;
   }
@@ -104,6 +111,7 @@ export function createPbrLook({ scene, renderer, sky = null, geoLights = null, a
         if (u.uLift) u.uLift.value = g.lift;
         if (u.uTint) u.uTint.value.set(d.tint[0], d.tint[1], d.tint[2]);
       }
+      if (post?.bloom) post.bloom.threshold = bloomThreshold(state ? state.day : 1);
 
       // The fog: the weather writes the horizon color each frame; with no
       // weather the first fog color is the base.
@@ -118,11 +126,10 @@ export function createPbrLook({ scene, renderer, sky = null, geoLights = null, a
       // The environment map follows the sky (once the sky moved enough).
       if (sky && baked && sinceBake >= ENV_REBAKE.seconds) {
         const now = snapshot(sky);
-        if (now.some((v, i) => Math.abs(v - baked[i]) > ENV_REBAKE.step)) rebake(state ? state.day : 1);
+        if (now.some((v, i) => Math.abs(v - baked[i]) > ENV_REBAKE.step)) rebake();
       }
-      // The intensity stays at LOOKS.pbr.environment: the baked map itself
-      // is dark at night, so a second cut made the dusk near black.
-      scene.environmentIntensity = L.environment;
+      // The baked map is dark at night; envForSky() keeps a part of the light.
+      scene.environmentIntensity = L.environment * env.intensity;
       info.envIntensity = scene.environmentIntensity;
       info.envBakes = bakes;
 

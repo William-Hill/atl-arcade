@@ -283,6 +283,35 @@ export function gradePixel(c, { contrast = 1, saturation = 1, warm = 0, lift = 0
   return o.map((v, i) => (v * (1 + warm * (SPLIT.shadow[i] + (SPLIT.light[i] - SPLIT.shadow[i]) * w)) + lift) * tint[i]);
 }
 
+// The environment light by the sky (#160). The env map is baked from the
+// sky dome, so at dusk and at night it takes the sky color; the night sky is
+// about 13 times darker than the noon sky, which left the ground near black.
+// The brightness falls only with the square root of the sky luma (a part of
+// the city glow and the eye adapting), with a cap, and the ground disc (the
+// bounce from the street) keeps a floor. `refLuma` is the noon sky luma
+// (src/sim/weather.js day zenith and horizon, mean).
+export const ENV_BY_SKY = { refLuma: 0.55, maxBoost: 3, groundFloor: 0.15 };
+
+// Pure: the env intensity factor and the ground disc factor for a sky luma
+// (the mean luma of the zenith and the horizon colors, linear).
+export function envForSky(skyLuma, e = ENV_BY_SKY) {
+  const k = Math.min(1, Math.max(0, skyLuma / e.refLuma));
+  return { intensity: Math.min(e.maxBoost, 1 / Math.sqrt(Math.max(k, 1e-4))), ground: Math.max(e.groundFloor, k) };
+}
+
+// The bloom threshold of the pbr look by daylight (0 night, 1 noon), in
+// linear luminance before the tone mapping. The brighter pbr sun puts a
+// sunlit trail over the toon threshold (0.92), and a daytime surface must
+// never glow (docs/art-direction-pbr.md). In the day only the sky glare and
+// hot emissive signs pass; at night the lit windows and signs bloom.
+export const BLOOM_THRESHOLD = { night: 0.92, day: 2.4 };
+
+// Pure: the bloom threshold for the daylight factor.
+export function bloomThreshold(day, b = BLOOM_THRESHOLD) {
+  const t = Math.min(1, Math.max(0, day));
+  return b.night + (b.day - b.night) * t;
+}
+
 // The height fog (#160): the distance fog of the scene, thicker near the
 // ground and thinner up high, so far towers stand out of a warm haze and a
 // near street stays clear. Heights are relative to the camera eye.

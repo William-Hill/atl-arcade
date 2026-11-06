@@ -24,7 +24,9 @@ const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--ena
 const log = [];
 try {
   for (const spec of args) {
-    const [name, rest] = spec.split("=");
+    // Split on the first "=" only: the params after "@" have their own.
+    const name = spec.slice(0, spec.indexOf("="));
+    const rest = spec.slice(spec.indexOf("=") + 1);
     const [cam, more = ""] = rest.split("@");
     const q = new URLSearchParams({ ...BASE, ...Object.fromEntries(new URLSearchParams(extra)), ...Object.fromEntries(new URLSearchParams(more)), cam });
     const page = await browser.newPage({ viewport: { width: w, height: h } });

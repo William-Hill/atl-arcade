@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import {
   ALBEDO,
+  BLOOM_THRESHOLD,
+  bloomThreshold,
+  ENV_BY_SKY,
+  envForSky,
   CHARACTER_MIN_ROUGHNESS,
   DISTRICT_LOOKS,
   FACADE_FADE,
@@ -381,5 +385,45 @@ describe("the skater rim (pbr look)", () => {
     // A second call does not stack a second rim.
     pbrSkater({ root });
     expect(skin.customProgramCacheKey()).toBe("npc-outfit-skater-rim");
+  });
+});
+
+describe("envForSky", () => {
+  it("leaves the noon sky as it is", () => {
+    expect(envForSky(ENV_BY_SKY.refLuma)).toEqual({ intensity: 1, ground: 1 });
+    expect(envForSky(1)).toEqual({ intensity: 1, ground: 1 });
+  });
+
+  it("keeps a part of the light under a dark night sky", () => {
+    // The night sky of src/sim/weather.js: zenith 0.016, horizon 0.07 luma.
+    const night = envForSky(0.043);
+    expect(night.intensity).toBeGreaterThan(2);
+    expect(night.intensity).toBeLessThanOrEqual(ENV_BY_SKY.maxBoost);
+    // The light that is left: map brightness x boost, about a quarter of noon.
+    const left = (0.043 / ENV_BY_SKY.refLuma) * night.intensity;
+    expect(left).toBeGreaterThan(0.15);
+    expect(left).toBeLessThan(0.5);
+    expect(night.ground).toBe(ENV_BY_SKY.groundFloor);
+  });
+
+  it("gets darker as the sky gets darker", () => {
+    let last = Infinity;
+    for (let l = 0.6; l >= 0.005; l *= 0.8) {
+      const e = envForSky(l);
+      const left = Math.min(1, l / ENV_BY_SKY.refLuma) * e.intensity;
+      expect(left).toBeLessThanOrEqual(last + 1e-12);
+      last = left;
+    }
+  });
+});
+
+describe("bloomThreshold", () => {
+  it("keeps the night threshold at night and lifts it over a sunlit wall by day", () => {
+    expect(bloomThreshold(0)).toBe(BLOOM_THRESHOLD.night);
+    expect(bloomThreshold(1)).toBe(BLOOM_THRESHOLD.day);
+    expect(bloomThreshold(2)).toBe(BLOOM_THRESHOLD.day);
+    // A 0.6 albedo wall in the pbr noon sun (4.2), with the noon exposure.
+    expect(BLOOM_THRESHOLD.day).toBeGreaterThan((0.6 / Math.PI) * 4.2 * 1.1 * 1.2);
+    expect(bloomThreshold(0.5)).toBeGreaterThan(bloomThreshold(0.2));
   });
 });

@@ -42,6 +42,11 @@ describe("perf lib", () => {
     expect(checkBudget([run(), run({ quality: "high" })], budget)).toEqual(["low/toon calls 40 > 30", "low/toon p95Ms 30 > 25"]);
   });
 
+  it("lets a tier/look entry override its tier", () => {
+    const budget = { tiers: { low: { calls: 30 }, "low/pbr": { calls: 50 } } };
+    expect(checkBudget([run({ look: "pbr" }), run()], budget)).toEqual(["low/toon calls 40 > 30"]);
+  });
+
   it("takes the median of the repeats", () => {
     const merged = mergeRuns([run({ calls: 10 }), run({ calls: 30 }), run({ calls: 20 })]);
     expect(merged).toHaveLength(1);

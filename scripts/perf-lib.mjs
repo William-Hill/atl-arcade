@@ -49,11 +49,12 @@ export const METRICS = {
 };
 
 // Pure: the list of "tier/look metric value > cap" lines. The budget is
-// { tiers: { low: { calls: 60, ... }, ... } }; a tier's caps apply to both looks.
+// { tiers: { low: { calls: 60, ... }, "phone/pbr": { ... } } }. A "tier/look"
+// entry adds to (and overrides) the caps of its tier.
 export function checkBudget(runs, budget) {
   const over = [];
   for (const r of runs) {
-    const caps = budget.tiers?.[r.quality] ?? {};
+    const caps = { ...(budget.tiers?.[r.quality] ?? {}), ...(budget.tiers?.[`${r.quality}/${r.look}`] ?? {}) };
     for (const [name, cap] of Object.entries(caps)) {
       const get = METRICS[name];
       if (!get) continue;

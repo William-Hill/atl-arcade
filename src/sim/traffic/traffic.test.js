@@ -3,6 +3,7 @@ import {
   CAR_SIZE,
   MAIN_STREETS,
   TRAFFIC,
+  cachedPitch,
   carBodyDistance,
   carGroundSampler,
   createTraffic,
@@ -730,5 +731,106 @@ describe("lights, signals, and crosswalks", () => {
       car.s + CAR_SIZE[car.kind].length / 2 > cw.s || car.lane !== lane.id,
     ).toBe(true);
     expect(car.crossing).toBe(false);
+  });
+});
+
+// The smallest distance from a corner of one car to the body of another.
+function closestCars(t) {
+  let closest = Infinity;
+  for (const p of t.cars) {
+    for (const q of t.cars) {
+      if (p === q) continue;
+      const size = CAR_SIZE[q.kind];
+      const fx = Math.cos(q.yaw);
+      const fz = -Math.sin(q.yaw);
+      for (const [u, v] of [
+        [0, 0],
+        [1, 1],
+        [1, -1],
+        [-1, 1],
+        [-1, -1],
+      ]) {
+        const x = q.x + (fx * u * size.length) / 2 - (fz * v * size.width) / 2;
+        const z = q.z + (fz * u * size.length) / 2 + (fx * v * size.width) / 2;
+        closest = Math.min(closest, carBodyDistance(p, x, z));
+      }
+    }
+  }
+  return closest;
+}
+
+describe("far-step (#189)", () => {
+  const focus = [-300, 300];
+  const dist = (c) => Math.hypot(c.x - focus[0], c.z - focus[1]);
+
+  it("steps the far cars every few ticks and the near cars on every tick", () => {
+    // The camera at the crossing: near cars there, far cars at the town edge.
+    const focus = [0, 0];
+    const dist = (c) => Math.hypot(c.x - focus[0], c.z - focus[1]);
+    const t = createTraffic(TOWN, { streets: GRID, perKm: 14, seed: 2 });
+    const moves = new Map(t.cars.map((c) => [c.id, { near: 0, far: 0, ticks: 0 }]));
+    for (let i = 0; i < 60 * 10; i += 1) {
+      const before = t.cars.map((c) => [c.s, dist(c)]);
+      stepTraffic(t, DT, null, { focus });
+      t.cars.forEach((c, k) => {
+        const [s, d] = before[k];
+        const m = moves.get(c.id);
+        if (c.s === s) return;
+        if (d < TRAFFIC.far[0][0]) m.near += 1;
+        if (d > TRAFFIC.far[1][0]) {
+          m.far += 1;
+          // A far car moves only on its own ticks.
+          expect((t.tick - 1 + c.id) % TRAFFIC.far[1][1]).toBe(0);
+        }
+      });
+    }
+    const all = [...moves.values()];
+    expect(all.some((m) => m.far > 0)).toBe(true);
+    expect(all.some((m) => m.near > 30)).toBe(true);
+  });
+
+  it("keeps the cars apart and about as fast as with no far-step", () => {
+    const t = createTraffic(TOWN, { streets: GRID, perKm: 14, seed: 2 });
+    const full = createTraffic(TOWN, { streets: GRID, perKm: 14, seed: 2 });
+    let closest = Infinity;
+    let run = 0;
+    let runFull = 0;
+    for (let i = 0; i < 60 * 60; i += 1) {
+      const a = t.cars.map((c) => c.speed);
+      const b = full.cars.map((c) => c.speed);
+      stepTraffic(t, DT, null, { focus });
+      stepTraffic(full, DT, null);
+      run += a.reduce((x, y) => x + y, 0);
+      runFull += b.reduce((x, y) => x + y, 0);
+      if (i % 10 === 0) closest = Math.min(closest, closestCars(t));
+    }
+    expect(closest).toBeGreaterThan(0);
+    expect(run / runFull).toBeGreaterThan(0.85);
+    expect(run / runFull).toBeLessThan(1.15);
+  });
+
+  it("keeps the 2 m circle around a skater near the camera", () => {
+    const t = createTraffic(TOWN, { streets: GRID, perKm: 14, seed: 3 });
+    const skater = [40, 0, 0];
+    for (let i = 0; i < 60 * 30; i += 1) stepTraffic(t, DT, skater, { focus: [40, 10] });
+    expect(t.closest).toBeGreaterThanOrEqual(TRAFFIC.safeRadius - 1e-6);
+  });
+
+  it("keeps the pitch of a car that has not moved", () => {
+    let calls = 0;
+    const pitch = cachedPitch(() => (x) => {
+      calls += 1;
+      return x * 0.1;
+    });
+    const car = { kind: "sedan", x: 0, z: 0, y: 0, yaw: 0 };
+    const p0 = pitch(car);
+    expect(p0).toBeGreaterThan(0);
+    expect(calls).toBe(2);
+    expect(pitch(car)).toBe(p0);
+    expect(calls).toBe(2);
+    car.x = 5;
+    car.yaw = Math.PI;
+    expect(pitch(car)).toBeLessThan(0);
+    expect(calls).toBe(4);
   });
 });

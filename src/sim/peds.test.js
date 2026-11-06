@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { PEDS, PED_COUNT, createPeds, hubDensity, pedCount, pedHubs, pedMinGap, pedRoutes, stepPeds } from "./peds.js";
+import { PEDS, PED_COUNT, createPeds, hubDensity, moverGrid, pedCount, pedHubs, pedMinGap, pedRoutes, stepPeds } from "./peds.js";
+import { farStride } from "./far-step.js";
 import { createGeoGroundSampler } from "../level/geo/geo-ground.js";
 import { pathOffsetPoint } from "./npc/path.js";
 
@@ -222,5 +223,53 @@ describe("pedCount", () => {
   it("keeps the high tier at 120 walkers or fewer", () => {
     expect(PED_COUNT.high).toBeLessThanOrEqual(120);
     expect(PED_COUNT.phone).toBeLessThanOrEqual(PED_COUNT.low);
+  });
+});
+
+describe("walker far-step and grid (#189)", () => {
+  it("moves a far walker only on its own ticks, and the near walkers on every tick", () => {
+    const state = createPeds(level, { seed: 3, count: 200, radius: 200 });
+    run(state, 1, { focus: spawnAt });
+    const moves = new Map();
+    for (let k = 0; k < 24; k += 1) {
+      const before = new Map(state.peds.map((p) => [p.id, [p.x, p.z, p.spawns, Math.hypot(p.x - spawnAt[0], p.z - spawnAt[1])]]));
+      stepPeds(state, 1 / 60, { focus: spawnAt });
+      for (const p of state.peds) {
+        const [x, z, spawns, d] = before.get(p.id);
+        if (spawns !== p.spawns || (x === p.x && z === p.z)) continue;
+        const stride = farStride(d, PEDS.far);
+        if (stride > 1) expect((state.tick + p.id) % stride).toBe(0);
+        if (stride === 1) moves.set(p.id, (moves.get(p.id) ?? 0) + 1);
+      }
+    }
+    // Some near walker walked on (almost) every tick.
+    expect(Math.max(...moves.values())).toBeGreaterThan(20);
+  });
+
+  it("walks a far walker about as far per second as a near one", () => {
+    const state = createPeds(level, { seed: 8, count: 150, radius: 200 });
+    run(state, 1, { focus: spawnAt });
+    const start = new Map(state.peds.map((p) => [p.id, [p.s, p.spawns, p.dir]]));
+    run(state, 4, { focus: spawnAt });
+    const rate = (far) => {
+      const list = state.peds.filter((p) => {
+        const [, spawns, dir] = start.get(p.id);
+        const d = Math.hypot(p.x - spawnAt[0], p.z - spawnAt[1]);
+        return p.live && p.spawns === spawns && p.dir === dir && p.pause <= 0 && (far ? d > 140 : d < 35);
+      });
+      return list.reduce((a, p) => a + Math.abs(p.s - start.get(p.id)[0]), 0) / Math.max(1, list.length) / 4;
+    };
+    const far = rate(true);
+    expect(far).toBeGreaterThan(0.8);
+    expect(far).toBeLessThan(PEDS.speed[1] + 0.05);
+  });
+
+  it("finds the crowd and Nia in the mover grid", () => {
+    const grid = moverGrid([{ x: 10, z: 10, radius: 0.8 }], [0, 0, 0]);
+    expect(grid.maxR).toBe(0.8);
+    const found = [];
+    for (const list of grid.cells.values()) found.push(...list);
+    expect(found.map((o) => o.nia).sort()).toEqual([false, true]);
+    expect(found.find((o) => o.nia).r).toBe(PEDS.niaRadius);
   });
 });

@@ -155,7 +155,9 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
     ready,
     skip,
     stats,
-    update(state, camera, dt) {
+    // view: { sees(x, y, z, r) } (src/render/view-cull.js) or null. A person
+    // out of the view keeps its place but skips the clip and the leash.
+    update(state, camera, dt, view = null) {
       skip.clear();
       stats.drawn = 0;
       if (!stats.loaded || !state) return;
@@ -181,15 +183,16 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
         const d = Math.hypot(w.x - camera.x, w.y - camera.y, w.z - camera.z);
         slot.person.root.position.set(w.x, w.y, w.z);
         slot.person.root.rotation.y = yaw;
-        pace(slot.person, w.speed, dt, d);
+        const seen = !view || view.sees(w.x, w.y + 0.9, w.z, slot.companion ? 2 : 1);
+        if (seen) pace(slot.person, w.speed, dt, d);
         if (slot.companion) {
           const c = PED_COMPANION[slot.kind];
           off.set(c.x, 0, c.z).applyAxisAngle(up, yaw);
           slot.companion.root.position.set(w.x + off.x, w.y, w.z + off.z);
           slot.companion.root.rotation.y = yaw;
-          pace(slot.companion, w.speed, dt, d);
+          if (seen) pace(slot.companion, w.speed, dt, d);
         }
-        if (slot.leash?.hand && slot.leash.collar) {
+        if (seen && slot.leash?.hand && slot.leash.collar) {
           const l = slot.leash;
           l.mesh.parent.updateMatrixWorld();
           l.hand.getWorldPosition(l.a);

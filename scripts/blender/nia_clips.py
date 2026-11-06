@@ -21,6 +21,12 @@ CFG = globals().get("SKATER_CFG") or {}
 ARM = CFG.get("arm", "NiaRig")
 MESH = CFG.get("mesh", "Nia")
 LEFT, FWD, UP = (1, 0, 0), (0, -1, 0), (0, 0, 1)
+# CURL is a per-bone axis: the finger direction crossed with the palm normal
+# (down in the rest pose). A positive angle curls a finger toward the palm on
+# both hands, also for a splayed finger.
+CURL = "curl"
+# STANCE scales the absolute foot x of at() for a skater with wider hips.
+STANCE = CFG.get("stance", 1.0)
 
 
 def bone(name):
@@ -67,6 +73,8 @@ def mirror_pose(pose):
 def mirror_rot(r):
     # A mirror across the YZ plane maps a rotation axis (x, y, z) to (x, -y, -z).
     axis, deg = r
+    if axis == CURL:
+        return r
     return ((axis[0], -axis[1], -axis[2]), deg)
 
 
@@ -88,7 +96,7 @@ LX, RX, FY = CFG.get("feet", (0.242, -0.236, 0.03))
 def at(x, y=0.0, z=0.0, side="L", rot=None):
     # A foot target at an absolute x, y (armature space) instead of an offset.
     rest_x = LX if side == "L" else RX
-    out = {"pos": (x - rest_x, y - FY, z)}
+    out = {"pos": (x * STANCE - rest_x, y - FY, z)}
     if rot:
         out["rot"] = rot
     return out
@@ -578,13 +586,13 @@ def glide(down=0.0, side=0.0, lean=4.0):
 
 def _fist(side, curl=85):
     # Closes the fingers of one hand. A finger curls toward the palm about
-    # the forward axis (the rest pose has the palms down).
+    # its own CURL axis (the rest pose has the palms down).
     out = {}
     sign = -1 if side == "Left" else 1
     for finger in ("Index", "Middle", "Ring", "Pinky"):
-        out[f"{side}Hand{finger}1"] = [rot(FWD, sign * curl * 0.8)]
-        out[f"{side}Hand{finger}2"] = [rot(FWD, sign * curl)]
-        out[f"{side}Hand{finger}3"] = [rot(FWD, sign * curl * 0.7)]
+        out[f"{side}Hand{finger}1"] = [rot(CURL, curl * 0.8)]
+        out[f"{side}Hand{finger}2"] = [rot(CURL, curl)]
+        out[f"{side}Hand{finger}3"] = [rot(CURL, curl * 0.7)]
     out[f"{side}HandThumb1"] = [rot(FWD, sign * 20)]
     out[f"{side}HandThumb2"] = [rot(UP, -sign * 30)]
     return out
@@ -829,6 +837,8 @@ def local_quat(pb, rotations):
     r = rest_rot(pb)
     rinv = r.inverted()
     for axis, deg in rotations:
+        if axis == CURL:
+            axis = (pb.bone.tail_local - pb.bone.head_local).normalized().cross(Vector((0, 0, -1)))
         q = Quaternion(rinv @ Vector(axis), math.radians(deg)) @ q
     return q
 

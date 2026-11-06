@@ -12,3 +12,5 @@ landmarks/*/material-evidence/**/*.png
 landmarks/*/detail-inventory/*.png
 landmarks/*/ref/reference-4000.jpg
 .meshy-raw/
+.vercel
+.env*

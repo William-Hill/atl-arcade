@@ -1380,7 +1380,65 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Style frames (#114) use free methods only: in-game captures with URL params (time, weather) and a page-side runtime tune (`tuneLook`, grade and bloom uniforms, applied from the page, no game source change), plus scripted ImageMagick paintovers (`scripts/art/paintover.sh`) of the captures. No image model was used (0 credits): the paintovers already show the two biggest gaps (the pale hazy lawn and the compressed tonal range), and a generated frame would show a city the renderer cannot match. An image-model batch stays an option for the owner, with the cost shown first.
 - Frames ship as JPGs with one `<frame>.provenance.json` each and a folder `provenance.json` listing them in `docs/style-frames/<subject>/`, with a grouped contact sheet; the owner chooses the frames to keep, and the chosen ones go into the doc.
 
+## 2026-11-05: epic/city-look — style frames, round two: one clear direction per option (#114)
 
+- The owner found the first round of options too close to tell apart: in-game time-of-day and grade changes barely move the pbr look (a #160 finding in its own right), and the first paintovers were mild.
+- Round two keeps option A as the game today and makes B–E one clear direction each: hot noon, golden hour, overcast soft, neon night, wet street, warm lamps. They are heavier scripted ImageMagick paintovers of the same captures (`scripts/art/paintover.sh` modes `hot`, `golden`, `soft`, `neon`, `wet`): lawn recolor, lilac asphalt darkened, sky replaced, regrade. 0 credits; no image model.
+- Each contact-sheet tile carries a "Look at:" line naming what changed; the per-frame provenance records the paintover mode and its tuning variables.
+
+## 2026-11-05: epic/city-look — traffic lane following (IDM), lamps, signals, crosswalk yields
+- Lanes: `trafficLanes()` (`src/sim/traffic/traffic.js`) now builds one lane per travel lane of `laneLayout()` (`src/level/geo/lanes.js`), at the lane centers between the painted lines (`runLaneOffsets()` in `src/sim/cars.js`), curb lane first. The BeltLine level goes from 9 to 15 lanes (54 to 68 moving cars) (Ponce de Leon 3 + 2, North Avenue and John Lewis 1 + 1 each, Freedom Parkway one-way). Cars stay in their lane: no lane changes yet.
+- Following: the Intelligent Driver Model (`idmAccel()`, a 1.5, b 2.5, s0 3 m, T 1.4 s, delta 4, hard limit 6 m/s²) replaces the target-speed rule. Stop lines, crosswalks, and the yield point before the skater are fixed points (`idmStopAccel()`): the IDM toward a virtual car at rest, plus a 1 m/s creep and a kinematic last half metre, because the plain IDM reaches a stop point only asymptotically. A car on a two-way street slows to 3 m/s for its U-turn, and spawns no faster than a calm stop before the next stop line allows.
+- Crosswalks: each lane keeps the `crosswalksOf()` crosswalks on its path. A car stops 1 m before a crosswalk with the skater on it (even on the far half, out of the car lane) and waits; the intersection stop also waits for a clear far crosswalk. The 2 m hard rule and the in-lane yield are unchanged. Calm traffic only (AGENTS.md): cars never threaten the skater.
+- State for the view: `accel`, `brake` (`brakeLevel()`: 0 cruising, 0.4 to 1 on deceleration over 0.3 m/s², 0.8 at rest), `signal` (`turnSignal()` on the heading change over the next 30 m, with hysteresis; U-turns signal left), and `crossing`.
+- Lamps: the vehicle GLBs share one atlas material, so the lamps are their own unlit layer (`lampLayout()`, `lampLevels()` in `src/render/car-models.js`; `createLamps()` in `src/render/car-view.js`): head, tail/brake and amber corner signal quads on every moving car within 240 m, and an additive headlight pool on the street within 120 m. Headlights are dim running lamps by day and full at night by the weather window factor (`weatherView.state.windowLit`, the facade `uLit`), passed from `src/main.js`; no weather file changed. Brake lamps brighten over the tail glow. Signals blink at 1.5 Hz with a per-car phase. Cost: 2 draw calls at night (1 by day), 2 triangles per lamp.
+
+### Evidence
+- Vitest: `src/sim/cars.test.js` (free road, standstill gap, the IDM equilibrium gap, a 6-car platoon behind a braking car with no collision, stop points without overshoot or crawl, lane centers from lane tags, signals, brake levels, crosswalk test), new `traffic.test.js` cases (brake lamps at a stop line, U-turn signal and speed, crosswalk stop with the skater out of the lane), `car-models.test.js` lamp cases.
+- Playwright (headless Chromium, `?level=beltline-eastside&quality=high&view=fixed`, same cameras before and after), screenshots in `reports/traffic-flow/`. Cars: draw calls 4 to 6 at night, 4 to 5 by day; triangles at the North Avenue camera 33,978 to 38,421 (the car mix in view differs by the new spawn, lamps add under 1,000); download 50.96 to 51.08 MB (code only, no new assets). Skater on the North Avenue crosswalk: both approaching cars stopped 6.2 m from the skater (`crossingYields` 2) with the brake lamps on.
+
+### Limits
+- No lane changes or merges, no traffic lights (stop-sign style boxes as before). Parked cars have no lamps. Headless frame rate makes the sim slow in wall time, so browser yield checks wait longer.
+
+
+## 2026-11-05: epic/city-look — the Blender facade kit in the pbr look
+
+### Decisions
+
+- The pbr look draws `assets/facades/facade-kit.glb` (docs/facade-kit.md, "In the game"): `src/level/geo/facade-kit-glb.js` (pure) runs `facadePlacements()` on every building that is not a claimed landmark footprint, from `frontEdges()`, `chooseStyle()`, `buildingSpan()`, `muralWalls()` and `floorCount()`; `main.js` loads the GLB while the meshes build (a failed load keeps the whole procedural kit) and `src/render/facade-kit-view.js` draws the kit. The toon look keeps the whole procedural kit. `?kit=0` drops both kits, `?depth=0` both depth-tile kits, and `?kitglb=0` the GLB kit only (the BEFORE of the evidence).
+- Cost: the whole GLB kit is one `BatchedMesh` (all nodes share the kit material), the shop names on its sign boards a second one, so it adds 2 draw calls at any camera. One `InstancedMesh` per module per 50 m tile cost 30–112 draw calls at the test cameras. Culling is per building, not per tile: a building is drawn while its procedural depth tile is (tile center closer than `DEPTH_DISTANCE`, 120 m) or while the building is closer than 120 m (the far wall of a long building), and it switches to far geometry past `LOD1_DISTANCE` (30 m, was 60; the `_lod1` nodes, else `farGeometry()`, the street-facing and large horizontal faces, about 40% of a frame), and drops the small trim (`TRIM`) past `TRIM_DISTANCE` (35 m). Past 120 m the shader facade alone is drawn, as before. Without `WEBGL_multi_draw` the batch would draw once per instance, so the GLB stays off there (the prop batch has the same dependency).
+- The window and shop glass panes of the GLB are cut out at load (`withoutGlass()`, the atlas glass strip), so the facade shader's glass and room interiors show through the frames; the GLB panes were flat dark glass over them. The door glass stays.
+- The procedural kit leaves out what the GLB replaces, per slot (`kitCovers()`): the sill, lintel and head of a window with a GLB frame, the pier on a bay line with a GLB pilaster, the sign band of a bay with GLB shop glass, and the procedural door where there is a GLB door (the step and the lamps stay, the lamps on the pilaster face). The shader shop glass and windows stay: the modules frame them (their panes cut out).
+- Kept procedural (`GLB_SKIP`): the awnings (they match the street awnings), and the cornice, coping and belt course. Those are in the building tiles, drawn at every distance; the GLB runs in the depth tiles would leave the roof line bare past 120 m.
+- The shop-name decals (`shop-names.js`) go on the GLB sign boards; a GLB sign board under a named shop sign (`shop-signs.js`) is left out. `decalQuad()` wrote each quad past the end of its buffers (it started at the buffer capacity), so no shop name drew before; it now writes quad by quad (`shop-names.test.js`).
+- `facadePlacements()` takes `floors` (the shader's floor count, OSM levels included, so the frames stay on the shader windows) and the door bay of `frontEdges()`, and tags each module with its slot (`bay`, `floor`, `line`).
+
+### Evidence
+
+- See the PR: labeled BEFORE (`?kitglb=0`) / AFTER shots from the same cameras (`node scripts/assets/facade-kit-wired.mjs OUT_DIR`), with the costs.
+
+### Limits
+
+- The GLB kit has no colliders, like the rest of the kit.
+
+## 2026-11-05: epic/city-look — Meshy pedestrians, street furniture and BeltLine props (#133, #115)
+- The owner set a hard cap of 400 Meshy credits; the lean list cost 351: six rigged people at 26 each (meshy-t2.5 preview 5 + refine 10, rigging 5, two library clips at 3), and 13 static props at 15 each (dog, stroller, drinking fountain, bollard, cone, barricade, e-scooter, city bike, bike dock, food cart, picnic table, umbrella, one original sculpture). `scripts/assets/meshy-people-props.mjs` checks its task log before every paid call and refuses a task that would pass the cap.
+- meshy-t2.5 in a T-pose rigs cleanly, and every rigged person gets the same 24-bone humanoid skeleton, so clips bought for one person are copied to the others in Blender (`people.py --share`) for free: each person ends with walk, run, idle, sit and cheer; the dog walker's idle, the elder's sit and the stroller dad's push are bought once.
+- Meshy rigs only humanoids, so the dog gets a 14-bone armature and walk/idle clips keyed in Blender (`scripts/blender/dog_rig.py`), 0 credits.
+- People: about 6k triangles (lod0) and 1.2k (lod1 at 25 m) on one skin, 1K base color, 0.5-0.75 MB per GLB. Props: 0.4-4k triangles with lod1s at 20 m (sculpture 60 m). The 19 GLBs total 7.1 MB; none is over 0.8 MB.
+- Not wired into the game here: the crowd simulation (`src/sim/npc/crowd.js`) has walk-only types and no sit/stand/goal states, and the placement files (`src/level/geo/*`, `src/render/geo-view.js`) are being merged by another session. `docs/people-props.md` says how to place each asset; `scripts/assets/people-props-preview.html` shows them in the pbr renderer.
+- The cyclist's `ride` is a seated pedaling loop keyed in Blender over the sit pose (0 credits). The bike first shipped static; its wheels and crank now turn (below).
+- Review of the first shots (owner): the people had a dark smoky halo, moved oddly and looked lumpy. Causes and fixes:
+  - Halo: the game's GTAO counted anything within 4 m in depth as an occluder, so a person in front of open ground darkened it. `thickness` is now 1 m in `src/render/post.js` (one value, whole game): wall feet and inside corners stay dark, nothing in open ground haloes.
+  - Specks (owner, after the remake): a speckled dark patch was still left around feet and paws: the GTAO samples took the legs as occluders of the ground right behind them. In the pbr look the GTAO depth/normal pass now skips skinned meshes (Nia, the NPC skaters, the people, the dog), as it already skips points and lines; the sun shadow grounds them. Static props still occlude. The toon look keeps them (its ink outlines read that depth). Side effects: a character's own pixels take the AO of what is behind it, and photo-mode tilt-shift sees the depth behind a character; the preview's `people` shot also drops from 400 to 268 draw calls (the AO pass no longer draws the people). Same-camera BEFORE/AFTER: `scripts/assets/people-props-shots.mjs` (now `peds=0`).
+  - Motion: two library clips walked off (Push_and_Walk_Forward 2.7 m, Catching_Breath 4.3 m) and popped back each loop; every clip now has its Hips drift removed. Shared clips were copied as local rotations, but each Meshy rig has its own rest orientations, which tilted the body; they are now baked per bone in armature space relative to the rest. `push` and `ride` are keyed with a two-bone IK in Python (`people_ik.py`; Blender's IK constraint misses on these rigs because the glTF importer's bone tails are not the child joints): hands on the stroller handle, and on the bike's grips with feet on the pedals.
+  - Shape: meshy-t2.5 at 6k triangles was blocky up close next to Nia and Marcus (17-18k). The owner approved a new 400-credit cap for remaking the six bodies on meshy-7.1 (standard, remeshed to 15k triangles): 205 credits, preview 20 + refine 10 each plus rigging 5 on five of them (the first rig was charged 0); all-in 351 + 205 = 556. The clips bought with the first bodies are reused on the new skins, so no clips were bought again.
+
+- Free Blender fixes (owner: the remake's 400 was its own budget; a further 200 credits were offered and kept unspent, so these cost 0):
+  - Wheels: `scripts/blender/prop_wheels.py` cuts the wheels of the `city_bike`, `e_scooter` and `stroller` (and the bike's crank arms and pedals) out of lod0 as child nodes pivoted on their axles, found as the faces inside a cylinder around the axle, narrow enough across to leave the fork and stays (the bike's whole wheel, with the dark spoke panels Meshy painted, turns; the scooter and stroller keep their hubs still), and keys one looping clip: bike `ride` (crank one turn per second in phase with the cyclist's feet, wheels two), stroller `push`, scooter `roll`. lod1 stays static. Each spinning part is one more draw call (bike 3, stroller 2, scooter 2). Rings, not new bones: the props stay unskinned.
+  - The cyclist's feet circled 16 cm behind the crank and pedaled backwards; the ankle circle is now centered over the crank axle measured on the bike (radius 0.137 m, its crank length) and turns forward. Saddle and grips moved 2-3 cm so the legs and arms reach (worst miss 3 cm, was 6).
+  - Stroller dad's far hand: it left the handle for half the loop (15 cm away) because the walk sampled for `push` came out mixed with the NLA tracks of the clips made before it, not because the arm was short. Sampling now mutes the other tracks (`ride` too); both hands stay on the handle through the loop (0 cm miss), with a slight lean into it.
+  - Leash: the dog walker and the dog are separate models that move independently, so the leash is not baked: `src/render/leash.js` hangs a parabola of fixed length (sag solved for the arc) between the walker's `LeftHand` and the dog's `neck`, which the preview draws as a thin tube each frame.
 
 ## 2026-11-05: epic/city-look — skating grades on the playable ways (terrain A)
 
@@ -1416,3 +1474,82 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
   - low tier: trail 69 → 72 calls, 152,484 → 176,752 triangles (140 walkers).
 - Walkers grow in over the outer 15% of the pool (`createPedsView`), so the ones that come and go at its edge do not pop inside the fog-free distance on the high tier (fog starts at 260 m, the pool ends at 200 m).
 - Heights come from the level less its buildings, so a walker at a footprint edge stays on the sidewalk. The crowd, the NPC skaters and Nia block spawns and moves.
+
+## 2026-11-05 — Marcus fingers, knee pads, and wristbands (#168)
+
+- Fit Marcus's 40 finger joints to his hand mesh. The joints came from Nia's
+  rig and sat 0.13 m behind the wrist. No vertex had a finger weight.
+- Find the fingers with a geodesic merge tree from the wrist. Each finger
+  region is complete when it joins another large region. Sort the regions
+  from the thumb. The fit stops if a hand has fewer than five fingers.
+- Split only the hand weight between the hand and the finger chains. Keep the
+  forearm weight, so the wrist seam does not change.
+- Weight each knee pad from one field: the cap and the lower strap follow the
+  shin, and the thigh share starts at the knee joint and ends 0.06 m above it.
+  A lower band (0.02 to 0.08 m) pulled the thigh skin away from the shorts hem.
+  A higher band left the cap fold in place. Skin within 0.03 m takes the pad weights.
+- Give the skin under each wristband the band weights.
+- Keep the 24 runtime clips unchanged in this step. The clip rebuild (#170)
+  re-keys them on the corrected body.
+- Evidence: `reports/skater-168/` (Blender close renders of the exported GLB,
+  before and after) and the Playwright contact sheets in
+  `assets/skaters/marcus/clips/`. Real skaters and the owner must still
+  review the hands in motion.
+
+## 2026-11-05 — All runtime clips on the v2 bodies (#170)
+
+- Drop the legacy clip transfer. Key the 22 `nia_clips.py` clips on the v2
+  body from `raw/forward-v2`. Keep the reviewed `push` and `coast`.
+- Use the forward IK for every clip: calibrated pole angles, poles that turn
+  with the foot yaw, quaternion foot targets. Also turn the pole at each leg
+  key until the knee points over the skate, because one calibrated pole
+  angle left Nia's knees 17 to 20 degrees inward in `jump` and `ride_back`.
+- Scale `at()` foot x by hip width. Marcus's hips are 1.64 times Nia's.
+- Curl each finger about its own axis, so Marcus's splayed fingers close.
+- Give Marcus `dance_smoothquad` from the same approved Tripo dance as Nia.
+  The clip name stays the same, so the style table and #107 still bind.
+- Clip names do not change. Both GLBs have 25 clips.
+- Known: the e2e T-pose gate fails its control check (too few silhouette
+  pixels) on the base GLBs and on these GLBs. It finds no T-pose frame.
+
+## 2026-11-05 — Tripo text-to-motion tests (#169)
+
+- Generate two 5 s motions in Tripo Studio on the Nia carrier project
+  72bfc452, through Claude in Chrome: "Dancing in Place" (an Atlanta Laffy
+  Taffy groove) and "Skating Turn" (a forward glide into crossover steps).
+  Cost: 40 credits, approved by the owner. Balance 2755 to 2715.
+- Export each motion as its own FBX (Blender preset, skeleton on). Retarget
+  each onto the v2 Nia and Marcus bodies with `skater_motion_retarget.py`.
+- Keep both as review clips in `raw/tripo-motion-v2/`. They are not in the
+  runtime GLBs. The clip names `dance_laffytaffy` and `skate_crossover` are
+  proposals. Adding them needs entries in `src/render/skater-anim.js` and
+  owner approval, as for `dance_smoothquad`.
+- The retarget removes the forward travel of the skating turn (5.55 m on
+  Nia), because the game controller supplies travel. The turn still changes
+  the heading by about 90 degrees, so the clip does not loop in place.
+- Evidence: `reports/skater-169/`.
+
+## 2026-11-06: #107 (code part) — clip blends, carve lean, foot IK
+- Scope: runtime code only. No new clips. The wall slide, bonk, and hard landing clips need Blender and the raw `.blend` files. #170 rebuilds all clips on the v2 bodies later. The code keys on clip names and bone names, not on the bone data of the current clips.
+- Fade times: `FADES` and `fadeFor(from, to)` in `src/render/skater-anim.js`. Rules match a clip name, a clip group (`groupOf()`), or `*`. The first rule that matches wins. Fast fades go into an impact (bail 0.05 s, land 0.05 s, jump 0.06 s). Slow fades go between ground clips (carve to carve 0.35 s, into idle 0.4 s, into and out of the backward ride 0.35 s, the half-turn time). A clip with no rule (a new clip name) gets 0.2 s.
+- Blender: `src/render/anim-blend.js` (pure). Each clip has a weight. A change starts a smoothstep fade from the weights of the current frame, so the weights always sum to 1. The view no longer uses `crossFadeTo()`. That call reset a clip that was still fading out to weight 0 when a second change came back to it (a pop). Now a looping clip that still has weight keeps its time. A one-time clip (jump, land, bail) starts again.
+- Lean: the body banks about the forward axis at 0.6 of the centripetal angle `atan(v * yawRate / g)`, at most 0.22 rad (12.6 degrees), with a 0.12 s smoothing that does not depend on the frame rate. On the coast and the push, the carve clips add a lean pose (`makeClipAdditive()` of the middle pose of `carve_left` or `carve_right` less the middle pose of `coast`), at most weight 0.6. The carve clips themselves get the bank only. `?lean=0` turns the lean off.
+- Foot IK: `src/render/foot-ik.js` (pure) plans the feet. It samples the level ground (`env.sampleGround`, no Rapier query) at the ankle and the toe of each skate and takes the higher one, so a skate across a stair edge sits on the step nose. The pelvis drops with the lower foot (at most 0.3 m). A two-bone solve bends each leg in the plane of the clip pose. Each skate tilts toward the ground normal (at most 0.6 rad). A tilted skate holds its ankle at h / cos(tilt) over the ground. The IK is off in the air, on a rail, and in a bail. It fades in over 0.15 s and out over 0.06 s. The leg bones are found by name: Mixamo with any prefix, and Blender `thigh.L` names.
+- Phone: the foot IK is off on the phone tier and on a phone device (the same check as the 1024 px skater). `?footik=1` or `?footik=0` sets it. NPC skaters have no foot IK. They get the lean.
+- Test page: `anim-lab.html` (`src/viewer/anim-lab.js`) puts a skater on the greybox ramp and stairs and draws the contact sheets for `e2e/skater-blend.spec.js`.
+
+### Evidence
+- Vitest: `src/render/anim-blend.test.js` (fade table, blender, lean) and `src/render/foot-ik.test.js` (bone names of both GLBs, two-bone solve, foot plan on the greybox stairs and quarter pipe, tilt, IK weight). 31 tests.
+- Playwright: `e2e/skater-blend.spec.js`. Contact sheets: `e2e/__screenshots__/anim-107-{nia,marcus}-{blend,lean,contact}.png`.
+  - Stairs (the left skate one 0.17 m step down): gap 0.170 m with IK off, 0.000 m with IK on, for both skaters.
+  - Ramp (1.2 m up the 3 m quarter pipe, about 24 degrees, riding across it): Nia uphill skate -0.097 m (into the ramp) to -0.015 m, downhill 0.039 m to 0.000 m. Marcus -0.127 m to -0.042 m, and 0.050 m to -0.015 m.
+  - Pop check (largest bone turn in one frame, rad): changes 0.127 (Nia) and 0.121 (Marcus); the push clip alone turns 0.133 and 0.180.
+  - IK cost in headless SwiftShader: 0.06 to 0.11 ms per frame.
+
+### Limits
+- On a slope the uphill skate can still go 1.5 to 4.2 cm into the surface: the toe moves after the tilt, and the plan samples the ground before it. A second sample pass would fix it for about twice the cost.
+- The body stays upright on a ramp. Only the legs and the skates follow the surface.
+- The lean pose uses one frame of each carve clip. #170 changes the clips, so look at the lean sheet again after it.
+- FPS gate not verified: `npm run playtest` gives a median of 6.7 FPS on this cloud machine (4 CPUs, SwiftShader) for this branch and for `epic/city-look` alike (gate 55). Run it again on the Mac.
+- `e2e/skater-anim.spec.js` (3 tests) and `e2e/skater-face.spec.js` (1 test) fail on this branch and on `epic/city-look` with the same errors (for example, the Marcus GLB has no `dance_smoothquad` clip). They are not part of this change.
+- No person played it. Real skaters did not review the lean or the blends.

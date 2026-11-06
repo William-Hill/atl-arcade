@@ -105,7 +105,7 @@ export function mergeRuns(runs) {
 export function renderMarkdown(result) {
   const rows = mergeRuns(result.runs);
   const lines = [];
-  lines.push(`Run ${result.date.slice(0, 16).replace("T", " ")} UTC, ${result.gpu}, ${result.machine.cpus} CPUs, viewport ${result.viewport}, ride ${result.rideSeconds} s, ${result.repeat} run(s) per row (median shown).`);
+  lines.push(`Run ${result.date.slice(0, 16).replace("T", " ")} UTC, ${result.gpu}, ${result.machine.cpus} CPUs, viewport ${result.viewport}, ride ${result.rideSeconds} s of game time (stopped after ${result.maxWallSeconds ?? "-"} s of wall time), ${Math.max(...rows.map((r) => r.runs))} run(s) per row (median shown).`);
   lines.push("");
   lines.push("| Tier | Look | Mean ms | p95 ms | Median FPS | Draw calls | Triangles | Geometries | Textures | Heap MB | First frame ms | Load avg |");
   lines.push("|---|---|---|---|---|---|---|---|---|---|---|---|");

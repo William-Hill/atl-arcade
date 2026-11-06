@@ -48,6 +48,7 @@ const out = arg("out", "reports/perf/perf.json");
 const md = arg("md", null);
 const budgetPath = arg("budget", null);
 const gpu = args.includes("--gpu");
+const maxWall = Number(arg("max-wall", "150"));
 // Extra URL parameters for every run, for example "&peds=0".
 const extra = arg("extra", "");
 
@@ -90,7 +91,8 @@ const base = `http://localhost:${port}`;
 const launchArgs = ["--no-sandbox", "--disable-dev-shm-usage", "--autoplay-policy=no-user-gesture-required", ...(gpu ? ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] : ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"])];
 const browser = await chromium.launch({ headless: true, args: launchArgs });
 
-const runs = [];
+// --append adds the runs to the ones already in --out (a second pass).
+const runs = args.includes("--append") && out && existsSync(resolve(ROOT, out)) ? JSON.parse(readFileSync(resolve(ROOT, out), "utf8")).runs : [];
 const errors = [];
 const round = (v, d = 1) => (v == null ? null : Math.round(v * 10 ** d) / 10 ** d);
 
@@ -132,7 +134,9 @@ async function oneRun(quality, look, n) {
 
   // The ride. runScript plays one script tick per fixed step, so a slow frame
   // makes the ride longer in wall time, not shorter in distance.
-  const timeoutMs = seconds * 20000 + 60000;
+  // A software GPU can take seconds per frame on the high tier; past
+  // --max-wall seconds the ride stops and the row has finished: false.
+  const timeoutMs = maxWall * 1000;
   const data = await page.evaluate(
     async ({ script, start, timeoutMs }) => {
       const a = window.__atl;
@@ -158,7 +162,7 @@ async function oneRun(quality, look, n) {
   const row = {
     quality,
     look,
-    run: n,
+    run: n + passOffset,
     load: round(load),
     finished: data.finished,
     wallSeconds: round(data.wallMs / 1000),
@@ -185,12 +189,35 @@ async function oneRun(quality, look, n) {
   return row;
 }
 
+const passOffset = Math.max(0, ...runs.map((r) => r.run ?? 0));
+
+// Writes the JSON after each run, so a stopped run keeps the rows so far.
+function save() {
+  const result = {
+    date: new Date().toISOString(),
+    level: LEVEL,
+    gpu: gpu ? "machine" : "swiftshader (software, CPU)",
+    machine: { cpus: cpus().length, model: cpus()[0]?.model ?? null, platform: process.platform },
+    viewport: "1280x720 @1",
+    rideSeconds: seconds,
+    maxWallSeconds: maxWall,
+    extra,
+    runs,
+  };
+  if (out) {
+    mkdirSync(dirname(resolve(ROOT, out)), { recursive: true });
+    writeFileSync(resolve(ROOT, out), `${JSON.stringify(result, null, 2)}\n`);
+  }
+  return result;
+}
+
 try {
   for (let n = 1; n <= repeat; n += 1) {
     for (const quality of tiers) {
       for (const look of looks) {
         const row = await oneRun(quality, look, n);
         runs.push(row);
+        save();
         const s = row.systems;
         console.log(
           `${quality.padEnd(5)} ${look.padEnd(4)} mean ${row.frame.meanMs} ms, p95 ${row.frame.p95Ms} ms, ${row.calls} calls, ${row.triangles} tris, heap ${row.heapMB} MB, first frame ${row.firstFrameMs} ms, ${row.downloadMB.total} MB` +
@@ -204,22 +231,8 @@ try {
   await new Promise((r) => server.httpServer.close(r));
 }
 
-const result = {
-  date: new Date().toISOString(),
-  level: LEVEL,
-  gpu: gpu ? "machine" : "swiftshader (software, CPU)",
-  machine: { cpus: cpus().length, model: cpus()[0]?.model ?? null, platform: process.platform },
-  viewport: "1280x720 @1",
-  rideSeconds: seconds,
-  repeat,
-  extra,
-  runs,
-};
-if (out) {
-  mkdirSync(dirname(resolve(ROOT, out)), { recursive: true });
-  writeFileSync(resolve(ROOT, out), `${JSON.stringify(result, null, 2)}\n`);
-  console.log(`wrote ${out}`);
-}
+const result = save();
+console.log(`wrote ${out}`);
 if (md) {
   const mdPath = resolve(ROOT, md);
   const doc = existsSync(mdPath) ? readFileSync(mdPath, "utf8") : "";

@@ -165,6 +165,21 @@
       "result": "Two review clips on the v2 body. Not in the runtime GLB. Owner and real-skater review open.",
       "credits_spent": 0,
       "credits_note": "The Tripo credits are recorded in the Nia provenance."
+    },
+    {
+      "tool": "scripts/assets/compress-skaters.mjs on Node 24 with @gltf-transform/core, extensions, and functions 4.5.1, draco3dgltf 1.5.9, sharp 0.35.5 (installed with npm i --no-save, not in package.json)",
+      "date": "2026-11-06",
+      "issue": "#187",
+      "prompt": "Cut the skater download: the two skater GLBs were 75% of the low/toon download and 69% of the phone/toon download.",
+      "command": "node scripts/assets/compress-skaters.mjs assets/skaters/marcus/skater.glb assets/skaters/marcus/skater.glb --quality 85 --normal-quality 90 && node scripts/assets/compress-skaters.mjs assets/skaters/marcus/skater-1024.glb assets/skaters/marcus/skater-1024.glb --quality 80 --normal-quality 85",
+      "actions": [
+        "Textures: JPEG to WebP (EXT_texture_webp, required), the same pixel sizes. skater.glb: quality 85, normal maps 90. skater-1024.glb: quality 80, normal maps 85.",
+        "Clips: resampled with tolerance 1e-4 (keys on a straight line removed), rotation keys stored as normalized int16. The largest change from the old clips, sampled at the old key times: 0.18 degrees of rotation and 0.45 mm of translation. The 25 clip names and all channels are the same.",
+        "Meshes: Draco again (edgebreaker; quantization position 14, normal 10, texcoord 12, generic 12). The same triangles; Draco merged a few duplicate vertices.",
+        "No new generation and no credits. The mesh, the rig, the joint names, and the clips are the same (src/render/skater-model.test.js). The before and after five views and face close-up match (PSNR 45 dB or more)."
+      ],
+      "result": "skater.glb 7,813,640 to 3,182,416 bytes; skater-1024.glb 5,362,980 to 2,309,792 bytes",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 115,
@@ -172,15 +187,15 @@
   "tripo_credits_after": 2970,
   "file": "assets/skaters/marcus/skater.glb",
   "triangles": 39074,
-  "file_size_bytes": 7813640,
+  "file_size_bytes": 3182416,
   "five_views": "assets/skaters/marcus/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "contact_sheets": "assets/skaters/marcus/clips/<clip>.png, made by e2e/skater-anim.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/marcus/provenance.json)",
   "animations": 25,
   "phone_variant": {
     "file": "assets/skaters/marcus/skater-1024.glb",
-    "file_size_bytes": 5362980,
-    "base_color": "1024x1024 JPEG",
+    "file_size_bytes": 2309792,
+    "base_color": "1024x1024 WebP",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
   },
   "current_build": {

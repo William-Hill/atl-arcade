@@ -231,3 +231,51 @@ The full-cycle frame sheets show both views. The `.blend` files remain editable.
 Marcus still has rigid fingers. Isolated shorts edges still reach 1.56 times
 their rest length. The percentile check does not replace visual review.
 User approval, the full clip rebuild, and game verification remain open.
+
+## Runtime v2: Marcus hands, knee pads, and wristbands (#168)
+
+`skater_runtime.py` reads `raw/runtime-v1` and writes `raw/runtime-v2` and the runtime GLB.
+For Marcus, it applies three corrections before the export:
+
+1. `skater_hands.py` moves the 40 finger joints onto the hand mesh.
+   The old joints were 0.13 m behind the wrist, inside the forearm.
+   No vertex had a finger weight, so each hand moved as one rigid region.
+   The script finds the thumb and four fingers with a geodesic merge tree.
+   It splits the hand weight between the hand joint and each finger chain.
+   The forearm weight at the wrist does not change.
+2. `skater_seams.close_pads()` sets one weight field on each knee pad.
+   The cap and the lower strap follow the shin. The thigh share starts at the
+   knee joint and ends 0.06 m above it. Skin near the pad takes the pad
+   weights. Before this change, the cap folded at its middle in `bail`, and
+   the knee skin came through at the side of the cap.
+3. `skater_seams.close_cuffs()` smooths each wristband's weights. Skin under
+   the band takes the band weights.
+
+Build Marcus and the phone variant:
+
+```sh
+BLENDER=/Applications/Blender.app/Contents/MacOS/Blender
+"$BLENDER" -b --factory-startup --python-exit-code 1 \
+  -P scripts/blender/skater_runtime.py -- --name marcus
+"$BLENDER" -b --factory-startup --python-exit-code 1 \
+  -P scripts/blender/skater_texture_variant.py -- \
+  --in assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend \
+  --out assets/skaters/marcus/skater-1024.glb
+"$BLENDER" -b --factory-startup --python-exit-code 1 \
+  -P scripts/blender/skater_rig_audit.py -- assets/skaters/marcus/skater.glb \
+  --report assets/skaters/marcus/raw/runtime-v2/rig-audit.json --all-clips
+```
+
+The finger fit requires five separate fingers on each hand mesh.
+The script stops with an error if it finds fewer than five finger regions.
+
+Limits:
+
+- The rig audit measures vertex pairs that start within 8 mm. The worst
+  increase is 11.1 mm, between the shorts hem and the thigh skin in
+  `air_liukang`. The base GLB has the same value. The knee and wrist fixes
+  come from visual review of close renders in `reports/skater-168/`.
+- The 24 clips in this build keep their keyed finger rotations. Those keys
+  rotate each finger about the armature forward axis. The splayed pinky
+  turns partly to the side in a fist. The clip rebuild (#170) corrects the
+  curl axis.

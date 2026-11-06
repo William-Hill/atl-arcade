@@ -1418,3 +1418,24 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
   - low tier: trail 69 → 72 calls, 152,484 → 176,752 triangles (140 walkers).
 - Walkers grow in over the outer 15% of the pool (`createPedsView`), so the ones that come and go at its edge do not pop inside the fog-free distance on the high tier (fog starts at 260 m, the pool ends at 200 m).
 - Heights come from the level less its buildings, so a walker at a footprint edge stays on the sidewalk. The crowd, the NPC skaters and Nia block spawns and moves.
+
+## 2026-11-05 — Marcus fingers, knee pads, and wristbands (#168)
+
+- Fit Marcus's 40 finger joints to his hand mesh. The joints came from Nia's
+  rig and sat 0.13 m behind the wrist. No vertex had a finger weight.
+- Find the fingers with a geodesic merge tree from the wrist. Each finger
+  region is complete when it joins another large region. Sort the regions
+  from the thumb. The fit stops if a hand has fewer than five fingers.
+- Split only the hand weight between the hand and the finger chains. Keep the
+  forearm weight, so the wrist seam does not change.
+- Weight each knee pad from one field: the cap and the lower strap follow the
+  shin, and the thigh share starts at the knee joint and ends 0.06 m above it.
+  A lower band (0.02 to 0.08 m) pulled the thigh skin away from the shorts hem.
+  A higher band left the cap fold in place. Skin within 0.03 m takes the pad weights.
+- Give the skin under each wristband the band weights.
+- Keep the 24 runtime clips unchanged in this step. The clip rebuild (#170)
+  re-keys them on the corrected body.
+- Evidence: `reports/skater-168/` (Blender close renders of the exported GLB,
+  before and after) and the Playwright contact sheets in
+  `assets/skaters/marcus/clips/`. Real skaters and the owner must still
+  review the hands in motion.

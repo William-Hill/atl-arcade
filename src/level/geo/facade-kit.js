@@ -102,6 +102,8 @@ export const KIT = {
 };
 // A curtain wall and an open parking deck have no sills.
 const NO_SILLS = new Set(["glass-office", "parking-deck"]);
+// The depth of the GLB trim_pilaster (docs/facade-kit.md), for the lamps.
+const GLB_PILASTER_OUT = 0.08;
 
 // True when a building of this style and wall height gets a cornice.
 function hasCornice(style, height) {
@@ -272,7 +274,11 @@ export function wallBox(m, o, t, n, a0, a1, y0, y1, out, color, style, bottom = 
 // On the top floor of a low building the lintel can go into the cornice.
 // Then the lintel gets lower: its top stays under the bed molding, and it
 // is at least `minLintel` m high, so it covers the top of the window frame.
-export function wallDepth(m, ring, top, style, si, base = 0, mural = null, floors = Math.max(1, Math.round((top - base) / style.floorHeight))) {
+//
+// `covers` (facade-kit-glb.js kitCovers()) lists the windows and bay lines
+// that the GLB facade kit dresses (pbr look): they get no sill, lintel,
+// head, or pier here.
+export function wallDepth(m, ring, top, style, si, base = 0, mural = null, floors = Math.max(1, Math.round((top - base) / style.floorHeight)), covers = null) {
   const counts = { sill: 0, pier: 0, lintel: 0, head: 0 };
   const floorH = (top - base) / floors;
   const sills = !NO_SILLS.has(style.id);
@@ -302,6 +308,7 @@ export function wallDepth(m, ring, top, style, si, base = 0, mural = null, floor
           // The mural wall is blank from mural.floor0 up: no window, no sill.
           if (mural && mural.edge === i && level >= (mural.floor0 ?? 0)) continue;
           if (onMural(c - half, c + half, y - KIT.sill.height, y)) continue;
+          if (covers?.sill.has(`${i}:${level}:${k}`)) continue;
           wallBox(m, [px, pz], t, n, c - half, c + half, y - KIT.sill.height, y, KIT.sill.out, style.trim, si, true, true);
           counts.sill += 1;
         }
@@ -319,6 +326,7 @@ export function wallDepth(m, ring, top, style, si, base = 0, mural = null, floor
         for (let k = 0; k < bays; k += 1) {
           const c = (k + 0.5) * bl;
           if (onMural(c - lintelHalf, c + lintelHalf, y0, y1)) continue;
+          if (covers?.sill.has(`${i}:${level}:${k}`)) continue;
           wallBox(m, [px, pz], t, n, c - lintelHalf, c + lintelHalf, y0, y1, style.brick ? L.out : H.out, style.trim, si, true, true);
           if (style.brick) counts.lintel += 1;
           else counts.head += 1;
@@ -332,6 +340,7 @@ export function wallDepth(m, ring, top, style, si, base = 0, mural = null, floor
       for (let k = 0; k <= bays; k += 1) {
         const c = Math.min(Math.max(k * bl, w), len - w);
         if (onMural(c - w, c + w, base, y1)) continue;
+        if (covers?.pier.has(`${i}:${k}`)) continue;
         wallBox(m, [px, pz], t, n, c - w, c + w, base, y1, KIT.pier.out, style.trim, si, false);
         counts.pier += 1;
       }
@@ -664,7 +673,9 @@ function signBay(m, { o, t, n, len }, bays, k, y0, y1, color, style, si, board, 
 //
 // The kit awnings are render-only. They hang under the sign band, so the
 // band stays in view.
-export function shopFront(m, ring, style, si, base, floorH, front, seed, awningColor = AWNING_COLORS[seed % AWNING_COLORS.length], boards = null) {
+// A bay in `covers.sign` (facade-kit-glb.js) has GLB shop glass and its
+// own sign board: no band there.
+export function shopFront(m, ring, style, si, base, floorH, front, seed, awningColor = AWNING_COLORS[seed % AWNING_COLORS.length], boards = null, covers = null) {
   const counts = { sign: 0, awning: 0 };
   if (!front || front.edge < 0 || front.edge >= ring.length) return counts;
   const { o, t, n, len } = wallOf(ring, front.edge);
@@ -676,13 +687,13 @@ export function shopFront(m, ring, style, si, base, floorH, front, seed, awningC
   const y1 = base + floorH - KIT.belt.height / 2 - g.beltGap;
   const color = SIGN_COLORS[seed % SIGN_COLORS.length];
   const at = (a, y, d) => [o[0] + t[0] * a + n[0] * d, y, o[1] + t[1] * a + n[1] * d];
-  for (let k = 0; k < bays; k += 1) if (signBay(m, wallOf(ring, front.edge), bays, k, y0, y1, color, style, si, k % 2 === 0, boards)) counts.sign += 1;
+  for (let k = 0; k < bays; k += 1) if (!covers?.sign.has(`${front.edge}:${k}`) && signBay(m, wallOf(ring, front.edge), bays, k, y0, y1, color, style, si, k % 2 === 0, boards)) counts.sign += 1;
   // The sign band turns the corner: the bay at the corner of each wrap wall.
   for (const j of front.wraps ?? []) {
     const wj = wallOf(ring, j);
     const bj = Math.max(1, Math.round(wj.len / style.bay));
     const k = j === (front.edge + 1) % ring.length ? 0 : bj - 1;
-    if (signBay(m, wj, bj, k, y0, y1, color, style, si, true, boards)) counts.sign += 1;
+    if (!covers?.sign.has(`${j}:${k}`) && signBay(m, wj, bj, k, y0, y1, color, style, si, true, boards)) counts.sign += 1;
   }
   if (front.street || !(style.awnings > 0)) return counts;
   const aw = KIT.awning;
@@ -725,7 +736,9 @@ export function doorBay(front, bays) {
 //
 // The door stands 0.15 m over the floor line: the step is the sill of the
 // door. The step and the door are render-only, like the rest of the kit.
-export function shopEntrance(m, ring, style, si, base, floorH, front, foot = base, color = SIGN_COLORS[0]) {
+// With `covers.door` (facade-kit-glb.js) the GLB storefront has the door:
+// only the step and the lamps go here, the lamps on the GLB pilasters.
+export function shopEntrance(m, ring, style, si, base, floorH, front, foot = base, color = SIGN_COLORS[0], covers = null) {
   const counts = { door: 0, step: 0, sconce: 0 };
   if (!front || front.edge < 0 || front.edge >= ring.length) return counts;
   const w = wallOf(ring, front.edge);
@@ -745,6 +758,10 @@ export function shopEntrance(m, ring, style, si, base, floorH, front, foot = bas
     // The step: from the foot of the plinth up to the door sill.
     wallBox(m, o, t, n, am - S.width / 2, am + S.width / 2, Math.min(foot, base), y0, S.depth, style.trim.map((v) => v * 0.9), si, false, true);
     counts.step = 1;
+  }
+  if (half + D.trim <= bl / 2 - KIT.pier.width / 2 - 0.05 && !covers?.door) {
+    const y0 = base + S.height;
+    const y1 = y0 + D.height;
     // The door leaf, and a dark glass light in it.
     wallBox(m, o, t, n, am - half, am + half, y0, y1, D.out, color, si, false, true);
     const [lw, lh] = D.light;
@@ -759,11 +776,11 @@ export function shopEntrance(m, ring, style, si, base, floorH, front, foot = bas
   // A lamp on each inner pier, on the pier face.
   const L = KIT.sconce;
   const ys = base + Math.min(L.y * floorH, L.maxY);
-  const po = KIT.pier.out;
   const [pw, ph, pd] = L.plate;
   const [lw2, lh2, ld] = L.lamp;
   for (let p = 1; p < bays; p += 1) {
     const c = p * bl;
+    const po = covers?.pier.has(`${front.edge}:${p}`) ? GLB_PILASTER_OUT : KIT.pier.out;
     wallBox(m, o, t, n, c - pw / 2, c + pw / 2, ys - ph / 2, ys + ph / 2, po + pd, L.plateColor, si, true, true);
     wallBox(m, o, t, n, c - lw2 / 2, c + lw2 / 2, ys - lh2 / 2, ys + lh2 / 2, po + pd + ld, L.lampColor, si, true, true);
     counts.sconce += 1;
@@ -960,7 +977,9 @@ const COUNT_KEYS = ["cornice", "coping", "belt", "roof", "sill", "pier", "crown"
 // `front` ({ edge, street, door }, frontEdges()) is the front wall. Without
 // it the building gets no shop front. For a house, `front` is an entry of
 // houseFronts() ({ edge, door, clear }), and the house gets a porch.
-export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null, front = null, level = null, boards = null) {
+// `covers` (facade-kit-glb.js kitCovers()) are the parts the GLB facade
+// kit of the pbr look replaces.
+export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, mural = null, front = null, level = null, boards = null, covers = null) {
   const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
   const si = STYLE_INDEX[style.id];
   const ring = orientRing(b.outer, false);
@@ -972,7 +991,7 @@ export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, 
   // the line of the facade floors.
   const floors = floorCount(b, style, top - base);
   const floorH = (top - base) / floors;
-  const d = wallDepth(depth, ring, top, style, si, base, mural, floors);
+  const d = wallDepth(depth, ring, top, style, si, base, mural, floors, covers);
   counts.sill = d.sill;
   counts.pier = d.pier;
   counts.lintel = d.lintel;
@@ -1017,10 +1036,10 @@ export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, 
     if (front) {
       const awningColor = AWNING_COLORS[hash32(`${b.id}:awning-color`) % AWNING_COLORS.length];
       const seed = hash32(`${b.id}:shop`);
-      const c = shopFront(m, ring, style, si, base, floorH, front, seed, awningColor, boards);
+      const c = shopFront(m, ring, style, si, base, floorH, front, seed, awningColor, boards, covers);
       counts.sign = c.sign;
       counts.awning = c.awning;
-      const e = shopEntrance(depth, ring, style, si, base, floorH, front, foot, SIGN_COLORS[seed % SIGN_COLORS.length]);
+      const e = shopEntrance(depth, ring, style, si, base, floorH, front, foot, SIGN_COLORS[seed % SIGN_COLORS.length], covers);
       counts.door = e.door;
       counts.step = e.step;
       counts.sconce = e.sconce;
@@ -1180,7 +1199,9 @@ export function houseFronts(level) {
 // `fronts` is the Map of frontEdges(), to share it with the aprons. The
 // houses get their porch walls from houseFronts().
 // `boards` are the shop name boards (shop-names.js).
-export function facadeKit(level, fronts = frontEdges(level), boards = null, houses = houseFronts(level)) {
+// `glb` (facadeKitPlacements().covers) maps a building id to the parts the
+// GLB facade kit replaces (pbr look); without it the kit is all procedural.
+export function facadeKit(level, fronts = frontEdges(level), boards = null, houses = houseFronts(level), glb = null) {
   const tiles = new Map();
   const depthTiles = new Map();
   const counts = Object.fromEntries(COUNT_KEYS.map((k) => [k, 0]));
@@ -1195,7 +1216,7 @@ export function facadeKit(level, fronts = frontEdges(level), boards = null, hous
     let dm = depthTiles.get(dkey);
     if (!dm) depthTiles.set(dkey, (dm = emptyMesh(true)));
     const front = fronts.get(b.id) ?? houses.get(b.id) ?? null;
-    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null, front, level, boards);
+    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null, front, level, boards, glb?.get(b.id) ?? null);
     for (const k of Object.keys(counts)) counts[k] += c[k];
   }
   const out = [...tiles.entries()]

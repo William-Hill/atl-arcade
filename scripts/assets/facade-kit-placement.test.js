@@ -118,21 +118,20 @@ describe("facade kit placement", () => {
     expect(units.length).toBeGreaterThan(0);
     for (const it of units) expect(it.position[0] < 8 || it.position[0] > 52 || it.position[2] < 8 || it.position[2] > 52).toBe(true);
 
-    // A mural that ends 0.3 m+ below the top-floor frames keeps those frames.
-    const low = { edge: 2, t0: 0, t1: 24, y0: 0.8, y1: 12.7 };
-    const top4 = facadePlacements({ ring, style: s, base: 0, top: 17, front: null, mural: low, seed: 2 }).filter((o) => o.wallIndex === 2 && o.module === "window_brick_loft");
-    expect(top4.length).toBeGreaterThan(0);
-    for (const it of top4) expect(it.position[1]).toBeGreaterThan(13);
+    // The shader blanks the whole mural wall from mural.floor0 up (as
+    // wallDepth() drops its sills): frames only below floor0 there.
+    const small = { edge: 2, t0: 4, t1: 8, y0: 6, y1: 9, floor0: 2 };
+    const wall2 = facadePlacements({ ring, style: s, base: 0, top: 17, front: null, mural: small, seed: 2 }).filter((o) => o.wallIndex === 2 && o.module === "window_brick_loft");
+    expect(wall2.length).toBeGreaterThan(0);
+    for (const it of wall2) expect(it.floor).toBeLessThan(2);
 
-    // Balconies on a mural's front wall keep its 0.3 m clearance too.
-    const ground = { edge: 2, t0: 0, t1: 24, y0: 0.8, y1: 4 };
+    // A mural's front wall is blank from floor0 up: no frames, so no balconies.
+    const ground = { edge: 2, t0: 0, t1: 24, y0: 0.8, y1: 4, floor0: 1 };
     let balconies = 0;
     for (let seed = 1; seed <= 40; seed += 1) {
-      for (const it of facadePlacements({ ring, style: s, base: 0, top: 17, front: { edge: 2, wraps: [] }, mural: ground, seed })) {
-        if (it.module !== "balcony_juliet" || it.wallIndex !== 2) continue;
-        balconies += 1;
-        expect(it.position[1]).toBeGreaterThan(ground.y1 + 0.3);
-      }
+      const juliets = (mural) => facadePlacements({ ring, style: s, base: 0, top: 17, front: { edge: 2, wraps: [] }, mural, seed }).filter((it) => it.module === "balcony_juliet" && it.wallIndex === 2);
+      balconies += juliets(null).length;
+      expect(juliets(ground)).toHaveLength(0);
     }
     expect(balconies).toBeGreaterThan(0);
   });

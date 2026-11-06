@@ -1401,6 +1401,45 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - No lane changes or merges, no traffic lights (stop-sign style boxes as before). Parked cars have no lamps. Headless frame rate makes the sim slow in wall time, so browser yield checks wait longer.
 
 
+## 2026-11-05: epic/city-look — the Blender facade kit in the pbr look
+
+### Decisions
+
+- The pbr look draws `assets/facades/facade-kit.glb` (docs/facade-kit.md, "In the game"): `src/level/geo/facade-kit-glb.js` (pure) runs `facadePlacements()` on every building that is not a claimed landmark footprint, from `frontEdges()`, `chooseStyle()`, `buildingSpan()`, `muralWalls()` and `floorCount()`; `main.js` loads the GLB while the meshes build (a failed load keeps the whole procedural kit) and `src/render/facade-kit-view.js` draws the kit. The toon look keeps the whole procedural kit. `?kit=0` drops both kits, `?depth=0` both depth-tile kits, and `?kitglb=0` the GLB kit only (the BEFORE of the evidence).
+- Cost: the whole GLB kit is one `BatchedMesh` (all nodes share the kit material), the shop names on its sign boards a second one, so it adds 2 draw calls at any camera. One `InstancedMesh` per module per 50 m tile cost 30–112 draw calls at the test cameras. Culling is per building, not per tile: a building is drawn while its procedural depth tile is (tile center closer than `DEPTH_DISTANCE`, 120 m) or while the building is closer than 120 m (the far wall of a long building), and it switches to far geometry past `LOD1_DISTANCE` (30 m, was 60; the `_lod1` nodes, else `farGeometry()`, the street-facing and large horizontal faces, about 40% of a frame), and drops the small trim (`TRIM`) past `TRIM_DISTANCE` (35 m). Past 120 m the shader facade alone is drawn, as before. Without `WEBGL_multi_draw` the batch would draw once per instance, so the GLB stays off there (the prop batch has the same dependency).
+- The window and shop glass panes of the GLB are cut out at load (`withoutGlass()`, the atlas glass strip), so the facade shader's glass and room interiors show through the frames; the GLB panes were flat dark glass over them. The door glass stays.
+- The procedural kit leaves out what the GLB replaces, per slot (`kitCovers()`): the sill, lintel and head of a window with a GLB frame, the pier on a bay line with a GLB pilaster, the sign band of a bay with GLB shop glass, and the procedural door where there is a GLB door (the step and the lamps stay, the lamps on the pilaster face). The shader shop glass and windows stay: the modules frame them (their panes cut out).
+- Kept procedural (`GLB_SKIP`): the awnings (they match the street awnings), and the cornice, coping and belt course. Those are in the building tiles, drawn at every distance; the GLB runs in the depth tiles would leave the roof line bare past 120 m.
+- The shop-name decals (`shop-names.js`) go on the GLB sign boards; a GLB sign board under a named shop sign (`shop-signs.js`) is left out. `decalQuad()` wrote each quad past the end of its buffers (it started at the buffer capacity), so no shop name drew before; it now writes quad by quad (`shop-names.test.js`).
+- `facadePlacements()` takes `floors` (the shader's floor count, OSM levels included, so the frames stay on the shader windows) and the door bay of `frontEdges()`, and tags each module with its slot (`bay`, `floor`, `line`).
+
+### Evidence
+
+- See the PR: labeled BEFORE (`?kitglb=0`) / AFTER shots from the same cameras (`node scripts/assets/facade-kit-wired.mjs OUT_DIR`), with the costs.
+
+### Limits
+
+- The GLB kit has no colliders, like the rest of the kit.
+
+## 2026-11-05: epic/city-look — Meshy pedestrians, street furniture and BeltLine props (#133, #115)
+- The owner set a hard cap of 400 Meshy credits; the lean list cost 351: six rigged people at 26 each (meshy-t2.5 preview 5 + refine 10, rigging 5, two library clips at 3), and 13 static props at 15 each (dog, stroller, drinking fountain, bollard, cone, barricade, e-scooter, city bike, bike dock, food cart, picnic table, umbrella, one original sculpture). `scripts/assets/meshy-people-props.mjs` checks its task log before every paid call and refuses a task that would pass the cap.
+- meshy-t2.5 in a T-pose rigs cleanly, and every rigged person gets the same 24-bone humanoid skeleton, so clips bought for one person are copied to the others in Blender (`people.py --share`) for free: each person ends with walk, run, idle, sit and cheer; the dog walker's idle, the elder's sit and the stroller dad's push are bought once.
+- Meshy rigs only humanoids, so the dog gets a 14-bone armature and walk/idle clips keyed in Blender (`scripts/blender/dog_rig.py`), 0 credits.
+- People: about 6k triangles (lod0) and 1.2k (lod1 at 25 m) on one skin, 1K base color, 0.5-0.75 MB per GLB. Props: 0.4-4k triangles with lod1s at 20 m (sculpture 60 m). The 19 GLBs total 7.1 MB; none is over 0.8 MB.
+- Not wired into the game here: the crowd simulation (`src/sim/npc/crowd.js`) has walk-only types and no sit/stand/goal states, and the placement files (`src/level/geo/*`, `src/render/geo-view.js`) are being merged by another session. `docs/people-props.md` says how to place each asset; `scripts/assets/people-props-preview.html` shows them in the pbr renderer.
+- The cyclist's `ride` is a seated pedaling loop keyed in Blender over the sit pose (0 credits). The bike first shipped static; its wheels and crank now turn (below).
+- Review of the first shots (owner): the people had a dark smoky halo, moved oddly and looked lumpy. Causes and fixes:
+  - Halo: the game's GTAO counted anything within 4 m in depth as an occluder, so a person in front of open ground darkened it. `thickness` is now 1 m in `src/render/post.js` (one value, whole game): wall feet and inside corners stay dark, nothing in open ground haloes.
+  - Specks (owner, after the remake): a speckled dark patch was still left around feet and paws: the GTAO samples took the legs as occluders of the ground right behind them. In the pbr look the GTAO depth/normal pass now skips skinned meshes (Nia, the NPC skaters, the people, the dog), as it already skips points and lines; the sun shadow grounds them. Static props still occlude. The toon look keeps them (its ink outlines read that depth). Side effects: a character's own pixels take the AO of what is behind it, and photo-mode tilt-shift sees the depth behind a character; the preview's `people` shot also drops from 400 to 268 draw calls (the AO pass no longer draws the people). Same-camera BEFORE/AFTER: `scripts/assets/people-props-shots.mjs` (now `peds=0`).
+  - Motion: two library clips walked off (Push_and_Walk_Forward 2.7 m, Catching_Breath 4.3 m) and popped back each loop; every clip now has its Hips drift removed. Shared clips were copied as local rotations, but each Meshy rig has its own rest orientations, which tilted the body; they are now baked per bone in armature space relative to the rest. `push` and `ride` are keyed with a two-bone IK in Python (`people_ik.py`; Blender's IK constraint misses on these rigs because the glTF importer's bone tails are not the child joints): hands on the stroller handle, and on the bike's grips with feet on the pedals.
+  - Shape: meshy-t2.5 at 6k triangles was blocky up close next to Nia and Marcus (17-18k). The owner approved a new 400-credit cap for remaking the six bodies on meshy-7.1 (standard, remeshed to 15k triangles): 205 credits, preview 20 + refine 10 each plus rigging 5 on five of them (the first rig was charged 0); all-in 351 + 205 = 556. The clips bought with the first bodies are reused on the new skins, so no clips were bought again.
+
+- Free Blender fixes (owner: the remake's 400 was its own budget; a further 200 credits were offered and kept unspent, so these cost 0):
+  - Wheels: `scripts/blender/prop_wheels.py` cuts the wheels of the `city_bike`, `e_scooter` and `stroller` (and the bike's crank arms and pedals) out of lod0 as child nodes pivoted on their axles, found as the faces inside a cylinder around the axle, narrow enough across to leave the fork and stays (the bike's whole wheel, with the dark spoke panels Meshy painted, turns; the scooter and stroller keep their hubs still), and keys one looping clip: bike `ride` (crank one turn per second in phase with the cyclist's feet, wheels two), stroller `push`, scooter `roll`. lod1 stays static. Each spinning part is one more draw call (bike 3, stroller 2, scooter 2). Rings, not new bones: the props stay unskinned.
+  - The cyclist's feet circled 16 cm behind the crank and pedaled backwards; the ankle circle is now centered over the crank axle measured on the bike (radius 0.137 m, its crank length) and turns forward. Saddle and grips moved 2-3 cm so the legs and arms reach (worst miss 3 cm, was 6).
+  - Stroller dad's far hand: it left the handle for half the loop (15 cm away) because the walk sampled for `push` came out mixed with the NLA tracks of the clips made before it, not because the arm was short. Sampling now mutes the other tracks (`ride` too); both hands stay on the handle through the loop (0 cm miss), with a slight lean into it.
+  - Leash: the dog walker and the dog are separate models that move independently, so the leash is not baked: `src/render/leash.js` hangs a parabola of fixed length (sag solved for the arc) between the walker's `LeftHand` and the dog's `neck`, which the preview draws as a thin tube each frame.
+
 ## 2026-11-05: epic/city-look — pedestrians on the trail, the sidewalks and the street edges
 - New: `src/sim/peds.js` (pure, seeded, Vitest in `src/sim/peds.test.js`) and `src/render/peds-view.js`, with a small hook in `src/main.js`. `?peds=0` leaves them out; `?npcseed=<n>` seeds them with the crowd. `window.__atl.peds` gives the count, the min gap, the draw calls, the triangles and the list.
 - The gen-city approach (`docs/research/2026-11-04-gen-city-auto.md`): a pool of walkers lives around the camera (140 low, 110 phone, 320 high; radius 150, 140, 200 m, inside the fog). A walker that leaves the pool comes back at the pool edge; a fast travel (a focus jump over 60 m) scatters the pool again. The existing crowd (`src/sim/npc/crowd.js`, a fixed set near the spawn) stays as it is.
@@ -1419,6 +1458,59 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Walkers grow in over the outer 15% of the pool (`createPedsView`), so the ones that come and go at its edge do not pop inside the fog-free distance on the high tier (fog starts at 260 m, the pool ends at 200 m).
 - Heights come from the level less its buildings, so a walker at a footprint edge stays on the sidewalk. The crowd, the NPC skaters and Nia block spawns and moves.
 
+## 2026-11-05 — Marcus fingers, knee pads, and wristbands (#168)
+
+- Fit Marcus's 40 finger joints to his hand mesh. The joints came from Nia's
+  rig and sat 0.13 m behind the wrist. No vertex had a finger weight.
+- Find the fingers with a geodesic merge tree from the wrist. Each finger
+  region is complete when it joins another large region. Sort the regions
+  from the thumb. The fit stops if a hand has fewer than five fingers.
+- Split only the hand weight between the hand and the finger chains. Keep the
+  forearm weight, so the wrist seam does not change.
+- Weight each knee pad from one field: the cap and the lower strap follow the
+  shin, and the thigh share starts at the knee joint and ends 0.06 m above it.
+  A lower band (0.02 to 0.08 m) pulled the thigh skin away from the shorts hem.
+  A higher band left the cap fold in place. Skin within 0.03 m takes the pad weights.
+- Give the skin under each wristband the band weights.
+- Keep the 24 runtime clips unchanged in this step. The clip rebuild (#170)
+  re-keys them on the corrected body.
+- Evidence: `reports/skater-168/` (Blender close renders of the exported GLB,
+  before and after) and the Playwright contact sheets in
+  `assets/skaters/marcus/clips/`. Real skaters and the owner must still
+  review the hands in motion.
+
+## 2026-11-05 — All runtime clips on the v2 bodies (#170)
+
+- Drop the legacy clip transfer. Key the 22 `nia_clips.py` clips on the v2
+  body from `raw/forward-v2`. Keep the reviewed `push` and `coast`.
+- Use the forward IK for every clip: calibrated pole angles, poles that turn
+  with the foot yaw, quaternion foot targets. Also turn the pole at each leg
+  key until the knee points over the skate, because one calibrated pole
+  angle left Nia's knees 17 to 20 degrees inward in `jump` and `ride_back`.
+- Scale `at()` foot x by hip width. Marcus's hips are 1.64 times Nia's.
+- Curl each finger about its own axis, so Marcus's splayed fingers close.
+- Give Marcus `dance_smoothquad` from the same approved Tripo dance as Nia.
+  The clip name stays the same, so the style table and #107 still bind.
+- Clip names do not change. Both GLBs have 25 clips.
+- Known: the e2e T-pose gate fails its control check (too few silhouette
+  pixels) on the base GLBs and on these GLBs. It finds no T-pose frame.
+
+## 2026-11-05 — Tripo text-to-motion tests (#169)
+
+- Generate two 5 s motions in Tripo Studio on the Nia carrier project
+  72bfc452, through Claude in Chrome: "Dancing in Place" (an Atlanta Laffy
+  Taffy groove) and "Skating Turn" (a forward glide into crossover steps).
+  Cost: 40 credits, approved by the owner. Balance 2755 to 2715.
+- Export each motion as its own FBX (Blender preset, skeleton on). Retarget
+  each onto the v2 Nia and Marcus bodies with `skater_motion_retarget.py`.
+- Keep both as review clips in `raw/tripo-motion-v2/`. They are not in the
+  runtime GLBs. The clip names `dance_laffytaffy` and `skate_crossover` are
+  proposals. Adding them needs entries in `src/render/skater-anim.js` and
+  owner approval, as for `dance_smoothquad`.
+- The retarget removes the forward travel of the skating turn (5.55 m on
+  Nia), because the game controller supplies travel. The turn still changes
+  the heading by about 90 degrees, so the clip does not loop in place.
+- Evidence: `reports/skater-169/`.
 
 ## 2026-11-06: #107 (code part) — clip blends, carve lean, foot IK
 - Scope: runtime code only. No new clips. The wall slide, bonk, and hard landing clips need Blender and the raw `.blend` files. #170 rebuilds all clips on the v2 bodies later. The code keys on clip names and bone names, not on the bone data of the current clips.

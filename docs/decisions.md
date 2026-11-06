@@ -1637,3 +1637,15 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The script writes the JSON after each run: a run with the software GPU on the high tier takes about 3 minutes, and a stopped run keeps its rows. The ride stops after 150 s of wall time (`--max-wall`).
 - Not verified: any number on a real GPU or a phone.
 - The baseline pbr rides did not finish in 150 s on the 4-CPU cloud machine, so their geometries and textures came from an early place on the trail. On a 14-CPU Mac (M4 Max) the low and phone pbr rides finish (about 60 s) and load more: low/pbr 173 geometries and 331 textures, phone/pbr 179 and 341, high/pbr 224 geometries. The PR head before the merge gave the same (low/pbr 172 and 305), so the cause is the ride length, not #98 or #94. The pbr caps for geometries and textures are now about 10% over the finished rides. `perf:check` warns when a ride stops early.
+
+## 2026-11-06 — Smaller skater GLBs: WebP textures, lighter clips (#187)
+
+- The four skater GLBs (nia and marcus, `skater.glb` and `skater-1024.glb`) keep their mesh, rig, joints, and 25 clip names. `scripts/assets/compress-skaters.mjs` (gltf-transform 4.5.1) re-encodes them: JPEG textures to WebP (`EXT_texture_webp`, the same pixel sizes), clips resampled (tolerance 1e-4) with the rotation keys as normalized int16, and the meshes Draco again with the M1-01 quantization. Quality: 85 (normal maps 90) for `skater.glb`, 80 (normal maps 85) for the phone files.
+- Sizes: nia 6.31 → 2.21 MB and 5.42 → 1.76 MB; marcus 7.81 → 3.18 MB and 5.36 → 2.31 MB. The phone pair went from 10.6 MB to 4.1 MB.
+- Same look: the five views and the face close-up, before and after, differ by PSNR 45 dB or more. The clips differ by at most 0.18 degrees and 0.45 mm at the old key times.
+- WebP needs Safari 14 or newer; GLTFLoader reads it with no new code.
+- The NPC-only skater model now downloads after the first frame (`src/main.js`, `npcBytes`), so it does not compete with the player skater and the level. The total download is the same.
+- Not done, and why:
+  - KTX2 (Basis): it saves GPU memory, not download. ETC1S is known to blur photo-like textures such as these Tripo ones, UASTC is bigger than JPEG, and the Basis transcoder adds to the download. Not tried here: the encoder (`toktx`) is not in the build tools. A follow-up if GPU memory on phones becomes the limit.
+  - meshopt: with float positions (the face decal shader reads bind-pose positions in meters) the meshopt meshes are bigger than Draco, and gltf-transform writes a second copy of a Draco mesh when meshopt is on for the clips.
+  - One shared texture set: the two skaters are separate Tripo models with their own UV layouts.

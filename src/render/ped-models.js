@@ -88,7 +88,10 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
       if (!o.isMesh) return;
       o.castShadow = true;
       o.receiveShadow = true;
-      o.frustumCulled = false;
+      // Keep the frustum culling on: a person behind the camera or out of
+      // the shadow frustum then costs no draw call. The skinned bounds move
+      // with the root, and the walk and idle clips stay inside them.
+      o.frustumCulled = true;
       const m = /_lod(\d)$/.exec(o.name);
       if (m) lods[Number(m[1])] = { mesh: o, distance: o.userData.lodDistance ?? 0 };
     });

@@ -1380,7 +1380,11 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Style frames (#114) use free methods only: in-game captures with URL params (time, weather) and a page-side runtime tune (`tuneLook`, grade and bloom uniforms, applied from the page, no game source change), plus scripted ImageMagick paintovers (`scripts/art/paintover.sh`) of the captures. No image model was used (0 credits): the paintovers already show the two biggest gaps (the pale hazy lawn and the compressed tonal range), and a generated frame would show a city the renderer cannot match. An image-model batch stays an option for the owner, with the cost shown first.
 - Frames ship as JPGs with one `<frame>.provenance.json` each and a folder `provenance.json` listing them in `docs/style-frames/<subject>/`, with a grouped contact sheet; the owner chooses the frames to keep, and the chosen ones go into the doc.
 
+## 2026-11-05: epic/city-look — style frames, round two: one clear direction per option (#114)
 
+- The owner found the first round of options too close to tell apart: in-game time-of-day and grade changes barely move the pbr look (a #160 finding in its own right), and the first paintovers were mild.
+- Round two keeps option A as the game today and makes B–E one clear direction each: hot noon, golden hour, overcast soft, neon night, wet street, warm lamps. They are heavier scripted ImageMagick paintovers of the same captures (`scripts/art/paintover.sh` modes `hot`, `golden`, `soft`, `neon`, `wet`): lawn recolor, lilac asphalt darkened, sky replaced, regrade. 0 credits; no image model.
+- Each contact-sheet tile carries a "Look at:" line naming what changed; the per-frame provenance records the paintover mode and its tuning variables.
 
 ## 2026-11-05: epic/city-look — traffic lane following (IDM), lamps, signals, crosswalk yields
 - Lanes: `trafficLanes()` (`src/sim/traffic/traffic.js`) now builds one lane per travel lane of `laneLayout()` (`src/level/geo/lanes.js`), at the lane centers between the painted lines (`runLaneOffsets()` in `src/sim/cars.js`), curb lane first. The BeltLine level goes from 9 to 15 lanes (54 to 68 moving cars) (Ponce de Leon 3 + 2, North Avenue and John Lewis 1 + 1 each, Freedom Parkway one-way). Cars stay in their lane: no lane changes yet.

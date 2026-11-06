@@ -2,7 +2,8 @@
   "frames": [
     {
       "file": "a-today.jpg",
-      "title": "A: today, eye level, 13:30",
+      "title": "A: today, 13:30",
+      "lookAt": "pale sky, lilac asphalt, mural reads flat",
       "subject": "mural-wall",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
@@ -20,6 +21,7 @@
         "params": {},
         "tune": null,
         "paintover": null,
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -44,42 +46,36 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
       "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
     },
     {
-      "file": "b-golden.jpg",
-      "title": "B: golden hour 18:30, over the trees",
+      "file": "b-hot-noon.jpg",
+      "title": "B: HOT NOON",
+      "lookAt": "deep blue sky frames the mural, dark asphalt",
       "subject": "mural-wall",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
-      "method": "in-game capture (no image model)",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"hot\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "method": "in-game capture + scripted paintover (no image model)",
       "prompt": null,
       "settings": {
-        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=18.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=81.13%2C9%2C435.4%2C105.4%2C6.59%2C447.56",
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=88.25%2C2%2C435.82%2C105.4%2C6.59%2C447.56",
         "cam": [
-          81.13,
-          9,
-          435.4,
+          88.25,
+          2,
+          435.82,
           105.4,
           6.59,
           447.56
         ],
-        "params": {
-          "time": "18.5"
+        "params": {},
+        "tune": null,
+        "paintover": "hot",
+        "paintoverEnv": {
+          "GROUND_Y": "0.75"
         },
-        "tune": {
-          "look": {
-            "environment": 0.8
-          },
-          "grade": {
-            "uSat": 1.15,
-            "uContrast": 1.1
-          }
-        },
-        "paintover": null,
         "viewport": [
           1280,
           720
@@ -87,35 +83,144 @@
         "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
         "build": "scripts/art/style-frames.mjs",
         "renderer": {
-          "calls": 166,
-          "triangles": 708629,
+          "calls": 158,
+          "triangles": 664353,
           "textures": 38,
           "geometries": 66
         },
         "look": {
           "toneMapping": 7,
           "exposure": 1.0976805,
-          "environment": 0.8,
+          "environment": 0.6,
           "sun": 2.847
         },
         "grade": {
-          "uContrast": 1.1,
-          "uSat": 1.15,
+          "uContrast": 1.06,
+          "uSat": 1.05,
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
       "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
     },
     {
-      "file": "c-o4w-morning.jpg",
-      "title": "C: O4W mural, morning 10:00",
+      "file": "c-golden.jpg",
+      "title": "C: GOLDEN HOUR",
+      "lookAt": "sunset sky, mural warmed, violet shadows",
       "subject": "mural-wall",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
-      "method": "in-game capture (no image model)",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"golden\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "method": "in-game capture + scripted paintover (no image model)",
+      "prompt": null,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=88.25%2C2%2C435.82%2C105.4%2C6.59%2C447.56",
+        "cam": [
+          88.25,
+          2,
+          435.82,
+          105.4,
+          6.59,
+          447.56
+        ],
+        "params": {},
+        "tune": null,
+        "paintover": "golden",
+        "paintoverEnv": {
+          "GROUND_Y": "0.75"
+        },
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
+        "build": "scripts/art/style-frames.mjs",
+        "renderer": {
+          "calls": 158,
+          "triangles": 664353,
+          "textures": 38,
+          "geometries": 66
+        },
+        "look": {
+          "toneMapping": 7,
+          "exposure": 1.0976805,
+          "environment": 0.6,
+          "sun": 2.847
+        },
+        "grade": {
+          "uContrast": 1.06,
+          "uSat": 1.05,
+          "uWarm": 0
+        },
+        "bloom": 0.28,
+        "commit": "e204431"
+      },
+      "credits": 0,
+      "date": "2026-11-05",
+      "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
+    },
+    {
+      "file": "d-overcast.jpg",
+      "title": "D: OVERCAST SOFT",
+      "lookAt": "white sky, mural colors at full strength",
+      "subject": "mural-wall",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"soft\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "method": "in-game capture + scripted paintover (no image model)",
+      "prompt": null,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=88.25%2C2%2C435.82%2C105.4%2C6.59%2C447.56",
+        "cam": [
+          88.25,
+          2,
+          435.82,
+          105.4,
+          6.59,
+          447.56
+        ],
+        "params": {},
+        "tune": null,
+        "paintover": "soft",
+        "paintoverEnv": {
+          "GROUND_Y": "0.75"
+        },
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
+        "build": "scripts/art/style-frames.mjs",
+        "renderer": {
+          "calls": 158,
+          "triangles": 664353,
+          "textures": 38,
+          "geometries": 66
+        },
+        "look": {
+          "toneMapping": 7,
+          "exposure": 1.0976805,
+          "environment": 0.6,
+          "sun": 2.847
+        },
+        "grade": {
+          "uContrast": 1.06,
+          "uSat": 1.05,
+          "uWarm": 0
+        },
+        "bloom": 0.28,
+        "commit": "e204431"
+      },
+      "credits": 0,
+      "date": "2026-11-05",
+      "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
+    },
+    {
+      "file": "e-hot-o4w.jpg",
+      "title": "E: HOT NOON, O4W mural",
+      "lookAt": "same direction on a second wall",
+      "subject": "mural-wall",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"hot\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "method": "in-game capture + scripted paintover (no image model)",
       "prompt": null,
       "settings": {
         "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=10&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-101.41%2C2%2C623.32%2C-81.28%2C6.07%2C628.46",
@@ -138,7 +243,10 @@
             "uSat": 1.12
           }
         },
-        "paintover": null,
+        "paintover": "hot",
+        "paintoverEnv": {
+          "GROUND_Y": "0.75"
+        },
         "viewport": [
           1280,
           720
@@ -163,57 +271,7 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
-      },
-      "credits": 0,
-      "date": "2026-11-05",
-      "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
-    },
-    {
-      "file": "d-paintover.jpg",
-      "title": "D: paintover: bolder paint, tonal range",
-      "subject": "mural-wall",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"mural\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
-      "method": "in-game capture + scripted paintover (no image model)",
-      "prompt": null,
-      "settings": {
-        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=88.25%2C2%2C435.82%2C105.4%2C6.59%2C447.56",
-        "cam": [
-          88.25,
-          2,
-          435.82,
-          105.4,
-          6.59,
-          447.56
-        ],
-        "params": {},
-        "tune": null,
-        "paintover": "mural",
-        "viewport": [
-          1280,
-          720
-        ],
-        "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
-        "build": "scripts/art/style-frames.mjs",
-        "renderer": {
-          "calls": 158,
-          "triangles": 664353,
-          "textures": 38,
-          "geometries": 66
-        },
-        "look": {
-          "toneMapping": 7,
-          "exposure": 1.0976805,
-          "environment": 0.6,
-          "sun": 2.847
-        },
-        "grade": {
-          "uContrast": 1.06,
-          "uSat": 1.05,
-          "uWarm": 0
-        },
-        "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",

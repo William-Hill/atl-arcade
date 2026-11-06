@@ -1,8 +1,9 @@
 {
-  "file": "d-paintover.jpg",
-  "title": "D: paintover: green lawn, tonal range",
+  "file": "d-overcast.jpg",
+  "title": "D: OVERCAST SOFT",
+  "lookAt": "soft light, outfit colors read true",
   "subject": "skater-close-up",
-  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"day\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"soft\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
   "method": "in-game capture + scripted paintover (no image model)",
   "prompt": null,
   "settings": {
@@ -17,7 +18,11 @@
     ],
     "params": {},
     "tune": null,
-    "paintover": "day",
+    "paintover": "soft",
+    "paintoverEnv": {
+      "GRASS_K": "1.0",
+      "SKY_FUZZ": "10%"
+    },
     "viewport": [
       1280,
       720
@@ -42,7 +47,7 @@
       "uWarm": 0
     },
     "bloom": 0.28,
-    "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+    "commit": "e204431"
   },
   "credits": 0,
   "date": "2026-11-05",

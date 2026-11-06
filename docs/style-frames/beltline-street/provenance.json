@@ -3,6 +3,7 @@
     {
       "file": "a-today.jpg",
       "title": "A: today, 13:30",
+      "lookAt": "pale mint lawn, flat light, no deep shadows",
       "subject": "beltline-street",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
@@ -20,6 +21,7 @@
         "params": {},
         "tune": null,
         "paintover": null,
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -44,136 +46,18 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
       "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
     },
     {
-      "file": "b-golden.jpg",
-      "title": "B: golden hour 19:12, warm grade",
+      "file": "b-hot-noon.jpg",
+      "title": "B: HOT NOON",
+      "lookAt": "green lawn, deep blue sky, hard dark shadows",
       "subject": "beltline-street",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
-      "method": "in-game capture (no image model)",
-      "prompt": null,
-      "settings": {
-        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=19.2&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
-        "cam": [
-          312,
-          2,
-          -175,
-          334,
-          3,
-          -80
-        ],
-        "params": {
-          "time": "19.2"
-        },
-        "tune": {
-          "look": {
-            "environment": 0.8
-          },
-          "grade": {
-            "uSat": 1.15,
-            "uContrast": 1.1
-          }
-        },
-        "paintover": null,
-        "viewport": [
-          1280,
-          720
-        ],
-        "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
-        "build": "scripts/art/style-frames.mjs",
-        "renderer": {
-          "calls": 222,
-          "triangles": 753689,
-          "textures": 49,
-          "geometries": 93
-        },
-        "look": {
-          "toneMapping": 7,
-          "exposure": 1.0976805,
-          "environment": 0.8,
-          "sun": 2.847
-        },
-        "grade": {
-          "uContrast": 1.1,
-          "uSat": 1.15,
-          "uWarm": 0
-        },
-        "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
-      },
-      "credits": 0,
-      "date": "2026-11-05",
-      "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
-    },
-    {
-      "file": "c-morning.jpg",
-      "title": "C: morning 9:30, sky-lit fill",
-      "subject": "beltline-street",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
-      "method": "in-game capture (no image model)",
-      "prompt": null,
-      "settings": {
-        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=9.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
-        "cam": [
-          312,
-          2,
-          -175,
-          334,
-          3,
-          -80
-        ],
-        "params": {
-          "time": "9.5"
-        },
-        "tune": {
-          "look": {
-            "environment": 1
-          },
-          "grade": {
-            "uSat": 1.12
-          }
-        },
-        "paintover": null,
-        "viewport": [
-          1280,
-          720
-        ],
-        "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
-        "build": "scripts/art/style-frames.mjs",
-        "renderer": {
-          "calls": 226,
-          "triangles": 731819,
-          "textures": 49,
-          "geometries": 95
-        },
-        "look": {
-          "toneMapping": 7,
-          "exposure": 1.0976805,
-          "environment": 1,
-          "sun": 2.847
-        },
-        "grade": {
-          "uContrast": 1.06,
-          "uSat": 1.12,
-          "uWarm": 0
-        },
-        "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
-      },
-      "credits": 0,
-      "date": "2026-11-05",
-      "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
-    },
-    {
-      "file": "d-paintover-trail.jpg",
-      "title": "D: paintover: green lawn, tonal range",
-      "subject": "beltline-street",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"day\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"hot\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
       "method": "in-game capture + scripted paintover (no image model)",
       "prompt": null,
       "settings": {
@@ -188,7 +72,8 @@
         ],
         "params": {},
         "tune": null,
-        "paintover": "day",
+        "paintover": "hot",
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -213,17 +98,122 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
       "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
     },
     {
-      "file": "e-paintover-street.jpg",
-      "title": "E: paintover: O4W storefront street",
+      "file": "c-golden.jpg",
+      "title": "C: GOLDEN HOUR",
+      "lookAt": "orange light, olive lawn, violet shadows, sun glare",
       "subject": "beltline-street",
-      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"day\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"golden\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "method": "in-game capture + scripted paintover (no image model)",
+      "prompt": null,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+        "cam": [
+          312,
+          2,
+          -175,
+          334,
+          3,
+          -80
+        ],
+        "params": {},
+        "tune": null,
+        "paintover": "golden",
+        "paintoverEnv": null,
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
+        "build": "scripts/art/style-frames.mjs",
+        "renderer": {
+          "calls": 222,
+          "triangles": 735349,
+          "textures": 49,
+          "geometries": 93
+        },
+        "look": {
+          "toneMapping": 7,
+          "exposure": 1.0976805,
+          "environment": 0.6,
+          "sun": 2.847
+        },
+        "grade": {
+          "uContrast": 1.06,
+          "uSat": 1.05,
+          "uWarm": 0
+        },
+        "bloom": 0.28,
+        "commit": "e204431"
+      },
+      "credits": 0,
+      "date": "2026-11-05",
+      "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
+    },
+    {
+      "file": "d-overcast.jpg",
+      "title": "D: OVERCAST SOFT",
+      "lookAt": "white sky, soft shadows, rich green",
+      "subject": "beltline-street",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"soft\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+      "method": "in-game capture + scripted paintover (no image model)",
+      "prompt": null,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+        "cam": [
+          312,
+          2,
+          -175,
+          334,
+          3,
+          -80
+        ],
+        "params": {},
+        "tune": null,
+        "paintover": "soft",
+        "paintoverEnv": null,
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
+        "build": "scripts/art/style-frames.mjs",
+        "renderer": {
+          "calls": 222,
+          "triangles": 735349,
+          "textures": 49,
+          "geometries": 93
+        },
+        "look": {
+          "toneMapping": 7,
+          "exposure": 1.0976805,
+          "environment": 0.6,
+          "sun": 2.847
+        },
+        "grade": {
+          "uContrast": 1.06,
+          "uSat": 1.05,
+          "uWarm": 0
+        },
+        "bloom": 0.28,
+        "commit": "e204431"
+      },
+      "credits": 0,
+      "date": "2026-11-05",
+      "license": "Original work for ATL Arcade. In-frame assets keep their own provenance: CC0 Poly Haven ground scans (assets/ground/provenance.json), original murals (assets/murals), original skaters, landmarks and props."
+    },
+    {
+      "file": "e-hot-street.jpg",
+      "title": "E: HOT NOON, O4W storefronts",
+      "lookAt": "dark asphalt, green lawn, blue sky over the shops",
+      "subject": "beltline-street",
+      "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"hot\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
       "method": "in-game capture + scripted paintover (no image model)",
       "prompt": null,
       "settings": {
@@ -238,7 +228,8 @@
         ],
         "params": {},
         "tune": null,
-        "paintover": "day",
+        "paintover": "hot",
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -263,7 +254,7 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",

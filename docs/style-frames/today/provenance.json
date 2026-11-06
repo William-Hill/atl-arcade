@@ -3,6 +3,7 @@
     {
       "file": "trail.jpg",
       "title": "BeltLine trail, 13:30",
+      "lookAt": null,
       "subject": "today",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
@@ -20,6 +21,7 @@
         "params": {},
         "tune": null,
         "paintover": null,
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -44,7 +46,7 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
@@ -53,6 +55,7 @@
     {
       "file": "street.jpg",
       "title": "O4W storefronts + murals, 13:30",
+      "lookAt": null,
       "subject": "today",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
@@ -70,6 +73,7 @@
         "params": {},
         "tune": null,
         "paintover": null,
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -94,7 +98,7 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
@@ -103,6 +107,7 @@
     {
       "file": "pcm.jpg",
       "title": "Ponce City Market, 13:30",
+      "lookAt": null,
       "subject": "today",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
@@ -120,6 +125,7 @@
         "params": {},
         "tune": null,
         "paintover": null,
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -144,7 +150,7 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
@@ -153,6 +159,7 @@
     {
       "file": "skater.jpg",
       "title": "Skater close-up (Nia), 13:30",
+      "lookAt": null,
       "subject": "today",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
@@ -170,6 +177,7 @@
         "params": {},
         "tune": null,
         "paintover": null,
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -194,7 +202,7 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
@@ -203,6 +211,7 @@
     {
       "file": "dusk.jpg",
       "title": "Trail at dusk, 20:36",
+      "lookAt": null,
       "subject": "today",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
@@ -222,6 +231,7 @@
         },
         "tune": null,
         "paintover": null,
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -246,7 +256,7 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",
@@ -255,6 +265,7 @@
     {
       "file": "night.jpg",
       "title": "Street at night, 22:30",
+      "lookAt": null,
       "subject": "today",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
@@ -274,6 +285,7 @@
         },
         "tune": null,
         "paintover": null,
+        "paintoverEnv": null,
         "viewport": [
           1280,
           720
@@ -298,7 +310,7 @@
           "uWarm": 0
         },
         "bloom": 0.28,
-        "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+        "commit": "e204431"
       },
       "credits": 0,
       "date": "2026-11-05",

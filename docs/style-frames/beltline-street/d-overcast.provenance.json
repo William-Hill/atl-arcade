@@ -1,12 +1,13 @@
 {
-  "file": "c-morning.jpg",
-  "title": "C: morning 9:30, sky-lit fill",
+  "file": "d-overcast.jpg",
+  "title": "D: OVERCAST SOFT",
+  "lookAt": "white sky, soft shadows, rich green",
   "subject": "beltline-street",
-  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
-  "method": "in-game capture (no image model)",
+  "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0) + scripts/art/paintover.sh \"soft\" (ImageMagick 6.9.11-60 Q16 x86_64 2021-01-25 https://imagemagick.org)",
+  "method": "in-game capture + scripted paintover (no image model)",
   "prompt": null,
   "settings": {
-    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=9.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
     "cam": [
       312,
       2,
@@ -15,18 +16,10 @@
       3,
       -80
     ],
-    "params": {
-      "time": "9.5"
-    },
-    "tune": {
-      "look": {
-        "environment": 1
-      },
-      "grade": {
-        "uSat": 1.12
-      }
-    },
-    "paintover": null,
+    "params": {},
+    "tune": null,
+    "paintover": "soft",
+    "paintoverEnv": null,
     "viewport": [
       1280,
       720
@@ -34,24 +27,24 @@
     "capture": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-today.json",
     "build": "scripts/art/style-frames.mjs",
     "renderer": {
-      "calls": 226,
-      "triangles": 731819,
+      "calls": 222,
+      "triangles": 735349,
       "textures": 49,
-      "geometries": 95
+      "geometries": 93
     },
     "look": {
       "toneMapping": 7,
       "exposure": 1.0976805,
-      "environment": 1,
+      "environment": 0.6,
       "sun": 2.847
     },
     "grade": {
       "uContrast": 1.06,
-      "uSat": 1.12,
+      "uSat": 1.05,
       "uWarm": 0
     },
     "bloom": 0.28,
-    "commit": "e2044315545dda27982ee208ada6e0fbaecfccfe"
+    "commit": "e204431"
   },
   "credits": 0,
   "date": "2026-11-05",

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { litMaterial } from "./look.js";
 import { landmarkPlacements } from "../level/geo/landmarks.js";
 import { createSignTexture } from "./landmark-signs.js";
 import { landmarkEnvironment, landmarkMaterials, landmarkTexturesReady } from "./landmark-materials.js";
@@ -44,13 +45,13 @@ function templateGeometry(t) {
   return g;
 }
 
-function signMesh(sign) {
+function signMesh(sign, look = "toon") {
   const group = new THREE.Group();
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(sign.width, sign.height, 0.4), new THREE.MeshToonMaterial({ color: 0x2b2e33 }));
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(sign.width, sign.height, 0.4), litMaterial(look, { color: 0x2b2e33 }, { roughness: 0.5, envLight: 0.6 }));
   frame.position.y = sign.height / 2 + 0.8;
   group.add(frame);
   const map = createSignTexture(sign.text);
-  const face = new THREE.MeshToonMaterial({ map });
+  const face = litMaterial(look, { map }, { roughness: 0.7, envLight: 0.6 });
   for (const side of [1, -1]) {
     const card = new THREE.Mesh(new THREE.PlaneGeometry(sign.width * 0.95, sign.height * 0.62), face);
     card.position.set(0, frame.position.y, side * 0.21);
@@ -89,7 +90,7 @@ function groupMeshes(t, mats) {
 
 // Returns { root, ready } where `ready` resolves when the towers load.
 // With `renderer`, the near level gets physical materials and reflections.
-export function createLandmarksView(level, { gradientMap = null, renderer = null } = {}) {
+export function createLandmarksView(level, { gradientMap = null, renderer = null, look = "toon" } = {}) {
   const root = new THREE.Group();
   root.name = "landmarks";
   // `towers` counts every landmark model (towers and fronts).
@@ -97,7 +98,7 @@ export function createLandmarksView(level, { gradientMap = null, renderer = null
   const tasks = [];
   for (const p of landmarkPlacements(level)) {
     if (p.sign) {
-      root.add(signMesh(p.sign));
+      root.add(signMesh(p.sign, look));
       info.signs += 1;
     }
     const load = TEMPLATES[p.id];
@@ -108,7 +109,7 @@ export function createLandmarksView(level, { gradientMap = null, renderer = null
         const lod = new THREE.LOD();
         lod.name = `landmark-${p.id}`;
         const far = new THREE.Group();
-        far.add(new THREE.Mesh(templateGeometry(t), new THREE.MeshToonMaterial({ vertexColors: true, gradientMap })));
+        far.add(new THREE.Mesh(templateGeometry(t), litMaterial(look, { vertexColors: true }, { gradientMap, roughness: 0.88, envLight: 0.8 })));
         const near = new THREE.Group();
         // The occlusion heights are in model meters; the base is the model's
         // world height (a roof for a tower, the ground for a front).

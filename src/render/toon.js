@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { characterRoughness } from "./pbr-palette.js";
 
 // The toon look for the skater, on both tiers:
 //
@@ -171,15 +172,63 @@ export function toonSkater(loaded) {
   return meshes.filter((m) => m.isSkinnedMesh && !isTransparent(m)).map(outlineHull);
 }
 
+// The skater rim of the pbr look (#160): a thin edge light from the sky, so
+// the skater reads against the city without an ink line. src/render/pbr-look.js
+// writes the strength by time of day and the color from the horizon. The
+// uniforms are shared by every skater material.
+export const SKATER_RIM = {
+  uRimColor: { value: new THREE.Color(1, 0.96, 0.9) },
+  uRimStrength: { value: 0.55 },
+};
+// The rim power: a higher value gives a thinner edge.
+export const RIM_POWER = 3.0;
+
+// Pure: the rim weight for the cosine between the normal and the view
+// direction, as in the shader.
+export function rimWeight(nDotV, power = RIM_POWER) {
+  return Math.pow(1 - Math.min(1, Math.max(0, nDotV)), power);
+}
+
+function addRim(m) {
+  // Chain the hook a material already has (the NPC outfit hook), and its key.
+  const before = m.onBeforeCompile;
+  const key = m.customProgramCacheKey;
+  m.onBeforeCompile = (shader, r) => {
+    before.call(m, shader, r);
+    shader.uniforms.uRimColor = SKATER_RIM.uRimColor;
+    shader.uniforms.uRimStrength = SKATER_RIM.uRimStrength;
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform vec3 uRimColor;\nuniform float uRimStrength;")
+      .replace(
+        "#include <opaque_fragment>",
+        `{
+  // The rim: strong where the surface turns away from the eye. It adds
+  // light (it never darkens), and it is lighter on the shade side too.
+  float rimNv = clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+  outgoingLight += uRimColor * uRimStrength * pow(1.0 - rimNv, ${RIM_POWER.toFixed(1)}) * (0.35 + 0.65 * diffuseColor.rgb);
+}
+#include <opaque_fragment>`,
+      );
+  };
+  m.customProgramCacheKey = () => `${key.call(m)}-skater-rim`;
+  m.userData.rim = true;
+  m.needsUpdate = true;
+}
+
 // The pbr look on a skater: the glTF materials are already standard
 // materials, so they keep their maps and roughness and light up under the
-// sky environment map. No outline hulls — the pbr look has no ink.
-export function pbrSkater(loaded, { envIntensity = 0.9 } = {}) {
+// sky environment map. No outline hulls — the pbr look has no ink. Each
+// material gets the rim (SKATER_RIM) and a roughness floor (no plastic skin
+// or cloth, pbr-palette.js characterRoughness()).
+export function pbrSkater(loaded, { envIntensity = 0.9, rim = true } = {}) {
   loaded.root.traverse((o) => {
     if (!o.isMesh) return;
     const mats = Array.isArray(o.material) ? o.material : [o.material];
     for (const m of mats) {
-      if (m.isMeshStandardMaterial) m.envMapIntensity = envIntensity;
+      if (!m.isMeshStandardMaterial) continue;
+      m.envMapIntensity = envIntensity;
+      m.roughness = characterRoughness(m.roughness, m.metalness);
+      if (rim && !m.transparent && !m.userData.rim) addRim(m);
     }
   });
   return [];

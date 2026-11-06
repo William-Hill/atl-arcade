@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { litMaterial } from "./look.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 // Three.js view of the crowd from src/sim/npc/crowd.js. One instanced mesh
@@ -145,10 +146,11 @@ export function npcGeometry(type) {
   return merged;
 }
 
-// A toon material where the tint attribute picks the vertex color, the
-// instance shirt color, or the instance skin tone.
-function crowdMaterial(gradientMap) {
-  const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
+// The look's material (toon, or pbr cloth roughness) where the tint
+// attribute picks the vertex color, the instance shirt color, or the
+// instance skin tone.
+function crowdMaterial(gradientMap, look = "toon") {
+  const mat = litMaterial(look, { vertexColors: true }, { gradientMap, roughness: 0.8, envLight: 0.8 });
   mat.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec2 tint;\nattribute vec3 instanceSkin;")
@@ -193,10 +195,10 @@ export const NPC_DRAW_DISTANCE = 150;
 // Builds the meshes for a crowd. sync(crowd, cameraPosition) packs the NPCs
 // near the camera into the first instances of each mesh and draws only
 // those. Call it once per frame.
-export function createNpcView(crowd, { drawDistance = NPC_DRAW_DISTANCE } = {}) {
+export function createNpcView(crowd, { drawDistance = NPC_DRAW_DISTANCE, look = "toon" } = {}) {
   const group = new THREE.Group();
   group.name = "npcs";
-  const material = crowdMaterial(rampTexture());
+  const material = crowdMaterial(look === "pbr" ? null : rampTexture(), look);
   const byType = new Map();
   for (const n of crowd.npcs) {
     if (!byType.has(n.type)) byType.set(n.type, 0);

@@ -6,7 +6,7 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { withLeafCut } from "./leaf-cut.js";
-import { GRADE } from "./look.js";
+import { GRADE_PIVOT, SPLIT, TIME_GRADES } from "./pbr-palette.js";
 
 // The high tier post chain:
 //   scene (MSAA x4) -> GTAO ambient occlusion -> ink outlines -> bloom -> output.
@@ -156,15 +156,21 @@ const InkShader = {
     }`,
 };
 
-// The grade pass (pbr look): a light filmic curve, a small saturation
-// lift, and a split tone — cool shadows, warm highlights — instead of the
-// ink lines. The weather tunes `uWarm` per time of day (0 neutral).
+// The grade pass (pbr look), on the linear color before the tone mapping:
+// a contrast on the luma around a mid gray (GRADE_PIVOT), a saturation that
+// keeps the luma, a split tone (cool shadows, warm lights) scaled by uWarm,
+// a small black lift, and the district tint (src/render/pbr-palette.js
+// gradePixel() is the same formula). src/render/pbr-look.js writes the
+// uniforms each frame by the time of day and the district.
+const v3 = (c) => `vec3(${c.map((v) => v.toFixed(4)).join(", ")})`;
 const GradeShader = {
   uniforms: {
     tDiffuse: { value: null },
-    uContrast: { value: 1.06 },
-    uSat: { value: 1.05 },
-    uWarm: { value: 0.0 },
+    uContrast: { value: TIME_GRADES.day.contrast },
+    uSat: { value: TIME_GRADES.day.saturation },
+    uWarm: { value: TIME_GRADES.day.warm },
+    uLift: { value: 0.0 },
+    uTint: { value: new THREE.Vector3(1, 1, 1) },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -174,15 +180,20 @@ const GradeShader = {
     uniform float uContrast;
     uniform float uSat;
     uniform float uWarm;
+    uniform float uLift;
+    uniform vec3 uTint;
     varying vec2 vUv;
     void main() {
       vec4 col = texture2D(tDiffuse, vUv);
-      float luma = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
-      col.rgb = (col.rgb - 0.5) * uContrast + 0.5 + luma - luma;
-      col.rgb = mix(vec3(luma), col.rgb, uSat);
-      // Cool shadows, warm highlights; uWarm 0 is neutral.
-      col.rgb += (luma - 0.5) * 2.0 * uWarm * vec3(0.06, 0.0, -0.08);
-      gl_FragColor = col;
+      vec3 c = max(col.rgb, vec3(0.0));
+      float l0 = dot(c, vec3(0.2126, 0.7152, 0.0722));
+      float l1 = l0 > 0.0 ? ${GRADE_PIVOT.toFixed(4)} * pow(l0 / ${GRADE_PIVOT.toFixed(4)}, uContrast) : 0.0;
+      c *= l0 > 1e-6 ? l1 / l0 : 0.0;
+      float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+      c = max(vec3(l) + (c - vec3(l)) * uSat, vec3(0.0));
+      float w = smoothstep(${SPLIT.range[0].toFixed(4)}, ${SPLIT.range[1].toFixed(4)}, l);
+      c = (c * (vec3(1.0) + uWarm * mix(${v3(SPLIT.shadow)}, ${v3(SPLIT.light)}, w)) + vec3(uLift)) * uTint;
+      gl_FragColor = vec4(c, col.a);
     }`,
 };
 

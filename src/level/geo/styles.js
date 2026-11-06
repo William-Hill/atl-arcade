@@ -318,6 +318,13 @@ function anchors(level) {
   }
   return list;
 }
+// The district anchors of a level: { id, radius, x, z } for each district
+// whose anchor building is in the level (for the pbr district grade,
+// src/render/pbr-palette.js).
+export function districtAnchors(level) {
+  return anchors(level).map((a) => ({ ...a }));
+}
+
 // The district of a building: the nearest anchor within its radius.
 function districtOf(b, level) {
   let x = 0, z = 0;

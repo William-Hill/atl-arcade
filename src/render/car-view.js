@@ -1,4 +1,8 @@
 import * as THREE from "three";
+import { litMaterial } from "./look.js";
+
+// The pbr car paint roughness (docs/art-direction-pbr.md: car paint 0.2 to 0.4).
+export const CAR_ROUGHNESS = 0.32;
 import { carTemplates } from "./car-kit.js";
 import { propLodFor } from "./prop-batch.js";
 import { CAR_COLORS, CAR_SIZE } from "../sim/traffic/traffic.js";
@@ -51,13 +55,11 @@ function rampTexture() {
   return tex;
 }
 
-// A toon material where paint mixes the vertex color toward the instance
+// The look's material (toon, or pbr metal/rough: car paint 0.3, look.js
+// litMaterial()) where paint mixes the vertex color toward the instance
 // color: paint 1 is the body, paint 0 keeps glass, tires, and lights.
-function carMaterial() {
-  const mat = new THREE.MeshToonMaterial({
-    vertexColors: true,
-    gradientMap: rampTexture(),
-  });
+function carMaterial(look = "toon") {
+  const mat = litMaterial(look, { vertexColors: true }, { gradientMap: look === "pbr" ? null : rampTexture(), roughness: CAR_ROUGHNESS, envLight: 0.8 });
   mat.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float paint;")
@@ -69,7 +71,7 @@ vColor.rgb = mix(vColor.rgb, vColor.rgb * getBatchingColor(getIndirectIndex(gl_D
 #endif`,
       );
   };
-  mat.customProgramCacheKey = () => "cars-v1";
+  mat.customProgramCacheKey = () => `cars-v1-${look}`;
   return mat;
 }
 
@@ -246,6 +248,7 @@ export function createCarView(
     lod0Distance = CAR_LOD0_DISTANCE,
     drawDistance = CAR_DRAW_DISTANCE,
     pitchAt = null,
+    look = "toon",
   } = {},
 ) {
   const templates = carTemplates();
@@ -265,7 +268,7 @@ export function createCarView(
       indices += g.index.count;
     }
   }
-  const material = carMaterial();
+  const material = carMaterial(look);
   const mesh = new THREE.BatchedMesh(
     Math.max(1, all.length),
     Math.max(1, vertices),

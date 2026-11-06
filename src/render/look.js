@@ -46,6 +46,13 @@ export const LOOKS = {
     sunOffset: [50, 30, 33],
     sunColor: 0xffd7a3,
     environment: 0.6,
+    // The weather sun (src/sim/weather.js, 3.0 at its peak) is set for the
+    // toon ramp. Under the pbr look a 0.6 albedo wall in full sun then
+    // reaches only about 186 of 255, and no day frame had a real highlight
+    // (docs/art-direction-pbr.md: p98 228 or less). The pbr look scales the
+    // weather sun by this factor each frame (src/render/pbr-look.js); the
+    // shade keeps the sky light, so the contrast between sun and shade grows.
+    sunScale: 1.4,
     // A thin contact line, not a cel outline: the relief of the normal maps
     // and the AO carry the shapes.
     ink: 0.3,
@@ -70,11 +77,16 @@ export const DETAIL_NORMAL = {
 // Each factor is RGB. The asphalt is darker and less blue than its art
 // color, and the slab sidewalk is near its art color, so a road and a
 // sidewalk differ at once in value (about 3 to 1 in linear light).
+//
+// #157: the asphalt goes to about 0.09 linear and loses its lilac cast (the
+// darkest ground in a frame), and the grass factor is per channel, so the
+// pale gray-green art colors of the lawn and the park land in the mid
+// green of the style sheet (#4f7a3a to #6f9a4a sRGB) and not in a mint gray.
 export const GROUND_ALBEDO = [
-  [0.62, 0.62, 0.54],
+  [0.36, 0.36, 0.3],
   [1.0, 1.0, 0.98],
   [0.85, 0.85, 0.85],
-  [0.55, 0.55, 0.55],
+  [0.3, 0.52, 0.17],
 ];
 // The roughness of a painted steel window frame (semi-gloss).
 export const FRAME_ROUGHNESS = 0.45;

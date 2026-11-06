@@ -364,3 +364,98 @@ export function createCarModelView(
     },
   };
 }
+
+// The car lamps: emissive quads on the front and the back of every moving
+// car (head, tail/brake, and amber signal lamps), drawn by
+// src/render/car-view.js. The GLBs share one atlas material, so the lamps
+// are their own unlit layer over the painted lamp spots.
+export const LAMP = {
+  head: 0xfff4d6,
+  tail: 0xff1a10,
+  signal: 0xffa21a,
+  // Blinks per second of the turn signals.
+  blink: 1.5,
+};
+
+// Pure: the lamp quads of a car of size { length, width, height } in the
+// car frame (x forward, y up, z right of the driver): [{ type, side, x, y,
+// z, w, h, face }]. side is +1 left, -1 right; face +1 front, -1 back.
+export function lampLayout({ length, width, height }) {
+  const tall = height > 2.5;
+  const hy = tall ? 0.75 : Math.min(0.75, height * 0.45);
+  const ty = tall ? 0.85 : Math.min(0.85, height * 0.52);
+  const fx = length / 2 + 0.03;
+  const lat = width / 2 - 0.3;
+  const out = [];
+  for (const side of [1, -1]) {
+    // Left of the driver (+yaw side) is -z in the car frame.
+    const z = -side * lat;
+    const zs = -side * (width / 2 - 0.08);
+    out.push({
+      type: "head",
+      side,
+      x: fx,
+      y: hy,
+      z,
+      w: 0.34,
+      h: 0.15,
+      face: 1,
+    });
+    out.push({
+      type: "tail",
+      side,
+      x: -fx,
+      y: ty,
+      z,
+      w: 0.3,
+      h: 0.16,
+      face: -1,
+    });
+    out.push({
+      type: "signal",
+      side,
+      x: fx,
+      y: hy,
+      z: zs,
+      w: 0.12,
+      h: 0.12,
+      face: 1,
+    });
+    out.push({
+      type: "signal",
+      side,
+      x: -fx,
+      y: ty,
+      z: zs,
+      w: 0.12,
+      h: 0.12,
+      face: -1,
+    });
+  }
+  return out;
+}
+
+// Pure: the lamp brightness (0..1) of each type for a moving car. lit is the
+// weather window factor (uLit: 0 day, 1 night); brake (0..1) and signal
+// (1 left, -1 right, 0 off) come from src/sim/traffic/traffic.js. The
+// headlights are dim running lights in the day and full at night; the tail
+// lamps glow at night and the brake lamps brighten on them. The signal
+// blinks at LAMP.blink with a per-car phase.
+export function lampLevels({
+  lit = 0,
+  brake = 0,
+  signal = 0,
+  time = 0,
+  phase = 0,
+} = {}) {
+  const l = Math.max(0, Math.min(1, lit));
+  const b = Math.max(0, Math.min(1, brake));
+  const on = signal !== 0 && (time * LAMP.blink + phase) % 1 < 0.5;
+  return {
+    head: 0.15 + 0.85 * l,
+    tail: Math.max(0.12 + 0.33 * l, b > 0 ? 0.5 + 0.5 * b : 0),
+    left: on && signal > 0 ? 1 : 0,
+    right: on && signal < 0 ? 1 : 0,
+    beam: l,
+  };
+}

@@ -11,3 +11,5 @@ assets/skaters/*/raw/
 landmarks/*/material-evidence/**/*.png
 landmarks/*/detail-inventory/*.png
 landmarks/*/ref/reference-4000.jpg
+.vercel
+.env*

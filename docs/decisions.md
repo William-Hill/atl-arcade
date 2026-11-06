@@ -1439,3 +1439,19 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
   before and after) and the Playwright contact sheets in
   `assets/skaters/marcus/clips/`. Real skaters and the owner must still
   review the hands in motion.
+
+## 2026-11-05 — All runtime clips on the v2 bodies (#170)
+
+- Drop the legacy clip transfer. Key the 22 `nia_clips.py` clips on the v2
+  body from `raw/forward-v2`. Keep the reviewed `push` and `coast`.
+- Use the forward IK for every clip: calibrated pole angles, poles that turn
+  with the foot yaw, quaternion foot targets. Also turn the pole at each leg
+  key until the knee points over the skate, because one calibrated pole
+  angle left Nia's knees 17 to 20 degrees inward in `jump` and `ride_back`.
+- Scale `at()` foot x by hip width. Marcus's hips are 1.64 times Nia's.
+- Curl each finger about its own axis, so Marcus's splayed fingers close.
+- Give Marcus `dance_smoothquad` from the same approved Tripo dance as Nia.
+  The clip name stays the same, so the style table and #107 still bind.
+- Clip names do not change. Both GLBs have 25 clips.
+- Known: the e2e T-pose gate fails its control check (too few silhouette
+  pixels) on the base GLBs and on these GLBs. It finds no T-pose frame.

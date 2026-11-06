@@ -25,6 +25,8 @@ import { frontEdges } from "../level/geo/facade-kit.js";
 import { shopSignName } from "../level/geo/shop-signs.js";
 import { LANDMARKS } from "../level/geo/landmarks.js";
 import { propObstacles } from "../level/geo/props.js";
+import { createGrid, gridNear, gridOf, gridSet } from "./grid.js";
+import { farStride, stepsOnTick, viewerDistance } from "./far-step.js";
 
 export const PEDS = {
   radius: 0.3, // m, the circle a walker keeps clear
@@ -47,6 +49,15 @@ export const PEDS = {
   heightStep: 0.5, // m walked between two ground samples
   sample: 4, // m between two spawn candidates on a route
   cell: 32, // m, the spawn candidate grid
+  near: 4, // m, the cell of the walker grid for the neighbor search (#189)
+  // Far-step (#189): a walker this far (m) from the camera and from Nia
+  // steps every `stride` ticks (src/sim/far-step.js). Inside the first band
+  // (give way, the crowd, the props) it steps on every tick.
+  far: [
+    [40, 2],
+    [80, 4],
+    [130, 6],
+  ],
 };
 
 // The pool size and the pool radius (m) by quality tier. The fog hides the
@@ -297,6 +308,7 @@ function placePed(state, p) {
   p.z = z;
   p.fx = tx * p.dir;
   p.fz = tz * p.dir;
+  gridSet(state.grid, p, x, z);
 }
 
 function sampleHeight(state, p) {
@@ -308,32 +320,33 @@ function sampleHeight(state, p) {
 
 function overlapsPed(state, self, x, z) {
   const rr = 2 * PEDS.radius;
-  for (const o of state.peds) {
-    if (o === self || !o.live) continue;
+  return gridNear(state.grid, x, z, rr, (o) => {
+    if (o === self || !o.live) return false;
     const dx = o.x - x;
     const dz = o.z - z;
-    if (dx * dx + dz * dz < rr * rr) return true;
-  }
-  return false;
+    return dx * dx + dz * dz < rr * rr;
+  });
 }
 
-// The others (the crowd, the NPC skaters) and Nia as circles: { x, z, r }.
-function movers(others, nia) {
-  const list = others.map((o) => ({ x: o.x, z: o.z, r: o.radius ?? o.r ?? 0.4 }));
-  if (nia) list.push({ x: nia[0], z: nia[2], r: PEDS.niaRadius });
-  return list;
+// The others (the crowd, the NPC skaters) and Nia as circles: { x, z, r },
+// in a grid (8 m cells). `maxR` is the largest circle.
+export function moverGrid(others, nia) {
+  const list = others.map((o) => ({ x: o.x, z: o.z, r: o.radius ?? o.r ?? 0.4, nia: false }));
+  if (nia) list.push({ x: nia[0], z: nia[2], r: PEDS.niaRadius, nia: true });
+  const grid = gridOf(list, 8);
+  grid.maxR = list.reduce((m, o) => Math.max(m, o.r), 0);
+  return grid;
 }
 
 // True when a walker at (x, z) would touch one of the movers. With `from`
 // ([x, z], the walker now), only a move that also gets closer counts, so
 // a mover that walks into a walker never traps it.
-function touchesMover(list, x, z, from = null) {
-  for (const o of list) {
+function touchesMover(grid, x, z, from = null) {
+  return gridNear(grid, x, z, PEDS.radius + grid.maxR, (o) => {
     const d = Math.hypot(o.x - x, o.z - z);
-    if (d >= PEDS.radius + o.r) continue;
-    if (!from || d < Math.hypot(o.x - from[0], o.z - from[1])) return true;
-  }
-  return false;
+    if (d >= PEDS.radius + o.r) return false;
+    return !from || d < Math.hypot(o.x - from[0], o.z - from[1]);
+  });
 }
 
 // Puts walker `p` at a weighted spawn point between rMin and rMax m of the
@@ -399,9 +412,11 @@ export function createPeds(level, { seed = 1, count = PED_COUNT.low, radius = PE
     heightAt: heightAt ?? ((x, z, y, r) => r.height),
     props: propIndex(propObstacles(props.filter((p) => !p.roof))),
     spawnCache: { key: null, set: null },
-    movers: [],
+    movers: moverGrid([], null),
+    grid: createGrid(PEDS.near),
     peds: [],
     time: 0,
+    tick: 0,
   };
   for (let i = 0; i < count; i += 1) state.peds.push({ id: i, live: false, x: Infinity, z: Infinity, y: 0, spawns: 0, offset: 0, dir: 1, s: 0, speed: 0, phase: 0, pause: 0, fx: 1, fz: 0 });
   scatter(state);
@@ -415,18 +430,21 @@ function scatter(state) {
 }
 
 // The things a walker steps around near (x, z): the other walkers, the
-// street props, Nia, and the `others` ({ x, z, radius }).
-function forEachNear(state, p, others, nia, fn) {
+// street props, Nia, and the others (the crowd, the NPC skaters, in
+// state.movers).
+function forEachNear(state, p, nia, fn) {
   const reach = PEDS.look + 1;
-  for (const o of state.peds) {
-    if (o === p || !o.live) continue;
-    if (Math.abs(o.x - p.x) > reach || Math.abs(o.z - p.z) > reach) continue;
+  gridNear(state.grid, p.x, p.z, reach, (o) => {
+    if (o === p || !o.live) return;
+    if (Math.abs(o.x - p.x) > reach || Math.abs(o.z - p.z) > reach) return;
     fn(o.x, o.z, PEDS.radius, o);
-  }
+  });
   const ix = Math.floor(p.x / 8);
   const iz = Math.floor(p.z / 8);
   for (let a = ix - 1; a <= ix + 1; a += 1) for (let b = iz - 1; b <= iz + 1; b += 1) for (const o of state.props.get(`${a},${b}`) ?? []) fn(o.x, o.z, o.r, null);
-  for (const o of others) if (Math.abs(o.x - p.x) <= reach + 3 && Math.abs(o.z - p.z) <= reach + 3) fn(o.x, o.z, o.radius ?? o.r ?? 0.4, null);
+  gridNear(state.movers, p.x, p.z, reach + 3, (o) => {
+    if (!o.nia && Math.abs(o.x - p.x) <= reach + 3 && Math.abs(o.z - p.z) <= reach + 3) fn(o.x, o.z, o.r, null);
+  });
   if (nia) fn(nia[0], nia[2], PEDS.niaRadius + PEDS.niaMargin, "nia");
 }
 
@@ -435,7 +453,8 @@ function forEachNear(state, p, others, nia, fn) {
 // NPC skaters ({ x, z, radius }). Mutates and returns the state.
 export function stepPeds(state, dt, { focus = null, nia = null, others = [] } = {}) {
   state.time += dt;
-  state.movers = movers(others, nia);
+  state.tick += 1;
+  state.movers = moverGrid(others, nia);
   if (focus) {
     const jumped = Math.hypot(focus[0] - state.focus[0], focus[1] - state.focus[1]) > PEDS.jump;
     state.focus = [focus[0], focus[1]];
@@ -444,12 +463,18 @@ export function stepPeds(state, dt, { focus = null, nia = null, others = [] } = 
   const [fx, fz] = state.focus;
   const r2 = state.radius * state.radius;
   const rand = state.rand;
+  const viewers = nia ? [state.focus, [nia[0], nia[2]]] : [state.focus];
+  const full = dt;
   for (const p of state.peds) {
     if (!p.live || (p.x - fx) ** 2 + (p.z - fz) ** 2 > r2) {
       p.live = false;
       spawn(state, p, state.radius * 0.75, state.radius);
       continue;
     }
+    // Far from the camera and Nia: a longer step on fewer ticks.
+    const stride = farStride(viewerDistance(p.x, p.z, viewers), PEDS.far);
+    if (!stepsOnTick(state.tick, p.id, stride)) continue;
+    dt = full * stride;
     const route = state.routes[p.route];
     // Nia close by: give way, even while paused.
     const niaNear = nia && Math.hypot(nia[0] - p.x, nia[2] - p.z) < PEDS.giveWay;
@@ -466,7 +491,7 @@ export function stepPeds(state, dt, { focus = null, nia = null, others = [] } = 
     let want = p.cruise;
     let target = p.dir * route.lane;
     let nearest = Infinity;
-    forEachNear(state, p, others, niaNear ? nia : null, (ox, oz, or, o) => {
+    forEachNear(state, p, niaNear ? nia : null, (ox, oz, or, o) => {
       const dx = ox - p.x;
       const dz = oz - p.z;
       const fwd = dx * p.fx + dz * p.fz;

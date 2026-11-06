@@ -11,6 +11,7 @@
 
 import { chainStrips, projectOnLine } from "../../playtest/trail-script.js";
 import { createPath, pathOffsetPoint, pathTangent } from "./path.js";
+import { farStride, stepsOnTick, viewerDistance } from "../far-step.js";
 
 // radius: the circle that must not overlap (m). speed: the cruise speed
 // (m/s). lane: the keep-right offset from the center line (m).
@@ -37,6 +38,13 @@ export const CROWD = {
   maxLean: 0.25,
   // An NPC that cannot move for this long turns around (s).
   stuckTime: 2,
+  // Far-step (#189): an NPC this far (m) from the camera and Nia steps
+  // every `stride` ticks (src/sim/far-step.js). The first band is far past
+  // giveWayDistance and lookAhead.
+  far: [
+    [80, 2],
+    [160, 4],
+  ],
 };
 
 // The default crowd for a geodata level. Trail NPCs: half near the spawn,
@@ -188,9 +196,14 @@ export function createCrowd(level, { seed = 1, mix = DEFAULT_MIX } = {}) {
 // it, so no two NPCs overlap after a step. `others` is an optional list of
 // { x, z, radius, vx, vz }: the NPC skaters (#134). The crowd sees them in
 // the look-ahead, so it slows down behind them and passes them. They are
-// not in the overlap test, so a skater never freezes the crowd.
-export function stepCrowd(crowd, dt, nia = null, others = []) {
+// not in the overlap test, so a skater never freezes the crowd. `focus` is
+// the camera [x, z]: with it, an NPC far from the camera and Nia steps less
+// often (CROWD.far); without it (the tests), every NPC steps on every tick.
+export function stepCrowd(crowd, dt, nia = null, others = [], { focus = null } = {}) {
   const { lines } = crowd;
+  const full = dt;
+  const viewers = focus ? [focus] : [];
+  if (focus && nia) viewers.push([nia[0], nia[2]]);
   const list = crowd.npcs.map((n) => ({ ...n }));
   const seen = others.length ? list.concat(others) : list;
   let bumps = crowd.bumps;
@@ -199,6 +212,9 @@ export function stepCrowd(crowd, dt, nia = null, others = []) {
 
   for (let i = 0; i < list.length; i += 1) {
     const n = list[i];
+    const stride = viewers.length ? farStride(viewerDistance(n.x, n.z, viewers), CROWD.far) : 1;
+    if (!stepsOnTick(crowd.tick, n.id, stride)) continue;
+    dt = full * stride;
     const line = lines[n.line];
     const maxOff = line.halfWidth - n.radius;
     const rx = -n.fz;

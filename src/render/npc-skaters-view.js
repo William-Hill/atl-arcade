@@ -192,8 +192,11 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
     visible(id) {
       return Boolean(views.get(id)?.view.group.visible);
     },
-    // dt: the frame time. beat: { time, bpm } or null. eye: the camera position.
-    sync(next, dt, beat, eye) {
+    // dt: the frame time. beat: { time, bpm } or null. eye: the camera
+    // position. view: { sees(x, y, z, r) } (src/render/view-cull.js) or
+    // null; an NPC out of the view stays drawn (its shadow) but skips the
+    // sync until it comes back.
+    sync(next, dt, beat, eye, view = null) {
       drawn = 0;
       const ready = next.npcs.filter((n) => views.get(n.id)?.ready);
       const dist = (p) => (eye ? Math.hypot(p[0] - eye.x, p[1] - eye.y, p[2] - eye.z) : 0);
@@ -204,6 +207,8 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
         entry.view.group.visible = pick.has(npc.id);
         if (!entry.view.group.visible) continue;
         drawn += 1;
+        const [x, y, z] = npc.skater.position;
+        if (view && !view.sees(x, y + 0.9, z, 1.2)) continue;
         entry.view.sync(npc.skater, dt, beat);
       }
     },

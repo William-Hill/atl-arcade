@@ -59,6 +59,13 @@ try {
   rows.push({ kind: "spawn", labview: "fixed", before, after });
   rows.push({ kind: "toon", after: await open(page, street.replace("look=pbr", "look=toon"), false) });
   rows.push({ kind: "kit0", after: await open(page, `${street}&kit=0`, false) });
+  // A failed GLB download: the procedural kit stays whole (the kit counts match ?kitglb=0).
+  const kitCounts = () => page.evaluate(() => window.__atl.level.kit);
+  const fullKit = (await open(page, `${street}&kitglb=0`, false), await kitCounts());
+  await page.route(/facade-kit.*\.glb/, (r) => r.abort());
+  const failed = await open(page, street, false);
+  rows.push({ kind: "glbfail", after: failed, kit: await kitCounts(), fullKit });
+  await page.unroute(/facade-kit.*\.glb/);
 } finally {
   writeFileSync(resolve(outDir, "wired.json"), JSON.stringify({ glbFileBytes: statSync("assets/facades/facade-kit.glb").size, rows, errors }, null, 2));
   await browser.close();

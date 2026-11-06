@@ -9,9 +9,10 @@ describe("district styles", () => {
     const krog = LEVEL.buildings.find((b) => b.name === "Krog Street Market");
     const kx = krog.outer.reduce((s, p) => s + p[0], 0) / krog.outer.length;
     const kz = krog.outer.reduce((s, p) => s + p[1], 0) / krog.outer.length;
-    // Untyped, mid-size stock within the Inman Park radius. "storefront"
-    // is a preserved pick (the mix never un-shops a shop).
-    const mix = new Set(["craftsman-house", "shotgun-house", "brick-loft", "stucco-apartment", "garage", "storefront", "brick-warehouse", "industrial-shed"]);
+    // Untyped, mid-size stock within the Inman Park radius. "storefront" and
+    // "modern-apartment" are preserved picks: both styles have shop fronts,
+    // and the mix never removes a shop front.
+    const mix = new Set(["craftsman-house", "shotgun-house", "brick-loft", "stucco-apartment", "garage", "storefront", "modern-apartment", "brick-warehouse", "industrial-shed"]);
     const styles = new Set(
       LEVEL.buildings
         .filter((b) => {

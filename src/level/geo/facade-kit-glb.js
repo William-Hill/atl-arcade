@@ -67,11 +67,11 @@ export function boardOf(it) {
 // Pure: the GLB kit of a level. `fronts` is frontEdges(); `signs` the shop
 // signs (shopSigns()). Claimed landmark footprints get nothing (their model
 // draws the building). Returns { tiles: Map(tile -> { center, list }),
-// covers: Map(id -> kitCovers()), boards, instances }.
+// covers: Map(id -> kitCovers()), instances }; a tile's `boards` are the
+// shop-name boards of its GLB sign boards (boardOf()).
 export function facadeKitPlacements(level, fronts, { signs = [], claimed = claimedIds(level), murals = new Map(muralWalls(level).map((m) => [m.id, m])) } = {}) {
   const tiles = new Map();
   const covers = new Map();
-  const boards = [];
   const signsOf = new Map(signs.map((s) => [s.id, s]));
   let instances = 0;
   for (const b of level.buildings ?? []) {
@@ -82,17 +82,17 @@ export function facadeKitPlacements(level, fronts, { signs = [], claimed = claim
     const list = facadePlacements({ ring: orientRing(b.outer, false), holes: b.holes ?? [], style, base: span.base, top: span.top, front: fronts.get(b.id) ?? null, mural: murals.get(b.id) ?? null, seed: hash32(String(b.id)), floors: floorCount(b, style, span.top - span.base) }).filter((it) => !GLB_SKIP.has(it.module) && !(it.module === "trim_sign_board" && sign && underShopSign(it, sign)));
     if (!list.length) continue;
     covers.set(b.id, kitCovers(list));
-    for (const it of list) if (it.module === "trim_sign_board") boards.push(boardOf(it));
     // The depth tile of the building, as facadeKit() keys it.
     const [x, z] = b.outer[0];
     const i = Math.floor(x / DEPTH_TILE);
     const j = Math.floor(z / DEPTH_TILE);
     const key = `${i},${j}`;
     let tile = tiles.get(key);
-    if (!tile) tiles.set(key, (tile = { center: [(i + 0.5) * DEPTH_TILE, (j + 0.5) * DEPTH_TILE], list: [] }));
+    if (!tile) tiles.set(key, (tile = { center: [(i + 0.5) * DEPTH_TILE, (j + 0.5) * DEPTH_TILE], list: [], boards: [] }));
     const trim = style.trim;
     for (const it of list) tile.list.push({ ...it, wall: undefined, color: it.tint === "trim" ? trim : null });
+    for (const it of list) if (it.module === "trim_sign_board") tile.boards.push(boardOf(it));
     instances += list.length;
   }
-  return { tiles, covers, boards, instances };
+  return { tiles, covers, instances };
 }

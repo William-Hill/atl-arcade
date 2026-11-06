@@ -255,6 +255,8 @@ export function facadePlacements({ ring, holes = [], style, base = 0, top, front
         for (let b = 0; b < bays; b += 1) {
           const a = (b + 0.5) * bl;
           if (b === fireBay && f >= 1) continue;
+          // The mural wall is blank from mural.floor0 up (no shader window), as in wallDepth().
+          if (mural && mural.edge === i && f >= (mural.floor0 ?? 0)) continue;
           // The frame's own bounds, as wallDepth() tests the sill's.
           if (onMural(i, a - (sx * mw) / 2, a + (sx * mw) / 2, yf + yOff, yf + yOff + sy * mh)) continue;
           if (inRange(sx, SCALE.window) && inRange(sy, SCALE.window)) add(windowModule, i, w, a, yf + yOff, 0, sx, sy, null, { bay: b, floor: f });

@@ -203,12 +203,17 @@ Wiring guidance (done as described in "In the game" below):
   bay line with a GLB pilaster, no sign band on a bay with GLB shop glass, no
   procedural door with a GLB door (the step and lamps stay). The shader glass
   stays: the modules frame it (they have no face on the wall plane).
-- `src/render/facade-kit-view.js`: loads the GLB (Draco) after the level
-  shows, one `InstancedMesh` per module per depth tile, visible closer than
-  `DEPTH_DISTANCE` (120 m, with the procedural depth tiles), the `_lod1` node
-  of a tile past `LOD1_DISTANCE` (60 m, by tile center).
-- `createGeoView(..., { kitGlb })`: on with `look === "pbr"`, `kit` and
-  `depth`. `?kitglb=0` leaves the GLB kit out (the procedural kit is whole
+- `src/render/facade-kit-view.js`: `loadFacadeKit()` (Draco) runs in
+  `main.js` while the meshes build; one `InstancedMesh` per module per depth
+  tile, visible closer than `DEPTH_DISTANCE` (120 m, with the procedural depth
+  tiles), the `_lod1` node of a tile past `LOD1_DISTANCE` (60 m, by tile
+  center). The shop names on a tile's GLB sign boards are in the same tile
+  group, so they hide with their boards.
+- `createGeoView(..., { kitGlb })`: `kitGlb` is the loaded nodes or null; on
+  with `look === "pbr"`, `kit` and `depth`. A failed load passes null: the
+  procedural kit stays whole (nothing is turned off before the GLB is in).
+  On a mural wall, no window frame goes from `mural.floor0` up (the shader
+  blanks that wall, as `wallDepth()` drops its sills). `?kitglb=0` leaves the GLB kit out (the procedural kit is whole
   again), `?kit=0` drops both, `?depth=0` drops both depth-tile kits.
   `window.__atl.level.facadeGlb` has the counts (instances, tiles, near, lod1,
   drawCalls, triangles, loaded).

@@ -118,11 +118,7 @@ const DISTRICT_ANCHORS = [
 // facade kit collects (facade-kit.js signBay()).
 export function shopNamesMesh(boards, level, look = "toon") {
   const { tex, rows } = makeAtlas();
-  const quads = [];
-  for (const b of boards) {
-    const row = hash32(`${Math.round(b.x * 4)},${Math.round(b.z * 4)}`) % SHOP_NAMES.length;
-    quads.push({ c: [b.x, b.y, b.z], n: [b.nx, b.nz], up: [0, 1, 0], w: b.w * 0.96, h: b.h * 0.8, row });
-  }
+  const quads = boardQuads(boards);
   // The district name on the trail near each anchor (the teleoperator map
   // labels): flat, along the trail, where a runner reads it.
   for (const a of DISTRICT_ANCHORS) {
@@ -136,6 +132,35 @@ export function shopNamesMesh(boards, level, look = "toon") {
     quads.push({ c: [near.x, y, near.z], n: [0, -1], up: [-near.tx, 0, -near.tz], w: 10, h: 1.9, row: SHOP_NAMES.length + a.label });
   }
   if (!quads.length) return null;
+  const mesh = decalMesh(quads, rows, namesMaterial(look, tex));
+  mesh.frustumCulled = false;
+  return mesh;
+}
+
+// The shop-name decals of grouped boards (the GLB sign boards of each depth
+// tile, facade-kit-view.js): Map(key -> mesh), one shared atlas material.
+export function boardNamesMeshes(groups, look = "pbr") {
+  const { tex, rows } = makeAtlas();
+  const mat = namesMaterial(look, tex);
+  const out = new Map();
+  for (const [key, boards] of groups) {
+    if (!boards.length) continue;
+    const mesh = decalMesh(boardQuads(boards), rows, mat);
+    mesh.geometry.computeBoundingSphere();
+    out.set(key, mesh);
+  }
+  return out;
+}
+
+function boardQuads(boards) {
+  return boards.map((b) => ({ c: [b.x, b.y, b.z], n: [b.nx, b.nz], up: [0, 1, 0], w: b.w * 0.96, h: b.h * 0.8, row: hash32(`${Math.round(b.x * 4)},${Math.round(b.z * 4)}`) % SHOP_NAMES.length }));
+}
+
+function namesMaterial(look, tex) {
+  return litMaterial(look, { map: tex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }, { roughness: ROUGHNESS.props, envLight: 0.6 });
+}
+
+function decalMesh(quads, rows, mat) {
   const g = new THREE.BufferGeometry();
   const n = quads.length * 4;
   g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
@@ -164,9 +189,7 @@ export function shopNamesMesh(boards, level, look = "toon") {
       decalQuad(g, q.c, q.n, q.up, q.w, q.h, q.row, rows);
     }
   }
-  const mat = litMaterial(look, { map: tex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }, { roughness: ROUGHNESS.props, envLight: 0.6 });
   const mesh = new THREE.Mesh(g, mat);
   mesh.name = "shop-names";
-  mesh.frustumCulled = false;
   return mesh;
 }

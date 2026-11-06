@@ -39,6 +39,7 @@ import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "
 import { createSky } from "./render/sky.js";
 import { LOOKS, createSkyEnvironment, lookFor, toneMappingOf } from "./render/look.js";
 import { labBuildings, labCamera } from "./level/geo/lab.js";
+import { loadFacadeKit } from "./render/facade-kit-view.js";
 import { createLitePost, createPost } from "./render/post.js";
 import { createWeatherView, weatherClock } from "./render/weather-view.js";
 import { createRain } from "./render/rain.js";
@@ -121,6 +122,11 @@ const look = geo ? lookFor(params.get("look"), quality) : "toon";
 // before the meshes build. ?landmarkglb=0 keeps the generic buildings.
 const landmarkGlbs = look === "pbr" && params.get("landmarks") !== "0" && params.get("landmarkglb") !== "0";
 if (landmarkGlbs) claimLandmarkModels();
+// The pbr look's Blender facade kit (src/render/facade-kit-view.js) loads while
+// the meshes build. ?kitglb=0 or a failed load keeps the full procedural kit.
+const facadeKitNodes = look === "pbr" && tier.detail && params.get("kit") !== "0" && params.get("kitglb") !== "0" && params.get("depth") !== "0"
+  ? loadFacadeKit().catch((err) => { console.warn("facade kit GLB failed to load; the procedural kit stays", err); return null; })
+  : null;
 
 // A geodata level gets a day sky, a far fog, and a sun that follows the
 // skater. Its meshes are built once and shared with the physics.
@@ -193,7 +199,7 @@ if (params.get("dev") === "1" || params.get("debug") === "1") document.body.clas
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: params.get("kitglb") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitNodes, depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 

@@ -5,7 +5,7 @@ import { STYLES } from "../level/geo/styles.js";
 import { roadMarkings } from "../level/geo/markings.js";
 import { storefrontAprons } from "../level/geo/aprons.js";
 import { facadeKit, frontEdges } from "../level/geo/facade-kit.js";
-import { shopNamesMesh } from "./shop-names.js";
+import { boardNamesMeshes, shopNamesMesh } from "./shop-names.js";
 import { shopSigns } from "../level/geo/shop-signs.js";
 import { createShopSigns } from "./shop-signs-view.js";
 import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
@@ -18,7 +18,7 @@ import { TREE_UNIFORMS, createLeafDepthMaterial, patchLeafFragment, patchLeafVer
 import { bakeTreeImpostors } from "./tree-impostors.js";
 import { getDracoLoader } from "./skater-model.js";
 import { facadeKitPlacements } from "../level/geo/facade-kit-glb.js";
-import { createFacadeKitView, loadFacadeKit } from "./facade-kit-view.js";
+import { createFacadeKitView } from "./facade-kit-view.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import stoneInfo from "../../assets/landmarks/textures/trim/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
@@ -1000,9 +1000,11 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
 // `aprons: false` leaves out the concrete aprons of the shops (aprons.js).
 // `season` sets the tree colors: "spring", "summer" (the default), or "fall".
 // `look` picks the material set ("toon" or "pbr", src/render/look.js).
-// With `kitGlb` the pbr look loads the Blender facade kit (facade-kit-view.js)
-// into the depth tiles, and the procedural kit leaves out what it replaces.
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer", look = "toon", kitGlb = false } = {}) {
+// `kitGlb`: the loaded Blender facade kit nodes (facade-kit-view.js
+// loadFacadeKit()) or null. The pbr look puts them in the depth tiles, and the
+// procedural kit leaves out what they replace; without them (a failed load)
+// the full procedural kit stays.
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -1043,21 +1045,11 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const signList = kit ? shopSigns(level, fronts) : [];
   const glbKit = kit && depth && kitGlb && look === "pbr" ? facadeKitPlacements(level, fronts, { signs: signList }) : null;
   const kitParts = kit ? facadeKit(level, fronts, shopBoards, undefined, glbKit?.covers ?? null) : { tiles: [], depthTiles: [], counts: {} };
-  if (glbKit) shopBoards.push(...glbKit.boards);
-  // The GLB modules load after the level shows; facadeGlb.ready settles then.
-  const facadeGlb = { on: glbKit !== null, loaded: false, instances: glbKit?.instances ?? 0, tiles: glbKit?.tiles.size ?? 0, near: 0, lod1: 0, drawCalls: 0, triangles: 0, ready: Promise.resolve() };
-  let glbView = null;
-  if (glbKit) {
-    facadeGlb.ready = loadFacadeKit().then((nodes) => {
-      glbView = createFacadeKitView(nodes, glbKit.tiles, { depthDistance });
-      root.add(glbView.root);
-      facadeGlb.loaded = true;
-    }).catch((err) => {
-      // The procedural kit is still there: the game goes on without the GLB.
-      facadeGlb.error = String(err?.message ?? err);
-      console.warn("facade kit GLB failed to load", err);
-    });
-  }
+  // The shop names on the GLB sign boards go in the GLB depth tiles, so they hide with their boards.
+  const decals = glbKit ? boardNamesMeshes(new Map([...glbKit.tiles].map(([key, t]) => [key, t.boards])), look) : new Map();
+  const glbView = glbKit ? createFacadeKitView(kitGlb, glbKit.tiles, { depthDistance, decals }) : null;
+  if (glbView) root.add(glbView.root);
+  const facadeGlb = { on: glbView !== null, loaded: glbView !== null, instances: glbKit?.instances ?? 0, tiles: glbKit?.tiles.size ?? 0, near: 0, lod1: 0, drawCalls: 0, triangles: 0 };
   const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));
   for (const { material, tile, mesh } of meshes) {
     // A "claimed" mesh is the footprint of a landmark with claim: true —

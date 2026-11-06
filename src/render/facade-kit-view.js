@@ -24,7 +24,8 @@ function trianglesOf(geometry) {
 
 // `tiles`: facadeKitPlacements().tiles. update() returns nothing; `info` has
 // the tile, instance, draw call, and triangle counts of the last update.
-export function createFacadeKitView(nodes, tiles, { depthDistance = 120, lod1Distance = LOD1_DISTANCE } = {}) {
+// `decals`: Map(tile key -> mesh), the shop names on the tile's GLB sign boards.
+export function createFacadeKitView(nodes, tiles, { depthDistance = 120, lod1Distance = LOD1_DISTANCE, decals = new Map() } = {}) {
   const root = new THREE.Group();
   root.name = "facade-kit-glb";
   const m4 = new THREE.Matrix4();
@@ -66,6 +67,11 @@ export function createFacadeKitView(nodes, tiles, { depthDistance = 120, lod1Dis
         far.push([lod0, lod1]);
       }
       instances += list.length;
+    }
+    const names = decals.get(key);
+    if (names) {
+      names.userData.triangles = names.geometry.index.count / 3;
+      group.add(names);
     }
     root.add(group);
     view.push({ group, center: tile.center, near, far, lod1: false });

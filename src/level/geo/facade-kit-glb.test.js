@@ -29,6 +29,9 @@ describe("the GLB facade kit on the BeltLine level", () => {
     }
     const count = [...GLB.tiles.values()].reduce((s, t) => s + t.list.length, 0);
     expect(count).toBe(GLB.instances);
+    // Each tile carries the shop-name boards of its own GLB sign boards, so the names hide with the tile.
+    for (const t of GLB.tiles.values()) expect(t.boards.length).toBe(t.list.filter((it) => it.module === "trim_sign_board").length);
+    expect([...GLB.tiles.values()].some((t) => t.boards.length > 0)).toBe(true);
   });
 
   it("dresses no claimed landmark footprint", () => {

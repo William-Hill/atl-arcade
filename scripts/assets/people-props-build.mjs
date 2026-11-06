@@ -40,7 +40,7 @@ export const PROPS = {
   traffic_cone: { dir: "props/street", fit: "height", m: 0.7, long: "x", lod1: 120, tex: 512 },
   barricade: { dir: "props/street", fit: "length", m: 1.2, long: "x", lod1: 300 },
   e_scooter: { dir: "props/beltline", fit: "length", m: 1.15, long: "z", lod1: 600, spin: { clip: "roll", frames: 30, parts: [{ name: "wheel_rear", c: [-0.42, 0.14], r: 0.16, rin: 0.03, x: [0, 0.05], turns: 3 }, { name: "wheel_front", c: [0.43, 0.14], r: 0.16, rin: 0.03, x: [0, 0.05], turns: 3 }] } },
-  city_bike: { dir: "props/beltline", fit: "length", m: 1.8, long: "z", lod1: 800, spin: { clip: "ride", frames: 30, parts: [{ name: "wheel_rear", c: [-0.575, 0.33], r: 0.36, rin: 0.07, x: [0, 0.05], turns: 2 }, { name: "wheel_front", c: [0.575, 0.33], r: 0.36, rin: 0.07, x: [0, 0.05], turns: 2 }, { name: "crank", c: [0, 0.29], r: 0.2, rin: 0, x: [0.09, 0.2], turns: 1, top: true }] } },
+  city_bike: { dir: "props/beltline", fit: "length", m: 1.8, long: "z", lod1: 800, spin: { clip: "ride", frames: 30, parts: [{ name: "wheel_rear", c: [-0.575, 0.33], r: 0.36, rin: 0, x: [0, 0.05], turns: 2 }, { name: "wheel_front", c: [0.575, 0.33], r: 0.36, rin: 0, x: [0, 0.05], turns: 2 }, { name: "crank", c: [0, 0.29], r: 0.2, rin: 0, x: [0.09, 0.2], turns: 1, top: true }] } },
   bike_dock: { dir: "props/beltline", fit: "height", m: 1.1, long: "x", lod1: 400 },
   food_cart: { dir: "props/beltline", fit: "length", m: 2.2, long: "x", lod1: 800 },
   picnic_table: { dir: "props/beltline", fit: "length", m: 1.8, long: "x", lod1: 400 },

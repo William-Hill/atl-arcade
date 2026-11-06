@@ -71,12 +71,12 @@
       },
       "blender": "scripts/blender/people_props.py city_bike --fit length --m 1.8 --long z --lod1 800; then scripts/blender/prop_wheels.py (ride: wheel_rear, wheel_front, crank turning)",
       "result": {
-        "bytes": 409220,
+        "bytes": 409596,
         "triangles": {
-          "lod0": 2310,
+          "lod0": 2198,
           "lod1": 754,
-          "wheel_rear": 204,
-          "wheel_front": 196,
+          "wheel_rear": 259,
+          "wheel_front": 253,
           "crank": 66
         },
         "size_m": [

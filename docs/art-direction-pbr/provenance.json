@@ -1,0 +1,248 @@
+{
+  "note": "Frames for docs/art-direction-pbr.md (#159): six BeltLine places on the high tier, one night frame, and the trail on the phone and low tiers. Captures of the real renderer; no generated art.",
+  "frames": [
+    {
+      "file": "pcm.jpg",
+      "title": "Ponce City Market from the trail, 13:30",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-98%2C2.5%2C-812%2C-190%2C22%2C-858",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-pcm",
+        "convert": "ImageMagick convert -quality 85"
+      },
+      "renderer": {
+        "calls": 192,
+        "triangles": 389223,
+        "textures": 88,
+        "geometries": 74
+      },
+      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
+      "date": "2026-11-06",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "telephone-factory.jpg",
+      "title": "Trail bridge by the Telephone Factory Lofts, 13:30",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=240%2C2%2C-285%2C205%2C10%2C-360",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-telephone-factory",
+        "convert": "ImageMagick convert -quality 85"
+      },
+      "renderer": {
+        "calls": 333,
+        "triangles": 1227451,
+        "textures": 115,
+        "geometries": 147
+      },
+      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
+      "date": "2026-11-06",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "trail.jpg",
+      "title": "BeltLine trail by the spawn, 13:30",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-trail",
+        "convert": "ImageMagick convert -quality 85"
+      },
+      "renderer": {
+        "calls": 303,
+        "triangles": 847253,
+        "textures": 194,
+        "geometries": 139
+      },
+      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
+      "date": "2026-11-06",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "skater.jpg",
+      "title": "Skater close-up (Nia), 13:30",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=338.9%2C1.4%2C-2.9%2C337.07%2C0.95%2C-1.3",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-skater",
+        "convert": "ImageMagick convert -quality 85"
+      },
+      "renderer": {
+        "calls": 448,
+        "triangles": 1438220,
+        "textures": 322,
+        "geometries": 199
+      },
+      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
+      "date": "2026-11-06",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "mural-wall.jpg",
+      "title": "Mural wall, 13:30",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=88.25%2C2%2C435.82%2C105.4%2C6.59%2C447.56",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-mural-wall",
+        "convert": "ImageMagick convert -quality 85"
+      },
+      "renderer": {
+        "calls": 218,
+        "triangles": 1042574,
+        "textures": 90,
+        "geometries": 90
+      },
+      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
+      "date": "2026-11-06",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "krog.jpg",
+      "title": "Mural and storefronts by Krog Street Market, 13:30",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-150%2C2%2C780%2C-70%2C5%2C850",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-krog",
+        "convert": "ImageMagick convert -quality 85"
+      },
+      "renderer": {
+        "calls": 234,
+        "triangles": 513278,
+        "textures": 107,
+        "geometries": 83
+      },
+      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
+      "date": "2026-11-06",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "night-street.jpg",
+      "title": "Inman Park storefront row at night, 22:30",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=22.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-80%2C2.5%2C640%2C-120%2C5%2C615",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-night-street",
+        "convert": "ImageMagick convert -quality 85"
+      },
+      "renderer": {
+        "calls": 300,
+        "triangles": 976125,
+        "textures": 90,
+        "geometries": 119
+      },
+      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
+      "date": "2026-11-06",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "trail-phone.jpg",
+      "title": "BeltLine trail, phone tier, look=pbr, 13:30",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=phone&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-trail-phone",
+        "convert": "ImageMagick convert -quality 85"
+      },
+      "renderer": {
+        "calls": 88,
+        "triangles": 240589,
+        "textures": 123,
+        "geometries": 90
+      },
+      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
+      "date": "2026-11-06",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "trail-low.jpg",
+      "title": "BeltLine trail, low tier, look=pbr, 13:30",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=low&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-trail-low",
+        "convert": "ImageMagick convert -quality 85"
+      },
+      "renderer": {
+        "calls": 82,
+        "triangles": 168177,
+        "textures": 109,
+        "geometries": 84
+      },
+      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
+      "date": "2026-11-06",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "contact-sheet.jpg",
+      "title": "All nine frames, 640x360 each",
+      "tool": "ImageMagick montage",
+      "method": "tiling of the frames above",
+      "prompt": null,
+      "credits": 0,
+      "date": "2026-11-06"
+    }
+  ]
+}

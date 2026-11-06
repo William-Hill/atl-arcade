@@ -1393,5 +1393,9 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 
 ### Evidence
 - Vitest: `src/sim/peds.test.js` (14 tests: routes on the right surfaces, hubs, hub weighting, seeding, no overlap, recycle around a moving focus, fast travel, give way to Nia, pauses near hubs, phase). Full suite: 1 failure, the known base failure in `src/level/geo/styles.test.js`.
-- Download: main chunk 938,755 → 953,023 bytes (+14.3 kB), gzip 242,091 → 247,148 (+5.1 kB). No new asset files.
-- Draw calls and triangles (BEFORE/AFTER at the same cameras with `scripts/art/pbr-frames.mjs`, high tier, pbr look, `npcs=0&cars=0`): trail camera 226 → 232 calls, 856,293 → 966,677 triangles. On the high tier the GTAO pass (`src/render/post.js`) draws the scene a second time, so the 3 walker meshes count twice there. On the low tier the walkers add 3 calls and about 24,000 triangles (140 walkers).
+- Download: main chunk 938.8 → 953.4 kB (+14.6 kB), gzip 245.9 → 251.3 kB (+5.4 kB), on `epic/city-look` a3ba26e. No new asset files.
+- Draw calls and triangles, the same build with `?peds=0` (BEFORE) and without it (AFTER), the same cameras (`scripts/art/pbr-frames.mjs`, pbr look, `npcs=0&cars=0`):
+  - high tier: trail 352 → 358 calls, 889,749 → 1,000,133 triangles; street 212 → 218, 859,549 → 970,317; Ponce City Market 138 → 144, 391,219 → 500,883. The GTAO pass (`src/render/post.js`) draws the scene a second time there, so the 3 walker meshes count twice (320 walkers).
+  - low tier: trail 69 → 72 calls, 152,484 → 176,752 triangles (140 walkers).
+- Walkers grow in over the outer 15% of the pool (`createPedsView`), so the ones that come and go at its edge do not pop inside the fog-free distance on the high tier (fog starts at 260 m, the pool ends at 200 m).
+- Heights come from the level less its buildings, so a walker at a footprint edge stays on the sidewalk. The crowd, the NPC skaters and Nia block spawns and moves.

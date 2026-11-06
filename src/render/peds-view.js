@@ -232,19 +232,25 @@ export function createPedsView(state, { look = "toon" } = {}) {
       return meshes.reduce((sum, mesh) => sum + (mesh.geometry.attributes.position.count / 3) * mesh.count, 0);
     },
     sync(st) {
+      // Walkers grow in over the outer 15% of the pool, so the ones that
+      // come and go at its edge never pop on a clear horizon.
+      const [fx, fz] = st.focus;
+      const band = 0.15 * st.radius;
       for (const mesh of meshes) mesh.count = 0;
       drawn = 0;
       for (const w of st.peds) {
         if (!w.live) continue;
         const l = lookOf(w.look);
         const mesh = meshes[l.variant];
+        q.setFromAxisAngle(up, Math.atan2(-w.fz, w.fx));
+        p.set(w.x, w.y, w.z);
+        const grow = Math.min(1, (st.radius - Math.hypot(w.x - fx, w.z - fz)) / band);
+        if (grow <= 0) continue;
+        s.setScalar(l.scale * grow);
+        m.compose(p, q, s);
         const k = mesh.count;
         mesh.count += 1;
         drawn += 1;
-        q.setFromAxisAngle(up, Math.atan2(-w.fz, w.fx));
-        p.set(w.x, w.y, w.z);
-        s.set(l.scale, l.scale, l.scale);
-        m.compose(p, q, s);
         mesh.setMatrixAt(k, m);
         mesh.setColorAt(k, l.shirt);
         mesh.userData.skin.setXYZ(k, l.skin.r, l.skin.g, l.skin.b);

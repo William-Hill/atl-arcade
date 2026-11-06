@@ -39,7 +39,7 @@ const SHOTS = [
 ];
 const want = args.length ? SHOTS.filter(([n]) => args.includes(n)) : SHOTS;
 const BASE =
-  "level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&skater=capsule&npcs=0&cars=0";
+  "level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&skater=capsule&npcs=0&cars=0&peds=0";
 mkdirSync(out, { recursive: true });
 const server = await createServer({ server: { port: 5196, strictPort: true }, logLevel: "error" });
 await server.listen();

@@ -72,6 +72,14 @@ describe("build-block tags", () => {
     expect(classifyWay({ highway: "steps" })).toBeNull();
     expect(classifyWay({ highway: "primary", tunnel: "yes" })).toBeNull();
   });
+
+  it("marks the paving-stone footways as brick paths (#158)", () => {
+    const level = JSON.parse(readFileSync(join(ROOT, "levels/beltline-eastside/level.json"), "utf8"));
+    const brick = level.strips.filter((s) => s.surface === "brick");
+    expect(brick.map((s) => s.id)).toEqual(["w182470301", "w182470306", "w182527944", "w741961715"]);
+    for (const s of brick) expect(s.kind).toBe("path");
+    expect(level.strips.filter((s) => s.surface && s.surface !== "brick")).toEqual([]);
+  });
 });
 
 describe("build-block geometry", () => {

@@ -1441,4 +1441,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - On a slope the uphill skate can still go 1.5 to 4.2 cm into the surface: the toe moves after the tilt, and the plan samples the ground before it. A second sample pass would fix it for about twice the cost.
 - The body stays upright on a ramp. Only the legs and the skates follow the surface.
 - The lean pose uses one frame of each carve clip. #170 changes the clips, so look at the lean sheet again after it.
+- FPS gate not verified: `npm run playtest` gives a median of 6.7 FPS on this cloud machine (4 CPUs, SwiftShader) for this branch and for `epic/city-look` alike (gate 55). Run it again on the Mac.
+- `e2e/skater-anim.spec.js` (3 tests) and `e2e/skater-face.spec.js` (1 test) fail on this branch and on `epic/city-look` with the same errors (for example, the Marcus GLB has no `dance_smoothquad` clip). They are not part of this change.
 - No person played it. Real skaters did not review the lean or the blends.

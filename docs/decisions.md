@@ -1536,3 +1536,11 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - FPS gate not verified: `npm run playtest` gives a median of 6.7 FPS on this cloud machine (4 CPUs, SwiftShader) for this branch and for `epic/city-look` alike (gate 55). Run it again on the Mac.
 - `e2e/skater-anim.spec.js` (3 tests) and `e2e/skater-face.spec.js` (1 test) fail on this branch and on `epic/city-look` with the same errors (for example, the Marcus GLB has no `dance_smoothquad` clip). They are not part of this change.
 - No person played it. Real skaters did not review the lean or the blends.
+
+## 2026-11-06 — Fewer walkers (performance)
+
+- The owner reported too many NPCs and a slow game. The walker step (`stepPeds`) was the main cost: 320 walkers on the high tier took 7.0 ms per frame in Node, 140 took 1.6 ms, and 120 took 1.3 ms.
+- New counts in `PED_COUNT` (`src/sim/peds.js`): high 120 (was 320), low 70 (was 140), phone 50 (was 110).
+- `?peds=<n>` sets the count (0 to 400). `?peds=0` still turns the walkers off.
+- The trail crowd (40, 0.2 ms), the traffic (68 moving cars, 0.9 ms) and the NPC skaters (5, 1.3 ms) do not change.
+- Not verified: the FPS on a real phone, and the FPS in the browser at 60 Hz (the test browser window was not in view).

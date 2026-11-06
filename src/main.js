@@ -56,7 +56,7 @@ import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
-import { PED_COUNT, PED_RADIUS, createPeds, pedMinGap, stepPeds } from "./sim/peds.js";
+import { PED_RADIUS, createPeds, pedCount, pedMinGap, stepPeds } from "./sim/peds.js";
 import { createPedsView } from "./render/peds-view.js";
 import { carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSampler, streetsOnly } from "./sim/traffic/traffic.js";
 import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
@@ -288,12 +288,14 @@ const parked = carsOn
   : [];
 const makeTraffic = () => createTraffic(level, { seed: carSeed, heightAt: carHeight });
 // Walkers on the trail, the sidewalks and the street edges, more of them
-// near the shops and the landmarks (src/sim/peds.js). ?peds=0 leaves them out.
-const pedsOn = geo && params.get("peds") !== "0";
+// near the shops and the landmarks (src/sim/peds.js). ?peds=0 leaves them
+// out, and ?peds=<n> sets the count.
+const pedTotal = pedCount(quality, params.get("peds"));
+const pedsOn = geo && pedTotal > 0;
 // The walker heights come from the level less the buildings, so a walker
 // at a footprint edge stays on the sidewalk, not on the roof.
 const pedHeight = pedsOn ? streetHeightSampler(createGeoGroundSampler({ ...level, buildings: [] }), (x, z) => (levelTerrain && !levelTerrain.flat ? levelTerrain.height(x, z) : 0)) : null;
-const makePeds = () => createPeds(level, { seed: npcSeed, count: PED_COUNT[quality], radius: PED_RADIUS[quality], heightAt: pedHeight, props: env.props });
+const makePeds = () => createPeds(level, { seed: npcSeed, count: pedTotal, radius: PED_RADIUS[quality], heightAt: pedHeight, props: env.props });
 let peds = pedsOn ? makePeds() : null;
 const pedsView = peds ? createPedsView(peds, { look }) : null;
 if (pedsView) scene.add(pedsView.group);

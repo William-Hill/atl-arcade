@@ -50,8 +50,20 @@ export const PEDS = {
 };
 
 // The pool size and the pool radius (m) by quality tier. The fog hides the
-// pool edge (fogNear in src/render/quality.js).
-export const PED_COUNT = { low: 140, phone: 110, high: 320 };
+// pool edge (fogNear in src/render/quality.js). The step cost grows faster
+// than the count: 120 walkers take about 1.3 ms per frame, 320 take 7 ms.
+// `?peds=<n>` sets another count.
+export const PED_COUNT = { low: 70, phone: 50, high: 120 };
+
+// Pure: the walker count for a tier and the `peds` URL value. "0" turns the
+// walkers off (0). A positive whole number sets the count, up to 400.
+export function pedCount(quality, param) {
+  const tier = PED_COUNT[quality] ?? PED_COUNT.low;
+  if (param == null || param === "") return tier;
+  const n = Number(param);
+  if (!Number.isFinite(n)) return tier;
+  return Math.max(0, Math.min(400, Math.round(n)));
+}
 export const PED_RADIUS = { low: 150, phone: 140, high: 200 };
 
 // The density of each route kind (walkers per m of route, relative), and

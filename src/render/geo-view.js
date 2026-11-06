@@ -53,7 +53,8 @@ export const PROP_LOD0_DISTANCE = 60;
 export const TREE_FADE_BAND = 8;
 export const PROP_DRAW_DISTANCE = 200;
 // The distance from the camera to the nearest edge of a surface tile past
-// which the low tier shows the coarse terrain drape (m).
+// which the low tier shows the coarse terrain drape (m). The high tier sets
+// its own (src/render/quality.js).
 export const FAR_TERRAIN_DISTANCE = 60;
 // The facade depth tiles (sills and piers) show when the camera is under
 // this distance from the tile center (m). A depth tile is 50 m square, so
@@ -1044,7 +1045,7 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
 // The build options of the far surface tiles (the low tier).
 export const FAR_TERRAIN_BUILD = { terrainStep: 2, surfacesOnly: true };
 
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, farMeshes = null } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, farMeshes = null } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -1210,7 +1211,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       let nearestFar = Infinity;
       for (const t of terrainLods) {
         const d = boundsDistance(t.bounds, cameraPosition.x, cameraPosition.z);
-        const far = d > FAR_TERRAIN_DISTANCE;
+        const far = d > farTerrainDistance;
         t.near.visible = !far;
         t.far.visible = far;
         if (far) {

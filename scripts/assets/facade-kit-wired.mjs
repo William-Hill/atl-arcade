@@ -9,7 +9,8 @@ import { createServer } from "vite";
 import { chromium } from "@playwright/test";
 
 const [outDir = "reports/facade-kit-wired", ...views] = process.argv.slice(2);
-const shots = (views.length ? views : ["brick-loft:street", "storefront:corner", "stucco-apartment:street:1"]).map((v) => v.split(":"));
+// "-" skips the lab shots (only the spawn shots and the fallback checks).
+const shots = (views[0] === "-" ? [] : views.length ? views : ["brick-loft:street", "storefront:corner", "stucco-apartment:street:1"]).map((v) => v.split(":"));
 mkdirSync(outDir, { recursive: true });
 const BASE = "level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1";
 const server = await createServer({ server: { port: 5194, strictPort: true }, logLevel: "error" });

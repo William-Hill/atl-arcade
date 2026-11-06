@@ -26,6 +26,11 @@ function fakeWorker({ failWith = null, neverReady = false } = {}) {
       this.posted.push(msg);
       setTimeout(() => {
         if (failWith === "error-event") return w.onerror?.({ message: "boom", preventDefault() {} });
+        if (failWith === "message-error") return w.onmessageerror?.({});
+        if (failWith === "error-twice") {
+          w.onmessage?.({ data: { error: "first" } });
+          return w.onerror?.({ message: "second", preventDefault() {} });
+        }
         if (failWith) return w.onmessage?.({ data: { error: failWith } });
         const result = job === "props" ? levelProps(level) : buildGeoMeshes(level, options);
         w.onmessage?.({ data: structuredClone({ result }) });
@@ -128,6 +133,8 @@ describe("a mesh build in workers", () => {
       }, "no workers here"],
       [() => fakeWorker({ failWith: "bad level" }), "bad level"],
       [() => fakeWorker({ failWith: "error-event" }), "boom"],
+      [() => fakeWorker({ failWith: "message-error" }), "could not be read"],
+      [() => fakeWorker({ failWith: "error-twice" }), "first"],
     ];
     for (const [createWorker, why] of cases) {
       const onFallback = vi.fn();

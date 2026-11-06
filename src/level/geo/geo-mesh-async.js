@@ -61,7 +61,11 @@ function startJob(job, level, options, { claimLandmarks, createWorker, onFallbac
   let isReady;
   const ready = new Promise((r) => (isReady = r));
   const result = new Promise((resolve) => {
+    // The first result or failure ends the job; a later event does nothing.
+    let ended = false;
     const done = (fn) => {
+      if (ended) return;
+      ended = true;
       isReady();
       worker.terminate?.();
       resolve(fn());
@@ -74,6 +78,8 @@ function startJob(job, level, options, { claimLandmarks, createWorker, onFallbac
       e?.preventDefault?.();
       done(() => local(e?.message ?? e));
     };
+    // A result that cannot be read here: build here, so the level does not wait forever.
+    worker.onmessageerror = () => done(() => local("the worker result could not be read"));
     try {
       worker.postMessage({ job, level, options, claimLandmarks });
     } catch (err) {

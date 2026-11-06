@@ -1,6 +1,7 @@
-// The level list for the shell. `?level=<name>` picks one; the greybox is
-// the default. A geodata level loads on demand, so the greybox page does not
-// download it.
+// The level list for the shell. `?level=<name>` picks one. The BeltLine
+// Eastside is the default. The greybox is the debug level: open it with
+// `?level=greybox`. A geodata level loads on demand, so the greybox page does
+// not download it.
 
 import { GREYBOX } from "./greybox.js";
 
@@ -23,10 +24,12 @@ export function withCanopy(level, canopy) {
   return { ...level, canopy, attribution };
 }
 
+export const DEFAULT_LEVEL = "beltline-eastside";
+
 export const LEVEL_ALIASES = { beltline: "beltline-eastside" };
 
 export function resolveLevelName(name) {
-  const n = name ?? "greybox";
+  const n = name || DEFAULT_LEVEL;
   const resolved = LEVEL_ALIASES[n] ?? n;
   // Own keys only: "constructor" or "toString" is not a level.
   if (!Object.hasOwn(LEVELS, resolved)) throw new Error(`unknown level "${n}". Known: ${Object.keys(LEVELS).join(", ")}`);

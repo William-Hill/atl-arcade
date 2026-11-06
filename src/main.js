@@ -39,6 +39,7 @@ import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "
 import { createSky } from "./render/sky.js";
 import { LOOKS, createSkyEnvironment, lookFor, toneMappingOf } from "./render/look.js";
 import { labBuildings, labCamera } from "./level/geo/lab.js";
+import { loadFacadeKit } from "./render/facade-kit-view.js";
 import { createLitePost, createPost } from "./render/post.js";
 import { createWeatherView, weatherClock } from "./render/weather-view.js";
 import { createRain } from "./render/rain.js";
@@ -55,7 +56,7 @@ import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
-import { PED_COUNT, PED_RADIUS, createPeds, pedMinGap, stepPeds } from "./sim/peds.js";
+import { PED_RADIUS, createPeds, pedCount, pedMinGap, stepPeds } from "./sim/peds.js";
 import { createPedsView } from "./render/peds-view.js";
 import { carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSampler, streetsOnly } from "./sim/traffic/traffic.js";
 import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
@@ -87,7 +88,7 @@ const smallSkater = params.get("quality") === "phone" || (params.get("quality") 
 const skaterBytes = skaterName !== "capsule" ? fetchSkaterModel(skaterName, (n, total) => loader.progress("skater", n, total), { small: smallSkater }) : null;
 // A failed download is reported where the model loads, not here.
 skaterBytes?.catch(() => {});
-// ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
+// ?level=beltline-eastside (default, alias: beltline) or ?level=greybox (the debug level).
 const level = await loadLevel(params.get("level"));
 performance.mark("atl:level");
 loader.step("level");
@@ -126,6 +127,12 @@ const look = geo ? lookFor(params.get("look"), quality) : "toon";
 // before the meshes build. ?landmarkglb=0 keeps the generic buildings.
 const landmarkGlbs = look === "pbr" && params.get("landmarks") !== "0" && params.get("landmarkglb") !== "0";
 if (landmarkGlbs) claimLandmarkModels();
+// The pbr look's Blender facade kit (src/render/facade-kit-view.js) loads while
+// the meshes build. ?kitglb=0, a failed load or a slow one keeps the full procedural kit.
+// One BatchedMesh: one draw call with WEBGL_multi_draw (as the prop batch), one per instance without.
+const facadeKitNodes = look === "pbr" && tier.detail && renderer.extensions.has("WEBGL_multi_draw") && params.get("kit") !== "0" && params.get("kitglb") !== "0" && params.get("depth") !== "0"
+  ? loadFacadeKit().catch((err) => { console.warn("facade kit GLB failed to load; the procedural kit stays", err); return null; })
+  : null;
 
 // A geodata level gets a day sky, a far fog, and a sun that follows the
 // skater. Its meshes are built once and shared with the physics.
@@ -200,7 +207,10 @@ if (params.get("dev") === "1" || params.get("debug") === "1") document.body.clas
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
+// The level does not wait on a slow facade GLB: past ?kitwait=<ms> (3 s) after
+// the meshes are built, the full procedural kit goes in instead.
+const facadeKitReady = (nodes, ms = numParam("kitwait") ?? 3000) => nodes && Promise.race([nodes, new Promise((done) => setTimeout(() => { console.warn(`facade kit GLB not loaded in ${ms} ms; the procedural kit stays`); done(null); }, ms))]);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
@@ -283,12 +293,14 @@ const parked = carsOn
   : [];
 const makeTraffic = () => createTraffic(level, { seed: carSeed, heightAt: carHeight });
 // Walkers on the trail, the sidewalks and the street edges, more of them
-// near the shops and the landmarks (src/sim/peds.js). ?peds=0 leaves them out.
-const pedsOn = geo && params.get("peds") !== "0";
+// near the shops and the landmarks (src/sim/peds.js). ?peds=0 leaves them
+// out, and ?peds=<n> sets the count.
+const pedTotal = pedCount(quality, params.get("peds"));
+const pedsOn = geo && pedTotal > 0;
 // The walker heights come from the level less the buildings, so a walker
 // at a footprint edge stays on the sidewalk, not on the roof.
 const pedHeight = pedsOn ? streetHeightSampler(createGeoGroundSampler({ ...level, buildings: [] }), (x, z) => (levelTerrain && !levelTerrain.flat ? levelTerrain.height(x, z) : 0)) : null;
-const makePeds = () => createPeds(level, { seed: npcSeed, count: PED_COUNT[quality], radius: PED_RADIUS[quality], heightAt: pedHeight, props: env.props });
+const makePeds = () => createPeds(level, { seed: npcSeed, count: pedTotal, radius: PED_RADIUS[quality], heightAt: pedHeight, props: env.props });
 let peds = pedsOn ? makePeds() : null;
 const pedsView = peds ? createPedsView(peds, { look }) : null;
 if (pedsView) scene.add(pedsView.group);
@@ -339,7 +351,11 @@ if (factCardsView) scene.add(factCardsView.group);
 const factPopup = facts.cards.length ? createFactPopup(document.body) : null;
 const factCardSpots = () => facts.cards.map((c) => ({ id: c.id, position: c.position }));
 
-const skaterView = createSkaterView();
+// Foot IK (#107): the skates touch stairs and ramps. Off on the phone tier
+// and on a phone (the same check as the small skater model), to keep the
+// frame time; ?footik=1 turns it on and ?footik=0 turns it off.
+const footIkOn = params.get("footik") === "1" || (params.get("footik") !== "0" && quality !== "phone" && !smallSkater);
+const skaterView = createSkaterView({ footIk: footIkOn, sampleGround: (x, z, y) => env.sampleGround(x, z, y), lean: params.get("lean") !== "0" });
 scene.add(skaterView.group);
 // The isometric map bake shows the city only.
 if (params.get("view") === "iso") skaterView.group.visible = false;
@@ -930,6 +946,10 @@ window.__atl = {
     get facadeDepth() {
       return geo && levelView.facadeDepth ? { ...levelView.facadeDepth } : null;
     },
+    // The Blender facade kit of the pbr look (?kitglb=0 leaves it out).
+    get facadeGlb() {
+      return geo && levelView.facadeGlb ? { ...levelView.facadeGlb } : null;
+    },
     get landmarks() {
       return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null } : null;
     },
@@ -1217,6 +1237,13 @@ window.__atl = {
     },
     get weights() {
       return skaterView.weights;
+    },
+    // The carve lean (rad) and the foot IK state { on, weight, ms } (#107).
+    get lean() {
+      return skaterView.lean;
+    },
+    get footIk() {
+      return skaterView.footIk;
     },
     // The face decal state: { eyes, mouth }.
     get face() {

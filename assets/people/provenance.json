@@ -1,0 +1,430 @@
+{
+  "date": "2026-11-06",
+  "asset": "Pedestrians for the crowd (#133): six rigged everyday Atlantans, a dog and a stroller.",
+  "tool": "Meshy text-to-3D API (POST /openapi/v2/text-to-3d, preview then refine; props: meshy-t2.5, smart topology; people: meshy-7.1 standard, remeshed to 15k triangles, first made on meshy-t2.5 at 6k); people: Meshy rigging (POST /openapi/v1/rigging) and library animations (POST /openapi/v1/animations); then Blender 5.2.3 LTS headless: scripts/blender/people.py (people), scripts/blender/people_props.py (props), scripts/blender/dog_rig.py (dog rig and clips keyed in Blender). Draco GLB export.",
+  "pipeline": "node scripts/assets/meshy-people-props.mjs --cap 400 (needs MESHY_API_KEY; raw downloads and task records in .meshy-raw/people/, git-ignored); people remade with --only <the six> --out .meshy-raw/people-v2 --cap 400 --model meshy-7.1 --polycount 15000 --no-anim; then node scripts/assets/people-props-build.mjs",
+  "license": "Generated with the project owner's Meshy account; usage is governed by Meshy's terms of service for that account. Blender steps and keyed clips: original work for this project.",
+  "style": "Realistic mid-2010s Atlanta, positive everyday people, no branding (prompts forbid logos and text); the sculpture is an original abstract design, not a copy of any artwork.",
+  "verify": "scripts/assets/people-props-preview.html (in the game's pbr renderer) and node scripts/assets/people-props-shots.mjs",
+  "files": {
+    "walker_sundress.glb": {
+      "prompt": "A cheerful young Black woman with natural curly hair, yellow floral sundress, white sneakers, small canvas tote bag on her shoulder, full body standing in a T-pose, arms straight out to the sides, palms down, feet slightly apart, looking forward, realistic proportions, friendly relaxed expression, casual 2010s Atlanta streetwear, game character, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Warm brown skin, dark curly hair, bright yellow sundress with small white flowers, white canvas sneakers, beige canvas tote, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "standard",
+        "ai_model": "meshy-7.1",
+        "should_remesh": true,
+        "topology": "triangle",
+        "target_polycount": 15000,
+        "target_formats": [
+          "glb"
+        ],
+        "pose_mode": "t-pose",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1adc8-d83b-72e7-8420-ed4beba9f68e",
+        "refine_task_id": "01a1adc9-a656-74a2-b2cc-baab05708e98",
+        "seed": 127056268,
+        "rig_task_id": "01a1adca-21ca-70f2-a8d2-041c20b308d0",
+        "height_meters": 1.68,
+        "animation_task_id": "01a1ad48-14fd-75db-85f5-c73daabedf40",
+        "action_ids": {
+          "Idle_02": 11,
+          "Cheer_with_Both_Hands_Up": 298
+        },
+        "first_body": {
+          "ai_model": "meshy-t2.5",
+          "target_polycount": 6000,
+          "preview_task_id": "01a1ad46-9305-77d0-8a70-79d1b7db9c2a",
+          "refine_task_id": "01a1ad47-3adb-7505-9f84-4ee2b6991bd2",
+          "rig_task_id": "01a1ad47-e004-7524-90e1-78bff5c8c7f5",
+          "replaced": "too blocky up close (6k triangles)"
+        }
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 20,
+        "refine": 10,
+        "rig": 0,
+        "animation": 6,
+        "first_body_replaced": 20,
+        "total": 56
+      },
+      "blender": "scripts/blender/people.py walker_sundress (clips: walk and run from the rig, cheer = Cheer_with_Both_Hands_Up; shared, 0 credits: sit = Chair_Sit_Idle_M of elder_polo, idle = Idle of dog_walker)",
+      "result": {
+        "bytes": 773568,
+        "triangles": {
+          "lod0": 15624,
+          "lod1": 1200
+        },
+        "size_m": [
+          1.29,
+          1.68,
+          0.336
+        ]
+      }
+    },
+    "elder_polo.glb": {
+      "prompt": "A friendly older Black man in his sixties with a short gray beard, light blue polo shirt, khaki trousers, brown loafers, plain flat cap, full body standing in a T-pose, arms straight out to the sides, palms down, feet slightly apart, looking forward, realistic proportions, friendly relaxed expression, casual 2010s Atlanta streetwear, game character, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Deep brown skin, short gray beard, light blue cotton polo shirt, khaki chino trousers, brown leather loafers, plain gray flat cap, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "standard",
+        "ai_model": "meshy-7.1",
+        "should_remesh": true,
+        "topology": "triangle",
+        "target_polycount": 15000,
+        "target_formats": [
+          "glb"
+        ],
+        "pose_mode": "t-pose",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1add8-c7f6-75c1-8d36-3d08e5a9e5b3",
+        "refine_task_id": "01a1add9-9513-7542-9663-016b20acb02c",
+        "seed": 946927393,
+        "rig_task_id": "01a1adda-35e0-71f0-9765-43d9f7f638a7",
+        "height_meters": 1.75,
+        "animation_task_id": "01a1ad4b-dd8d-761b-ac99-69448c63c94c",
+        "action_ids": {
+          "Chair_Sit_Idle_M": 33,
+          "Cheer_with_One_Hand_Up": 306
+        },
+        "first_body": {
+          "ai_model": "meshy-t2.5",
+          "target_polycount": 6000,
+          "preview_task_id": "01a1ad4a-2960-7003-be90-5860626d163a",
+          "refine_task_id": "01a1ad4a-d64a-7695-afdf-3364380732be",
+          "rig_task_id": "01a1ad4b-7c0c-7006-bf12-39d28e1628e0",
+          "replaced": "too blocky up close (6k triangles)"
+        }
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 20,
+        "refine": 10,
+        "rig": 5,
+        "animation": 6,
+        "first_body_replaced": 20,
+        "total": 61
+      },
+      "blender": "scripts/blender/people.py elder_polo (clips: walk and run from the rig, sit = Chair_Sit_Idle_M; shared, 0 credits: idle = Idle of dog_walker, cheer = Cheer_with_Both_Hands_Up of walker_sundress)",
+      "result": {
+        "bytes": 910276,
+        "triangles": {
+          "lod0": 15570,
+          "lod1": 1200
+        },
+        "size_m": [
+          1.168,
+          1.75,
+          0.544
+        ]
+      }
+    },
+    "jogger.glb": {
+      "prompt": "An athletic Latina woman jogger with a high ponytail, coral running tank top, black running leggings, teal running shoes, plain sport watch, full body standing in a T-pose, arms straight out to the sides, palms down, feet slightly apart, looking forward, realistic proportions, friendly relaxed expression, casual 2010s Atlanta streetwear, game character, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Tan skin, dark brown ponytail, coral athletic tank top, black leggings, teal and white running shoes, black watch band, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "standard",
+        "ai_model": "meshy-7.1",
+        "should_remesh": true,
+        "topology": "triangle",
+        "target_polycount": 15000,
+        "target_formats": [
+          "glb"
+        ],
+        "pose_mode": "t-pose",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1adda-931b-7753-8949-0f251c4e153e",
+        "refine_task_id": "01a1addb-38d9-76d3-8fc9-f2895853cb4b",
+        "seed": 3183509567,
+        "rig_task_id": "01a1addb-b2cd-71cc-8b79-fb5d35e7272d",
+        "height_meters": 1.7,
+        "animation_task_id": "01a1ad4d-ff16-7449-8af8-291fba82a54b",
+        "action_ids": {
+          "Catching_Breath": 31,
+          "Victory_Cheer": 59
+        },
+        "first_body": {
+          "ai_model": "meshy-t2.5",
+          "target_polycount": 6000,
+          "preview_task_id": "01a1ad4c-7cc8-7071-9ba1-7ecc91ef136f",
+          "refine_task_id": "01a1ad4d-211a-76d0-9380-16a1852fc109",
+          "rig_task_id": "01a1ad4d-9ff2-74f5-8979-8fa119768d8f",
+          "replaced": "too blocky up close (6k triangles)"
+        }
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 20,
+        "refine": 10,
+        "rig": 5,
+        "animation": 6,
+        "first_body_replaced": 20,
+        "total": 61
+      },
+      "blender": "scripts/blender/people.py jogger (clips: walk and run from the rig, rest = Catching_Breath, cheer = Victory_Cheer; shared, 0 credits: idle = Idle of dog_walker, sit = Chair_Sit_Idle_M of elder_polo)",
+      "result": {
+        "bytes": 966168,
+        "triangles": {
+          "lod0": 15610,
+          "lod1": 1200
+        },
+        "size_m": [
+          1.536,
+          1.7,
+          0.284
+        ]
+      }
+    },
+    "dog_walker.glb": {
+      "prompt": "A smiling young East Asian woman with a short bob haircut, light denim jacket over a white t-shirt, olive green trousers, white sneakers, small crossbody bag, full body standing in a T-pose, arms straight out to the sides, palms down, feet slightly apart, looking forward, realistic proportions, friendly relaxed expression, casual 2010s Atlanta streetwear, game character, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Light skin, black bob hair, faded light blue denim jacket, plain white t-shirt, olive green trousers, white sneakers, tan crossbody bag, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "standard",
+        "ai_model": "meshy-7.1",
+        "should_remesh": true,
+        "topology": "triangle",
+        "target_polycount": 15000,
+        "target_formats": [
+          "glb"
+        ],
+        "pose_mode": "t-pose",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1addc-397e-70bd-9d1f-9440ef280bce",
+        "refine_task_id": "01a1addd-010b-7516-800a-e80e35a9b9f4",
+        "seed": 168314701,
+        "rig_task_id": "01a1addd-7a5f-70b2-b263-e5bf5f5552e8",
+        "height_meters": 1.65,
+        "animation_task_id": "01a1ad50-4592-72d4-9262-5a63fe21e83c",
+        "action_ids": {
+          "Idle": 0,
+          "Motivational_Cheer": 49
+        },
+        "first_body": {
+          "ai_model": "meshy-t2.5",
+          "target_polycount": 6000,
+          "preview_task_id": "01a1ad4e-9de4-737d-89a3-c791709edb24",
+          "refine_task_id": "01a1ad4f-41ef-74de-b061-b256cf226dc3",
+          "rig_task_id": "01a1ad4f-e71b-7257-a799-c11057dfbb6c",
+          "replaced": "too blocky up close (6k triangles)"
+        }
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 20,
+        "refine": 10,
+        "rig": 5,
+        "animation": 6,
+        "first_body_replaced": 20,
+        "total": 61
+      },
+      "blender": "scripts/blender/people.py dog_walker (clips: walk and run from the rig, idle = Idle, cheer = Motivational_Cheer; shared, 0 credits: sit = Chair_Sit_Idle_M of elder_polo)",
+      "result": {
+        "bytes": 983108,
+        "triangles": {
+          "lod0": 15547,
+          "lod1": 1200
+        },
+        "size_m": [
+          1.47,
+          1.65,
+          0.316
+        ]
+      }
+    },
+    "stroller_dad.glb": {
+      "prompt": "A relaxed young white father with a short brown beard, heather gray hoodie, dark jeans, brown boots, plain baseball cap, full body standing in a T-pose, arms straight out to the sides, palms down, feet slightly apart, looking forward, realistic proportions, friendly relaxed expression, casual 2010s Atlanta streetwear, game character, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Fair skin, short brown beard, heather gray cotton hoodie, dark blue jeans, brown leather boots, plain navy cap, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "standard",
+        "ai_model": "meshy-7.1",
+        "should_remesh": true,
+        "topology": "triangle",
+        "target_polycount": 15000,
+        "target_formats": [
+          "glb"
+        ],
+        "pose_mode": "t-pose",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1addd-d73d-74e9-a3a5-a7c0f4f7d67d",
+        "refine_task_id": "01a1adde-9f09-7010-aea3-0437937f7c61",
+        "seed": 1727242681,
+        "rig_task_id": "01a1addf-187f-7625-8448-9a4ca94d897f",
+        "height_meters": 1.82,
+        "animation_task_id": "01a1ad52-8aa9-7647-8bb0-dd4bf8bdab7c",
+        "action_ids": {
+          "Push_and_Walk_Forward": 261,
+          "Idle": 0
+        },
+        "first_body": {
+          "ai_model": "meshy-t2.5",
+          "target_polycount": 6000,
+          "preview_task_id": "01a1ad50-e5e7-7679-ae13-d44f0d56f456",
+          "refine_task_id": "01a1ad51-6164-776e-b492-bda148c380bb",
+          "rig_task_id": "01a1ad52-2ce7-75cc-bfeb-708b77500587",
+          "replaced": "too blocky up close (6k triangles)"
+        }
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 20,
+        "refine": 10,
+        "rig": 5,
+        "animation": 6,
+        "first_body_replaced": 20,
+        "total": 61
+      },
+      "blender": "scripts/blender/people.py stroller_dad (clips: walk and run from the rig, idle = Idle; shared, 0 credits: sit = Chair_Sit_Idle_M of elder_polo, cheer = Cheer_with_Both_Hands_Up of walker_sundress; push keyed in Blender (IK))",
+      "result": {
+        "bytes": 803464,
+        "triangles": {
+          "lod0": 15542,
+          "lod1": 1200
+        },
+        "size_m": [
+          1.622,
+          1.82,
+          0.362
+        ]
+      }
+    },
+    "cyclist.glb": {
+      "prompt": "A fit South Asian man cyclist with a plain matte green bike helmet, fitted orange cycling jersey, black knee-length cycling shorts, gray sneakers, fingerless gloves, full body standing in a T-pose, arms straight out to the sides, palms down, feet slightly apart, looking forward, realistic proportions, friendly relaxed expression, casual 2010s Atlanta streetwear, game character, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Medium brown skin, matte green helmet, solid orange cycling jersey, black cycling shorts, gray sneakers, black gloves, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "standard",
+        "ai_model": "meshy-7.1",
+        "should_remesh": true,
+        "topology": "triangle",
+        "target_polycount": 15000,
+        "target_formats": [
+          "glb"
+        ],
+        "pose_mode": "t-pose",
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1addf-9da9-77d9-9415-9c974573f20e",
+        "refine_task_id": "01a1ade0-4b1f-7034-9054-669b311cc7ad",
+        "seed": 2491075802,
+        "rig_task_id": "01a1ade0-ebfd-7638-934e-ece54d42a91e",
+        "height_meters": 1.75,
+        "animation_task_id": "01a1ad55-236d-732a-a948-60dff2c43f52",
+        "action_ids": {
+          "Chair_Sit_Idle_M": 33,
+          "Idle": 0
+        },
+        "first_body": {
+          "ai_model": "meshy-t2.5",
+          "target_polycount": 6000,
+          "preview_task_id": "01a1ad53-2aa3-7783-ba44-935de61388e1",
+          "refine_task_id": "01a1ad53-aaa4-735c-b86f-fa839528f264",
+          "rig_task_id": "01a1ad54-c60a-73b8-bb98-260890c88ff8",
+          "replaced": "too blocky up close (6k triangles)"
+        }
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 20,
+        "refine": 10,
+        "rig": 5,
+        "animation": 6,
+        "first_body_replaced": 20,
+        "total": 61
+      },
+      "blender": "scripts/blender/people.py cyclist (clips: walk and run from the rig, sit = Chair_Sit_Idle_M, idle = Idle; shared, 0 credits: cheer = Cheer_with_Both_Hands_Up of walker_sundress; ride keyed in Blender (IK))",
+      "result": {
+        "bytes": 759188,
+        "triangles": {
+          "lod0": 15667,
+          "lod1": 1200
+        },
+        "size_m": [
+          1.798,
+          1.75,
+          0.298
+        ]
+      }
+    },
+    "dog.glb": {
+      "prompt": "A friendly medium-sized mixed breed dog, tan and white short fur, floppy ears, standing on all four legs in a neutral pose, tail out, red nylon collar, realistic, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Short tan fur with a white chest and white paws, black nose, brown eyes, red nylon collar, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 3000,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad4a-295b-741d-be73-2fa8cf362c7c",
+        "refine_task_id": "01a1ad4a-7de0-7635-a4b5-afa9543de96a",
+        "seed": 1956685525
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py dog --fit length --m 0.9 --long z --lod1 700; then scripts/blender/dog_rig.py",
+      "result": {
+        "bytes": 411292,
+        "triangles": {
+          "lod0": 3168,
+          "lod1": 700
+        },
+        "size_m": [
+          0.308,
+          0.718,
+          0.9
+        ]
+      }
+    },
+    "stroller.glb": {
+      "prompt": "A modern baby stroller, empty seat with a folded-back canopy, black aluminum frame, four black wheels, push handle, small basket underneath, no logos, no badges, no text, no lettering, no branding",
+      "texture_prompt": "Teal fabric seat and canopy, black aluminum frame, black rubber wheels, black mesh basket, no logos, no badges, no text, no lettering, no branding",
+      "meshy": {
+        "model_type": "smart-topology",
+        "ai_model": "meshy-t2.5",
+        "topology": "triangle",
+        "target_polycount": 2500,
+        "target_formats": [
+          "glb"
+        ],
+        "enable_pbr": true,
+        "texture_resolution": "2k",
+        "preview_task_id": "01a1ad4b-22bd-745e-b9b8-b903ad451edf",
+        "refine_task_id": "01a1ad4b-83fc-7170-951a-84dad22dc1ca",
+        "seed": 2019555506
+      },
+      "generated": "2026-11-05",
+      "credits": {
+        "preview": 5,
+        "refine": 10,
+        "total": 15
+      },
+      "blender": "scripts/blender/people_props.py stroller --fit length --m 0.95 --long z --yaw 180 --lod1 600; then scripts/blender/prop_wheels.py (push: wheels_rear, wheels_front turning)",
+      "result": {
+        "bytes": 269092,
+        "triangles": {
+          "lod0": 1564,
+          "lod1": 589,
+          "wheels_rear": 469,
+          "wheels_front": 429
+        },
+        "size_m": [
+          0.598,
+          1.345,
+          0.95
+        ]
+      }
+    }
+  },
+  "credits_total": 391
+}

@@ -28,13 +28,16 @@ import { goalsFor } from "./level/goals.js";
 import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
 import { createResults } from "./ui/results.js";
 import { createLevelEnv } from "./level/ground.js";
-import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
+import { meshWorkerCount, startGeoMeshBuild, startLevelProps } from "./level/geo/geo-mesh-async.js";
 import { terrainOf } from "./level/geo/terrain.js";
-import { createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
+import { FAR_TERRAIN_BUILD, createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
 import { createLandmarkModels } from "./render/landmark-models.js";
 import { claimLandmarkModels } from "./level/geo/landmarks.js";
-import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
+import { QUALITY, isPhone, pixelRatioFor, qualityFor, readDevice, rendererName } from "./render/quality.js";
+import { setPostToggles } from "./render/post-toggles.js";
+import { choiceFrom, paramFor, readSettings, reloadHref, safeStorage, sourcesOf, writeSettings } from "./ui/settings.js";
+import { createSettingsMenu } from "./ui/settings-menu.js";
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
 import { createSky } from "./render/sky.js";
 import { LOOKS, createSkyEnvironment, lookFor, toneMappingOf } from "./render/look.js";
@@ -80,6 +83,14 @@ const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
 // reads __atl.perf). Off by default: NO_PERF does nothing.
 const perf = params.get("perf") === "1" ? createFrameCost(() => performance.now()) : NO_PERF;
+// The player settings (#94, src/ui/settings.js): a URL flag wins, then the
+// saved choice, then the device default.
+const settingsStorage = safeStorage();
+const savedSettings = readSettings(settingsStorage);
+const qualityParam = paramFor("quality", params, savedSettings);
+const deviceFacts = readDevice();
+// A number URL parameter, or undefined.
+const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
 // Start the slow downloads at once, in parallel with the level (#74): the
 // physics WASM and the skater GLB. A test that started the GLB after the
 // physics gave the same first frame (the WASM compile, not the link, is the
@@ -90,7 +101,7 @@ const loader = createLoader(document.getElementById("loader"), { skater: skaterN
 // A phone gets the skater with a 1024 px base color (#74). The tier is not
 // known yet (it needs the WebGL renderer), so this uses the same device test
 // as the phone tier. ?quality=phone forces it, and ?quality=high keeps 2048 px.
-const smallSkater = params.get("quality") === "phone" || (params.get("quality") !== "high" && isPhone({ touch: (navigator.maxTouchPoints ?? 0) > 0 || (window.matchMedia?.("(pointer: coarse)").matches ?? false), width: window.screen?.width ?? window.innerWidth, height: window.screen?.height ?? window.innerHeight }));
+const smallSkater = qualityParam === "phone" || (qualityParam !== "high" && isPhone(deviceFacts));
 const skaterBytes = skaterName !== "capsule" ? fetchSkaterModel(skaterName, (n, total) => loader.progress("skater", n, total), { small: smallSkater }) : null;
 // A failed download is reported where the model loads, not here.
 skaterBytes?.catch(() => {});
@@ -99,23 +110,18 @@ const level = await loadLevel(params.get("level"));
 performance.mark("atl:level");
 loader.step("level");
 const geo = isGeoLevel(level);
-const env = createLevelEnv(level, { props: params.get("props") !== "0" });
-const skaterEnv = createSkaterEnv(level, env.grindables);
 
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
 const scene = new THREE.Scene();
 // The render tier (src/render/quality.js): low for a software GPU, phone
-// for a touch device with a small screen, high for every other GPU.
-// ?quality=low|phone|high sets it.
+// for a phone or a 2-core CPU, high for every other GPU.
+// ?quality=low|phone|high or the settings menu sets it.
 const gpuName = rendererName(renderer);
-const device = {
-  touch: (navigator.maxTouchPoints ?? 0) > 0 || (window.matchMedia?.("(pointer: coarse)").matches ?? false),
-  width: window.screen?.width ?? window.innerWidth,
-  height: window.screen?.height ?? window.innerHeight,
-};
-const quality = geo ? qualityFor(params.get("quality"), gpuName, device) : "low";
-const tier = QUALITY[quality];
+const autoQuality = geo ? qualityFor(null, gpuName, deviceFacts) : "low";
+const quality = geo ? qualityFor(qualityParam, gpuName, deviceFacts) : "low";
+// The settings menu can turn the shadow map on or off for any tier.
+const tier = { ...QUALITY[quality], shadows: typeof savedSettings.shadows === "boolean" ? savedSettings.shadows : QUALITY[quality].shadows };
 renderer.setPixelRatio(pixelRatioFor(window.devicePixelRatio, tier.pixelRatio));
 // Count the draw calls of the whole frame (all post passes), not only the
 // last pass. The frame loop resets the counters.
@@ -127,7 +133,7 @@ const GEO_FAR = tier.far;
 const GEO_FOG_NEAR = tier.fogNear;
 // The city look (src/render/look.js): pbr on the high tier, toon on the
 // others. ?look=toon|pbr sets it.
-const look = geo ? lookFor(params.get("look"), quality) : "toon";
+const look = geo ? lookFor(paramFor("look", params, savedSettings), quality) : "toon";
 // The pbr look draws the Blender landmark GLBs (src/render/landmark-models.js)
 // in place of the buildings on their footprints, so the footprints are claimed
 // before the meshes build. ?landmarkglb=0 keeps the generic buildings.
@@ -140,10 +146,26 @@ const facadeKitNodes = look === "pbr" && tier.detail && renderer.extensions.has(
   ? loadFacadeKit().catch((err) => { console.warn("facade kit GLB failed to load; the procedural kit stays", err); return null; })
   : null;
 
+// The level builds in Web Workers (#98), while this thread makes the lights
+// and the sky, and the physics WASM compiles: the meshes (built once and
+// shared with the physics, split over up to 2 workers), the low tier's far
+// surface tiles, and the street prop placements, one more worker each. One
+// core stays for this thread. ?meshworker=0 builds them all here, as before;
+// ?meshshards=<n> sets the mesh worker count (for perf checks).
+const meshWorkers = params.get("meshworker") !== "0" ? undefined : null;
+const meshFallback = (why) => why && console.warn("level worker failed; building on the main thread", why);
+const farTerrain = geo && quality === "low" && params.get("farterrain") !== "0";
+const levelPropsOn = params.get("props") !== "0";
+const meshShards = numParam("meshshards") ?? meshWorkerCount(navigator.hardwareConcurrency - (farTerrain ? 1 : 0) - (geo && levelPropsOn ? 1 : 0));
+const meshBuild = geo ? startGeoMeshBuild(level, {}, { workers: meshShards, claimLandmarks: landmarkGlbs, createWorker: meshWorkers, onFallback: meshFallback }) : null;
+const farBuild = farTerrain ? startGeoMeshBuild(level, FAR_TERRAIN_BUILD, { claimLandmarks: landmarkGlbs, createWorker: meshWorkers, onFallback: meshFallback }) : null;
+const propsBuild = geo && levelPropsOn ? startLevelProps(level, { createWorker: meshWorkers, onFallback: meshFallback }) : null;
+// A worker boots only while this thread is free, so the next long step
+// waits until the workers have loaded (at most 2 s).
+await Promise.all([meshBuild?.ready, farBuild?.ready, propsBuild?.ready]);
+
 // A geodata level gets a day sky, a far fog, and a sun that follows the
-// skater. Its meshes are built once and shared with the physics.
-const geoMeshes = geo ? buildGeoMeshes(level) : null;
-performance.mark("atl:meshes");
+// skater.
 let geoLights = null;
 let sky = null;
 if (geo) {
@@ -212,11 +234,15 @@ if (attribution && level.attribution) {
 if (params.get("dev") === "1" || params.get("debug") === "1") document.body.classList.add("dev");
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
-const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
 // The level does not wait on a slow facade GLB: past ?kitwait=<ms> (3 s) after
 // the meshes are built, the full procedural kit goes in instead.
 const facadeKitReady = (nodes, ms = numParam("kitwait") ?? 3000) => nodes && Promise.race([nodes, new Promise((done) => setTimeout(() => { console.warn(`facade kit GLB not loaded in ${ms} ms; the procedural kit stays`); done(null); }, ms))]);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
+// The skate env: the ground sampler, the props, the grindables.
+const env = createLevelEnv(level, { props: levelPropsOn, placed: propsBuild && (await propsBuild.props) });
+const skaterEnv = createSkaterEnv(level, env.grindables);
+const geoMeshes = geo ? await meshBuild.meshes : null;
+performance.mark("atl:meshes");
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
@@ -301,7 +327,7 @@ const makeTraffic = () => createTraffic(level, { seed: carSeed, heightAt: carHei
 // Walkers on the trail, the sidewalks and the street edges, more of them
 // near the shops and the landmarks (src/sim/peds.js). ?peds=0 leaves them
 // out, and ?peds=<n> sets the count.
-const pedTotal = pedCount(quality, params.get("peds"));
+const pedTotal = pedCount(quality, paramFor("peds", params, savedSettings));
 const pedsOn = geo && pedTotal > 0;
 // The walker heights come from the level less the buildings, so a walker
 // at a footprint edge stays on the sidewalk, not on the roof.
@@ -518,6 +544,8 @@ let post = tier.post === "full" ? createPost(renderer, scene, camera, postOption
 // Photo mode's tilt-shift blur (src/render/tilt-shift.js): on the full
 // chain only, and off in play.
 let tiltShift = post && post.kind === "full" ? addTiltShift(post, camera, renderer) : null;
+// The ink and bloom switches of the settings menu.
+setPostToggles(post, savedSettings);
 // The pbr look's per-frame light (src/render/pbr-look.js): the grade by
 // time of day and district, the fog tint, the env map bake, the skater rim.
 // ?pbrgrade=0 keeps the fixed day values (for a before/after check).
@@ -593,12 +621,12 @@ function collectFactCard(id) {
 }
 // Music (#110): the beat clock plays a track from assets/music/tracks.json;
 // the results screen picks it and localStorage keeps the choice.
-const beat = new BeatClock(beatClockOptions(params, window.localStorage));
+const beat = new BeatClock(beatClockOptions(params, settingsStorage));
 beat.muted = params.get("mute") === "1";
 beat.preload();
 const musicChoices = beat.tracks.length ? trackChoices(beat.tracks) : [];
 const onTrack = (id) => {
-  writeChoice(window.localStorage, id);
+  writeChoice(settingsStorage, id);
   beat.setTrack(id).catch(() => {});
 };
 const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: () => resetSkater(), tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack }) : null;
@@ -757,13 +785,30 @@ const photo = createPhotoPanel({
   },
 });
 
+// The settings menu (#94, src/ui/settings-menu.js): O or the SETTINGS
+// button. The game stops while it is open. The ink and the bloom switch at
+// once; the tier, the look, the walkers and the shadows apply on a reload.
+const runningSettings = { quality, look, peds: pedTotal, shadows: tier.shadows, ink: savedSettings.ink, bloom: savedSettings.bloom };
+const settingsMenu = createSettingsMenu({
+  running: runningSettings,
+  choice: choiceFrom(params, savedSettings),
+  sources: sourcesOf(params, savedSettings),
+  autoQuality,
+  post: () => ({ kind: post ? post.kind : null, look }),
+  onSave: (s) => writeSettings(settingsStorage, s),
+  onLive: (s) => setPostToggles(post, s),
+  reload: (keys, carry) => window.location.assign(reloadHref(window.location.href, keys, carry)),
+  canOpen: () => !photo.isOpen && !fullmap?.isOpen,
+  onChange: () => input.reset(),
+});
+
 // The full map of the level (M key, or the minimap expand button). The game
 // stops while it is open. ?fullmap=0 leaves it out.
 fullmap =
   geo && params.get("fullmap") !== "0"
     ? createFullMap(document.body, level, {
         icons: minimap?.icons ?? mapLandmarks(level),
-        canOpen: () => !photo.isOpen,
+        canOpen: () => !photo.isOpen && !settingsMenu.isOpen,
         onChange: () => input.reset(),
         // The baked isometric map of the level (scripts/bake-iso-map.mjs).
         iso: params.get("isomap") === "0" ? null : isoTilesFor(level.name),
@@ -816,7 +861,7 @@ function frame(now) {
     return;
   }
   // Photo mode and the full map stop the game.
-  const paused = photo.isOpen || Boolean(fullmap?.isOpen);
+  const paused = photo.isOpen || Boolean(fullmap?.isOpen) || settingsMenu.isOpen;
   // Photo mode pauses the governor: the blur is slow and the game is stopped.
   if (governor && !paused) {
     governor = governorStep(governor, elapsed * 1000);
@@ -949,6 +994,23 @@ window.__atl = {
   // greybox level or with ?weather=0.
   get weather() {
     return weatherView ? weatherView.info() : null;
+  },
+  // The settings menu (#94): open, close, the menu choice, the keys that
+  // wait for a reload, and what this page runs.
+  settings: {
+    get isOpen() {
+      return settingsMenu.isOpen;
+    },
+    get choice() {
+      return settingsMenu.state;
+    },
+    get pending() {
+      return settingsMenu.pending;
+    },
+    running: runningSettings,
+    autoQuality,
+    open: () => settingsMenu.open(),
+    close: () => settingsMenu.close(),
   },
   // Photo mode (#90): open, close, toggle, set({ center, strength }), save().
   photo: {

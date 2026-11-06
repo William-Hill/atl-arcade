@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createRenderer, fitToWindow } from "../render/renderer.js";
-import { loadSkaterModel } from "../render/skater-model.js";
+import { fetchSkaterModel, loadSkaterModel } from "../render/skater-model.js";
 import { EYES, MOUTHS } from "../render/face-anim.js";
 
 // Test page for a skater model: skater.html?skater=nia&view=front.
@@ -142,7 +142,10 @@ const state = {
 window.__skater = state;
 
 try {
-  const model = await loadSkaterModel(params.get("skater") ?? "nia");
+  // ?small=1 shows the phone GLB (skater-1024.glb).
+  const name = params.get("skater") ?? "nia";
+  const small = params.get("small") === "1";
+  const model = await loadSkaterModel(name, small ? fetchSkaterModel(name, null, { small }) : null);
   scene.add(model.root);
   clips = model.animations;
   face = model.face;

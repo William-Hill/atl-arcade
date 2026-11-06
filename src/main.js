@@ -414,10 +414,14 @@ const skatersOn = params.get("skaters") === "1" || (geo && params.get("skaters")
 let npcSkaters = skatersOn ? createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] }) : null;
 // One download for each model: the NPCs of one model share the bytes.
 const npcByteCache = new Map();
+// A model that only the NPCs use downloads after the first frame (#187), so
+// it does not slow the player's skater and the level.
+let firstFrameDone;
+const firstFrame = new Promise((resolve) => (firstFrameDone = resolve));
 const npcBytes = (model) => {
   if (model === skaterName) return skaterBytes;
   if (!npcByteCache.has(model)) {
-    const bytes = fetchSkaterModel(model, null, { small: smallSkater });
+    const bytes = firstFrame.then(() => fetchSkaterModel(model, null, { small: smallSkater }));
     // A failed download is reported where the model loads, not here.
     bytes.catch(() => {});
     npcByteCache.set(model, bytes);
@@ -942,6 +946,7 @@ function frame(now) {
   if (frames === 1) {
     loader.hide();
     performance.mark("atl:first-frame");
+    firstFrameDone();
   }
   if (recorder.active && frames % recorder.every === 0) {
     recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });

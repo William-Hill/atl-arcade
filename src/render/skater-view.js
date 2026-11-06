@@ -283,6 +283,13 @@ export function createSkaterView({ lean: leanOn = true, footIk = false, sampleGr
       enter(anim.clip, 0);
       applyWeights();
     },
+    // Moves the group to the state position and heading only, with no clip,
+    // lean or IK update. A view out of the camera uses it (#189), so its
+    // body and its shadow do not stay at an old place.
+    place(state) {
+      group.position.set(state.position[0], state.position[1], state.position[2]);
+      group.rotation.y = state.yaw;
+    },
     // beat: optional { time, bpm } from the game beat clock. Without it the
     // view counts its own time at the default BPM.
     sync(state, dt = 1 / 60, beat = null) {

@@ -199,10 +199,32 @@ describe("the roofs and the street walls of the brick styles", () => {
   });
 
   it("keeps the street awnings of the BeltLine level as they were before streetWalls()", () => {
-    // 3,184 vertices: the count before the refactor to streetWalls().
+    // 3,184 vertices before the refactor to streetWalls(), now twice that:
+    // each side of an awning has its own vertices (no 0 normals).
     const isStreet = streetTest(LEVEL);
     let vertices = 0;
     for (const b of LEVEL.buildings) vertices += awningsFor(b, STYLES[STYLE_INDEX[chooseStyle(b)]], isStreet).positions.length / 3;
-    expect(vertices).toBe(3184);
+    expect(vertices).toBe(3184 * 2);
+  });
+});
+
+describe("awning normals", () => {
+  it("gives each side of an awning its own vertices, so no vertex normal is 0", async () => {
+    const THREE = await import("three");
+    const isStreet = streetTest(LEVEL);
+    let checked = 0;
+    for (const b of LEVEL.buildings) {
+      const m = awningsFor(b, STYLES[STYLE_INDEX[chooseStyle(b)]], isStreet);
+      if (!m.indices.length) continue;
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(m.positions, 3));
+      g.setIndex(m.indices);
+      g.computeVertexNormals();
+      const n = g.attributes.normal;
+      for (let i = 0; i < n.count; i += 1) expect(Math.hypot(n.getX(i), n.getY(i), n.getZ(i))).toBeGreaterThan(0.5);
+      checked += 1;
+      if (checked >= 20) break;
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });

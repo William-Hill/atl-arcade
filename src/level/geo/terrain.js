@@ -1109,23 +1109,41 @@ const ATTRS = [
   ["uvs", 2],
 ];
 
-// Clips a polygon (a list of vertices { p: [x, y, z], a: { attr: [] } }) to
-// the half-plane f(x, z) >= 0, where f is linear.
-function clip(poly, f) {
+// A draped vertex: { p: [x, y, z], a: [the attributes, in ATTRS order] }.
+// Clips a polygon of them to the half-plane f >= 0 of one cell side (`side`):
+// 0 u >= 0, 1 u <= 1, 2 v >= 0, 3 v <= 1, 4 u + v <= 1, 5 u + v >= 1, with
+// u = (x - cx) / cell and v = (z - cz) / cell. The math is the same as the
+// first version (closures for f, #98), in the same order, so the result is
+// the same to the bit.
+function sideValue(side, x, z, cx, cz, cell) {
+  if (side === 0) return (x - cx) / cell;
+  if (side === 1) return 1 - (x - cx) / cell;
+  if (side === 2) return (z - cz) / cell;
+  if (side === 3) return 1 - (z - cz) / cell;
+  if (side === 4) return 1 - (x - cx) / cell - (z - cz) / cell;
+  return (x - cx) / cell + (z - cz) / cell - 1;
+}
+
+function clip(poly, side, cx, cz, cell) {
   const out = [];
-  for (let i = 0; i < poly.length; i += 1) {
+  const n = poly.length;
+  if (n === 0) return out;
+  // The edges (0, 1), (1, 2), ..., (n - 1, 0); each f value is found once.
+  const f0 = sideValue(side, poly[0].p[0], poly[0].p[2], cx, cz, cell);
+  let fa = f0;
+  for (let i = 0; i < n; i += 1) {
     const A = poly[i];
-    const B = poly[(i + 1) % poly.length];
-    const fa = f(A.p[0], A.p[2]);
-    const fb = f(B.p[0], B.p[2]);
+    const B = poly[(i + 1) % n];
+    const fb = i + 1 < n ? sideValue(side, B.p[0], B.p[2], cx, cz, cell) : f0;
     if (fa >= 0) out.push(A);
     if ((fa >= 0) !== (fb >= 0)) {
       const k = fa / (fa - fb);
       const p = [A.p[0] + (B.p[0] - A.p[0]) * k, A.p[1] + (B.p[1] - A.p[1]) * k, A.p[2] + (B.p[2] - A.p[2]) * k];
-      const a = {};
-      for (const name in A.a) a[name] = A.a[name].map((v, n) => v + (B.a[name][n] - v) * k);
+      const a = new Array(A.a.length);
+      for (let m = 0; m < a.length; m += 1) a[m] = A.a[m] + (B.a[m] - A.a[m]) * k;
       out.push({ p, a });
     }
+    fa = fb;
   }
   return out;
 }
@@ -1140,6 +1158,10 @@ function area3(a, b, c) {
   return Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
 }
 
+// Two rounded key values are the same weld value. NaN equals NaN here, as
+// in the first version's text keys.
+const sameKey = (a, b) => a === b || (a !== a && b !== b);
+
 // Returns a new mesh: each triangle cut on the terrain triangles, and each
 // vertex moved up by the terrain height under it. The colors, the facade
 // attribute, and the uvs are kept (interpolated on the cut edges).
@@ -1148,36 +1170,72 @@ export function drapeMesh(mesh, terrain) {
   const { cell, x0, z0 } = terrain;
   const P = mesh.positions;
   const names = ATTRS.filter(([n]) => mesh[n]);
-  const out = { positions: [], indices: [] };
-  for (const [n] of names) out[n] = [];
+  const attrSize = names.reduce((acc, [, size]) => acc + size, 0);
+  const positions = [];
+  const attrs = [];
+  const indices = [];
+  // One source vertex object per index, shared by its triangles (nothing
+  // changes a vertex object after it is made).
+  const verts = new Array(P.length / 3);
   const vert = (k) => {
-    const a = {};
-    for (const [n, size] of names) a[n] = Array.from(mesh[n].slice(k * size, k * size + size));
-    return { p: [P[k * 3], P[k * 3 + 1], P[k * 3 + 2]], a };
+    let V = verts[k];
+    if (V) return V;
+    const a = new Array(attrSize);
+    let o = 0;
+    for (const [n, size] of names) {
+      const src = mesh[n];
+      for (let m = 0; m < size; m += 1) a[o++] = src[k * size + m];
+    }
+    V = { p: [P[k * 3], P[k * 3 + 1], P[k * 3 + 2]], a };
+    verts[k] = V;
+    return V;
   };
   // Shared vertices are welded (same position and attributes, to 0.1 mm),
   // so a draped mesh keeps about one vertex per corner. Only the faces of one
   // orientation weld (`facing`, from the flat triangle): the terrain gets
   // smooth normals, and a curb keeps a hard edge between its top and side.
-  const welded = new Map();
-  let facing = "";
+  // The weld key is the facing, the rounded position, and the rounded
+  // attributes, kept as numbers (`keys`, `stride` per vertex) and found by a
+  // hash chain. It welds the same vertices as a text key.
+  const stride = 6 + attrSize;
+  const keys = [];
+  const next = [];
+  const heads = new Map();
+  const key = new Array(stride);
+  let fx = 0;
+  let fy = 0;
+  let fz = 0;
   const vertexIndex = (V) => {
-    let key = `${facing}:${Math.round(V.p[0] * 1e4)},${Math.round(V.p[1] * 1e4)},${Math.round(V.p[2] * 1e4)}`;
-    for (const [n] of names) key += `|${V.a[n].map((v) => Math.round(v * 1e4)).join(",")}`;
-    let k = welded.get(key);
-    if (k === undefined) {
-      k = out.positions.length / 3;
-      welded.set(key, k);
-      out.positions.push(V.p[0], V.p[1], V.p[2]);
-      for (const [n] of names) out[n].push(...V.a[n]);
+    key[0] = fx;
+    key[1] = fy;
+    key[2] = fz;
+    key[3] = Math.round(V.p[0] * 1e4);
+    key[4] = Math.round(V.p[1] * 1e4);
+    key[5] = Math.round(V.p[2] * 1e4);
+    for (let m = 0; m < attrSize; m += 1) key[6 + m] = Math.round(V.a[m] * 1e4);
+    let h = 0;
+    for (let m = 0; m < stride; m += 1) h = (Math.imul(h, 31) + (key[m] | 0)) | 0;
+    const head = heads.get(h);
+    for (let k = head ?? -1; k >= 0; k = next[k]) {
+      let same = true;
+      for (let m = 0; m < stride && same; m += 1) same = sameKey(keys[k * stride + m], key[m]);
+      if (same) return k;
     }
+    const k = positions.length / 3;
+    for (let m = 0; m < stride; m += 1) keys.push(key[m]);
+    next.push(head ?? -1);
+    heads.set(h, k);
+    positions.push(V.p[0], V.p[1], V.p[2]);
+    for (let m = 0; m < attrSize; m += 1) attrs.push(V.a[m]);
     return k;
   };
   const I = mesh.indices;
   for (let t = 0; t < I.length; t += 3) {
     const tri = [vert(I[t]), vert(I[t + 1]), vert(I[t + 2])];
     {
-      const [a, b, c] = tri.map((v) => v.p);
+      const a = tri[0].p;
+      const b = tri[1].p;
+      const c = tri[2].p;
       const ux = b[0] - a[0];
       const uy = b[1] - a[1];
       const uz = b[2] - a[2];
@@ -1188,27 +1246,32 @@ export function drapeMesh(mesh, terrain) {
       const ny = uz * vx - ux * vz;
       const nz = ux * vy - uy * vx;
       const l = Math.hypot(nx, ny, nz) || 1;
-      facing = `${Math.round((nx / l) * 4)},${Math.round((ny / l) * 4)},${Math.round((nz / l) * 4)}`;
+      // + 0 turns -0 into 0, as the text key did.
+      fx = Math.round((nx / l) * 4) + 0;
+      fy = Math.round((ny / l) * 4) + 0;
+      fz = Math.round((nz / l) * 4) + 0;
     }
-    const xs = tri.map((v) => v.p[0]);
-    const zs = tri.map((v) => v.p[2]);
-    const i0 = Math.floor((Math.min(...xs) - x0) / cell);
-    const i1 = Math.floor((Math.max(...xs) - x0) / cell);
-    const j0 = Math.floor((Math.min(...zs) - z0) / cell);
-    const j1 = Math.floor((Math.max(...zs) - z0) / cell);
+    const ax = tri[0].p[0];
+    const bx = tri[1].p[0];
+    const cx3 = tri[2].p[0];
+    const az = tri[0].p[2];
+    const bz = tri[1].p[2];
+    const cz3 = tri[2].p[2];
+    const i0 = Math.floor((Math.min(ax, bx, cx3) - x0) / cell);
+    const i1 = Math.floor((Math.max(ax, bx, cx3) - x0) / cell);
+    const j0 = Math.floor((Math.min(az, bz, cz3) - z0) / cell);
+    const j1 = Math.floor((Math.max(az, bz, cz3) - z0) / cell);
     // A triangle with a position that is not finite has no cells. Without
     // this check an infinite range makes the cell loop run without end.
-    if (![i0, i1, j0, j1].every(Number.isFinite)) continue;
+    if (!(Number.isFinite(i0) && Number.isFinite(i1) && Number.isFinite(j0) && Number.isFinite(j1))) continue;
     for (let i = i0; i <= i1; i += 1) {
       for (let j = j0; j <= j1; j += 1) {
         const cx = x0 + i * cell;
         const cz = z0 + j * cell;
-        const u = (x) => (x - cx) / cell;
-        const v = (z) => (z - cz) / cell;
-        let cellPoly = clip(clip(clip(clip(tri, (x) => u(x)), (x) => 1 - u(x)), (x, z) => v(z)), (x, z) => 1 - v(z));
+        const cellPoly = clip(clip(clip(clip(tri, 0, cx, cz, cell), 1, cx, cz, cell), 2, cx, cz, cell), 3, cx, cz, cell);
         if (cellPoly.length < 3) continue;
-        for (const half of [(x, z) => 1 - u(x) - v(z), (x, z) => u(x) + v(z) - 1]) {
-          const poly = clip(cellPoly, half);
+        for (let side = 4; side <= 5; side += 1) {
+          const poly = clip(cellPoly, side, cx, cz, cell);
           if (poly.length < 3) continue;
           const moved = poly.map(({ p, a }) => ({ p: [p[0], p[1] + terrain.height(p[0], p[2]), p[2]], a }));
           for (let k = 1; k < moved.length - 1; k += 1) {
@@ -1216,15 +1279,21 @@ export function drapeMesh(mesh, terrain) {
             const B = moved[k];
             const C = moved[k + 1];
             if (area3(A.p, B.p, C.p) < 1e-6) continue;
-            for (const V of [A, B, C]) out.indices.push(vertexIndex(V));
+            indices.push(vertexIndex(A), vertexIndex(B), vertexIndex(C));
           }
         }
-        cellPoly = null;
       }
     }
   }
-  const res = { positions: Float32Array.from(out.positions), indices: Uint32Array.from(out.indices) };
-  for (const [n] of names) res[n] = Float32Array.from(out[n]);
+  const res = { positions: Float32Array.from(positions), indices: Uint32Array.from(indices) };
+  const count = positions.length / 3;
+  let o = 0;
+  for (const [n, size] of names) {
+    const arr = new Float32Array(count * size);
+    for (let k = 0; k < count; k += 1) for (let m = 0; m < size; m += 1) arr[k * size + m] = attrs[k * attrSize + o + m];
+    res[n] = arr;
+    o += size;
+  }
   return res;
 }
 

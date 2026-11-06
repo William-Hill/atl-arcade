@@ -10,9 +10,10 @@
 //   outlines, bloom, MSAA, tone mapping, cloud sky, and a longer draw
 //   distance.
 //
-// ?quality=low|phone|high sets it. With no parameter, a software renderer
-// gets low, a touch device with a small screen gets phone, and every other
-// renderer gets high.
+// ?quality=low|phone|high sets it, then the settings menu (src/ui/settings.js).
+// With neither, a software renderer gets low, a phone (a touch device with a
+// small screen, or a phone user agent) or a CPU with 2 cores or less gets
+// phone, and every other renderer gets high.
 
 const SOFTWARE = /swiftshader|llvmpipe|softpipe|software|basic render/i;
 
@@ -20,18 +21,45 @@ const SOFTWARE = /swiftshader|llvmpipe|softpipe|software|basic render/i;
 // small tablet).
 export const PHONE_MAX_SIDE = 900;
 
-// Pure: true for a touch device with a small screen.
-export function isPhone({ touch = false, width = 0, height = 0 } = {}) {
+// A phone user agent: "Mobile" is in the phone builds of Chrome, Safari and
+// Firefox, and not in the tablet builds.
+const MOBILE_UA = /Mobi|iPhone|iPod|Windows Phone/i;
+
+// Pure: true for a phone user agent.
+export function isMobileAgent(userAgent) {
+  return MOBILE_UA.test(String(userAgent ?? ""));
+}
+
+// Pure: true for a touch device with a small screen, or a phone user agent
+// (`mobile`).
+export function isPhone({ touch = false, width = 0, height = 0, mobile = false } = {}) {
+  if (mobile) return true;
   const side = Math.min(width, height);
   return Boolean(touch) && side > 0 && side <= PHONE_MAX_SIDE;
 }
 
+// A CPU with this many cores or less gets the phone tier.
+export const LOW_CORES = 2;
+
 // Pure: the tier for a URL value, a WebGL renderer name, and the device.
-// `device` is { touch, width, height } (the screen size in CSS px).
+// `device` is { touch, width, height, mobile, cores } (the screen size in CSS
+// px, a phone user agent, navigator.hardwareConcurrency).
 export function qualityFor(param, rendererName, device = {}) {
   if (param === "low" || param === "high" || param === "phone") return param;
   if (SOFTWARE.test(String(rendererName ?? ""))) return "low";
-  return isPhone(device) ? "phone" : "high";
+  if (isPhone(device)) return "phone";
+  return device.cores > 0 && device.cores <= LOW_CORES ? "phone" : "high";
+}
+
+// The device facts for qualityFor, from the browser.
+export function readDevice(nav = globalThis.navigator, win = globalThis.window) {
+  return {
+    touch: (nav?.maxTouchPoints ?? 0) > 0 || (win?.matchMedia?.("(pointer: coarse)").matches ?? false),
+    width: win?.screen?.width ?? win?.innerWidth ?? 0,
+    height: win?.screen?.height ?? win?.innerHeight ?? 0,
+    mobile: isMobileAgent(nav?.userAgent),
+    cores: nav?.hardwareConcurrency ?? 0,
+  };
 }
 
 // The unmasked WebGL renderer name, for example "ANGLE (Apple, Apple M3, ...)".

@@ -211,7 +211,9 @@ Wiring guidance (done as described in "In the game" below):
   group, so they hide with their boards.
 - `createGeoView(..., { kitGlb })`: `kitGlb` is the loaded nodes or null; on
   with `look === "pbr"`, `kit` and `depth`. A failed load passes null: the
-  procedural kit stays whole (nothing is turned off before the GLB is in).
+  procedural kit stays whole (nothing is turned off before the GLB is in). So
+  does a slow one: the level waits at most `?kitwait=<ms>` (3000) after the
+  meshes are built.
   On a mural wall, no window frame goes from `mural.floor0` up (the shader
   blanks that wall, as `wallDepth()` drops its sills). `?kitglb=0` leaves the GLB kit out (the procedural kit is whole
   again), `?kit=0` drops both, `?depth=0` drops both depth-tile kits.

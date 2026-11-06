@@ -1604,3 +1604,12 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - `?peds=<n>` sets the count (0 to 400). `?peds=0` still turns the walkers off.
 - The trail crowd (40, 0.2 ms), the traffic (68 moving cars, 0.9 ms) and the NPC skaters (5, 1.3 ms) do not change.
 - Not verified: the FPS on a real phone, and the FPS in the browser at 60 Hz (the test browser window was not in view).
+
+## 2026-11-06 — Performance baseline and budget (#185)
+
+- One command, `npm run perf` (`scripts/perf.mjs`), measures the BeltLine Eastside on each tier (low, phone, high) and each look (pbr, toon) in headless Chromium. It rides the same 15 s trail path in every run and writes `docs/perf/baseline.json` and the tables in `docs/perf/baseline.md`. It replaces `scripts/prop-perf.mjs` for the baseline; `prop-perf.mjs` stays for fixed-camera A/B checks, and `scripts/load-check.mjs` stays for the phone first load on Fast 4G.
+- `?perf=1` times each system per frame with `performance.now()` (`src/perf/frame-cost.js`, read as `__atl.perf.report()`). Off by default: the calls go to a no-op object. The sim systems report a cost per 1/60 s step, because a slow software frame runs up to 5 steps.
+- The governor is off in the runs (`?governor=0`), so a slow software frame does not step the tier down during the ride. All tiers use a 1280 x 720 viewport at pixel ratio 1.
+- The budget (`docs/perf/budget.json`, checked by `npm run perf:check`) caps only the numbers that do not depend on the GPU: draw calls, triangles, geometries, textures, heap, download. The caps are about 10% over the baseline. Frame times are not capped: headless Chromium uses SwiftShader, a software GPU, so they are relative only. The FPS targets on real devices (the phone tier at 60 FPS on a mid-range phone) are in `docs/perf/baseline.md`.
+- The script writes the JSON after each run: a run with the software GPU on the high tier takes about 3 minutes, and a stopped run keeps its rows. The ride stops after 150 s of wall time (`--max-wall`).
+- Not verified: any number on a real GPU or a phone.

@@ -1,0 +1,742 @@
+{
+  "date": "2026-11-06T17:24:20.904Z",
+  "level": "beltline-eastside",
+  "gpu": "swiftshader (software, CPU)",
+  "machine": {
+    "cpus": 4,
+    "model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "platform": "linux"
+  },
+  "viewport": "1280x720 @1",
+  "rideSeconds": 15,
+  "maxWallSeconds": 150,
+  "extra": "",
+  "runs": [
+    {
+      "quality": "low",
+      "look": "pbr",
+      "run": 1,
+      "load": 2.7,
+      "finished": false,
+      "wallSeconds": 150,
+      "frame": {
+        "frames": 64,
+        "meanMs": 2153,
+        "p95Ms": 3783.2,
+        "medianFps": 0.5
+      },
+      "calls": 138,
+      "triangles": 276691,
+      "geometries": 104,
+      "textures": 163,
+      "heapMB": 37.4,
+      "firstFrameMs": 9032,
+      "settledMs": 23539,
+      "requests": 246,
+      "downloadMB": {
+        "js": 0.78,
+        "glb": 20.85,
+        "textures": 1.35,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 24.16
+      },
+      "stepsPerFrame": 4.594,
+      "systems": {
+        "skater": {
+          "meanMs": 1.265,
+          "p95Ms": 5.5,
+          "perStepMs": 0.275
+        },
+        "walkers": {
+          "meanMs": 3.283,
+          "p95Ms": 8.5,
+          "perStepMs": 0.715
+        },
+        "walkersView": {
+          "meanMs": 0.084,
+          "p95Ms": 0.1
+        },
+        "crowd": {
+          "meanMs": 0.901,
+          "p95Ms": 3.1,
+          "perStepMs": 0.196
+        },
+        "crowdView": {
+          "meanMs": 0.036,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 3.536,
+          "p95Ms": 8.6,
+          "perStepMs": 0.77
+        },
+        "trafficView": {
+          "meanMs": 0.441,
+          "p95Ms": 1.4
+        },
+        "npcSkaters": {
+          "meanMs": 3.758,
+          "p95Ms": 10.4,
+          "perStepMs": 0.818
+        },
+        "npcSkatersView": {
+          "meanMs": 0.436,
+          "p95Ms": 1
+        },
+        "views": {
+          "meanMs": 2.475,
+          "p95Ms": 6
+        },
+        "render": {
+          "meanMs": 7.429,
+          "p95Ms": 10.9
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-C-UP1Af8.glb",
+          "kB": 7631
+        },
+        {
+          "file": "/assets/skater-BCMrG1JZ.glb",
+          "kB": 6159
+        },
+        {
+          "file": "/assets/vehicles_lod-CklJUZoL.glb",
+          "kB": 1735
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863
+        },
+        {
+          "file": "/assets/ponce-city-market-DqBRVczI.glb",
+          "kB": 700
+        },
+        {
+          "file": "/assets/telephone-factory-lofts-Bgmn9E1F.glb",
+          "kB": 487
+        },
+        {
+          "file": "/assets/studioplex-DWbhSNQo.glb",
+          "kB": 432
+        }
+      ],
+      "perfFrames": 69,
+      "pixelRatio": 1,
+      "post": null,
+      "errors": []
+    },
+    {
+      "quality": "low",
+      "look": "toon",
+      "run": 1,
+      "load": 4,
+      "finished": true,
+      "wallSeconds": 48.5,
+      "frame": {
+        "frames": 189,
+        "meanMs": 252,
+        "p95Ms": 483.3,
+        "medianFps": 4.3
+      },
+      "calls": 164,
+      "triangles": 251936,
+      "geometries": 143,
+      "textures": 211,
+      "heapMB": 67.5,
+      "firstFrameMs": 6662,
+      "settledMs": 14650,
+      "requests": 212,
+      "downloadMB": {
+        "js": 0.84,
+        "glb": 15.77,
+        "textures": 0.51,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 18.31
+      },
+      "stepsPerFrame": 4.649,
+      "systems": {
+        "skater": {
+          "meanMs": 0.432,
+          "p95Ms": 1.4,
+          "perStepMs": 0.093
+        },
+        "walkers": {
+          "meanMs": 2.536,
+          "p95Ms": 5.2,
+          "perStepMs": 0.545
+        },
+        "walkersView": {
+          "meanMs": 0.093,
+          "p95Ms": 0.2
+        },
+        "crowd": {
+          "meanMs": 0.608,
+          "p95Ms": 1.4,
+          "perStepMs": 0.131
+        },
+        "crowdView": {
+          "meanMs": 0.056,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 2.432,
+          "p95Ms": 4.9,
+          "perStepMs": 0.523
+        },
+        "trafficView": {
+          "meanMs": 0.209,
+          "p95Ms": 0.4
+        },
+        "npcSkaters": {
+          "meanMs": 1.862,
+          "p95Ms": 4.4,
+          "perStepMs": 0.4
+        },
+        "npcSkatersView": {
+          "meanMs": 0.36,
+          "p95Ms": 0.8
+        },
+        "views": {
+          "meanMs": 2.04,
+          "p95Ms": 4.6
+        },
+        "render": {
+          "meanMs": 14.458,
+          "p95Ms": 8.9
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-C-UP1Af8.glb",
+          "kB": 7631
+        },
+        {
+          "file": "/assets/skater-BCMrG1JZ.glb",
+          "kB": 6159
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/city_bike-fyZbZLlq.glb",
+          "kB": 400
+        },
+        {
+          "file": "/assets/food_cart-DVPWBUWf.glb",
+          "kB": 277
+        },
+        {
+          "file": "/assets/drinking_fountain-DRCuSKtW.glb",
+          "kB": 273
+        },
+        {
+          "file": "/assets/e_scooter-oY71MfIU.glb",
+          "kB": 268
+        },
+        {
+          "file": "/assets/sculpture_ribbon-mkx2_452.glb",
+          "kB": 267
+        }
+      ],
+      "perfFrames": 194,
+      "pixelRatio": 1,
+      "post": null,
+      "errors": []
+    },
+    {
+      "quality": "phone",
+      "look": "pbr",
+      "run": 1,
+      "load": 4.4,
+      "finished": false,
+      "wallSeconds": 150,
+      "frame": {
+        "frames": 73,
+        "meanMs": 1940.1,
+        "p95Ms": 4483.2,
+        "medianFps": 0.5
+      },
+      "calls": 144,
+      "triangles": 338699,
+      "geometries": 120,
+      "textures": 201,
+      "heapMB": 40.5,
+      "firstFrameMs": 7500,
+      "settledMs": 15489,
+      "requests": 274,
+      "downloadMB": {
+        "js": 0.78,
+        "glb": 22.55,
+        "textures": 1.35,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 25.86
+      },
+      "stepsPerFrame": 4.744,
+      "systems": {
+        "skater": {
+          "meanMs": 0.773,
+          "p95Ms": 2,
+          "perStepMs": 0.163
+        },
+        "walkers": {
+          "meanMs": 3.387,
+          "p95Ms": 8.4,
+          "perStepMs": 0.714
+        },
+        "walkersView": {
+          "meanMs": 1.018,
+          "p95Ms": 4.5
+        },
+        "crowd": {
+          "meanMs": 1.138,
+          "p95Ms": 5.9,
+          "perStepMs": 0.24
+        },
+        "crowdView": {
+          "meanMs": 0.059,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 3.718,
+          "p95Ms": 7.9,
+          "perStepMs": 0.784
+        },
+        "trafficView": {
+          "meanMs": 0.641,
+          "p95Ms": 2.7
+        },
+        "npcSkaters": {
+          "meanMs": 3.849,
+          "p95Ms": 12.4,
+          "perStepMs": 0.811
+        },
+        "npcSkatersView": {
+          "meanMs": 0.46,
+          "p95Ms": 1.6
+        },
+        "views": {
+          "meanMs": 2.286,
+          "p95Ms": 6.1
+        },
+        "render": {
+          "meanMs": 86.499,
+          "p95Ms": 28.3
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-1024-D70fARew.glb",
+          "kB": 5294
+        },
+        {
+          "file": "/assets/skater-1024-m-eML3vT.glb",
+          "kB": 5238
+        },
+        {
+          "file": "/assets/vehicles_lod-CklJUZoL.glb",
+          "kB": 1735
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/dog_walker-Bm6RdTSv.glb",
+          "kB": 960
+        },
+        {
+          "file": "/assets/jogger-DQr7_kDJ.glb",
+          "kB": 944
+        },
+        {
+          "file": "/assets/elder_polo-8aDq2Tyj.glb",
+          "kB": 889
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863
+        }
+      ],
+      "perfFrames": 78,
+      "pixelRatio": 1,
+      "post": "lite",
+      "errors": []
+    },
+    {
+      "quality": "phone",
+      "look": "toon",
+      "run": 1,
+      "load": 4.1,
+      "finished": true,
+      "wallSeconds": 31,
+      "frame": {
+        "frames": 192,
+        "meanMs": 158.9,
+        "p95Ms": 316.7,
+        "medianFps": 6.7
+      },
+      "calls": 165,
+      "triangles": 311874,
+      "geometries": 140,
+      "textures": 213,
+      "heapMB": 63.3,
+      "firstFrameMs": 5581,
+      "settledMs": 13220,
+      "requests": 212,
+      "downloadMB": {
+        "js": 0.84,
+        "glb": 12.59,
+        "textures": 0.51,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 15.13
+      },
+      "stepsPerFrame": 4.589,
+      "systems": {
+        "skater": {
+          "meanMs": 0.362,
+          "p95Ms": 1.1,
+          "perStepMs": 0.079
+        },
+        "walkers": {
+          "meanMs": 2.227,
+          "p95Ms": 6.1,
+          "perStepMs": 0.485
+        },
+        "walkersView": {
+          "meanMs": 0.086,
+          "p95Ms": 0.2
+        },
+        "crowd": {
+          "meanMs": 0.656,
+          "p95Ms": 1.3,
+          "perStepMs": 0.143
+        },
+        "crowdView": {
+          "meanMs": 0.049,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 2.679,
+          "p95Ms": 5.8,
+          "perStepMs": 0.584
+        },
+        "trafficView": {
+          "meanMs": 0.251,
+          "p95Ms": 0.3
+        },
+        "npcSkaters": {
+          "meanMs": 1.904,
+          "p95Ms": 5,
+          "perStepMs": 0.415
+        },
+        "npcSkatersView": {
+          "meanMs": 0.344,
+          "p95Ms": 0.7
+        },
+        "views": {
+          "meanMs": 1.898,
+          "p95Ms": 5
+        },
+        "render": {
+          "meanMs": 8.954,
+          "p95Ms": 9.8
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-1024-D70fARew.glb",
+          "kB": 5294
+        },
+        {
+          "file": "/assets/skater-1024-m-eML3vT.glb",
+          "kB": 5238
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/city_bike-fyZbZLlq.glb",
+          "kB": 400
+        },
+        {
+          "file": "/assets/food_cart-DVPWBUWf.glb",
+          "kB": 277
+        },
+        {
+          "file": "/assets/drinking_fountain-DRCuSKtW.glb",
+          "kB": 273
+        },
+        {
+          "file": "/assets/e_scooter-oY71MfIU.glb",
+          "kB": 268
+        },
+        {
+          "file": "/assets/sculpture_ribbon-mkx2_452.glb",
+          "kB": 267
+        }
+      ],
+      "perfFrames": 197,
+      "pixelRatio": 1,
+      "post": "lite",
+      "errors": []
+    },
+    {
+      "quality": "high",
+      "look": "pbr",
+      "run": 1,
+      "load": 4.4,
+      "finished": false,
+      "wallSeconds": 150.1,
+      "frame": {
+        "frames": 8,
+        "meanMs": 11193.3,
+        "p95Ms": 19382.5,
+        "medianFps": 0.1
+      },
+      "calls": 503,
+      "triangles": 1409195,
+      "geometries": 200,
+      "textures": 364,
+      "heapMB": 48.6,
+      "firstFrameMs": 12594,
+      "settledMs": 153344,
+      "requests": 318,
+      "downloadMB": {
+        "js": 0.78,
+        "glb": 30.27,
+        "textures": 4.45,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 36.68
+      },
+      "stepsPerFrame": 5,
+      "systems": {
+        "skater": {
+          "meanMs": 2.546,
+          "p95Ms": 2,
+          "perStepMs": 0.509
+        },
+        "walkers": {
+          "meanMs": 8.631,
+          "p95Ms": 14.1,
+          "perStepMs": 1.726
+        },
+        "walkersView": {
+          "meanMs": 1.262,
+          "p95Ms": 4.7
+        },
+        "crowd": {
+          "meanMs": 1.592,
+          "p95Ms": 1.5,
+          "perStepMs": 0.318
+        },
+        "crowdView": {
+          "meanMs": 0.062,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 5.723,
+          "p95Ms": 11.7,
+          "perStepMs": 1.145
+        },
+        "trafficView": {
+          "meanMs": 0.754,
+          "p95Ms": 0.8
+        },
+        "npcSkaters": {
+          "meanMs": 4.554,
+          "p95Ms": 7.2,
+          "perStepMs": 0.911
+        },
+        "npcSkatersView": {
+          "meanMs": 0.846,
+          "p95Ms": 0.7
+        },
+        "views": {
+          "meanMs": 2.538,
+          "p95Ms": 3.1
+        },
+        "render": {
+          "meanMs": 35.015,
+          "p95Ms": 45.1
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-C-UP1Af8.glb",
+          "kB": 7631
+        },
+        {
+          "file": "/assets/skater-BCMrG1JZ.glb",
+          "kB": 6159
+        },
+        {
+          "file": "/assets/vehicles_lod-CklJUZoL.glb",
+          "kB": 1735
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/dog_walker-Bm6RdTSv.glb",
+          "kB": 960
+        },
+        {
+          "file": "/assets/jogger-DQr7_kDJ.glb",
+          "kB": 944
+        },
+        {
+          "file": "/assets/elder_polo-8aDq2Tyj.glb",
+          "kB": 889
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863
+        }
+      ],
+      "perfFrames": 13,
+      "pixelRatio": 1,
+      "post": "full",
+      "errors": []
+    },
+    {
+      "quality": "high",
+      "look": "toon",
+      "run": 1,
+      "load": 3.6,
+      "finished": false,
+      "wallSeconds": 150.1,
+      "frame": {
+        "frames": 41,
+        "meanMs": 3129.5,
+        "p95Ms": 6399.7,
+        "medianFps": 0.3
+      },
+      "calls": 786,
+      "triangles": 1405103,
+      "geometries": 161,
+      "textures": 255,
+      "heapMB": 46.3,
+      "firstFrameMs": 8293,
+      "settledMs": 50859,
+      "requests": 216,
+      "downloadMB": {
+        "js": 0.84,
+        "glb": 15.77,
+        "textures": 1.8,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 19.61
+      },
+      "stepsPerFrame": 4.696,
+      "systems": {
+        "skater": {
+          "meanMs": 1.454,
+          "p95Ms": 4.1,
+          "perStepMs": 0.31
+        },
+        "walkers": {
+          "meanMs": 6.954,
+          "p95Ms": 16.6,
+          "perStepMs": 1.481
+        },
+        "walkersView": {
+          "meanMs": 0.146,
+          "p95Ms": 0.2
+        },
+        "crowd": {
+          "meanMs": 0.793,
+          "p95Ms": 1.3,
+          "perStepMs": 0.169
+        },
+        "crowdView": {
+          "meanMs": 0.065,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 3.874,
+          "p95Ms": 8.5,
+          "perStepMs": 0.825
+        },
+        "trafficView": {
+          "meanMs": 0.446,
+          "p95Ms": 0.7
+        },
+        "npcSkaters": {
+          "meanMs": 3.867,
+          "p95Ms": 7.7,
+          "perStepMs": 0.824
+        },
+        "npcSkatersView": {
+          "meanMs": 0.859,
+          "p95Ms": 2.7
+        },
+        "views": {
+          "meanMs": 2.454,
+          "p95Ms": 5.5
+        },
+        "render": {
+          "meanMs": 17.752,
+          "p95Ms": 26.4
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-C-UP1Af8.glb",
+          "kB": 7631
+        },
+        {
+          "file": "/assets/skater-BCMrG1JZ.glb",
+          "kB": 6159
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/color-D3UcKDw3.jpg",
+          "kB": 422
+        },
+        {
+          "file": "/assets/city_bike-fyZbZLlq.glb",
+          "kB": 400
+        },
+        {
+          "file": "/assets/color-Cdbt2_I1.jpg",
+          "kB": 392
+        },
+        {
+          "file": "/assets/color-BdcKY0pu.jpg",
+          "kB": 280
+        },
+        {
+          "file": "/assets/food_cart-DVPWBUWf.glb",
+          "kB": 277
+        }
+      ],
+      "perfFrames": 46,
+      "pixelRatio": 1,
+      "post": "full",
+      "errors": []
+    }
+  ]
+}

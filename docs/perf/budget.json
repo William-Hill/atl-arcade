@@ -1,0 +1,11 @@
+{
+  "note": "Caps checked by `npm run perf:check` (scripts/perf.mjs --budget). Only the numbers that do not depend on the machine are caps: draw calls, triangles, textures, geometries, heap, download. They sit about 10% over the 2026-11-06 baseline, so a PR that adds cost fails and must raise the cap on purpose, with a line in docs/decisions.md. Frame times are not capped here: headless Chromium uses SwiftShader (a software GPU), so they are relative only. See docs/perf/baseline.md for the targets on real devices.",
+  "tiers": {
+    "low": { "calls": 185, "triangles": 310000, "geometries": 160, "textures": 235, "heapMB": 100, "downloadMB": 20.5, "jsMB": 1.0 },
+    "low/pbr": { "downloadMB": 26.5, "textures": 270 },
+    "phone": { "calls": 185, "triangles": 375000, "geometries": 155, "textures": 235, "heapMB": 100, "downloadMB": 16.7, "jsMB": 1.0 },
+    "phone/pbr": { "downloadMB": 28.5 },
+    "high": { "calls": 870, "triangles": 1550000, "geometries": 220, "textures": 400, "heapMB": 100, "downloadMB": 21.6, "jsMB": 1.0 },
+    "high/pbr": { "calls": 555, "downloadMB": 40.4 }
+  }
+}

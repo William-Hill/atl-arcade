@@ -1380,6 +1380,15 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Style frames (#114) use free methods only: in-game captures with URL params (time, weather) and a page-side runtime tune (`tuneLook`, grade and bloom uniforms, applied from the page, no game source change), plus scripted ImageMagick paintovers (`scripts/art/paintover.sh`) of the captures. No image model was used (0 credits): the paintovers already show the two biggest gaps (the pale hazy lawn and the compressed tonal range), and a generated frame would show a city the renderer cannot match. An image-model batch stays an option for the owner, with the cost shown first.
 - Frames ship as JPGs with one `<frame>.provenance.json` each and a folder `provenance.json` listing them in `docs/style-frames/<subject>/`, with a grouped contact sheet; the owner chooses the frames to keep, and the chosen ones go into the doc.
 
+## 2026-11-06: epic/city-look — art direction for the pbr look, second check (#159)
+
+(Placed next to the first #159 entry, not at the end of the file, so it does not conflict with open PRs.)
+
+- `docs/art-direction-pbr.md` is rewritten after PR #182: target references in words, the palette with hex values, material rules per surface (brick, concrete, asphalt, trail, glass, metal, foliage), light and time of day, fog and grade, skaters and NPCs, mural rules, and a table of what the low, phone and high tiers keep under `?look=pbr`.
+- The phone tier keeps the standard materials, the palette albedos, small ground scans, the sky light, a cheap grade, the skater rim and the bold far windows. It drops shadow maps, GTAO, bloom, height fog, wall scans, the facade kit, leaf cards and the toon ink. The phone and low tiers still default to toon (#191: pbr costs 8 to 12 times the toon frame per pixel on the software GPU).
+- Check: nine headless frames at commit de429e3 (six BeltLine places on high, one night, the trail on phone and low), in `docs/art-direction-pbr/` with `provenance.json`; cameras in `scripts/art/shots-159.json`. Brick, glass, asphalt, trail, the day light, the skater and the murals meet the target. The gaps are issues #195 to #203: phone ink and grade, night lamp pools, flat lime lawn, flat mural walls, bridge concrete, lines over Ponce City Market, flat sky (tonal gate), leaf-card speckle, and Nia's green pants on the lawn.
+- No `src/` change in this entry; it is docs and screenshots only.
+
 ## 2026-11-05: epic/city-look — style frames, round two: one clear direction per option (#114)
 
 - The owner found the first round of options too close to tell apart: in-game time-of-day and grade changes barely move the pbr look (a #160 finding in its own right), and the first paintovers were mild.

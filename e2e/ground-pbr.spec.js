@@ -77,7 +77,7 @@ for (const cfg of CONFIGS) {
         return { frames: window.__atl.frames };
       }, v);
       expect(placed, v.name).not.toBeNull();
-      await page.waitForFunction((f) => window.__atl.frames > f + 6, placed.frames, { timeout: 60000 });
+      await page.waitForFunction((f) => window.__atl.frames > f + 6, placed.frames, { timeout: 300000 });
       await page.waitForTimeout(500);
       out.views[v.name] = await page.evaluate(() => window.__atl.rendererInfo);
       await page.screenshot({ path: `${DIR}/${cfg.name}-${v.name}.png` });

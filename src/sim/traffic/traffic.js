@@ -31,6 +31,7 @@
 // blocks one.
 
 import { chainStrips, projectOnLine } from "../../playtest/trail-script.js";
+import { farStride, stepsOnTick, viewerDistance } from "../far-step.js";
 import { createPath, pathOffsetPoint, pathTangent } from "../npc/path.js";
 import { streetIntersections } from "../../level/geo/signs.js";
 import { hash32, seededRandom } from "../../level/geo/styles.js";
@@ -85,6 +86,14 @@ export const TRAFFIC = {
   // The largest height change of a car in one step on the same lane (m).
   // A step in the street (a bridge joint) becomes a short ramp.
   maxClimb: 0.06,
+  // Far-step (#189): a car this far (m) from the skater and the camera
+  // steps every `stride` ticks (src/sim/far-step.js). The first band is past
+  // lookAhead and the turn signal reach, so a car near the skater steps on
+  // every tick.
+  far: [
+    [80, 2],
+    [200, 4],
+  ],
 };
 
 // Car sizes (m): length along +x, width along z, height. The car kit
@@ -610,7 +619,7 @@ function skaterGap(car, skater) {
 // Moves a car to arc length s on a lane (the pose and the height). After a
 // wrap past the lane end (to the next lane, or to the start of the same
 // lane) the height starts again from the lane.
-function place(state, car, laneId, s, wrapped = false) {
+function place(state, car, laneId, s, wrapped = false, stride = 1) {
   const lane = state.lanes[laneId];
   const pose = lanePose(lane, s);
   const same = !wrapped;
@@ -622,7 +631,10 @@ function place(state, car, laneId, s, wrapped = false) {
   car.yaw = pose.yaw;
   car.y = same
     ? car.y +
-      Math.max(-TRAFFIC.maxClimb, Math.min(TRAFFIC.maxClimb, target - car.y))
+      Math.max(
+        -TRAFFIC.maxClimb * stride,
+        Math.min(TRAFFIC.maxClimb * stride, target - car.y),
+      )
     : target;
 }
 
@@ -676,166 +688,184 @@ function poseAfter(state, car, ds) {
 }
 
 // Steps the traffic by dt. `skater` is the skater position [x, y, z] (or
-// null). Mutates and returns the state.
-export function stepTraffic(state, dt, skater = null) {
+// null), and `focus` the camera [x, z] (or null). With a focus, a car far
+// from the camera and the skater steps less often (TRAFFIC.far). Mutates
+// and returns the state.
+export function stepTraffic(state, dt, skater = null, { focus = null } = {}) {
   const T = TRAFFIC;
   let minGap = Infinity;
+  // The far-step needs the camera: without `focus` (the tests) every car
+  // steps on every tick.
+  const viewers = focus ? [focus] : [];
+  if (focus && skater) viewers.push([skater[0], skater[2]]);
   for (const car of state.cars) {
-    const lane = state.lanes[car.lane];
-    const size = CAR_SIZE[car.kind];
-    const half = size.length / 2;
-    const front = car.s + half;
-    const v = car.speed;
-    const v0 = lane.speed;
-    // hold: the car is at a stop point and stays at rest.
-    let hold = false;
-    // A fixed stop point `dist` m ahead of the front.
-    const stopAt = (dist) => {
-      if (dist < 0.6 && v < 0.2) hold = true;
-      else acc = Math.min(acc, idmStopAccel(v, v0, dist));
-    };
-
-    // The car ahead (the IDM leader).
-    const lead = leader(state, car);
-    let acc = idmAccel(v, v0, lead.gap, v - lead.speed);
-    if (lead.speed < 0.1 && lead.gap - T.gap < 0.6 && v < 0.2) hold = true;
-
-    // The stop line, and the intersection.
-    const st = lane.stops[car.next];
-    if (st) {
-      const dist = st.sStop - front;
-      if (dist < 0.6 && v < 0.2) {
-        // The wait counts from the full stop.
-        if (v === 0) car.wait += dt;
-        const free =
-          state.occupant[st.box] === -1 || state.occupant[st.box] === car.id;
-        // Room past the intersection, so a queue never blocks it.
-        const room = lead.gap >= st.sExit - st.sStop + size.length + T.gap;
-        // No skater on a crosswalk on the far side.
-        const clear = !skaterCrossing(lane, front, st.sExit + 4, skater, car.y);
-        if (car.wait >= T.stopWait && free && room && clear) {
-          state.occupant[st.box] = car.id;
-          car.box = st.box;
-          car.boxExit = st.sExit;
-          car.next += 1;
-          car.wait = 0;
-        } else hold = true;
-      } else stopAt(dist);
+    const stride = viewers.length
+      ? farStride(viewerDistance(car.x, car.z, viewers), T.far)
+      : 1;
+    if (!stepsOnTick(state.tick, car.id, stride)) {
+      minGap = Math.min(minGap, skaterGap(car, skater));
+      continue;
     }
-
-    // Slow to turnSpeed for the U-turn at the end of a two-way street.
-    if (!lane.oneway) {
-      const toEnd = lane.length - car.s;
-      const need =
-        (v * v - T.turnSpeed * T.turnSpeed) / (2 * Math.max(1, toEnd));
-      if (need > 0.2) acc = Math.min(acc, -Math.min(T.hardBrake, need));
-    }
-
-    // The skater on a crosswalk ahead: stop before it and wait.
-    const cw = skaterCrossing(lane, front, front + T.lookAhead, skater, car.y);
-    // The skater in the lane ahead: slow, stop, wait, then go on.
-    const ahead = skaterAhead(car, skater);
-    if (cw || ahead < Infinity) {
-      if (cw) stopAt(Math.max(0, cw.s - cw.depth / 2 - T.crossingStop - front));
-      if (ahead < Infinity) stopAt(ahead - T.safeRadius - T.yieldMargin);
-      if (!car.yielding) {
-        state.yields += 1;
-        if (cw) state.crossingYields += 1;
-      }
-      car.yielding = true;
-      car.crossing = Boolean(cw) || (car.crossing && car.yielding);
-      car.yieldTime = T.yieldWait;
-    } else if (car.yieldTime > 0) {
-      car.yieldTime = Math.max(0, car.yieldTime - dt);
-      if (v < 0.5) hold = true;
-      if (car.yieldTime === 0) car.yielding = false;
-    } else car.yielding = false;
-    if (!car.yielding) car.crossing = false;
-
-    if (hold) acc = -T.hardBrake;
-    car.speed = Math.max(0, Math.min(v0, v + acc * dt));
-    if (hold && car.speed < 0.3) car.speed = 0;
-    // Never into the car ahead.
-    let ds = Math.min(car.speed * dt, Math.max(0, lead.gap - 0.5));
-
-    // The next lane at the end of this one must be free at its start.
-    if (car.s + ds > lane.length) {
-      const nextLane = state.lanes[lane.next];
-      const sNew = car.s + ds - lane.length + lane.nextS;
-      const blocked = state.cars.some(
-        (o) =>
-          o !== car &&
-          o.lane === nextLane.id &&
-          o.s - CAR_SIZE[o.kind].length / 2 < sNew + half + T.gap &&
-          o.s + CAR_SIZE[o.kind].length / 2 > sNew - half - T.gap,
-      );
-      if (blocked) {
-        ds = Math.max(0, lane.length - car.s);
-        car.speed = 0;
-      }
-    }
-
-    // The hard rule: a move never brings the car body nearer than
-    // safeRadius to the skater. A shorter move is tried, then none.
-    const before = skaterGap(car, skater);
-    if (ds > 0 && skater) {
-      let ok = false;
-      for (let k = 0; k < 4 && !ok; k += 1) {
-        const p = poseAfter(state, car, ds);
-        const after = skaterGap(p, skater);
-        if (after >= T.safeRadius || after >= before) ok = true;
-        else ds /= 2;
-      }
-      if (!ok) {
-        ds = 0;
-        car.speed = 0;
-        car.yieldTime = T.yieldWait;
-        car.yielding = true;
-      }
-    }
-    // After every branch that sets the speed, so a forced stop lights the
-    // brake lamps too.
-    car.accel = (car.speed - v) / dt;
-    car.brake = brakeLevel(car.accel, car.speed);
-
-    if (ds > 0) {
-      let s = car.s + ds;
-      let laneId = car.lane;
-      // A lane can link to its own start, so a wrap is not a lane change.
-      const wrapped = s > lane.length;
-      if (wrapped) {
-        s += lane.nextS - lane.length;
-        laneId = lane.next;
-        if (car.box >= 0) {
-          state.occupant[car.box] = -1;
-          car.box = -1;
-        }
-      }
-      place(state, car, laneId, s, wrapped);
-      if (wrapped) car.next = nextStop(state.lanes[laneId], s + half);
-    }
-
-    // Out of the intersection: free it.
-    if (car.box >= 0 && car.s - half > car.boxExit) {
-      state.occupant[car.box] = -1;
-      car.box = -1;
-    }
-    // The turn signal: the heading change over the next signalAhead m
-    // (a U-turn at a lane end signals left, as in right-hand traffic).
-    const ahead2 = poseAfter(
-      state,
-      car,
-      Math.min(T.signalAhead, state.lanes[car.lane].length - 1),
-    );
-    let dyaw = angleDelta(car.yaw, ahead2.yaw);
-    if (Math.abs(dyaw) > 2.6) dyaw = Math.PI;
-    car.signal = turnSignal(dyaw, car.signal);
+    stepCar(state, car, dt * stride, skater, stride);
     minGap = Math.min(minGap, skaterGap(car, skater));
   }
   state.tick += 1;
   state.minSkaterGap = minGap;
   state.closest = Math.min(state.closest, minGap);
   return state;
+}
+
+// Steps one car by dt (stride ticks of the fixed step).
+function stepCar(state, car, dt, skater, stride) {
+  const T = TRAFFIC;
+  const lane = state.lanes[car.lane];
+  const size = CAR_SIZE[car.kind];
+  const half = size.length / 2;
+  const front = car.s + half;
+  const v = car.speed;
+  const v0 = lane.speed;
+  // hold: the car is at a stop point and stays at rest.
+  let hold = false;
+  // A fixed stop point `dist` m ahead of the front.
+  const stopAt = (dist) => {
+    if (dist < 0.6 && v < 0.2) hold = true;
+    else acc = Math.min(acc, idmStopAccel(v, v0, dist));
+  };
+
+  // The car ahead (the IDM leader).
+  const lead = leader(state, car);
+  let acc = idmAccel(v, v0, lead.gap, v - lead.speed);
+  if (lead.speed < 0.1 && lead.gap - T.gap < 0.6 && v < 0.2) hold = true;
+
+  // The stop line, and the intersection.
+  const st = lane.stops[car.next];
+  if (st) {
+    const dist = st.sStop - front;
+    if (dist < 0.6 && v < 0.2) {
+      // The wait counts from the full stop.
+      if (v === 0) car.wait += dt;
+      const free =
+        state.occupant[st.box] === -1 || state.occupant[st.box] === car.id;
+      // Room past the intersection, so a queue never blocks it.
+      const room = lead.gap >= st.sExit - st.sStop + size.length + T.gap;
+      // No skater on a crosswalk on the far side.
+      const clear = !skaterCrossing(lane, front, st.sExit + 4, skater, car.y);
+      if (car.wait >= T.stopWait && free && room && clear) {
+        state.occupant[st.box] = car.id;
+        car.box = st.box;
+        car.boxExit = st.sExit;
+        car.next += 1;
+        car.wait = 0;
+      } else hold = true;
+    } else stopAt(dist);
+  }
+
+  // Slow to turnSpeed for the U-turn at the end of a two-way street.
+  if (!lane.oneway) {
+    const toEnd = lane.length - car.s;
+    const need = (v * v - T.turnSpeed * T.turnSpeed) / (2 * Math.max(1, toEnd));
+    if (need > 0.2) acc = Math.min(acc, -Math.min(T.hardBrake, need));
+  }
+
+  // The skater on a crosswalk ahead: stop before it and wait.
+  const cw = skaterCrossing(lane, front, front + T.lookAhead, skater, car.y);
+  // The skater in the lane ahead: slow, stop, wait, then go on.
+  const ahead = skaterAhead(car, skater);
+  if (cw || ahead < Infinity) {
+    if (cw) stopAt(Math.max(0, cw.s - cw.depth / 2 - T.crossingStop - front));
+    if (ahead < Infinity) stopAt(ahead - T.safeRadius - T.yieldMargin);
+    if (!car.yielding) {
+      state.yields += 1;
+      if (cw) state.crossingYields += 1;
+    }
+    car.yielding = true;
+    car.crossing = Boolean(cw) || (car.crossing && car.yielding);
+    car.yieldTime = T.yieldWait;
+  } else if (car.yieldTime > 0) {
+    car.yieldTime = Math.max(0, car.yieldTime - dt);
+    if (v < 0.5) hold = true;
+    if (car.yieldTime === 0) car.yielding = false;
+  } else car.yielding = false;
+  if (!car.yielding) car.crossing = false;
+
+  if (hold) acc = -T.hardBrake;
+  car.speed = Math.max(0, Math.min(v0, v + acc * dt));
+  if (hold && car.speed < 0.3) car.speed = 0;
+  // Never into the car ahead.
+  let ds = Math.min(car.speed * dt, Math.max(0, lead.gap - 0.5));
+
+  // The next lane at the end of this one must be free at its start.
+  if (car.s + ds > lane.length) {
+    const nextLane = state.lanes[lane.next];
+    const sNew = car.s + ds - lane.length + lane.nextS;
+    const blocked = state.cars.some(
+      (o) =>
+        o !== car &&
+        o.lane === nextLane.id &&
+        o.s - CAR_SIZE[o.kind].length / 2 < sNew + half + T.gap &&
+        o.s + CAR_SIZE[o.kind].length / 2 > sNew - half - T.gap,
+    );
+    if (blocked) {
+      ds = Math.max(0, lane.length - car.s);
+      car.speed = 0;
+    }
+  }
+
+  // The hard rule: a move never brings the car body nearer than
+  // safeRadius to the skater. A shorter move is tried, then none.
+  const before = skaterGap(car, skater);
+  if (ds > 0 && skater) {
+    let ok = false;
+    for (let k = 0; k < 4 && !ok; k += 1) {
+      const p = poseAfter(state, car, ds);
+      const after = skaterGap(p, skater);
+      if (after >= T.safeRadius || after >= before) ok = true;
+      else ds /= 2;
+    }
+    if (!ok) {
+      ds = 0;
+      car.speed = 0;
+      car.yieldTime = T.yieldWait;
+      car.yielding = true;
+    }
+  }
+  // After every branch that sets the speed, so a forced stop lights the
+  // brake lamps too.
+  car.accel = (car.speed - v) / dt;
+  car.brake = brakeLevel(car.accel, car.speed);
+
+  if (ds > 0) {
+    let s = car.s + ds;
+    let laneId = car.lane;
+    // A lane can link to its own start, so a wrap is not a lane change.
+    const wrapped = s > lane.length;
+    if (wrapped) {
+      s += lane.nextS - lane.length;
+      laneId = lane.next;
+      if (car.box >= 0) {
+        state.occupant[car.box] = -1;
+        car.box = -1;
+      }
+    }
+    place(state, car, laneId, s, wrapped, stride);
+    if (wrapped) car.next = nextStop(state.lanes[laneId], s + half);
+  }
+
+  // Out of the intersection: free it.
+  if (car.box >= 0 && car.s - half > car.boxExit) {
+    state.occupant[car.box] = -1;
+    car.box = -1;
+  }
+  // The turn signal: the heading change over the next signalAhead m
+  // (a U-turn at a lane end signals left, as in right-hand traffic).
+  const ahead2 = poseAfter(
+    state,
+    car,
+    Math.min(T.signalAhead, state.lanes[car.lane].length - 1),
+  );
+  let dyaw = angleDelta(car.yaw, ahead2.yaw);
+  if (Math.abs(dyaw) > 2.6) dyaw = Math.PI;
+  car.signal = turnSignal(dyaw, car.signal);
 }
 
 // The nose-up angle of a car (rad) from the street heights under its front
@@ -847,6 +877,27 @@ export function carPitch(car, heightAt) {
   const front = heightAt(car.x + fx, car.z + fz);
   const back = heightAt(car.x - fx, car.z - fz);
   return Math.atan2(front - back, 2 * half);
+}
+
+// carPitch with a memo per car (#189): a car that has not moved since the
+// last call (a far car between its steps, a car at a stop) keeps its
+// pitch. heightFor(car) gives the heightAt of carPitch for that car.
+export function cachedPitch(heightFor) {
+  const memo = new WeakMap();
+  return (car) => {
+    const m = memo.get(car);
+    if (
+      m &&
+      m.x === car.x &&
+      m.z === car.z &&
+      m.y === car.y &&
+      m.yaw === car.yaw
+    )
+      return m.pitch;
+    const pitch = carPitch(car, heightFor(car));
+    memo.set(car, { x: car.x, z: car.z, y: car.y, yaw: car.yaw, pitch });
+    return pitch;
+  };
 }
 
 // A ground sampler with the cars as solid boxes. The controller treats a

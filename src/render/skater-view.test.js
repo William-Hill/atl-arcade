@@ -1,6 +1,15 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { grindLean } from "./skater-view.js";
+import { createSkaterView, grindLean } from "./skater-view.js";
+
+describe("place (#189)", () => {
+  it("moves the group to the state position and heading, with no clip step", () => {
+    const view = createSkaterView({ lean: false });
+    view.place({ position: [3, 1.5, -7], yaw: 1.2 });
+    expect(view.group.position.toArray()).toEqual([3, 1.5, -7]);
+    expect(view.group.rotation.y).toBeCloseTo(1.2);
+  });
+});
 
 // Axes: yaw 0 faces +x and positive yaw turns left (toward -z), so +z is the
 // skater's right. A positive balance makes the skater fall off the right.

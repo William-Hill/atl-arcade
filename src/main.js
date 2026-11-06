@@ -344,7 +344,11 @@ if (factCardsView) scene.add(factCardsView.group);
 const factPopup = facts.cards.length ? createFactPopup(document.body) : null;
 const factCardSpots = () => facts.cards.map((c) => ({ id: c.id, position: c.position }));
 
-const skaterView = createSkaterView();
+// Foot IK (#107): the skates touch stairs and ramps. Off on the phone tier
+// and on a phone (the same check as the small skater model), to keep the
+// frame time; ?footik=1 turns it on and ?footik=0 turns it off.
+const footIkOn = params.get("footik") === "1" || (params.get("footik") !== "0" && quality !== "phone" && !smallSkater);
+const skaterView = createSkaterView({ footIk: footIkOn, sampleGround: (x, z, y) => env.sampleGround(x, z, y), lean: params.get("lean") !== "0" });
 scene.add(skaterView.group);
 // The isometric map bake shows the city only.
 if (params.get("view") === "iso") skaterView.group.visible = false;
@@ -1220,6 +1224,13 @@ window.__atl = {
     },
     get weights() {
       return skaterView.weights;
+    },
+    // The carve lean (rad) and the foot IK state { on, weight, ms } (#107).
+    get lean() {
+      return skaterView.lean;
+    },
+    get footIk() {
+      return skaterView.footIk;
     },
     // The face decal state: { eyes, mouth }.
     get face() {

@@ -1511,3 +1511,28 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
   Nia), because the game controller supplies travel. The turn still changes
   the heading by about 90 degrees, so the clip does not loop in place.
 - Evidence: `reports/skater-169/`.
+
+## 2026-11-06: #107 (code part) — clip blends, carve lean, foot IK
+- Scope: runtime code only. No new clips. The wall slide, bonk, and hard landing clips need Blender and the raw `.blend` files. #170 rebuilds all clips on the v2 bodies later. The code keys on clip names and bone names, not on the bone data of the current clips.
+- Fade times: `FADES` and `fadeFor(from, to)` in `src/render/skater-anim.js`. Rules match a clip name, a clip group (`groupOf()`), or `*`. The first rule that matches wins. Fast fades go into an impact (bail 0.05 s, land 0.05 s, jump 0.06 s). Slow fades go between ground clips (carve to carve 0.35 s, into idle 0.4 s, into and out of the backward ride 0.35 s, the half-turn time). A clip with no rule (a new clip name) gets 0.2 s.
+- Blender: `src/render/anim-blend.js` (pure). Each clip has a weight. A change starts a smoothstep fade from the weights of the current frame, so the weights always sum to 1. The view no longer uses `crossFadeTo()`. That call reset a clip that was still fading out to weight 0 when a second change came back to it (a pop). Now a looping clip that still has weight keeps its time. A one-time clip (jump, land, bail) starts again.
+- Lean: the body banks about the forward axis at 0.6 of the centripetal angle `atan(v * yawRate / g)`, at most 0.22 rad (12.6 degrees), with a 0.12 s smoothing that does not depend on the frame rate. On the coast and the push, the carve clips add a lean pose (`makeClipAdditive()` of the middle pose of `carve_left` or `carve_right` less the middle pose of `coast`), at most weight 0.6. The carve clips themselves get the bank only. `?lean=0` turns the lean off.
+- Foot IK: `src/render/foot-ik.js` (pure) plans the feet. It samples the level ground (`env.sampleGround`, no Rapier query) at the ankle and the toe of each skate and takes the higher one, so a skate across a stair edge sits on the step nose. The pelvis drops with the lower foot (at most 0.3 m). A two-bone solve bends each leg in the plane of the clip pose. Each skate tilts toward the ground normal (at most 0.6 rad). A tilted skate holds its ankle at h / cos(tilt) over the ground. The IK is off in the air, on a rail, and in a bail. It fades in over 0.15 s and out over 0.06 s. The leg bones are found by name: Mixamo with any prefix, and Blender `thigh.L` names.
+- Phone: the foot IK is off on the phone tier and on a phone device (the same check as the 1024 px skater). `?footik=1` or `?footik=0` sets it. NPC skaters have no foot IK. They get the lean.
+- Test page: `anim-lab.html` (`src/viewer/anim-lab.js`) puts a skater on the greybox ramp and stairs and draws the contact sheets for `e2e/skater-blend.spec.js`.
+
+### Evidence
+- Vitest: `src/render/anim-blend.test.js` (fade table, blender, lean) and `src/render/foot-ik.test.js` (bone names of both GLBs, two-bone solve, foot plan on the greybox stairs and quarter pipe, tilt, IK weight). 31 tests.
+- Playwright: `e2e/skater-blend.spec.js`. Contact sheets: `e2e/__screenshots__/anim-107-{nia,marcus}-{blend,lean,contact}.png`.
+  - Stairs (the left skate one 0.17 m step down): gap 0.170 m with IK off, 0.000 m with IK on, for both skaters.
+  - Ramp (1.2 m up the 3 m quarter pipe, about 24 degrees, riding across it): Nia uphill skate -0.097 m (into the ramp) to -0.015 m, downhill 0.039 m to 0.000 m. Marcus -0.127 m to -0.042 m, and 0.050 m to -0.015 m.
+  - Pop check (largest bone turn in one frame, rad): changes 0.127 (Nia) and 0.121 (Marcus); the push clip alone turns 0.133 and 0.180.
+  - IK cost in headless SwiftShader: 0.06 to 0.11 ms per frame.
+
+### Limits
+- On a slope the uphill skate can still go 1.5 to 4.2 cm into the surface: the toe moves after the tilt, and the plan samples the ground before it. A second sample pass would fix it for about twice the cost.
+- The body stays upright on a ramp. Only the legs and the skates follow the surface.
+- The lean pose uses one frame of each carve clip. #170 changes the clips, so look at the lean sheet again after it.
+- FPS gate not verified: `npm run playtest` gives a median of 6.7 FPS on this cloud machine (4 CPUs, SwiftShader) for this branch and for `epic/city-look` alike (gate 55). Run it again on the Mac.
+- `e2e/skater-anim.spec.js` (3 tests) and `e2e/skater-face.spec.js` (1 test) fail on this branch and on `epic/city-look` with the same errors (for example, the Marcus GLB has no `dance_smoothquad` clip). They are not part of this change.
+- No person played it. Real skaters did not review the lean or the blends.

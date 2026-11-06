@@ -52,6 +52,7 @@ describe("perf lib", () => {
     expect(merged).toHaveLength(1);
     expect(merged[0].calls).toBe(20);
     expect(merged[0].runs).toBe(3);
+    expect(mergeRuns([run({ calls: 10 }), run({ calls: 31 })])[0].calls).toBe(20.5);
   });
 
   it("writes the tables between the markers", () => {

@@ -77,7 +77,9 @@ export function mergeRuns(runs) {
   }
   const mid = (list) => {
     const v = list.filter((x) => x != null).sort((a, b) => a - b);
-    return v.length ? v[Math.floor(v.length / 2)] : null;
+    if (!v.length) return null;
+    const m = v.length / 2;
+    return v.length % 2 ? v[Math.floor(m)] : Math.round(((v[m - 1] + v[m]) / 2) * 1000) / 1000;
   };
   return [...groups.values()].map((g) => {
     const systems = {};

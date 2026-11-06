@@ -4,8 +4,9 @@
 for the Beltline Eastside level (Old Fourth Ward, Inman Park, Poncey-Highland):
 storefronts, upper windows, cornices and parapet caps, belt courses, awnings,
 balconies, fire escapes, wall AC units, roof units, and trim. It is built by
-`scripts/blender/facade_kit.py` (Blender 5.2.3, headless, no Meshy) and is not
-wired into the game yet. This doc is for the session that wires it in.
+`scripts/blender/facade_kit.py` (Blender 5.2.3, headless, no Meshy). The pbr
+look draws it in the game (see "In the game" below); the toon look keeps the
+procedural kit.
 
     ~/tools/blender -b -P scripts/blender/facade_kit.py -- assets/facades --stats /tmp/fk-stats.json
     node scripts/assets/facade-kit-check.mjs --out lineup.png --lod1 lod1.png
@@ -113,7 +114,7 @@ shader's own window (src/render/geo-view.js) instead of fighting it.
 6. **Scale limits.** Never scale past `extras.kit.scaleX/scaleY`; skip the
    module instead (the shader window still shows). z is never scaled.
 7. **Tint.** `tint: true` modules are near-white in the atlas; set the
-   instance color (`InstancedMesh.setColorAt`) to `style.trim` (trim) or the
+   instance color (`setColorAt`) to `style.trim` (trim) or the
    building's awning color (`AWNING_COLORS[seed % n]`).
 8. **Roof.** Roof units sit on `top` (`buildingSpan().top`), at least 1.5 m
    plus their own clearance from every wall, not overlapping each other, in
@@ -169,20 +170,71 @@ Per building:
 7. Roof units on flat roofs (rule 8), never in a courtyard (`holes`) or
    within 1.5 m + clearance of its edge.
 
-Wiring it in (the parent's job, not done here):
+Wiring guidance (done as described in "In the game" below):
 
-- One `InstancedMesh` per module per depth tile (`DEPTH_TILE = 50`);
-  `byModule()` groups the list. All share the one material, so at most ~39
-  draw calls per tile, in practice 10–20. Merge tiles if draw calls matter
-  more than culling.
-- `<module>_lod1` past `LOD1_DISTANCE = 60` m; drop the small wall modules
-  (AC units, lamps, downspout parts, sign boards) past ~120 m; past the
-  existing `lod0` distance the shader facade alone is enough.
+- All modules share the one material, so they can go in one `BatchedMesh`
+  (one draw call with `WEBGL_multi_draw`); `byModule()` groups the list if
+  one `InstancedMesh` per module is wanted instead.
+- `<module>_lod1` past `LOD1_DISTANCE = 30` m; drop the small wall modules
+  (AC units, lamps, downspout parts) at range; past the existing depth
+  distance the shader facade alone is enough.
 - Where the kit is on, turn off the procedural parts it replaces on those
   walls: sills (`wallDepth`), piers and sign bands (`shopFront`), and the
   `KIT.awning` awnings. The preview does it the blunt way with `?kit=0`
   (which also drops cornices, crowns and pitched house roofs).
 - Under `?look=pbr` only; the toon look keeps the procedural kit.
+
+## In the game
+
+- `src/level/geo/facade-kit-glb.js` (pure): `facadeKitPlacements(level,
+  fronts, { signs })` runs `facadePlacements()` for every building that is not
+  a claimed landmark footprint, with `floors = floorCount()` (the shader's
+  floors, OSM levels included) and the door bay of `frontEdges()`, and groups
+  the modules by the 50 m depth tile of `facadeKit()`. It returns the tiles,
+  the per-building `covers` (`kitCovers()`), and the shop-name boards on the
+  GLB sign boards. A GLB sign board under a shop sign (`shop-signs.js`) is
+  left out.
+- `GLB_SKIP` keeps the procedural awnings, cornice, coping, and belt course:
+  those are in the building tiles, drawn at every distance, so the roof line
+  does not go bare past `DEPTH_DISTANCE`.
+- `buildingKit()` / `wallDepth()` / `shopFront()` / `shopEntrance()` take the
+  `covers`: no sill, lintel or head on a window with a GLB frame, no pier on a
+  bay line with a GLB pilaster, no sign band on a bay with GLB shop glass, no
+  procedural door with a GLB door (the step and lamps stay). The shader glass
+  stays: the modules frame it, with their own panes cut out (below).
+- `src/render/facade-kit-view.js`: `loadFacadeKit()` (Draco) runs in
+  `main.js` while the meshes build. All the modules of the level are in one
+  `BatchedMesh` (one draw call: every node shares the kit material), and the
+  shop names on the GLB sign boards in a second one. Culling is per
+  building: it is drawn while its procedural depth tile is (the tile center
+  closer than `DEPTH_DISTANCE`, 120 m: the procedural parts it covers are
+  left out there), and while the building itself (center distance minus
+  footprint radius) is closer than 120 m, for the far wall of a long
+  building. Past `LOD1_DISTANCE` (30 m) it uses the `_lod1` nodes, and for the
+  other modules `farGeometry()` (the faces toward the street and the large
+  horizontal faces: about 40% of a window frame); the small trim (`TRIM`:
+  AC units, downspout parts, lamps, pilaster caps, roof vents and units,
+  ladders) only closer than `TRIM_DISTANCE` (35 m). The BatchedMesh also
+  frustum-culls per instance. Without `WEBGL_multi_draw` a BatchedMesh draws
+  once per instance, so `main.js` then keeps the procedural kit.
+- The glass panes of the `window_*` and `storefront_glass_*` nodes (the
+  atlas glass strip) are cut out at load (`withoutGlass()`), so the facade
+  shader's glass and room interiors show through the GLB frames, as in the
+  toon look and with `?kitglb=0`. The door glass stays (the procedural door
+  under it is turned off).
+- `createGeoView(..., { kitGlb })`: `kitGlb` is the loaded nodes or null; on
+  with `look === "pbr"`, `kit` and `depth`. A failed load passes null: the
+  procedural kit stays whole (nothing is turned off before the GLB is in). So
+  does a slow one: the level waits at most `?kitwait=<ms>` (3000) after the
+  meshes are built.
+  On a mural wall, no window frame goes from `mural.floor0` up (the shader
+  blanks that wall, as `wallDepth()` drops its sills). `?kitglb=0` leaves the GLB kit out (the procedural kit is whole
+  again), `?kit=0` drops both, `?depth=0` drops both depth-tile kits.
+  `window.__atl.level.facadeGlb` has the counts (instances, buildings, near,
+  lod1, shown, drawCalls, triangles before the frustum culling, loaded).
+- `node scripts/assets/facade-kit-wired.mjs OUT_DIR [kind:labview ...]`:
+  labeled BEFORE (`?kitglb=0`) and AFTER shots from the same camera, with the
+  costs, and the toon and `?kit=0` checks.
 
 ## Preview in the real renderer
 

@@ -1401,6 +1401,26 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - No lane changes or merges, no traffic lights (stop-sign style boxes as before). Parked cars have no lamps. Headless frame rate makes the sim slow in wall time, so browser yield checks wait longer.
 
 
+## 2026-11-05: epic/city-look — the Blender facade kit in the pbr look
+
+### Decisions
+
+- The pbr look draws `assets/facades/facade-kit.glb` (docs/facade-kit.md, "In the game"): `src/level/geo/facade-kit-glb.js` (pure) runs `facadePlacements()` on every building that is not a claimed landmark footprint, from `frontEdges()`, `chooseStyle()`, `buildingSpan()`, `muralWalls()` and `floorCount()`; `main.js` loads the GLB while the meshes build (a failed load keeps the whole procedural kit) and `src/render/facade-kit-view.js` draws the kit. The toon look keeps the whole procedural kit. `?kit=0` drops both kits, `?depth=0` both depth-tile kits, and `?kitglb=0` the GLB kit only (the BEFORE of the evidence).
+- Cost: the whole GLB kit is one `BatchedMesh` (all nodes share the kit material), the shop names on its sign boards a second one, so it adds 2 draw calls at any camera. One `InstancedMesh` per module per 50 m tile cost 30–112 draw calls at the test cameras. Culling is per building, not per tile: a building is drawn while its procedural depth tile is (tile center closer than `DEPTH_DISTANCE`, 120 m) or while the building is closer than 120 m (the far wall of a long building), and it switches to far geometry past `LOD1_DISTANCE` (30 m, was 60; the `_lod1` nodes, else `farGeometry()`, the street-facing and large horizontal faces, about 40% of a frame), and drops the small trim (`TRIM`) past `TRIM_DISTANCE` (35 m). Past 120 m the shader facade alone is drawn, as before. Without `WEBGL_multi_draw` the batch would draw once per instance, so the GLB stays off there (the prop batch has the same dependency).
+- The window and shop glass panes of the GLB are cut out at load (`withoutGlass()`, the atlas glass strip), so the facade shader's glass and room interiors show through the frames; the GLB panes were flat dark glass over them. The door glass stays.
+- The procedural kit leaves out what the GLB replaces, per slot (`kitCovers()`): the sill, lintel and head of a window with a GLB frame, the pier on a bay line with a GLB pilaster, the sign band of a bay with GLB shop glass, and the procedural door where there is a GLB door (the step and the lamps stay, the lamps on the pilaster face). The shader shop glass and windows stay: the modules frame them (their panes cut out).
+- Kept procedural (`GLB_SKIP`): the awnings (they match the street awnings), and the cornice, coping and belt course. Those are in the building tiles, drawn at every distance; the GLB runs in the depth tiles would leave the roof line bare past 120 m.
+- The shop-name decals (`shop-names.js`) go on the GLB sign boards; a GLB sign board under a named shop sign (`shop-signs.js`) is left out. `decalQuad()` wrote each quad past the end of its buffers (it started at the buffer capacity), so no shop name drew before; it now writes quad by quad (`shop-names.test.js`).
+- `facadePlacements()` takes `floors` (the shader's floor count, OSM levels included, so the frames stay on the shader windows) and the door bay of `frontEdges()`, and tags each module with its slot (`bay`, `floor`, `line`).
+
+### Evidence
+
+- See the PR: labeled BEFORE (`?kitglb=0`) / AFTER shots from the same cameras (`node scripts/assets/facade-kit-wired.mjs OUT_DIR`), with the costs.
+
+### Limits
+
+- The GLB kit has no colliders, like the rest of the kit.
+
 ## 2026-11-05: epic/city-look — pedestrians on the trail, the sidewalks and the street edges
 - New: `src/sim/peds.js` (pure, seeded, Vitest in `src/sim/peds.test.js`) and `src/render/peds-view.js`, with a small hook in `src/main.js`. `?peds=0` leaves them out; `?npcseed=<n>` seeds them with the crowd. `window.__atl.peds` gives the count, the min gap, the draw calls, the triangles and the list.
 - The gen-city approach (`docs/research/2026-11-04-gen-city-auto.md`): a pool of walkers lives around the camera (140 low, 110 phone, 320 high; radius 150, 140, 200 m, inside the fog). A walker that leaves the pool comes back at the pool edge; a fast travel (a focus jump over 60 m) scatters the pool again. The existing crowd (`src/sim/npc/crowd.js`, a fixed set near the spawn) stays as it is.

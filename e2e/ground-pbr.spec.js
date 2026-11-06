@@ -50,7 +50,8 @@ for (const cfg of CONFIGS) {
     page.on("response", async (res) => {
       const url = res.url();
       if (!/\/assets\/ground\//.test(url) || /\.json/.test(url)) return;
-      const body = await res.body().catch(() => null);
+      // The body size on the wire (res.body() is empty for a fetch() stream).
+      const body = await res.request().sizes().then((z) => ({ length: z.responseBodySize })).catch(() => null);
       textures.push({ file: new URL(url).pathname.replace(/^.*\/assets\/ground\//, ""), bytes: body ? body.length : null });
     });
     await page.goto(`/?level=beltline-eastside&mute=1&quality=${cfg.quality}&look=${cfg.look}&governor=0&view=fixed&minimap=0&skater=capsule&weather=0&cars=0&traffic=0&peds=0&npcs=0&skaters=0`);

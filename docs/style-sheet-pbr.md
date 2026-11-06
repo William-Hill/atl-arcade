@@ -121,13 +121,16 @@ lists the material types in the scene and any toon material left.
 | Item | Value | Where |
 | --- | --- | --- |
 | Tone mapping | Neutral, exposure 1.0 (the weather eases it at night) | `LOOKS.pbr`, `weather-view.js` |
-| Sun | Weather sun (3.0 peak, real solar position) | `src/sim/weather.js` |
-| Sky environment | 0.6 × the weather daylight factor; baked again from the sky when its colors move | `pbr-look.js` |
-| Contrast (luma, pivot 0.18) | day 1.14, golden 1.12, dusk 1.04, night 1.18 | `TIME_GRADES` |
-| Saturation | day 1.06, golden 1.14, dusk 1.00, night 1.12 (× district) | `TIME_GRADES` |
+| Sun | Weather sun (real solar position, 3.0 peak) × 1.4 = 4.2 peak | `LOOKS.pbr.sunScale`, `pbr-look.js` |
+| Sky environment | Baked again from the sky dome when its colors move (dusk, night, clouds). Intensity 0.6 × `1 / sqrt(sky luma / 0.55)`, cap × 3; ground bounce × the same luma ratio, floor 0.15 | `envForSky()`, `pbr-look.js` |
+| Contrast (luma, pivot 0.18) | day 1.14, golden 1.12, dusk 1.00, night 1.04 | `TIME_GRADES` |
+| Saturation | day 1.06, golden 1.14, dusk 1.04, night 1.12 (× district) | `TIME_GRADES` |
 | Split tone (cool shadows, warm lights) | day 0.35, golden 1.0, dusk −0.35 (cool), night 0.45; clouds cut it by up to 70 % | `TIME_GRADES`, `SPLIT` |
+| Black lift | dusk 0.010, night 0.006 (linear) | `TIME_GRADES` |
+| Bloom threshold | 2.4 in the day, 0.92 at night (no sunlit surface glows) | `bloomThreshold()` |
 | Height fog | the distance fog, × 0.55 high up, full under the eye; ground haze up to 0.16; full at the far plane at every height | `HEIGHT_FOG` |
-| Skater rim | horizon color mixed with warm white; strength 0.55 day, 0.8 golden, 0.3 night; power 3 | `SKATER_RIM`, `toon.js` |
+| Skater rim | horizon color mixed with warm white; strength 0.55 day, 0.8 golden, 0.45 dusk, 0.3 night; power 3 | `SKATER_RIM`, `toon.js` |
+| Ambient occlusion | GTAO as on `epic/city-look` (not changed here; PR #166 tunes it) | `src/render/post.js` |
 
 ## Political rules (AGENTS.md)
 

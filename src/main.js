@@ -838,7 +838,7 @@ function frame(now) {
   if (rain) rain.update(camera, now / 1000, weatherView?.state, renderer.domElement.height);
   if (streetSigns) streetSigns.update(isoFocus ?? camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
-  if (pedModels) pedModels.update(peds, camera.position, Math.min(elapsed, 0.1));
+  if (pedModels) pedModels.update(peds, camera.position, paused ? 0 : Math.min(elapsed, 0.1));
   if (pedsView) pedsView.sync(peds, pedModels?.skip);
   if (meshyProps) meshyProps.update(camera.position);
   if (carView) carView.update(camera.position, traffic?.cars, { lit: weatherView?.state.windowLit ?? 0, time: now / 1000 });

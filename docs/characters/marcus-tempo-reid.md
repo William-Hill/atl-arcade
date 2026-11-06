@@ -72,7 +72,13 @@ These are the same rules as for Nia.
 
 ## Move set
 
-Marcus uses the M1-02 clip set and the clip table in `src/render/skater-anim.js`, the same as Nia. The script `scripts/blender/nia_clips.py` keys the clips on the Mixamo bone names, so the same keys drive his rig. A different move set for each skater is out of scope for M1-10.
+Marcus uses the gameplay clip names in `src/render/skater-anim.js`.
+His movement must differ from Nia's movement.
+The user added this requirement on 2026-11-05 after rejection of the shared animation set.
+
+Marcus uses sharper jam accents, different lead-foot patterns, and asymmetric arm gestures.
+Nia uses a smoother rink glide and longer support phases.
+See `skating-motion-research-2026-11-05.md` for the references and review requirements.
 
 ## Political and cultural rules
 

@@ -1205,6 +1205,100 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - LOD1 has no `wheels_roll` clip: the game never played it (car-models.js spins and steers the wheel instances itself).
 - Badge cleanup: `scripts/blender/vehicle_cleanup.json` boxes (glTF meters) on the taxi (grille chevron, rear emblem, trunk mark), sedan, pickup, hatchback, and bus (windshield signs, roof-box lettering). Texels are masked by their interpolated 3D position, not face centers, because plates and badges often sit on large faces. The fill is the median of a separate sample box. With `--patch` the script also writes the painted 1024 textures back into the LOD0 GLBs in place (another JPEG encode), so restore `assets/vehicles/*.glb` first; without it, re-runs only rebuild `vehicles_lod.glb`.
 
+## 2026-11-05: epic/assets — painted murals for the pbr look (assets/murals)
+- 16 original mural designs (dogwood, peach, magnolia, brown thrasher, heron and river, skyline silhouettes, the BeltLine trail, skaters, music, porch-row neighbors, a crowd wave, a night rink) are drawn from code with the Chromium 2D canvas (`scripts/assets/mural-atlas.mjs`, seed 1979), then a per-pixel paint pass adds brush strokes, a ragged dry-brush edge over painted brick or stucco, mortar show-through, weathering, and a roughness atlas. No image model, no Meshy (0 credits), no real murals, artists' styles, or brands.
+- Canvas, not Blender: the art is flat paint on a wall, and the 2D canvas gives exact lettering and shapes and runs in seconds; the storefront atlas uses the same tool.
+- Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
+- `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
+- `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
+## 2026-11-05 — Body repair after rejected skater videos
+
+- Treat the earlier `raw/*-animated.glb` videos as rejected outputs.
+  Source bone names and animation counts did not prove correct deformation.
+- Marcus's failed automatic weights retained whole-part rigid assignments.
+  His jacket followed `Spine2`; both shorts legs followed `RightUpLeg`.
+  Adjacent parts separated by up to 0.73055 m in the exported motion.
+- Fit the body joints and use continuous weights across Marcus's parts.
+  Weld coincident vertices before reduction. Preserve UV coordinates on
+  face corners. This removes the surface defects introduced by reduction
+  of disconnected source vertices.
+- Share Nia's weights at part boundaries and bind each skate assembly to
+  its foot. Use quaternion foot targets for both new candidates.
+  Euler targets caused a 51.79-degree right-foot step in Nia's `coast`.
+- Keep candidates separate: `nia/raw/review-v4` and `marcus/raw/review-v6`.
+  Both have 65 joints and 24 clips. The game assets remain unchanged.
+- Sample separation across all 24 exported clips. The maximum increase is
+  0.00002 m for Nia and 0.00571 m for Marcus. The foot-step check also passes.
+  Render fresh MP4s from these GLBs at 30 fps. Verify encoded frame counts.
+- User approval, runtime checks, and Marcus's independent finger articulation
+  remain open. See `scripts/blender/SKATER-REPAIR.md` for commands and limits.
+
+## 2026-11-05 — Tripo PBR skater regeneration (multiview + parts)
+- Concept art: Codex imagegen chosen over AutoSprite for all 3 views of both
+  skaters (AutoSprite side views broke T-pose; Codex kept strict T + better
+  fabric detail). AutoSprite set kept as *-autosprite-*.png. 18 AS + 0 Codex cr.
+- Parts flow costs ~145 cr/char vs 115 est. (texture is now a separate 20-cr
+  step + 5-cr PBR pass). Remove Lighting toggle ON = no baked shading.
+- Rigged exports are FBX-only in the current Studio UI (Blender preset, 4k,
+  skeleton). GLB comes out of our Blender step anyway.
+- 18k-quad retopo (face-rig test) exceeds Tripo's auto-rig cap — rig fails
+  with no charge. Marcus kept as unrigged GLB + FBX for mixamo.com instead.
+- MetaHuman-in-three.js is license-legal since MetaHuman 5.6 EULA (any
+  engine); not pursued — decals stay the face plan.
+
+## 2026-11-05 — Forward strides and Nia's arm proportions
+
+- The user approved a 40-credit Tripo motion test. Both five-second motions are exported.
+  The user judged them as dances, not the required forward stride.
+- Preserve the Tripo exports under `raw/tripo-motion-v1/`.
+  Use them as dance references. They still need foot-motion cleanup before integration.
+- Separate the forward push from the coast. Use distinct motion profiles for each character.
+  Nia uses a two-second cycle. Marcus uses a 1.6-second cycle.
+- Correct Nia's source proportions in the mesh and skeleton.
+  Her arm span changes from 1.23 m to 1.51 m at a height of 1.70 m.
+  Her upper arms measure 0.26 m. Her forearms measure 0.23 m.
+- Calibrate the knee pole angles for each rig.
+  Place each skate from its sole geometry. Transfer the hips over the support skate before recovery.
+- Keep the new two-clip candidates under `raw/forward-v1/`.
+  The arm, knee, support, loop, separation, and foot-step checks pass.
+  The support check failed before correction on Marcus: 0.111 m offset. The corrected offset is 0.035 m.
+- The new forward work uses Blender scripts and costs no credits.
+  User review, the full clip rebuild, and game verification remain open.
+
+## 2026-11-05 — Blender corrections for forward v2
+
+- Use Blender for Nia's upper-body motion and Marcus's shorts and ankle deformation.
+  Preserve the Tripo geometry and the earlier review files.
+- Add Nia's arm stroke, elbow variation, and torso counter-rotation.
+  Keep her corrected arm proportions and existing leg paths.
+- Correct Marcus's hip joints and knee bend planes.
+  The old IK solve twisted his right thigh by 113 degrees without changing bone scale.
+  The new maximum axial leg twist is 12.64 degrees.
+- Spread the ankle bend through the boot cuffs and calves.
+  Fit the shorts weights while preserving the attachment seams.
+  Preserve the seed GLB, fitted weights, source hashes, and rebuild script.
+- Add an exported deformation check across every frame of both forward clips.
+  The v1 asset fails. The v2 asset passes the same limits.
+  Worst-frame 99th-percentile edge ratios fall from 2.80 to 1.20 for the shorts
+  and from 2.36 to 1.19 for the worst ankle.
+- Keep the candidates in `raw/forward-v2/`.
+  Render full front and side cycles with constant light and source hashes.
+  These remain review assets. Marcus's fingers and the full runtime clip set remain open.
+
+## 2026-11-05 — Runtime skater assets from the approved v2 review
+
+- Promote the reviewed v2 bodies into `assets/skaters/<name>/skater.glb` and
+  `skater-1024.glb`. The files remain below the 10 MB repository limit.
+- Keep the v2 forward push and coast. Append the existing gameplay clip set to
+  preserve game coverage. Set `use_fake_user` on imported actions so Blender
+  retains them through save and export.
+- Add Nia's `dance_smoothquad`, retargeted from the approved Tripo dance FBX
+  to her corrected 1.70 m body. Map it as a groove dance.
+- Raise the GLB checks to match the approved PBR assets: under 10 MB, under
+  45,000 triangles, 65 Mixamo joints, and ground bounds across all primitives.
+- Two five-second Tripo motion tests remain approved at 20 credits each.
+  The MCP exposes no text-to-motion tool and the carrier task returns 404, so
+  generation stays a follow-up Studio task.
 ## 2026-11-05: epic/assets — skateable features as PBR GLBs (assets/skate-features)
 - 18 procedural Blender features (`scripts/blender/skate_features.py`): flat bars 3/6/9 m, round rails 3/6 m, down rails on 4 and 7 stairs, a kinked rail (3 down, landing, 3 down), concrete ledges 3/6 m, a granite-capped planter ledge, a manual pad, a quarter pipe, a kicker, a bank, a pyramid/funbox, a trail bench with a steel edge, and a block bench. No skatestoppers anywhere: the game welcomes skating. See `docs/skate-features.md`.
 - One material and one trim sheet (color 1024², normal 1024², ORM 512², strips tiling in U) for the whole set, external to the GLBs: one download, one GPU upload (about 12 MB), one material for batching. `shareSkateFeatureMaterial()` (`src/render/skate-feature-models.js`) undoes GLTFLoader's per-file copies.
@@ -1217,6 +1311,16 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - A mural was pasted over the shader's windows (an 8-storey glass wall facing the trail). Murals now go only on walls with no windows behind them.
 - `muralWalls()` skips glass offices, parking decks, buildings over `MURAL_MAX_FLOORS` (5) floors, and one-floor storefronts. Real mural walls are blank side walls of walk-ups, lofts and shops, not towers. The level goes from 38 murals to 30.
 - The mural wall is `FACE.blank` (facade kind 3) from `floor0` up. For a storefront `floor0` is 1, so its shop floor keeps its glass; otherwise it is 0. The facade shader draws no window, frame, sill, lintel or floor slab on a blank wall, and the facade kit puts no sills there. This costs no extra geometry: the one wall quad becomes two at most.
+
+## 2026-11-05: ACE-Step music drives the beat clock (#110, #20)
+- Four original instrumental loops made with ACE-Step 1.5 (`acestep-v15-turbo` DiT, no 5 Hz LM, 8 steps, text-to-music only, `[Instrumental]`) on this VM's CPU (8 threads, no GPU, 0 paid credits): an 80 s take renders in 3.6–5.8 min. Code and weights are MIT and the model card allows commercial use of outputs (`assets/music/LICENSE.md`). Prompts are genre and instrument words only: no artist, song or producer names, no reference audio, no samples.
+- Tracks (`assets/music/tracks.json`): Day Trail Bounce (funk, 100 BPM, 24 bars), Peachtree Deep House (124 BPM, 31 bars), Porch Light (trap-soul, 80 BPM, 20 bars), Rink Night (disco/boogie, 120 BPM, 28 bars). Each loop is 56–61 s and 0.78–0.88 MB as Ogg Opus 96 kb/s, plus an AAC (`.m4a`) fallback for Safari versions without Opus.
+- Every BPM gives a whole number of samples per loop at 48 kHz. ACE-Step rendered the house prompt at a steady 124 BPM instead of the 125 asked for; the take is gridded at its measured tempo (31 bars at 124 BPM = 60.000 s) rather than re-rendered, because its timing is steadier (jitter 3.7 ms) than the 125 BPM seed 23 take (5.6 ms, one 13 ms step).
+- `scripts/music/loop_take.py` measures each take: tempo by folding the onset envelope, the downbeat from the kick and chord-change slot, and per-bar onset offsets tracked bar to bar, so a wrong tempo shows as a ramp. A take is rejected over 2 ms/bar drift or 6 ms jitter. The loop is cut on a bar line (shifted by the mean onset offset), exactly `bars` bars long, and its first beat is crossfaded with the audio past the loop end, so the wrap continues the take with no length change. Drift on the kept loops: −0.05 to +0.46 ms/bar (porch-light −0.65).
+- `BeatClock` plays the track on its own AudioContext (48 kHz requested, so the loop points are exact samples) as a looping `AudioBufferSourceNode`, the first downbeat on beat 0, at the track's BPM. Changing tracks waits for the next bar line of the old grid, and beat 0 moves to that bar line. The synthesized click stays the fallback: `?music=0`, the "Click (no music)" choice, or a decode error. Style-move lengths follow the clock's BPM. Timing math is pure in `src/audio/music-math.js`.
+- The anchor that maps DOM time to audio time now takes the freshest scheduler reading of the last 500 ms (`envelopeAnchor`), because Chromium updates `currentTime` in chunks and a single reading is late by up to a chunk.
+- The results screen has a Music select. `localStorage["skate-atl.music"]` keeps the choice, and `?music=<id>` picks a track for one visit. Evidence: `reports/m2-music-alignment-day-trail.json` (output sample-matched to the grid, lag 0), `reports/m2-beat-alignment-peachtree-house.json` (32 taps at 124 BPM), and `reports/m0-07-beat-alignment.json` (click).
+- On this VM the PulseAudio null sink holds Chromium's audio clock still for about 1 s after `resume()`, and the clock runs a little fast or slow against `performance.now()`. Chromium also raises `outputLatency` (40 to about 51 ms) after the stream starts. The tap helper shared by `e2e/beat.spec.js` and `e2e/music.spec.js` (`e2e/beat-taps.js`) waits for the clock to move and reads each tap's target time from the anchor and latency at that moment; the base branch's test failed on this VM the same way (mean −220 ms, then +90 ms).
 
 ## 2026-11-05: epic/city-look — full PBR ground sets (assets/textures/ground-pbr, #158)
 - Four sets for the surfaces the skater rides on: `sidewalk` (Poly Haven `brushed_concrete_03`), `brick` (`brick_pavement_02`), `asphalt` (`asphalt_pit_lane`), `trail` (`concrete_floor`). Each has albedo (sRGB, de-lit), OpenGL normal and ORM (R AO, G roughness, B metalness 0), 1024 px (high) and 512 px (phone). All CC0 scans, 0 paid credits; `provenance.json` per set. See `docs/ground-textures-pbr.md`.
@@ -1281,3 +1385,21 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The owner found the first round of options too close to tell apart: in-game time-of-day and grade changes barely move the pbr look (a #160 finding in its own right), and the first paintovers were mild.
 - Round two keeps option A as the game today and makes B–E one clear direction each: hot noon, golden hour, overcast soft, neon night, wet street, warm lamps. They are heavier scripted ImageMagick paintovers of the same captures (`scripts/art/paintover.sh` modes `hot`, `golden`, `soft`, `neon`, `wet`): lawn recolor, lilac asphalt darkened, sky replaced, regrade. 0 credits; no image model.
 - Each contact-sheet tile carries a "Look at:" line naming what changed; the per-frame provenance records the paintover mode and its tuning variables.
+
+## 2026-11-05: epic/city-look — pedestrians on the trail, the sidewalks and the street edges
+- New: `src/sim/peds.js` (pure, seeded, Vitest in `src/sim/peds.test.js`) and `src/render/peds-view.js`, with a small hook in `src/main.js`. `?peds=0` leaves them out; `?npcseed=<n>` seeds them with the crowd. `window.__atl.peds` gives the count, the min gap, the draw calls, the triangles and the list.
+- The gen-city approach (`docs/research/2026-11-04-gen-city-auto.md`): a pool of walkers lives around the camera (140 low, 110 phone, 320 high; radius 150, 140, 200 m, inside the fog). A walker that leaves the pool comes back at the pool edge; a fast travel (a focus jump over 60 m) scatters the pool again. The existing crowd (`src/sim/npc/crowd.js`, a fixed set near the spawn) stays as it is.
+- Routes (`pedRoutes()`): the BeltLine trail (keep right 1.7 m off center, the shoulder as room), the sidewalks less the parts on a street (the `sidewalkLayout()` cuts), chained over the joints, and the street edges: 1.1 m past each side of a main or residential street (`EDGE` in `lanes.js`) where that line is on open ground or a park (`edgeWalks()`). BeltLine level: 2 trail routes (2.3 km), 174 sidewalk routes (29.9 km), 319 edge routes (25.5 km). Walkers do not use the street lanes.
+- Density: a base per route kind (trail 1, sidewalk 0.3, edge 0.1) times one plus the sum of Gaussian hub bumps (sigma 30 m): storefront fronts (`frontEdges()`, peak 1.2), named shops (`shopSignName()`, peak 3) and landmark outlines (`LANDMARKS`, peak 4 every 25 m). 233 hubs on the BeltLine level (161 storefront, 8 shop, 64 landmark). Near a hub, walkers stop now and then (window shopping) and some spawn standing.
+- Behavior: walkers keep right, follow a slower walker going their way, step aside for Nia (7 m), the crowd, the NPC skaters, the street props and each other, and turn around at a route end or after 3 s held. A move that would overlap another walker or Nia does not happen, so walkers never overlap (min gap 0.000 m over 60 s × 3 seeds × 3 places at 320 walkers). They never change Nia's motion; the e2e crowd test that compares her ride with the pure controller still applies.
+- Render: 3 part-packed figures (walker 152, dress with a tote 188, backpack and cap 176 triangles), each one `InstancedMesh`, so 3 draw calls. Each vertex carries its part (leg side, arm side, joint height) and its tint channel (shirt, skin, pants, or fixed); each instance carries its shirt, skin and pants colors and `pedAnim` = (phase, stride). The vertex shader turns the legs about the hip and the arms about the shoulder and bobs the body; the CPU writes one matrix and a few numbers per walker. No skeleton and no CPU animation. The phase advances with the distance walked, so feet do not slide. The material is `litMaterial()`, so the figures follow the toon or the pbr look. Procedural geometry only: no generated assets, so no provenance file.
+- Tone: bright shirts (Hawks red, Braves navy among them), a range of skin tones, people out walking and shopping. No conflict, no danger content.
+
+### Evidence
+- Vitest: `src/sim/peds.test.js` (14 tests: routes on the right surfaces, hubs, hub weighting, seeding, no overlap, recycle around a moving focus, fast travel, give way to Nia, pauses near hubs, phase). Full suite: 1 failure, the known base failure in `src/level/geo/styles.test.js`.
+- Download: main chunk 938.8 → 953.4 kB (+14.6 kB), gzip 245.9 → 251.3 kB (+5.4 kB), on `epic/city-look` a3ba26e. No new asset files.
+- Draw calls and triangles, the same build with `?peds=0` (BEFORE) and without it (AFTER), the same cameras (`scripts/art/pbr-frames.mjs`, pbr look, `npcs=0&cars=0`):
+  - high tier: trail 352 → 358 calls, 889,749 → 1,000,133 triangles; street 212 → 218, 859,549 → 970,317; Ponce City Market 138 → 144, 391,219 → 500,883. The GTAO pass (`src/render/post.js`) draws the scene a second time there, so the 3 walker meshes count twice (320 walkers).
+  - low tier: trail 69 → 72 calls, 152,484 → 176,752 triangles (140 walkers).
+- Walkers grow in over the outer 15% of the pool (`createPedsView`), so the ones that come and go at its edge do not pop inside the fog-free distance on the high tier (fog starts at 260 m, the pool ends at 200 m).
+- Heights come from the level less its buildings, so a walker at a footprint edge stays on the sidewalk. The crowd, the NPC skaters and Nia block spawns and moves.

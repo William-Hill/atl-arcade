@@ -455,6 +455,9 @@ body.results-open #touch-controls { display: none; }
 .results-goals li[data-done="1"] .results-mark { color: #7ef0c2; }
 .results-progress { font-size: 14px; opacity: 0.9; font-variant-numeric: tabular-nums; }
 
+.results-music { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; }
+.results-music-select { flex: 1; max-width: 240px; font: inherit; font-size: 15px; letter-spacing: 0; text-transform: none; min-height: 40px; padding: 6px 8px; border-radius: 8px; border: 1px solid #5b5f7a; background: #1d1f2e; color: #f3f3f7; }
+.results-music-select:focus-visible { outline: 3px solid #ffd166; outline-offset: 2px; }
 /* 48 px high: a touch target. */
 .results-replay {
   display: block;
@@ -484,6 +487,7 @@ body.results-open #touch-controls { display: none; }
   .results-stats dd { font-size: 18px; }
   .results-goals { gap: 2px; margin-bottom: 10px; }
   .results-goals li { font-size: 14px; }
+  .results-music { margin-bottom: 8px; }
 }
 @media (max-width: 600px) and (orientation: portrait) {
   #results {

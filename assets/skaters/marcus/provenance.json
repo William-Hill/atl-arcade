@@ -1,7 +1,7 @@
 {
   "asset": "Marcus \"Tempo\" Reid, the second skater (M1-10, #42)",
   "date": "2026-11-02",
-  "status": "shipped, animated with the M1-02 clip set (greybox clips in ATL and X Games style, not reviewed by skaters)",
+  "status": "shipped review candidate: corrected PBR body and forward motion, pending PR review",
   "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
   "source_image": "docs/characters/concept/marcus/marcus-tpose-front.png (see docs/characters/concept/marcus/provenance.json)",
   "pipeline": "A (Tripo Studio 3D Workspace, Blender cleanup, Draco glTF). Pipeline B (img2character) was not used; see docs/characters/pipeline-comparison-m1-10.md.",
@@ -78,5 +78,13 @@
     "file_size_bytes": 1493828,
     "base_color": "1024x1024 JPEG",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
+  },
+  "current_build": {
+    "date": "2026-11-05",
+    "triangles": 39074,
+    "joints": 65,
+    "clips": 24,
+    "source": "assets/skaters/marcus/raw/forward-v2 (ignored build source)",
+    "method": "Keep corrected push/coast; append the existing clip set; preserve every action for glTF export."
   }
 }

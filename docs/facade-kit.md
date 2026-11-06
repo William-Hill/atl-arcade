@@ -176,7 +176,7 @@ Wiring guidance (done as described in "In the game" below):
   `byModule()` groups the list. All share the one material, so at most ~39
   draw calls per tile, in practice 10–20. Merge tiles if draw calls matter
   more than culling.
-- `<module>_lod1` past `LOD1_DISTANCE = 60` m; drop the small wall modules
+- `<module>_lod1` past `LOD1_DISTANCE = 30` m; drop the small wall modules
   (AC units, lamps, downspout parts, sign boards) past ~120 m; past the
   existing `lod0` distance the shader facade alone is enough.
 - Where the kit is on, turn off the procedural parts it replaces on those
@@ -202,13 +202,24 @@ Wiring guidance (done as described in "In the game" below):
   `covers`: no sill, lintel or head on a window with a GLB frame, no pier on a
   bay line with a GLB pilaster, no sign band on a bay with GLB shop glass, no
   procedural door with a GLB door (the step and lamps stay). The shader glass
-  stays: the modules frame it (they have no face on the wall plane).
+  stays: the modules frame it, with their own panes cut out (below).
 - `src/render/facade-kit-view.js`: `loadFacadeKit()` (Draco) runs in
-  `main.js` while the meshes build; one `InstancedMesh` per module per depth
-  tile, visible closer than `DEPTH_DISTANCE` (120 m, with the procedural depth
-  tiles), the `_lod1` node of a tile past `LOD1_DISTANCE` (60 m, by tile
-  center). The shop names on a tile's GLB sign boards are in the same tile
-  group, so they hide with their boards.
+  `main.js` while the meshes build. All the modules of the level are in one
+  `BatchedMesh` (one draw call: every node shares the kit material), and the
+  shop names on the GLB sign boards in a second one. Culling is per
+  building (its distance: center distance minus footprint radius): closer
+  than `DEPTH_DISTANCE` (120 m, with the procedural depth tiles) it is
+  drawn; past `LOD1_DISTANCE` (30 m) it uses the `_lod1` nodes, and for the
+  other modules `farGeometry()` (the faces toward the street and the large
+  horizontal faces: about 40% of a window frame); the small trim (`TRIM`:
+  AC units, downspout parts, lamps, pilaster caps, roof vents and units,
+  ladders) only closer than `TRIM_DISTANCE` (35 m). The BatchedMesh also
+  frustum-culls per instance.
+- The glass panes of the `window_*` and `storefront_glass_*` nodes (the
+  atlas glass strip) are cut out at load (`withoutGlass()`), so the facade
+  shader's glass and room interiors show through the GLB frames, as in the
+  toon look and with `?kitglb=0`. The door glass stays (the procedural door
+  under it is turned off).
 - `createGeoView(..., { kitGlb })`: `kitGlb` is the loaded nodes or null; on
   with `look === "pbr"`, `kit` and `depth`. A failed load passes null: the
   procedural kit stays whole (nothing is turned off before the GLB is in). So
@@ -217,8 +228,8 @@ Wiring guidance (done as described in "In the game" below):
   On a mural wall, no window frame goes from `mural.floor0` up (the shader
   blanks that wall, as `wallDepth()` drops its sills). `?kitglb=0` leaves the GLB kit out (the procedural kit is whole
   again), `?kit=0` drops both, `?depth=0` drops both depth-tile kits.
-  `window.__atl.level.facadeGlb` has the counts (instances, tiles, near, lod1,
-  drawCalls, triangles, loaded).
+  `window.__atl.level.facadeGlb` has the counts (instances, buildings, near,
+  lod1, shown, drawCalls, triangles before the frustum culling, loaded).
 - `node scripts/assets/facade-kit-wired.mjs OUT_DIR [kind:labview ...]`:
   labeled BEFORE (`?kitglb=0`) and AFTER shots from the same camera, with the
   costs, and the toon and `?kit=0` checks.

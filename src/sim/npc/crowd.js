@@ -94,6 +94,19 @@ function place(npc, lines) {
   return { ...npc, x, z, y: line.height, fx: tx * npc.dir, fz: tz * npc.dir };
 }
 
+// True when a step from (fx, fz) to (x, z) goes deeper into one of the
+// `others` (the skaters): a crowd NPC does not walk into a skater who waits.
+// A step that moves away from an overlap is allowed, so an NPC that a
+// skater rolled into is never stuck.
+function intoOthers(others, fx, fz, x, z, r) {
+  for (const o of others) {
+    const rr = r + o.radius;
+    const d2 = (o.x - x) ** 2 + (o.z - z) ** 2;
+    if (d2 < rr * rr && d2 < (o.x - fx) ** 2 + (o.z - fz) ** 2) return true;
+  }
+  return false;
+}
+
 function overlapsAny(list, i, x, z, r) {
   for (let j = 0; j < list.length; j += 1) {
     if (j === i) continue;
@@ -251,7 +264,7 @@ export function stepCrowd(crowd, dt, nia = null, others = []) {
     let moved = false;
     for (const [ts, toff] of tries) {
       const c = place({ ...n, s: ts, offset: toff, dir }, lines);
-      if (!overlapsAny(list, i, c.x, c.z, n.radius)) {
+      if (!overlapsAny(list, i, c.x, c.z, n.radius) && !intoOthers(others, n.x, n.z, c.x, c.z, n.radius)) {
         Object.assign(n, c);
         moved = true;
         break;

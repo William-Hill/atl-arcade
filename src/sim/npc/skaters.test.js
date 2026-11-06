@@ -106,9 +106,8 @@ describe("NPC skaters", () => {
       }
     }
     st.npcs.forEach(expectClean);
-    // A skater body is 0.3 m in radius. The crowd does not stop for a
-    // skater, so a crowd NPC can brush a skater that waits (one event in this
-    // minute, 0.16 m from the skater center). No skater runs into the crowd.
+    // A skater body is 0.3 m in radius. No skater runs into the crowd, and
+    // a crowd NPC does not step into a skater who waits (crowd.js).
     expect(closest).toBeGreaterThan(0.1);
     // They still ride: at least 150 m each in the minute.
     for (const n of st.npcs) expect(n.stats.distance, `${n.id} distance`).toBeGreaterThan(150);

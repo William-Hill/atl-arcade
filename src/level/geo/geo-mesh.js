@@ -143,15 +143,19 @@ function nearestOnLines(lines, x, z) {
 
 function quad(mesh, a, b, c, d, color, uv = null) {
   // a, b, c, d are [x, y, z] in order around the face.
+  // Both sides, so an awning shows from below and above. Each side has its
+  // own 4 vertices: on shared vertices the two sides' normals sum to 0, and
+  // a 0 normal is NaN in the shader (the bloom spreads it over the frame).
   const base = mesh.positions.length / 3;
-  for (const [i, p] of [a, b, c, d].entries()) {
-    mesh.positions.push(p[0], p[1], p[2]);
-    if (mesh.colors) mesh.colors.push(color[0], color[1], color[2]);
-    if (mesh.facade) mesh.facade.push(0, 0, 0, FACE.roof);
-    if (mesh.uvs) mesh.uvs.push(uv[i][0], uv[i][1]);
+  for (let side = 0; side < 2; side += 1) {
+    for (const [i, p] of [a, b, c, d].entries()) {
+      mesh.positions.push(p[0], p[1], p[2]);
+      if (mesh.colors) mesh.colors.push(color[0], color[1], color[2]);
+      if (mesh.facade) mesh.facade.push(0, 0, 0, FACE.roof);
+      if (mesh.uvs) mesh.uvs.push(uv[i][0], uv[i][1]);
+    }
   }
-  // Both sides, so an awning shows from below and above.
-  mesh.indices.push(base, base + 1, base + 2, base, base + 2, base + 3, base, base + 2, base + 1, base, base + 3, base + 2);
+  mesh.indices.push(base, base + 1, base + 2, base, base + 2, base + 3, base + 4, base + 6, base + 5, base + 4, base + 7, base + 6);
 }
 
 // The walls of a ring that face a street: the indices of the walls whose

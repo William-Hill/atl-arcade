@@ -140,6 +140,12 @@ function stepRolling(s, input, dt, env, k) {
     s.yaw = wrapYaw(s.yaw + input.steer * k.carveRate * k.carveMinFactor * dt);
   }
 
+  // At rest with the push held, the start of a stroke has little thrust
+  // (the half sine starts at 0), and the stopSpeed snap sets the first
+  // small speeds to 0. Without a hold, any uphill rolls her back and turns
+  // her around before the stroke moves her.
+  const pushFromRest = input.push && s.speed === 0;
+
   // Push: a held button gives strokes of pushCooldown s. The thrust of a
   // stroke rises and falls (a half sine wave), and its mean is pushAccel.
   // A release stops the thrust at once; the roll friction then slows her.
@@ -168,7 +174,13 @@ function stepRolling(s, input, dt, env, k) {
   const n = s.groundNormal;
   let t = surfaceTangent(s.yaw, n);
   s.speed -= k.gravity * t[1] * dt;
-  if (s.speed < 0) {
+  if (s.speed < 0 && pushFromRest && k.gravity * t[1] < k.pushAccel) {
+    // A push from rest up a grade that the mean push can climb: she stands
+    // on this tick, and the stroke moves her forward on the next ticks. On
+    // a grade steeper than that, or after she moved (a real stall), she
+    // rolls back below.
+    s.speed = 0;
+  } else if (s.speed < 0) {
     // Rolled back: face the other way and keep rolling.
     s.speed = -s.speed;
     s.yaw = wrapYaw(s.yaw + Math.PI);

@@ -7,7 +7,7 @@ test("the shell renders a Three.js scene with no console errors", async ({ page 
   });
   page.on("pageerror", (err) => errors.push(String(err)));
 
-  await page.goto("/");
+  await page.goto("/?level=greybox&level=greybox");
   await expect(page.locator("#stage")).toBeVisible();
 
   // Wait for the fixed-step loop to have driven real simulation ticks.

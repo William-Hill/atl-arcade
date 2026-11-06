@@ -1041,7 +1041,10 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
 // loadFacadeKit()) or null. The pbr look puts them in the depth tiles, and the
 // procedural kit leaves out what they replace; without them (a failed load)
 // the full procedural kit stays.
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null } = {}) {
+// The build options of the far surface tiles (the low tier).
+export const FAR_TERRAIN_BUILD = { terrainStep: 2, surfacesOnly: true };
+
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, farMeshes = null } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -1106,7 +1109,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   // drape sits above the exact ground, so it must never show near the camera.
   const terrainLods = [];
   if (farTerrain && !terrain.flat) {
-    for (const { tile, mesh } of buildGeoMeshes(level, { terrainStep: 2, surfacesOnly: true })) {
+    // `farMeshes`: the same build, made before (in a worker, #98).
+    for (const { tile, mesh } of farMeshes ?? buildGeoMeshes(level, FAR_TERRAIN_BUILD)) {
       const near = byId.get(`surface-${tile}`);
       if (!near) continue;
       const far = addMesh(root, byId, `surface-far-${tile}`, geoGeometry(mesh), materials.surface);

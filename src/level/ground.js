@@ -37,10 +37,11 @@ export function createGroundSampler(level) {
 // A geodata level (format "geo-level/1") uses the polygon and strip sampler,
 // with the street props as solid obstacles. `props` lists the placements
 // for the render. `{ props: false }` leaves the props out (the M1-03 level).
-export function createLevelEnv(level, { props = true } = {}) {
+// `placed`: the props, made before by levelProps(level) (in a worker, #98).
+export function createLevelEnv(level, { props = true, placed: made = null } = {}) {
   const geo = typeof level.format === "string" && level.format.startsWith("geo-level/");
   if (!geo) return { sampleGround: createGroundSampler(level), bounds: level.bounds, spawn: level.spawn, props: [], grindables: [] };
-  const placed = props ? levelProps(level) : [];
+  const placed = props ? (made ?? levelProps(level)) : [];
   const obstacles = propObstacles(placed.filter((p) => !p.roof));
   const sampleGround = createGeoGroundSampler(level, GEO_CELL, { obstacles });
   // The skate features (#136): the OSM benches and the curbs are ledges.

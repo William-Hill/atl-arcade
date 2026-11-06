@@ -1537,6 +1537,10 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - `e2e/skater-anim.spec.js` (3 tests) and `e2e/skater-face.spec.js` (1 test) fail on this branch and on `epic/city-look` with the same errors (for example, the Marcus GLB has no `dance_smoothquad` clip). They are not part of this change.
 - No person played it. Real skaters did not review the lean or the blends.
 
+## 2026-11-06 — The BeltLine Eastside is the default level
+
+- A URL with no `level` opens `beltline-eastside` (`DEFAULT_LEVEL` in `src/level/levels.js`). This replaces "The greybox stays the default" in the M1 shell entry.
+- The greybox is the debug level. Open it with `?level=greybox`. The e2e specs that need the greybox ask for it by name.
 ## 2026-11-06 — Fewer walkers (performance)
 
 - The owner reported too many NPCs and a slow game. The walker step (`stepPeds`) was the main cost: 320 walkers on the high tier took 7.0 ms per frame in Node, 140 took 1.6 ms, and 120 took 1.3 ms.

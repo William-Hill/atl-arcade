@@ -77,7 +77,7 @@ try {
       if (msg.type() === "error") errors.push(msg.text());
     });
 
-    await page.goto(`http://localhost:${PORT}/?mute=1${LEVEL === "greybox" ? "" : `&level=${LEVEL}`}${QUERY ? `&${QUERY}` : ""}`);
+    await page.goto(`http://localhost:${PORT}/?mute=1&level=${LEVEL}${QUERY ? `&${QUERY}` : ""}`);
     await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 10, null, { timeout: 30000 });
     await page.evaluate(() => window.__atl.beat.start());
     await page.waitForTimeout(300);

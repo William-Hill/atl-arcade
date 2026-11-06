@@ -85,7 +85,7 @@ const smallSkater = params.get("quality") === "phone" || (params.get("quality") 
 const skaterBytes = skaterName !== "capsule" ? fetchSkaterModel(skaterName, (n, total) => loader.progress("skater", n, total), { small: smallSkater }) : null;
 // A failed download is reported where the model loads, not here.
 skaterBytes?.catch(() => {});
-// ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
+// ?level=beltline-eastside (default, alias: beltline) or ?level=greybox (the debug level).
 const level = await loadLevel(params.get("level"));
 performance.mark("atl:level");
 loader.step("level");

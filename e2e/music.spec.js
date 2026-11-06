@@ -11,7 +11,7 @@ const META = JSON.parse(readFileSync(new URL("../assets/music/tracks.json", impo
 const TRACK = META.tracks[0];
 
 async function ready(page, query = "") {
-  await page.goto(`/?${query}`);
+  await page.goto(`/?level=greybox&${query}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 60000 });
 }
 

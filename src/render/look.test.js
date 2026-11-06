@@ -204,11 +204,11 @@ describe("detailNormal", () => {
 
 describe("the pbr detail and the ink", () => {
   it("gives a normal strength to every ground set", () => {
-    expect(DETAIL_NORMAL.ground).toHaveLength(4);
+    expect(DETAIL_NORMAL.ground).toHaveLength(5);
     for (const k of [DETAIL_NORMAL.brick, DETAIL_NORMAL.stone, ...DETAIL_NORMAL.ground]) expect(k).toBeGreaterThan(0);
   });
 
-  it("gives an albedo factor under 1 to every ground set, and the darkest to grass", () => {
+  it("gives an albedo factor under 1 to every ground set, and the darkest gray ground to grass", () => {
     expect(GROUND_ALBEDO).toHaveLength(DETAIL_NORMAL.ground.length);
     for (const rgb of GROUND_ALBEDO) {
       expect(rgb).toHaveLength(3);
@@ -218,7 +218,8 @@ describe("the pbr detail and the ink", () => {
       }
     }
     const mean = (rgb) => (rgb[0] + rgb[1] + rgb[2]) / 3;
-    expect(mean(GROUND_ALBEDO[3])).toBe(Math.min(...GROUND_ALBEDO.map(mean)));
+    // The brick pavers (index 4) are a colored ground, not a gray one.
+    expect(mean(GROUND_ALBEDO[3])).toBe(Math.min(...GROUND_ALBEDO.slice(0, 4).map(mean)));
   });
 
   it("makes the asphalt much darker than the sidewalk slabs", () => {

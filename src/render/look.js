@@ -66,8 +66,9 @@ export const LOOKS = {
 export const DETAIL_NORMAL = {
   brick: 1.4,
   stone: 0.9,
-  // In the order of the ground sets in src/render/geo-view.js (GROUND).
-  ground: [1.0, 0.8, 0.9, 1.2],
+  // In the order of the pbr ground layers (assets/ground/pbr/sets.json):
+  // asphalt, concrete, trail, grass, brick.
+  ground: [1.0, 0.8, 0.9, 1.2, 1.2],
 };
 // The albedo of each ground set in the pbr look, as a factor on the art
 // color, in the order of GROUND. The sun of the pbr look (3.2) falls full on
@@ -82,11 +83,16 @@ export const DETAIL_NORMAL = {
 // darkest ground in a frame), and the grass factor is per channel, so the
 // pale gray-green art colors of the lawn and the park land in the mid
 // green of the style sheet (#4f7a3a to #6f9a4a sRGB) and not in a mint gray.
+//
+// #158: the brick pavers (a path with an OSM paving-stone surface) get a
+// red-brown paver albedo, about #9c5a45 sRGB (linear 0.33, 0.10, 0.06),
+// from the brick art color (geo-mesh.js SURFACE_COLORS.brick) x 0.72.
 export const GROUND_ALBEDO = [
   [0.36, 0.36, 0.3],
   [1.0, 1.0, 0.98],
   [0.85, 0.85, 0.85],
   [0.3, 0.52, 0.17],
+  [0.578, 0.184, 0.122],
 ];
 // The roughness of a painted steel window frame (semi-gloss).
 export const FRAME_ROUGHNESS = 0.45;

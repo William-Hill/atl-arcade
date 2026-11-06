@@ -322,8 +322,9 @@ Both skaters now have 25 clips, with `dance_smoothquad` from the approved
 Tripo smooth quad dance. Marcus did not have this clip before, and the
 contact-sheet test failed on it.
 
-Knee check (`skater_motion_audit.py`, every frame): 21 of 25 Nia clips and
-21 of 25 Marcus clips pass. The failures are deliberate leg shapes:
+Knee check (`skater_motion_audit.py`, every frame): 20 of 25 clips pass for
+each skater. The audit cannot measure `air_liukang`: the kick leg stays
+straight, so it has no bend direction. The failures are deliberate leg shapes:
 `dance_crisscross` and `grind_unity` cross the legs, `grind_frontside` turns
 the body 90 degrees to the rail, and Marcus's `dance_sitspin` extends one
 leg nearly straight. Nia's `ride_back` swizzle brings the knees to 0.083 m

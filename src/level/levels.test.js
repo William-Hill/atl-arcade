@@ -3,7 +3,9 @@ import { loadLevel, resolveLevelName, withCanopy } from "./levels.js";
 
 describe("resolveLevelName", () => {
   it("resolves the known levels and the alias", () => {
-    expect(resolveLevelName()).toBe("greybox");
+    expect(resolveLevelName()).toBe("beltline-eastside");
+    expect(resolveLevelName("")).toBe("beltline-eastside");
+    expect(resolveLevelName("greybox")).toBe("greybox");
     expect(resolveLevelName("beltline")).toBe("beltline-eastside");
   });
 

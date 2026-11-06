@@ -57,14 +57,71 @@ export const ANIM = {
   idleSpeed: 0.3, // m/s. Under this speed the skater stands.
   carveRate: 0.6, // rad/s of yaw change that counts as a carve.
   trickAirTime: 0.25, // s in the air off a ramp before the air trick starts.
-  fade: 0.15, // s default crossfade.
-  fastFade: 0.06, // s crossfade into a bail, a push, a jump, a landing, a grind, or a dance.
+  fade: 0.2, // s default crossfade. FADES sets the time for each change.
   turnTime: 0.35, // s for the half turn into and out of the backward ride.
 };
 
-const FAST = new Set(["bail", "push", "jump", "land", ...GRINDS, ...DANCE_CLIPS]);
 const AIR = new Set(["jump", ...AIR_TRICKS]);
 const GROUND = new Set(["idle", "push", "coast", "ride_back", "carve_left", "carve_right", "manual"]);
+
+// --- Fade times for each state change (#107) ---------------------------
+//
+// The table keys on clip names and clip groups, not on bone data, so new
+// clip GLBs (#170) keep the same blends.
+
+const GROUPS = {
+  idle: ["idle"],
+  roll: ["push", "coast", "manual"],
+  carve: ["carve_left", "carve_right"],
+  back: ["ride_back"],
+  jump: ["jump"],
+  trick: AIR_TRICKS,
+  land: ["land"],
+  grind: GRINDS,
+  bail: ["bail"],
+  dance: DANCE_CLIPS,
+};
+
+const GROUP_OF = new Map();
+for (const [g, clips] of Object.entries(GROUPS)) for (const c of clips) GROUP_OF.set(c, g);
+
+// The group of a clip name. An unknown clip has the group "other".
+export const groupOf = (clip) => GROUP_OF.get(clip) ?? "other";
+
+// The fade rules. The first rule that matches wins. A side is a clip name,
+// a group name, or "*". The times are in seconds.
+export const FADES = [
+  ["*", "bail", 0.05], // A fall reads at once.
+  ["bail", "*", 0.3],
+  ["jump", "trick", 0.15],
+  ["trick", "trick", 0.15],
+  ["*", "land", 0.05], // The impact reads at once.
+  ["land", "*", 0.25],
+  ["*", "jump", 0.06], // The pop reads at once.
+  ["grind", "grind", 0.12],
+  ["*", "grind", 0.08],
+  ["grind", "*", 0.15],
+  ["*", "dance", 0.08],
+  ["dance", "*", 0.25],
+  ["coast", "push", 0.12],
+  ["push", "coast", 0.25],
+  ["carve", "carve", 0.35],
+  ["roll", "carve", 0.3],
+  ["carve", "roll", 0.3],
+  ["*", "back", ANIM.turnTime], // The fade matches the half turn.
+  ["back", "*", ANIM.turnTime],
+  ["idle", "*", 0.3],
+  ["*", "idle", 0.4],
+  ["*", "*", ANIM.fade],
+];
+
+const sideMatches = (side, clip) => side === "*" || side === clip || side === groupOf(clip);
+
+// The crossfade time (s) from one clip to another.
+export function fadeFor(from, to, rules = FADES) {
+  for (const [a, b, t] of rules) if (sideMatches(a, from) && sideMatches(b, to)) return t;
+  return ANIM.fade;
+}
 
 export const beatLength = (bpm = BEAT.bpm) => 60 / bpm;
 
@@ -169,7 +226,7 @@ export function stepAnim(prev, state, dt) {
   next.clip = wanted;
   next.time = 0;
   next.lock = CLIPS[wanted].lock ?? 0;
-  const fade = FAST.has(wanted) ? ANIM.fastFade : ANIM.fade;
+  const fade = fadeFor(prev.clip, wanted);
   return { anim: next, change: { from: prev.clip, to: wanted, fade } };
 }
 

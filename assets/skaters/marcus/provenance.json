@@ -1,6 +1,6 @@
 {
   "asset": "Marcus \"Tempo\" Reid, the second skater (M1-10, #42)",
-  "date": "2026-11-02",
+  "date": "2026-11-05",
   "status": "shipped review candidate: corrected PBR body and forward motion, pending PR review",
   "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
   "source_image": "docs/characters/concept/marcus/marcus-tpose-front.png (see docs/characters/concept/marcus/provenance.json)",
@@ -61,21 +61,125 @@
         "No new generation and no credits. The mesh, the rig, the joint names, and the 24 clips are the same as skater.glb (src/render/skater-model.test.js checks them)."
       ],
       "result": "assets/skaters/marcus/skater-1024.glb, 1,493,828 bytes (skater.glb is 2,071,416 bytes), the same triangles, joints, and clips"
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_runtime.py with skater_hands.py and skater_seams.py",
+      "date": "2026-11-05",
+      "issue": "#168",
+      "prompt": "Give Marcus independent finger articulation. Close the wrist gap in air_japan and the knee pad separation in bail.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_runtime.py -- --name marcus; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_texture_variant.py -- --in assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend --out assets/skaters/marcus/skater-1024.glb",
+      "actions": [
+        "Moved the 40 finger joints onto the hand mesh. They were 0.13 m behind the wrist, inside the forearm. A geodesic merge tree finds the thumb and four finger regions on each hand.",
+        "Split the hand weight of 236 left-hand and 246 right-hand vertices between the hand joint and the three joints of each finger. The forearm weight at the wrist did not change.",
+        "Set one weight field on each knee pad: the cap and the lower strap follow the shin, and the thigh share starts 0.00 m and ends 0.06 m above the knee joint. Skin within 0.03 m of the pad takes the pad weights.",
+        "Smoothed the weights of each wristband. Skin within 0.018 m of the band takes the band weights.",
+        "Kept the 24 clips from raw/runtime-v1 without change. Removed the unused action coast.001."
+      ],
+      "result": "assets/skaters/marcus/skater.glb, 7,761,192 bytes; assets/skaters/marcus/skater-1024.glb, 5,310,536 bytes; 39,074 triangles, 65 joints, 24 clips",
+      "finger_fit": {
+        "Left": {
+          "cuts_m": {
+            "Thumb": 0.0839,
+            "Index": 0.1273,
+            "Middle": 0.1273,
+            "Ring": 0.1254,
+            "Pinky": 0.1095
+          },
+          "lengths_m": {
+            "Thumb": 0.0441,
+            "Index": 0.0854,
+            "Middle": 0.0948,
+            "Ring": 0.0823,
+            "Pinky": 0.0587
+          }
+        },
+        "Right": {
+          "cuts_m": {
+            "Thumb": 0.0797,
+            "Index": 0.1245,
+            "Middle": 0.1245,
+            "Ring": 0.1221,
+            "Pinky": 0.1112
+          },
+          "lengths_m": {
+            "Thumb": 0.0618,
+            "Index": 0.0773,
+            "Middle": 0.093,
+            "Ring": 0.0878,
+            "Pinky": 0.0562
+          }
+        }
+      },
+      "local_files_not_in_git": [
+        "assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend",
+        "assets/skaters/marcus/raw/runtime-v2/build.json",
+        "assets/skaters/marcus/raw/runtime-v2/rig-audit.json"
+      ],
+      "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_runtime.py (nia_clips.py with the forward IK), skater_motion_retarget.py, skater_texture_variant.py",
+      "date": "2026-11-05",
+      "issue": "#170",
+      "prompt": "Rebuild all clips on the v2 body. Drop the legacy clip transfer. Use the knee-pole and twist fixes of skater_forward_motion.py for every clip.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_runtime.py -- --name marcus; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_motion_retarget.py -- --name marcus --fbx assets/skaters/nia/raw/tripo-motion-v1/tripo_convert_8a663486-9228-4e65-abc7-9c14db3df2dd.fbx --out assets/skaters/marcus/raw/runtime-v2 --base assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend --preserve-actions --clip dance_smoothquad --glb assets/skaters/marcus/skater.glb --blend assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_texture_variant.py -- --in assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend --out assets/skaters/marcus/skater-1024.glb",
+      "actions": [
+        "Started from raw/forward-v2/marcus-forward.blend: the corrected v2 body with the reviewed push and coast clips. Applied the #168 hand and seam corrections.",
+        "Removed the 22 legacy clips that runtime v1 appended from the old review rig.",
+        "Keyed 22 clips of nia_clips.py on the v2 rig: calibrated knee pole angles {'L': 24, 'R': -10}, knee poles that turn with the foot yaw, quaternion foot targets, and at() foot x scaled by hip width (stance 1.642).",
+        "At each of 240 leg keys, turned the knee pole about the hip-ankle axis until the knee bend points over the skate (largest residual 0.5 degrees).",
+        "Fists curl each finger about its own axis (finger direction crossed with the palm normal).",
+        "Retargeted dance_smoothquad from the approved Tripo smooth quad dance (no new credits). Marcus did not have this clip before."
+      ],
+      "result": "assets/skaters/marcus/skater.glb, 7,813,640 bytes; skater-1024.glb, 5,362,980 bytes; 65 joints, 25 clips",
+      "local_files_not_in_git": [
+        "assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend",
+        "assets/skaters/marcus/raw/runtime-v2/build.json",
+        "assets/skaters/marcus/raw/runtime-v2/motion-audit.json",
+        "assets/skaters/marcus/raw/runtime-v2/rig-audit.json"
+      ],
+      "credits_spent": 0
+    },
+    {
+      "tool": "Tripo Studio 3D Workspace, Animate, text to motion (studio.tripo3d.ai, driven through Claude in Chrome); Blender 5.2.2 LTS, scripts/blender/skater_motion_retarget.py",
+      "date": "2026-11-05",
+      "issue": "#169",
+      "project": "Nia carrier task 72bfc452-df28-4e58-83bb-e89a35341a9a",
+      "settings": "Duration 5 s. Export FBX, Blender preset, 4k, Export Skeleton on, one animation per file.",
+      "motions": [
+        {
+          "clip": "dance_laffytaffy",
+          "tripo_name": "Dancing in Place",
+          "prompt": "A quad roller skater dances the Atlanta Laffy Taffy groove in place: a relaxed knee bounce on each beat, smooth shoulder rolls, and loose arm swings, upbeat and friendly.",
+          "source_fbx": "assets/skaters/nia/raw/tripo-motion-v2/laffy-taffy/tripo_convert_75c21621-6a1b-4741-9de3-6eb7bf639922.fbx",
+          "review_glb": "assets/skaters/marcus/raw/tripo-motion-v2/laffy-taffy/marcus-dance_laffytaffy.glb"
+        },
+        {
+          "clip": "skate_crossover",
+          "tripo_name": "Skating Turn",
+          "prompt": "A quad roller skater glides forward with bent knees, then does smooth crossover steps to turn left, the right skate crossing over the left, arms out for balance, then glides out of the turn.",
+          "source_fbx": "assets/skaters/nia/raw/tripo-motion-v2/skating-turn/tripo_convert_44bafd1e-08fc-42b5-891d-8ac490e55891.fbx",
+          "review_glb": "assets/skaters/marcus/raw/tripo-motion-v2/skating-turn/marcus-skate_crossover.glb"
+        }
+      ],
+      "result": "Two review clips on the v2 body. Not in the runtime GLB. Owner and real-skater review open.",
+      "credits_spent": 0,
+      "credits_note": "The Tripo credits are recorded in the Nia provenance."
     }
   ],
   "credits_spent_total": 115,
   "tripo_credits_before": 3085,
   "tripo_credits_after": 2970,
   "file": "assets/skaters/marcus/skater.glb",
-  "triangles": 17006,
-  "file_size_bytes": 2071416,
+  "triangles": 39074,
+  "file_size_bytes": 7813640,
   "five_views": "assets/skaters/marcus/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "contact_sheets": "assets/skaters/marcus/clips/<clip>.png, made by e2e/skater-anim.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/marcus/provenance.json)",
-  "animations": 24,
+  "animations": 25,
   "phone_variant": {
     "file": "assets/skaters/marcus/skater-1024.glb",
-    "file_size_bytes": 1493828,
+    "file_size_bytes": 5362980,
     "base_color": "1024x1024 JPEG",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
   },
@@ -83,8 +187,12 @@
     "date": "2026-11-05",
     "triangles": 39074,
     "joints": 65,
-    "clips": 24,
-    "source": "assets/skaters/marcus/raw/forward-v2 (ignored build source)",
-    "method": "Keep corrected push/coast; append the existing clip set; preserve every action for glTF export."
+    "clips": 25,
+    "source": "assets/skaters/marcus/raw/forward-v2 + raw/runtime-v2 (ignored build sources)",
+    "method": "Keep the forward push and coast. Key the other 22 clips on the v2 rig with the forward IK. Retarget dance_smoothquad from the approved Tripo dance.",
+    "corrections": "#168: finger joints and weights, knee pad and wristband weights",
+    "added_clips": [
+      "dance_smoothquad"
+    ]
   }
 }

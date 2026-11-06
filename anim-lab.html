@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Animation lab — Skate ATL</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #10101c; overflow: hidden; }
+    #stage { display: block; width: 100%; height: 100%; }
+    #labels { position: fixed; inset: 0; pointer-events: none; font: 12px/1.3 system-ui, sans-serif; color: #fff; }
+    .label { position: absolute; box-sizing: border-box; padding: 2px 5px; font-size: 11px; background: rgba(16, 16, 28, 0.72); border-right: 1px solid #10101c; }
+  </style>
+</head>
+<body>
+  <canvas id="stage"></canvas>
+  <div id="labels"></div>
+  <script type="module" src="/src/viewer/anim-lab.js"></script>
+</body>
+</html>

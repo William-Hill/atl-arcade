@@ -15,6 +15,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, "index.html"),
         skater: resolve(import.meta.dirname, "skater.html"),
+        "anim-lab": resolve(import.meta.dirname, "anim-lab.html"),
       },
     },
   },

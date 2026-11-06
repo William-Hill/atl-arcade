@@ -1463,3 +1463,94 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
   - low tier: trail 69 → 72 calls, 152,484 → 176,752 triangles (140 walkers).
 - Walkers grow in over the outer 15% of the pool (`createPedsView`), so the ones that come and go at its edge do not pop inside the fog-free distance on the high tier (fog starts at 260 m, the pool ends at 200 m).
 - Heights come from the level less its buildings, so a walker at a footprint edge stays on the sidewalk. The crowd, the NPC skaters and Nia block spawns and moves.
+
+## 2026-11-05 — Marcus fingers, knee pads, and wristbands (#168)
+
+- Fit Marcus's 40 finger joints to his hand mesh. The joints came from Nia's
+  rig and sat 0.13 m behind the wrist. No vertex had a finger weight.
+- Find the fingers with a geodesic merge tree from the wrist. Each finger
+  region is complete when it joins another large region. Sort the regions
+  from the thumb. The fit stops if a hand has fewer than five fingers.
+- Split only the hand weight between the hand and the finger chains. Keep the
+  forearm weight, so the wrist seam does not change.
+- Weight each knee pad from one field: the cap and the lower strap follow the
+  shin, and the thigh share starts at the knee joint and ends 0.06 m above it.
+  A lower band (0.02 to 0.08 m) pulled the thigh skin away from the shorts hem.
+  A higher band left the cap fold in place. Skin within 0.03 m takes the pad weights.
+- Give the skin under each wristband the band weights.
+- Keep the 24 runtime clips unchanged in this step. The clip rebuild (#170)
+  re-keys them on the corrected body.
+- Evidence: `reports/skater-168/` (Blender close renders of the exported GLB,
+  before and after) and the Playwright contact sheets in
+  `assets/skaters/marcus/clips/`. Real skaters and the owner must still
+  review the hands in motion.
+
+## 2026-11-05 — All runtime clips on the v2 bodies (#170)
+
+- Drop the legacy clip transfer. Key the 22 `nia_clips.py` clips on the v2
+  body from `raw/forward-v2`. Keep the reviewed `push` and `coast`.
+- Use the forward IK for every clip: calibrated pole angles, poles that turn
+  with the foot yaw, quaternion foot targets. Also turn the pole at each leg
+  key until the knee points over the skate, because one calibrated pole
+  angle left Nia's knees 17 to 20 degrees inward in `jump` and `ride_back`.
+- Scale `at()` foot x by hip width. Marcus's hips are 1.64 times Nia's.
+- Curl each finger about its own axis, so Marcus's splayed fingers close.
+- Give Marcus `dance_smoothquad` from the same approved Tripo dance as Nia.
+  The clip name stays the same, so the style table and #107 still bind.
+- Clip names do not change. Both GLBs have 25 clips.
+- Known: the e2e T-pose gate fails its control check (too few silhouette
+  pixels) on the base GLBs and on these GLBs. It finds no T-pose frame.
+
+## 2026-11-05 — Tripo text-to-motion tests (#169)
+
+- Generate two 5 s motions in Tripo Studio on the Nia carrier project
+  72bfc452, through Claude in Chrome: "Dancing in Place" (an Atlanta Laffy
+  Taffy groove) and "Skating Turn" (a forward glide into crossover steps).
+  Cost: 40 credits, approved by the owner. Balance 2755 to 2715.
+- Export each motion as its own FBX (Blender preset, skeleton on). Retarget
+  each onto the v2 Nia and Marcus bodies with `skater_motion_retarget.py`.
+- Keep both as review clips in `raw/tripo-motion-v2/`. They are not in the
+  runtime GLBs. The clip names `dance_laffytaffy` and `skate_crossover` are
+  proposals. Adding them needs entries in `src/render/skater-anim.js` and
+  owner approval, as for `dance_smoothquad`.
+- The retarget removes the forward travel of the skating turn (5.55 m on
+  Nia), because the game controller supplies travel. The turn still changes
+  the heading by about 90 degrees, so the clip does not loop in place.
+- Evidence: `reports/skater-169/`.
+
+## 2026-11-06: #107 (code part) — clip blends, carve lean, foot IK
+- Scope: runtime code only. No new clips. The wall slide, bonk, and hard landing clips need Blender and the raw `.blend` files. #170 rebuilds all clips on the v2 bodies later. The code keys on clip names and bone names, not on the bone data of the current clips.
+- Fade times: `FADES` and `fadeFor(from, to)` in `src/render/skater-anim.js`. Rules match a clip name, a clip group (`groupOf()`), or `*`. The first rule that matches wins. Fast fades go into an impact (bail 0.05 s, land 0.05 s, jump 0.06 s). Slow fades go between ground clips (carve to carve 0.35 s, into idle 0.4 s, into and out of the backward ride 0.35 s, the half-turn time). A clip with no rule (a new clip name) gets 0.2 s.
+- Blender: `src/render/anim-blend.js` (pure). Each clip has a weight. A change starts a smoothstep fade from the weights of the current frame, so the weights always sum to 1. The view no longer uses `crossFadeTo()`. That call reset a clip that was still fading out to weight 0 when a second change came back to it (a pop). Now a looping clip that still has weight keeps its time. A one-time clip (jump, land, bail) starts again.
+- Lean: the body banks about the forward axis at 0.6 of the centripetal angle `atan(v * yawRate / g)`, at most 0.22 rad (12.6 degrees), with a 0.12 s smoothing that does not depend on the frame rate. On the coast and the push, the carve clips add a lean pose (`makeClipAdditive()` of the middle pose of `carve_left` or `carve_right` less the middle pose of `coast`), at most weight 0.6. The carve clips themselves get the bank only. `?lean=0` turns the lean off.
+- Foot IK: `src/render/foot-ik.js` (pure) plans the feet. It samples the level ground (`env.sampleGround`, no Rapier query) at the ankle and the toe of each skate and takes the higher one, so a skate across a stair edge sits on the step nose. The pelvis drops with the lower foot (at most 0.3 m). A two-bone solve bends each leg in the plane of the clip pose. Each skate tilts toward the ground normal (at most 0.6 rad). A tilted skate holds its ankle at h / cos(tilt) over the ground. The IK is off in the air, on a rail, and in a bail. It fades in over 0.15 s and out over 0.06 s. The leg bones are found by name: Mixamo with any prefix, and Blender `thigh.L` names.
+- Phone: the foot IK is off on the phone tier and on a phone device (the same check as the 1024 px skater). `?footik=1` or `?footik=0` sets it. NPC skaters have no foot IK. They get the lean.
+- Test page: `anim-lab.html` (`src/viewer/anim-lab.js`) puts a skater on the greybox ramp and stairs and draws the contact sheets for `e2e/skater-blend.spec.js`.
+
+### Evidence
+- Vitest: `src/render/anim-blend.test.js` (fade table, blender, lean) and `src/render/foot-ik.test.js` (bone names of both GLBs, two-bone solve, foot plan on the greybox stairs and quarter pipe, tilt, IK weight). 31 tests.
+- Playwright: `e2e/skater-blend.spec.js`. Contact sheets: `e2e/__screenshots__/anim-107-{nia,marcus}-{blend,lean,contact}.png`.
+  - Stairs (the left skate one 0.17 m step down): gap 0.170 m with IK off, 0.000 m with IK on, for both skaters.
+  - Ramp (1.2 m up the 3 m quarter pipe, about 24 degrees, riding across it): Nia uphill skate -0.097 m (into the ramp) to -0.015 m, downhill 0.039 m to 0.000 m. Marcus -0.127 m to -0.042 m, and 0.050 m to -0.015 m.
+  - Pop check (largest bone turn in one frame, rad): changes 0.127 (Nia) and 0.121 (Marcus); the push clip alone turns 0.133 and 0.180.
+  - IK cost in headless SwiftShader: 0.06 to 0.11 ms per frame.
+
+### Limits
+- On a slope the uphill skate can still go 1.5 to 4.2 cm into the surface: the toe moves after the tilt, and the plan samples the ground before it. A second sample pass would fix it for about twice the cost.
+- The body stays upright on a ramp. Only the legs and the skates follow the surface.
+- The lean pose uses one frame of each carve clip. #170 changes the clips, so look at the lean sheet again after it.
+- FPS gate not verified: `npm run playtest` gives a median of 6.7 FPS on this cloud machine (4 CPUs, SwiftShader) for this branch and for `epic/city-look` alike (gate 55). Run it again on the Mac.
+- `e2e/skater-anim.spec.js` (3 tests) and `e2e/skater-face.spec.js` (1 test) fail on this branch and on `epic/city-look` with the same errors (for example, the Marcus GLB has no `dance_smoothquad` clip). They are not part of this change.
+- No person played it. Real skaters did not review the lean or the blends.
+
+## 2026-11-06 — The BeltLine Eastside is the default level
+
+- A URL with no `level` opens `beltline-eastside` (`DEFAULT_LEVEL` in `src/level/levels.js`). This replaces "The greybox stays the default" in the M1 shell entry.
+- The greybox is the debug level. Open it with `?level=greybox`. The e2e specs that need the greybox ask for it by name.
+## 2026-11-06 — Fewer walkers (performance)
+
+- The owner reported too many NPCs and a slow game. The walker step (`stepPeds`) was the main cost: 320 walkers on the high tier took 7.0 ms per frame in Node, 140 took 1.6 ms, and 120 took 1.3 ms.
+- New counts in `PED_COUNT` (`src/sim/peds.js`): high 120 (was 320), low 70 (was 140), phone 50 (was 110).
+- `?peds=<n>` sets the count (0 to 400). `?peds=0` still turns the walkers off.
+- The trail crowd (40, 0.2 ms), the traffic (68 moving cars, 0.9 ms) and the NPC skaters (5, 1.3 ms) do not change.
+- Not verified: the FPS on a real phone, and the FPS in the browser at 60 Hz (the test browser window was not in view).

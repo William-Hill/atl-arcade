@@ -36,7 +36,7 @@ test(`every ${name} clip renders as a contact sheet`, async ({ page }) => {
 test(`the scripted sessions show no ${name} T-pose frame`, async ({ page }) => {
   test.setTimeout(120000);
   const errors = collectErrors(page);
-  await page.goto(`/?mute=1&skater=${name}`);
+  await page.goto(`/?level=greybox&mute=1&skater=${name}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
   const tpose = await page.evaluate(() => window.__atl.skaterModel.tposeSilhouette());
   const tposePixels = tpose.reduce((a, b) => a + b, 0);
@@ -106,7 +106,7 @@ test(`the scripted sessions show no ${name} T-pose frame`, async ({ page }) => {
 test("the switch button turns the skater to ride backward", async ({ page }) => {
   test.setTimeout(60000);
   const errors = collectErrors(page);
-  await page.goto("/?mute=1");
+  await page.goto("/?level=greybox&mute=1");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
   const samples = await page.evaluate(async () => {
     const atl = window.__atl;

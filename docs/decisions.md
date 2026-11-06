@@ -1455,3 +1455,20 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Clip names do not change. Both GLBs have 25 clips.
 - Known: the e2e T-pose gate fails its control check (too few silhouette
   pixels) on the base GLBs and on these GLBs. It finds no T-pose frame.
+
+## 2026-11-05 — Tripo text-to-motion tests (#169)
+
+- Generate two 5 s motions in Tripo Studio on the Nia carrier project
+  72bfc452, through Claude in Chrome: "Dancing in Place" (an Atlanta Laffy
+  Taffy groove) and "Skating Turn" (a forward glide into crossover steps).
+  Cost: 40 credits, approved by the owner. Balance 2755 to 2715.
+- Export each motion as its own FBX (Blender preset, skeleton on). Retarget
+  each onto the v2 Nia and Marcus bodies with `skater_motion_retarget.py`.
+- Keep both as review clips in `raw/tripo-motion-v2/`. They are not in the
+  runtime GLBs. The clip names `dance_laffytaffy` and `skate_crossover` are
+  proposals. Adding them needs entries in `src/render/skater-anim.js` and
+  owner approval, as for `dance_smoothquad`.
+- The retarget removes the forward travel of the skating turn (5.55 m on
+  Nia), because the game controller supplies travel. The turn still changes
+  the heading by about 90 degrees, so the clip does not loop in place.
+- Evidence: `reports/skater-169/`.

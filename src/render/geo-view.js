@@ -1052,6 +1052,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       glbView = createFacadeKitView(nodes, glbKit.tiles, { depthDistance });
       root.add(glbView.root);
       facadeGlb.loaded = true;
+    }).catch((err) => {
+      // The procedural kit is still there: the game goes on without the GLB.
+      facadeGlb.error = String(err?.message ?? err);
+      console.warn("facade kit GLB failed to load", err);
     });
   }
   const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));

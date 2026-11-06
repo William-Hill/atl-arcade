@@ -1287,3 +1287,22 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Frames ship as JPGs with one `<frame>.provenance.json` each and a folder `provenance.json` listing them in `docs/style-frames/<subject>/`, with a grouped contact sheet; the owner chooses the frames to keep, and the chosen ones go into the doc.
 
 
+
+## 2026-11-05: epic/city-look — the Blender facade kit in the pbr look
+
+### Decisions
+
+- The pbr look draws `assets/facades/facade-kit.glb` (docs/facade-kit.md, "In the game"): `src/level/geo/facade-kit-glb.js` (pure) runs `facadePlacements()` on every building that is not a claimed landmark footprint, from `frontEdges()`, `chooseStyle()`, `buildingSpan()`, `muralWalls()` and `floorCount()`; `src/render/facade-kit-view.js` loads the GLB after the level shows and draws one `InstancedMesh` per module per 50 m depth tile. The toon look keeps the whole procedural kit. `?kit=0` drops both kits, `?depth=0` both depth-tile kits, and `?kitglb=0` the GLB kit only (the BEFORE of the evidence).
+- The GLB tiles are visible with the procedural depth tiles (closer than `DEPTH_DISTANCE` = 120 m), and a tile uses the `_lod1` nodes past `LOD1_DISTANCE` (60 m, by tile center). Past 120 m the shader facade alone is drawn, as before.
+- The procedural kit leaves out what the GLB replaces, per slot (`kitCovers()`): the sill, lintel and head of a window with a GLB frame, the pier on a bay line with a GLB pilaster, the sign band of a bay with GLB shop glass, and the procedural door where there is a GLB door (the step and the lamps stay, the lamps on the pilaster face). The shader shop glass and windows stay: the modules frame them and have no face on the wall plane.
+- Kept procedural (`GLB_SKIP`): the awnings (they match the street awnings), and the cornice, coping and belt course. Those are in the building tiles, drawn at every distance; the GLB runs in the depth tiles would leave the roof line bare past 120 m.
+- The shop-name decals (`shop-names.js`) go on the GLB sign boards; a GLB sign board under a named shop sign (`shop-signs.js`) is left out.
+- `facadePlacements()` takes `floors` (the shader's floor count, OSM levels included, so the frames stay on the shader windows) and the door bay of `frontEdges()`, and tags each module with its slot (`bay`, `floor`, `line`).
+
+### Evidence
+
+- See the PR: labeled BEFORE (`?kitglb=0`) / AFTER shots from the same cameras (`node scripts/assets/facade-kit-wired.mjs OUT_DIR`), with the costs.
+
+### Limits
+
+- The GLB kit has no colliders, like the rest of the kit.

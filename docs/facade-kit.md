@@ -4,8 +4,9 @@
 for the Beltline Eastside level (Old Fourth Ward, Inman Park, Poncey-Highland):
 storefronts, upper windows, cornices and parapet caps, belt courses, awnings,
 balconies, fire escapes, wall AC units, roof units, and trim. It is built by
-`scripts/blender/facade_kit.py` (Blender 5.2.3, headless, no Meshy) and is not
-wired into the game yet. This doc is for the session that wires it in.
+`scripts/blender/facade_kit.py` (Blender 5.2.3, headless, no Meshy). The pbr
+look draws it in the game (see "In the game" below); the toon look keeps the
+procedural kit.
 
     ~/tools/blender -b -P scripts/blender/facade_kit.py -- assets/facades --stats /tmp/fk-stats.json
     node scripts/assets/facade-kit-check.mjs --out lineup.png --lod1 lod1.png
@@ -169,7 +170,7 @@ Per building:
 7. Roof units on flat roofs (rule 8), never in a courtyard (`holes`) or
    within 1.5 m + clearance of its edge.
 
-Wiring it in (the parent's job, not done here):
+Wiring guidance (done as described in "In the game" below):
 
 - One `InstancedMesh` per module per depth tile (`DEPTH_TILE = 50`);
   `byModule()` groups the list. All share the one material, so at most ~39
@@ -183,6 +184,37 @@ Wiring it in (the parent's job, not done here):
   `KIT.awning` awnings. The preview does it the blunt way with `?kit=0`
   (which also drops cornices, crowns and pitched house roofs).
 - Under `?look=pbr` only; the toon look keeps the procedural kit.
+
+## In the game
+
+- `src/level/geo/facade-kit-glb.js` (pure): `facadeKitPlacements(level,
+  fronts, { signs })` runs `facadePlacements()` for every building that is not
+  a claimed landmark footprint, with `floors = floorCount()` (the shader's
+  floors, OSM levels included) and the door bay of `frontEdges()`, and groups
+  the modules by the 50 m depth tile of `facadeKit()`. It returns the tiles,
+  the per-building `covers` (`kitCovers()`), and the shop-name boards on the
+  GLB sign boards. A GLB sign board under a shop sign (`shop-signs.js`) is
+  left out.
+- `GLB_SKIP` keeps the procedural awnings, cornice, coping, and belt course:
+  those are in the building tiles, drawn at every distance, so the roof line
+  does not go bare past `DEPTH_DISTANCE`.
+- `buildingKit()` / `wallDepth()` / `shopFront()` / `shopEntrance()` take the
+  `covers`: no sill, lintel or head on a window with a GLB frame, no pier on a
+  bay line with a GLB pilaster, no sign band on a bay with GLB shop glass, no
+  procedural door with a GLB door (the step and lamps stay). The shader glass
+  stays: the modules frame it (they have no face on the wall plane).
+- `src/render/facade-kit-view.js`: loads the GLB (Draco) after the level
+  shows, one `InstancedMesh` per module per depth tile, visible closer than
+  `DEPTH_DISTANCE` (120 m, with the procedural depth tiles), the `_lod1` node
+  of a tile past `LOD1_DISTANCE` (60 m, by tile center).
+- `createGeoView(..., { kitGlb })`: on with `look === "pbr"`, `kit` and
+  `depth`. `?kitglb=0` leaves the GLB kit out (the procedural kit is whole
+  again), `?kit=0` drops both, `?depth=0` drops both depth-tile kits.
+  `window.__atl.level.facadeGlb` has the counts (instances, tiles, near, lod1,
+  drawCalls, triangles, loaded).
+- `node scripts/assets/facade-kit-wired.mjs OUT_DIR [kind:labview ...]`:
+  labeled BEFORE (`?kitglb=0`) and AFTER shots from the same camera, with the
+  costs, and the toon and `?kit=0` checks.
 
 ## Preview in the real renderer
 

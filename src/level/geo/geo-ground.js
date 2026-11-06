@@ -12,7 +12,7 @@
 // are strips: a point is on a strip when it is within width / 2 of the
 // center line. A uniform grid keeps each query to a few candidates.
 
-import { BRIDGE, bridgeDeck, buildingSpan, parapetBlocked, terrainOf } from "./terrain.js";
+import { BRIDGE, bridgeDeck, buildingSpan, limitGrade, parapetBlocked, terrainOf } from "./terrain.js";
 import { bridgeLayout, parapetRuns } from "./bridges.js";
 import { streetJunctions } from "./junctions.js";
 import { medianStrips } from "./medians.js";
@@ -179,7 +179,7 @@ export function createGeoGroundSampler(level, cell = GEO_CELL, { obstacles = [] 
     if (x < minX || x > maxX || z < minZ || z > maxZ) return null;
     const flat = terrain.flat;
     const t = flat ? 0 : terrain.height(x, z);
-    const n = flat ? UP : terrain.normal(x, z);
+    const n = flat ? UP : limitGrade(terrain.normal(x, z));
     let best = { height: groundTop + t, normal: n, id: "ground" };
     const list = grid.get(cellKey(Math.floor(x / cell), Math.floor(z / cell)));
     let ramp = null;
@@ -199,7 +199,7 @@ export function createGeoGroundSampler(level, cell = GEO_CELL, { obstacles = [] 
         } else if (s.deck) {
           h = s.top + s.deck(x, z);
           if (h > y + BRIDGE_HEADROOM) continue;
-          normal = deckNormal(s, x, z);
+          normal = limitGrade(deckNormal(s, x, z));
         } else h = s.top + t;
         if (h <= best.height) continue;
         if (contains(s, x, z)) best = { height: h, normal, id: s.id };

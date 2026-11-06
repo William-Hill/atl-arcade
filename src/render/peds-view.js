@@ -206,9 +206,10 @@ export function createPedsView(state, { look = "toon" } = {}) {
   const looks = new Map();
   const lookOf = (n) => {
     if (!looks.has(n)) {
+      // Clear a full cache before the new entry, so the entry stays.
+      if (looks.size >= 4096) looks.clear();
       const l = pedLook(n);
       looks.set(n, { ...l, shirt: new THREE.Color(l.shirt), pants: new THREE.Color(l.pants), skin: new THREE.Color(l.skin) });
-      if (looks.size > 4096) looks.clear();
     }
     return looks.get(n);
   };

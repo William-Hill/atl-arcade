@@ -28,7 +28,7 @@ import { pathToFileURL } from "node:url";
 import polygonClipping from "polygon-clipping";
 import { bboxCenter, createProjection, parseBbox } from "../src/level/geo/projection.js";
 import { cleanRing, signedArea } from "../src/level/geo/extrude.js";
-import { decodeHeights, encodeHeights, gradeBridgeEnds, gradeFootprints, gradeTrail, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
+import { FOOTPRINT_GRADE, decodeHeights, encodeHeights, gradeBridgeEnds, gradeFootprints, gradeTrail, gradeWays, bridgeNodes, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
 import { shortName } from "../src/level/geo/signs.js";
 import { createStreetNamer } from "./street-names.mjs";
 
@@ -515,11 +515,12 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
   // Raise the bridge approaches that the grid smooths (src/level/geo/terrain.js).
   let embankments = [];
   if (terrain) {
-    // First a rail grade on the trail, then a pad under each building on a
-    // slope (#135; it keeps the trail band), then the embankments at the
-    // bridge ends.
+    // First a rail grade on the trail, then the playable ways to a skating
+    // grade, then a pad under each building on a slope (#135; it keeps the
+    // trail band and the ways), then the embankments at the bridge ends.
     const railed = gradeTrail({ ...terrain, heights: decodeHeights(terrain.data, terrain.cols * terrain.rows) }, strips).heights;
-    const graded = gradeFootprints({ ...terrain, heights: railed }, buildings, strips).heights;
+    const skated = gradeWays({ ...terrain, heights: railed }, strips).heights;
+    const graded = gradeFootprints({ ...terrain, heights: skated }, buildings, strips).heights;
     const r = raiseEmbankments({ ...terrain, heights: graded }, strips);
     embankments = r.changes;
     // Last, the ground at the bridge joints goes on the deck line (#131).
@@ -527,7 +528,13 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     // runtime deck (bridgeDeck) has the same line as the grade.
     const once = gradeBridgeEnds({ ...terrain, heights: r.heights }, strips);
     const ends = gradeBridgeEnds({ ...terrain, heights: once.heights }, strips);
-    terrain = { ...terrain, data: encodeHeights(ends.heights) };
+    // The embankments and the bridge ends steepen the ways near the decks
+    // again: grade the ways once more with the bridge nodes pinned, then the
+    // lots again, off the way network only, so a way keeps its grade.
+    const skating = gradeWays({ ...terrain, heights: ends.heights }, strips, { pinned: bridgeNodes(terrain, strips) });
+    const wayMargin = terrain.cell * Math.SQRT2 + 0.01;
+    const lots = gradeFootprints({ ...terrain, heights: skating.heights }, buildings, strips, { ...FOOTPRINT_GRADE, wayMargin, trailMargin: Math.max(FOOTPRINT_GRADE.trailMargin, wayMargin) });
+    terrain = { ...terrain, data: encodeHeights(lots.heights) };
   }
   const spawn = trailSpawn(strips.filter((st) => !st.bridge));
   if (terrain) spawn.position[1] = round(spawn.position[1] + terrainOf({ terrain }).height(spawn.position[0], spawn.position[2]));

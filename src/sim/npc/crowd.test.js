@@ -126,6 +126,21 @@ describe("crowd", () => {
     expect(c.npcs[0].speed).toBeGreaterThan(0);
   });
 
+  it("never steps into a skater who waits in its way", () => {
+    const crowd = createCrowd(LEVEL, { seed: 1 });
+    const n = crowd.npcs[0];
+    // A skater (radius 0.4) at rest 1.5 m ahead, a little to the right.
+    const skater = { x: n.x + n.fx * 1.5 - n.fz * 0.3, z: n.z + n.fz * 1.5 + n.fx * 0.3, radius: 0.4, vx: 0, vz: 0 };
+    let c = crowd;
+    let closest = Infinity;
+    for (let t = 0; t < 240; t += 1) {
+      c = stepCrowd(c, DT, null, [skater]);
+      const m = c.npcs[0];
+      closest = Math.min(closest, Math.hypot(m.x - skater.x, m.z - skater.z) - m.radius - skater.radius);
+    }
+    expect(closest).toBeGreaterThanOrEqual(0);
+  });
+
   it("gives way: an NPC steps to the side away from Nia", () => {
     const crowd = createCrowd(LEVEL, { seed: 1 });
     const n = crowd.npcs[0];

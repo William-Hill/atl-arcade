@@ -227,7 +227,7 @@ describe("the greybox gaps with the real controller", () => {
 });
 
 // The Beltline gaps: a hop on the trail under each bridge. The skater rides
-// the trail north to south (-z) at x 336.
+// the trail south to north (-z) at x 336.
 describe("the Beltline gaps with the real controller", () => {
   const env = createLevelEnv(BELTLINE);
   const skaterEnv = createSkaterEnv(BELTLINE);
@@ -235,7 +235,7 @@ describe("the Beltline gaps with the real controller", () => {
   function hop(z, pushFrames) {
     // The trail height, under the bridge decks (26.5 m is over the trail, under the decks).
     const y = env.sampleGround(336, z, 26.5).height;
-    let r = createRun(BELTLINE, { position: [336, y, z], yaw: -Math.PI / 2 });
+    let r = createRun(BELTLINE, { position: [336, y, z], yaw: Math.PI / 2 });
     let g = createGoals(def);
     const script = [{ frames: pushFrames, input: { push: true } }, { frames: 1, input: { push: true, jump: true } }, { frames: 90, input: {} }];
     for (const e of script) for (let i = 0; i < e.frames; i += 1) {

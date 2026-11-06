@@ -24,7 +24,7 @@ test("the capsule follows the controller and a scripted run lands within toleran
   const env = createLevelEnv(GREYBOX);
   const expected = runScript(createSkateState({ position: GREYBOX.spawn.position, yaw: GREYBOX.spawn.yaw }), SCRIPT, { env }).state;
 
-  await page.goto("/?view=orbit");
+  await page.goto("/?level=greybox&view=orbit");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
 
   const actual = await page.evaluate((script) => window.__atl.runScript(script), SCRIPT);
@@ -42,7 +42,7 @@ test("the capsule follows the controller and a scripted run lands within toleran
 });
 
 test("keyboard input drives the skater", async ({ page }) => {
-  await page.goto("/?view=orbit");
+  await page.goto("/?level=greybox&view=orbit");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
   const start = await page.evaluate(() => window.__atl.skater.position[0]);
   await page.keyboard.down("KeyW");

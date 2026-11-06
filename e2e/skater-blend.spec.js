@@ -81,7 +81,7 @@ for (const name of SKATERS) {
 test("the game turns foot IK on, and off on the phone tier", async ({ page }) => {
   test.setTimeout(120000);
   const errors = collectErrors(page);
-  await page.goto("/?mute=1&skater=nia");
+  await page.goto("/?level=greybox&mute=1&skater=nia");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 60000 });
   // The IK weight fades in over FOOT_IK.fadeIn frames of game time.
   await page.waitForFunction(() => window.__atl.skaterModel.footIk.weight === 1, null, { timeout: 20000 });
@@ -89,10 +89,10 @@ test("the game turns foot IK on, and off on the phone tier", async ({ page }) =>
   expect(ik.on).toBe(true);
   expect(ik.ms).toBeLessThan(2);
   expect(Math.abs(await page.evaluate(() => window.__atl.skaterModel.lean))).toBeLessThan(0.01);
-  await page.goto("/?mute=1&skater=nia&quality=phone");
+  await page.goto("/?level=greybox&mute=1&skater=nia&quality=phone");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 60000 });
   expect((await page.evaluate(() => window.__atl.skaterModel.footIk)).on).toBe(false);
-  await page.goto("/?mute=1&skater=nia&quality=phone&footik=1");
+  await page.goto("/?level=greybox&mute=1&skater=nia&quality=phone&footik=1");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 60000 });
   expect((await page.evaluate(() => window.__atl.skaterModel.footIk)).on).toBe(true);
   expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);

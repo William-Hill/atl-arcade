@@ -1536,3 +1536,8 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - FPS gate not verified: `npm run playtest` gives a median of 6.7 FPS on this cloud machine (4 CPUs, SwiftShader) for this branch and for `epic/city-look` alike (gate 55). Run it again on the Mac.
 - `e2e/skater-anim.spec.js` (3 tests) and `e2e/skater-face.spec.js` (1 test) fail on this branch and on `epic/city-look` with the same errors (for example, the Marcus GLB has no `dance_smoothquad` clip). They are not part of this change.
 - No person played it. Real skaters did not review the lean or the blends.
+
+## 2026-11-06 — The BeltLine Eastside is the default level
+
+- A URL with no `level` opens `beltline-eastside` (`DEFAULT_LEVEL` in `src/level/levels.js`). This replaces "The greybox stays the default" in the M1 shell entry.
+- The greybox is the debug level. Open it with `?level=greybox`. The e2e specs that need the greybox ask for it by name.

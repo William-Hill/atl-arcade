@@ -10,7 +10,7 @@ const BAL = GRIND.balanceDrift / GRIND.balanceCorrect;
 const { defaultBrowserType, ...pixel } = devices["Pixel 7"]; // eslint-disable-line no-unused-vars
 
 async function ready(page, query = "") {
-  await page.goto(`/?mute=1${query}`);
+  await page.goto(`/?mute=1${query}${query.includes("level=") ? "" : "&level=greybox"}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 60000 });
 }
 

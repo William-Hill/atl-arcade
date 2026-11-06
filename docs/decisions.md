@@ -1604,3 +1604,16 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - `?peds=<n>` sets the count (0 to 400). `?peds=0` still turns the walkers off.
 - The trail crowd (40, 0.2 ms), the traffic (68 moving cars, 0.9 ms) and the NPC skaters (5, 1.3 ms) do not change.
 - Not verified: the FPS on a real phone, and the FPS in the browser at 60 Hz (the test browser window was not in view).
+
+## 2026-11-06 — First load: the level builds in workers (#98)
+
+- `drapeMesh()` (`src/level/geo/terrain.js`) was most of the mesh build: it welded vertices with text keys. It now uses number keys in a hash chain and flat vertex arrays, with the same math in the same order. The output is the same to the bit (a SHA-256 of the whole BeltLine build, the far build, and the plain build; `drape.test.js` keeps the first version as a reference). The full build takes 1.4 s in Node, down from 3.6 s.
+- The meshes, the low tier's far surface tiles, and the street prop placements (`levelProps()`) build in Web Workers (`geo-mesh-worker.js`, `geo-mesh-async.js`) while the main thread makes the lights, the sky, and the skate env, and the Rapier WASM compiles. The mesh buffers are transferred, not copied.
+- A mesh build can be split in tile shards (`shard: { index, count }` in `buildGeoMeshes()`, `shardOf()`, `mergeGeoShards()`). Each (material, tile) mesh is built whole in one shard, so the merged list is the same as one build. Up to 2 mesh workers, one core stays for the main thread; `?meshshards=<n>` sets the count. On the 4-core test machine 1, 2, and 3 shards gave the same first frame (within the noise); more workers help when the build, not the main thread, is the limit.
+- Chromium boots a worker with tasks on the main thread. A worker made just before a long main-thread task started only after it (5 s later). So `main.js` waits for the workers' `ready` message (at most 2 s) before the long steps.
+- The main thread claims the landmark GLB footprints in its own module copy (`claimLandmarkModels()`); the worker gets a `claimLandmarks` flag and claims them in its copy.
+- A missing Worker, a worker error, or `?meshworker=0` builds on the main thread, as before.
+- Rejected: baking the meshes at build time. The merged meshes are 20.7 MB raw and 5.0 MB gzipped, against 0.15 MB for the gzipped level file: about 4.5 s more download on the 9 Mbps phone profile, more than the build time it saves.
+- `npm run loadcheck` now writes the long tasks (over 50 ms) before the first game frame, and takes `--query <&params>`.
+- Not verified: `npm run loadcheck -- --gpu` on a Mac (the issue's gate, under 4 s). This machine has no GPU; the numbers in the PR are SwiftShader with a 4x CPU throttle.
+- Next big main-thread step: from `atl:view` to `atl:scene` (the weather, the walkers, the cars, the NPC skaters), about 6 s here.

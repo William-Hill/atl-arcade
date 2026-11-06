@@ -7,7 +7,7 @@ name: Deploy to Vercel
 
 on:
   push:
-    branches: [main]
+    branches: [main, "epic/**"]
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -61,6 +61,19 @@ jobs:
           url=$(npx --yes ${{ env.VERCEL_CLI }} deploy --prebuilt ${{ steps.target.outputs.flag }} --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Deployed: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      # An epic branch gets a stable URL: epic/city-look -> skate-atl-city-look.vercel.app
+      - name: Set the stable URL of the epic branch
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/epic/')
+        env:
+          BRANCH: ${{ github.ref_name }}
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          slug=$(printf '%s' "${BRANCH#epic/}" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-' | sed 's/-*$//')
+          alias="skate-atl-${slug}.vercel.app"
+          npx --yes "$VERCEL_CLI" alias set "$DEPLOY_URL" "$alias" --token="$VERCEL_TOKEN" --scope=william-hills-projects
+          echo "Stable URL: https://$alias" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Write the preview URL on the pull request
         if: github.event_name == 'pull_request'

@@ -1,6 +1,12 @@
 # Pedestrians, street furniture and BeltLine props (assets/people, assets/props/street, assets/props/beltline)
 
-Meshy-generated models for the pbr look (#133, #115): models only. Nothing in the game loads them yet; this note is how to place them.
+Meshy-generated models for the pbr look (#133, #115), and how the game places them.
+
+## In the game
+
+- People: `src/render/ped-models.js`. In the pbr look the walkers of `src/sim/peds.js` nearest the camera (8 on high, 3 on phone, none on low, within 45 m) are drawn as these people. Each person is picked per walker id from `walker_sundress`, `elder_polo`, `jogger`, `dog_walker` and `stroller_dad`. The walk plays at the walker's pace (one cycle per `PEDS.stride` m), and the idle plays when the walker stops. `peds-view.js` skips those walkers (`sync(st, skip)`). The dog walker has the `dog` on a leash; the stroller dad pushes the `stroller`, whose wheels turn. `?pedglb=0` turns this off. The cyclist (no bike lane yet) and the sit pose are not used in the game.
+- Props: `src/level/geo/props.js` places them, and `src/render/people-props-view.js` draws them: one `InstancedMesh` per mesh of each LOD, up to 160 m, with lod1 from the manifest `lodDistance`. They are also solids (`PROP_SOLID`) for the skater and the walkers. The OSM `drinking_water` and `bollard` points get `drinking_fountain` and `bollard` (`FURNITURE_PROP`). Along the trail, before the row trees: a picnic table with a patio umbrella every 160 m, plus a food cart at every second stop; a bike dock with a city bike and an e-scooter every 200 m; a sculpture every 480 m. On beltline-eastside that is 3 fountains, 2 bollards, 13 tables, 12 umbrellas, 6 food carts, 7 docks, 7 bikes, 7 scooters and 4 sculptures. `?meshyprops=0` hides them; they still stand as solids. Parked bikes and scooters don't move.
+- Not placed: cones and barricades (no construction data yet).
 
 - Generator: `node scripts/assets/meshy-people-props.mjs --cap 400` (Meshy text-to-3D meshy-t2.5, rigging, library clips; raw files in git-ignored `.meshy-raw/people/`; the six people were remade with `--only <the six> --out .meshy-raw/people-v2 --model meshy-7.1 --polycount 15000 --no-anim`, and the build takes their skins from `people-v2/` and the clips bought with the first bodies from `people/`), then `node scripts/assets/people-props-build.mjs` (Blender headless: `scripts/blender/people.py`, `people_props.py`, `dog_rig.py`; Draco level 7, 1K base color, 512 normal, 256-512 metal/rough).
 - Manifests: `assets/<dir>/manifest.json`. Per asset: `file`, `bytes`, `triangles` (`lod0`, `lod1`), `lodDistance`, `bounds`, `size`, and for people and the dog `bones` and `clips` (game name → frames, fps, source clip, `shared_from`). Provenance: `assets/<dir>/provenance.json` (prompt, Meshy task ids, credits per step).
@@ -28,7 +34,7 @@ Meshy-generated models for the pbr look (#133, #115): models only. Nothing in th
 
 ## Street furniture (assets/props/street)
 
-`drinking_fountain` (1.0 m), `bollard` (0.9 m), `traffic_cone` (0.7 m), `barricade` (1.2 m wide, construction only). The fountain and the bollard are the two OSM furniture kinds `FURNITURE_PROP` maps to `null` today (`drinking_water`, `bollard` in `src/level/geo/props.js`, PR #143): point those entries at these GLBs, one `InstancedMesh` per LOD per prop. Cones and barricades go only around construction (no danger, no police).
+`drinking_fountain` (1.0 m), `bollard` (0.9 m), `traffic_cone` (0.7 m), `barricade` (1.2 m wide, construction only). The fountain and the bollard fill the two OSM furniture kinds that had no prop (`drinking_water`, `bollard` in `FURNITURE_PROP`, `src/level/geo/props.js`); see "In the game". Cones and barricades go only around construction (no danger, no police).
 
 ## BeltLine props (assets/props/beltline)
 

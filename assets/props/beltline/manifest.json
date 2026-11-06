@@ -66,12 +66,12 @@
     },
     "city_bike": {
       "file": "city_bike.glb",
-      "bytes": 409596,
+      "bytes": 409724,
       "triangles": {
-        "lod0": 2198,
+        "lod0": 2021,
         "lod1": 754,
-        "wheel_rear": 259,
-        "wheel_front": 253,
+        "wheel_rear": 346,
+        "wheel_front": 343,
         "crank": 66
       },
       "lodDistance": {
@@ -106,19 +106,19 @@
         "wheel_rear": {
           "axle_m": [
             0,
-            0.342,
-            -0.563
+            0.347,
+            -0.544
           ],
-          "triangles": 259,
+          "triangles": 346,
           "turns": 2
         },
         "wheel_front": {
           "axle_m": [
             0,
-            0.332,
-            0.563
+            0.355,
+            0.546
           ],
-          "triangles": 253,
+          "triangles": 343,
           "turns": 2
         },
         "crank": {

@@ -58,6 +58,8 @@ import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView } from "./render/npc-view.js";
 import { PED_COUNT, PED_RADIUS, createPeds, pedMinGap, stepPeds } from "./sim/peds.js";
 import { createPedsView } from "./render/peds-view.js";
+import { createPedModels, PED_MODEL_COUNT } from "./render/ped-models.js";
+import { createMeshyPropsView } from "./render/people-props-view.js";
 import { carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSampler, streetsOnly } from "./sim/traffic/traffic.js";
 import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
 import { parkedCars } from "./sim/traffic/parking.js";
@@ -297,6 +299,20 @@ const makePeds = () => createPeds(level, { seed: npcSeed, count: PED_COUNT[quali
 let peds = pedsOn ? makePeds() : null;
 const pedsView = peds ? createPedsView(peds, { look }) : null;
 if (pedsView) scene.add(pedsView.group);
+// The Meshy people (assets/people/) for the nearest walkers, pbr look only;
+// ?pedglb=0 leaves them out (src/render/ped-models.js).
+const pedModels = pedsView && look === "pbr" && params.get("pedglb") !== "0" && PED_MODEL_COUNT[quality] > 0 ? createPedModels({ count: PED_MODEL_COUNT[quality] }) : null;
+if (pedModels) {
+  scene.add(pedModels.group);
+  pedModels.ready.catch((err) => console.error(err));
+}
+// The Meshy fountains, bollards and BeltLine props at their placements in
+// env.props (src/render/people-props-view.js); ?meshyprops=0 hides them.
+const meshyProps = geo && params.get("props") !== "0" && params.get("meshyprops") !== "0" ? createMeshyPropsView(env.props) : null;
+if (meshyProps) {
+  scene.add(meshyProps.group);
+  meshyProps.ready.catch((err) => console.error(err));
+}
 let traffic = carsOn && params.get("traffic") !== "0" ? makeTraffic() : null;
 const carView = carsOn ? createCarView(parked, traffic ? traffic.cars : [], { pitchAt: (c) => carPitch(c, (x, z) => carHeight(x, z, c.y)) }) : null;
 if (carView) {
@@ -822,7 +838,9 @@ function frame(now) {
   if (rain) rain.update(camera, now / 1000, weatherView?.state, renderer.domElement.height);
   if (streetSigns) streetSigns.update(isoFocus ?? camera.position);
   if (npcView) npcView.sync(crowd, camera.position);
-  if (pedsView) pedsView.sync(peds);
+  if (pedModels) pedModels.update(peds, camera.position, Math.min(elapsed, 0.1));
+  if (pedsView) pedsView.sync(peds, pedModels?.skip);
+  if (meshyProps) meshyProps.update(camera.position);
   if (carView) carView.update(camera.position, traffic?.cars, { lit: weatherView?.state.windowLit ?? 0, time: now / 1000 });
   if (npcSkatersView && !npcWarm && npcSkatersView.loaded + npcSkatersView.failed === npcSkaters.npcs.length) {
     npcWarm = true;
@@ -1032,6 +1050,9 @@ window.__atl = {
         },
       }
     : null,
+  // The Meshy people and props (ped-models.js, people-props-view.js), or null.
+  pedModels: pedModels ? pedModels.stats : null,
+  meshyProps: meshyProps ? meshyProps.stats : null,
   // The walkers (src/sim/peds.js), or null on the greybox and with ?peds=0.
   peds: pedsView
     ? {

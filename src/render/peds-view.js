@@ -231,7 +231,8 @@ export function createPedsView(state, { look = "toon" } = {}) {
     get triangles() {
       return meshes.reduce((sum, mesh) => sum + (mesh.geometry.attributes.position.count / 3) * mesh.count, 0);
     },
-    sync(st) {
+    // skip: walker ids drawn elsewhere (the Meshy people of ped-models.js).
+    sync(st, skip = null) {
       // Walkers grow in over the outer 15% of the pool, so the ones that
       // come and go at its edge never pop on a clear horizon.
       const [fx, fz] = st.focus;
@@ -239,7 +240,7 @@ export function createPedsView(state, { look = "toon" } = {}) {
       for (const mesh of meshes) mesh.count = 0;
       drawn = 0;
       for (const w of st.peds) {
-        if (!w.live) continue;
+        if (!w.live || skip?.has(w.id)) continue;
         const l = lookOf(w.look);
         const mesh = meshes[l.variant];
         q.setFromAxisAngle(up, Math.atan2(-w.fz, w.fx));

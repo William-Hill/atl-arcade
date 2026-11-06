@@ -15,3 +15,4 @@ landmarks/*/ref/reference-4000.jpg
 .vercel
 .env*
 .cache/
+reports/perf/

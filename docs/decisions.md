@@ -1605,6 +1605,39 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The trail crowd (40, 0.2 ms), the traffic (68 moving cars, 0.9 ms) and the NPC skaters (5, 1.3 ms) do not change.
 - Not verified: the FPS on a real phone, and the FPS in the browser at 60 Hz (the test browser window was not in view).
 
+## 2026-11-06 — Settings menu for the render tiers (#94)
+
+- O or the SETTINGS button opens a menu: the render tier (Auto, Low, Phone, High), the look (Auto, Toon, PBR), the walker count, and the shadow, ink outline and bloom switches. The game stops while it is open.
+- Order: a URL flag (`?quality`, `?look`, `?peds`) wins, then the saved choice, then the device default. The logic is pure in `src/ui/settings.js`; the menu is `src/ui/settings-menu.js`.
+- Saved in `localStorage` under `atl.settings.v1`. Every read and write is in try/catch. With no storage the menu still works for the page and says so. The music choice now uses the same safe storage: a blocked `localStorage` used to stop the game from loading.
+- The ink and the bloom switch at once (`src/render/post-toggles.js`). The tier, the look, the walkers and the shadows build the scene, so they apply with a reload: the menu says which change needs it and shows "Reload now". That reload drops the URL flags of the changed settings, so the saved choice wins. With no storage, that reload puts the choice in the URL flags instead; the shadows have no URL flag, so the menu says they cannot apply.
+- Device default (`qualityFor`): a software GPU gets low; a phone user agent or a touch device with a small screen gets phone; a CPU with 2 cores or less gets phone; every other device gets high. The user agent and core count rules are new.
+- The menu is a native `<dialog>` with `showModal()`: the focus stays in it, Escape closes it, and the focus goes back to the button. Every control has a label. The text contrast is 11:1 or more, and the buttons are 44 px tall.
+- Not verified: a real phone, and a real GPU (the test browser uses SwiftShader, so its auto tier is low).
+
+## 2026-11-06 — First load: the level builds in workers (#98)
+
+- `drapeMesh()` (`src/level/geo/terrain.js`) was most of the mesh build: it welded vertices with text keys. It now uses number keys in a hash chain and flat vertex arrays, with the same math in the same order. The output is the same to the bit (a SHA-256 of the whole BeltLine build, the far build, and the plain build; `drape.test.js` keeps the first version as a reference). The full build takes 1.4 s in Node, down from 3.6 s.
+- The meshes, the low tier's far surface tiles, and the street prop placements (`levelProps()`) build in Web Workers (`geo-mesh-worker.js`, `geo-mesh-async.js`) while the main thread makes the lights, the sky, and the skate env, and the Rapier WASM compiles. The mesh buffers are transferred, not copied.
+- A mesh build can be split in tile shards (`shard: { index, count }` in `buildGeoMeshes()`, `shardOf()`, `mergeGeoShards()`). Each (material, tile) mesh is built whole in one shard, so the merged list is the same as one build. Up to 2 mesh workers, one core stays for the main thread; `?meshshards=<n>` sets the count. On the 4-core test machine 1, 2, and 3 shards gave the same first frame (within the noise); more workers help when the build, not the main thread, is the limit.
+- Chromium boots a worker with tasks on the main thread. A worker made just before a long main-thread task started only after it (5 s later). So `main.js` waits for the workers' `ready` message (at most 2 s) before the long steps.
+- The main thread claims the landmark GLB footprints in its own module copy (`claimLandmarkModels()`); the worker gets a `claimLandmarks` flag and claims them in its copy.
+- A missing Worker, a worker error, or `?meshworker=0` builds on the main thread, as before.
+- Rejected: baking the meshes at build time. The merged meshes are 20.7 MB raw and 5.0 MB gzipped, against 0.15 MB for the gzipped level file: about 4.5 s more download on the 9 Mbps phone profile, more than the build time it saves.
+- `npm run loadcheck` now writes the long tasks (over 50 ms) before the first game frame, and takes `--query <&params>`.
+- Not verified: `npm run loadcheck -- --gpu` on a Mac (the issue's gate, under 4 s). This machine has no GPU; the numbers in the PR are SwiftShader with a 4x CPU throttle.
+- Next big main-thread step: from `atl:view` to `atl:scene` (the weather, the walkers, the cars, the NPC skaters), about 6 s here.
+
+## 2026-11-06 — Performance baseline and budget (#185)
+
+- One command, `npm run perf` (`scripts/perf.mjs`), measures the BeltLine Eastside on each tier (low, phone, high) and each look (pbr, toon) in headless Chromium. It rides the same 15 s trail path in every run and writes `reports/perf/perf.json`. `npm run perf:baseline` (2 runs each) writes `docs/perf/baseline.json` and the tables in `docs/perf/baseline.md`. It replaces `scripts/prop-perf.mjs` for the baseline; `prop-perf.mjs` stays for fixed-camera A/B checks, and `scripts/load-check.mjs` stays for the phone first load on Fast 4G.
+- `?perf=1` times each system per frame with `performance.now()` (`src/perf/frame-cost.js`, read as `__atl.perf.report()`). Off by default: the calls go to a no-op object. The sim systems report a cost per 1/60 s step, because a slow software frame runs up to 5 steps.
+- The governor is off in the runs (`?governor=0`), so a slow software frame does not step the tier down during the ride. All tiers use a 1280 x 720 viewport at pixel ratio 1.
+- The budget (`docs/perf/budget.json`, checked by `npm run perf:check`) caps only the numbers that do not depend on the GPU: draw calls, triangles, geometries, textures, heap, download. The caps are about 10% over the baseline. Frame times are not capped: headless Chromium uses SwiftShader, a software GPU, so they are relative only. The FPS targets on real devices (the phone tier at 60 FPS on a mid-range phone) are in `docs/perf/baseline.md`.
+- The script writes the JSON after each run: a run with the software GPU on the high tier takes about 3 minutes, and a stopped run keeps its rows. The ride stops after 150 s of wall time (`--max-wall`).
+- Not verified: any number on a real GPU or a phone.
+- The baseline pbr rides did not finish in 150 s on the 4-CPU cloud machine, so their geometries and textures came from an early place on the trail. On a 14-CPU Mac (M4 Max) the low and phone pbr rides finish (about 60 s) and load more: low/pbr 173 geometries and 331 textures, phone/pbr 179 and 341, high/pbr 224 geometries. The PR head before the merge gave the same (low/pbr 172 and 305), so the cause is the ride length, not #98 or #94. The pbr caps for geometries and textures are now about 10% over the finished rides. `perf:check` warns when a ride stops early.
+
 ## 2026-11-06 — PBR ground sets for the pbr look (#158)
 
 - Five PBR sets for the ground of the pbr look: asphalt (street and street decals), concrete (sidewalk and path), trail (the BeltLine), grass (lawn and park), and brick (pavers). Each set has an albedo, an OpenGL normal map, and a packed ORM map (R ambient occlusion, G roughness, B metalness 0). Build: `python3 -I scripts/ground-textures-pbr.py`.

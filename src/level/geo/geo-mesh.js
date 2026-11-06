@@ -576,9 +576,15 @@ function jointEnds(level) {
 // `detail: false` the buildings are plain boxes (the M1-03 look).
 // `terrainStep` > 1 drapes on a coarser terrain (a far level of detail for
 // the render only), and `surfacesOnly` leaves out everything but the flat
-// surfaces.
-export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfacesOnly = false } = {}) {
+// surfaces. `shard: { index, count }` builds only the tiles of one shard
+// (shardOf()), so `count` workers can share a build (#98); mergeGeoShards()
+// joins their results into the same list as one full build.
+export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfacesOnly = false, shard = null } = {}) {
   const parts = new Map();
+  // An item is built only in the shard of its tile. Every mesh of a
+  // (material, tile) key comes from items of that tile, so each merged mesh
+  // is built whole, in one shard, in the same order as a full build.
+  const mine = shard ? (item) => shardOf(tileOf(...firstPoint(item)), shard.count) === shard.index : () => true;
   function add(material, item, mesh) {
     const [x, z] = firstPoint(item);
     const key = `${material}|${tileOf(x, z)}`;
@@ -606,11 +612,11 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
         [bx, bz],
         [ax, bz],
       ];
-      add("surface", { outer }, drape(flatPolygon(outer, [], groundTop, { color: SURFACE_COLORS.ground })));
+      if (mine({ outer })) add("surface", { outer }, drape(flatPolygon(outer, [], groundTop, { color: SURFACE_COLORS.ground })));
     }
   }
 
-  for (const a of level.areas ?? []) add("surface", a, drape(flatPolygon(a.outer, a.holes ?? [], surfaceTop(level, a.kind), { color: SURFACE_COLORS[a.kind] })));
+  for (const a of level.areas ?? []) if (mine(a)) add("surface", a, drape(flatPolygon(a.outer, a.holes ?? [], surfaceTop(level, a.kind), { color: SURFACE_COLORS[a.kind] })));
 
   // A deck runs on over the end of its approach road to the joint, so the
   // approach road mesh stops at the joint (bridges.js).
@@ -620,20 +626,22 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
   // junction and a disk at each joint (junctions.js, #138).
   const J = streetJunctions(level, { flat: terrain.flat });
   const streetTopY = (level.strips ?? []).some((s) => s.kind === "street") ? surfaceTop(level, "street") : 0;
-  for (const p of J.pieces) add("surface", p.strip, drape(stripMesh(p.points, p.width, streetTopY, { bottom: 0, color: SURFACE_COLORS.street })));
-  for (const j of J.junctions) add("surface", { points: [[j.x, j.z]] }, drape(flatPolygon(j.ring, [], streetTopY + JOIN_LIFT, { color: SURFACE_COLORS.street })));
+  for (const p of J.pieces) if (mine(p.strip)) add("surface", p.strip, drape(stripMesh(p.points, p.width, streetTopY, { bottom: 0, color: SURFACE_COLORS.street })));
+  for (const j of J.junctions) if (mine({ points: [[j.x, j.z]] })) add("surface", { points: [[j.x, j.z]] }, drape(flatPolygon(j.ring, [], streetTopY + JOIN_LIFT, { color: SURFACE_COLORS.street })));
   for (const j of J.joints) {
+    if (!mine({ points: [[j.x, j.z]] })) continue;
     const ring = [];
     for (let k = 0; k < 16; k += 1) ring.push([j.x + Math.cos((k / 16) * Math.PI * 2) * j.r, j.z + Math.sin((k / 16) * Math.PI * 2) * j.r]);
     add("surface", { points: [[j.x, j.z]] }, drape(flatPolygon(ring, [], streetTopY, { color: SURFACE_COLORS.street })));
   }
   // The raised grass medians of the divided roads (medians.js).
   if (level.surfaces?.sidewalk !== undefined) {
-    for (const m of medianStrips(level)) add("surface", m, drape(medianMesh(m, surfaceTop(level, "sidewalk"), { grass: SURFACE_COLORS.park, curb: SURFACE_COLORS.sidewalk })));
+    for (const m of medianStrips(level)) if (mine(m)) add("surface", m, drape(medianMesh(m, surfaceTop(level, "sidewalk"), { grass: SURFACE_COLORS.park, curb: SURFACE_COLORS.sidewalk })));
   }
   const walks = sidewalkLayout(level);
   for (const s of level.strips ?? []) {
     if (s.kind === "street" && !(s.bridge && !terrain.flat)) continue;
+    if (!mine(s)) continue;
     const top = surfaceTop(level, s.kind);
     const curb = s.kind === "sidewalk";
     if (s.bridge && !terrain.flat) {
@@ -683,6 +691,7 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     const murals = muralWalls(level);
     const muralOf = new Map(murals.map((mw) => [mw.id, mw]));
     for (const b of level.buildings ?? []) {
+      if (!mine(b)) continue;
       const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
       const color = wallColor(style, b.id);
       const mural = muralOf.get(b.id);
@@ -698,10 +707,11 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
       const aw = awningsFor(b, style, isStreet);
       if (aw.indices.length) add(bucket, b, span.base ? liftMesh(aw, () => span.base) : aw);
     }
-    for (const m of murals) add("mural", { points: [m.a] }, muralMesh(m));
+    for (const m of murals) if (mine({ points: [m.a] })) add("mural", { points: [m.a] }, muralMesh(m));
   } else {
     const claimed = claimedIds(level);
     for (const b of level.buildings ?? []) {
+      if (!mine(b)) continue;
       const color = buildingColor(b.id);
       const span = buildingSpan(level, b);
       add(claimed.has(b.id) ? "claimed" : "building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.foot, top: span.top }, { color, roofColor: tint(color, 0.35) }));
@@ -713,6 +723,25 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     const [material, tile] = key.split("|");
     out.push({ material, tile, mesh: mergeMeshes(list) });
   }
-  out.sort((a, b) => GEO_MATERIALS.indexOf(a.material) - GEO_MATERIALS.indexOf(b.material) || (a.tile < b.tile ? -1 : 1));
-  return out;
+  return sortGeoMeshes(out);
+}
+
+// The order of the merged meshes: by material, then by tile. In place.
+export function sortGeoMeshes(list) {
+  return list.sort((a, b) => GEO_MATERIALS.indexOf(a.material) - GEO_MATERIALS.indexOf(b.material) || (a.tile < b.tile ? -1 : a.tile > b.tile ? 1 : 0));
+}
+
+// The shard (0 to count - 1) of a tile key ("x,z"): diagonal stripes (a
+// checkerboard for 2), so neighbor tiles (the dense middle of a level) go to
+// different shards.
+export function shardOf(tile, count) {
+  if (count <= 1) return 0;
+  const [i, j] = tile.split(",").map(Number);
+  return (((i + j) % count) + count) % count;
+}
+
+// Joins the results of the shards of one build: the same list as the full
+// build (each key is built in one shard only).
+export function mergeGeoShards(results) {
+  return sortGeoMeshes(results.flat());
 }

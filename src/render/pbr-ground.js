@@ -119,13 +119,19 @@ export function groundAlbedo(kind) {
 // layer), so the shader compiles and draws at once, and swaps in the strip
 // when it has loaded. Each layer is stored upside down in the strip, so
 // with flipY off it reads as a 2D map with flipY on.
-function loadArray(url, fill, { srgb = false, onLoad } = {}) {
+// The anisotropic filtering of the ground arrays by tier. Software and
+// phone GPUs pay for each extra sample on most of the screen: on SwiftShader
+// the phone ground took 1048 ms at 8x and 668 ms at 2x, with no visible
+// change at skating height (#191).
+export const GROUND_ANISOTROPY = { high: 8, small: 2 };
+
+function loadArray(url, fill, { srgb = false, onLoad, anisotropy = 8 } = {}) {
   const n = GROUND_LAYERS.length;
   const data = new Uint8Array(n * 4);
   fill.forEach((rgba, i) => data.set(rgba, i * 4));
-  const holder = { value: arrayTexture({ data, width: 1, height: 1, depth: n }, srgb, false) };
+  const holder = { value: arrayTexture({ data, width: 1, height: 1, depth: n }, srgb, false, anisotropy) };
   const done = (image) => {
-    const t = arrayTexture({ data: image, width: image.width, height: image.height / n, depth: n }, srgb, true);
+    const t = arrayTexture({ data: image, width: image.width, height: image.height / n, depth: n }, srgb, true, anisotropy);
     holder.value.dispose();
     holder.value = t;
     onLoad?.(t);
@@ -138,7 +144,7 @@ function loadArray(url, fill, { srgb = false, onLoad } = {}) {
   return holder;
 }
 
-function arrayTexture(image, srgb, mips) {
+function arrayTexture(image, srgb, mips, anisotropy = 8) {
   const t = new THREE.DataArrayTexture(image.data, image.width, image.height, image.depth);
   t.image = image;
   t.wrapS = THREE.RepeatWrapping;
@@ -146,7 +152,7 @@ function arrayTexture(image, srgb, mips) {
   t.magFilter = THREE.LinearFilter;
   t.minFilter = mips ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
   t.generateMipmaps = mips;
-  t.anisotropy = 8;
+  t.anisotropy = anisotropy;
   t.flipY = false;
   if (srgb) t.colorSpace = THREE.SRGBColorSpace;
   t.needsUpdate = true;
@@ -171,9 +177,10 @@ export function createPbrSurfaceMaterial({ tier = "high" } = {}) {
   const normal = Boolean(files.normal);
   mat.defines = normal ? { GROUND_NORMAL: 1 } : {};
   const kinds = Object.keys(PBR_GROUND_OF);
+  const anisotropy = GROUND_ANISOTROPY[tier] ?? 8;
   const uniforms = {
-    uGroundAlbedo: loadArray(URLS[files.albedo], sets.map((s) => [...s.meanLinear.map(srgb8), 255]), { srgb: true }),
-    uGroundOrm: loadArray(URLS[files.orm], sets.map((s) => [Math.round(s.aoMean * 255), Math.round(s.roughMean * 255), 0, 255])),
+    uGroundAlbedo: loadArray(URLS[files.albedo], sets.map((s) => [...s.meanLinear.map(srgb8), 255]), { srgb: true, anisotropy }),
+    uGroundOrm: loadArray(URLS[files.orm], sets.map((s) => [Math.round(s.aoMean * 255), Math.round(s.roughMean * 255), 0, 255]), { anisotropy }),
     uGroundMean: { value: sets.map((s) => new THREE.Vector3(...s.meanLinear)) },
     uGroundAoMean: { value: sets.map((s) => s.aoMean) },
     uGroundTile: { value: sets.map((s) => s.tileMeters) },
@@ -192,7 +199,7 @@ export function createPbrSurfaceMaterial({ tier = "high" } = {}) {
     uGroundLight: { value: blackMap() },
     uGroundLightBox: { value: new THREE.Vector4(0, 0, 1, 1) },
   };
-  if (normal) uniforms.uGroundNormal = loadArray(URLS[files.normal], sets.map(() => [128, 128, 255, 255]));
+  if (normal) uniforms.uGroundNormal = loadArray(URLS[files.normal], sets.map(() => [128, 128, 255, 255]), { anisotropy });
   mat.userData.uWet = uniforms.uWet;
   mat.userData.uLit = uniforms.uLit;
   // Bakes the ground light map from the prop placements (the lamps and the

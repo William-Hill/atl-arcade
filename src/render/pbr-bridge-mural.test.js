@@ -71,6 +71,9 @@ describe("the concrete class of the bridges (#199)", () => {
     m.onBeforeCompile(shader);
     expect(shader.fragmentShader).toContain(`roughnessFactor = ${CONCRETE.roughness[0].toFixed(3)}`);
     expect(shader.fragmentShader).toContain(PLASTER_SCAN.mean.toFixed(4));
+    // The tail of the map (under the 1st percentile) is clamped into the band.
+    expect(shader.fragmentShader).toContain(`clamp(diffuseColor.rgb, vec3(${CONCRETE.range[0].toFixed(3)}), vec3(${CONCRETE.range[1].toFixed(3)}))`);
+    expect(shader.fragmentShader.indexOf("clamp(diffuseColor.rgb")).toBeGreaterThan(shader.fragmentShader.indexOf("#include <map_fragment>"));
   });
 });
 

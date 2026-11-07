@@ -98,7 +98,8 @@ export function concreteRoughness(t, c = CONCRETE) {
 
 // The concrete map of the landmark bridge GLBs (lm_concrete_color, the
 // plaster scan recolored by scripts/blender/landmarks.py): its mean and its
-// darkest and lightest texel, in linear light. landmark-models.js tints the
+// 1st and 99th percentile texel, in linear light (the full range is 0.122
+// to 0.381; the shader clamps the tail into the class band). landmark-models.js tints the
 // map by CONCRETE.albedo / mean, so the GLB bridges and the geo bridges have
 // one concrete color.
 export const GLB_CONCRETE_MAP = { mean: [0.32, 0.306, 0.276], min: 0.254, max: 0.342 };

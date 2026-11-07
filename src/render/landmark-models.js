@@ -157,10 +157,20 @@ export function concreteClassPatch(material) {
   material.roughness = 1;
   material.metalness = 0;
   const [r0, r1] = CONCRETE.roughness;
+  const [a0, a1] = CONCRETE.range;
   material.onBeforeCompile = (shader) => {
-    shader.fragmentShader = shader.fragmentShader.replace(
-      "#include <roughnessmap_fragment>",
-      `#include <roughnessmap_fragment>
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <map_fragment>",
+        // The darkest texels of the map (down to 0.12 linear, under its 1st
+        // percentile) times the tint are under the class band. The clamp
+        // holds every texel in the band.
+        `#include <map_fragment>
+diffuseColor.rgb = clamp(diffuseColor.rgb, vec3(${a0.toFixed(3)}), vec3(${a1.toFixed(3)}));`,
+      )
+      .replace(
+        "#include <roughnessmap_fragment>",
+        `#include <roughnessmap_fragment>
 #ifdef USE_ROUGHNESSMAP
 {
   float g = clamp((texture2D(roughnessMap, vRoughnessMapUv).g - ${PLASTER_SCAN.mean.toFixed(4)}) / ${PLASTER_SCAN.spread.toFixed(4)}, -1.0, 1.0);
@@ -169,7 +179,7 @@ export function concreteClassPatch(material) {
 #else
 roughnessFactor = ${((r0 + r1) / 2).toFixed(3)};
 #endif`,
-    );
+      );
   };
   material.customProgramCacheKey = () => "landmark-concrete-class";
   material.needsUpdate = true;

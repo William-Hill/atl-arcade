@@ -106,3 +106,24 @@ for (const name of ["nia", "marcus"]) {
     expect(errors).toEqual([]);
   });
 }
+
+// Frame strips of the moves with the pbr materials (the skater viewer with
+// ?look=pbr): six frames of each clip, from the three-quarter view.
+const STRIP_CLIPS = { nia: ["idle", "push", "coast", "carve_left", "dance_bankhead", "brake"], marcus: ["idle", "push", "coast", "carve_left", "dance_jamgroove", "dance_drumline", "dance_jamstep", "brake"] };
+for (const name of ["nia", "marcus"]) {
+  test(`${name} pbr frame strips of the v3 moves`, async ({ page }) => {
+    const errors = [];
+    page.on("pageerror", (err) => errors.push(String(err)));
+    await page.setViewportSize({ width: 1200, height: 360 });
+    await page.goto(`/skater.html?skater=${name}&look=pbr`);
+    await page.waitForFunction(() => window.__skater && (window.__skater.ready || window.__skater.error), null, { timeout: 30000 });
+    expect(await page.evaluate(() => window.__skater.error)).toBeFalsy();
+    fs.mkdirSync(OUT, { recursive: true });
+    for (const clip of STRIP_CLIPS[name]) {
+      const info = await page.evaluate((n) => window.__skater.sheet(n), clip);
+      expect(info.tracks, `${name} ${clip}`).toBeGreaterThan(5);
+      await page.screenshot({ path: `${OUT}/strip-pbr-${name}-${clip}.png` });
+    }
+    expect(errors).toEqual([]);
+  });
+}

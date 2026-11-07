@@ -3,6 +3,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createRenderer, fitToWindow } from "../render/renderer.js";
 import { fetchSkaterModel, loadSkaterModel } from "../render/skater-model.js";
 import { EYES, MOUTHS } from "../render/face-anim.js";
+import { pbrSkater } from "../render/toon.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 // Test page for a skater model: skater.html?skater=nia&view=front.
 // The model faces +x, as in the game. +z is the skater's right.
@@ -146,6 +148,12 @@ try {
   const name = params.get("skater") ?? "nia";
   const small = params.get("small") === "1";
   const model = await loadSkaterModel(name, small ? fetchSkaterModel(name, null, { small }) : null);
+  // ?look=pbr: the materials of the game's pbr look, lit by a room
+  // environment map. Without it, the viewer shows the GLB materials.
+  if (params.get("look") === "pbr") {
+    scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+    pbrSkater(model);
+  }
   scene.add(model.root);
   clips = model.animations;
   face = model.face;

@@ -56,11 +56,21 @@ describe("the state -> clip table", () => {
     expect(clipFor(rolling({ braking: true, pushing: true }))).toBe("brake");
     expect(clipFor(rolling({ braking: true, speed: 0.1 }))).toBe("idle");
     expect(clipFor(rolling({ braking: true, backward: true }))).toBe("ride_back");
-    expect(clipFor(rolling(), { decel: ANIM.brakeDecel + 1 })).toBe("brake");
+    expect(clipFor(rolling(), { slowing: ANIM.brakeHold })).toBe("brake");
+    expect(clipFor(rolling(), { slowing: 0 })).toBe("coast");
     // The roll friction and drag at the top speed do not count as a brake.
     const drag = SKATE.coastDecel + SKATE.coastDrag * SKATE.maxSpeed ** 2;
     expect(drag).toBeLessThan(ANIM.brakeDecel);
-    expect(clipFor(rolling(), { decel: drag })).toBe("coast");
+  });
+
+  it("brakes on a hard slow-down that lasts, not on a one-tick drop", () => {
+    const at = (speed, tick) => rolling({ speed, tick });
+    // A one-tick drop of 1 m/s (60 m/s^2), then a steady speed: no brake.
+    const drop = run([at(4, 1), at(4, 2), at(3, 3), at(3, 4), at(3, 5), at(3, 6), at(3, 7), at(3, 8), at(3, 9)]);
+    expect(drop.changes.map((c) => c.to)).not.toContain("brake");
+    // 8 m/s^2 for 12 ticks (0.2 s): the brake starts after 0.1 s.
+    const hard = run(Array.from({ length: 14 }, (_, i) => at(8 - (8 / 60) * i, i + 1)));
+    expect(hard.changes.map((c) => c.to)).toContain("brake");
   });
 
   it("plays the brake while the controller brakes, and holds it for its lock", () => {

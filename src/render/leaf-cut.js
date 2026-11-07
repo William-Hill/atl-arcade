@@ -103,6 +103,9 @@ export const TREE_UNIFORMS = {
 
 const shapeTable = LEAF_SHAPES.map(([n, w, l, o], i) => `${i ? "else " : ""}if (s == ${i}) { n = ${n}; size = vec2(${w.toFixed(3)}, ${l.toFixed(3)}); outline = ${o}; }`).join("\n  ");
 
+// The turn from one leaf of a card to the next (rad).
+export const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
 const LEAF_GLSL = /* glsl */ `
 varying vec3 vLeaf;
 varying float vFade;
@@ -117,6 +120,12 @@ float treeNoise(vec2 p) {
   float c = treeHash(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7)));
   float d = treeHash(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7)));
   return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+// Two values in 0..1 from a 2D point, with no sin (Dave Hoskins' hash22).
+vec2 leafHash(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.xx + p3.yz) * p3.zy);
 }
 // The bark shade at (around, along).
 float barkTone(vec2 uv, int kind) {
@@ -168,14 +177,25 @@ vec4 treeTexel(vec3 l) {
   // The leaf field: > 0 in a leaf, 1 at a leaf center.
   float best = -1e3;
   float tone = 1.0;
+  // The cost of a card pixel (#191): the loop runs for every card layer of a
+  // crown, so it has no sin or cos per leaf. The leaf places come from an
+  // arithmetic hash, and the leaf angles turn by the golden angle from one
+  // angle per card. A card that is one clump (clump 1) skips the loop: its
+  // leaf field has no weight. A leaf too far from the pixel to cover it is
+  // skipped.
+  int nLeaves = clump > 0.999 ? 0 : n;
+  float a0 = 6.2832 * leafHash(vec2(l.z * 13.1, 7.3)).x;
+  vec2 rot = vec2(cos(a0), sin(a0));
+  float reach = 1.5 * max(size.x, size.y);
   for (int i = 0; i < ${MAX_LEAVES}; i++) {
-    if (i >= n) break;
+    if (i >= nLeaves) break;
     float fi = float(i);
-    vec2 c = vec2(fract(sin((l.z * 91.7 + fi) * 12.9898) * 43758.55), fract(sin((l.z * 47.3 + fi) * 78.233) * 43758.55));
-    c = ${LEAVES.margin.toFixed(2)} + ${(1 - 2 * LEAVES.margin).toFixed(2)} * c;
-    float ang = fract(sin((l.z * 13.1 + fi) * 37.7) * 9631.3) * 6.2832;
+    vec2 c = ${LEAVES.margin.toFixed(2)} + ${(1 - 2 * LEAVES.margin).toFixed(2)} * leafHash(vec2(l.z * 91.7, fi * 1.37 + 0.5));
     vec2 d = l.xy - c;
-    d = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * d;
+    vec2 r0 = rot;
+    rot = vec2(rot.x * ${Math.cos(GOLDEN_ANGLE).toFixed(6)} - rot.y * ${Math.sin(GOLDEN_ANGLE).toFixed(6)}, rot.x * ${Math.sin(GOLDEN_ANGLE).toFixed(6)} + rot.y * ${Math.cos(GOLDEN_ANGLE).toFixed(6)});
+    if (dot(d, d) > reach * reach) continue;
+    d = mat2(r0.x, -r0.y, r0.y, r0.x) * d;
     float e;
     float vein = 1.0;
     if (outline == 1) {

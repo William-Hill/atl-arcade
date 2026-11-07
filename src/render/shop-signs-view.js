@@ -20,7 +20,38 @@ export function boardWidth(textPx, height, maxWidth, minWidth = 1.2) {
   return Math.min(maxWidth, Math.max(minWidth, ((textPx + 2 * PAD) / ROW) * height));
 }
 
-function makeAtlas(boards) {
+// The hot core of a sign at night in the pbr look (#196): the cream letters
+// and border are emissive, `night` times their color at uLit 1, so they
+// are brighter than a lit window and bloom. The board paint stays unlit.
+export const SIGN_CORE = { color: CREAM, night: 8 };
+
+// Pure: the emissive intensity of the sign letters at a window light `lit`
+// (0 day, 1 night; weather-view.js).
+export function signCoreIntensity(lit) {
+  return SIGN_CORE.night * Math.min(1, Math.max(0, lit));
+}
+
+// Gives `mat` (a MeshStandardMaterial with an emissive color) a
+// userData.uLit that weather-view.js writes each frame (0 day, 1 night):
+// it sets the emissive intensity to signCoreIntensity(uLit), and calls
+// `onLit(uLit)` when given.
+export function hotCore(mat, onLit = null) {
+  mat.emissiveIntensity = 0;
+  let lit = 0;
+  mat.userData.uLit = {
+    get value() {
+      return lit;
+    },
+    set value(v) {
+      lit = v;
+      mat.emissiveIntensity = signCoreIntensity(v);
+      onLit?.(v);
+    },
+  };
+  return mat;
+}
+
+function makeAtlas(boards, { mask = false } = {}) {
   const canvas = document.createElement("canvas");
   canvas.width = ATLAS_W;
   canvas.height = THREE.MathUtils.ceilPowerOfTwo(Math.max(1, boards.length) * ROW);
@@ -43,7 +74,8 @@ function makeAtlas(boards) {
     const w = Math.round(Math.min(ATLAS_W, textPx + 2 * PAD));
     widths.push(textPx);
     const x0 = (ATLAS_W - w) / 2;
-    ctx.fillStyle = b.color;
+    // The mask atlas (the emissive map) is black under the letters' paint.
+    ctx.fillStyle = mask ? "#000000" : b.color;
     ctx.fillRect(0, y, ATLAS_W, ROW);
     ctx.strokeStyle = CREAM;
     ctx.lineWidth = 5;
@@ -58,11 +90,14 @@ function makeAtlas(boards) {
 }
 
 // `boards` are shopSigns() entries. `material(params)` makes the lit
-// material of the look (look.js litMaterial()).
-export function createShopSigns(boards, material) {
+// material of the look (look.js litMaterial()). With `hot` (the pbr look)
+// the letters glow at night: a second atlas with the letters only is the
+// emissive map, and material.userData.uLit (set by weather-view.js) sets
+// its intensity. Same mesh and draw call.
+export function createShopSigns(boards, material, { hot = false } = {}) {
   const group = new THREE.Group();
   group.name = "shop-signs";
-  if (!boards.length) return { group, count: 0, names: [], update() {} };
+  if (!boards.length) return { group, count: 0, names: [], material: null, update() {} };
   const { tex, rows, widths } = makeAtlas(boards);
   const parts = [];
   const centers = [];
@@ -87,7 +122,9 @@ export function createShopSigns(boards, material) {
     parts.push(g.index ? g.toNonIndexed() : g);
     centers.push([b.x, b.z]);
   });
-  const mesh = new THREE.Mesh(mergeGeometries(parts), material({ map: tex }));
+  const mat = material(hot ? { map: tex, emissive: SIGN_CORE.color, emissiveMap: makeAtlas(boards, { mask: true }).tex, emissiveIntensity: 0 } : { map: tex });
+  if (hot) hotCore(mat);
+  const mesh = new THREE.Mesh(mergeGeometries(parts), mat);
   mesh.name = "shop-signs";
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -95,6 +132,7 @@ export function createShopSigns(boards, material) {
   return {
     group,
     count: boards.length,
+    material: hot ? mat : null,
     names: boards.map((b) => b.name),
     // Shows the boards when one of them is near the camera.
     update(p) {

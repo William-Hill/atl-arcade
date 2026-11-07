@@ -1,0 +1,8 @@
+{
+  "what": "Before and after frames for #196 (night lamp pools, hot sign cores) and #197 (lawn). Top half before, bottom half after, 0.75 scale. toon-*.jpg: the toon look, before left, after right.",
+  "tool": "scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json (shots 159-night-street, 159-pcm, 159-krog, 159-trail); Playwright 1.63.0, headless Chromium, SwiftShader, 1280x720",
+  "before": "88e6eec (origin/epic/city-look)",
+  "after": "e2e10ac (claude/pbr-ground-196-197)",
+  "credits": "In-game render of the game's own assets; no generated art",
+  "date": "2026-11-07"
+}

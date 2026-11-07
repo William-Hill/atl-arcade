@@ -168,13 +168,20 @@ vec4 treeTexel(vec3 l) {
   // The leaf field: > 0 in a leaf, 1 at a leaf center.
   float best = -1e3;
   float tone = 1.0;
+  // The cost of a card pixel (#191): the loop runs for every card layer of a
+  // crown. A card that is one clump (clump 1) skips the loop: its leaf field
+  // has no weight. A leaf too far from the pixel to cover it skips the turn
+  // and the shape (the leaf places and angles are the same as before).
+  int nLeaves = clump > 0.999 ? 0 : n;
+  float reach = 1.5 * max(size.x, size.y);
   for (int i = 0; i < ${MAX_LEAVES}; i++) {
-    if (i >= n) break;
+    if (i >= nLeaves) break;
     float fi = float(i);
     vec2 c = vec2(fract(sin((l.z * 91.7 + fi) * 12.9898) * 43758.55), fract(sin((l.z * 47.3 + fi) * 78.233) * 43758.55));
     c = ${LEAVES.margin.toFixed(2)} + ${(1 - 2 * LEAVES.margin).toFixed(2)} * c;
-    float ang = fract(sin((l.z * 13.1 + fi) * 37.7) * 9631.3) * 6.2832;
     vec2 d = l.xy - c;
+    if (dot(d, d) > reach * reach) continue;
+    float ang = fract(sin((l.z * 13.1 + fi) * 37.7) * 9631.3) * 6.2832;
     d = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * d;
     float e;
     float vein = 1.0;

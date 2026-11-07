@@ -272,7 +272,7 @@ export function wallSkyLight({ zenith, horizon, ground, saturation = ENV_SKY.sat
 // ground disc in the ground color covers that half, so a surface that faces
 // down gets a warm bounce light and not a sky-blue light. The map uses a
 // copy of the sky material with the ENV_SKY colors.
-export function createSkyEnvironment(renderer, sky, { ground = ENV_SKY.ground, saturation = ENV_SKY.saturation, radius = 400 } = {}) {
+export function createSkyEnvironment(renderer, sky, { ground = ENV_SKY.ground, saturation = ENV_SKY.saturation, radius = 400, sh = false } = {}) {
   const scene = new THREE.Scene();
   const material = sky.mesh.material.clone();
   for (const name of ["uZenith", "uHorizon"]) {
@@ -290,11 +290,69 @@ export function createSkyEnvironment(renderer, sky, { ground = ENV_SKY.ground, s
   const pmrem = new THREE.PMREMGenerator(renderer);
   const target = pmrem.fromScene(scene, 0.02, 0.1, radius * 1.2);
   pmrem.dispose();
+  // The same sky as 9 spherical harmonics (#191): the phone and low tiers
+  // light with these and do not sample the map (pbr-look.js installSkySh()).
+  if (sh) target.texture.userData.sh = skyShFromScene(renderer, scene, radius * 1.2);
   dome.geometry.dispose();
   material.dispose();
   disc.geometry.dispose();
   disc.material.dispose();
   return target.texture;
+}
+
+// The sky light as 9 spherical harmonics (#191). The env map lookup
+// (textureCubeUV) was a large part of the pbr frame on a software GPU: about
+// 1.1 s of a 3.4 s phone frame. The phone and low tiers have no clouds, so
+// their sky is a smooth gradient, and 9 coefficients hold it. Renders the
+// env scene into a small cube and projects it (shFromCubeFaces()).
+// Returns 27 numbers: 9 RGB coefficients of the radiance.
+export function skyShFromScene(renderer, scene, far = 500, size = 16) {
+  // RGBA + FLOAT is the read that WebGL2 guarantees for a float target
+  // (EXT_color_buffer_float); a half float read is not. Without the
+  // extension, 8 bits (the sun core clips at 1).
+  const float = renderer.extensions.has("EXT_color_buffer_float");
+  const target = new THREE.WebGLCubeRenderTarget(size, { type: float ? THREE.FloatType : THREE.UnsignedByteType });
+  const camera = new THREE.CubeCamera(0.1, far, target);
+  camera.update(renderer, scene);
+  const faces = [];
+  for (let f = 0; f < 6; f += 1) {
+    const raw = float ? new Float32Array(size * size * 4) : new Uint8Array(size * size * 4);
+    renderer.readRenderTargetPixels(target, 0, 0, size, size, raw, f);
+    faces.push(float ? raw : Float32Array.from(raw, (v) => v / 255));
+  }
+  target.dispose();
+  return shFromCubeFaces(faces, size, renderer.coordinateSystem === THREE.WebGLCoordinateSystem ? -1 : 1);
+}
+
+// Pure: the radiance SH (9 RGB coefficients, 27 numbers) of a cube map:
+// `faces` are 6 linear RGBA arrays of size x size in the order of
+// THREE.CubeCamera, read with readRenderTargetPixels. The same projection as
+// three's LightProbeGenerator.fromCubeRenderTarget (`flip` -1 for WebGL).
+export function shFromCubeFaces(faces, size, flip = -1) {
+  const out = new Array(27).fill(0);
+  const basis = new Array(9);
+  const dir = new THREE.Vector3();
+  let total = 0;
+  const px = 2 / size;
+  faces.forEach((data, face) => {
+    for (let i = 0; i < size * size; i += 1) {
+      const col = (1 - ((i % size) + 0.5) * px) * flip;
+      const row = 1 - (Math.floor(i / size) + 0.5) * px;
+      if (face === 0) dir.set(-1 * flip, row, col * flip);
+      else if (face === 1) dir.set(1 * flip, row, -col * flip);
+      else if (face === 2) dir.set(col, 1, -row);
+      else if (face === 3) dir.set(col, -1, row);
+      else if (face === 4) dir.set(col, row, 1);
+      else dir.set(-col, row, -1);
+      const l2 = dir.lengthSq();
+      const w = 4 / (Math.sqrt(l2) * l2);
+      total += w;
+      THREE.SphericalHarmonics3.getBasisAt(dir.normalize(), basis);
+      for (let j = 0; j < 9; j += 1) for (let k = 0; k < 3; k += 1) out[j * 3 + k] += basis[j] * data[i * 4 + k] * w;
+    }
+  });
+  const norm = (4 * Math.PI) / total;
+  return out.map((v) => v * norm);
 }
 
 // The renderer tone mapping constant for a look.

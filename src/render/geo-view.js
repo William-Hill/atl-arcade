@@ -12,14 +12,15 @@ import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { seasonColors, treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
 import { createMuralAtlas } from "./murals.js";
-import { ALBEDO, ALBEDO_GLSL, FACADE_FADE, MATERIAL_CLASSES, windowColorGlsl, windowMean } from "./pbr-palette.js";
+import { ALBEDO, ALBEDO_GLSL, FACADE_FADE, windowColorGlsl, windowMean } from "./pbr-palette.js";
 import { createPropBatch } from "./prop-batch.js";
-import { BRICK_TONE, DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, FRAME_ROUGHNESS, GROUND_ALBEDO, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
+import { BRICK_TONE, DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, FRAME_ROUGHNESS, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
 import { TREE_UNIFORMS, createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
 import { bakeTreeImpostors } from "./tree-impostors.js";
 import { getDracoLoader } from "./skater-model.js";
 import { facadeKitPlacements } from "../level/geo/facade-kit-glb.js";
 import { createFacadeKitView } from "./facade-kit-view.js";
+import { createPbrSurfaceMaterial } from "./pbr-ground.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import stoneInfo from "../../assets/landmarks/textures/trim/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
@@ -546,38 +547,27 @@ roughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);`,
   return mat;
 }
 
-// The ground scans (scripts/ground-textures.py, CC0). One static URL per
-// file, so Vite bundles each map.
-// The normal and roughness maps are for the pbr look only.
+// The ground scans of the toon look (scripts/ground-textures.py, CC0). One
+// static URL per file, so Vite bundles each map. The pbr look has its own
+// PBR sets (src/render/pbr-ground.js, #158).
 const GROUND = [
   {
     info: asphaltInfo,
     url: new URL("../../assets/ground/asphalt/color.jpg", import.meta.url).href,
-    nor: new URL("../../assets/ground/asphalt/normal.jpg", import.meta.url).href,
-    rough: new URL("../../assets/ground/asphalt/rough.jpg", import.meta.url).href,
   },
   {
     info: concreteInfo,
     url: new URL("../../assets/ground/concrete/color.jpg", import.meta.url).href,
-    nor: new URL("../../assets/ground/concrete/normal.jpg", import.meta.url).href,
-    rough: new URL("../../assets/ground/concrete/rough.jpg", import.meta.url).href,
   },
   {
     info: trailInfo,
     url: new URL("../../assets/ground/trail/color.jpg", import.meta.url).href,
-    nor: new URL("../../assets/ground/trail/normal.jpg", import.meta.url).href,
-    rough: new URL("../../assets/ground/trail/rough.jpg", import.meta.url).href,
   },
   {
     info: grassInfo,
     url: new URL("../../assets/ground/grass/color.jpg", import.meta.url).href,
-    nor: new URL("../../assets/ground/grass/normal.jpg", import.meta.url).href,
-    rough: new URL("../../assets/ground/grass/rough.jpg", import.meta.url).href,
   },
 ];
-// The lowest ground roughness from a map. A smoother ground reflects the
-// bright sky at a low angle and gives a white haze (look.js ENV_LIGHT).
-const GROUND_MIN_ROUGHNESS = 0.75;
 // Surface kind -> ground set (index in GROUND) and detail strength.
 const GROUND_OF = {
   ground: [3, 0.6],
@@ -592,6 +582,8 @@ const GROUND_OF = {
   patchLight: [0, 0.8],
   iron: [0, 0.4],
   bike: [0, 0.5],
+  // A brick path (#158) is a path in the toon look.
+  brick: [1, 0.8],
 };
 
 // The surface shader: a toon material whose art color (the vertex color of
@@ -600,17 +592,14 @@ const GROUND_OF = {
 // A second, rotated, larger sample breaks the tile repeat. The detail fades
 // out with distance, where a tile is under a few pixels.
 //
-// With `detailMaps` (loadGroundDetail(), the pbr look) the ground also gets
-// the relief and the roughness of each scan: the asphalt grain, the slab
-// joints, and the grass blades catch the sun.
-export function createSurfaceMaterial(gradientMap, { maps = null, look = "toon", detailMaps = null } = {}) {
+// The pbr look with ground maps uses createPbrSurfaceMaterial()
+// (src/render/pbr-ground.js, #158) instead.
+export function createSurfaceMaterial(gradientMap, { maps = null, look = "toon" } = {}) {
   const mat = litMaterial(look, { vertexColors: true }, { gradientMap, roughness: ROUGHNESS.ground, envLight: ENV_LIGHT.ground });
   // The albedo calibration (pbr look): a darker ground, toward real
   // asphalt and soil (docs/research gen-city: nothing stays near-white).
   if (look === "pbr") mat.color.setScalar(0.72);
   if (!maps) return mat;
-  const detail = look === "pbr" && detailMaps !== null;
-  if (detail) mat.defines = { DETAIL: 1 };
   const kinds = Object.keys(GROUND_OF);
   const kindColor = kinds.map((k) => new THREE.Vector3(...SURFACE_COLORS[k]));
   const kindSet = kinds.map((k) => GROUND_OF[k][0]);
@@ -628,12 +617,6 @@ export function createSurfaceMaterial(gradientMap, { maps = null, look = "toon",
     // Kept on the material so the weather can write it after compile.
     shader.uniforms.uWet = { value: 0 };
     mat.userData.uWet = shader.uniforms.uWet;
-    if (detail) {
-      GROUND.forEach((_, i) => {
-        shader.uniforms[`uGroundNor${i}`] = { value: detailMaps.nor[i] };
-        shader.uniforms[`uGroundRough${i}`] = { value: detailMaps.rough[i] };
-      });
-    }
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec2 vGroundXZ;")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\nvGroundXZ = (modelMatrix * vec4(transformed, 1.0)).xz;");
@@ -648,13 +631,6 @@ uniform vec3 uKindColor[${kinds.length}];
 uniform float uKindSet[${kinds.length}];
 uniform float uKindStrength[${kinds.length}];
 uniform float uWet;
-#ifdef DETAIL
-${GROUND.map((_, i) => `uniform sampler2D uGroundNor${i};\nuniform sampler2D uGroundRough${i};`).join("\n")}
-// The ground set of this pixel and the weight of its detail.
-float groundSet = -1.0;
-float groundK = 0.0;
-${DETAIL_GLSL}
-#endif
 vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   vec3 a = texture2D(t, xz / tile).rgb / mean;
   vec2 r = mat2(0.8, -0.6, 0.6, 0.8) * xz;
@@ -683,51 +659,15 @@ vec3 groundDetail(sampler2D t, vec3 mean, float tile, vec2 xz) {
   // gets streaks. Only a face that points up gets the detail.
   fade *= smoothstep(0.5, 0.85, dot(normalize(vNormal), normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz)));
   diffuseColor.rgb *= mix(vec3(1.0), det, strength * fade);
-  #ifdef DETAIL
-  groundSet = set;
-  groundK = strength * fade;
-  diffuseColor.rgb *= set < -0.5 ? vec3(1.0) : set < 0.5 ? vec3(${GROUND_ALBEDO[0].map((c) => c.toFixed(3)).join(", ")}) : set < 1.5 ? vec3(${GROUND_ALBEDO[1].map((c) => c.toFixed(3)).join(", ")}) : set < 2.5 ? vec3(${GROUND_ALBEDO[2].map((c) => c.toFixed(3)).join(", ")}) : vec3(${GROUND_ALBEDO[3].map((c) => c.toFixed(3)).join(", ")});
-  #endif
   // A soaked street is darker; a material that has roughness gets the wet
   // sheen too (the toon shader has no roughness chunk, so that part only
   // lands on standard materials).
   diffuseColor.rgb *= mix(1.0, 0.72, uWet);
 }`,
       )
-      .replace(
-        "#include <roughnessmap_fragment>",
-        `#include <roughnessmap_fragment>
-#ifdef DETAIL
-{
-  // Sample every set at the top level, so the mipmap level is correct.
-${GROUND.map((_, i) => `  float r${i} = texture2D(uGroundRough${i}, vGroundXZ / uGroundTile${i}).r;`).join("\n")}
-  float rg = groundSet < -0.5 ? roughnessFactor : groundSet < 0.5 ? r0 : groundSet < 1.5 ? r1 : groundSet < 2.5 ? r2 : r3;
-  // Grass is the roughest ground (0.92, docs/style-sheet-pbr.md): a smoother
-  // lawn caught the grazing sky and went mint-gray.
-  roughnessFactor = mix(roughnessFactor, max(rg, groundSet > 2.5 ? ${MATERIAL_CLASSES.grass.roughness[0].toFixed(3)} : ${GROUND_MIN_ROUGHNESS.toFixed(3)}), groundK);
-}
-#endif
-roughnessFactor *= mix(1.0, 0.3, uWet);`,
-      )
-      .replace(
-        "#include <normal_fragment_maps>",
-        `#include <normal_fragment_maps>
-#ifdef DETAIL
-{
-${GROUND.map((_, i) => `  vec3 n${i} = texture2D(uGroundNor${i}, vGroundXZ / uGroundTile${i}).rgb;`).join("\n")}
-  vec3 sn = groundSet < -0.5 ? vec3(0.5, 0.5, 1.0) : groundSet < 0.5 ? n0 : groundSet < 1.5 ? n1 : groundSet < 2.5 ? n2 : n3;
-  float kn = groundSet < 0.5 ? ${DETAIL_NORMAL.ground[0].toFixed(3)} : groundSet < 1.5 ? ${DETAIL_NORMAL.ground[1].toFixed(3)} : groundSet < 2.5 ? ${DETAIL_NORMAL.ground[2].toFixed(3)} : ${DETAIL_NORMAL.ground[3].toFixed(3)};
-  vec3 d = (sn - vec3(0.5, 0.5, 1.0)) * groundK;
-  d.xy *= kn;
-  // The map u grows along world x and v along world z (vGroundXZ).
-  vec3 tu = (viewMatrix * vec4(1.0, 0.0, 0.0, 0.0)).xyz;
-  vec3 tv = (viewMatrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz;
-  if (groundK > 0.0) normal = detailNormal(normal, tu, tv, vec3(0.5, 0.5, 1.0) + d, 1.0);
-}
-#endif`,
-      );
+      .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\nroughnessFactor *= mix(1.0, 0.3, uWet);");
   };
-  mat.customProgramCacheKey = () => `surface-v2-ground-${look}${detail ? "-detail" : ""}`;
+  mat.customProgramCacheKey = () => `surface-v2-ground-${look}`;
   return mat;
 }
 
@@ -740,19 +680,6 @@ function loadGroundMaps() {
     t.anisotropy = 8;
     return t;
   });
-}
-
-// The ground normal and roughness maps of the pbr look, in the order of
-// GROUND. The maps hold data, so they stay in linear space.
-function loadGroundDetail() {
-  const load = (url) => {
-    const t = new THREE.TextureLoader().load(url);
-    t.wrapS = THREE.RepeatWrapping;
-    t.wrapT = THREE.RepeatWrapping;
-    t.anisotropy = 8;
-    return t;
-  };
-  return { nor: GROUND.map((g) => load(g.nor)), rough: GROUND.map((g) => load(g.rough)) };
 }
 
 // The brick scan for the facade shader. It tiles by the shader's own meter
@@ -1045,13 +972,15 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
 // The build options of the far surface tiles (the low tier).
 export const FAR_TERRAIN_BUILD = { terrainStep: 2, surfacesOnly: true };
 
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, farMeshes = null } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
   let muralMap = null;
   const materials = {
-    surface: createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null, look, detailMaps: groundDetail && look === "pbr" ? loadGroundDetail() : null }),
+    // The pbr look gets the PBR ground sets on every tier (#158): the full
+    // maps with groundDetail, the small ones (no normal map) without.
+    surface: look === "pbr" && pbrGround ? createPbrSurfaceMaterial({ tier: groundDetail ? "high" : "small" }) : createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null, look }),
     building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors, look, detailMaps: look === "pbr" ? loadWallDetail() : null }),
     props: null,
     get mural() {

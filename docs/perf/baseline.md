@@ -41,6 +41,7 @@ Headless Chromium in this cloud machine draws with **SwiftShader, a software GPU
 - The draw calls, triangles, geometries, textures, heap, and download bytes do **not** depend on the GPU. They are the numbers the budget caps.
 - The sim costs (`walkers`, `traffic`, ...) are CPU time and are real, but this machine's CPU is not a phone CPU. A mid-range phone is about 2 to 4 times slower per core than this machine.
 - At under 10 FPS, the fixed-step loop runs up to 5 sim steps in one frame. The table gives the sim cost per step (the cost of a frame at 60 FPS).
+- Machine load changes the geometry count at the end of the ride. The same build gave 150 phone/toon geometries at a load average of 15 and 169 at a load of 50 (`docs/decisions.md`, 2026-11-06, the gates of epic/city-look). `perf:check` warns when the load average is over the CPU count. Run it on a quiet machine before you raise a geometry cap.
 - On the high tier and on the pbr look, the software frames take seconds, so the ride stops at 150 s of wall time with only 8 to 73 frames (`finished: false` in the JSON). Those frame times are rough.
 
 ## Results

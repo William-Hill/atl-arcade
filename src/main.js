@@ -63,7 +63,7 @@ import { PED_RADIUS, createPeds, pedCount, pedMinGap, stepPeds } from "./sim/ped
 import { createPedsView } from "./render/peds-view.js";
 import { createPedModels, PED_MODEL_COUNT } from "./render/ped-models.js";
 import { createMeshyPropsView } from "./render/people-props-view.js";
-import { carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSampler, streetsOnly } from "./sim/traffic/traffic.js";
+import { cachedPitch, carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSampler, streetsOnly } from "./sim/traffic/traffic.js";
 import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
 import { parkedCars } from "./sim/traffic/parking.js";
 import { createCarView } from "./render/car-view.js";
@@ -80,6 +80,7 @@ import { createFactPopup } from "./ui/fact-popup.js";
 import { NO_PERF, createFrameCost } from "./perf/frame-cost.js";
 import { createDrawSplit } from "./perf/draw-split.js";
 import { createShadowPass } from "./render/shadow-pass.js";
+import { createViewCull } from "./render/view-cull.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -363,7 +364,7 @@ if (meshyProps) {
   meshyProps.ready.catch((err) => console.error(err));
 }
 let traffic = carsOn && params.get("traffic") !== "0" ? makeTraffic() : null;
-const carView = carsOn ? createCarView(parked, traffic ? traffic.cars : [], { pitchAt: (c) => carPitch(c, (x, z) => carHeight(x, z, c.y)), look }) : null;
+const carView = carsOn ? createCarView(parked, traffic ? traffic.cars : [], { pitchAt: cachedPitch((c) => (x, z) => carHeight(x, z, c.y)), look }) : null;
 if (carView) {
   carView.update({ x: level.spawn.position[0], z: level.spawn.position[2] }, traffic?.cars);
   scene.add(carView.mesh);
@@ -426,16 +427,21 @@ const skatersOn = params.get("skaters") === "1" || (geo && params.get("skaters")
 let npcSkaters = skatersOn ? createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] }) : null;
 // One download for each model: the NPCs of one model share the bytes.
 const npcByteCache = new Map();
+// A model that only the NPCs use downloads after the first frame (#187), so
+// it does not slow the player's skater and the level.
+let firstFrameDone;
+const firstFrame = new Promise((resolve) => (firstFrameDone = resolve));
 const npcBytes = (model) => {
   if (model === skaterName) return skaterBytes;
   if (!npcByteCache.has(model)) {
-    const bytes = fetchSkaterModel(model, null, { small: smallSkater });
+    const bytes = firstFrame.then(() => fetchSkaterModel(model, null, { small: smallSkater }));
     // A failed download is reported where the model loads, not here.
     bytes.catch(() => {});
     npcByteCache.set(model, bytes);
   }
   return npcByteCache.get(model);
 };
+const viewCull = createViewCull();
 const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model) => cloneSkaterModel(model, npcBytes(model)), toon: params.get("toon") !== "0", draw: NPC_DRAW[quality] ?? NPC_DRAW.low, look }) : null;
 if (npcSkatersView) scene.add(npcSkatersView.group);
 
@@ -705,16 +711,16 @@ function simulate(dt) {
     if (goals.ended) events.push({ tick: run.tick, type: "run-end", ...goalsJson(goals, goalDef) });
   }
   perf.begin("crowd");
-  if (crowd) crowd = stepCrowd(crowd, dt, skater.position, npcSkaters ? skaterObstacles(npcSkaters) : []);
+  if (crowd) crowd = stepCrowd(crowd, dt, skater.position, npcSkaters ? skaterObstacles(npcSkaters) : [], { focus: [camera.position.x, camera.position.z] });
   perf.end("crowd");
   perf.begin("traffic");
-  if (traffic) traffic = stepTraffic(traffic, dt, skater.position);
+  if (traffic) traffic = stepTraffic(traffic, dt, skater.position, { focus: [camera.position.x, camera.position.z] });
   perf.end("traffic");
   perf.begin("walkers");
   if (peds) stepPeds(peds, dt, { focus: [camera.position.x, camera.position.z], nia: skater.position, others: [...(crowd ? crowd.npcs : []), ...(npcSkaters ? skaterObstacles(npcSkaters) : [])] });
   perf.end("walkers");
   perf.begin("npcSkaters");
-  if (npcSkaters) npcSkaters = stepNpcSkaters(npcSkaters, dt, env, skaterEnv, { player: skater.position, crowd: crowd ? crowd.npcs : [], beat: beat.running ? { time: beat.now(), bpm: beat.bpm } : null });
+  if (npcSkaters) npcSkaters = stepNpcSkaters(npcSkaters, dt, env, skaterEnv, { player: skater.position, crowd: crowd ? crowd.npcs : [], focus: [camera.position.x, camera.position.z], beat: beat.running ? { time: beat.now(), bpm: beat.bpm } : null });
   perf.end("npcSkaters");
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
   if (run.banked) {
@@ -941,11 +947,14 @@ function frame(now) {
   if (streetSigns) streetSigns.update(isoFocus ?? camera.position);
   if (meshyProps) meshyProps.update(camera.position);
   perf.end("views");
+  // The view test for the people and NPC skater syncs (#189), from the
+  // camera of this frame.
+  viewCull.update(camera);
   perf.begin("crowdView");
   if (npcView) npcView.sync(crowd, camera.position);
   perf.end("crowdView");
   perf.begin("walkersView");
-  if (pedModels) pedModels.update(peds, camera.position, paused ? 0 : Math.min(elapsed, 0.1));
+  if (pedModels) pedModels.update(peds, camera.position, paused ? 0 : Math.min(elapsed, 0.1), viewCull);
   if (pedsView) pedsView.sync(peds, pedModels?.skip);
   perf.end("walkersView");
   perf.begin("trafficView");
@@ -956,7 +965,7 @@ function frame(now) {
     npcSkatersView.warm(renderer, camera, scene).catch(() => {});
   }
   perf.begin("npcSkatersView");
-  if (npcSkatersView) npcSkatersView.sync(npcSkaters, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null, camera.position);
+  if (npcSkatersView) npcSkatersView.sync(npcSkaters, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null, camera.position, viewCull);
   perf.end("npcSkatersView");
   perf.begin("render");
   draw();
@@ -966,6 +975,7 @@ function frame(now) {
   if (frames === 1) {
     loader.hide();
     performance.mark("atl:first-frame");
+    firstFrameDone();
   }
   if (recorder.active && frames % recorder.every === 0) {
     recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
@@ -1215,6 +1225,14 @@ window.__atl = {
         get drawCalls() {
           return carView.drawCalls;
         },
+        // The draw calls of the lamp layer (lamp quads and headlight pools,
+        // 0 to 2) and of the GLB cars: drawCalls minus both is the kit body.
+        get lampCalls() {
+          return carView.lamps ? carView.lamps.drawCalls : 0;
+        },
+        get modelCalls() {
+          return carView.models ? carView.models.drawCalls : 0;
+        },
         get drawn() {
           return carView.info.drawn;
         },
@@ -1394,10 +1412,11 @@ window.__atl = {
       skaterView.freezePose(frozen);
     },
     // The shader program key of the skater material ("skater-face",
-    // "skater-toon-rim", or both).
+    // "skater-toon-rim", or both): the head material when the skater has
+    // face decals.
     get materialKey() {
       const m = skaterView.model;
-      return m ? m.skinnedMesh.material.customProgramCacheKey() : null;
+      return m ? (m.face?.meshes[0] ?? m.skinnedMesh).material.customProgramCacheKey() : null;
     },
     // The model yaw offset: PI when the skater rides backward.
     get facing() {
@@ -1406,14 +1425,14 @@ window.__atl = {
     // The skater mask from a camera in front of it (for the T-pose check).
     silhouette() {
       const m = skaterView.model;
-      return m ? Array.from(silhouette(skaterView.group, m.skinnedMesh)) : null;
+      return m ? Array.from(silhouette(skaterView.group, m.skinnedMeshes)) : null;
     },
     // The same mask with the skeleton in the bind pose (the T-pose).
     tposeSilhouette() {
       const m = skaterView.model;
       if (!m) return null;
       m.skinnedMesh.skeleton.pose();
-      const mask = Array.from(silhouette(skaterView.group, m.skinnedMesh));
+      const mask = Array.from(silhouette(skaterView.group, m.skinnedMeshes));
       skaterView.sync(skater, 0);
       return mask;
     },

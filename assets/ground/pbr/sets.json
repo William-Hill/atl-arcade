@@ -1,0 +1,301 @@
+{
+  "layers": [
+    "asphalt",
+    "concrete",
+    "trail",
+    "grass",
+    "brick"
+  ],
+  "tiers": {
+    "high": {
+      "files": {
+        "albedo": "albedo-1024.webp",
+        "normal": "normal-1024.webp",
+        "orm": "orm-512.webp"
+      },
+      "layers": 5,
+      "bytes": {
+        "albedo": 803692,
+        "normal": 1074414,
+        "orm": 145694
+      },
+      "gpuBytes": {
+        "albedo": 27962027,
+        "normal": 27962027,
+        "orm": 6990507
+      },
+      "totalBytes": 2023800,
+      "totalGpuBytes": 62914561
+    },
+    "small": {
+      "files": {
+        "albedo": "albedo-512.webp",
+        "orm": "orm-512.webp"
+      },
+      "layers": 5,
+      "bytes": {
+        "albedo": 175306,
+        "orm": 145694
+      },
+      "gpuBytes": {
+        "albedo": 6990507,
+        "orm": 6990507
+      },
+      "totalBytes": 321000,
+      "totalGpuBytes": 13981014
+    }
+  },
+  "sets": [
+    {
+      "id": "asphalt",
+      "asset": "asphalt_floor",
+      "source": "https://polyhaven.com/a/asphalt_floor",
+      "authors": {
+        "eye-candy.xyz": "All"
+      },
+      "license": "CC0 1.0",
+      "tileMeters": 2.35,
+      "meanLinear": [
+        0.2941,
+        0.2197,
+        0.1645
+      ],
+      "roughMean": 0.9501,
+      "aoMean": 0.8838,
+      "scoresAfter": {
+        "light": 0.0021,
+        "shadow": 0.0918,
+        "seam": 1.008
+      },
+      "candidates": [
+        {
+          "asset": "asphalt_track",
+          "light": 0.0057,
+          "shadow": 0.2707,
+          "seam": 0.997,
+          "rejected": [],
+          "picked": false
+        },
+        {
+          "asset": "clean_asphalt",
+          "light": 0.0007,
+          "shadow": 0.0,
+          "seam": 1.006,
+          "rejected": [
+            "review: a crack line across the tile"
+          ],
+          "picked": false
+        },
+        {
+          "asset": "asphalt_05",
+          "light": 0.0031,
+          "shadow": 0.232,
+          "seam": 0.975,
+          "rejected": [],
+          "picked": false
+        },
+        {
+          "asset": "asphalt_floor",
+          "light": 0.0021,
+          "shadow": 0.0918,
+          "seam": 1.008,
+          "rejected": [],
+          "picked": true
+        }
+      ]
+    },
+    {
+      "id": "concrete",
+      "asset": "brushed_concrete_03",
+      "source": "https://polyhaven.com/a/brushed_concrete_03",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "license": "CC0 1.0",
+      "tileMeters": 2.0,
+      "meanLinear": [
+        0.149,
+        0.1126,
+        0.0754
+      ],
+      "roughMean": 0.8542,
+      "aoMean": 0.8954,
+      "scoresAfter": {
+        "light": 0.0028,
+        "shadow": 0.2208,
+        "seam": 0.821
+      },
+      "candidates": [
+        {
+          "asset": "brushed_concrete_03",
+          "light": 0.0028,
+          "shadow": 0.2208,
+          "seam": 0.821,
+          "rejected": [],
+          "picked": true
+        },
+        {
+          "asset": "concrete_pavement",
+          "light": 0.0022,
+          "shadow": 0.0575,
+          "seam": 1.33,
+          "rejected": [
+            "review: small pavers, not a poured sidewalk"
+          ],
+          "picked": false
+        },
+        {
+          "asset": "concrete_pavement_03",
+          "light": 0.0295,
+          "shadow": 0.0,
+          "seam": 1.102,
+          "rejected": [
+            "review: a two-tone paver pattern, not a sidewalk"
+          ],
+          "picked": false
+        }
+      ]
+    },
+    {
+      "id": "trail",
+      "asset": "granular_concrete",
+      "source": "https://polyhaven.com/a/granular_concrete",
+      "authors": {
+        "Dario Barresi": "Processing",
+        "Michael Jenkins": "Photography"
+      },
+      "license": "CC0 1.0",
+      "tileMeters": 2.4,
+      "meanLinear": [
+        0.1561,
+        0.1359,
+        0.1024
+      ],
+      "roughMean": 0.7541,
+      "aoMean": 0.5623,
+      "scoresAfter": {
+        "light": 0.0017,
+        "shadow": 0.0973,
+        "seam": 1.02
+      },
+      "candidates": [
+        {
+          "asset": "concrete_floor_03",
+          "light": 0.0166,
+          "shadow": 0.34,
+          "seam": 1.024,
+          "rejected": [],
+          "picked": false
+        },
+        {
+          "asset": "smooth_concrete_floor",
+          "light": 0.0163,
+          "shadow": 0.0521,
+          "seam": 1.008,
+          "rejected": [
+            "review: dark cracks and stains"
+          ],
+          "picked": false
+        },
+        {
+          "asset": "granular_concrete",
+          "light": 0.0017,
+          "shadow": 0.0973,
+          "seam": 1.02,
+          "rejected": [],
+          "picked": true
+        }
+      ]
+    },
+    {
+      "id": "grass",
+      "asset": "leafy_grass",
+      "source": "https://polyhaven.com/a/leafy_grass",
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "license": "CC0 1.0",
+      "tileMeters": 2.0,
+      "meanLinear": [
+        0.3199,
+        0.2356,
+        0.1063
+      ],
+      "roughMean": 0.685,
+      "aoMean": 0.7398,
+      "scoresAfter": {
+        "light": 0.008,
+        "shadow": 0.1835,
+        "seam": 1.097
+      },
+      "candidates": [
+        {
+          "asset": "leafy_grass",
+          "light": 0.0214,
+          "shadow": 0.1779,
+          "seam": 1.098,
+          "rejected": [],
+          "picked": true
+        }
+      ]
+    },
+    {
+      "id": "brick",
+      "asset": "herringbone_brick",
+      "source": "https://polyhaven.com/a/herringbone_brick",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0 1.0",
+      "tileMeters": 1.8,
+      "meanLinear": [
+        0.0816,
+        0.0461,
+        0.0258
+      ],
+      "roughMean": 0.8786,
+      "aoMean": 0.7909,
+      "scoresAfter": {
+        "light": 0.0141,
+        "shadow": 0.0,
+        "seam": 1.128
+      },
+      "candidates": [
+        {
+          "asset": "red_brick_pavers",
+          "light": 0.0106,
+          "shadow": 0.0,
+          "seam": 2.924,
+          "rejected": [
+            "seam"
+          ],
+          "picked": false
+        },
+        {
+          "asset": "herringbone_brick",
+          "light": 0.046,
+          "shadow": 0.0,
+          "seam": 1.162,
+          "rejected": [],
+          "picked": true
+        },
+        {
+          "asset": "brick_pavement_02",
+          "light": 0.0236,
+          "shadow": 0.2079,
+          "seam": 0.67,
+          "rejected": [],
+          "picked": false
+        },
+        {
+          "asset": "herringbone_pavement",
+          "light": 0.0161,
+          "shadow": 0.5739,
+          "seam": 1.018,
+          "rejected": [],
+          "picked": false
+        }
+      ]
+    }
+  ]
+}

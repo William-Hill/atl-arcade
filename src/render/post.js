@@ -243,7 +243,8 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   composer.addPass(new RenderPass(scene, camera));
 
   const gtao = new GTAOPass(scene, camera, size.x, size.y);
-  // The tree leaf cards (src/render/leaf-cut.js): AO and ink see the leaves.
+  // The tree leaf cut (src/render/leaf-cut.js): the AO sees the trunks, the
+  // crown cores and the impostors, but not the leaf cards (#202).
   withLeafCut(gtao.normalMaterial);
   keepShadowMap(gtao);
   // World units are meters: a 2.5 m radius darkens the ground at a wall

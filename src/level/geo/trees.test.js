@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildPropMeshes } from "./geo-mesh.js";
 import { levelProps } from "./props.js";
-import { LEAF_CARDS, SEASONS, TREE_SPECIES, TREE_VARIANTS, isTreeKind, seasonColors, treeKindFor, treeTemplate, treeTemplates, withProceduralTrees } from "./trees.js";
+import { LEAF_CARDS, PUFF_CORE_CODE, SEASONS, TREE_SPECIES, TREE_VARIANTS, isTreeKind, seasonColors, treeKindFor, treeTemplate, treeTemplates, withProceduralTrees } from "./trees.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
 const SPECIES = Object.keys(TREE_SPECIES);
@@ -197,7 +197,8 @@ describe("leaf cards", () => {
   it("gives each card a seed in (0, 1] and corners in 0..1", () => {
     const t = treeTemplate("magnolia", 1, 0, "summer", { cards: true });
     for (let i = 0; i < t.leaf.length; i += 3) {
-      if (t.leaf[i + 2] === 0) continue;
+      // 0: no texture; PUFF_CORE_CODE: a crown puff (#202).
+      if (t.leaf[i + 2] === 0 || t.leaf[i + 2] === PUFF_CORE_CODE) continue;
       expect(t.leaf[i + 2]).toBeGreaterThan(0);
       expect(t.leaf[i + 2]).toBeLessThanOrEqual(1);
       expect([0, 1]).toContain(t.leaf[i]);

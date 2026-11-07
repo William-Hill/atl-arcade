@@ -246,7 +246,8 @@ export function awningsFor(b, style, isStreet) {
 
 // A bridge (issue #131): the deck top is a surface ribbon from joint to
 // joint (bridges.js), with mitered turns and its height from bridgeDeck().
-// The structure is in the facade material (no windows): the slab under the
+// The structure is in the facade material (no windows, FACE.concrete, so
+// the pbr look gives it the concrete class, #199): the slab under the
 // OSM span, a parapet on each open side of the span, and at each OSM end an
 // end post and a wing wall that turns out away from the road and down into
 // the ground. A parapet side that is inside another deck (a sidewalk bridge
@@ -259,7 +260,7 @@ function face(m, p0, p1, p2, p3, hint, color) {
   for (const q of [p0, p1, p2, p3]) {
     m.positions.push(q[0], q[1], q[2]);
     m.colors.push(color[0], color[1], color[2]);
-    m.facade.push(0, 0, 0, FACE.cornice);
+    m.facade.push(0, 0, 0, FACE.concrete);
   }
   const ux = p1[0] - p0[0];
   const uy = p1[1] - p0[1];

@@ -72,11 +72,15 @@ export function rendererName(renderer) {
 // Settings for each tier. far and fogNear are in meters. post is "full"
 // (GTAO, ink, bloom, MSAA), "lite" (depth ink only), or null. pixelRatio is
 // the cap on the device pixel ratio. detail turns on the ground scans, the
-// road markings, the facade kit, and the interiors.
+// road markings, the facade kit, and the interiors. farTerrain is the
+// distance (m) past which a ground tile shows the coarse terrain drape (a
+// quarter of the triangles, no road markings), or null for none. On high it
+// starts at 350 m, where the fog is already 23% and a road marking is under
+// half a pixel (#188).
 export const QUALITY = {
-  low: { shadows: false, post: null, clouds: false, far: 320, fogNear: 150, pixelRatio: 2, detail: false },
-  phone: { shadows: false, post: "lite", clouds: false, far: 320, fogNear: 150, pixelRatio: 1.5, detail: false },
-  high: { shadows: true, post: "full", clouds: true, far: 650, fogNear: 260, pixelRatio: 2, detail: true },
+  low: { shadows: false, post: null, clouds: false, far: 320, fogNear: 150, pixelRatio: 2, detail: false, farTerrain: 60 },
+  phone: { shadows: false, post: "lite", clouds: false, far: 320, fogNear: 150, pixelRatio: 1.5, detail: false, farTerrain: null },
+  high: { shadows: true, post: "full", clouds: true, far: 650, fogNear: 260, pixelRatio: 2, detail: true, farTerrain: 350 },
 };
 
 // Pure: the pixel ratio for a device pixel ratio and a cap.

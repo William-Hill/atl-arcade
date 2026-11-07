@@ -306,7 +306,11 @@ const SPHERES = [icosphere(0), icosphere(1)];
 
 // One crown puff. `crown` is the crown center: the normals point away from
 // it, mixed with the puff's own normal, so the crown shades as one shape.
-function puff(m, center, radius, flatten, sphere, rand, ctx) {
+// With `core` (a tree with leaf cards) a puff vertex gets the crown core
+// leaf code and a uv in meters (src/render/leaf-cut.js CORE_CODE and
+// markCrownCores()), so the pbr shader gives it a leafy, darker shade.
+export const PUFF_CORE_CODE = -5;
+function puff(m, center, radius, flatten, sphere, rand, ctx, core = false) {
   const base = m.positions.length / 3;
   for (const s of sphere.verts) {
     const k = 1 + (rand() - 0.5) * 0.18;
@@ -319,6 +323,7 @@ function puff(m, center, radius, flatten, sphere, rand, ctx) {
     const ao = 0.78 + 0.18 * lift + 0.1 * edge;
     const color = ctx.colorAt(rand);
     vertex(m, p, n, shade(color, Math.min(1.08, ao)), ctx.swayOf(p));
+    if (core) m.leaf.splice(m.leaf.length - 3, 3, p[0] * 0.8 + p[2] * 0.6, p[1] * 0.85 + (p[2] * 0.8 - p[0] * 0.6) * 0.5, PUFF_CORE_CODE);
   }
   for (const [a, b, c] of sphere.faces) m.indices.push(base + a, base + b, base + c);
 }
@@ -410,7 +415,7 @@ export function treeTemplate(species, variant, lod = 0, season = "summer", { car
     colorAt,
   };
   const leafy = withCards && lod === 0;
-  for (const c of centers) puff(m, [c[0], c[1], c[2]], leafy ? c[3] * LEAF_CARDS.core : c[3], sp.flatten ?? 1, SPHERES[1], rand, ctx);
+  for (const c of centers) puff(m, [c[0], c[1], c[2]], leafy ? c[3] * LEAF_CARDS.core : c[3], sp.flatten ?? 1, SPHERES[1], rand, ctx, leafy);
   // The cards use their own random stream, so the trunk and the puffs keep
   // the same shape with and without cards.
   if (leafy) {

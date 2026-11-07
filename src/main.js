@@ -78,6 +78,8 @@ import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
 import { createFactCardsView } from "./render/fact-cards-view.js";
 import { createFactPopup } from "./ui/fact-popup.js";
 import { NO_PERF, createFrameCost } from "./perf/frame-cost.js";
+import { createDrawSplit } from "./perf/draw-split.js";
+import { createShadowPass } from "./render/shadow-pass.js";
 import { createViewCull } from "./render/view-cull.js";
 
 const params = new URLSearchParams(window.location.search);
@@ -155,7 +157,12 @@ const facadeKitNodes = look === "pbr" && tier.detail && renderer.extensions.has(
 // ?meshshards=<n> sets the mesh worker count (for perf checks).
 const meshWorkers = params.get("meshworker") !== "0" ? undefined : null;
 const meshFallback = (why) => why && console.warn("level worker failed; building on the main thread", why);
-const farTerrain = geo && quality === "low" && params.get("farterrain") !== "0";
+// The coarse far ground: past 60 m on low, past 350 m on high (#188).
+// ?farterrain=0 keeps the exact ground everywhere; ?farterrain=<m> sets the distance.
+const farTerrainParam = params.get("farterrain");
+const farTerrainDistance = farTerrainParam !== null && Number(farTerrainParam) > 0 ? Number(farTerrainParam) : tier.farTerrain;
+// The isometric map bake (view=iso) stands 600 m back: it keeps the exact ground.
+const farTerrain = geo && farTerrainParam !== "0" && farTerrainDistance > 0 && params.get("view") !== "iso";
 const levelPropsOn = params.get("props") !== "0";
 const meshShards = numParam("meshshards") ?? meshWorkerCount(navigator.hardwareConcurrency - (farTerrain ? 1 : 0) - (geo && levelPropsOn ? 1 : 0));
 const meshBuild = geo ? startGeoMeshBuild(level, {}, { workers: meshShards, claimLandmarks: landmarkGlbs, createWorker: meshWorkers, onFallback: meshFallback }) : null;
@@ -168,12 +175,17 @@ await Promise.all([meshBuild?.ready, farBuild?.ready, propsBuild?.ready]);
 // A geodata level gets a day sky, a far fog, and a sun that follows the
 // skater.
 let geoLights = null;
+let shadowPass = null;
 let sky = null;
 if (geo) {
   // The low tier has no shadow map: in headless SwiftShader it halved the
   // frame rate. The kit trees carry a shadow disc and the skater a blob.
   renderer.shadowMap.enabled = tier.shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // The skater shadow stand-ins and the cull of the casters whose shadow is
+  // off screen (src/render/shadow-pass.js, #188). ?shadowcull=0 keeps every
+  // caster (for a before/after check).
+  shadowPass = createShadowPass(renderer, { cull: params.get("shadowcull") !== "0" });
   if (tier.post || look === "pbr") {
     // Toon: neutral tone mapping keeps the art colors and rolls off the
     // bright sun. Pbr uses the same curve (see src/render/look.js).
@@ -243,7 +255,7 @@ const env = createLevelEnv(level, { props: levelPropsOn, placed: propsBuild && (
 const skaterEnv = createSkaterEnv(level, env.grindables);
 const geoMeshes = geo ? await meshBuild.meshes : null;
 performance.mark("atl:meshes");
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full" }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
@@ -556,10 +568,22 @@ setPostToggles(post, savedSettings);
 // time of day and district, the fog tint, the env map bake, the skater rim.
 // ?pbrgrade=0 keeps the fixed day values (for a before/after check).
 const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: districtAnchors(level), getPost: () => post }) : null;
+// ?perf=1: the draw calls of each frame by pass and object kind (#188).
+const drawSplit = perf.enabled ? createDrawSplit(renderer) : null;
+function labelPostPasses() {
+  if (!drawSplit || !post?.composer) return;
+  for (const p of post.composer.passes) {
+    const label = p === post.gtao ? "gtao" : p === post.ink ? "ink" : p === post.grade ? "grade" : p === post.bloom ? "bloom" : p.isRenderPass ? "main" : "post";
+    drawSplit.wrapPass(p, label);
+  }
+}
+labelPostPasses();
 function draw() {
   renderer.info.reset();
+  drawSplit?.begin();
   if (post) post.render();
   else renderer.render(scene, camera);
+  drawSplit?.end();
 }
 
 // The frame-time governor (src/render/governor.js) steps the phone and high
@@ -1201,6 +1225,14 @@ window.__atl = {
         get drawCalls() {
           return carView.drawCalls;
         },
+        // The draw calls of the lamp layer (lamp quads and headlight pools,
+        // 0 to 2) and of the GLB cars: drawCalls minus both is the kit body.
+        get lampCalls() {
+          return carView.lamps ? carView.lamps.drawCalls : 0;
+        },
+        get modelCalls() {
+          return carView.models ? carView.models.drawCalls : 0;
+        },
         get drawn() {
           return carView.info.drawn;
         },
@@ -1380,10 +1412,11 @@ window.__atl = {
       skaterView.freezePose(frozen);
     },
     // The shader program key of the skater material ("skater-face",
-    // "skater-toon-rim", or both).
+    // "skater-toon-rim", or both): the head material when the skater has
+    // face decals.
     get materialKey() {
       const m = skaterView.model;
-      return m ? m.skinnedMesh.material.customProgramCacheKey() : null;
+      return m ? (m.face?.meshes[0] ?? m.skinnedMesh).material.customProgramCacheKey() : null;
     },
     // The model yaw offset: PI when the skater rides backward.
     get facing() {
@@ -1392,14 +1425,14 @@ window.__atl = {
     // The skater mask from a camera in front of it (for the T-pose check).
     silhouette() {
       const m = skaterView.model;
-      return m ? Array.from(silhouette(skaterView.group, m.skinnedMesh)) : null;
+      return m ? Array.from(silhouette(skaterView.group, m.skinnedMeshes)) : null;
     },
     // The same mask with the skeleton in the bind pose (the T-pose).
     tposeSilhouette() {
       const m = skaterView.model;
       if (!m) return null;
       m.skinnedMesh.skeleton.pose();
-      const mask = Array.from(silhouette(skaterView.group, m.skinnedMesh));
+      const mask = Array.from(silhouette(skaterView.group, m.skinnedMeshes));
       skaterView.sync(skater, 0);
       return mask;
     },
@@ -1475,6 +1508,14 @@ window.__atl = {
   // The per-system frame cost (?perf=1): reset(), then report() gives the
   // mean and p95 ms per frame for each system. Null without ?perf=1.
   perf: perf.enabled ? { reset: () => perf.reset(), report: () => perf.report() } : null,
+  // ?perf=1: the last frame's draw calls by pass and object kind.
+  get drawSplit() {
+    return drawSplit ? drawSplit.report() : null;
+  },
+  // The shadow pass: the casters, the culled ones, the stand-ins shown.
+  get shadowPass() {
+    return shadowPass ? { ...shadowPass.info } : null;
+  },
   get rendererInfo() {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   },

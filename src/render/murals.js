@@ -173,11 +173,44 @@ function loadPaintedAtlas(size) {
   return tex;
 }
 
-// The roughness atlas for the painted murals (a linear texture).
+// The roughness atlas for the painted murals (a linear texture). Green and
+// blue are the roughness; red is the paint coverage (#198).
 export function createMuralRoughness() {
   const tex = new THREE.TextureLoader().load(MURAL_ROUGHNESS_URL);
   tex.colorSpace = THREE.NoColorSpace;
   return tex;
+}
+
+// The cut of the painted murals (#198): a mural pixel whose paint coverage
+// (the red channel of the roughness atlas) is under this value is not
+// drawn, so the real host wall 8 cm behind it shows at the ragged dry-brush
+// edge. Before this, the atlas showed a painted brick or stucco edge that
+// did not match the wall of the building.
+export const MURAL_EDGE_CUT = 0.5;
+
+// Adds the dry-brush cut to a standard material that has the painted atlas
+// and the roughness atlas. It costs no texture and no draw call.
+export function withMuralEdge(material, cut = MURAL_EDGE_CUT) {
+  material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <map_fragment>",
+      `#include <map_fragment>
+#ifdef USE_ROUGHNESSMAP
+if (texture2D(roughnessMap, vRoughnessMapUv).r < ${cut.toFixed(3)}) discard;
+#endif`,
+    );
+  };
+  material.customProgramCacheKey = () => `mural-edge-${cut}`;
+  return material;
+}
+
+// The mural material. The pbr look with the painted atlas also gets the
+// roughness atlas and the dry-brush cut. The toon look (and the canvas
+// atlas) keeps the atlas alone. `litMaterial` is look.js litMaterial().
+export function createMuralMaterial(look, litMaterial, options) {
+  const map = createMuralAtlas(1024, { look });
+  if (look !== "pbr" || map.userData.muralSource !== "painted") return litMaterial(look, { map }, options);
+  return withMuralEdge(litMaterial(look, { map, roughnessMap: createMuralRoughness() }, options));
 }
 
 // `look` is the city look ("toon" or "pbr"); without it the URL decides

@@ -1,7 +1,7 @@
 {
   "asset": "murals",
   "description": "16 original painted-wall mural designs for the trail-facing walls of the BeltLine Eastside level (pbr look): a 4 x 4 color atlas and a roughness atlas in the cell layout of muralMesh() (src/level/geo/geo-mesh.js).",
-  "generated": "2026-11-05",
+  "generated": "2026-11-07",
   "tool": {
     "art": "scripts/assets/mural-atlas.mjs: Chromium 2D canvas via Playwright (@playwright/test 1.63.0). Every shape is drawn from code: Bezier paths, circles, gradients, and system DejaVu Sans / Bitstream Charter lettering. A per-pixel paint pass (seeded value noise) adds brush strokes, roughness, weathering, and a ragged dry-brush edge over painted brick or stucco.",
     "generator": "deterministic: same seed, same pixels (up to the browser's JPEG encoder)"
@@ -34,12 +34,12 @@
         512
       ],
       "colorSpace": "linear",
-      "bytes": 34170,
+      "bytes": 46088,
       "gpuBytes": 1394606,
-      "encoding": "gray = roughness / 0.85 (ROUGHNESS.mural), read from the green channel by MeshStandardMaterial.roughnessMap"
+      "encoding": "green and blue = roughness / 0.85 (ROUGHNESS.mural), read from the green channel by MeshStandardMaterial.roughnessMap; red = paint coverage (0 bare wall, 1 paint), the mural cut-out mask at 0.5 (src/render/murals.js)"
     }
   },
-  "totalBytes": 917311,
+  "totalBytes": 929229,
   "totalGpuBytes": 23708303,
   "designs": [
     {
@@ -239,5 +239,6 @@
       ],
       "paintCoverage": 0.888
     }
-  ]
+  ],
+  "note": "2026-11-07 (#198): mural-roughness.jpg was painted again with the paint coverage in the red channel. mural-atlas.jpg is the 2026-11-05 file: the same seed paints the same design, and a new JPEG encode differs only by encoder noise."
 }

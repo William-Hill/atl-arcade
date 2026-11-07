@@ -5,6 +5,7 @@ import {
   LANDMARK_GLB_BRIDGES,
   LANDMARK_GLB_BUILDINGS,
 } from "../level/geo/landmarks.js";
+import { CONCRETE, PLASTER_SCAN, glbConcreteTint } from "./pbr-palette.js";
 
 // The Blender landmark GLBs (assets/landmarks/<key>/<key>.glb, docs/landmarks.md)
 // for the PBR look: one THREE.LOD per landmark, at its site origin, from the
@@ -147,6 +148,44 @@ function facadeLit(scene) {
   return found;
 }
 
+// The concrete class on the concrete of a bridge GLB (#199): the map is
+// tinted to CONCRETE.albedo, and the roughness map (the plaster scan,
+// 0.6 to 1.0) is mapped into the class band, as on the geo bridges
+// (geo-view.js). The albedo stays in CONCRETE.range (pbr-palette.test.js).
+export function concreteClassPatch(material) {
+  material.color.setRGB(...glbConcreteTint(), THREE.LinearSRGBColorSpace);
+  material.roughness = 1;
+  material.metalness = 0;
+  const [r0, r1] = CONCRETE.roughness;
+  const [a0, a1] = CONCRETE.range;
+  material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <map_fragment>",
+        // The darkest texels of the map (down to 0.12 linear, under its 1st
+        // percentile) times the tint are under the class band. The clamp
+        // holds every texel in the band.
+        `#include <map_fragment>
+diffuseColor.rgb = clamp(diffuseColor.rgb, vec3(${a0.toFixed(3)}), vec3(${a1.toFixed(3)}));`,
+      )
+      .replace(
+        "#include <roughnessmap_fragment>",
+        `#include <roughnessmap_fragment>
+#ifdef USE_ROUGHNESSMAP
+{
+  float g = clamp((texture2D(roughnessMap, vRoughnessMapUv).g - ${PLASTER_SCAN.mean.toFixed(4)}) / ${PLASTER_SCAN.spread.toFixed(4)}, -1.0, 1.0);
+  roughnessFactor = ${r0.toFixed(3)} + ${(r1 - r0).toFixed(3)} * (0.5 + 0.5 * g);
+}
+#else
+roughnessFactor = ${((r0 + r1) / 2).toFixed(3)};
+#endif`,
+      );
+  };
+  material.customProgramCacheKey = () => "landmark-concrete-class";
+  material.needsUpdate = true;
+  return material;
+}
+
 const SHADOW_MATERIAL = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
 // The shadow proxies move to this layer, which only the shadow cameras see,
 // once the shadow lights are found: then they cost no main-pass draw call.
@@ -176,6 +215,7 @@ export function createLandmarkModels(
   let source = null;
   let lastLook = -Infinity;
   const patched = new Set();
+  const bridges = new Set(LANDMARK_GLB_BRIDGES);
   const proxies = [];
   let lightsDone = false;
   const follow = (renderer, scene) => {
@@ -216,12 +256,17 @@ export function createLandmarkModels(
               m.castShadow = false;
               m.receiveShadow = true;
               const ms = Array.isArray(m.material) ? m.material : [m.material];
-              for (const mat of ms)
+              for (const mat of ms) {
+                if (bridges.has(k) && mat.name === "lm_concrete" && !patched.has(mat)) {
+                  patched.add(mat);
+                  concreteClassPatch(mat);
+                }
                 if (mat.emissiveMap && !patched.has(mat)) {
                   patched.add(mat);
                   windowLightPatch(mat, lit);
                   mat.onBeforeRender = follow;
                 }
+              }
             });
             lod.addLevel(node, node.userData.lodDistance ?? 0);
           }
@@ -253,7 +298,10 @@ export function createLandmarkModels(
           shadow.castShadow = true;
           shadow.receiveShadow = false;
           shadow.position.set(...site.origin);
-          if (lightsDone) shadow.layers.set(SHADOW_LAYER);
+          // The proxy is on the shadow layer from the start: on the main
+          // layer it drew black over the bridge piers (#199), because only
+          // a window material (follow()) moved it, and a bridge has none.
+          shadow.layers.set(SHADOW_LAYER);
           proxies.push(shadow);
           root.add(shadow);
           info.shadowTriangles += g.index.count / 3;
@@ -262,6 +310,15 @@ export function createLandmarkModels(
       }),
     ).then(() => {
       info.textures = cache.size;
+      // The shadow cameras see the proxies, also where no window material
+      // draws (a bridge alone in view).
+      let top = root;
+      while (top.parent) top = top.parent;
+      if (!lightsDone) {
+        const lights = shadowLights(top);
+        for (const l of lights) l.shadow.camera.layers.enable(SHADOW_LAYER);
+        if (lights.length) lightsDone = true;
+      }
     });
   });
   // setWindowLit(v) takes over from the scene's facade value (for a caller

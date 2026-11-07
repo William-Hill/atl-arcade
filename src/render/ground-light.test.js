@@ -108,27 +108,22 @@ describe("the ground light map", () => {
     expect(g.texel).toBeGreaterThan(4);
   });
 
-  it("keeps a BeltLine-size level under 16 MB of GPU memory", () => {
-    // The Eastside level spans about 1.2 km x 2 km of props.
-    const g = groundLightGrid([{ x: -600, z: -1000 }], [{ x: 600, z: 1000, r: 2 }]);
-    expect(g.width * g.height * 4).toBeLessThan(16e6);
+  it("keeps a BeltLine-size level near 4 MB of GPU memory (RG8, no mips)", () => {
+    // The Eastside props span about 1 km x 2 km (992 x 1967 texels).
+    const g = groundLightGrid([{ x: -500, z: -985 }], [{ x: 470, z: 960, r: 2 }]);
+    expect(g.width * g.height * 2).toBeLessThan(4.2e6);
   });
 
   it("is null with no lamps and no trees", () => {
     expect(bakeGroundLight([{ kind: "bench", x: 0, z: 0 }])).toBeNull();
   });
 
-  it("stores RGBA8 with B 0 and A 255", () => {
+  it("stores RG8: two bytes a texel", () => {
     const map = bakeGroundLight([{ kind: "lamp", x: 0, z: 0 }]);
     const { width, height } = map.grid;
-    expect(map.data).toHaveLength(width * height * 4);
-    for (let k = 0; k < width * height; k += 97) {
-      expect(map.data[k * 4 + 2]).toBe(0);
-      expect(map.data[k * 4 + 3]).toBe(255);
-    }
+    expect(map.data).toHaveLength(width * height * 2);
   });
 });
-
 // The lamp node of the kit GLB (no Draco): its positions and vertex colors.
 function kitLamp() {
   const b = readFileSync(new URL("../../assets/kit/street-kit.glb", import.meta.url));

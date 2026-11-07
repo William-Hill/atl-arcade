@@ -1,4 +1,4 @@
-// The ground light map of the pbr look (#196, #197): one small texture over
+// The ground light map of the pbr look (#196, #197): one RG8 texture over
 // the level that the ground shader (pbr-ground.js) reads with one sample.
 //   R: the pool of light under each street and trail lamp (night only).
 //   G: the mulch or bare soil patch under each tree (on the lawn only).
@@ -101,8 +101,8 @@ export function groundLightGrid(pools, patches, { texel = GROUND_LIGHT_GRID.texe
 }
 
 // Pure: the map of `placements`: { grid, data, pools, patches }. `data` is
-// RGBA8 (width x height x 4), row 0 at z0: R the lamp light, G the mulch.
-// B and A are 0 and 255. Null when there are no lamps and no trees.
+// RG8 (width x height x 2), row 0 at z0: R the lamp light, G the mulch.
+// Null when there are no lamps and no trees.
 export function bakeGroundLight(placements, options = {}) {
   const pools = lampPools(placements);
   const patches = mulchPatches(placements);
@@ -128,11 +128,10 @@ export function bakeGroundLight(placements, options = {}) {
   };
   for (const p of pools) stamp(p.x, p.z, LAMP_POOL.radius, poolFalloff, r, true);
   for (const p of patches) stamp(p.x, p.z, p.r, mulchFalloff, g, false);
-  const data = new Uint8Array(width * height * 4);
+  const data = new Uint8Array(width * height * 2);
   for (let k = 0; k < width * height; k += 1) {
-    data[k * 4] = Math.round(255 * Math.min(1, r[k]));
-    data[k * 4 + 1] = Math.round(255 * Math.min(1, g[k]));
-    data[k * 4 + 3] = 255;
+    data[k * 2] = Math.round(255 * Math.min(1, r[k]));
+    data[k * 2 + 1] = Math.round(255 * Math.min(1, g[k]));
   }
   return { grid, data, pools: pools.length, patches: patches.length };
 }
@@ -147,7 +146,7 @@ export function sampleGroundLight(map, x, z) {
   const j = Math.floor(fz);
   const ti = fx - i;
   const tj = fz - j;
-  const at = (a, b, c) => map.data[(Math.min(height - 1, b) * width + Math.min(width - 1, a)) * 4 + c] / 255;
+  const at = (a, b, c) => map.data[(Math.min(height - 1, b) * width + Math.min(width - 1, a)) * 2 + c] / 255;
   const lerp = (c) => {
     const top = at(i, j, c) * (1 - ti) + at(i + 1, j, c) * ti;
     const bottom = at(i, j + 1, c) * (1 - ti) + at(i + 1, j + 1, c) * ti;

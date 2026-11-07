@@ -201,7 +201,8 @@ export function createPbrSurfaceMaterial({ tier = "high" } = {}) {
     const map = bakeGroundLight(placements);
     if (!map) return null;
     const { x0, z0, texel, width, height } = map.grid;
-    const t = new THREE.DataTexture(map.data, width, height, THREE.RGBAFormat);
+    const t = new THREE.DataTexture(map.data, width, height, THREE.RGFormat);
+    t.unpackAlignment = 2;
     t.magFilter = THREE.LinearFilter;
     t.minFilter = THREE.LinearFilter;
     t.wrapS = THREE.ClampToEdgeWrapping;
@@ -210,7 +211,7 @@ export function createPbrSurfaceMaterial({ tier = "high" } = {}) {
     uniforms.uGroundLight.value.dispose();
     uniforms.uGroundLight.value = t;
     uniforms.uGroundLightBox.value.set(x0, z0, 1 / (width * texel), 1 / (height * texel));
-    mat.userData.groundLight = { pools: map.pools, patches: map.patches, width, height, texel, gpuBytes: width * height * 4 };
+    mat.userData.groundLight = { pools: map.pools, patches: map.patches, width, height, texel, gpuBytes: width * height * 2 };
     return mat.userData.groundLight;
   };
   mat.userData.groundTier = tier;

@@ -39,7 +39,7 @@ Her voice lines must be short, positive, and in plain words. Do not write slang 
 | Skin | Deep brown |
 | Hair | Box braids in a high bun, held close to the head |
 | Top | A cropped bomber jacket in peach orange, over a cream tank top |
-| Bottom | Forest-green joggers, cuffed at the calf |
+| Bottom | Navy joggers, cuffed at the calf (forest green until #203: green pants merged with the BeltLine lawn) |
 | Skates | High-top quad roller skates (four wheels each), white boots, gold wheels, a peach toe stop |
 | Accessories | Small gold hoop earrings, cream knee pads, a green wristband |
 | Logos and text | None |
@@ -51,7 +51,8 @@ The skates are quad roller skates. They are not inline skates and not a skateboa
 | Name | Hex | Use |
 |---|---|---|
 | Peach | `#F28C4A` | The jacket, the toe stops |
-| Forest | `#2F6B4F` | The joggers, the wristband |
+| Navy | `#2E3D6B` | The joggers (#203) |
+| Forest | `#2F6B4F` | The wristband |
 | Gold | `#E8B931` | The wheels, the earrings |
 | Cream | `#F4EBD9` | The tank top, the knee pads, the boots |
 | Deep brown | `#5A3A29` | The skin tone reference |

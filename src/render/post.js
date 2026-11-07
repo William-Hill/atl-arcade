@@ -163,6 +163,28 @@ const InkShader = {
 // gradePixel() is the same formula). src/render/pbr-look.js writes the
 // uniforms each frame by the time of day and the district.
 const v3 = (c) => `vec3(${c.map((v) => v.toFixed(4)).join(", ")})`;
+
+// The grade formula in GLSL, for the grade passes and for the material grade
+// of the low tier (src/render/pbr-look.js installMaterialGrade()).
+// The input and the output are linear colors before the tone mapping.
+// The guard lets a shader have it two times: the material grade puts it in
+// the tone mapping chunk of every shader with tone mapping, and the phone
+// grade pass draws to the canvas with tone mapping.
+export const PBR_GRADE_GLSL = /* glsl */ `
+    #ifndef PBR_GRADE_FN
+    #define PBR_GRADE_FN
+    vec3 pbrGrade(vec3 col, float contrast, float sat, float warm, float lift, vec3 tint) {
+      vec3 c = max(col, vec3(0.0));
+      float l0 = dot(c, vec3(0.2126, 0.7152, 0.0722));
+      float l1 = l0 > 0.0 ? ${GRADE_PIVOT.toFixed(4)} * pow(l0 / ${GRADE_PIVOT.toFixed(4)}, contrast) : 0.0;
+      c *= l0 > 1e-6 ? l1 / l0 : 0.0;
+      float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+      c = max(vec3(l) + (c - vec3(l)) * sat, vec3(0.0));
+      float w = smoothstep(${SPLIT.range[0].toFixed(4)}, ${SPLIT.range[1].toFixed(4)}, l);
+      return (c * (vec3(1.0) + warm * mix(${v3(SPLIT.shadow)}, ${v3(SPLIT.light)}, w)) + vec3(lift)) * tint;
+    }
+    #endif`;
+
 const GradeShader = {
   uniforms: {
     tDiffuse: { value: null },
@@ -183,17 +205,10 @@ const GradeShader = {
     uniform float uLift;
     uniform vec3 uTint;
     varying vec2 vUv;
+    ${PBR_GRADE_GLSL}
     void main() {
       vec4 col = texture2D(tDiffuse, vUv);
-      vec3 c = max(col.rgb, vec3(0.0));
-      float l0 = dot(c, vec3(0.2126, 0.7152, 0.0722));
-      float l1 = l0 > 0.0 ? ${GRADE_PIVOT.toFixed(4)} * pow(l0 / ${GRADE_PIVOT.toFixed(4)}, uContrast) : 0.0;
-      c *= l0 > 1e-6 ? l1 / l0 : 0.0;
-      float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-      c = max(vec3(l) + (c - vec3(l)) * uSat, vec3(0.0));
-      float w = smoothstep(${SPLIT.range[0].toFixed(4)}, ${SPLIT.range[1].toFixed(4)}, l);
-      c = (c * (vec3(1.0) + uWarm * mix(${v3(SPLIT.shadow)}, ${v3(SPLIT.light)}, w)) + vec3(uLift)) * uTint;
-      gl_FragColor = vec4(c, col.a);
+      gl_FragColor = vec4(pbrGrade(col.rgb, uContrast, uSat, uWarm, uLift, uTint), col.a);
     }`,
 };
 
@@ -399,27 +414,66 @@ const LiteInkShader = {
     }`,
 };
 
-export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true }) {
+// The phone tier post pass of the pbr look (#195): one scene pass into a
+// target with no MSAA (as the ink pass), then one fullscreen pass that
+// applies the grade (PBR_GRADE_GLSL), the tone mapping and the output color
+// space. The pbr look has no ink and no halftone, so the pass reads one
+// texel and no depth. A direct draw to the canvas costs more: the canvas
+// has MSAA.
+const LiteGradeShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uContrast: { value: TIME_GRADES.day.contrast },
+    uSat: { value: TIME_GRADES.day.saturation },
+    uWarm: { value: TIME_GRADES.day.warm },
+    uLift: { value: 0.0 },
+    uTint: { value: new THREE.Vector3(1, 1, 1) },
+  },
+  vertexShader: LiteInkShader.vertexShader,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform float uContrast;
+    uniform float uSat;
+    uniform float uWarm;
+    uniform float uLift;
+    uniform vec3 uTint;
+    varying vec2 vUv;
+    ${PBR_GRADE_GLSL}
+    void main() {
+      vec4 col = texture2D(tDiffuse, vUv);
+      gl_FragColor = vec4(pbrGrade(col.rgb, uContrast, uSat, uWarm, uLift, uTint), col.a);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }`,
+};
+
+export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true, look = "toon" }) {
+  // The pbr look (#195): the grade pass, with no ink, no halftone and no
+  // depth texture.
+  const pbr = look === "pbr";
+  const shader = pbr ? LiteGradeShader : LiteInkShader;
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const target = new THREE.WebGLRenderTarget(size.x, size.y, {
-    depthTexture: new THREE.DepthTexture(size.x, size.y),
+    depthTexture: pbr ? null : new THREE.DepthTexture(size.x, size.y),
     depthBuffer: true,
   });
   // An sRGB target keeps 8-bit colors without dark banding.
   target.texture.colorSpace = THREE.SRGBColorSpace;
   const material = new THREE.ShaderMaterial({
-    uniforms: THREE.UniformsUtils.clone(LiteInkShader.uniforms),
-    vertexShader: LiteInkShader.vertexShader,
-    fragmentShader: LiteInkShader.fragmentShader,
+    uniforms: THREE.UniformsUtils.clone(shader.uniforms),
+    vertexShader: shader.vertexShader,
+    fragmentShader: shader.fragmentShader,
     depthTest: false,
     depthWrite: false,
   });
   const u = material.uniforms;
   u.tDiffuse.value = target.texture;
-  u.tDepth.value = target.depthTexture;
-  u.fadeNear.value = fadeNear;
-  u.fadeFar.value = fadeFar;
-  if (!halftone) u.halftone.value.x = 0;
+  if (!pbr) {
+    u.tDepth.value = target.depthTexture;
+    u.fadeNear.value = fadeNear;
+    u.fadeFar.value = fadeFar;
+    if (!halftone) u.halftone.value.x = 0;
+  }
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
   quad.frustumCulled = false;
   const quadScene = new THREE.Scene();
@@ -427,6 +481,7 @@ export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, hal
   const quadCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
   function sync() {
+    if (pbr) return;
     u.cameraNear.value = camera.near;
     u.cameraFar.value = camera.far;
     const pr = Math.max(1, renderer.getPixelRatio());
@@ -435,7 +490,9 @@ export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, hal
   }
   return {
     kind: "lite",
-    ink: { uniforms: u },
+    // src/render/pbr-look.js writes the grade uniforms each frame.
+    ink: pbr ? null : { uniforms: u },
+    grade: pbr ? { uniforms: u } : null,
     render() {
       sync();
       renderer.setRenderTarget(target);
@@ -446,7 +503,7 @@ export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, hal
     setSize() {
       const s = renderer.getDrawingBufferSize(new THREE.Vector2());
       target.setSize(s.x, s.y);
-      u.resolution.value.set(s.x, s.y);
+      if (u.resolution) u.resolution.value.set(s.x, s.y);
     },
     dispose() {
       target.dispose();

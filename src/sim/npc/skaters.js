@@ -52,7 +52,7 @@ export const PILOT = {
 // player spawn. `outfit` names an entry in src/render/npc-skaters-view.js.
 // A trick list plays in a loop: `every` s after the previous trick.
 export const BELTLINE_SKATERS = [
-  { id: "kiana", model: "nia", outfit: "cobalt", from: -150, to: 130, start: 30, dir: 1, cruise: 5.5, tricks: [{ kind: "groove", every: 6 }, { kind: "jump", every: 5 }] },
+  { id: "kiana", model: "nia", outfit: "wine", from: -150, to: 130, start: 30, dir: 1, cruise: 5.5, tricks: [{ kind: "groove", every: 6 }, { kind: "jump", every: 5 }] },
   { id: "dre", model: "marcus", outfit: "sunset", from: -150, to: 130, start: -40, dir: -1, cruise: 6.5, tricks: [{ kind: "jump", every: 4 }, { kind: "spin", every: 5 }] },
   { id: "tasha", model: "nia", outfit: "plum", from: -150, to: 130, start: 90, dir: -1, cruise: 4.5, tricks: [{ kind: "spin", every: 7 }, { kind: "groove", every: 6 }] },
   { id: "jalen", model: "marcus", outfit: "lime", from: -150, to: 130, start: -110, dir: 1, cruise: 6, tricks: [{ kind: "groove", every: 5 }, { kind: "jump", every: 6 }] },
@@ -83,7 +83,7 @@ export const GREYBOX_SKATERS = [
   {
     id: "kiana",
     model: "nia",
-    outfit: "cobalt",
+    outfit: "wine",
     line: [
       [-12, 4],
       [20, 4],

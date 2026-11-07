@@ -47,38 +47,38 @@ Headless Chromium in this cloud machine draws with **SwiftShader, a software GPU
 ## Results
 
 <!-- perf:begin -->
-Run 2026-11-06 17:46 UTC, swiftshader (software, CPU), 4 CPUs, viewport 1280x720 @1, ride 15 s of game time (stopped after 150 s of wall time), 2 run(s) per row (median shown).
+Run 2026-11-07 19:24 UTC, swiftshader (software, CPU), 4 CPUs, viewport 1280x720 @1, ride 15 s of game time (stopped after 150 s of wall time), 2 run(s) per row (median shown).
 
 | Tier | Look | Mean ms | p95 ms | Median FPS | Draw calls | Triangles | Geometries | Textures | Heap MB | First frame ms | Load avg |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| low | pbr | 2227.8 | 4416.45 | 0.5 | 138.5 | 276,716 | 104 | 163 | 38.3 | 9082.5 | 2.7 3.8 |
-| low | toon | 253.35 | 483.3 | 4.3 | 164 | 251,918 | 139.5 | 211 | 56.25 | 6596.5 | 4 4.2 |
-| phone | pbr | 1897 | 4158.2 | 0.5 | 145 | 337,459.5 | 121 | 202.5 | 41.8 | 7496.5 | 4.4 4.4 |
-| phone | toon | 157.05 | 308.35 | 6.7 | 165 | 312,072 | 136.5 | 213 | 63.55 | 5727.5 | 4.1 4 |
-| high | pbr | 10233.95 | 16499.3 | 0.1 | 502.5 | 1,415,795 | 199.5 | 365.5 | 50 | 12491 | 4.4 4.2 |
-| high | toon | 3086.3 | 6308.1 | 0.3 | 785 | 1,410,199 | 161.5 | 255 | 45 | 8350.5 | 3.6 3.8 |
+| low | pbr | 2748.3 | 5666.45 | 0.4 | 138 | 271,009 | 100 | 167 | 40.8 | 4651.5 | 1.6 3.6 |
+| low | toon | 216.65 | 416.65 | 5 | 118 | 251,888 | 142.5 | 224.5 | 57.4 | 3676 | 4.1 4.1 |
+| phone | pbr | 2221.05 | 4741.5 | 0.5 | 146.5 | 374,206 | 114.5 | 209 | 44.15 | 4189 | 4.2 4.2 |
+| phone | toon | 134.45 | 258.35 | 8.05 | 119 | 312,126 | 135 | 213 | 64.7 | 3581 | 4.1 3.9 |
+| high | pbr | 6565.15 | 13682.75 | 0.15 | 383 | 1,176,967 | 203.5 | 360 | 56.75 | 6238.5 | 4.1 4.3 |
+| high | toon | 2483.4 | 5116.4 | 0.4 | 327 | 1,020,196 | 172.5 | 229 | 46.35 | 5375.5 | 3.5 4 |
 
 Download (MB on the wire, gzip as the host serves it):
 
 | Tier | Look | JS | GLB | Textures | WASM | Data | Other | Total |
 |---|---|---|---|---|---|---|---|---|
-| low | pbr | 0.78 | 20.85 | 1.35 | 1.18 | 0 | 0.01 | 24.16 |
-| low | toon | 0.84 | 15.77 | 0.51 | 1.18 | 0 | 0.01 | 18.31 |
-| phone | pbr | 0.78 | 22.55 | 1.35 | 1.18 | 0 | 0.01 | 25.86 |
-| phone | toon | 0.84 | 12.59 | 0.51 | 1.18 | 0 | 0.01 | 15.13 |
-| high | pbr | 0.78 | 30.27 | 4.45 | 1.18 | 0 | 0.01 | 36.68 |
-| high | toon | 0.84 | 15.77 | 1.8 | 1.18 | 0 | 0.01 | 19.61 |
+| low | pbr | 0.8 | 8.73 | 1.7 | 1.18 | 0 | 0.01 | 12.41 |
+| low | toon | 0.86 | 5.54 | 0.51 | 1.18 | 0 | 0.01 | 8.1 |
+| phone | pbr | 0.8 | 11.27 | 1.7 | 1.18 | 0 | 0.01 | 14.96 |
+| phone | toon | 0.86 | 5.11 | 0.51 | 1.18 | 0 | 0.01 | 7.67 |
+| high | pbr | 0.8 | 14.2 | 3.32 | 1.18 | 0 | 0.01 | 19.51 |
+| high | toon | 0.86 | 5.54 | 1.8 | 1.18 | 0 | 0.01 | 9.4 |
 
 Cost by system (`?perf=1`, CPU ms on the main thread). A sim system (skater, walkers, crowd, traffic, NPC skaters) runs once per 1/60 s step; the table gives its cost per step, which is its cost per frame at 60 FPS. A view or the render runs once per frame; the table gives the mean per frame. `render` is the CPU side of `renderer.render` only: the software GPU works in another process.
 
 | Tier | Look | render | skater | walkers | walkersView | crowd | crowdView | traffic | trafficView | npcSkaters | npcSkatersView | views | Steps per frame |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| low | pbr | 7.604 | 0.258 | 0.793 | 0.066 | 0.202 | 0.048 | 0.711 | 0.434 | 0.801 | 0.414 | 2.782 | 4.676 |
-| low | toon | 15.087 | 0.093 | 0.559 | 0.11 | 0.131 | 0.046 | 0.543 | 0.2 | 0.387 | 0.322 | 1.96 | 4.664 |
-| phone | pbr | 71.453 | 0.184 | 0.712 | 0.953 | 0.208 | 0.137 | 0.852 | 0.572 | 0.801 | 0.456 | 2.253 | 4.693 |
-| phone | toon | 9.202 | 0.097 | 0.497 | 0.078 | 0.151 | 0.056 | 0.599 | 0.262 | 0.415 | 0.363 | 1.91 | 4.587 |
-| high | pbr | 34.617 | 0.493 | 1.701 | 1.364 | 0.423 | 0.043 | 1.103 | 0.798 | 0.793 | 0.779 | 633.531 | 5 |
-| high | toon | 17.487 | 0.256 | 1.38 | 0.125 | 0.17 | 0.057 | 0.774 | 0.457 | 0.826 | 0.766 | 2.404 | 4.736 |
+| low | pbr | 177.745 | 0.046 | 0.362 | 0.049 | 0.114 | 0.042 | 0.257 | 0.296 | 0.426 | 0.193 | 2.06 | 4.491 |
+| low | toon | 8.355 | 0.033 | 0.237 | 0.083 | 0.063 | 0.046 | 0.139 | 0.116 | 0.157 | 0.291 | 1.773 | 4.738 |
+| phone | pbr | 113.536 | 0.051 | 0.353 | 0.725 | 0.136 | 0.08 | 0.269 | 0.383 | 0.465 | 0.243 | 2.054 | 4.511 |
+| phone | toon | 9.317 | 0.031 | 0.195 | 0.084 | 0.056 | 0.059 | 0.134 | 0.117 | 0.144 | 0.265 | 1.404 | 4.482 |
+| high | pbr | 20.107 | 0.05 | 0.514 | 0.604 | 0.165 | 0.024 | 0.235 | 0.308 | 0.459 | 0.424 | 2.407 | 4.764 |
+| high | toon | 9.483 | 0.051 | 0.492 | 0.09 | 0.149 | 0.041 | 0.23 | 0.215 | 0.35 | 0.332 | 1.91 | 4.721 |
 <!-- perf:end -->
 
 ## Budget
@@ -89,9 +89,11 @@ Cost by system (`?perf=1`, CPU ms on the main thread). A sim system (skater, wal
 
 | Tier | Draw calls | Triangles | Textures | Heap MB | Download MB | JS MB |
 |---|---|---|---|---|---|---|
-| low | 185 | 310,000 | 235 (pbr 270) | 100 | 20.5 (pbr 26.5) | 1.0 |
-| phone | 185 | 375,000 | 235 | 100 | 16.7 (pbr 28.5) | 1.0 |
-| high | 360 (pbr 420) | 1,070,000 (pbr 1,200,000) | 400 | 100 | 21.6 (pbr 40.4) | 1.0 |
+| low | 185 | 310,000 | 260 (pbr 365) | 100 | 9.0 (pbr 13.7) | 1.0 |
+| phone | 185 | 375,000 (pbr 420,000) | 235 (pbr 375) | 100 | 8.5 (pbr 16.5) | 1.0 |
+| high | 360 (pbr 420) | 1,070,000 (pbr 1,200,000) | 400 | 100 | 10.4 (pbr 21.5) | 1.0 |
+
+The download caps are from #190 (2026-11-07). `budget.json` is the source; this table follows it.
 
 ### Targets (on real devices, to reach by version 1)
 
@@ -116,6 +118,7 @@ The numbers are from the 2026-11-06 baseline above. Each one is a GitHub issue l
    **Done in #188** (the high caps above are from it): the cause was the skaters (22 to 26 parts each, with one toon outline hull per part, all drawn again in the GTAO pass) and a second shadow map drawn by the GTAO pass. After the fix, on the same ride: high pbr 378 draw calls and 1.16 M triangles, high toon 328 and 1.02 M. See `docs/decisions.md` and `__atl.drawSplit` (`?perf=1`) for the split by pass.
 4. **The sim and view CPU per frame, walkers first** (#189). On high, the walkers take 1.5 to 1.7 ms per step (120 walkers) and their view 0.15 to 1.26 ms (pbr: the Meshy people); traffic 0.8 to 1.1 ms plus 0.45 to 0.75 ms for the view; NPC skaters 0.8 to 0.9 ms plus 0.85 ms. The other views take 2.5 ms. Together that is about 7.2 ms (toon) to 10 ms (pbr) of CPU per frame on high before the render, on this machine's CPU; on low toon it is about 4.4 ms. The `render` CPU (the Three.js side of the draw) is 7 to 35 ms per frame on top.
 5. **The pbr look's extra downloads and the first frame** (#190). The pbr look adds 6 to 17 MB to the download: high pbr is 36.7 MB (30.3 MB GLB, 4.5 MB textures) against 19.6 MB for high toon. The car GLB (`vehicles_lod`, 1.7 MB) is the largest after the skaters. The first frame on localhost with no network limit is 5.7 s (phone toon) to 12.5 s (high pbr).
+   **Done in #190** (the results above are from it): WebP textures in the 38 pbr GLBs, the far content after the first frame, the env map bake after the level workers. High pbr 27.3 → 19.5 MB and 10.3 → 6.2 s (median of 5.9 and 6.6 s); high toon 11.3 → 9.4 MB and 6.0 → 5.4 s. The rest of the high pbr first frame is the shader link of the first draw (1.5 s against 0.6 to 0.9 s for toon), which is #191. Per-file lists: `files` in `docs/perf/baseline.json` (each file with its start time). Marks and long tasks: `node scripts/first-frame-probe.mjs --quality high --look pbr`. See `docs/decisions.md` and `docs/perf/190/`.
 
 ## Not verified
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { bytesKey, LANDMARK_MODEL_KEYS, lodGroups, mergedPositions, windowLightPatch } from "./landmark-models.js";
+import { bytesKey, LANDMARK_MODEL_KEYS, lodGroups, mergedPositions, sharedImageIndex, windowLightPatch } from "./landmark-models.js";
 
 describe("landmark models", () => {
   it("keys equal image bytes alike and different bytes apart", () => {
@@ -10,6 +10,15 @@ describe("landmark models", () => {
     expect(bytesKey(a)).not.toBe(
       bytesKey(new Uint8Array([1, 2, 3, 4, 0]).buffer),
     );
+  });
+
+  it("shares a plain or a WebP texture, not one with another extension", () => {
+    expect(sharedImageIndex({ source: 3 })).toBe(3);
+    expect(sharedImageIndex({ extensions: { EXT_texture_webp: { source: 5 } } })).toBe(5);
+    expect(sharedImageIndex({ source: 1, extensions: { EXT_texture_webp: { source: 5 } } })).toBe(5);
+    expect(sharedImageIndex({ source: 1, extensions: { KHR_texture_basisu: { source: 2 } } })).toBe(null);
+    expect(sharedImageIndex({ extensions: { EXT_texture_webp: { source: 5 }, KHR_texture_transform: {} } })).toBe(null);
+    expect(sharedImageIndex({})).toBe(null);
   });
 
   it("loads the four buildings and the four bridges", () => {

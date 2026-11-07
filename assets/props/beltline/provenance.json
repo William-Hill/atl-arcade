@@ -44,6 +44,15 @@
           1.091,
           1.15
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/beltline/e_scooter.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 273744,
+        "bytes_after": 126444
       }
     },
     "city_bike.glb": {
@@ -84,6 +93,15 @@
           1.09,
           1.8
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/beltline/city_bike.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 409724,
+        "bytes_after": 236972
       }
     },
     "bike_dock.glb": {
@@ -121,6 +139,15 @@
           1.1,
           0.512
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/beltline/bike_dock.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 219372,
+        "bytes_after": 99296
       }
     },
     "food_cart.glb": {
@@ -158,6 +185,15 @@
           2.799,
           1.83
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/beltline/food_cart.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 283696,
+        "bytes_after": 137872
       }
     },
     "picnic_table.glb": {
@@ -195,6 +231,15 @@
           0.817,
           1.504
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/beltline/picnic_table.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 230372,
+        "bytes_after": 109036
       }
     },
     "patio_umbrella.glb": {
@@ -232,6 +277,15 @@
           2.5,
           3.296
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/beltline/patio_umbrella.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 203172,
+        "bytes_after": 94144
       }
     },
     "sculpture_ribbon.glb": {
@@ -269,6 +323,15 @@
           4,
           1.212
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/beltline/sculpture_ribbon.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 273024,
+        "bytes_after": 122932
       }
     }
   },

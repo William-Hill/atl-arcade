@@ -185,7 +185,7 @@
     },
     {
       "file": "trail-phone.jpg",
-      "title": "BeltLine trail, phone tier, look=pbr, 13:30",
+      "title": "Trail by the spawn, phone tier, 13:30, after #195 (no toon ink, pbr grade)",
       "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
       "method": "in-game capture (no image model)",
       "prompt": null,
@@ -196,22 +196,22 @@
           1280,
           720
         ],
-        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-trail-phone",
-        "convert": "ImageMagick convert -quality 85"
+        "capture": "node scripts/art/pbr-frames.mjs --shots <shots-195.json> --out <dir> trail-phone  (same camera as scripts/art/shots-159.json 159-trail-phone)",
+        "convert": "Pillow JPEG quality 85"
       },
       "renderer": {
-        "calls": 88,
-        "triangles": 240589,
-        "textures": 123,
+        "calls": 87,
+        "triangles": 240429,
+        "textures": 124,
         "geometries": 90
       },
-      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
-      "date": "2026-11-06",
+      "commit": "epic/city-look 88e6eec with the #195 change (branch claude/pbr-phone-195)",
+      "date": "2026-11-07",
       "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
     },
     {
       "file": "trail-low.jpg",
-      "title": "BeltLine trail, low tier, look=pbr, 13:30",
+      "title": "Trail by the spawn, low tier, 13:30, after #195 (no toon ink, pbr grade)",
       "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
       "method": "in-game capture (no image model)",
       "prompt": null,
@@ -222,17 +222,17 @@
           1280,
           720
         ],
-        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir> 159-trail-low",
-        "convert": "ImageMagick convert -quality 85"
+        "capture": "node scripts/art/pbr-frames.mjs --shots <shots-195.json> --out <dir> trail-low  (same camera as scripts/art/shots-159.json 159-trail-low)",
+        "convert": "Pillow JPEG quality 85"
       },
       "renderer": {
         "calls": 82,
-        "triangles": 168177,
-        "textures": 109,
+        "triangles": 168189,
+        "textures": 111,
         "geometries": 84
       },
-      "commit": "de429e3d0c2aaabd767a445b60cdd0b14dcdf4b9",
-      "date": "2026-11-06",
+      "commit": "epic/city-look 88e6eec with the #195 change (branch claude/pbr-phone-195)",
+      "date": "2026-11-07",
       "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
     },
     {
@@ -243,6 +243,46 @@
       "prompt": null,
       "credits": 0,
       "date": "2026-11-06"
+    },
+    {
+      "file": "trail-195-before-after.jpg",
+      "title": "Trail, phone and low tiers with ?look=pbr: before (epic/city-look 88e6eec) and after #195, 2x2 sheet",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=phone&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots <shots-195.json> --out <dir> trail-phone  (same camera as scripts/art/shots-159.json 159-trail-phone)",
+        "convert": "Pillow: four 1280x720 captures at 640x360, labels, JPEG quality 85"
+      },
+      "commit": "epic/city-look 88e6eec with the #195 change (branch claude/pbr-phone-195)",
+      "date": "2026-11-07",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
+    },
+    {
+      "file": "trail-195-toon-check.jpg",
+      "title": "Trail, phone and low tiers with ?look=toon: before and after #195 (the toon look does not change), 2x2 sheet",
+      "tool": "Skate ATL game renderer (Three.js, ?look=pbr, Chromium SwiftShader via Playwright, headless)",
+      "method": "in-game capture (no image model)",
+      "prompt": null,
+      "credits": 0,
+      "settings": {
+        "url": "/?level=beltline-eastside&quality=phone&look=toon&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+        "viewport": [
+          1280,
+          720
+        ],
+        "capture": "node scripts/art/pbr-frames.mjs --shots <shots-195.json> --out <dir> trail-phone  (same camera as scripts/art/shots-159.json 159-trail-phone)",
+        "convert": "Pillow: four 1280x720 captures at 640x360, labels, JPEG quality 85"
+      },
+      "commit": "epic/city-look 88e6eec with the #195 change (branch claude/pbr-phone-195)",
+      "date": "2026-11-07",
+      "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
     }
   ]
 }

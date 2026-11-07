@@ -187,14 +187,14 @@ if (geo) {
   scene.add(geoLights.group);
   // The low tier has no sky dome (a flat horizon color), to keep the
   // headless frame budget. ?sky=0 leaves it out on the high tier too.
-  sky = tier.post !== "full" || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
+  sky = tier.post !== "full" || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds, pbr: look === "pbr" });
   if (sky) scene.add(sky.mesh);
   if (look === "pbr") {
     // The height fog (src/render/pbr-look.js): before the first material compiles.
     if (params.get("heightfog") !== "0") installHeightFog();
     // The sky environment map: ambient light and reflections. A tier with
     // no sky dome gets one made only for the map.
-    const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection });
+    const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection, pbr: true });
     scene.environment = createSkyEnvironment(renderer, envSky);
     scene.environmentIntensity = LOOKS.pbr.environment;
     if (!sky) {

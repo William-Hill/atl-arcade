@@ -2,12 +2,16 @@ import * as THREE from "three";
 import { HEIGHT_FOG, bloomThreshold, districtLook, districtWeights, envForSky, timeGrade } from "./pbr-palette.js";
 import { ENV_SKY, LOOKS, createSkyEnvironment } from "./look.js";
 import { SKATER_RIM } from "./toon.js";
+import { PBR_GRADE_GLSL } from "./post.js";
 
 // The per-frame light of the pbr look (#160). Pure values come from
 // src/render/pbr-palette.js; this module writes them to the scene:
 //
 // - the grade pass uniforms (src/render/post.js): the tone grade by time of
-//   day and the light tint of the district at the camera
+//   day and the light tint of the district at the camera. The phone tier
+//   has a cheap grade pass (createLitePost()). The low tier has no post
+//   pass: the same grade goes into the materials (installMaterialGrade(),
+//   #195)
 // - the fog color: the horizon color with a part of the district fog tint
 // - the environment map: baked again from the sky when the sky colors move
 //   (dusk, night, cloud), and its intensity follows the daylight, so the
@@ -47,6 +51,43 @@ export function installHeightFog(f = HEIGHT_FOG) {
 #endif`;
 }
 
+// The material grade of the low tier and of the last governor rung (#195).
+// These draws have no post pass, so each material applies the grade
+// (src/render/post.js
+// PBR_GRADE_GLSL) just before its tone mapping. The tone mapping runs only
+// in a draw to the canvas, so a draw into a render target (the full post
+// chain, the environment bake) gets no grade here.
+//
+// The values live in one shared object. Three.js copies the uniforms of a
+// built-in material from THREE.ShaderLib, and it keeps a plain object by
+// reference, so every material reads this one object. A ShaderMaterial
+// does not get the uniform: GLSL gives it 0, so `on` is 0 and the grade is
+// off (the identity).
+export const MATERIAL_GRADE = { on: 0, contrast: 1, sat: 1, warm: 0, lift: 0, tint: [1, 1, 1] };
+
+// Pure: the grade values for the time grade `g` (pbr-palette.js timeGrade())
+// and the district look `d` (pbr-palette.js districtLook()). The grade pass
+// and the material grade get the same values.
+export function gradeValues(g, d) {
+  return { contrast: g.contrast, sat: g.saturation * d.saturation, warm: g.warm, lift: g.lift ?? 0, tint: [d.tint[0], d.tint[1], d.tint[2]] };
+}
+
+// Changes the tone mapping chunks and the ShaderLib uniforms. Call it once,
+// before the first material compiles to the canvas, and only in the pbr look.
+export function installMaterialGrade(ref = MATERIAL_GRADE) {
+  const C = THREE.ShaderChunk;
+  if (C.tonemapping_fragment.includes("pbrGrade")) return;
+  C.tonemapping_pars_fragment = `struct PbrMaterialGrade { float on; float contrast; float sat; float warm; float lift; vec3 tint; };
+uniform PbrMaterialGrade pbrMaterialGrade;
+${PBR_GRADE_GLSL}
+${C.tonemapping_pars_fragment}`;
+  C.tonemapping_fragment = `#if defined( TONE_MAPPING )
+	if ( pbrMaterialGrade.on > 0.5 ) gl_FragColor.rgb = pbrGrade( gl_FragColor.rgb, pbrMaterialGrade.contrast, pbrMaterialGrade.sat, pbrMaterialGrade.warm, pbrMaterialGrade.lift, pbrMaterialGrade.tint );
+	gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );
+#endif`;
+  for (const shader of Object.values(THREE.ShaderLib)) shader.uniforms.pbrMaterialGrade = { value: ref };
+}
+
 // The sky change that bakes the environment map again (max channel step,
 // linear), and the shortest time between two bakes (s).
 const ENV_REBAKE = { step: 0.025, seconds: 2 };
@@ -56,6 +97,8 @@ const envGround = new THREE.Color();
 
 export function createPbrLook({ scene, renderer, sky = null, geoLights = null, anchors = [], getPost = () => null }) {
   const L = LOOKS.pbr;
+  // Before the first frame: the materials compile with the grade code.
+  installMaterialGrade();
   const fogBase = scene.fog ? scene.fog.color.clone() : null;
   const fogTint = new THREE.Color();
   let baked = sky ? snapshot(sky) : null;
@@ -104,13 +147,19 @@ export function createPbrLook({ scene, renderer, sky = null, geoLights = null, a
 
       const post = getPost();
       const u = post?.grade?.uniforms;
+      const v = gradeValues(g, d);
       if (u) {
-        u.uContrast.value = g.contrast;
-        u.uSat.value = g.saturation * d.saturation;
-        u.uWarm.value = g.warm;
-        if (u.uLift) u.uLift.value = g.lift;
-        if (u.uTint) u.uTint.value.set(d.tint[0], d.tint[1], d.tint[2]);
+        u.uContrast.value = v.contrast;
+        u.uSat.value = v.sat;
+        u.uWarm.value = v.warm;
+        if (u.uLift) u.uLift.value = v.lift;
+        if (u.uTint) u.uTint.value.set(v.tint[0], v.tint[1], v.tint[2]);
       }
+      // No grade pass (the low tier, or the last governor rung):
+      // the materials apply the grade. With a grade pass they do not, so
+      // the grade does not apply two times.
+      Object.assign(MATERIAL_GRADE, v, { on: u ? 0 : 1 });
+      info.materialGrade = MATERIAL_GRADE.on === 1;
       if (post?.bloom) post.bloom.threshold = bloomThreshold(state ? state.day : 1);
 
       // The fog: the weather writes the horizon color each frame; with no

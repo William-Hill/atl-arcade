@@ -36,9 +36,9 @@ export const PBR_SKY = {
   bandAmount: 0.85,
   glowWide: [6, 0.22],
   glowNear: [48, 0.45],
-  fairChance: 0.4,
+  fairChance: 0.45,
   fairScale: 1.6,
-  fairSize: [0.18, 0.34],
+  fairSize: [0.22, 0.4],
   cloudLit: 1.6,
   cloudBase: [0.66, 0.72, 0.82],
 };

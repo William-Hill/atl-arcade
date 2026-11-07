@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { CROWD_FRAMES, bakePose, createPedCrowd, crowdFrame, crowdGrow, crowdLod } from "./ped-crowd.js";
+import { CROWD_FRAMES, bakePose, createPedCrowd, crowdFrame, crowdGrow, crowdLod, staticMeshes } from "./ped-crowd.js";
 
 // A two-bone strip: the lower vertices follow bone 0, the upper ones bone 1.
 function strip() {
@@ -76,5 +76,30 @@ describe("the baked walker crowd", () => {
     expect(crowd.stats.drawn).toBe(2);
     crowd.update({ peds, focus: [0, 0], radius: 200 }, new Set(), eye);
     expect(crowd.stats.drawn).toBe(3);
+  });
+
+  it("bakes a static LOD with its child meshes (the stroller wheels)", () => {
+    const root = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
+    body.name = "stroller_lod0";
+    body.position.set(0, 1, 0);
+    const wheels = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
+    wheels.name = "stroller_wheels_front";
+    wheels.position.set(0, -1, 0);
+    body.add(wheels);
+    root.add(body);
+    const g = staticMeshes(body, root);
+    expect(g.attributes.position.count).toBe(48);
+    g.computeBoundingBox();
+    expect(g.boundingBox.min.y).toBeCloseTo(-0.5);
+    expect(g.boundingBox.max.y).toBeCloseTo(1.5);
+  });
+
+  it("culls each walker, not the whole batch", async () => {
+    const { root } = strip();
+    const crowd = await createPedCrowd({ walker: { scene: root, animations: [] } }, { people: ["walker"], kindOf: () => "walker", size: 2 });
+    const mesh = crowd.group.children[0];
+    expect(mesh.frustumCulled).toBe(false);
+    expect(mesh.perObjectFrustumCulled).toBe(true);
   });
 });

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 // The far walkers of the pbr look as the same Meshy people as the near ones
 // (ped-models.js), so a walker no longer turns from a blocky figure into a
@@ -116,9 +117,7 @@ function bakeKind(gltf, walkName, frames) {
   };
   const levels = lods.map((mesh) => {
     if (!mesh.isSkinnedMesh) {
-      scene.updateMatrixWorld(true);
-      const g = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
-      for (const name of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(name)) g.deleteAttribute(name);
+      const g = staticMeshes(mesh, scene);
       return Array.from({ length: frames + 1 }, () => g);
     }
     const poses = [];
@@ -129,6 +128,23 @@ function bakeKind(gltf, walkName, frames) {
   mixer.stopAllAction();
   mixer.uncacheRoot(scene);
   return { material: lods[0].material, levels, distances: lods.map((m) => m.userData.lodDistance ?? 0) };
+}
+
+// A static LOD node with its child meshes (the stroller's wheels hang under
+// stroller_lod0) as one geometry in the space of `root`.
+export function staticMeshes(node, root) {
+  root.updateMatrixWorld(true);
+  const toRoot = new THREE.Matrix4().copy(root.matrixWorld).invert();
+  const parts = [];
+  node.traverse((o) => {
+    if (!o.isMesh) return;
+    const g = o.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(toRoot, o.matrixWorld));
+    for (const name of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(name)) g.deleteAttribute(name);
+    parts.push(g);
+  });
+  if (parts.length === 1) return parts[0];
+  const indexed = parts.every((g) => g.index);
+  return mergeGeometries(indexed ? parts : parts.map((g) => (g.index ? g.toNonIndexed() : g)));
 }
 
 // Pure: the LOD for a walker `d` m away, from the LOD start distances.
@@ -167,6 +183,10 @@ export async function createPedCrowd(gltfs, { people, kindOf, companions = {}, w
     mesh.receiveShadow = true;
     // A character: out of the pbr AO depth, as the rigs (post.js).
     mesh.userData.character = true;
+    // The instances move over the whole walker pool and the batch keeps its
+    // first bounds, so only the per-instance culling (perObjectFrustumCulled)
+    // runs, as for the moving car batches.
+    mesh.frustumCulled = false;
     const ids = new Map(unique.map((g) => [g, mesh.addGeometry(g)]));
     const geometry = baked.levels.map((poses) => poses.map((g) => ids.get(g)));
     group.add(mesh);

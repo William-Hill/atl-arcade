@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { MATERIAL_GRADE, gradeValues, installMaterialGrade } from "./pbr-look.js";
+import { MATERIAL_GRADE, SKY_SH, gradeValues, installMaterialGrade, installSkySh, setSkySh } from "./pbr-look.js";
+import { shFromCubeFaces } from "./look.js";
 import { districtLook, timeGrade } from "./pbr-palette.js";
 
 describe("gradeValues (#195)", () => {
@@ -53,5 +54,57 @@ describe("installMaterialGrade (#195)", () => {
     installMaterialGrade();
     expect(THREE.ShaderChunk.tonemapping_pars_fragment).toBe(once);
     expect(once.match(/struct PbrMaterialGrade/g)).toHaveLength(1);
+  });
+});
+
+describe("sky SH (#191)", () => {
+  const size = 8;
+  const face = (rgb) => {
+    const a = new Float32Array(size * size * 4);
+    for (let i = 0; i < size * size; i += 1) a.set([...rgb, 1], i * 4);
+    return a;
+  };
+  // three's SphericalHarmonics3: radiance and irradiance from 27 numbers.
+  const asSh = (c) => {
+    const sh = new THREE.SphericalHarmonics3();
+    sh.coefficients.forEach((v, i) => v.set(c[i * 3], c[i * 3 + 1], c[i * 3 + 2]));
+    return sh;
+  };
+
+  it("projects a uniform sky to radiance L and irradiance PI L in every direction", () => {
+    const c = shFromCubeFaces(Array.from({ length: 6 }, () => face([0.2, 0.4, 0.8])), size);
+    const sh = asSh(c);
+    for (const d of [new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, -1, 0)]) {
+      const l = sh.getAt(d, new THREE.Vector3());
+      const e = sh.getIrradianceAt(d, new THREE.Vector3());
+      expect(l.x).toBeCloseTo(0.2, 2);
+      expect(l.z).toBeCloseTo(0.8, 2);
+      expect(e.y).toBeCloseTo(Math.PI * 0.4, 2);
+    }
+  });
+
+  it("puts a bright top face (+y, face 2) above a dark ground (face 3)", () => {
+    const faces = [0, 1, 2, 3, 4, 5].map((f) => face(f === 2 ? [1, 1, 1] : f === 3 ? [0, 0, 0] : [0.5, 0.5, 0.5]));
+    const sh = asSh(shFromCubeFaces(faces, size));
+    const up = sh.getIrradianceAt(new THREE.Vector3(0, 1, 0), new THREE.Vector3()).x;
+    const down = sh.getIrradianceAt(new THREE.Vector3(0, -1, 0), new THREE.Vector3()).x;
+    expect(up).toBeGreaterThan(down + 0.5);
+  });
+
+  it("swaps both env lookups for the SH and shares one array with the materials", () => {
+    installSkySh();
+    const chunk = THREE.ShaderChunk.envmap_physical_pars_fragment;
+    expect(chunk).toContain("pbrShIrradiance( envMapRotation * worldNormal )");
+    expect(chunk).toContain("pbrShRadiance( skyDir )");
+    // The retro and anisotropy variants (not used by the game) keep the map.
+    expect(chunk.match(/textureCubeUV/g).length).toBe(1);
+    expect(THREE.ShaderLib.standard.uniforms.pbrSkySh.value).toBe(SKY_SH);
+    expect(THREE.ShaderLib.physical.uniforms.pbrSkySh.value).toBe(SKY_SH);
+    setSkySh(Array.from({ length: 27 }, (_, i) => i));
+    expect(SKY_SH.c2.toArray()).toEqual([6, 7, 8]);
+    const m = new THREE.MeshStandardMaterial();
+    const u = THREE.UniformsUtils.clone(THREE.ShaderLib.standard.uniforms);
+    expect(u.pbrSkySh.value.c2).toBe(SKY_SH.c2);
+    m.dispose();
   });
 });

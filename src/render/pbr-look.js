@@ -88,6 +88,70 @@ ${C.tonemapping_pars_fragment}`;
   for (const shader of Object.values(THREE.ShaderLib)) shader.uniforms.pbrMaterialGrade = { value: ref };
 }
 
+// The sky light of the phone and low tiers (#191): the env map functions
+// of the standard and physical materials read 9 spherical harmonics
+// (look.js skyShFromScene()) and not the env map. On SwiftShader the map
+// lookup was about a third of the pbr phone frame. The material keeps its
+// envMapIntensity and the BRDF; only the lookup changes:
+// - the diffuse sky light: the SH irradiance (as a light probe);
+// - the reflection: the SH radiance in the reflection direction for a
+//   smooth surface, the irradiance / PI for a rough one, mixed by the
+//   roughness. The sky of these tiers has no clouds, so 9 coefficients hold
+//   its gradient; a sharp reflection gets a soft sky.
+// The 9 RGB values live in one shared plain object (a struct uniform):
+// THREE copies an array of vectors into each material, but it keeps a plain
+// object by reference, so setSkySh() reaches every material.
+export const SKY_SH = Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`c${i}`, new THREE.Vector3()]));
+
+export function setSkySh(coefficients, ref = SKY_SH) {
+  if (!coefficients) return;
+  for (let i = 0; i < 9; i += 1) ref[`c${i}`].set(coefficients[i * 3], coefficients[i * 3 + 1], coefficients[i * 3 + 2]);
+}
+
+const SKY_SH_GLSL = /* glsl */ `
+struct PbrSkySh { vec3 c0; vec3 c1; vec3 c2; vec3 c3; vec3 c4; vec3 c5; vec3 c6; vec3 c7; vec3 c8; };
+uniform PbrSkySh pbrSkySh;
+// pbrSkySh: the radiance (three SphericalHarmonics3.getAt) and the
+// irradiance (shGetIrradianceAt) in a world direction.
+vec3 pbrShRadiance(vec3 d) {
+  return pbrSkySh.c0 * 0.282095
+    + 0.488603 * (pbrSkySh.c1 * d.y + pbrSkySh.c2 * d.z + pbrSkySh.c3 * d.x)
+    + 1.092548 * (pbrSkySh.c4 * d.x * d.y + pbrSkySh.c5 * d.y * d.z + pbrSkySh.c7 * d.x * d.z)
+    + pbrSkySh.c6 * (0.315392 * (3.0 * d.z * d.z - 1.0))
+    + pbrSkySh.c8 * (0.546274 * (d.x * d.x - d.y * d.y));
+}
+vec3 pbrShIrradiance(vec3 d) {
+  return pbrSkySh.c0 * 0.886227
+    + 1.023328 * (pbrSkySh.c1 * d.y + pbrSkySh.c2 * d.z + pbrSkySh.c3 * d.x)
+    + 0.858086 * (pbrSkySh.c4 * d.x * d.y + pbrSkySh.c5 * d.y * d.z + pbrSkySh.c7 * d.x * d.z)
+    + pbrSkySh.c6 * (0.743125 * d.z * d.z - 0.247708)
+    + pbrSkySh.c8 * (0.429043 * (d.x * d.x - d.y * d.y));
+}`;
+
+// Call it once, before the first material compiles, and only in the pbr
+// look on a tier with no cloud sky. The env map stays on the scene (it
+// keeps USE_ENVMAP and envMapIntensity), but no shader samples it.
+export function installSkySh(ref = SKY_SH) {
+  const C = THREE.ShaderChunk;
+  if (C.envmap_physical_pars_fragment.includes("pbrSkySh")) return;
+  // Whitespace in three's chunk is free, so the matches allow any.
+  const swaps = [
+    [/#ifdef USE_ENVMAP\n/, `#ifdef USE_ENVMAP\n${SKY_SH_GLSL}\n`],
+    [/vec4 envMapColor = textureCubeUV\( envMap, envMapRotation \* worldNormal, 1\.0 \);\s*return PI \* envMapColor\.rgb \* envMapIntensity;/, "return max( pbrShIrradiance( envMapRotation * worldNormal ), 0.0 ) * envMapIntensity;"],
+    [
+      /vec4 envMapColor = textureCubeUV\( envMap, envMapRotation \* reflectVec, roughness \);\s*return envMapColor\.rgb \* envMapIntensity;/,
+      "vec3 skyDir = envMapRotation * reflectVec;\n\t\t\treturn max( mix( pbrShRadiance( skyDir ), pbrShIrradiance( skyDir ) * RECIPROCAL_PI, roughness ), 0.0 ) * envMapIntensity;",
+    ],
+  ];
+  let chunk = C.envmap_physical_pars_fragment;
+  for (const [from, to] of swaps) {
+    if (!from.test(chunk)) throw new Error(`installSkySh: three's envmap chunk changed (${from.source.slice(0, 40)})`);
+    chunk = chunk.replace(from, to);
+  }
+  C.envmap_physical_pars_fragment = chunk;
+  for (const name of ["standard", "physical"]) THREE.ShaderLib[name].uniforms.pbrSkySh = { value: ref };
+}
+
 // The sky change that bakes the environment map again (max channel step,
 // linear), and the shortest time between two bakes (s).
 const ENV_REBAKE = { step: 0.025, seconds: 2 };
@@ -95,7 +159,7 @@ const ENV_REBAKE = { step: 0.025, seconds: 2 };
 const RIM_WARM = new THREE.Color(1, 0.95, 0.88);
 const envGround = new THREE.Color();
 
-export function createPbrLook({ scene, renderer, sky = null, geoLights = null, anchors = [], getPost = () => null }) {
+export function createPbrLook({ scene, renderer, sky = null, geoLights = null, anchors = [], getPost = () => null, skySh = false }) {
   const L = LOOKS.pbr;
   // Before the first frame: the materials compile with the grade code.
   installMaterialGrade();
@@ -125,7 +189,8 @@ export function createPbrLook({ scene, renderer, sky = null, geoLights = null, a
     // The ground disc is the bounce of the street: a sunlit pavement in the
     // day, the dim city glow at night.
     envGround.set(ENV_SKY.ground).multiplyScalar(env.ground);
-    scene.environment = createSkyEnvironment(renderer, sky, { ground: envGround });
+    scene.environment = createSkyEnvironment(renderer, sky, { ground: envGround, sh: skySh });
+    setSkySh(scene.environment.userData.sh);
     if (old) old.dispose();
     sinceBake = 0;
     bakes += 1;

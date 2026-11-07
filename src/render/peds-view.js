@@ -31,6 +31,11 @@ const BODY = [0, 0, 0];
 const leg = (side) => [side, 0, WALK.hip];
 const arm = (side) => [0, side, WALK.shoulder];
 
+// pedInfo.x is PED_MARK + the channel: a mesh without the ped attributes
+// reads 0 or 1 there (the generic attribute value), so the shader patch
+// leaves it as it is.
+const PED_MARK = 16;
+
 // One part: `ch` the color channel, `bit` the feature bit (-1: always on).
 function part(geometry, { color = 0xffffff, ch = CH.fixed, bit = -1, swing = BODY, at: [x, y, z], scale = null, rotX = 0 }) {
   const g = geometry.index ? geometry.toNonIndexed() : geometry;
@@ -47,7 +52,7 @@ function part(geometry, { color = 0xffffff, ch = CH.fixed, bit = -1, swing = BOD
   for (let i = 0; i < n; i += 1) {
     colors.set([c.r, c.g, c.b], i * 3);
     parts.set(swing, i * 3);
-    info.set([ch, bit + 1], i * 2);
+    info.set([PED_MARK + ch, bit + 1], i * 2);
   }
   g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   g.setAttribute("pedPart", new THREE.BufferAttribute(parts, 3));
@@ -128,10 +133,6 @@ export function pedGeometry() {
 const WALK_GLSL = /* glsl */ `
 attribute vec3 pedPart;
 attribute vec2 pedInfo;
-attribute vec3 pedSkin;
-attribute vec3 pedPants;
-attribute vec3 pedHair;
-attribute vec3 pedAccent;
 attribute vec3 pedAnim;
 vec3 pedTurn(vec3 v, float a) {
   float c = cos(a);
@@ -142,17 +143,21 @@ bool pedGene(int bit) {
   return ((int(pedAnim.z + 0.5) >> bit) & 1) == 1;
 }`;
 
-function pedMaterial(look, gradientMap) {
-  const mat = litMaterial(look, { vertexColors: true }, { gradientMap });
-  mat.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", `#include <common>\n${WALK_GLSL}`)
-      .replace(
+// Pure on the shader: the walk and the feature fold, on any material with
+// <beginnormal_vertex> and <begin_vertex>. A mesh without the ped
+// attributes reads them as 0: no swing, no bob, every part on. So the
+// override material of the AO and ink pass (post.js) takes it too, and
+// draws the walkers as the main pass does.
+export function patchPedVertex(shader) {
+  shader.vertexShader = shader.vertexShader
+    .replace("#include <common>", `#include <common>\n${WALK_GLSL}`)
+    .replace(
         "#include <beginnormal_vertex>",
-        `float pedSwing = sin(pedAnim.x) * pedAnim.y;
+        `bool pedIs = pedInfo.x > ${(PED_MARK - 0.5).toFixed(1)};
+float pedSwing = pedIs ? sin(pedAnim.x) * pedAnim.y : 0.0;
 float pedA = (pedPart.x * ${WALK.leg.toFixed(3)} - pedPart.y * ${WALK.arm.toFixed(3)}) * pedSwing;
 int pedBit = int(pedInfo.y + 0.5) - 1;
-bool pedOn = pedBit < 0 || pedGene(pedBit);
+bool pedOn = !pedIs || pedBit < 0 || pedGene(pedBit);
 vec3 objectNormal = pedTurn(vec3(normal), pedA);
 #ifdef USE_TANGENT
 vec3 objectTangent = vec3(tangent.xyz);
@@ -161,15 +166,26 @@ vec3 objectTangent = vec3(tangent.xyz);
       .replace(
         "#include <begin_vertex>",
         `vec3 transformed = vec3(position);
-if (pedPart.z > 0.0) {
+if (pedIs && pedPart.z > 0.0) {
   transformed.y -= pedPart.z;
   transformed = pedTurn(transformed, pedA);
   transformed.y += pedPart.z;
 }
 // The body is highest when the legs pass each other.
-transformed.y += ${WALK.bob.toFixed(3)} * pedAnim.y * (abs(cos(pedAnim.x)) - 0.5);
+if (pedIs) transformed.y += ${WALK.bob.toFixed(3)} * pedAnim.y * (abs(cos(pedAnim.x)) - 0.5);
+#ifdef USE_ALPHAHASH
+vPosition = vec3(position);
+#endif
 if (!pedOn) transformed = vec3(0.0);`,
-      )
+    );
+}
+
+function pedMaterial(look, gradientMap) {
+  const mat = litMaterial(look, { vertexColors: true }, { gradientMap });
+  mat.onBeforeCompile = (shader) => {
+    patchPedVertex(shader);
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nattribute vec3 pedSkin;\nattribute vec3 pedPants;\nattribute vec3 pedHair;\nattribute vec3 pedAccent;")
       .replace(
         "#include <color_vertex>",
         `vColor = vec4(color, 1.0);
@@ -177,7 +193,7 @@ vec3 pedShirt = vec3(1.0);
 #ifdef USE_INSTANCING_COLOR
 pedShirt = instanceColor.rgb;
 #endif
-int pedCh = int(pedInfo.x + 0.5);
+int pedCh = int(pedInfo.x + 0.5) - ${PED_MARK};
 if (pedCh == ${CH.shirt}) vColor.rgb = pedShirt;
 else if (pedCh == ${CH.pants}) vColor.rgb = pedPants;
 else if (pedCh == ${CH.skin}) vColor.rgb = pedSkin;

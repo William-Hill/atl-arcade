@@ -56,8 +56,7 @@ describe("crowd", () => {
       expect(onTrail.some((n) => n.type === type), type).toBe(true);
     }
     expect(crowd.lines.filter((l) => l.kind !== "trail").length).toBe(4);
-    // 20 on the trail and 12 on the sidewalks (fewer since 2026-11-07).
-    expect(crowd.npcs.length).toBeGreaterThanOrEqual(30);
+    expect(crowd.npcs.length).toBeGreaterThanOrEqual(36);
   });
 
   // Acceptance (#41): at least 20 NPCs on the trail with no overlap over a

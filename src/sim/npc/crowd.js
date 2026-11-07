@@ -48,11 +48,9 @@ export const CROWD = {
 };
 
 // The default crowd for a geodata level. Trail NPCs: half near the spawn,
-// so the player sees them, half along the full trail. 20 on the trail, not
-// 28: with the walkers (src/sim/peds.js) the trail read as a queue of people
-// (docs/decisions.md, 2026-11-07).
+// so the player sees them, half along the full trail.
 export const DEFAULT_MIX = {
-  trail: { skater: 5, jogger: 4, cyclist: 4, dogWalker: 4, family: 3 },
+  trail: { skater: 7, jogger: 6, cyclist: 5, dogWalker: 5, family: 5 },
   sidewalk: { lines: 4, perLine: 3, types: ["walker", "jogger"] },
 };
 

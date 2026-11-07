@@ -1685,6 +1685,19 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The toon look keeps its own maps (`assets/ground/<set>/color.jpg`) and shader. The old pbr-only `normal.jpg` and `rough.jpg` files are removed.
 - Evidence: `e2e/ground-pbr.spec.js` (GROUND_SHOTS=before|after) and `reports/ground-pbr/`.
 
+## 2026-11-07 — PBR sky: gradient, sun glow and fair-weather clouds (#201)
+
+- Problem: day frames with a large area of sky missed the tonal gate (luma p98 ≥ 230, `docs/art-direction-pbr.md`). The sky was one flat light blue with no clouds on a clear day, so the top of the frame had no highlight. Ponce City Market p98 190, mural wall 184, Krog 227.
+- Change (`src/render/sky.js`, pbr look only, `PBR_SKY` values): a deeper zenith (× 0.72), a gradient that stays pale higher up (power 0.8, toon 0.55), a warm pale band at the horizon (1.22 × the horizon luma, falls to 1/e at sin(elevation) 0.09), a wide sun glow, and fair-weather clouds on the high tier. All of these parts fade out with the sun height (`pbrSkyDay()`: 0 at the horizon, 1 at about 15°), so dusk and night keep the weather colors. Pure mirrors with Vitest tests: `pbrSkyColor()`, `pbrSkyDay()`, `pbrFairChance()`.
+- The fair-weather clouds use a grid on the cloud plane with at most one cloud in each cell (45 % of the cells, radius 0.22 to 0.40 of a cell), with a noise warp for a lumpy outline and a gray-blue base on the side away from the zenith. They fade out when the weather cover goes from 0.2 to 0.6 (the weather clouds take over) and at night.
+- Rejected: a lower threshold on the old fbm clouds. Its cover changed very much with the view direction (in a sky-only render: 34 % to 64 % to the north, 0 % to 6 % to the south, 0 % in the mural wall corner), so a frame got clouds by chance. The grid gives 13 % to 28 % in each direction.
+- At night the pbr sky is the same as the toon sky: the weather clouds keep the toon colors and edges at day 0. In a sky-only render at night, the pbr and toon skies have the same pixels in seven directions. The first version gave the night clouds the sky colors; that removed their light from the night env map and the night lawn went darker (p50 27 → 23), so it was changed back. Note: the hash of the cloud noise is exactly 0 in the grid cell (0, 0), so the grid uses an offset.
+- The env map follows the new sky with no new code: `createSkyEnvironment()` bakes a copy of the sky material, with its defines. `envForSky()` does not change: it reads the weather zenith and horizon colors, and the new parts are 0 at night. A test keeps the mean light from the sky gradient on a wall within 10 % of the old value.
+- No new draw call or texture: the change is only in the sky fragment shader. The phone and low tiers have no sky dome; their env map gets the pbr gradient without clouds.
+- The toon look sky does not change: a sky-only render with the old and the new `sky.js` gives the same pixels.
+- Frames (`scripts/art/pbr-frames.mjs`, `scripts/art/shots-159.json`, SwiftShader, 1280 × 720), luma p50 / p98 before → after: PCM 91 / 190 → 98 / 236; mural wall 85 / 184 → 93 / 249; Krog 126 / 227 → 135 / 241; night street 27 / 185 → 27 / 185. Extra: PCM at dusk (20.9 h) 55 / 143 → 55 / 143; Krog at golden hour (19.3 h) 111 / 221 → 116 / 232. No wall albedo changed.
+- Caveat: a frame with a small area of sky reaches the gate only when a cloud is in it. The grid makes this likely in every direction, but not certain. An earlier layout gave PCM p98 221 because the building hid its clouds.
+
 ## 2026-11-07 — PBR ground: lamp pools at night, hot sign cores, a mid-green lawn (#196, #197)
 
 Both issues change the pbr ground shader (`src/render/pbr-ground.js`), so one PR does both. The toon look does not change: every change is behind `look === "pbr"`.

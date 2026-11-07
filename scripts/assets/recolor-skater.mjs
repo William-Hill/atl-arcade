@@ -19,6 +19,8 @@
 //   npm i --no-save sharp@0.35.5
 //   node scripts/assets/recolor-skater.mjs <in.glb> <out.glb> [--recipe nia-navy] [--quality 80] [--min-share 0.05]
 import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 // Colors are sRGB 0..255. Hue in degrees, saturation 0..1, value 0..255.
 // Each range is [zero, full, full, zero]: the weight is 1 between the two
@@ -182,4 +184,6 @@ async function main() {
   console.log(`${output}: ${out.length} bytes (was ${readFileSync(input).length})`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) await main();
+// Run main() only from the command line. pathToFileURL encodes spaces and
+// other special characters in the path, as the other scripts do.
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) await main();

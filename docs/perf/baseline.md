@@ -26,6 +26,7 @@ Every run uses `?perf=1&governor=0&run=free&mute=1&npcseed=1`, a 1280 x 720 view
 
 - **Mean ms, p95 ms, median FPS**: the frame time over the ride (`requestAnimationFrame` to `requestAnimationFrame`), without the first 5 frames.
 - **Draw calls, triangles**: `renderer.info.render` for one whole frame (all post passes), at the end of the ride.
+- **Draw split** (`drawSplit` in the JSON, `__atl.drawSplit` with `?perf=1`, `src/perf/draw-split.js`): the same frame's draw calls and triangles by pass (`shadow`, `main`, `gtao`, `ink` or `grade`, `bloom`, `post`; `gtao>shadow` is a shadow map drawn inside the GTAO pass) and by object kind (the object name without its tile or index).
 - **Geometries, textures**: `renderer.info.memory` at the end of the ride.
 - **Heap MB**: the used JS heap (CDP `Runtime.getHeapUsage`) at the end of the ride. It moves with the garbage collector by 20 to 30 MB from run to run.
 - **First frame ms**: the `atl:first-frame` mark, from the start of the navigation, on localhost with no network limit.
@@ -90,7 +91,7 @@ Cost by system (`?perf=1`, CPU ms on the main thread). A sim system (skater, wal
 |---|---|---|---|---|---|---|
 | low | 185 | 310,000 | 235 (pbr 270) | 100 | 20.5 (pbr 26.5) | 1.0 |
 | phone | 185 | 375,000 | 235 | 100 | 16.7 (pbr 28.5) | 1.0 |
-| high | 870 (pbr 555) | 1,550,000 | 400 | 100 | 21.6 (pbr 40.4) | 1.0 |
+| high | 360 (pbr 420) | 1,070,000 (pbr 1,200,000) | 400 | 100 | 21.6 (pbr 40.4) | 1.0 |
 
 ### Targets (on real devices, to reach by version 1)
 
@@ -111,6 +112,7 @@ The numbers are from the 2026-11-06 baseline above. Each one is a GitHub issue l
 1. **The pbr look's shading** (#191). On the same tier and the same pixels, the pbr look's frame takes 8.8 times as long as the toon look on low (2228 ms against 253 ms), 12 times as long on phone (1897 against 157), and 3.3 times as long on high (10234 against 3086). The draw calls are about the same (139 against 164 on low), so the cost is in the pixels: standard materials with the env map and the height fog on every pixel. Relative only (software GPU), but it is the largest ratio in the run. The phone tier gets toon by default; keep it that way until a phone run says otherwise.
 2. **The skater GLBs** (#187). The player and the NPC skaters load two skater models: 7.6 MB and 6.2 MB (13.8 MB, 75% of the low/toon download of 18.3 MB). The phone tier loads the 1024 px variants and still gets 5.3 MB and 5.2 MB (10.5 MB of 15.1 MB). Compressed textures (KTX2) and meshopt, or a lazy load of the second model, would bring the phone tier near its 10 MB target.
 3. **The high tier's draw calls and triangles** (#188). 503 draw calls (pbr) and 785 (toon) against 139 to 165 on low and phone, and 1.41 M triangles against 0.25 to 0.34 M. The high toon frame has 56% more draw calls than the high pbr frame; the cause is not measured yet (candidates: the toon outlines, the halftone and ink passes of the full post chain, and the longer draw distance of the high tier, 650 m against 320 m).
+   **Done in #188** (the high caps above are from it): the cause was the skaters (22 to 26 parts each, with one toon outline hull per part, all drawn again in the GTAO pass) and a second shadow map drawn by the GTAO pass. After the fix, on the same ride: high pbr 378 draw calls and 1.16 M triangles, high toon 328 and 1.02 M. See `docs/decisions.md` and `__atl.drawSplit` (`?perf=1`) for the split by pass.
 4. **The sim and view CPU per frame, walkers first** (#189). On high, the walkers take 1.5 to 1.7 ms per step (120 walkers) and their view 0.15 to 1.26 ms (pbr: the Meshy people); traffic 0.8 to 1.1 ms plus 0.45 to 0.75 ms for the view; NPC skaters 0.8 to 0.9 ms plus 0.85 ms. The other views take 2.5 ms. Together that is about 7.2 ms (toon) to 10 ms (pbr) of CPU per frame on high before the render, on this machine's CPU; on low toon it is about 4.4 ms. The `render` CPU (the Three.js side of the draw) is 7 to 35 ms per frame on top.
 5. **The pbr look's extra downloads and the first frame** (#190). The pbr look adds 6 to 17 MB to the download: high pbr is 36.7 MB (30.3 MB GLB, 4.5 MB textures) against 19.6 MB for high toon. The car GLB (`vehicles_lod`, 1.7 MB) is the largest after the skaters. The first frame on localhost with no network limit is 5.7 s (phone toon) to 12.5 s (high pbr).
 

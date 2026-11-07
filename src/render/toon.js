@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeShadow, mergeableParts, mergedSkin } from "./skin-merge.js";
 import { characterRoughness } from "./pbr-palette.js";
 
 // The toon look for the skater, on both tiers:
@@ -160,7 +161,11 @@ function isTransparent(mesh) {
 }
 
 // Gives a loaded skater (loadSkaterModel()) the toon materials and an
-// outline hull for each opaque skinned mesh. Returns the hull meshes.
+// outline hull. Returns the hull meshes. When the parts merge
+// (src/render/skin-merge.js), one hull covers them all: one draw call in
+// place of 22 to 26. The GTAO normal pass then draws the hull alone (its
+// override material draws the same surface as the parts, src/render/post.js),
+// and one stand-in casts the parts' shadow.
 export function toonSkater(loaded) {
   const meshes = [];
   loaded.root.traverse((o) => {
@@ -169,7 +174,22 @@ export function toonSkater(loaded) {
   for (const m of meshes) {
     m.material = Array.isArray(m.material) ? m.material.map(toonMaterial) : toonMaterial(m.material);
   }
-  return meshes.filter((m) => m.isSkinnedMesh && !isTransparent(m)).map(outlineHull);
+  const opaque = meshes.filter((m) => m.isSkinnedMesh && !isTransparent(m));
+  const parts = mergeableParts(loaded.root);
+  const hulls = parts.length === opaque.length && parts.length ? [mergedHull(parts)] : opaque.map(outlineHull);
+  mergeShadow(loaded.root);
+  return hulls;
+}
+
+// One outline hull for all the merged parts. The parts get `normalStandIn`:
+// the GTAO normal pass draws the hull in their place.
+function mergedHull(parts) {
+  const hull = mergedSkin(parts, outlineMaterial(), "skater-outline");
+  hull.userData.outlineOf = parts;
+  hull.castShadow = false;
+  hull.receiveShadow = false;
+  for (const p of parts) p.userData.normalStandIn = hull;
+  return hull;
 }
 
 // The skater rim of the pbr look (#160): a thin edge light from the sky, so
@@ -231,5 +251,7 @@ export function pbrSkater(loaded, { envIntensity = 0.9, rim = true } = {}) {
       if (rim && !m.transparent && !m.userData.rim) addRim(m);
     }
   });
+  // One stand-in casts the parts' shadow (src/render/skin-merge.js).
+  mergeShadow(loaded.root);
   return [];
 }

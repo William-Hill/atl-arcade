@@ -33,6 +33,14 @@ describe("quality tiers", () => {
     expect(QUALITY.high.far).toBeGreaterThan(QUALITY.low.far);
   });
 
+  it("starts the coarse far ground inside the fog on high, and keeps low at 60 m", () => {
+    expect(QUALITY.low.farTerrain).toBe(60);
+    expect(QUALITY.phone.farTerrain).toBe(null);
+    // Past the fog start, and well inside the far plane.
+    expect(QUALITY.high.farTerrain).toBeGreaterThan(QUALITY.high.fogNear);
+    expect(QUALITY.high.farTerrain).toBeLessThan(QUALITY.high.far * 0.6);
+  });
+
   it("gives the phone tier no shadow map, the lite post, and a pixel ratio of 1.5 or less", () => {
     expect(QUALITY.phone).toMatchObject({ shadows: false, post: "lite", detail: false });
     expect(QUALITY.phone.pixelRatio).toBeLessThanOrEqual(1.5);

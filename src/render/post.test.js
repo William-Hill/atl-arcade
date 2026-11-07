@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { PBR_GRADE_GLSL, createLitePost, creaseInk, disposeComposer, halftoneRadius, syncComposerSize } from "./post.js";
+import { PBR_GRADE_GLSL, createLitePost, creaseInk, disposeComposer, halftoneRadius, keepShadowMap, syncComposerSize } from "./post.js";
 import { setPostToggles } from "./post-toggles.js";
 import { GRADE_PIVOT } from "./pbr-palette.js";
 
@@ -61,6 +61,23 @@ describe("creaseInk", () => {
 
   it("draws no ink on a flat face", () => {
     expect(creaseInk(front, front, front, front)).toBe(0);
+  });
+});
+
+describe("keepShadowMap", () => {
+  it("turns off the shadow map update inside the GTAO normal pass, then puts it back", () => {
+    const renderer = { shadowMap: { autoUpdate: true, needsUpdate: false } };
+    const seen = [];
+    const pass = {
+      _renderOverride(r) {
+        seen.push(r.shadowMap.autoUpdate, r.shadowMap.needsUpdate);
+        throw new Error("draw failed");
+      },
+    };
+    keepShadowMap(pass);
+    expect(() => pass._renderOverride(renderer)).toThrow("draw failed");
+    expect(seen).toEqual([false, false]);
+    expect(renderer.shadowMap).toEqual({ autoUpdate: true, needsUpdate: false });
   });
 });
 

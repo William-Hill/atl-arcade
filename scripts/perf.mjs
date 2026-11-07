@@ -154,7 +154,7 @@ async function oneRun(quality, look, n) {
       const done = a.runScript(script, start);
       const end = await Promise.race([done, new Promise((r) => setTimeout(() => r(null), timeoutMs))]);
       const wallMs = performance.now() - t0;
-      return { finished: Boolean(end), wallMs, frameMs: a.fps.stop(), perf: a.perf.report(), info: a.rendererInfo, render: a.render };
+      return { finished: Boolean(end), wallMs, frameMs: a.fps.stop(), perf: a.perf.report(), info: a.rendererInfo, drawSplit: a.drawSplit, render: a.render };
     },
     { script: ride, start: { position: levelJson.spawn.position, yaw: levelJson.spawn.yaw }, timeoutMs },
   );
@@ -188,6 +188,8 @@ async function oneRun(quality, look, n) {
     systems: data.perf.systems,
     top: [...reqs.values()].filter((r) => r.bytes != null).sort((a, b) => b.bytes - a.bytes).slice(0, 8).map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024) })),
     perfFrames: data.perf.frames,
+    // The last frame's draw calls by pass and object kind (#188).
+    drawSplit: data.drawSplit,
     pixelRatio: data.render.pixelRatio,
     post: data.render.post,
     errors: runErrors.slice(0, 5),

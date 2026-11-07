@@ -136,14 +136,16 @@ export function createSky({ radius, sunDirection, clouds = false, pbr = false })
       // spreads the clouds evenly over the sky, as fair-weather cumulus.
       // Returns > 0 inside a cloud (1 at the center).
       float fairPuffs(vec2 p, float chance) {
+        float m = -1.0;
+        if (chance <= 0.0) return m;
         vec2 i = floor(p);
         vec2 f = fract(p);
-        float m = -1.0;
         for (int y = -1; y <= 1; y++) {
           for (int x = -1; x <= 1; x++) {
             vec2 g = vec2(float(x), float(y));
             vec2 cell = i + g;
-            if (hash(cell) > chance) continue;
+            // The offset: hash() is exactly 0 in the cell (0, 0).
+            if (hash(cell + 0.37) >= chance) continue;
             vec2 o = vec2(hash(cell + 17.1), hash(cell + 31.7)) * 0.6 + 0.2;
             float r = ${g1(P.fairSize[0])} + ${g1(P.fairSize[1] - P.fairSize[0])} * hash(cell + 5.3);
             m = max(m, 1.0 - length(g + o - f) / r);

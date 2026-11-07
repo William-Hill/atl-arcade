@@ -1748,6 +1748,19 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Not done: TAA (no TAA pass in the chain). The phone tier depth ink (`post.js`, owned by #195) still draws some ink at leaf edges near the camera.
 - Evidence: `docs/art-direction-pbr/202/` (before and after at trail, telephone-factory, mural-wall, trail on phone and low), from `scripts/art/pbr-frames.mjs` with `scripts/art/shots-159.json`. SwiftShader MSAA can differ from a real GPU.
 
+## 2026-11-07 — Nia's joggers are navy (#203)
+
+- Problem: the pbr art direction (#159, `docs/art-direction-pbr/skater.jpg`) showed Nia's dark green joggers on the green BeltLine lawn. The lower half of her silhouette lost its edge. Section 6 of `docs/art-direction-pbr.md` says outfits avoid grass green and trail sand for big areas.
+- Decision: the owner chose navy. The joggers change from forest green (texture mean sRGB 51,74,44) to navy `#2E3D6B` (HSV 225°, 0.57, 0.42; luma 61, above the `#303030` albedo floor). The orange jacket, cream top, knee pads and boots, gold wheels, peach toe stops and green wristband do not change.
+- Method: `scripts/assets/recolor-skater.mjs` (recipe `nia-navy`) changes only the base color images where the joggers color covers 5% or more: `tripo_part_1`, `2`, `15`, `16` (joggers) and `8`, `9` (the pant cuffs on the boot texture). A texel changes when its hue is 80–125°, its saturation 0.22 or more and its value 36–95 (soft edges). The new texel keeps the linear luminance pattern of the old texel, so folds and stitches stay. The script writes the new WebP images into the GLB binary chunk. The Draco mesh, the rig, the 25 clips and the other 60 images stay byte for byte. Vitest: `scripts/assets/recolor-skater.test.js`.
+- Sizes: `skater.glb` 2,210,000 → 2,203,728 bytes (WebP quality 84; 85 made it 3 KB bigger). `skater-1024.glb` 1,755,420 → 1,753,764 bytes (quality 80, as in #187). The download does not go up.
+- NPC outfits: the Nia NPC outfits (`src/render/npc-skaters-view.js`) hue-shifted the green band (70–170°). They now shift the navy band (205–245°, saturation 0.3 or more). The green wristband and the bluish metal trucks are outside the band. "cobalt" became "wine" (shift +115°, about 340°), because cobalt is too near the new navy. "plum" now shifts +65° (about 290°).
+- Marcus: no change. His colors are a teal jacket and wristbands (hue about 185°, a blue-green, not grass green), navy shorts, white and light gray shirt and pads, dark gray boots and teal wheels. No green or sand areas. The owner decides if the teal is too near the lawn.
+- `npm run perf:check` on the 4-CPU cloud machine: budget PASS, no cap changed. MB on the wire: phone/toon 8.73, low/toon 9.99, high/toon 11.29, phone/pbr 19.77, low/pbr 16.15, high/pbr 27.2 (the pbr rides stop early on this machine).
+- Evidence: `docs/art-direction-pbr/203/` (before and after at the 159-skater camera on the pbr and toon looks, `scripts/art/shots-203.json`). A headless run on the low, phone and high tiers loaded and animated Nia with no console errors; the phone tier loaded `skater-1024.glb`.
+- The turnaround renders in `assets/skaters/nia/views/` and the 25 clip contact sheets in `assets/skaters/nia/clips/` show the navy joggers. The e2e run made them again: `e2e/skater-anim.spec.js` writes the clip sheets, and `e2e/skater-model.spec.js` writes the views to `e2e/__screenshots__/`, from where they were copied. The old views showed the v1 model, so the framing changes too.
+- Real skaters still review the look with the move set.
+
 ## 2026-11-07 — PBR murals, bridges and the Ponce City Market roof (#198, #199, #200)
 
 Three gaps of the pbr art direction (#159). The toon look does not change.

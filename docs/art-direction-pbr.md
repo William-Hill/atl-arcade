@@ -155,7 +155,7 @@ Rec. 709). The middle (p50) sits between 90 and 170.
   the skater apart from the background (day 0.55, golden 0.8, dusk 0.45,
   night 0.3).
 - **Silhouette first.** One saturated main color per outfit (Nia: orange
-  jacket) and a contrasting secondary. Outfits avoid the main colors of the
+  jacket) and a contrasting secondary (Nia: navy joggers, #203). Outfits avoid the main colors of the
   places they skate: on the BeltLine that means no grass green and no trail
   sand for big areas.
 - Skin roughness 0.45–0.6 (never plastic). Hair 0.5–0.7. Cloth 0.7–0.95,

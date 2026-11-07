@@ -27,7 +27,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bus_shelter.glb <out> 4.0",
       "triangles": 6393,
       "triangles_from_meshy": 6420,
-      "bytes": 459596,
+      "bytes": 206580,
       "bounds_m": {
         "x": [
           -1.308,
@@ -49,7 +49,16 @@
           "faces": 19
         }
       },
-      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG"
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/bus_stop/bus_shelter.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 459596,
+        "bytes_after": 206580
+      }
     },
     "planter.glb": {
       "prompt": "Realistic square cast concrete sidewalk planter box filled with dark mulch and small green shrubs, city streetscape furniture, no logos, no badges, no text, no lettering, no branding",
@@ -70,7 +79,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/planter.glb <out> 1.2",
       "triangles": 1981,
       "triangles_from_meshy": 2085,
-      "bytes": 332384,
+      "bytes": 145092,
       "bounds_m": {
         "x": [
           -0.596,
@@ -87,7 +96,16 @@
       },
       "scale_applied": 1.2526,
       "removed_parts": {},
-      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG"
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/bus_stop/planter.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 332384,
+        "bytes_after": 145092
+      }
     },
     "bench.glb": {
       "prompt": "Realistic city sidewalk bench, black powder-coated steel frame with wooden slat seat and backrest, three-seat length, two armrests, no logos, no badges, no text, no lettering, no branding",
@@ -108,7 +126,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bench.glb <out> 1.8",
       "triangles": 3019,
       "triangles_from_meshy": 3019,
-      "bytes": 333012,
+      "bytes": 149048,
       "bounds_m": {
         "x": [
           -0.41,
@@ -125,7 +143,16 @@
       },
       "scale_applied": 1.8905,
       "removed_parts": {},
-      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG"
+      "textures": "baseColor, metallicRoughness, normal; 2048 from Meshy, downscaled to 1024 JPEG",
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/bus_stop/bench.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 333012,
+        "bytes_after": 149048
+      }
     }
   },
   "credits": "45 Meshy credits (5 per preview + 10 per refine)"

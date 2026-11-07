@@ -159,6 +159,9 @@ async function oneRun(quality, look, n) {
     { script: ride, start: { position: levelJson.spawn.position, yaw: levelJson.spawn.yaw }, timeoutMs },
   );
   const heap = await cdp.send("Runtime.getHeapUsage");
+  // When each file was asked for (ms from the navigation), to split the
+  // downloads before and after the first frame (#190).
+  const started = new Map(await page.evaluate(() => performance.getEntriesByType("resource").map((e) => [e.name, Math.round(e.startTime)])));
   const bytes = { js: 0, glb: 0, textures: 0, wasm: 0, data: 0, other: 0 };
   let requests = 0;
   for (const r of reqs.values()) {
@@ -187,6 +190,11 @@ async function oneRun(quality, look, n) {
     stepsPerFrame: data.perf.stepsPerFrame,
     systems: data.perf.systems,
     top: [...reqs.values()].filter((r) => r.bytes != null).sort((a, b) => b.bytes - a.bytes).slice(0, 8).map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024) })),
+    // Every file (bytes on the wire) and when it started, from the navigation (#190).
+    files: [...reqs.values()]
+      .filter((r) => r.bytes != null && !r.url.startsWith("data:"))
+      .map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024), startMs: started.get(r.url) ?? null }))
+      .sort((a, b) => b.kB - a.kB),
     perfFrames: data.perf.frames,
     // The last frame's draw calls by pass and object kind (#188).
     drawSplit: data.drawSplit,

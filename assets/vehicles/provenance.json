@@ -27,7 +27,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/sedan.glb <out> 4.6",
       "triangles": 11034,
       "triangles_from_meshy": 11035,
-      "bytes": 604492,
+      "bytes": 342776,
       "bounds_m": {
         "x": [
           -0.984,
@@ -102,6 +102,15 @@
           "model lettering on the trunk",
           "lettering on the rear bumper"
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/vehicles/sedan.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 604492,
+        "bytes_after": 342776
       }
     },
     "bus.glb": {
@@ -123,7 +132,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/bus3/bus.glb <out> 12",
       "triangles": 14016,
       "triangles_from_meshy": 14023,
-      "bytes": 612004,
+      "bytes": 329420,
       "bounds_m": {
         "x": [
           -1.542,
@@ -206,6 +215,15 @@
           "right sign under the windshield",
           "lettering on the roof box"
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/vehicles/bus.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 612004,
+        "bytes_after": 329420
       }
     },
     "pickup.glb": {
@@ -227,7 +245,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/pickup.glb <out> 5.4",
       "triangles": 10614,
       "triangles_from_meshy": 10616,
-      "bytes": 546676,
+      "bytes": 281340,
       "bounds_m": {
         "x": [
           -1.168,
@@ -300,6 +318,15 @@
           "emblem in the front grille",
           "badge on the tailgate handle"
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/vehicles/pickup.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 546676,
+        "bytes_after": 281340
       }
     },
     "hatchback.glb": {
@@ -325,7 +352,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4b/hatchback.glb <out> 4.1 --paint scripts/blender/vehicle_paint.json --paint-key hatchback",
       "triangles": 10253,
       "triangles_from_meshy": 10254,
-      "bytes": 542996,
+      "bytes": 300848,
       "bounds_m": {
         "x": [
           -0.978,
@@ -433,6 +460,15 @@
         "painted": [
           "chevron badge above the front grille"
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/vehicles/hatchback.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 542996,
+        "bytes_after": 300848
       }
     },
     "van.glb": {
@@ -458,7 +494,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4/van.glb <out> 5.2 --paint scripts/blender/vehicle_paint.json --paint-key van",
       "triangles": 10028,
       "triangles_from_meshy": 10032,
-      "bytes": 634148,
+      "bytes": 359592,
       "bounds_m": {
         "x": [
           -1.255,
@@ -560,6 +596,15 @@
           }
         },
         "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/vehicles/van.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 634148,
+        "bytes_after": 359592
       }
     },
     "taxi.glb": {
@@ -585,7 +630,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4/taxi.glb <out> 4.9 --paint scripts/blender/vehicle_paint.json --paint-key taxi",
       "triangles": 11876,
       "triangles_from_meshy": 11878,
-      "bytes": 677272,
+      "bytes": 386624,
       "bounds_m": {
         "x": [
           -1.111,
@@ -705,6 +750,15 @@
           "small emblem on the rear bumper",
           "triangle mark on the trunk lid"
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/vehicles/taxi.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 677272,
+        "bytes_after": 386624
       }
     },
     "box_truck.glb": {
@@ -730,7 +784,7 @@
       "blender": "blender -b -P scripts/blender/street_props.py -- .meshy-raw/v4/box_truck.glb <out> 7.5 --width-scale 0.9 --paint scripts/blender/vehicle_paint.json --paint-key box_truck",
       "triangles": 14349,
       "triangles_from_meshy": 14353,
-      "bytes": 739220,
+      "bytes": 404940,
       "bounds_m": {
         "x": [
           -1.395,
@@ -832,6 +886,15 @@
           }
         },
         "note": "headless Chromium, GLTFLoader + DRACOLoader, steer_* at 0.4 rad, wheels_roll sampled at 12 times over one turn; lowest wheel point per wheel (ground is y = 0)"
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/vehicles/box_truck.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 739220,
+        "bytes_after": 404940
       }
     },
     "vehicles_lod.glb": {
@@ -921,8 +984,17 @@
           512
         ]
       },
-      "bytes": 1776644,
-      "credits": 0
+      "bytes": 778168,
+      "credits": 0,
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/vehicles/vehicles_lod.glb <out.glb> --max-size 1024",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88, textures scaled to at most 1024 px; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 1776644,
+        "bytes_after": 778168
+      }
     }
   },
   "credits": "150 Meshy credits in total. Session 1: 75 (45 for sedan, bus, pickup and 30 for two discarded bus attempts). Session 2 (hatchback, van, taxi, box_truck, cap 75): 75 = 60 for the four vehicles plus 15 for one discarded hatchback; Meshy balance 6378 before, 6303 after.",

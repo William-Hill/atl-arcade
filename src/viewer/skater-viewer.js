@@ -4,6 +4,7 @@ import { createRenderer, fitToWindow } from "../render/renderer.js";
 import { fetchSkaterModel, loadSkaterModel } from "../render/skater-model.js";
 import { EYES, MOUTHS } from "../render/face-anim.js";
 import { pbrSkater } from "../render/toon.js";
+import { bodyFor, modelScale } from "../sim/skate/body.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 // Test page for a skater model: skater.html?skater=nia&view=front.
@@ -18,7 +19,9 @@ const VIEWS = {
 // Until the model loads: a 1.7 m skater centered at hip height.
 const TARGET = new THREE.Vector3(0, 0.85, 0);
 // The face close-up: ?view=face. The face center is about 1.44 m up.
-const FACE_TARGET = new THREE.Vector3(0, 1.44, 0);
+// The face of the 1.70 m GLB, before the dossier scale (body.js).
+const FACE_Y = 1.44;
+const FACE_TARGET = new THREE.Vector3(0, FACE_Y, 0);
 let radius = 0.95;
 let currentView = "three-quarter";
 // True once the user rotates or zooms: a resize then keeps their camera.
@@ -156,6 +159,8 @@ try {
     pbrSkater(model);
   }
   scene.add(model.root);
+  // The model stands at the dossier height: the face moves with the scale.
+  FACE_TARGET.y = FACE_Y * modelScale(bodyFor(name));
   clips = model.animations;
   face = model.face;
   if (face && params.get("face")) {

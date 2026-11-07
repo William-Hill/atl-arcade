@@ -35,7 +35,9 @@ export function createSkaterEnv(level, extra = []) {
   return { grindables: [...(level ? prepareGrindables(level) : []), ...extra] };
 }
 
-export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, k = { skate: SKATE, grind: GRIND }) {
+export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, kIn = { skate: SKATE, grind: GRIND }) {
+  // skaterEnv.skate: the skate constants of this skater's body (body.js).
+  const k = skaterEnv.skate ? { ...kIn, skate: skaterEnv.skate } : kIn;
   const grindables = skaterEnv.grindables ?? [];
   const wantsGrind = Boolean(input.grind);
   const grindEdge = wantsGrind && !prev.grindHeld;

@@ -1,8 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 const VIEWS = ["front", "back", "left", "right", "three-quarter"];
-// The height range (m) of each skater, with the skates.
-const SKATERS = { nia: [1.65, 1.75], marcus: [1.72, 1.84] };
+import { SKATER_BODIES, SKATE_STACK } from "../src/sim/skate/body.js";
+
+// The height range (m) of each skater, with the skates: the dossier height
+// plus the skate (src/sim/skate/body.js), +-3 cm.
+const SKATERS = Object.fromEntries(Object.entries(SKATER_BODIES).map(([n, b]) => [n, [b.height + SKATE_STACK - 0.03, b.height + SKATE_STACK + 0.03]]));
 
 for (const [name, [minH, maxH]] of Object.entries(SKATERS)) {
 

@@ -68,6 +68,7 @@ import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
 import { parkedCars } from "./sim/traffic/parking.js";
 import { createCarView } from "./render/car-view.js";
 import { createCarModelView, loadCarModels } from "./render/car-models.js";
+import { bodyFor, skateFor } from "./sim/skate/body.js";
 import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
 import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
 import { createPbrLook, installHeightFog, installSkySh, setSkySh, validSkySh } from "./render/pbr-look.js";
@@ -264,6 +265,9 @@ const env = createLevelEnv(level, { props: levelPropsOn, placed: propsBuild && (
 const skaterEnv = createSkaterEnv(level, env.grindables);
 // The style moves pick from this skater's dances (STYLE dances with `skaters`).
 skaterEnv.skater = skaterName;
+// The skate constants follow the skater's body (src/sim/skate/body.js and the
+// dossiers in docs/characters/). The capsule keeps SKATE.
+skaterEnv.skate = skateFor(bodyFor(skaterName));
 const geoMeshes = geo ? await meshBuild.meshes : null;
 performance.mark("atl:meshes");
 const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full" }) : createLevelView(level);
@@ -1440,6 +1444,22 @@ window.__atl = {
     silhouette() {
       const m = skaterView.model;
       return m ? Array.from(silhouette(skaterView.group, m.skinnedMeshes)) : null;
+    },
+    // The model height (m) in the bind pose, from the wheels to the top of
+    // the head: the dossier height plus the skate (src/sim/skate/body.js).
+    restHeight() {
+      const m = skaterView.model;
+      if (!m) return null;
+      m.skinnedMesh.skeleton.pose();
+      m.root.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(m.root, true);
+      skaterView.sync(skater, 0);
+      return box.max.y - box.min.y;
+    },
+    // The skate constants of this skater's body.
+    get skate() {
+      const k = skaterEnv.skate;
+      return { maxSpeed: k.maxSpeed, pushAccel: k.pushAccel, coastDrag: k.coastDrag, carveRate: k.carveRate, brakeDecel: k.brakeDecel, jumpSpeed: k.jumpSpeed, bodyRadius: k.bodyRadius };
     },
     // The same mask with the skeleton in the bind pose (the T-pose).
     tposeSilhouette() {

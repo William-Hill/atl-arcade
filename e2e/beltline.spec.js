@@ -4,6 +4,9 @@ import { createSkateState, runScript } from "../src/sim/skate/controller.js";
 import { createLevelEnv } from "../src/level/ground.js";
 import { pointInRings } from "../src/level/geo/geo-ground.js";
 import { chainStrips, followLineScript } from "../src/playtest/trail-script.js";
+import { bodyFor, skateFor } from "../src/sim/skate/body.js";
+// The page rides Nia (the default skater): the pure side uses her body constants.
+const NIA = skateFor(bodyFor("nia"));
 import { buildingSpan, terrainOf } from "../src/level/geo/terrain.js";
 
 // M1-03: the BeltLine Eastside Trail block from OpenStreetMap loads in the
@@ -126,7 +129,7 @@ test("Nia skates north on the Eastside Trail and the run matches the pure contro
 
   const env = createLevelEnv(LEVEL);
   const [trail] = chainStrips(LEVEL.strips, "trail");
-  const planned = followLineScript(trail, LEVEL.spawn, env, { frames: 600 });
+  const planned = followLineScript(trail, LEVEL.spawn, env, { frames: 600, k: NIA });
   const halfWidth = LEVEL.strips.find((s) => s.kind === "trail").width / 2;
   expect(planned.offTrack).toBeLessThan(halfWidth);
 
@@ -223,7 +226,7 @@ for (const { kind, filter } of [
     const env = createLevelEnv(LEVEL);
     const [mx, mz] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
     const start = { position: [mx, env.sampleGround(mx, mz).height, mz], yaw: Math.atan2(-(b[1] - a[1]), b[0] - a[0]) };
-    const planned = followLineScript(strip.points, start, env, { frames: 180, cruise: 5 });
+    const planned = followLineScript(strip.points, start, env, { frames: 180, cruise: 5, k: NIA });
     const actual = await page.evaluate(({ script, start }) => window.__atl.runScript(script, start), { script: planned.script, start });
     for (let i = 0; i < 3; i += 1) expect(Math.abs(actual.position[i] - planned.state.position[i])).toBeLessThan(0.01);
     expect(Math.hypot(actual.position[0] - start.position[0], actual.position[2] - start.position[2])).toBeGreaterThan(8);

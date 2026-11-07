@@ -127,3 +127,21 @@ for (const name of ["nia", "marcus"]) {
     expect(errors).toEqual([]);
   });
 }
+
+// The dossier body in the game: the model stands at the dossier height on
+// skates, and the controller uses the constants of the body.
+test("each skater stands at the dossier height and skates with its body constants", async ({ page }) => {
+  const { SKATER_BODIES, SKATE_STACK, skateFor } = await import("../src/sim/skate/body.js");
+  for (const name of ["nia", "marcus"]) {
+    await page.goto(`/?level=greybox&mute=1&skater=${name}`);
+    await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 60000 });
+    const got = await page.evaluate(() => ({ height: window.__atl.skaterModel.restHeight(), skate: window.__atl.skaterModel.skate }));
+    const body = SKATER_BODIES[name];
+    expect(got.height, name).toBeGreaterThan(body.height + SKATE_STACK - 0.03);
+    expect(got.height, name).toBeLessThan(body.height + SKATE_STACK + 0.03);
+    expect(got.skate.maxSpeed).toBeCloseTo(skateFor(body).maxSpeed, 6);
+    expect(got.skate.coastDrag).toBeCloseTo(skateFor(body).coastDrag, 6);
+    test.info().annotations.push({ type: name, description: JSON.stringify(got) });
+    console.log(name, JSON.stringify(got));
+  }
+});

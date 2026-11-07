@@ -1848,3 +1848,12 @@ Three gaps of the pbr art direction (#159). The toon look does not change.
 
 **Third pass (owner playtest, 2026-11-07).** The owner saw no step, no knee drive, and no ankle push-off. Cause: the v3 push and coast poses had no foot targets, so the feet stayed at their rest targets (the thigh turned 13.6 degrees in the push; 38.4 on v2). The push is now a stroke in phases for each leg: push out and back with an ankle push-off (the heel comes up 30 to 34 degrees), a step with a knee drive (the skate lifts 15 to 18 cm), and a glide with the weight over the skate. Evidence: `docs/characters/anim-v3/push-side-front.jpg`.
 
+
+## 2026-11-07 — The skater bodies set the model scale and the skating physics
+
+The owner saw the playable skaters as too small next to the NPCs, and asked that height and weight also change the skating physics.
+- Measured before: the skater GLBs were 1.70 m (Nia) and 1.78 m (Marcus) from the wheels to the top of the head, so the bodies were about 1.60 and 1.68 m without skates. Nia's head top was at 1.55 m in her idle crouch. The pedestrians' head joints stood 1.30 to 1.48 m above their feet (about 1.55 to 1.73 m tall).
+- The dossiers (`docs/characters/nia-sway-ellis.md`, `marcus-tempo-reid.md`) now have a Body section: Nia 1.68 m and 61 kg, Marcus 1.88 m and 79 kg, barefoot. A quad skate adds 0.10 m. `SKATER_BODIES` in `src/sim/skate/body.js` holds the same values.
+- The model scale is (height + 0.10 m) / GLB height: Nia 1.047 (1.78 m on skates), Marcus 1.112 (1.98 m on skates). `wrapModel()` applies it. The GLBs do not change.
+- `skateFor()` changes the SKATE constants (tuned for 1.75 m, 70 kg) with small scaling laws: top speed and stroke time with sqrt(height); push acceleration with weight^(-1/3) and sqrt(height); air drag with sqrt(height / weight); brake with weight^(-1/3); turn rate with height^(-1/2) weight^(-1/6); jump with weight^(-1/6) height^(1/4); collision radius with sqrt(weight / height). Each constant stays within its min and max in `constants.js`, and within 12% of SKATE. The roll friction stays the same. `skaterEnv.skate` carries the constants into `stepSkater()`; the capsule keeps SKATE.
+- The tables in the dossiers list each constant for each skater.

@@ -15,7 +15,7 @@ import { createMuralAtlas, createMuralMaterial } from "./murals.js";
 import { ALBEDO, ALBEDO_GLSL, CONCRETE, FACADE_CALIBRATION, FACADE_FADE, PLASTER_SCAN, WALL_GRAIN, windowColorGlsl, windowMean } from "./pbr-palette.js";
 import { createPropBatch } from "./prop-batch.js";
 import { BRICK_TONE, DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, FRAME_ROUGHNESS, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
-import { TREE_UNIFORMS, createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
+import { TREE_UNIFORMS, createLeafDepthMaterial, markCrownCores, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
 import { bakeTreeImpostors } from "./tree-impostors.js";
 import { getDracoLoader } from "./skater-model.js";
 import { facadeKitPlacements } from "../level/geo/facade-kit-glb.js";
@@ -850,7 +850,8 @@ export function glbTreeTemplates(templates, season = "summer") {
     // The far shapes are the impostors (tree-impostors.js), or the
     // procedural crown cards (trees.js) with no renderer to draw them.
     const m = GLB_TREE_NAME.exec(k);
-    if (m && !m[3]) out[`tree:${m[1]}:${m[2]}`] = seasonalGlbTree(t, m[1], season);
+    // The crown cores get their own leaf code (leaf-cut.js markCrownCores()).
+    if (m && !m[3]) out[`tree:${m[1]}:${m[2]}`] = markCrownCores(seasonalGlbTree(t, m[1], season));
   }
   return out;
 }
@@ -969,12 +970,16 @@ export async function loadKitTemplates(url = KIT_URL) {
 // world wind move into the template space.
 // The leaf flutter of a tree card on top of the crown sway (m, rad/s).
 export const LEAF_FLUTTER = { amplitude: 0.035, rate: 7.0 };
-function createPropMaterial({ wind = true, look = "toon", leaves = false } = {}) {
+// With `coverage` (the high tier: the scene draws into a MSAA target) the
+// leaf edges use alpha to coverage (#202). Without MSAA it has no effect, so
+// the phone and low tiers keep the cut at 0.5 coverage.
+function createPropMaterial({ wind = true, look = "toon", leaves = false, coverage = false } = {}) {
   const material = litMaterial(look, { vertexColors: true }, { gradientMap: toonRamp({ soft: true }), roughness: ROUGHNESS.props, envLight: ENV_LIGHT.props });
   // The albedo calibration (pbr look): darker leaves and props.
   if (look === "pbr") material.color.setScalar(0.8);
   // A card is a single quad: both sides must draw.
   if (leaves) material.side = THREE.DoubleSide;
+  if (leaves && coverage) material.alphaToCoverage = true;
   const time = { value: 0 };
   if (wind || leaves) {
     material.onBeforeCompile = (shader) => {
@@ -1027,7 +1032,7 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
 // The build options of the far surface tiles (the low tier).
 export const FAR_TERRAIN_BUILD = { terrainStep: 2, surfacesOnly: true };
 
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null, leafCoverage = false } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -1047,7 +1052,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   };
   // The leaf cards on the trees come with the pbr look (look.js).
   const leaves = trees && look === "pbr";
-  const propMaterial = createPropMaterial({ wind, look, leaves });
+  const propMaterial = createPropMaterial({ wind, look, leaves, coverage: leafCoverage });
   materials.props = propMaterial.material;
   const byId = new Map();
   // Road markings join the render copy of their surface tile (no extra

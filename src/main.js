@@ -255,7 +255,7 @@ const env = createLevelEnv(level, { props: levelPropsOn, placed: propsBuild && (
 const skaterEnv = createSkaterEnv(level, env.grindables);
 const geoMeshes = geo ? await meshBuild.meshes : null;
 performance.mark("atl:meshes");
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full" }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 

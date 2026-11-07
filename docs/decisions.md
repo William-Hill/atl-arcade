@@ -1734,6 +1734,20 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Perf (`scripts/perf.mjs`, SwiftShader, 4-CPU cloud machine, relative only). Phone/pbr mean frame: before 2327, 2305, 2295, 2228 ms (mean 2289); after 2340, 2316 ms (mean 2328), +1.7 %. Low/pbr: before 2949, 3155 ms; after 3080, 3152 ms. `--budget docs/perf/budget.json`: PASS for phone/pbr and low/pbr; no cap changed. Draw calls and triangles do not change (trail frame: phone 87 calls and 240k triangles, low 82 and 168k, before and after).
 - Frames at the same camera (`docs/art-direction-pbr.md`, section 9): luma p50 phone 143 → 149, low 146 → 151. The phone ink is gone. The toon frames on phone, low and high, and the pbr frame on high, are the same before and after (only the people and the leaves in the wind move).
 
+## 2026-11-07 — PBR trees: soft leaf edges, no dark speckle (#202)
+
+- Cause of the dark speckle: two causes. (1) The leaf cut was binary, and at mid range a leaf is less than 2 pixels wide, so the cut aliased into green and sky noise. (2) The GTAO pass saw the leaf cards. Its depth changed at each pixel inside a crown, and the AO turned that depth into dark speckle and a near-black inside. A probe frame with GTAO off removed most of the speckle.
+- Leaf edges (`src/render/leaf-cut.js`): the leaf field is now continuous and the shader makes a coverage ramp one pixel wide from `fwidth`. On the high tier the prop material uses alpha to coverage, so the MSAA x4 resolve of the scene target blends the edge. When a leaf on a card gets less than about 2 pixels wide, the card changes to one soft, lobed clump of leaves (`LEAF_AA`). The veins fade out under one pixel. The impostor alpha gets the same ramp. The shadow map pass uses the same cut, so the crown shadows also change to clumps far away.
+- Phone and low tiers: no MSAA, so no alpha to coverage. They keep the cut at 0.5 coverage. The clump change still removes the mid-range noise there.
+- GTAO: `withLeafCut()` now drops the leaf cards from the AO normal and depth pass. Trunks, crown cores and impostors stay. A leaf pixel gets the smooth AO of what is behind it. Only the pbr look has leaf cards, so the toon ink does not change.
+- Darker inside: a crown occlusion on the sky (indirect) light of the leaf cards only (`CROWN_AO`, min 0.5 where the crown normal points down). It replaces the AO that the cards gave, but it is smooth. The albedo does not change. The crown cores do not get it, because GTAO still sees them (with both, the core undersides went near black).
+- Crown cores: the icosphere cores of the Blender trees (`markCrownCores()`, in `glbTreeTemplates()`) and the puffs of the procedural trees (`PUFF_CORE_CODE` in `trees.js`) get leaf code -5 and a uv in meters. The shader gives them leafy blotches (0.7 to 1.0), so a core between thin cards does not read as a large flat polygon.
+- Albedo floor: Vitest checks that the darkest leaf (vein, clump rim, crown occlusion of the Blender trees, darkest tree tint, pbr scale 0.8) and the darkest core stay over 0.03 linear for every species and season.
+- Cost: the same meshes and materials, so the draw calls and the triangles do not change. The fragment shader of a leaf card does a little more work (derivatives and one clump shape).
+- Renderer change: one line in `src/main.js` passes `leafCoverage: tier.post === "full"` to `createGeoView()`. No change to the renderer, the composer or `src/render/post.js`.
+- Not done: TAA (no TAA pass in the chain). The phone tier depth ink (`post.js`, owned by #195) still draws some ink at leaf edges near the camera.
+- Evidence: `docs/art-direction-pbr/202/` (before and after at trail, telephone-factory, mural-wall, trail on phone and low), from `scripts/art/pbr-frames.mjs` with `scripts/art/shots-159.json`. SwiftShader MSAA can differ from a real GPU.
+
 ## 2026-11-07 — PBR murals, bridges and the Ponce City Market roof (#198, #199, #200)
 
 Three gaps of the pbr art direction (#159). The toon look does not change.

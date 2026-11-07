@@ -1118,3 +1118,7 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Not verified: the 55 FPS median on the harness. `npm run playtest:beltline` gave a median of 20 FPS (FAIL) at a load average of 37 from other sessions (`reports/playtest-beltline-eastside-2026-11-04-22-47-50.json`). Measure it again on a quiet machine. The phone tier adds no triangles (see Evidence).
 - The planters stay small at 25 m: `PLANTER` is in `src/level/geo/props.js`, which the roads session owns.
 - The porches and the boards have no colliders, like the rest of the kit.
+
+## 2026-11-07: Landmark facts may cite public sources (landmark discovery GDD)
+
+The landmark discovery feature (`design/gdd/landmark-discovery.md`) needs history facts, for example the 1926 Sears, Roebuck building at Ponce City Market. The Atlanta open data catalog has numbers about parks, stations and neighborhoods, but it has no landmark history. The rule in `AGENTS.md` ("facts sourced from the open data catalog") changes for landmark story cards: a fact comes from the open data catalog or from a cited public source (National Register / NPS, City of Atlanta, Atlanta History Center, Georgia Encyclopedia, Atlanta BeltLine Inc., or the landmark's own site). Every fact keeps a source name and URL, and stays positive or neutral. Wikipedia is a pointer only, never the source. Fact cards (`levels/<level>/facts.json`) keep the catalog-only rule. Research: `docs/research/2026-11-07-eastside-landmarks.md`.

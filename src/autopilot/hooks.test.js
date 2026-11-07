@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { createBridge } from "./autopilot-bridge.js";
 import { controlsFromBindings, createSkateHooks, movementNumbers, playerFromSkater, steerToward, MOVE_WALL_FACTOR, SKATER_HALF_HEIGHT } from "./hooks.js";
@@ -99,7 +99,7 @@ describe("the move hook", () => {
 });
 
 describe("the bridge on Skate ATL's scene", () => {
-  function setup() {
+  function setup(extra = {}) {
     const scene = new THREE.Scene();
     const levelView = createLevelView(GREYBOX);
     scene.add(levelView.root);
@@ -131,6 +131,7 @@ describe("the bridge on Skate ATL's scene", () => {
       keyTarget: { dispatchEvent: (e) => keys.push(`${e.type}:${e.code}`) },
       global: { navigator: { getGamepads: () => [] } },
       requestFrame: () => {},
+      ...extra,
     });
     return { bridge, atl, keys, resets: () => resets };
   }
@@ -178,5 +179,40 @@ describe("the bridge on Skate ATL's scene", () => {
     const { bridge } = setup();
     const r = await bridge.handle("rc", { verb: "property", body: { objectPath: "atl", propertyName: "skater.state" } });
     expect(r).toEqual({ "skater.state": "rolling" });
+  });
+
+  // A fake WebSocket: the test opens, welcomes, and closes it by hand.
+  function fakeSockets() {
+    const sockets = [];
+    class FakeSocket {
+      constructor(url) {
+        this.url = url;
+        sockets.push(this);
+      }
+      send() {}
+      close() {}
+    }
+    return { sockets, WebSocket: FakeSocket };
+  }
+
+  it("keeps the held keys when a connect fails, and lets them go when a connected agent leaves", async () => {
+    vi.useFakeTimers();
+    try {
+      const { sockets, WebSocket } = fakeSockets();
+      const { bridge, keys } = setup({ WebSocket });
+      bridge.connect();
+      await bridge.handle("key", { key: "W", mode: "hold", lease: 10 });
+      // A failed connect (no agent service): the key stays down.
+      sockets[0].onclose();
+      expect(keys).toEqual(["keydown:KeyW"]);
+      // A connected agent leaves: its keys go up.
+      vi.advanceTimersByTime(1000);
+      sockets[1].onmessage({ data: JSON.stringify({ type: "welcome" }) });
+      sockets[1].onclose();
+      expect(keys).toEqual(["keydown:KeyW", "keyup:KeyW"]);
+      bridge.close?.();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -11,12 +11,12 @@ import { pbrSkater, toonSkater } from "./toon.js";
 // An outfit moves the texels whose hue is inside `band` (degrees) by
 // `shift` degrees, and scales their saturation by `sat`. Only texels with a
 // saturation of `minSat` or more change, so the skin and the white parts
-// keep their color. Nia: the band holds the green pants and wristband (her
-// jacket and her skin have the same hue, so the jacket keeps its color).
+// keep their color. Nia: the band holds the navy pants (#203). The green
+// wristband, the metal trucks, the jacket and the skin are outside the band.
 // Marcus: the band holds the teal jacket, the navy shorts, and the wheels.
 export const OUTFITS = {
-  cobalt: { model: "nia", band: [70, 170], shift: 110, sat: 1.1, minSat: 0.18 },
-  plum: { model: "nia", band: [70, 170], shift: 175, sat: 1.15, minSat: 0.18 },
+  wine: { model: "nia", band: [205, 245], shift: 115, sat: 1.1, minSat: 0.3 },
+  plum: { model: "nia", band: [205, 245], shift: 65, sat: 1.1, minSat: 0.3 },
   sunset: { model: "marcus", band: [150, 250], shift: 185, sat: 1.1, minSat: 0.2 },
   lime: { model: "marcus", band: [150, 250], shift: -85, sat: 1.0, minSat: 0.2 },
   berry: { model: "marcus", band: [150, 250], shift: 130, sat: 1.1, minSat: 0.2 },
@@ -139,7 +139,7 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
     group.add(view.group);
     const entry = { view, ready: false, outfit: npc.spec.outfit };
     views.set(npc.id, entry);
-    const outfit = { name: npc.spec.outfit, ...(OUTFITS[npc.spec.outfit] ?? OUTFITS.cobalt) };
+    const outfit = { name: npc.spec.outfit, ...(OUTFITS[npc.spec.outfit] ?? OUTFITS.wine) };
     load(npc.spec.model)
       .then((model) => {
         dressNpc(model, outfit, { toon, look });

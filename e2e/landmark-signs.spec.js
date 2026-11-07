@@ -27,10 +27,12 @@ function collectErrors(page) {
 }
 
 // `cam` is in world meters. The ?cam heights are over the terrain (src/main.js).
+// The page pins a clear afternoon (?time=14&weather=clear): without it the
+// game uses the clock of the computer, and at night the sign is dark.
 async function open(page, cam) {
   const h = terrainOf(LEVEL).height;
   const q = [cam[0], cam[1] - h(cam[0], cam[2]), cam[2], cam[3], cam[4] - h(cam[3], cam[5]), cam[5]];
-  await page.goto(`/?level=beltline-eastside&mute=1&view=fixed&skater=capsule&cam=${q.map((v) => v.toFixed(2)).join(",")}`);
+  await page.goto(`/?level=beltline-eastside&mute=1&view=fixed&skater=capsule&time=14&weather=clear&cam=${q.map((v) => v.toFixed(2)).join(",")}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 60000 });
   await page.waitForFunction(() => window.__atl.level.landmarks && window.__atl.level.landmarks.towers >= 2, null, { timeout: 60000 });
   await page.waitForFunction(() => window.__atl.level.props && (window.__atl.level.props.loaded || window.__atl.level.props.error), null, { timeout: 60000 });

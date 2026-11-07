@@ -155,7 +155,7 @@ Rec. 709). The middle (p50) sits between 90 and 170.
   the skater apart from the background (day 0.55, golden 0.8, dusk 0.45,
   night 0.3).
 - **Silhouette first.** One saturated main color per outfit (Nia: orange
-  jacket) and a contrasting secondary. Outfits avoid the main colors of the
+  jacket) and a contrasting secondary (Nia: navy joggers, #203). Outfits avoid the main colors of the
   places they skate: on the BeltLine that means no grass green and no trail
   sand for big areas.
 - Skin roughness 0.45–0.6 (never plastic). Hair 0.5–0.7. Cloth 0.7–0.95,
@@ -204,8 +204,8 @@ today differs, the cell says so.
 | Sky environment light | keep (small, baked rarely) | keep (small, baked rarely) | keep, baked again when the sky moves |
 | Sun shadow map | drop | drop | keep |
 | GTAO | drop | drop | keep |
-| Grade (time of day, district) | keep, in the materials or one pass | keep, in one cheap pass | keep, full pass |
-| Toon ink and halftone | drop | **drop** (today the lite pass still draws them, #195) | drop |
+| Grade (time of day, district) | keep, in the materials (#195) | keep, in one cheap pass (#195) | keep, full pass |
+| Toon ink and halftone | drop | drop (#195) | drop |
 | Height fog | plain distance fog | plain distance fog | keep |
 | Bloom | drop | drop | keep (night signs) |
 | Skater rim light | keep | keep | keep |
@@ -247,6 +247,8 @@ capture log (`shots-log.json`). Contact sheet: `docs/art-direction-pbr/contact-s
 | Night, Inman Park storefronts, 22:30 | 7 / 27 / 185 | 300 | 976k |
 | Trail, phone tier | 4 / 215 / 231 | 88 | 241k |
 | Trail, low tier | 6 / 215 / 231 | 82 | 168k |
+| Trail, phone tier, after #195 (2026-11-07) | 3 / 149 / 236 | 87 | 240k |
+| Trail, low tier, after #195 (2026-11-07) | 4 / 151 / 236 | 82 | 168k |
 
 All high-tier frames are under the 555 draw call cap.
 
@@ -326,9 +328,20 @@ All high-tier frames are under the 555 draw call cap.
 
 - **Meets:** same layout and colors of the trail, trees and people; 82–88
   draw calls.
-- **Misses:** the lawn is pale mint and the ground flat (no scans; #194 adds
-  them); no shadows; the frame is washed out (p50 215). On the phone tier
-  the lite post pass draws the toon ink and has no grade (#195).
+- **Misses (2026-11-06):** the lawn is pale mint and the ground flat (no
+  scans; #194 adds them); no shadows; the frame is washed out (p50 215). On
+  the phone tier the lite post pass draws the toon ink and has no grade
+  (#195).
+- **After #195 (2026-11-07):** the frames above are new. The phone tier
+  draws no ink and no halftone. Both tiers apply the pbr grade, the split
+  tone and the district tint: the phone tier in one cheap pass, the low
+  tier in the materials. Luma p50 149 (phone) and 151 (low); the lawn mean
+  is `#75ab4a` on both. Before and after at the same camera:
+  `art-direction-pbr/trail-195-before-after.jpg` (before: the tip of
+  `epic/city-look`, 88e6eec, p50 143 and 146). The toon look does not
+  change: `art-direction-pbr/trail-195-toon-check.jpg`.
+- **Still misses:** no shadows (by the tier table). The lawn is still
+  brighter than the `#4f7a3a`–`#6f9a4a` range in full sun (#197).
 
 ### Summary
 
@@ -348,7 +361,7 @@ All high-tier frames are under the 555 draw call cap.
 | Skater | Yes, reads clearly | Outfit vs lawn (#203) |
 | NPCs | Varied and positive | — |
 | Murals | Strongest asset | Host walls (#198) |
-| Phone and low tiers | Layout and color | Ink, grade, ground (#195, #194) |
+| Phone and low tiers | Layout and color; no ink, grade on (#195) | Ground (#194), lawn (#197) |
 | Bugs | — | Lines over Ponce City Market (#200) |
 
 ## 10. Gaps (each is a GitHub issue linked to #159)

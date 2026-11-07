@@ -11,11 +11,11 @@ import { createShopSigns } from "./shop-signs-view.js";
 import { drapeMesh, terrainOf } from "../level/geo/terrain.js";
 import { mergeMeshes } from "../level/geo/extrude.js";
 import { seasonColors, treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
-import { createMuralAtlas } from "./murals.js";
-import { ALBEDO, ALBEDO_GLSL, FACADE_FADE, windowColorGlsl, windowMean } from "./pbr-palette.js";
+import { createMuralAtlas, createMuralMaterial } from "./murals.js";
+import { ALBEDO, ALBEDO_GLSL, CONCRETE, FACADE_CALIBRATION, FACADE_FADE, PLASTER_SCAN, WALL_GRAIN, windowColorGlsl, windowMean } from "./pbr-palette.js";
 import { createPropBatch } from "./prop-batch.js";
 import { BRICK_TONE, DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, FRAME_ROUGHNESS, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
-import { TREE_UNIFORMS, createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
+import { TREE_UNIFORMS, createLeafDepthMaterial, markCrownCores, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
 import { bakeTreeImpostors } from "./tree-impostors.js";
 import { getDracoLoader } from "./skater-model.js";
 import { facadeKitPlacements } from "../level/geo/facade-kit-glb.js";
@@ -55,7 +55,8 @@ export const PROP_LOD0_DISTANCE = 60;
 export const TREE_FADE_BAND = 8;
 export const PROP_DRAW_DISTANCE = 200;
 // The distance from the camera to the nearest edge of a surface tile past
-// which the low tier shows the coarse terrain drape (m).
+// which the low tier shows the coarse terrain drape (m). The high tier sets
+// its own (src/render/quality.js).
 export const FAR_TERRAIN_DISTANCE = 60;
 // The facade depth tiles (sills and piers) show when the camera is under
 // this distance from the tile center (m). A depth tile is 50 m square, so
@@ -119,6 +120,15 @@ export const REVEAL = { head: 0.16, jamb: 0.07, headShade: 0.5, jambShade: 0.28 
 // the scans: the brick courses and the mortar joints on a brick wall, a
 // plaster grain on the other walls and on the stone sills, lintels, and kick
 // plates, and the roughness of each. A painted steel frame is semi-gloss.
+// A wall that is not brick also gets the plaster grain in its albedo
+// (pbr-palette.js WALL_GRAIN), so a mural host wall is not a flat color
+// (#198).
+//
+// A FACE.concrete face (the structure of a bridge, geo-mesh.js) gets the
+// concrete class in the pbr look (pbr-palette.js CONCRETE, #199): the warm
+// gray albedo inside the class band, with the plaster scan for the grain,
+// the relief, and the roughness. The scan tiles in world meters on the
+// plane of the face. The toon look draws it as a cornice.
 export function createFacadeMaterial(gradientMap, { brickMap = null, interiors = false, look = "toon", detailMaps = null } = {}) {
   const pbr = look === "pbr";
   const detail = pbr && detailMaps !== null;
@@ -162,14 +172,14 @@ export function createFacadeMaterial(gradientMap, { brickMap = null, interiors =
       shader.uniforms.uStoneRough = { value: detailMaps.stoneRough };
     }
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;\nflat varying vec3 vWallSeed;")
+      .replace("#include <common>", "#include <common>\nattribute vec4 facade;\nvarying vec4 vFacade;\nflat varying vec3 vWallSeed;\n#ifdef DETAIL\nvarying vec3 vFacadeW;\n#endif")
       .replace(
         "#include <begin_vertex>",
         // A seed for each wall face, from the model-space normal and the
         // wall plane. It does not change with the camera, so a room keeps
         // its look when the camera turns. All 4 corners of a wall give the
         // same value, and the flat varying keeps it exact.
-        "#include <begin_vertex>\nvFacade = facade;\nvWallSeed = vec3(floor(normal.xz * 8.0 + 0.5), mod(floor(dot(position.xz, normal.xz) + 0.5), 97.0));",
+        "#include <begin_vertex>\nvFacade = facade;\nvWallSeed = vec3(floor(normal.xz * 8.0 + 0.5), mod(floor(dot(position.xz, normal.xz) + 0.5), 97.0));\n#ifdef DETAIL\nvFacadeW = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#endif",
       );
     shader.fragmentShader = shader.fragmentShader
       .replace(
@@ -204,14 +214,27 @@ uniform sampler2D uBrickNor;
 uniform sampler2D uBrickRough;
 uniform sampler2D uStoneNor;
 uniform sampler2D uStoneRough;
+varying vec3 vFacadeW;
 // The wall position in meters, and the weight of each surface on a wall
 // pixel: brick, stone or plaster, and the painted frame.
 vec2 facadeM = vec2(0.0);
 float facadeKBrick = 0.0;
 float facadeKStone = 0.0;
 float facadeKFrame = 0.0;
+// 1 on a concrete face (FACE.concrete), for the concrete roughness.
+float facadeConcrete = 0.0;
+// The plaster scan grain (-1..1) of a scan sample.
+float plasterGrain(float s) { return clamp((s - ${PLASTER_SCAN.mean.toFixed(4)}) / ${PLASTER_SCAN.spread.toFixed(4)}, -1.0, 1.0); }
 #define BRICK_TILE ${brickInfo.tileMeters.toFixed(3)}
 #define STONE_TILE ${stoneInfo.tileMeters.toFixed(3)}
+// The grain at a wall point m (meters): the fine scan grain, and the same
+// scan ${PLASTER_SCAN.coarse} times larger for patches that still read at
+// street distance (the fine grain averages out in the mipmaps).
+float plasterMottle(vec2 m) {
+  float fine = plasterGrain(texture2D(uStoneRough, m / STONE_TILE).r);
+  float coarse = plasterGrain(texture2D(uStoneRough, m / (STONE_TILE * ${PLASTER_SCAN.coarse.toFixed(1)}) + vec2(0.37, 0.61)).r);
+  return clamp(0.4 * fine + 0.8 * coarse, -1.0, 1.0);
+}
 ${DETAIL_GLSL}
 #endif
 // The center (cell fraction) of the shop window on the ground floor.
@@ -235,7 +258,8 @@ vec3 roomColor(float h) {
   int st = int(vFacade.x + 0.5);
   float kind = vFacade.w;
   // kind 1 is a wall, kind 3 a blank wall (a mural wall): no windows.
-  if ((kind > 0.5 && kind < 1.5) || kind > 2.5) {
+  // kind 4 (concrete) is after this block.
+  if ((kind > 0.5 && kind < 1.5) || (kind > 2.5 && kind < 3.5)) {
     bool blank = kind > 2.5;
     vec2 cell = fract(vFacade.yz);
     float level = floor(vFacade.z);
@@ -412,6 +436,11 @@ vec3 roomColor(float h) {
     // Sample outside the branch, so the mipmap level stays correct.
     vec3 detail = clamp(texture2D(uBrick, vFacade.yz * uStyleM[st] / uBrickTile).rgb / uBrickMean, 0.35, 2.2);
     if (uBrickOn > 0.5 && a.w > 0.5) wallCol *= mix(detail, vec3(1.0), far0);
+    #ifdef DETAIL
+    // A wall that is not brick: the plaster grain in the albedo (#198).
+    float wallGrain = plasterMottle(vFacade.yz * uStyleM[st]);
+    if (a.w < 0.5) wallCol *= 1.0 + ${WALL_GRAIN.toFixed(3)} * wallGrain;
+    #endif
     // The frame is painted steel; the sill, the lintel, and the kick plate
     // are cast stone.
     vec3 col = mix(wallCol, uFrame[st], frame * 0.85);
@@ -464,9 +493,9 @@ vec3 roomColor(float h) {
     #ifdef PBR_LOOK
     // The albedo calibration (the bleached white-box fix of the gen-city
     // research): darker walls, a little less chroma.
-    diffuseColor.rgb *= 0.74;
+    diffuseColor.rgb *= ${FACADE_CALIBRATION.scale.toFixed(3)};
     float albL = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(albL), 0.1);
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(albL), ${FACADE_CALIBRATION.desaturate.toFixed(3)});
     // The albedo ceiling (#157, pbr-palette.js ALBEDO): no wall over 0.6
     // linear, so pale stucco and white trim do not bleach under the sun.
     diffuseColor.rgb = albedoCeiling(diffuseColor.rgb, ${ALBEDO.ceiling.toFixed(3)});
@@ -493,6 +522,28 @@ vec3 roomColor(float h) {
       #endif
     }
   }
+  #ifdef PBR_LOOK
+  if (kind > 3.5) {
+    // Concrete (#199): the class albedo, with the plaster scan grain. The
+    // scan is in world meters on the plane of the face.
+    float grain = 0.0;
+    #ifdef DETAIL
+    vec3 wn = normalize((vec4(vNormal, 0.0) * viewMatrix).xyz);
+    bool horiz = abs(wn.y) > 0.5;
+    vec2 cm = horiz ? vFacadeW.xz : (abs(wn.x) > abs(wn.z) ? vFacadeW.zy : vFacadeW.xy);
+    // The grain and the relief fade out where a scan tile is under a few
+    // pixels.
+    float cnear = 1.0 - smoothstep(0.04, 0.2, max(length(fwidth(cm)), 1e-5));
+    grain = plasterMottle(cm);
+    facadeM = cm;
+    facadeConcrete = 1.0;
+    // The relief needs an up vector in the face: not on a top or a bottom.
+    facadeKStone = horiz ? 0.0 : cnear;
+    #endif
+    vec3 conc = vec3(${CONCRETE.albedo.map((v) => v.toFixed(4)).join(", ")}) * (1.0 + ${CONCRETE.grain.toFixed(3)} * grain);
+    diffuseColor.rgb = clamp(conc, vec3(${CONCRETE.range[0].toFixed(3)}), vec3(${CONCRETE.range[1].toFixed(3)}));
+  }
+  #endif
 }`,
       )
       .replace(
@@ -506,6 +557,10 @@ vec3 roomColor(float h) {
   roughnessFactor = mix(roughnessFactor, rb, facadeKBrick);
   roughnessFactor = mix(roughnessFactor, rs, facadeKStone);
   roughnessFactor = mix(roughnessFactor, ${FRAME_ROUGHNESS.toFixed(3)}, facadeKFrame);
+  // Concrete: the scan mapped into the class band (pbr-palette.js
+  // concreteRoughness()).
+  float cr = clamp(0.5 + 0.5 * plasterGrain(rs), 0.0, 1.0);
+  roughnessFactor = mix(roughnessFactor, ${CONCRETE.roughness[0].toFixed(3)} + ${(CONCRETE.roughness[1] - CONCRETE.roughness[0]).toFixed(3)} * cr, facadeConcrete);
 }
 #endif
 roughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);`,
@@ -536,14 +591,15 @@ roughnessFactor = mix(roughnessFactor, facadeGlassRough, facadeGlass);`,
   vec3 nb = texture2D(uBrickNor, facadeM / BRICK_TILE).rgb - vec3(0.5, 0.5, 1.0);
   vec3 ns = texture2D(uStoneNor, facadeM / STONE_TILE).rgb - vec3(0.5, 0.5, 1.0);
   nb.xy *= ${DETAIL_NORMAL.brick.toFixed(3)};
-  ns.xy *= ${DETAIL_NORMAL.stone.toFixed(3)};
+  // Concrete gets a stronger relief: the plaster scan is very flat.
+  ns.xy *= ${DETAIL_NORMAL.stone.toFixed(3)} * (1.0 + 2.0 * facadeConcrete);
   vec3 s = vec3(0.5, 0.5, 1.0) + nb * facadeKBrick + ns * facadeKStone;
   if (facadeKBrick + facadeKStone > 0.0) normal = detailNormal(normal, tu, tv, s, 1.0);
 }
 #endif`,
       );
   };
-  mat.customProgramCacheKey = () => `facade-v11${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}${detail ? "-detail" : ""}`;
+  mat.customProgramCacheKey = () => `facade-v12${brickMap ? "-brick" : ""}${interiors ? "-interior" : ""}${pbr ? "-pbr" : ""}${detail ? "-detail" : ""}`;
   return mat;
 }
 
@@ -795,7 +851,8 @@ export function glbTreeTemplates(templates, season = "summer") {
     // The far shapes are the impostors (tree-impostors.js), or the
     // procedural crown cards (trees.js) with no renderer to draw them.
     const m = GLB_TREE_NAME.exec(k);
-    if (m && !m[3]) out[`tree:${m[1]}:${m[2]}`] = seasonalGlbTree(t, m[1], season);
+    // The crown cores get their own leaf code (leaf-cut.js markCrownCores()).
+    if (m && !m[3]) out[`tree:${m[1]}:${m[2]}`] = markCrownCores(seasonalGlbTree(t, m[1], season));
   }
   return out;
 }
@@ -914,12 +971,16 @@ export async function loadKitTemplates(url = KIT_URL) {
 // world wind move into the template space.
 // The leaf flutter of a tree card on top of the crown sway (m, rad/s).
 export const LEAF_FLUTTER = { amplitude: 0.035, rate: 7.0 };
-function createPropMaterial({ wind = true, look = "toon", leaves = false } = {}) {
+// With `coverage` (the high tier: the scene draws into a MSAA target) the
+// leaf edges use alpha to coverage (#202). Without MSAA it has no effect, so
+// the phone and low tiers keep the cut at 0.5 coverage.
+function createPropMaterial({ wind = true, look = "toon", leaves = false, coverage = false } = {}) {
   const material = litMaterial(look, { vertexColors: true }, { gradientMap: toonRamp({ soft: true }), roughness: ROUGHNESS.props, envLight: ENV_LIGHT.props });
   // The albedo calibration (pbr look): darker leaves and props.
   if (look === "pbr") material.color.setScalar(0.8);
   // A card is a single quad: both sides must draw.
   if (leaves) material.side = THREE.DoubleSide;
+  if (leaves && coverage) material.alphaToCoverage = true;
   const time = { value: 0 };
   // The pbr look: the warm globe of each kit lamp glows at night (#196).
   // The globe is the one vertex color LAMP_GLOBE in the kit lamp.
@@ -988,7 +1049,7 @@ if (distance(vColor.rgb, vec3(${LAMP_GLOBE.color.join(", ")})) < 0.02) totalEmis
 // The build options of the far surface tiles (the low tier).
 export const FAR_TERRAIN_BUILD = { terrainStep: 2, surfacesOnly: true };
 
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null, leafCoverage = false } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -1000,13 +1061,15 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors, look, detailMaps: look === "pbr" ? loadWallDetail() : null }),
     props: null,
     get mural() {
-      if (!muralMap) muralMap = litMaterial(look, { map: createMuralAtlas() }, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural });
+      // The pbr look: the painted atlas, its roughness, and the dry-brush
+      // cut that shows the host wall (murals.js, #198).
+      if (!muralMap) muralMap = look === "pbr" ? createMuralMaterial(look, litMaterial, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural }) : litMaterial(look, { map: createMuralAtlas() }, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural });
       return muralMap;
     },
   };
   // The leaf cards on the trees come with the pbr look (look.js).
   const leaves = trees && look === "pbr";
-  const propMaterial = createPropMaterial({ wind, look, leaves });
+  const propMaterial = createPropMaterial({ wind, look, leaves, coverage: leafCoverage });
   materials.props = propMaterial.material;
   const byId = new Map();
   // Road markings join the render copy of their surface tile (no extra
@@ -1030,7 +1093,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const shopBoards = [];
   const signList = kit ? shopSigns(level, fronts) : [];
   const glbKit = kit && depth && kitGlb && look === "pbr" ? facadeKitPlacements(level, fronts, { signs: signList }) : null;
-  const kitParts = kit ? facadeKit(level, fronts, shopBoards, undefined, glbKit?.covers ?? null) : { tiles: [], depthTiles: [], counts: {} };
+  // The pbr look frames each mural with a cap and a base (#198).
+  const kitParts = kit ? facadeKit(level, fronts, shopBoards, undefined, glbKit?.covers ?? null, undefined, { muralFrames: look === "pbr" }) : { tiles: [], depthTiles: [], counts: {} };
   // The shop names on the GLB sign boards go in the GLB depth tiles, so they hide with their boards.
   const glbNames = glbKit ? boardNamesBatch(glbKit.buildings.flatMap((b) => b.boards), look) : null;
   const glbView = glbKit ? createFacadeKitView(kitGlb, glbKit.buildings, { depthDistance, names: glbNames }) : null;
@@ -1164,7 +1228,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       let nearestFar = Infinity;
       for (const t of terrainLods) {
         const d = boundsDistance(t.bounds, cameraPosition.x, cameraPosition.z);
-        const far = d > FAR_TERRAIN_DISTANCE;
+        const far = d > farTerrainDistance;
         t.near.visible = !far;
         t.far.visible = far;
         if (far) {

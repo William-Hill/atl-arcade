@@ -7,14 +7,16 @@
 //   facade?: number[] }.
 // `facade` has 4 numbers per vertex: [style, u, v, kind]. u counts window
 // bays along a wall, v counts floors up a wall, and kind is FACE.roof,
-// FACE.wall, FACE.cornice, or FACE.blank (a wall with no windows: the
-// wall of a mural). The facade shader draws windows from it.
+// FACE.wall, FACE.cornice, FACE.blank (a wall with no windows: the
+// wall of a mural), or FACE.concrete (the structure of a bridge: the pbr
+// look gives it the concrete class, the toon look draws it as a cornice).
+// The facade shader draws windows from it.
 // Faces do not share vertices across a corner, so a flat-shaded or toon
 // material gets one normal per face.
 
 import earcut from "earcut";
 
-export const FACE = { roof: 0, wall: 1, cornice: 2, blank: 3 };
+export const FACE = { roof: 0, wall: 1, cornice: 2, blank: 3, concrete: 4 };
 const NO_FACADE = [0, 0, 0, FACE.roof];
 
 // Signed area in the x-z plane. Positive is counterclockwise when x points

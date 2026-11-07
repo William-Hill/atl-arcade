@@ -69,6 +69,74 @@ export function clampToClass(cls, roughness, metalness = 0) {
   return { roughness: k(roughness, c.roughness), metalness: k(metalness, c.metalness) };
 }
 
+// The concrete class of the bridges and the underpasses (#199): decks,
+// piers, beams, parapets, end posts and wing walls in the pbr look. A warm
+// gray in linear light, with the grain of the plaster scan (the same scan
+// as the concrete of the landmark GLBs). `range` is the albedo band of the
+// class in docs/art-direction-pbr.md (0.25 to 0.5 linear), and `roughness`
+// its roughness band. `grain` is the largest share that the scan grain
+// moves the albedo up or down. The toon look keeps BRIDGE.color.
+export const CONCRETE = {
+  albedo: [0.37, 0.355, 0.33],
+  range: [0.25, 0.5],
+  grain: 0.14,
+  roughness: [0.75, 0.92],
+};
+
+// Pure: the linear albedo of a concrete pixel for a scan grain in -1..1.
+// The result stays in CONCRETE.range on every channel.
+export function concreteAlbedo(grain = 0, c = CONCRETE) {
+  const g = Math.min(1, Math.max(-1, grain));
+  return c.albedo.map((v) => Math.min(c.range[1], Math.max(c.range[0], v * (1 + g * c.grain))));
+}
+
+// Pure: the roughness of a concrete pixel for a scan value t in 0..1.
+export function concreteRoughness(t, c = CONCRETE) {
+  const k = Math.min(1, Math.max(0, t));
+  return c.roughness[0] + (c.roughness[1] - c.roughness[0]) * k;
+}
+
+// The concrete map of the landmark bridge GLBs (lm_concrete_color, the
+// plaster scan recolored by scripts/blender/landmarks.py): its mean and its
+// 1st and 99th percentile texel, in linear light (the full range is 0.122
+// to 0.381; the shader clamps the tail into the class band). landmark-models.js tints the
+// map by CONCRETE.albedo / mean, so the GLB bridges and the geo bridges have
+// one concrete color.
+export const GLB_CONCRETE_MAP = { mean: [0.32, 0.306, 0.276], min: 0.254, max: 0.342 };
+
+// Pure: the color factor of the GLB concrete material (linear).
+export function glbConcreteTint(c = CONCRETE, map = GLB_CONCRETE_MAP) {
+  return c.albedo.map((v, i) => v / map.mean[i]);
+}
+
+// The grain of the plaster scan (assets/landmarks/textures/trim/rough.jpg):
+// its mean and the spread that maps to a grain of 1. The shaders turn a
+// scan sample s into a grain with (s - mean) / spread.
+// `coarse` is the scale of a second, larger sample for the patches that
+// read at street distance.
+export const PLASTER_SCAN = { mean: 0.621, spread: 0.03, coarse: 6 };
+
+// The calibration of the facade shader in the pbr look (geo-view.js): the
+// wall albedo is scaled and a little desaturated (the bleached white-box
+// fix), then held under the ceiling.
+export const FACADE_CALIBRATION = { scale: 0.74, desaturate: 0.1 };
+
+// The wall class (#198): a wall that is not brick (stucco, plaster, painted
+// panel) gets the grain of the plaster scan in its albedo, so a mural host
+// wall reads as a real wall and not as a flat color. `grain` is the largest
+// share up or down.
+export const WALL_GRAIN = 0.16;
+
+// Pure: the linear albedo of a facade wall pixel in the pbr look, from the
+// style wall color `c` (linear) and a scan grain in -1..1 (0 for brick, which
+// gets the brick scan). The same steps as the facade shader.
+export function facadeWallAlbedo(c, grain = 0) {
+  const g = 1 + Math.min(1, Math.max(-1, grain)) * WALL_GRAIN;
+  const k = c.map((v) => v * g * FACADE_CALIBRATION.scale);
+  const l = 0.2126 * k[0] + 0.7152 * k[1] + 0.0722 * k[2];
+  return albedoCeiling(k.map((v) => v + (l - v) * FACADE_CALIBRATION.desaturate));
+}
+
 // The lowest roughness of a character material that is not metal: no
 // plastic skin or cloth (skin 0.45 to 0.6, satin 0.45, boots 0.4).
 export const CHARACTER_MIN_ROUGHNESS = 0.42;

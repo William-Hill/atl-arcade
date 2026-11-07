@@ -1,6 +1,6 @@
 {
   "asset": "Nia \"Sway\" Ellis, the first skater (M1-01, #11)",
-  "date": "2026-11-05",
+  "date": "2026-11-07",
   "status": "shipped review candidate: corrected PBR body and forward motion, pending PR review",
   "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
   "source_image": "docs/characters/concept/nia/nia-tpose-front.png (see docs/characters/concept/nia/provenance.json)",
@@ -170,6 +170,23 @@
       ],
       "result": "skater.glb 6,306,628 to 2,210,000 bytes; skater-1024.glb 5,420,932 to 1,755,420 bytes",
       "credits_spent": 0
+    },
+    {
+      "tool": "scripts/assets/recolor-skater.mjs (recipe nia-navy) on Node 22 with sharp 0.35.5 (installed with npm i --no-save, not in package.json)",
+      "date": "2026-11-07",
+      "issue": "#203",
+      "prompt": "Nia's dark green pants merge with the BeltLine lawn (art direction #159, docs/art-direction-pbr.md section 6). The owner chose navy for the pants. Keep the orange jacket, the cream boots and the warm wheels.",
+      "command": "node scripts/assets/recolor-skater.mjs assets/skaters/nia/skater.glb assets/skaters/nia/skater.glb --recipe nia-navy --quality 84 && node scripts/assets/recolor-skater.mjs assets/skaters/nia/skater-1024.glb assets/skaters/nia/skater-1024.glb --recipe nia-navy --quality 80",
+      "actions": [
+        "Joggers: forest green (texture mean sRGB 51,74,44) to navy #2E3D6B (HSV 225 deg, 0.57, 0.42). A texel changes when its hue is 80 to 125 deg, its saturation 0.22 or more and its value 36 to 95, with soft ramps at the edges. The new color keeps the linear luminance pattern of the old texel, so the folds, seams and stitches stay.",
+        "Six base color images change: tripo_part_1, 2, 15, 16 (the joggers) and tripo_part_8, 9 (the pant cuffs on the boot texture). An image changes only when the joggers color covers 5% or more of it, so the hair, the face and the green wristband (hue 135 to 145 deg, brighter) stay byte for byte.",
+        "WebP quality 84 for skater.glb (85 made the file 3 KB bigger) and 80 for skater-1024.glb, as in #187.",
+        "The other 60 images, the Draco mesh, the rig, the 25 clips and the glTF JSON (but the buffer view offsets) are byte for byte the same.",
+        "Kept: the orange jacket, the cream top, knee pads and boots, the gold wheels, the peach toe stops, the green wristband.",
+        "No new generation and no credits."
+      ],
+      "result": "skater.glb 2,210,000 to 2,203,728 bytes; skater-1024.glb 1,755,420 to 1,753,764 bytes",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 155,
@@ -177,13 +194,13 @@
   "tripo_credits_after": 2715,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2210000,
+  "file_size_bytes": 2203728,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
   "animations": 25,
   "phone_variant": {
     "file": "assets/skaters/nia/skater-1024.glb",
-    "file_size_bytes": 1755420,
+    "file_size_bytes": 1753764,
     "base_color": "1024x1024 WebP",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
   },
@@ -198,5 +215,14 @@
       "dance_smoothquad"
     ],
     "tripo_motion": "assets/skaters/nia/raw/tripo-motion-v1/tripo_convert_8a663486-9228-4e65-abc7-9c14db3df2dd.fbx"
+  },
+  "outfit": {
+    "jacket": "peach orange",
+    "top": "cream",
+    "joggers": "navy #2E3D6B (forest green until #203)",
+    "wristband": "forest green",
+    "boots": "cream",
+    "wheels": "gold",
+    "review": "Real skaters still review the look with the move set."
   }
 }

@@ -154,7 +154,7 @@ async function oneRun(quality, look, n) {
       const done = a.runScript(script, start);
       const end = await Promise.race([done, new Promise((r) => setTimeout(() => r(null), timeoutMs))]);
       const wallMs = performance.now() - t0;
-      return { finished: Boolean(end), wallMs, frameMs: a.fps.stop(), perf: a.perf.report(), info: a.rendererInfo, render: a.render };
+      return { finished: Boolean(end), wallMs, frameMs: a.fps.stop(), perf: a.perf.report(), info: a.rendererInfo, drawSplit: a.drawSplit, render: a.render };
     },
     { script: ride, start: { position: levelJson.spawn.position, yaw: levelJson.spawn.yaw }, timeoutMs },
   );
@@ -188,6 +188,8 @@ async function oneRun(quality, look, n) {
     systems: data.perf.systems,
     top: [...reqs.values()].filter((r) => r.bytes != null).sort((a, b) => b.bytes - a.bytes).slice(0, 8).map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024) })),
     perfFrames: data.perf.frames,
+    // The last frame's draw calls by pass and object kind (#188).
+    drawSplit: data.drawSplit,
     pixelRatio: data.render.pixelRatio,
     post: data.render.post,
     errors: runErrors.slice(0, 5),
@@ -255,6 +257,11 @@ if (budgetPath) {
   // A ride stopped by --max-wall reads the draw calls and triangles at
   // another place on the trail, so its caps compare with less accuracy.
   for (const r of runs) if (!r.finished) console.warn(`${r.quality}/${r.look} run ${r.run}: the ride stopped after ${r.wallSeconds} s of wall time; the draw calls and triangles come from where it stopped`);
+  // Machine load changes the geometry count at the end of the ride: the same
+  // build gave 150 phone/toon geometries at a load average of 15 and 169 at a
+  // load of 50 (docs/decisions.md, 2026-11-06, the gates of epic/city-look).
+  const busy = runs.filter((r) => r.load > cpus().length);
+  if (busy.length) console.warn(`the load average was over the CPU count (${cpus().length}) in ${busy.length} run(s), up to ${Math.max(...busy.map((r) => r.load))}; the geometry counts can be too high. Run perf:check again on a quiet machine before you raise a cap.`);
   const over = checkBudget(runs, budget);
   for (const o of over) console.error(`OVER BUDGET ${o}`);
   if (over.length) process.exit(1);

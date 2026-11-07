@@ -17,7 +17,8 @@
     "perf": "node scripts/perf.mjs --out reports/perf/perf.json",
     "perf:baseline": "node scripts/perf.mjs --repeat 2 --out docs/perf/baseline.json --md docs/perf/baseline.md",
     "perf:check": "node scripts/perf.mjs --out reports/perf/perf.json --budget docs/perf/budget.json",
-    "perf:sim": "node scripts/sim-bench.mjs"
+    "perf:sim": "node scripts/sim-bench.mjs",
+    "npc:variety": "node scripts/npc-variety.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

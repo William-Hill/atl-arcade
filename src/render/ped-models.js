@@ -25,8 +25,9 @@ export const PED_MODEL_URLS = {
 };
 export const PED_MODEL_KINDS = ["walker_sundress", "elder_polo", "jogger", "dog_walker", "stroller_dad"];
 // How many walkers get a GLB person, by quality tier, and out to what
-// distance (m) from the camera.
-export const PED_MODEL_COUNT = { low: 0, phone: 3, high: 8 };
+// distance (m) from the camera. No more than the person kinds: two people
+// on screen are never the same model (the owner saw too many repeats).
+export const PED_MODEL_COUNT = { low: 0, phone: 3, high: PED_MODEL_KINDS.length };
 export const PED_MODEL_RADIUS = 45;
 // Each person's walking clip, and what walks with it (x, z in the person's
 // frame, m; +z ahead, +x its left).
@@ -41,6 +42,35 @@ export function personFor(id, kinds = PED_MODEL_KINDS) {
   let h = (id + 1) * 2654435761;
   h ^= h >>> 15;
   return kinds[(h >>> 0) % kinds.length];
+}
+
+// Pure: the person for each walker in `want` (ids, nearest first), with no
+// person twice. `bound` (Map id -> kind) keeps the walkers that have a person
+// now. A new walker takes its own person (personFor) if no one has it, else
+// the next free one. Walkers past the kinds get none.
+export function assignPeople(want, bound = new Map(), kinds = PED_MODEL_KINDS) {
+  const out = new Map();
+  const used = new Set();
+  for (const id of want) {
+    const k = bound.get(id);
+    if (k && !used.has(k)) {
+      out.set(id, k);
+      used.add(k);
+    }
+  }
+  for (const id of want) {
+    if (out.has(id) || used.size >= kinds.length) continue;
+    const first = kinds.indexOf(personFor(id, kinds));
+    for (let i = 0; i < kinds.length; i += 1) {
+      const k = kinds[(first + i) % kinds.length];
+      if (!used.has(k)) {
+        out.set(id, k);
+        used.add(k);
+        break;
+      }
+    }
+  }
+  return out;
 }
 
 // Pure: the ids of the live walkers within `radius` of (x, z), nearest
@@ -155,6 +185,10 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
     ready,
     skip,
     stats,
+    // The person drawn for walker `id`, or null.
+    kindOf(id) {
+      return pool.find((s) => s.id === id)?.kind ?? null;
+    },
     // view: { sees(x, y, z, r) } (src/render/view-cull.js) or null. A person
     // out of the view keeps its place but skips the clip and the leash.
     update(state, camera, dt, view = null) {
@@ -163,10 +197,10 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
       if (!stats.loaded || !state) return;
       const want = nearestWalkers(state.peds, camera.x, camera.z, count);
       const byId = new Map(state.peds.map((w) => [w.id, w]));
-      const keep = new Set(want);
-      for (const slot of pool) if (!keep.has(slot.id)) slot.id = -1;
-      for (const id of want) {
-        const kind = personFor(id);
+      const bound = new Map(pool.filter((s) => s.id >= 0).map((s) => [s.id, s.kind]));
+      const people = assignPeople(want, bound);
+      for (const slot of pool) if (people.get(slot.id) !== slot.kind) slot.id = -1;
+      for (const [id, kind] of people) {
         const slot = pool.find((s) => s.id === id) ?? pool.find((s) => s.id === -1 && s.kind === kind) ?? make(kind);
         slot.id = id;
       }

@@ -1819,3 +1819,18 @@ Three gaps of the pbr art direction (#159). The toon look does not change.
   - Phone and low: the pbr ground arrays use 2x anisotropic filtering, high keeps 8x (`GROUND_ANISOTROPY`). No visible change at skating height; 4x kept most of the cost.
   - All tiers: the leaf cut skips the leaf loop on a card that draws as one clump, and skips the turn and shape of a leaf out of reach of the pixel. The leaf places are the same.
 - **Rejected**: a depth pre-pass for the props (lit once per pixel with depth EQUAL): slower on SwiftShader (3.4 s to 4.4 s). A sin-free leaf hash: it moved the leaves and the near crowns lost their fine leaves. No leaf cards on phone and low (`?trees=kit`, 1.16 s): a look change, left for the owner with the art-direction tier table ("Leaf cards: drop (impostors)").
+
+## 2026-11-07 — Unique NPC people, and fewer of them
+
+The owner saw too many repeat characters, and maybe too many NPCs. `node scripts/npc-variety.mjs` measures it: it opens the BeltLine Eastside for each look and tier, stops at 3 points on the trail and in one close view, and counts the people on screen (`__atl.people.inView()`) and the pairs with the same look within 40 m.
+
+**Before** (high tier): 40 crowd NPCs, 120 walkers, 8 GLB people (pbr). On screen: 21 to 57 people. The walkers had 3 box shapes, each with one fixed hair color; only the shirt, the pants and the skin changed. The crowd figures had no hair and one pants color per type. The 8 GLB slots shared 5 models, so 2 of the same person were often near: at the first stop 4 GLB people showed 2 models (2 repeat pairs; two yellow-sundress women within 20 m).
+
+**Decision: a procedural walker, not more Meshy models.** One part-packed figure (`src/render/peds-view.js`) has every optional part: 5 hair styles, a cap, a beanie, a beard, short and long sleeves, an open jacket, long pants, a skirt, a backpack, a tote, a crossbody bag, headphones, glasses. `pedLook()` (`src/render/ped-look.js`) gives each walker a seeded height (1.52 to 1.94 m, mean about 1.73 m), a build (width 0.88 to 1.16), one of 12 skin tones, 12 hair colors, 20 shirt, 13 pants and 12 accent colors, and the feature bits. The vertex shader folds the parts whose bit is off to one point. In 500 seeded looks, at most 1 pair matches. All walkers are now one instanced mesh: 1 draw call, not 3.
+- The GLB people never repeat on screen: `assignPeople()` (`src/render/ped-models.js`) gives each near walker a model that no other drawn walker has, and the high tier draws 5 GLB people (the 5 kinds), not 8. Phone stays at 3.
+- The crowd figures get a hair cap, a seeded pants and hair color, and a height scale of 0.92 to 1.08 (`crowdLook()`, `src/render/npc-view.js`).
+- Why not paid generation now: a new Meshy person costs about 41 credits at the current Meshy prices (meshy-7.1 preview 20, refine 10, rig 5, 2 library clips 6), and the first six people cost 56 each with one retry. So 10 more people cost about 410 to 560 credits, and they still repeat in a crowd of 90. The procedural figure costs no credits and no download. More GLB people stay an option for the near view (see the PR).
+
+**Decision: fewer NPCs.** With the walkers, the trail read as a queue of people, and the owner said there may be too many. The crowd trail mix goes from 28 to 20 NPCs (`DEFAULT_MIX` in `src/sim/npc/crowd.js`), and the walker pool from 120/70/50 to 90/60/45 (high/low/phone, `PED_COUNT` in `src/sim/peds.js`). `?peds=<n>` and the settings menu still set another count.
+
+**Heights**: the GLB people are 1.65 to 1.82 m (manifest), the walkers 1.52 to 1.94 m, the crowd adults about 1.59 to 1.87 m. All are adult heights. The child of a crowd family is about 1.07 m.

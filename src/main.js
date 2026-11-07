@@ -58,7 +58,7 @@ import { createLookInput } from "./input/look.js";
 import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
-import { createNpcView } from "./render/npc-view.js";
+import { createNpcView, NPC_DRAW_DISTANCE } from "./render/npc-view.js";
 import { PED_RADIUS, createPeds, pedCount, pedMinGap, stepPeds } from "./sim/peds.js";
 import { createPedsView } from "./render/peds-view.js";
 import { createPedModels, PED_MODEL_COUNT } from "./render/ped-models.js";
@@ -1221,6 +1221,34 @@ window.__atl = {
         },
       }
     : null,
+  // Every person on screen (the crowd, the walkers, the GLB people), for
+  // the variety check: { src, id, key, d }. `key` names the look; two
+  // people with the same key look the same.
+  people: {
+    inView() {
+      const v = new THREE.Vector3();
+      const out = [];
+      const seen = (x, y, z) => {
+        v.set(x, y + 1, z);
+        const d = v.distanceTo(camera.position);
+        if (d > camera.far * 0.9) return -1;
+        v.project(camera);
+        return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1 ? d : -1;
+      };
+      if (crowd) for (const n of crowd.npcs) {
+        const d = seen(n.x, n.y, n.z);
+        if (d >= 0 && d < NPC_DRAW_DISTANCE) out.push({ src: "crowd", id: n.id, d, key: npcView.lookKey(n) });
+      }
+      if (peds) for (const w of peds.peds) {
+        if (!w.live) continue;
+        const d = seen(w.x, w.y, w.z);
+        if (d < 0) continue;
+        const glb = pedModels?.skip.has(w.id);
+        out.push({ src: glb ? "glb" : "ped", id: w.id, d, key: glb ? pedModels.kindOf(w.id) : pedsView.lookKey(w.look), height: glb ? null : pedsView.heightOf(w.look) });
+      }
+      return out.sort((a, b) => a.d - b.d);
+    },
+  },
   // The cars (#132), or null on the greybox and with ?cars=0.
   cars: carView
     ? {

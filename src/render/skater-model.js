@@ -102,22 +102,31 @@ export function parseSkaterGltf(name = "nia", bytes = null) {
   return promise;
 }
 
+// The skinned meshes of a skater scene, and every mesh casts a shadow. A
+// glTF mesh with many primitives (one per material) loads as one skinned
+// mesh per primitive, all on one rig (#167). skinnedMesh is the first one.
+function skinnedMeshesOf(scene) {
+  const out = [];
+  scene.traverse((o) => {
+    if (o.isSkinnedMesh) out.push(o);
+    if (o.isMesh) o.castShadow = true;
+  });
+  return out;
+}
+
 // A new copy of a skater for an NPC: its own skeleton, and the shared
 // geometry, materials, and clips. Returns the same shape as
 // loadSkaterModel(), with no face decals.
 export async function cloneSkaterModel(name = "nia", bytes = null) {
   const { gltf, pristine } = await parseSkaterGltf(name, bytes);
   const scene = cloneSkinned(pristine);
-  let skinnedMesh = null;
-  scene.traverse((o) => {
-    if (o.isSkinnedMesh && !skinnedMesh) skinnedMesh = o;
-    if (o.isMesh) o.castShadow = true;
-  });
+  const skinnedMeshes = skinnedMeshesOf(scene);
+  const skinnedMesh = skinnedMeshes[0];
   if (!skinnedMesh) throw new Error(`Skater model ${name} has no skinned mesh`);
-  return { root: wrapModel(scene), skinnedMesh, animations: gltf.animations, face: null };
+  return { root: wrapModel(scene), skinnedMesh, skinnedMeshes, animations: gltf.animations, face: null };
 }
 
-// Loads a skater GLB. Returns the wrapper, the skinned mesh, the clips, and
+// Loads a skater GLB. Returns the wrapper, the skinned meshes, the clips, and
 // the face (null when the skater has no face decals). `bytes` is an optional
 // promise from fetchSkaterModel().
 export async function loadSkaterModel(name = "nia", bytes = null) {
@@ -126,19 +135,16 @@ export async function loadSkaterModel(name = "nia", bytes = null) {
   // first load changed the scene.
   const scene = gltf.userData.taken ? cloneSkinned(pristine) : gltf.scene;
   gltf.userData.taken = true;
-  let skinnedMesh = null;
-  scene.traverse((o) => {
-    if (o.isSkinnedMesh && !skinnedMesh) skinnedMesh = o;
-    if (o.isMesh) o.castShadow = true;
-  });
+  const skinnedMeshes = skinnedMeshesOf(scene);
+  const skinnedMesh = skinnedMeshes[0];
   if (!skinnedMesh) throw new Error(`Skater model ${name} has no skinned mesh`);
   // The face decals are a bonus: if one fails to load, keep the model with
   // its painted face rather than drop to the capsule.
   let face = null;
   try {
-    face = await attachFace(skinnedMesh, name);
+    face = await attachFace(skinnedMeshes, name);
   } catch (err) {
     console.warn(`Skater ${name}: no face decals (${err?.message ?? err})`);
   }
-  return { root: wrapModel(scene), skinnedMesh, animations: gltf.animations, face };
+  return { root: wrapModel(scene), skinnedMesh, skinnedMeshes, animations: gltf.animations, face };
 }

@@ -1685,6 +1685,26 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The toon look keeps its own maps (`assets/ground/<set>/color.jpg`) and shader. The old pbr-only `normal.jpg` and `rough.jpg` files are removed.
 - Evidence: `e2e/ground-pbr.spec.js` (GROUND_SHOTS=before|after) and `reports/ground-pbr/`.
 
+## 2026-11-06 — The gates of epic/city-look pass again
+
+- Problem: the epic CI runs only the Vercel deploy, so unit, e2e and perf failures reached the epic. This entry records the cause of each failure and the fix.
+- perf:check geometry caps (phone/toon 167 > 155, low/toon 166 > 160, high/toon 236 > 220): no code regression. Machine load changes the count. The caps stay as they are.
+  - Evidence, on a 14-CPU Mac, toon look, all rides finished: the baseline commit bf88815 gave low 152/152 and phone 150/150 at load 18–22. The epic head (with #192, #194, #206) gave low 152/152, phone 149/150 and high 214/215 at load 12–15. Both pass.
+  - The same head at load 50–58 gave phone 169 and high 230 (high stopped at 150 s). The #206 session saw the same: 161/158/221 at load 13–28, 169/166/253 at load 50–67.
+  - #192 adds no geometry: a probe at the spawn, after the late loads, read 102 before #192 and 103 after.
+  - `perf:check` now warns when the load average is over the CPU count. Run it again on a quiet machine before you raise a cap.
+  - Not done: the cause of the load effect inside the renderer. `renderer.info.memory.geometries` counts each geometry that was drawn once and not disposed. So the count depends on which frames draw, and a loaded machine draws other frames.
+- e2e skater-anim (T-pose mask 148 px): a code bug. The v2 GLBs (#167) have one glTF mesh with 22 (Nia) or 26 (Marcus) primitives, so Three.js loads one skinned mesh per material. The silhouette painted only the first one white. It now paints all of them (`loaded.skinnedMeshes`).
+- e2e skater-face (the viewer close-up): a code bug of the same cause. `attachFace()` put the decal on the first mesh, not on the head (`tripo_part_3`). It now puts the decal on each mesh with front vertices under the eye or mouth rect. The in-game toon test passed, but its "closed-smile" screenshot showed open eyes.
+- e2e goals (3 results screen tests): a stale test. Since 3a7c54e the controller does not turn the skater around on a grade, and the Vitest hop faces north (yaw +PI/2). The e2e hop still faced south.
+- e2e cars (2 draw calls): a stale test. The lamp layer of #173 adds up to 2 calls (lamp quads and headlight pools). The test now checks that the kit bodies are 1 call and the lamps 2 or fewer.
+- e2e phone-tier (90–91 calls, limit 80): a stale test. The 80 is from #72, before the BeltLine level, the people, the props and the NPC skaters. The count also changed from 47 to 129 with the time of the read. The test now reads the calls after the late loads, as `scripts/perf.mjs` does, and compares them with the phone cap in `docs/perf/budget.json` (185). This raises the limit; the reason is above.
+- e2e autopilot (body_yaw 112–117, limit 120): two code bugs.
+  - The main cause: each failed connect to the agent service called `releaseAll()`. The test points the bridge at a closed port, so each retry (1 s, 2 s, 4 s) let go of the push and steer keys of the move hook. The skater stopped after about 0.1 m, and the turn depended on the retry time. The bridge now lets go of the keys only when a connected agent leaves.
+  - The `move` hook counted its seconds in wall time, but `gameTime()` counts the fixed ticks. Under load, fewer ticks ran in the same wall time. The hook now counts game time, and stops after 10 times the seconds of wall time when the game is paused.
+- e2e landmark-signs (Ponce City Market, 0 yellow pixels): a stale test, and also a base failure that the first list did not have. Without `?time=`, the game uses the clock of the computer, and after dark the sign is dark. The test now pins `time=14&weather=clear`.
+- e2e bridges (high tier, timeout at 180 s): a stale test, also a base failure. Since #182 the high tier draws the pbr look, and a pbr frame on the software GPU takes 4 to 10 s. The test takes 17 pictures of the deck joints, which do not depend on the look. It now pins `look=toon`, `time=14` and `weather=clear`. It takes about 2 minutes, so the time limit is now 360 s for a loaded machine.
+
 ## 2026-11-07 — PBR phone and low tiers: no toon ink, the grade stays (#195)
 
 - Problem: with `?look=pbr`, the phone tier went through the lite post pass (`createLitePost`, `src/render/post.js`). That pass drew the toon ink and the halftone and had no grade. The low tier has no post pass, so it also had no grade. The pbr grade (time of day), the split tone and the district tint were lost on both tiers.

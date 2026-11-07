@@ -1,0 +1,552 @@
+[
+  {
+    "look": "pbr",
+    "tier": "high",
+    "counts": {
+      "crowd": 40,
+      "peds": 90,
+      "glb": 5
+    },
+    "stops": [
+      {
+        "share": 0.2,
+        "at": [
+          -52,
+          565
+        ],
+        "file": "pbr-high-0.png",
+        "total": 24,
+        "bySrc": {
+          "glb": 2,
+          "ped": 22
+        },
+        "near": 2,
+        "distinctNear": 2,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5688313154340723,
+          "max": 1.8231603025388903
+        }
+      },
+      {
+        "share": 0.45,
+        "at": [
+          314,
+          149
+        ],
+        "file": "pbr-high-1.png",
+        "total": 26,
+        "bySrc": {
+          "glb": 1,
+          "ped": 24,
+          "crowd": 1
+        },
+        "near": 3,
+        "distinctNear": 3,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.6245924271363765,
+          "max": 1.8434704549820162
+        }
+      },
+      {
+        "share": 0.7,
+        "at": [
+          180,
+          -356
+        ],
+        "file": "pbr-high-2.png",
+        "total": 50,
+        "bySrc": {
+          "glb": 4,
+          "ped": 46
+        },
+        "near": 9,
+        "distinctNear": 9,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.6229485784773714,
+          "max": 1.8978087043459526
+        }
+      },
+      {
+        "share": "close",
+        "file": "pbr-high-close.png",
+        "total": 13,
+        "bySrc": {
+          "glb": 3,
+          "ped": 4,
+          "crowd": 6
+        },
+        "near": 3,
+        "distinctNear": 3,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5896961534861476,
+          "max": 1.828285455419682
+        }
+      }
+    ],
+    "errors": []
+  },
+  {
+    "look": "pbr",
+    "tier": "phone",
+    "counts": {
+      "crowd": 40,
+      "peds": 45,
+      "glb": 3
+    },
+    "stops": [
+      {
+        "share": 0.2,
+        "at": [
+          -52,
+          565
+        ],
+        "file": "pbr-phone-0.png",
+        "total": 11,
+        "bySrc": {
+          "glb": 1,
+          "ped": 10
+        },
+        "near": 2,
+        "distinctNear": 2,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.6842311684438027,
+          "max": 1.8672559759602883
+        }
+      },
+      {
+        "share": 0.45,
+        "at": [
+          314,
+          149
+        ],
+        "file": "pbr-phone-1.png",
+        "total": 13,
+        "bySrc": {
+          "glb": 2,
+          "ped": 5,
+          "crowd": 6
+        },
+        "near": 2,
+        "distinctNear": 2,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5766579352412373,
+          "max": 1.8255871908343397
+        }
+      },
+      {
+        "share": 0.7,
+        "at": [
+          180,
+          -356
+        ],
+        "file": "pbr-phone-2.png",
+        "total": 29,
+        "bySrc": {
+          "glb": 2,
+          "ped": 27
+        },
+        "near": 7,
+        "distinctNear": 7,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5520673606405035,
+          "max": 1.9039696106850168
+        }
+      },
+      {
+        "share": "close",
+        "file": "pbr-phone-close.png",
+        "total": 7,
+        "bySrc": {
+          "glb": 1,
+          "ped": 1,
+          "crowd": 5
+        },
+        "near": 1,
+        "distinctNear": 1,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.8206229146290571,
+          "max": 1.8206229146290571
+        }
+      }
+    ],
+    "errors": []
+  },
+  {
+    "look": "pbr",
+    "tier": "low",
+    "counts": {
+      "crowd": 40,
+      "peds": 60,
+      "glb": 0
+    },
+    "stops": [
+      {
+        "share": 0.2,
+        "at": [
+          -52,
+          565
+        ],
+        "file": "pbr-low-0.png",
+        "total": 24,
+        "bySrc": {
+          "ped": 24
+        },
+        "near": 1,
+        "distinctNear": 1,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5896611054660752,
+          "max": 1.8652429510909132
+        }
+      },
+      {
+        "share": 0.45,
+        "at": [
+          314,
+          149
+        ],
+        "file": "pbr-low-1.png",
+        "total": 20,
+        "bySrc": {
+          "ped": 14,
+          "crowd": 6
+        },
+        "near": 4,
+        "distinctNear": 4,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.665098641992081,
+          "max": 1.8886992593342438
+        }
+      },
+      {
+        "share": 0.7,
+        "at": [
+          180,
+          -356
+        ],
+        "file": "pbr-low-2.png",
+        "total": 39,
+        "bySrc": {
+          "ped": 39
+        },
+        "near": 9,
+        "distinctNear": 9,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5685808389238083,
+          "max": 1.9080765211116522
+        }
+      },
+      {
+        "share": "close",
+        "file": "pbr-low-close.png",
+        "total": 11,
+        "bySrc": {
+          "ped": 5,
+          "crowd": 6
+        },
+        "near": 2,
+        "distinctNear": 2,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5269328516325913,
+          "max": 1.8840029044891708
+        }
+      }
+    ],
+    "errors": []
+  },
+  {
+    "look": "toon",
+    "tier": "high",
+    "counts": {
+      "crowd": 40,
+      "peds": 90,
+      "glb": 0
+    },
+    "stops": [
+      {
+        "share": 0.2,
+        "at": [
+          -52,
+          565
+        ],
+        "file": "toon-high-0.png",
+        "total": 19,
+        "bySrc": {
+          "ped": 19
+        },
+        "near": 2,
+        "distinctNear": 2,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5652537583606319,
+          "max": 1.8720234770490787
+        }
+      },
+      {
+        "share": 0.45,
+        "at": [
+          314,
+          149
+        ],
+        "file": "toon-high-1.png",
+        "total": 19,
+        "bySrc": {
+          "ped": 14,
+          "crowd": 5
+        },
+        "near": 0,
+        "distinctNear": 0,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.624021064026747,
+          "max": 1.8886992593342438
+        }
+      },
+      {
+        "share": 0.7,
+        "at": [
+          180,
+          -356
+        ],
+        "file": "toon-high-2.png",
+        "total": 33,
+        "bySrc": {
+          "ped": 33
+        },
+        "near": 5,
+        "distinctNear": 5,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.6112629230809399,
+          "max": 1.9016593660786747
+        }
+      },
+      {
+        "share": "close",
+        "file": "toon-high-close.png",
+        "total": 13,
+        "bySrc": {
+          "ped": 7,
+          "crowd": 6
+        },
+        "near": 3,
+        "distinctNear": 3,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5896961534861476,
+          "max": 1.903954018689692
+        }
+      }
+    ],
+    "errors": []
+  },
+  {
+    "look": "toon",
+    "tier": "phone",
+    "counts": {
+      "crowd": 40,
+      "peds": 45,
+      "glb": 0
+    },
+    "stops": [
+      {
+        "share": 0.2,
+        "at": [
+          -52,
+          565
+        ],
+        "file": "toon-phone-0.png",
+        "total": 12,
+        "bySrc": {
+          "ped": 12
+        },
+        "near": 2,
+        "distinctNear": 2,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5552036067610606,
+          "max": 1.8672559759602883
+        }
+      },
+      {
+        "share": 0.45,
+        "at": [
+          314,
+          149
+        ],
+        "file": "toon-phone-1.png",
+        "total": 12,
+        "bySrc": {
+          "ped": 5,
+          "crowd": 7
+        },
+        "near": 0,
+        "distinctNear": 0,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.6019458097126336,
+          "max": 1.793982579645235
+        }
+      },
+      {
+        "share": 0.7,
+        "at": [
+          180,
+          -356
+        ],
+        "file": "toon-phone-2.png",
+        "total": 29,
+        "bySrc": {
+          "ped": 27,
+          "crowd": 2
+        },
+        "near": 4,
+        "distinctNear": 4,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5410265534138308,
+          "max": 1.8824388966779224
+        }
+      },
+      {
+        "share": "close",
+        "file": "toon-phone-close.png",
+        "total": 9,
+        "bySrc": {
+          "ped": 3,
+          "crowd": 6
+        },
+        "near": 1,
+        "distinctNear": 1,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.7790088435006328,
+          "max": 1.8313931360910647
+        }
+      }
+    ],
+    "errors": []
+  },
+  {
+    "look": "toon",
+    "tier": "low",
+    "counts": {
+      "crowd": 40,
+      "peds": 60,
+      "glb": 0
+    },
+    "stops": [
+      {
+        "share": 0.2,
+        "at": [
+          -52,
+          565
+        ],
+        "file": "toon-low-0.png",
+        "total": 27,
+        "bySrc": {
+          "ped": 27
+        },
+        "near": 2,
+        "distinctNear": 2,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.5617684359452688,
+          "max": 1.850903377237264
+        }
+      },
+      {
+        "share": 0.45,
+        "at": [
+          314,
+          149
+        ],
+        "file": "toon-low-1.png",
+        "total": 16,
+        "bySrc": {
+          "ped": 9,
+          "crowd": 7
+        },
+        "near": 3,
+        "distinctNear": 3,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.572656628873665,
+          "max": 1.7749404022865929
+        }
+      },
+      {
+        "share": 0.7,
+        "at": [
+          180,
+          -356
+        ],
+        "file": "toon-low-2.png",
+        "total": 29,
+        "bySrc": {
+          "ped": 27,
+          "crowd": 2
+        },
+        "near": 6,
+        "distinctNear": 6,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.595123858775478,
+          "max": 1.8831477442895994
+        }
+      },
+      {
+        "share": "close",
+        "file": "toon-low-close.png",
+        "total": 10,
+        "bySrc": {
+          "ped": 4,
+          "crowd": 6
+        },
+        "near": 2,
+        "distinctNear": 2,
+        "repeatPairsNear": 0,
+        "repeated": [],
+        "height": {
+          "min": 1.6824673138698563,
+          "max": 1.8840029044891708
+        }
+      }
+    ],
+    "errors": []
+  }
+]

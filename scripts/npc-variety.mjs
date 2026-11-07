@@ -90,7 +90,7 @@ try {
       page.on("pageerror", (e) => errors.push(String(e)));
       await page.goto(`http://localhost:${PORT}/?level=beltline-eastside&mute=1&look=${look}&quality=${tier}${EXTRA ? `&${EXTRA}` : ""}`);
       await page.waitForFunction(() => window.__atl?.ready && window.__atl.frames > 5, null, { timeout: 240000 });
-      await page.waitForFunction(() => !window.__atl.pedModels || window.__atl.pedModels.loaded || window.__atl.pedModels.error, null, { timeout: 120000 });
+      await page.waitForFunction(() => window.__atl?.ready && (!window.__atl.pedModels || window.__atl.pedModels.loaded || window.__atl.pedModels.error), null, { timeout: 120000 });
       const stops = [];
       for (const [i, share] of STOPS.entries()) {
         const [x, z] = at(share);
@@ -107,7 +107,7 @@ try {
       if (!args.includes("--no-close")) {
         await page.goto(`http://localhost:${PORT}/?level=beltline-eastside&mute=1&look=${look}&quality=${tier}&view=fixed&skater=capsule${EXTRA ? `&${EXTRA}` : ""}`);
         await page.waitForFunction(() => window.__atl?.ready && window.__atl.frames > 5, null, { timeout: 240000 });
-        await page.waitForFunction(() => !window.__atl.pedModels || window.__atl.pedModels.loaded || window.__atl.pedModels.error, null, { timeout: 120000 });
+        await page.waitForFunction(() => window.__atl?.ready && (!window.__atl.pedModels || window.__atl.pedModels.loaded || window.__atl.pedModels.error), null, { timeout: 120000 });
         await page.waitForTimeout(3000);
         // The walker pool follows the camera, and a big camera move
         // scatters it again: aim from a small move, after the pool settles.

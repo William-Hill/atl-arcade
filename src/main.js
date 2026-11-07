@@ -386,7 +386,7 @@ if (pedsView) scene.add(pedsView.group);
 // people out, ?pedcrowd=0 keeps the figures for the far walkers, and
 // ?pedrigs=<n> sets how many walkers get a rigged person
 // (src/render/ped-models.js).
-const pedModels = pedsView && look === "pbr" && params.get("pedglb") !== "0" && PED_MODEL_COUNT[quality] > 0 ? createPedModels({ count: numParam("pedrigs") ?? PED_MODEL_COUNT[quality], after: firstFrame, crowd: params.get("pedcrowd") !== "0" && renderer.extensions.has("WEBGL_multi_draw") ? peds.peds.length : 0 }) : null;
+const pedModels = pedsView && look === "pbr" && params.get("pedglb") !== "0" && PED_MODEL_COUNT[quality] > 0 ? createPedModels({ count: numParam("pedrigs") ?? PED_MODEL_COUNT[quality], after: firstFrame, ...(params.get("pedvariants") === "0" ? { variants: {}, variantUrls: {} } : {}), crowd: params.get("pedcrowd") !== "0" && renderer.extensions.has("WEBGL_multi_draw") ? peds.peds.length : 0 }) : null;
 if (pedModels) {
   scene.add(pedModels.group);
   pedModels.ready.catch((err) => console.error(err));

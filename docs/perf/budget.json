@@ -6,6 +6,6 @@
     "phone": { "calls": 185, "triangles": 375000, "geometries": 155, "textures": 235, "heapMB": 100, "downloadMB": 8.5, "jsMB": 1.0 },
     "phone/pbr": { "triangles": 420000, "downloadMB": 16.5, "geometries": 197, "textures": 375 },
     "high": { "calls": 360, "triangles": 1070000, "geometries": 220, "textures": 400, "heapMB": 100, "downloadMB": 10.4, "jsMB": 1.0 },
-    "high/pbr": { "calls": 420, "triangles": 1200000, "geometries": 245, "downloadMB": 21.5 }
+    "high/pbr": { "calls": 420, "triangles": 1200000, "geometries": 245, "textures": 480, "downloadMB": 21.5 }
   }
 }

@@ -111,7 +111,9 @@ export function glbConcreteTint(c = CONCRETE, map = GLB_CONCRETE_MAP) {
 // The grain of the plaster scan (assets/landmarks/textures/trim/rough.jpg):
 // its mean and the spread that maps to a grain of 1. The shaders turn a
 // scan sample s into a grain with (s - mean) / spread.
-export const PLASTER_SCAN = { mean: 0.621, spread: 0.03 };
+// `coarse` is the scale of a second, larger sample for the patches that
+// read at street distance.
+export const PLASTER_SCAN = { mean: 0.621, spread: 0.03, coarse: 6 };
 
 // The calibration of the facade shader in the pbr look (geo-view.js): the
 // wall albedo is scaled and a little desaturated (the bleached white-box
@@ -122,7 +124,7 @@ export const FACADE_CALIBRATION = { scale: 0.74, desaturate: 0.1 };
 // panel) gets the grain of the plaster scan in its albedo, so a mural host
 // wall reads as a real wall and not as a flat color. `grain` is the largest
 // share up or down.
-export const WALL_GRAIN = 0.1;
+export const WALL_GRAIN = 0.16;
 
 // Pure: the linear albedo of a facade wall pixel in the pbr look, from the
 // style wall color `c` (linear) and a scan grain in -1..1 (0 for brick, which

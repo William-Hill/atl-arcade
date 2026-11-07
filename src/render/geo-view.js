@@ -223,6 +223,14 @@ float facadeKFrame = 0.0;
 float facadeConcrete = 0.0;
 // The plaster scan grain (-1..1) of a scan sample.
 float plasterGrain(float s) { return clamp((s - ${PLASTER_SCAN.mean.toFixed(4)}) / ${PLASTER_SCAN.spread.toFixed(4)}, -1.0, 1.0); }
+// The grain at a wall point m (meters): the fine scan grain, and the same
+// scan ${PLASTER_SCAN.coarse} times larger for patches that still read at
+// street distance (the fine grain averages out in the mipmaps).
+float plasterMottle(vec2 m) {
+  float fine = plasterGrain(texture2D(uStoneRough, m / STONE_TILE).r);
+  float coarse = plasterGrain(texture2D(uStoneRough, m / (STONE_TILE * ${PLASTER_SCAN.coarse.toFixed(1)}) + vec2(0.37, 0.61)).r);
+  return clamp(0.4 * fine + 0.8 * coarse, -1.0, 1.0);
+}
 #define BRICK_TILE ${brickInfo.tileMeters.toFixed(3)}
 #define STONE_TILE ${stoneInfo.tileMeters.toFixed(3)}
 ${DETAIL_GLSL}
@@ -428,8 +436,8 @@ vec3 roomColor(float h) {
     if (uBrickOn > 0.5 && a.w > 0.5) wallCol *= mix(detail, vec3(1.0), far0);
     #ifdef DETAIL
     // A wall that is not brick: the plaster grain in the albedo (#198).
-    float wallGrain = plasterGrain(texture2D(uStoneRough, vFacade.yz * uStyleM[st] / STONE_TILE).r);
-    if (a.w < 0.5) wallCol *= 1.0 + ${WALL_GRAIN.toFixed(3)} * wallGrain * (1.0 - far0);
+    float wallGrain = plasterMottle(vFacade.yz * uStyleM[st]);
+    if (a.w < 0.5) wallCol *= 1.0 + ${WALL_GRAIN.toFixed(3)} * wallGrain;
     #endif
     // The frame is painted steel; the sill, the lintel, and the kick plate
     // are cast stone.
@@ -524,7 +532,7 @@ vec3 roomColor(float h) {
     // The grain and the relief fade out where a scan tile is under a few
     // pixels.
     float cnear = 1.0 - smoothstep(0.04, 0.2, max(length(fwidth(cm)), 1e-5));
-    grain = plasterGrain(texture2D(uStoneRough, cm / STONE_TILE).r) * cnear;
+    grain = plasterMottle(cm);
     facadeM = cm;
     facadeConcrete = 1.0;
     // The relief needs an up vector in the face: not on a top or a bottom.

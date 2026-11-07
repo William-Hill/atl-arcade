@@ -31,11 +31,13 @@ function box(page, sel) {
 const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 // Hop on the Beltline trail under the Stone Mountain Trail bridge (the same
-// line as the Vitest in src/sim/skate/goals.test.js).
+// line as the Vitest in src/sim/skate/goals.test.js). The skater starts
+// facing north (-z, yaw +PI/2): since 3a7c54e the controller does not turn
+// her around on the grade.
 async function stoneMountainHop(page) {
   return page.evaluate(async () => {
     const y = window.__atl.level.sample(336, 62, 26.5).height;
-    await window.__atl.runScript([{ frames: 45, input: { push: true } }, { frames: 1, input: { push: true, jump: true } }, { frames: 90, input: {} }], { position: [336, y, 62], yaw: -Math.PI / 2 });
+    await window.__atl.runScript([{ frames: 45, input: { push: true } }, { frames: 1, input: { push: true, jump: true } }, { frames: 90, input: {} }], { position: [336, y, 62], yaw: Math.PI / 2 });
     return window.__atl.events.filter((e) => e.type === "gap").map((e) => e.id);
   });
 }

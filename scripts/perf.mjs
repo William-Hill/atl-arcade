@@ -255,6 +255,11 @@ if (budgetPath) {
   // A ride stopped by --max-wall reads the draw calls and triangles at
   // another place on the trail, so its caps compare with less accuracy.
   for (const r of runs) if (!r.finished) console.warn(`${r.quality}/${r.look} run ${r.run}: the ride stopped after ${r.wallSeconds} s of wall time; the draw calls and triangles come from where it stopped`);
+  // Machine load changes the geometry count at the end of the ride: the same
+  // build gave 150 phone/toon geometries at a load average of 15 and 169 at a
+  // load of 50 (docs/decisions.md, 2026-11-06, the gates of epic/city-look).
+  const busy = runs.filter((r) => r.load > cpus().length);
+  if (busy.length) console.warn(`the load average was over the CPU count (${cpus().length}) in ${busy.length} run(s), up to ${Math.max(...busy.map((r) => r.load))}; the geometry counts can be too high. Run perf:check again on a quiet machine before you raise a cap.`);
   const over = checkBudget(runs, budget);
   for (const o of over) console.error(`OVER BUDGET ${o}`);
   if (over.length) process.exit(1);

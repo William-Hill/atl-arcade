@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PBR_SKY, pbrCloudCover, pbrSkyColor, pbrSkyDay } from "./sky.js";
+import { PBR_SKY, pbrFairChance, pbrSkyColor, pbrSkyDay } from "./sky.js";
 
 // The weather sky colors (src/sim/weather.js PALETTE), linear.
 const DAY = { zenith: [0.1, 0.38, 0.8], horizon: [0.62, 0.8, 0.98] };
@@ -82,14 +82,17 @@ describe("pbrSkyColor (#201)", () => {
   });
 });
 
-describe("pbrCloudCover (#201)", () => {
+describe("pbrFairChance (#201)", () => {
   it("keeps a few fair-weather clouds on a clear day", () => {
-    expect(pbrCloudCover(0, NOON_SUN)).toBe(PBR_SKY.fairCover);
-    expect(PBR_SKY.fairCover).toBeLessThan(0.35);
+    expect(pbrFairChance(0, NOON_SUN)).toBe(PBR_SKY.fairChance);
+    // A few: under half of the cells, and each cloud is smaller than its cell.
+    expect(PBR_SKY.fairChance).toBeLessThan(0.5);
+    expect(PBR_SKY.fairSize[1]).toBeLessThan(0.5);
   });
 
-  it("keeps the weather cover when it is larger, and adds no clouds at night", () => {
-    expect(pbrCloudCover(0.8, NOON_SUN)).toBe(0.8);
-    expect(pbrCloudCover(0, -0.3)).toBe(0);
+  it("fades out under a weather cover and at night", () => {
+    expect(pbrFairChance(0.6, NOON_SUN)).toBe(0);
+    expect(pbrFairChance(0.4, NOON_SUN)).toBeLessThan(PBR_SKY.fairChance);
+    expect(pbrFairChance(0, -0.3)).toBe(0);
   });
 });

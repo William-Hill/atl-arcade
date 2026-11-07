@@ -254,14 +254,15 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   gtao.updateGtaoMaterial({ radius: 2.5, distanceExponent: 1.5, thickness: 1, scale: 1.2, samples: 12 });
   gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
   const pbr = look === "pbr";
-  // Characters (skinned: Nia, the NPC skaters, the people, the dog) stay out
-  // of the AO depth, as points and lines do: their legs left a speckled dark
-  // patch on the ground around the feet. The sun shadow grounds them. Only
-  // the pbr look: the toon ink reads its outlines from this depth.
+  // Characters (skinned: Nia, the NPC skaters, the people, the dog; and the
+  // baked walkers of ped-crowd.js, userData.character) stay out of the AO
+  // depth, as points and lines do: their legs left a speckled dark patch on
+  // the ground around the feet. The sun shadow grounds them. Only the pbr
+  // look: the toon ink reads its outlines from this depth.
   if (pbr) gtao._overrideVisibility = function () {
     const cache = this._visibilityCache;
     this.scene.traverse((o) => {
-      if ((o.isPoints || o.isLine || o.isLine2 || o.isSkinnedMesh) && o.visible) {
+      if ((o.isPoints || o.isLine || o.isLine2 || o.isSkinnedMesh || o.userData.character) && o.visible) {
         o.visible = false;
         cache.push(o);
       }

@@ -165,6 +165,8 @@ export async function createPedCrowd(gltfs, { people, kindOf, companions = {}, w
     mesh.name = `ped-crowd-${kind}`;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
+    // A character: out of the pbr AO depth, as the rigs (post.js).
+    mesh.userData.character = true;
     const ids = new Map(unique.map((g) => [g, mesh.addGeometry(g)]));
     const geometry = baked.levels.map((poses) => poses.map((g) => ids.get(g)));
     group.add(mesh);

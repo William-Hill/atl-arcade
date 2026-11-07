@@ -70,7 +70,7 @@ import { createCarView } from "./render/car-view.js";
 import { createCarModelView, loadCarModels } from "./render/car-models.js";
 import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
 import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
-import { createPbrLook, installHeightFog } from "./render/pbr-look.js";
+import { createPbrLook, installHeightFog, installSkySh, setSkySh, validSkySh } from "./render/pbr-look.js";
 import { materialAudit } from "./render/pbr-palette.js";
 import { districtAnchors } from "./level/geo/styles.js";
 import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
@@ -177,6 +177,8 @@ await Promise.all([meshBuild?.ready, farBuild?.ready, propsBuild?.ready]);
 let geoLights = null;
 let shadowPass = null;
 let sky = null;
+// The pbr look on a tier with no cloud sky lights with sky SH (#191).
+const skySh = look === "pbr" && !tier.clouds && params.get("skysh") !== "0";
 if (geo) {
   // The low tier has no shadow map: in headless SwiftShader it halved the
   // frame rate. The kit trees carry a shadow disc and the skater a blob.
@@ -207,7 +209,14 @@ if (geo) {
     // The sky environment map: ambient light and reflections. A tier with
     // no sky dome gets one made only for the map.
     const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection, pbr: true });
-    scene.environment = createSkyEnvironment(renderer, envSky);
+    scene.environment = createSkyEnvironment(renderer, envSky, { sh: skySh });
+    // A tier with no cloud sky lights with 9 spherical harmonics of the
+    // same sky, not the env map lookup (#191). ?skysh=0 keeps the lookup,
+    // and so does a failed SH read. No standard material has compiled yet.
+    if (skySh && validSkySh(scene.environment.userData.sh)) {
+      installSkySh();
+      setSkySh(scene.environment.userData.sh);
+    }
     scene.environmentIntensity = LOOKS.pbr.environment;
     if (!sky) {
       envSky.mesh.geometry.dispose();
@@ -567,7 +576,7 @@ setPostToggles(post, savedSettings);
 // The pbr look's per-frame light (src/render/pbr-look.js): the grade by
 // time of day and district, the fog tint, the env map bake, the skater rim.
 // ?pbrgrade=0 keeps the fixed day values (for a before/after check).
-const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: districtAnchors(level), getPost: () => post }) : null;
+const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: districtAnchors(level), getPost: () => post, skySh }) : null;
 // ?perf=1: the draw calls of each frame by pass and object kind (#188).
 const drawSplit = perf.enabled ? createDrawSplit(renderer) : null;
 function labelPostPasses() {

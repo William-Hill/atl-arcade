@@ -38,7 +38,7 @@ export const CORE_CODE = -5;
 
 // Pure: a Blender tree template with its crown cores marked (#202). A core
 // (the low icospheres inside the crown, scripts/blender/pbr_trees.py) has
-// leaf code 0 and a sway weight over 0; a kit prop has no sway. A core
+// leaf code 0 (under 0.025 after Draco) and a sway weight over 0; a kit prop has no sway. A core
 // vertex gets CORE_CODE and a uv in meters from its position, so the shader
 // can give the core a leafy, darker shade and not a flat polygon. Returns a
 // new template; the input does not change.
@@ -47,7 +47,8 @@ export function markCrownCores(t) {
   const leaf = Float32Array.from(t.leaf);
   let marked = 0;
   for (let i = 0; i < leaf.length / 3; i += 1) {
-    if (leaf[i * 3 + 2] !== 0 || !(t.sway[i] > 0)) continue;
+    // Draco quantizes the code: 0 comes back near 0, as in the shader.
+    if (Math.abs(leaf[i * 3 + 2]) >= 0.025 || !(t.sway[i] > 0)) continue;
     const x = t.positions[i * 3];
     const y = t.positions[i * 3 + 1];
     const z = t.positions[i * 3 + 2];

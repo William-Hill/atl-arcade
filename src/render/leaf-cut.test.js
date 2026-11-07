@@ -64,14 +64,15 @@ describe("crown cores (#202)", () => {
     const t = {
       positions: [1, 5, 2, 0, 6, 0, 0, 1, 0, 3, 4, 0],
       // A core, a leaf card, bark, and a vertex with no sway.
-      leaf: [0, 0, 0, 0.5, 0.5, 1.3, 0.2, 0.4, -1, 0, 0, 0],
+      leaf: [0, 0, -3e-6, 0.5, 0.5, 1.3, 0.2, 0.4, -1, 0, 0, 0],
       sway: [0.6, 0.8, 0, 0],
       colors: [],
       indices: [],
     };
     const out = markCrownCores(t);
     expect(out).not.toBe(t);
-    expect(t.leaf[2]).toBe(0);
+    // A Draco code near 0 is a core too.
+    expect(t.leaf[2]).toBe(-3e-6);
     expect(out.leaf[2]).toBe(CORE_CODE);
     expect(out.leaf[0]).toBeCloseTo(1 * 0.8 + 2 * 0.6);
     expect(Array.from(out.leaf.slice(3))).toEqual([0.5, 0.5, 1.2999999523162842, 0.20000000298023224, 0.4000000059604645, -1, 0, 0, 0]);

@@ -4,6 +4,7 @@ import { cheer, createFaceState, stepFace } from "./face-anim.js";
 import { CLIPS, beatPhase, createAnimState, grooveRate, stepAnim, stepFacing } from "./skater-anim.js";
 import { createBlend, leanLayers, leanTarget, rollFor, startBlend, stepBlend, stepLean } from "./anim-blend.js";
 import { ikWanted, legBoneNames, planFeet, solveTwoBone, stepIkWeight } from "./foot-ik.js";
+import { leanClip, restFrom } from "./lean-clip.js";
 
 // The skater bound to the controller output. It starts as a capsule (the
 // nose cone shows the facing). attachModel() swaps in a GLB skater and plays
@@ -254,11 +255,14 @@ export function createSkaterView({ lean: leanOn = true, footIk = false, sampleGr
         actions.set(clip.name, action);
       }
       // The lean poses: the carve clips less the coast, as additive layers.
+      // The bones are at rest here, so a carve track with no coast track
+      // takes its rest value as the reference (lean-clip.js).
       const coast = loaded.animations.find((c) => c.name === "coast");
+      const rest = restFrom(loaded.root);
       for (const side of ["carve_left", "carve_right"]) {
         const carve = loaded.animations.find((c) => c.name === side);
         if (!coast || !carve) continue;
-        const clip = THREE.AnimationUtils.makeClipAdditive(poseClip(carve, `lean_${side}`), 0, poseClip(coast, "lean_ref"));
+        const clip = leanClip(carve, coast, rest, `lean_${side}`);
         const action = mixer.clipAction(clip);
         leanActions.set(side, action);
       }
@@ -344,19 +348,6 @@ const _q = new THREE.Quaternion();
 const _qa = new THREE.Quaternion();
 const _qb = new THREE.Quaternion();
 const _qf = new THREE.Quaternion();
-
-// One pose of a clip: the rotation of each bone at the middle key, as a
-// clip of one key. The lean layers use the pose, not the motion.
-function poseClip(clip, name) {
-  const tracks = [];
-  for (const t of clip.tracks) {
-    if (t.ValueTypeName !== "quaternion") continue;
-    const n = t.getValueSize();
-    const i = Math.floor(t.times.length / 2);
-    tracks.push(new THREE.QuaternionKeyframeTrack(t.name, [0], Array.from(t.values.slice(i * n, i * n + n))));
-  }
-  return new THREE.AnimationClip(name, 1, tracks);
-}
 
 // On a rail the capsule leans with the balance meter, toward the side the
 // skater falls off: a positive balance falls to the right (+z at yaw 0), and

@@ -4,6 +4,7 @@ import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js
 import { getDracoLoader } from "./skater-model.js";
 import { PEDS } from "../sim/peds.js";
 import { leashPoints } from "./leash.js";
+import { createPedCrowd } from "./ped-crowd.js";
 
 // The Meshy people (assets/people/; docs/people-props.md) for the walkers
 // nearest the camera (src/sim/peds.js), in the pbr look: each of those
@@ -11,7 +12,9 @@ import { leashPoints } from "./leash.js";
 // walker's pace (idle when it stops), and peds-view.js skips it. The dog
 // walker walks the dog on a leash (leash.js), the stroller dad pushes the
 // stroller, its wheels turning. The other walkers keep the instanced
-// figures. The cyclist and the seated pose are not walkers.
+// figures, or, with `crowd` (#190), the same people as baked poses
+// (ped-crowd.js), so no walker turns from a figure into a person.
+// The cyclist and the seated pose are not walkers.
 
 const url = (f) => new URL(`../../assets/people/${f}.glb`, import.meta.url).href;
 export const PED_MODEL_URLS = {
@@ -63,17 +66,26 @@ export function walkTimeScale(speed, duration, stride = PEDS.stride) {
 
 // `after` (a promise) holds the downloads back, for example until the first
 // frame (#190).
-export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL_URLS, after = null } = {}) {
+// `crowd` (the walker pool size, needs WEBGL_multi_draw) draws the other
+// walkers as baked people too; figureSkip then hides every instanced figure
+// of peds-view.js, also while the GLBs load (unless they fail).
+export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL_URLS, after = null, crowd = 0 } = {}) {
   const group = new THREE.Group();
   group.name = "ped-models";
   const skip = new Set();
-  const stats = { count, drawn: 0, loaded: false, error: null };
+  const stats = { count, drawn: 0, crowd: 0, loaded: false, error: null };
+  let crowdView = null;
+  const ALL = { has: () => true };
   const gltfs = {};
   const loader = new GLTFLoader();
   loader.setDRACOLoader(getDracoLoader());
   const ready = Promise.resolve(after)
     .then(() => Promise.all(Object.entries(urls).map(async ([k, u]) => (gltfs[k] = await loader.loadAsync(u)))))
-    .then(() => {
+    .then(async () => {
+      if (crowd > 0) {
+        crowdView = await createPedCrowd(gltfs, { people: PED_MODEL_KINDS, kindOf: (id) => personFor(id), companions: PED_COMPANION, walkClip: PED_WALK_CLIP, size: crowd });
+        group.add(crowdView.group);
+      }
       stats.loaded = true;
     })
     .catch((err) => {
@@ -158,11 +170,16 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
     ready,
     skip,
     stats,
+    // The walker ids that peds-view.js must not draw.
+    get figureSkip() {
+      return crowd > 0 && !stats.error ? ALL : skip;
+    },
     // view: { sees(x, y, z, r) } (src/render/view-cull.js) or null. A person
     // out of the view keeps its place but skips the clip and the leash.
     update(state, camera, dt, view = null) {
       skip.clear();
       stats.drawn = 0;
+      stats.crowd = 0;
       if (!stats.loaded || !state) return;
       const want = nearestWalkers(state.peds, camera.x, camera.z, count);
       const byId = new Map(state.peds.map((w) => [w.id, w]));
@@ -204,6 +221,12 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
           l.mesh.geometry.dispose();
           l.mesh.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(p.x, p.y, p.z))), 16, 0.006, 5);
         }
+      }
+      // Every other walker as a baked person (ped-crowd.js).
+      if (crowdView) {
+        crowdView.update(state, skip, camera);
+        stats.crowd = crowdView.stats.drawn;
+        stats.crowdBakeMs = crowdView.stats.bakeMs;
       }
     },
   };

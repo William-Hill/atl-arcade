@@ -369,9 +369,14 @@ const makePeds = () => createPeds(level, { seed: npcSeed, count: pedTotal, radiu
 let peds = pedsOn ? makePeds() : null;
 const pedsView = peds ? createPedsView(peds, { look }) : null;
 if (pedsView) scene.add(pedsView.group);
-// The Meshy people (assets/people/) for the nearest walkers, pbr look only;
-// ?pedglb=0 leaves them out (src/render/ped-models.js).
-const pedModels = pedsView && look === "pbr" && params.get("pedglb") !== "0" && PED_MODEL_COUNT[quality] > 0 ? createPedModels({ count: PED_MODEL_COUNT[quality], after: firstFrame }) : null;
+// The Meshy people (assets/people/) for the walkers, pbr look only: rigged
+// for the nearest, baked poses for the rest (src/render/ped-crowd.js), so
+// no walker turns from a blocky figure into a person as the camera comes
+// near. The figures stay hidden while the GLBs load. ?pedglb=0 leaves the
+// people out, ?pedcrowd=0 keeps the figures for the far walkers, and
+// ?pedrigs=<n> sets how many walkers get a rigged person
+// (src/render/ped-models.js).
+const pedModels = pedsView && look === "pbr" && params.get("pedglb") !== "0" && PED_MODEL_COUNT[quality] > 0 ? createPedModels({ count: numParam("pedrigs") ?? PED_MODEL_COUNT[quality], after: firstFrame, crowd: params.get("pedcrowd") !== "0" && renderer.extensions.has("WEBGL_multi_draw") ? peds.peds.length : 0 }) : null;
 if (pedModels) {
   scene.add(pedModels.group);
   pedModels.ready.catch((err) => console.error(err));
@@ -975,7 +980,7 @@ function frame(now) {
   perf.end("crowdView");
   perf.begin("walkersView");
   if (pedModels) pedModels.update(peds, camera.position, paused ? 0 : Math.min(elapsed, 0.1), viewCull);
-  if (pedsView) pedsView.sync(peds, pedModels?.skip);
+  if (pedsView) pedsView.sync(peds, pedModels?.figureSkip);
   perf.end("walkersView");
   perf.begin("trafficView");
   if (carView) carView.update(camera.position, traffic?.cars, { lit: weatherView?.state.windowLit ?? 0, time: now / 1000 });

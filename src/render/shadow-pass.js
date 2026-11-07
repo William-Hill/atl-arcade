@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { SHADOW_STAND_INS } from "./skin-merge.js";
+import { SHADOW_STAND_INS, enableShadowStandIns } from "./skin-merge.js";
 
 // The sun shadow map pass (#188). It wraps renderer.shadowMap.render:
 //
@@ -71,6 +71,8 @@ export function createShadowPass(renderer, { cull = true } = {}) {
   const off = [];
   const shown = [];
   const info = { casters: 0, culled: 0, culledInstances: 0, standIns: 0 };
+  // From now on, a skater's parts may cast through one stand-in.
+  enableShadowStandIns();
 
   // The sun and the view planes of the shadow pass running now, for the
   // batches; null outside a pass or with no cull.

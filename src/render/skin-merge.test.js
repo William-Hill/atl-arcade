@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { describe, expect, it } from "vitest";
-import { SHADOW_STAND_INS, canMerge, mergeGeometries, mergeShadow, mergeableParts, plainDepth, sameSkeleton } from "./skin-merge.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { SHADOW_STAND_INS, canMerge, enableShadowStandIns, mergeGeometries, mergeShadow, mergeableParts, plainDepth, sameSkeleton } from "./skin-merge.js";
 
 function partGeometry(offset, { indexed = true } = {}) {
   const g = new THREE.BufferGeometry();
@@ -67,6 +67,15 @@ describe("mergeGeometries", () => {
 });
 
 describe("mergeShadow", () => {
+  beforeEach(() => enableShadowStandIns(true));
+  afterEach(() => enableShadowStandIns(false));
+  it("keeps the parts' own shadows when no shadow pass shows the stand-ins", () => {
+    enableShadowStandIns(false);
+    const { root, parts } = skater(3, { clone: true });
+    expect(mergeShadow(root)).toBe(null);
+    expect(parts.every((p) => p.castShadow)).toBe(true);
+    expect(root.children.some((o) => o.name === "skater-shadow")).toBe(false);
+  });
   it("adds one hidden stand-in that casts in place of the parts", () => {
     const { root, parts } = skater(3, { clone: true });
     const caster = mergeShadow(root);

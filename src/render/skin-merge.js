@@ -21,6 +21,15 @@ const ATTRS = [
 // main camera's layers in the shadow pass.
 export const SHADOW_STAND_INS = new Set();
 
+// Only the shadow pass (src/render/shadow-pass.js) shows the stand-ins. A
+// page with no shadow pass (the greybox level, the animation lab) must keep
+// the parts' own shadows, so mergeShadow() does nothing until a shadow pass
+// turns the stand-ins on.
+const standIns = { on: false };
+export function enableShadowStandIns(on = true) {
+  standIns.on = on;
+}
+
 function materials(mesh) {
   return Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 }
@@ -135,8 +144,10 @@ export function mergeableParts(root, keep = () => true) {
 
 // One shadow caster in place of the parts' shadows: the merged mesh with a
 // plain material of the parts' side, so it draws the same depth. The parts
-// stop casting. Returns the caster, or null when the parts do not merge.
+// stop casting. Returns the caster, or null when the parts do not merge or
+// no shadow pass shows the stand-ins.
 export function mergeShadow(root) {
+  if (!standIns.on) return null;
   const parts = mergeableParts(root, (p) => p.castShadow);
   if (!parts.length) return null;
   const caster = mergedSkin(parts, new THREE.MeshBasicMaterial({ side: materials(parts[0])[0].side, colorWrite: false }), "skater-shadow");

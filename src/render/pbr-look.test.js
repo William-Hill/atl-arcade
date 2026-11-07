@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { MATERIAL_GRADE, SKY_SH, gradeValues, installMaterialGrade, installSkySh, setSkySh } from "./pbr-look.js";
+import { MATERIAL_GRADE, SKY_SH, gradeValues, installMaterialGrade, installSkySh, setSkySh, validSkySh } from "./pbr-look.js";
 import { shFromCubeFaces } from "./look.js";
 import { districtLook, timeGrade } from "./pbr-palette.js";
 
@@ -89,6 +89,27 @@ describe("sky SH (#191)", () => {
     const up = sh.getIrradianceAt(new THREE.Vector3(0, 1, 0), new THREE.Vector3()).x;
     const down = sh.getIrradianceAt(new THREE.Vector3(0, -1, 0), new THREE.Vector3()).x;
     expect(up).toBeGreaterThan(down + 0.5);
+  });
+
+  it("puts each side face on its own axis (+x face 0, +z face 4 for CubeCamera)", () => {
+    for (const [f, axis] of [[0, "x"], [4, "z"]]) {
+      const faces = [0, 1, 2, 3, 4, 5].map((i) => face(i === f ? [1, 1, 1] : [0.2, 0.2, 0.2]));
+      const sh = asSh(shFromCubeFaces(faces, size));
+      const at = (v) => sh.getIrradianceAt(new THREE.Vector3(...v), new THREE.Vector3()).x;
+      const pos = axis === "x" ? [1, 0, 0] : [0, 0, 1];
+      const neg = pos.map((v) => -v);
+      const side = axis === "x" ? [0, 0, 1] : [1, 0, 0];
+      expect(at(pos)).toBeGreaterThan(at(neg) + 0.3);
+      expect(at(pos)).toBeGreaterThan(at(side) + 0.1);
+    }
+  });
+
+  it("refuses a failed read (zeros, NaN, wrong length)", () => {
+    expect(validSkySh(new Array(27).fill(0))).toBe(false);
+    expect(validSkySh([NaN, ...new Array(26).fill(1)])).toBe(false);
+    expect(validSkySh(new Array(9).fill(1))).toBe(false);
+    expect(validSkySh(undefined)).toBe(false);
+    expect(validSkySh(new Array(27).fill(0.3))).toBe(true);
   });
 
   it("swaps both env lookups for the SH and shares one array with the materials", () => {

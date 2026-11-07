@@ -70,7 +70,7 @@ import { createCarView } from "./render/car-view.js";
 import { createCarModelView, loadCarModels } from "./render/car-models.js";
 import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
 import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
-import { createPbrLook, installHeightFog, installSkySh, setSkySh } from "./render/pbr-look.js";
+import { createPbrLook, installHeightFog, installSkySh, setSkySh, validSkySh } from "./render/pbr-look.js";
 import { materialAudit } from "./render/pbr-palette.js";
 import { districtAnchors } from "./level/geo/styles.js";
 import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
@@ -209,11 +209,14 @@ if (geo) {
     // The sky environment map: ambient light and reflections. A tier with
     // no sky dome gets one made only for the map.
     const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection, pbr: true });
-    // A tier with no cloud sky lights with 9 spherical harmonics of the
-    // same sky, not the env map lookup (#191). ?skysh=0 keeps the lookup.
-    if (skySh) installSkySh();
     scene.environment = createSkyEnvironment(renderer, envSky, { sh: skySh });
-    setSkySh(scene.environment.userData.sh);
+    // A tier with no cloud sky lights with 9 spherical harmonics of the
+    // same sky, not the env map lookup (#191). ?skysh=0 keeps the lookup,
+    // and so does a failed SH read. No standard material has compiled yet.
+    if (skySh && validSkySh(scene.environment.userData.sh)) {
+      installSkySh();
+      setSkySh(scene.environment.userData.sh);
+    }
     scene.environmentIntensity = LOOKS.pbr.environment;
     if (!sky) {
       envSky.mesh.geometry.dispose();

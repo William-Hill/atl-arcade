@@ -103,8 +103,14 @@ ${C.tonemapping_pars_fragment}`;
 // object by reference, so setSkySh() reaches every material.
 export const SKY_SH = Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`c${i}`, new THREE.Vector3()]));
 
+// Pure: true for a usable sky SH: 27 finite numbers with a lit mean (a
+// failed read gives zeros, and the tiers would lose the whole sky light).
+export function validSkySh(c) {
+  return Array.isArray(c) && c.length === 27 && c.every(Number.isFinite) && c[0] + c[1] + c[2] > 1e-4;
+}
+
 export function setSkySh(coefficients, ref = SKY_SH) {
-  if (!coefficients) return;
+  if (!validSkySh(coefficients)) return;
   for (let i = 0; i < 9; i += 1) ref[`c${i}`].set(coefficients[i * 3], coefficients[i * 3 + 1], coefficients[i * 3 + 2]);
 }
 

@@ -307,15 +307,18 @@ export function createSkyEnvironment(renderer, sky, { ground = ENV_SKY.ground, s
 // env scene into a small cube and projects it (shFromCubeFaces()).
 // Returns 27 numbers: 9 RGB coefficients of the radiance.
 export function skyShFromScene(renderer, scene, far = 500, size = 16) {
-  const half = renderer.extensions.has("EXT_color_buffer_float") || renderer.extensions.has("EXT_color_buffer_half_float");
-  const target = new THREE.WebGLCubeRenderTarget(size, { type: half ? THREE.HalfFloatType : THREE.UnsignedByteType });
+  // RGBA + FLOAT is the read that WebGL2 guarantees for a float target
+  // (EXT_color_buffer_float); a half float read is not. Without the
+  // extension, 8 bits (the sun core clips at 1).
+  const float = renderer.extensions.has("EXT_color_buffer_float");
+  const target = new THREE.WebGLCubeRenderTarget(size, { type: float ? THREE.FloatType : THREE.UnsignedByteType });
   const camera = new THREE.CubeCamera(0.1, far, target);
   camera.update(renderer, scene);
   const faces = [];
   for (let f = 0; f < 6; f += 1) {
-    const raw = half ? new Uint16Array(size * size * 4) : new Uint8Array(size * size * 4);
+    const raw = float ? new Float32Array(size * size * 4) : new Uint8Array(size * size * 4);
     renderer.readRenderTargetPixels(target, 0, 0, size, size, raw, f);
-    faces.push(Float32Array.from(raw, half ? THREE.DataUtils.fromHalfFloat : (v) => v / 255));
+    faces.push(float ? raw : Float32Array.from(raw, (v) => v / 255));
   }
   target.dispose();
   return shFromCubeFaces(faces, size, renderer.coordinateSystem === THREE.WebGLCoordinateSystem ? -1 : 1);

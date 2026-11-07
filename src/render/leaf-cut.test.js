@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CORE_CODE, CORE_SHADE, CROWN_AO, LEAF_AA, crownOcclusion, LEAF_SHAPES, leafClump, leafCoverage, leafShadeRange, markCrownCores } from "./leaf-cut.js";
+import { CORE_CODE, CORE_SHADE, CROWN_AO, LEAF_AA, crownOcclusion, LEAF_SHAPES, leafClump, leafCoverage, leafShadeRange, markCrownCores, patchLeafFragment } from "./leaf-cut.js";
 import { ALBEDO, srgbToLinear } from "./pbr-palette.js";
 import { PUFF_CORE_CODE, SEASONS, TREE_SPECIES, seasonColors, treeTemplate } from "../level/geo/trees.js";
 import { treeTint } from "./geo-view.js";
@@ -122,5 +122,32 @@ describe("procedural crown puffs (#202)", () => {
     expect(codes.has("card")).toBe(true);
     expect(codes.has("other")).toBe(false);
     expect(treeTemplate("oak", 0, 0, "summer").leaf).toBeUndefined();
+  });
+});
+
+describe("leaf cut shader patch (#202)", () => {
+  const frag = () => ({ fragmentShader: "void main() {\n#include <clipping_planes_fragment>\n#include <color_fragment>\n#include <lights_fragment_end>\n}" });
+
+  it("drops the leaf cards from the AO pass and keeps them in the color pass", () => {
+    const ao = frag();
+    patchLeafFragment(ao, { tone: false, cards: false });
+    expect(ao.fragmentShader).toContain("if (vLeaf.z > 0.025) discard;");
+    const color = frag();
+    patchLeafFragment(color);
+    expect(color.fragmentShader).not.toContain("if (vLeaf.z > 0.025) discard;");
+  });
+
+  it("sends the coverage to the alpha only with alpha to coverage", () => {
+    const s = frag();
+    patchLeafFragment(s, { backlight: true });
+    expect(s.fragmentShader).toMatch(/#ifdef ALPHA_TO_COVERAGE\nif \(leafHit\.a < 0\.060\) discard;\n#else\nif \(leafHit\.a < 0\.50\) discard;/);
+    expect(s.fragmentShader).toMatch(/#ifdef ALPHA_TO_COVERAGE\ndiffuseColor\.a = leafHit\.a;\n#endif/);
+    expect(s.fragmentShader).toContain("reflectedLight.indirectDiffuse *= crownAo;");
+  });
+
+  it("guards atan(0, 0) at the card center", () => {
+    const s = frag();
+    patchLeafFragment(s);
+    expect(s.fragmentShader).toContain("atan(q.y, q.x + 1e-6)");
   });
 });

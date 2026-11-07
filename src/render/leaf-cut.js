@@ -205,7 +205,8 @@ vec4 treeTexel(vec3 l) {
   float w = clamp(fwidth(best), 1e-4, 2.0 * px / size.x);
   // The clump: a lobed round shape, one per card, with the mean leaf tone.
   vec2 q = l.xy - 0.5;
-  float qa = atan(q.y, q.x);
+  // atan(0, 0) is undefined in GLSL: a small x offset keeps the card center defined.
+  float qa = atan(q.y, q.x + 1e-6);
   float seed = fract(l.z);
   float rim = ${LEAF_AA.clump.toFixed(2)} * (1.0 + 0.12 * sin(3.0 * qa + seed * 37.0) + 0.07 * sin(5.0 * qa + seed * 91.0));
   float blob = 1.0 - length(q) / rim;

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { SURFACE_COLORS, stripColor } from "../level/geo/geo-mesh.js";
 import { DETAIL_NORMAL, GROUND_ALBEDO } from "./look.js";
 import { ALBEDO, MATERIAL_CLASSES } from "./pbr-palette.js";
-import { GROUND_LAYERS, GROUND_ROUGHNESS_FLOOR, PBR_GROUND_OF, groundAlbedo, groundBudget, groundFiles, pbrGroundTier } from "./pbr-ground.js";
+import { GROUND_LAYERS, GROUND_ROUGHNESS_FLOOR, LAWN, PBR_GROUND_OF, groundAlbedo, groundBudget, groundFiles, lawnTone, pbrGroundTier } from "./pbr-ground.js";
 import sets from "../../assets/ground/pbr/sets.json";
 
 const ROOT = new URL("../../", import.meta.url);
@@ -116,5 +116,53 @@ describe("the brick path color", () => {
     expect(stripColor({ kind: "path", surface: "brick" })).toBe(SURFACE_COLORS.brick);
     expect(stripColor({ kind: "path" })).toBe(SURFACE_COLORS.path);
     expect(stripColor({ kind: "street", surface: "asphalt" })).toBe(SURFACE_COLORS.street);
+  });
+});
+
+describe("the pbr lawn (#197)", () => {
+  const LIN = (h) => [0, 2, 4].map((i) => {
+    const v = parseInt(h.slice(1 + i, 3 + i), 16) / 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  const luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  // HSV saturation of a linear color, in sRGB.
+  const sat = (c) => {
+    const s = c.map((v) => (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
+    return 1 - Math.min(...s) / Math.max(...s);
+  };
+
+  it("keeps the mean lawn albedo a mid green in the doc range (#4f7a3a to #6f9a4a)", () => {
+    for (const kind of ["ground", "park"]) {
+      const c = groundAlbedo(kind);
+      expect(luma(c), kind).toBeGreaterThan(luma(LIN("#4f7a3a")) * 0.95);
+      expect(luma(c), kind).toBeLessThan(luma(LIN("#6f9a4a")));
+      expect(c[1], kind).toBeGreaterThan(c[0]);
+      expect(sat(c), kind).toBeLessThanOrEqual(sat(LIN("#4f7a3a")) + 0.02);
+    }
+  });
+
+  it("makes the lawn less saturated and darker than the bare scan, and leaves other layers alone", () => {
+    const c = [0.1, 0.28, 0.05];
+    const t = lawnTone(c);
+    expect(sat(t)).toBeLessThan(sat(c));
+    expect(luma(t)).toBeCloseTo(luma(c) * LAWN.value, 6);
+    expect(groundAlbedo("street")).toEqual(SURFACE_COLORS.street.map((v, i) => v * 0.72 * GROUND_ALBEDO[0][i]));
+  });
+
+  it("swings the value about 10 % and keeps every lawn and bed inside the albedo limits", () => {
+    expect(LAWN.valueSwing).toBeCloseTo(0.1, 2);
+    expect(LAWN.hueSwing).toBeLessThan(0.1);
+    expect(Math.min(...LAWN.scales)).toBeGreaterThanOrEqual(10);
+    for (const kind of ["ground", "park"]) {
+      const c = groundAlbedo(kind);
+      const hi = (1 + LAWN.valueSwing) * (1 + LAWN.hueSwing);
+      expect(Math.max(...c) * hi, kind).toBeLessThanOrEqual(ALBEDO.ceiling);
+      expect(Math.max(...c) * (1 - LAWN.valueSwing) * (1 - LAWN.hueSwing), kind).toBeGreaterThanOrEqual(ALBEDO.floor);
+    }
+    for (const bed of [LAWN.mulch, LAWN.soil]) {
+      expect(Math.max(...bed)).toBeGreaterThanOrEqual(ALBEDO.floor);
+      expect(bed[0]).toBeGreaterThan(bed[1]);
+      expect(bed[1]).toBeGreaterThan(bed[2]);
+    }
   });
 });

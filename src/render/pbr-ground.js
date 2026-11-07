@@ -3,6 +3,7 @@ import { SURFACE_COLORS } from "../level/geo/geo-mesh.js";
 import { MATERIAL_CLASSES } from "./pbr-palette.js";
 import { DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, GROUND_ALBEDO, ROUGHNESS, litMaterial } from "./look.js";
 import groundSets from "../../assets/ground/pbr/sets.json";
+import { LAMP_POOL, bakeGroundLight } from "./ground-light.js";
 
 // The ground of the pbr look (#158): five PBR sets (asphalt, concrete,
 // trail, grass, brick), each an albedo, an OpenGL normal map, and a packed
@@ -26,6 +27,7 @@ const URLS = {
 
 export const GROUND_LAYERS = groundSets.layers;
 const layer = (id) => GROUND_LAYERS.indexOf(id);
+const GRASS = layer("grass");
 
 // Surface kind -> [layer, detail strength]. The same strengths as the toon
 // surface (geo-view.js GROUND_OF); a brick path gets the brick pavers.
@@ -53,6 +55,39 @@ export const GROUND_ROUGHNESS_FLOOR = GROUND_LAYERS.map((id) => MATERIAL_CLASSES
 // asphalt and soil; see createSurfaceMaterial in geo-view.js).
 export const GROUND_COLOR_SCALE = 0.72;
 
+// The lawn in the pbr look (#197). The grass scan in full sun read as one
+// lime green (screen mean #69ad40). So the grass layer gets:
+// - `saturation`: the part of its chroma that stays (linear, about the luma),
+//   and `value`: an albedo factor, so a sunlit lawn reads mid green;
+// - a low-frequency change over tens of meters (`scales`, m): the value
+//   +-`valueSwing` and a hue shift +-`hueSwing` (warmer and drier, or cooler
+//   and fuller), in the shader, with no extra draw call;
+// - mulch and bare soil under each tree (ground-light.js, G channel).
+export const LAWN = {
+  saturation: 0.85,
+  value: 0.8,
+  valueSwing: 0.1,
+  hueSwing: 0.07,
+  scales: [41, 13],
+  // Linear albedo of the bark mulch and of the bare soil.
+  mulch: [0.075, 0.05, 0.032],
+  soil: [0.13, 0.095, 0.062],
+};
+
+// The lamp pools at night (#196): the light of a pool center on the ground
+// (an irradiance factor) at uLit 1. The pool color is LAMP_POOL.color.
+export const LAMP_POOL_LIGHT = 3.2;
+
+const LUMA = [0.2126, 0.7152, 0.0722];
+const glslVec3 = (v) => `vec3(${v.map((x) => x.toFixed(4)).join(", ")})`;
+
+// Pure: the lawn albedo factor of a mean linear color `c`: less chroma and
+// a lower value (LAWN.saturation, LAWN.value). The shader does the same.
+export function lawnTone(c) {
+  const l = c.reduce((s, v, i) => s + v * LUMA[i], 0);
+  return c.map((v) => (l + (v - l) * LAWN.saturation) * LAWN.value);
+}
+
 // Pure: the tier of the pbr ground: "high", "small", or null (no maps).
 export function pbrGroundTier(quality, enabled = true) {
   if (!enabled) return null;
@@ -73,9 +108,11 @@ export function groundBudget(tier) {
 // Pure: the mean linear albedo of a surface kind in the pbr look (art color
 // x 0.72 x GROUND_ALBEDO of its layer). The scan detail is divided by its
 // own mean, so this is the mean of the pixels too.
+// The grass layer gets the lawn tone (LAWN) on top.
 export function groundAlbedo(kind) {
   const [l] = PBR_GROUND_OF[kind];
-  return SURFACE_COLORS[kind].map((c, i) => c * GROUND_COLOR_SCALE * GROUND_ALBEDO[l][i]);
+  const c = SURFACE_COLORS[kind].map((v, i) => v * GROUND_COLOR_SCALE * GROUND_ALBEDO[l][i]);
+  return l === GRASS ? lawnTone(c) : c;
 }
 
 // A texture array that starts as 1x1 layers of `fill` (RGBA 0..255 per
@@ -116,6 +153,12 @@ function arrayTexture(image, srgb, mips) {
   return t;
 }
 
+function blackMap() {
+  const t = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1, THREE.RGBAFormat);
+  t.needsUpdate = true;
+  return t;
+}
+
 const srgb8 = (v) => Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
 
 // The pbr surface material. One material for every ground tile, as the toon
@@ -142,9 +185,34 @@ export function createPbrSurfaceMaterial({ tier = "high" } = {}) {
     uKindStrength: { value: kinds.map((k) => PBR_GROUND_OF[k][1]) },
     // The ground wetness (src/render/weather-view.js): 0 dry, 1 soaked.
     uWet: { value: 0 },
+    // The window light of the weather (0 day, 1 night): the lamp pools.
+    uLit: { value: 0 },
+    // The ground light map (ground-light.js) and its box: x0, z0, 1 / the
+    // width and 1 / the depth in m. A black 1x1 map until the props load.
+    uGroundLight: { value: blackMap() },
+    uGroundLightBox: { value: new THREE.Vector4(0, 0, 1, 1) },
   };
   if (normal) uniforms.uGroundNormal = loadArray(URLS[files.normal], sets.map(() => [128, 128, 255, 255]));
   mat.userData.uWet = uniforms.uWet;
+  mat.userData.uLit = uniforms.uLit;
+  // Bakes the ground light map from the prop placements (the lamps and the
+  // trees) and swaps it in. Returns the map info, or null.
+  mat.userData.setGroundLight = (placements) => {
+    const map = bakeGroundLight(placements);
+    if (!map) return null;
+    const { x0, z0, texel, width, height } = map.grid;
+    const t = new THREE.DataTexture(map.data, width, height, THREE.RGBAFormat);
+    t.magFilter = THREE.LinearFilter;
+    t.minFilter = THREE.LinearFilter;
+    t.wrapS = THREE.ClampToEdgeWrapping;
+    t.wrapT = THREE.ClampToEdgeWrapping;
+    t.needsUpdate = true;
+    uniforms.uGroundLight.value.dispose();
+    uniforms.uGroundLight.value = t;
+    uniforms.uGroundLightBox.value.set(x0, z0, 1 / (width * texel), 1 / (height * texel));
+    mat.userData.groundLight = { pools: map.pools, patches: map.patches, width, height, texel, gpuBytes: width * height * 4 };
+    return mat.userData.groundLight;
+  };
   mat.userData.groundTier = tier;
   mat.userData.groundTextures = () => [uniforms.uGroundAlbedo.value, uniforms.uGroundOrm.value, ...(normal ? [uniforms.uGroundNormal.value] : [])];
   const n = GROUND_LAYERS.length;
@@ -173,6 +241,23 @@ uniform vec3 uKindColor[${kinds.length}];
 uniform float uKindSet[${kinds.length}];
 uniform float uKindStrength[${kinds.length}];
 uniform float uWet;
+uniform float uLit;
+uniform sampler2D uGroundLight;
+uniform vec4 uGroundLightBox;
+// The lamp light of this pixel (ground-light.js R channel).
+float groundLamp = 0.0;
+// Value noise in 0..1 over world x and z, for the lawn and the mulch edge.
+float groundHash(vec2 p) {
+  p = fract(p * vec2(0.1031, 0.1030));
+  p += dot(p, p.yx + 33.33);
+  return fract((p.x + p.y) * p.x);
+}
+float groundNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(groundHash(i), groundHash(i + vec2(1.0, 0.0)), f.x), mix(groundHash(i + vec2(0.0, 1.0)), groundHash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
 // The ground layer of this pixel, the weight of its detail, its UV and
 // UV gradients, and its ORM sample.
 int groundSet = -1;
@@ -217,6 +302,27 @@ ${DETAIL_GLSL}`,
     diffuseColor.rgb *= mix(vec3(1.0), det, groundK) * uGroundTint[groundSet];
     groundOrm = textureGrad(uGroundOrm, vec3(groundUv, L), groundDx, groundDy).rgb;
   }
+  vec2 lightUv = (vGroundXZ - uGroundLightBox.xy) * uGroundLightBox.zw;
+  vec2 groundLightMap = texture2D(uGroundLight, lightUv).rg;
+  groundLamp = groundLightMap.r;
+  if (groundSet == ${GRASS}) {
+    // The lawn (#197): less chroma and value, then a slow change in value
+    // and hue over tens of meters.
+    float lum = dot(diffuseColor.rgb, vec3(${LUMA.join(", ")}));
+    diffuseColor.rgb = mix(vec3(lum), diffuseColor.rgb, ${LAWN.saturation.toFixed(3)}) * ${LAWN.value.toFixed(3)};
+    float nv = groundNoise(vGroundXZ / ${LAWN.scales[0].toFixed(1)}) * 0.65 + groundNoise(vGroundXZ / ${LAWN.scales[1].toFixed(1)} + 17.0) * 0.35;
+    float nh = groundNoise(vGroundXZ / ${(LAWN.scales[0] * 1.3).toFixed(1)} + 41.0);
+    float hue = (nh * 2.0 - 1.0) * ${LAWN.hueSwing.toFixed(3)};
+    diffuseColor.rgb *= (1.0 + (nv * 2.0 - 1.0) * ${LAWN.valueSwing.toFixed(3)}) * vec3(1.0 + hue, 1.0, 1.0 - hue * 1.4);
+    // Mulch and bare soil under the trees, with a ragged edge.
+    float edge = groundNoise(vGroundXZ * 1.7) - 0.5;
+    float m = smoothstep(0.3, 0.6, groundLightMap.g + edge * 0.4);
+    if (m > 0.0) {
+      float grain = 0.8 + 0.4 * groundNoise(vGroundXZ * 5.3);
+      vec3 bed = mix(${glslVec3(LAWN.mulch)}, ${glslVec3(LAWN.soil)}, smoothstep(0.35, 0.65, groundNoise(vGroundXZ / 9.0 + 5.0))) * grain;
+      diffuseColor.rgb = mix(diffuseColor.rgb, bed, m * (1.0 - smoothstep(120.0, 300.0, length(vViewPosition))));
+    }
+  }
   // A soaked street is darker.
   diffuseColor.rgb *= mix(1.0, 0.72, uWet);
 }`,
@@ -248,6 +354,13 @@ if (groundSet >= 0 && groundK > 0.0) {
 #endif`,
       )
       .replace(
+        "#include <emissivemap_fragment>",
+        `#include <emissivemap_fragment>
+// The lamp pools at night (#196): the lamp light on the ground albedo,
+// with no real light. Dark between the pools.
+totalEmissiveRadiance += diffuseColor.rgb * ${glslVec3(LAMP_POOL.color)} * (groundLamp * uLit * ${LAMP_POOL_LIGHT.toFixed(2)});`,
+      )
+      .replace(
         "#include <aomap_fragment>",
         `#include <aomap_fragment>
 // The scan AO on the sky light only (the sun is direct light), over its
@@ -259,6 +372,6 @@ if (groundSet >= 0) {
 }`,
       );
   };
-  mat.customProgramCacheKey = () => `surface-pbr-ground-v1-${tier}`;
+  mat.customProgramCacheKey = () => `surface-pbr-ground-v2-${tier}`;
   return mat;
 }

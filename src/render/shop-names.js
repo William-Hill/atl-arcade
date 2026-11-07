@@ -3,6 +3,7 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { hash32 } from "../level/geo/styles.js";
 import { terrainOf } from "../level/geo/terrain.js";
 import { litMaterial, ROUGHNESS } from "./look.js";
+import { hotCore } from "./shop-signs-view.js";
 
 // Shop-name decals on the kit's sign boards, and district names painted on
 // the trail — the teleoperator "real names" cue (docs/research). One canvas
@@ -165,8 +166,42 @@ function boardQuads(boards) {
   return boards.map((b) => ({ c: [b.x, b.y, b.z], n: [b.nx, b.nz], up: [0, 1, 0], w: b.w * 0.96, h: b.h * 0.8, row: hash32(`${Math.round(b.x * 4)},${Math.round(b.z * 4)}`) % SHOP_NAMES.length }));
 }
 
+// The warm white of the lit shop letters at night (pbr look, #196).
+export const NAME_GLOW = "#ffe2b0";
+// The alpha factor of a far shop name at night (see namesMaterial).
+export const NAME_FAR_ALPHA = 4;
+
+// In the pbr look the shop letters are lit channel letters at night: a hot
+// emissive core (shop-signs-view.js hotCore, x8 at uLit 1) that blooms. Only
+// the wall decals glow; the district names on the trail (normal straight
+// up) do not. A wall decal normal leans 45 degrees up (decalQuad), so the
+// cut is near 1.
 function namesMaterial(look, tex) {
-  return litMaterial(look, { map: tex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }, { roughness: ROUGHNESS.props, envLight: 0.6 });
+  const mat = litMaterial(look, { map: tex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }, { roughness: ROUGHNESS.props, envLight: 0.6 });
+  if (look !== "pbr") return mat;
+  mat.emissive.set(NAME_GLOW);
+  const uNight = { value: 0 };
+  hotCore(mat, (v) => (uNight.value = Math.min(1, Math.max(0, v))));
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uNight = uNight;
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform float uNight;")
+      // At night a far sign stays a strip of light: the mip level of the
+      // letters lowers their alpha under the alpha test, so the alpha grows
+      // with the distance (x NAME_FAR_ALPHA at 60 m).
+      .replace(
+        "#include <alphatest_fragment>",
+        `diffuseColor.a = min(1.0, diffuseColor.a * mix(1.0, ${NAME_FAR_ALPHA.toFixed(1)}, uNight * smoothstep(15.0, 60.0, length(vViewPosition))));
+#include <alphatest_fragment>`,
+      )
+      .replace(
+        "#include <emissivemap_fragment>",
+        `#include <emissivemap_fragment>
+totalEmissiveRadiance *= 1.0 - smoothstep(0.85, 0.97, abs(dot(normalize(vNormal), normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz))));`,
+      );
+  };
+  mat.customProgramCacheKey = () => "shop-names-hot";
+  return mat;
 }
 
 export function decalMesh(quads, rows, mat) {

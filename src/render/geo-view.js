@@ -21,6 +21,7 @@ import { getDracoLoader } from "./skater-model.js";
 import { facadeKitPlacements } from "../level/geo/facade-kit-glb.js";
 import { createFacadeKitView } from "./facade-kit-view.js";
 import { createPbrSurfaceMaterial } from "./pbr-ground.js";
+import { LAMP_GLOBE } from "./ground-light.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
 import stoneInfo from "../../assets/landmarks/textures/trim/set.json";
 import asphaltInfo from "../../assets/ground/asphalt/set.json";
@@ -920,8 +921,24 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
   // A card is a single quad: both sides must draw.
   if (leaves) material.side = THREE.DoubleSide;
   const time = { value: 0 };
-  if (wind || leaves) {
+  // The pbr look: the warm globe of each kit lamp glows at night (#196).
+  // The globe is the one vertex color LAMP_GLOBE in the kit lamp.
+  const lampGlow = look === "pbr";
+  if (lampGlow) material.userData.uLit = { value: 0 };
+  if (wind || leaves || lampGlow) {
     material.onBeforeCompile = (shader) => {
+      if (lampGlow) {
+        shader.uniforms.uLit = material.userData.uLit;
+        shader.fragmentShader = shader.fragmentShader
+          .replace("#include <common>", "#include <common>\nuniform float uLit;")
+          .replace(
+            "#include <emissivemap_fragment>",
+            `#include <emissivemap_fragment>
+#ifdef USE_COLOR
+if (distance(vColor.rgb, vec3(${LAMP_GLOBE.color.join(", ")})) < 0.02) totalEmissiveRadiance += vColor.rgb * uLit * ${LAMP_GLOBE.night.toFixed(1)};
+#endif`,
+          );
+      }
       if (leaves) {
         patchLeafVertex(shader);
         patchLeafFragment(shader, { backlight: look === "pbr" });
@@ -954,7 +971,7 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
           ].join("\n"),
         );
     };
-    material.customProgramCacheKey = () => `geo-props${wind ? "-wind" : ""}${leaves ? "-leaves" : ""}-${look}`;
+    material.customProgramCacheKey = () => `geo-props${wind ? "-wind" : ""}${leaves ? "-leaves" : ""}${lampGlow ? "-lamps" : ""}-${look}`;
   }
   return { material, time };
 }
@@ -1015,7 +1032,8 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const glbKit = kit && depth && kitGlb && look === "pbr" ? facadeKitPlacements(level, fronts, { signs: signList }) : null;
   const kitParts = kit ? facadeKit(level, fronts, shopBoards, undefined, glbKit?.covers ?? null) : { tiles: [], depthTiles: [], counts: {} };
   // The shop names on the GLB sign boards go in the GLB depth tiles, so they hide with their boards.
-  const glbView = glbKit ? createFacadeKitView(kitGlb, glbKit.buildings, { depthDistance, names: boardNamesBatch(glbKit.buildings.flatMap((b) => b.boards), look) }) : null;
+  const glbNames = glbKit ? boardNamesBatch(glbKit.buildings.flatMap((b) => b.boards), look) : null;
+  const glbView = glbKit ? createFacadeKitView(kitGlb, glbKit.buildings, { depthDistance, names: glbNames }) : null;
   if (glbView) root.add(glbView.root);
   const facadeGlb = { on: glbView !== null, loaded: glbView !== null, instances: glbKit?.instances ?? 0, buildings: glbKit?.buildings.length ?? 0, near: 0, shown: 0, lod1: 0, drawCalls: 0, triangles: 0 };
   const kitTiles = new Map(kitParts.tiles.map((t) => [t.tile, t.mesh]));
@@ -1067,13 +1085,13 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   }
   const facadeDepth = { tiles: depthTiles.length, near: 0, nearTriangles: 0 };
   // The shop name boards from the OSM shop and amenity tags (issue #135).
-  const signs = kit ? createShopSigns(signList, (params) => litMaterial(look, params, { gradientMap, roughness: 0.7, envLight: ENV_LIGHT.props })) : null;
+  const signs = kit ? createShopSigns(signList, (params) => litMaterial(look, params, { gradientMap, roughness: 0.7, envLight: ENV_LIGHT.props }), { hot: look === "pbr" }) : null;
   if (signs) root.add(signs.group);
 
   // Kit props load after the level shows. All props are one batch (one
   // draw call); update() picks the LOD of each prop.
   let propBatch = null;
-  const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null };
+  const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null, groundLight: null };
   // `renderer` draws the far tree impostors (tree-impostors.js).
   const treeCost = { impostorKinds: 0, atlasBytes: 0, bakeMs: 0 };
   const treeAtlas = { pixels: null, size: 0 };
@@ -1099,6 +1117,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     const placed = (trees ? withProceduralTrees(placements) : placements).map((p) => (glbKinds.has(p.kind) && !p.yaw ? { ...p, yaw: Math.round(unitHash(p.x * 3.7 + p.z * 0.29) * 6283) / 1000 } : p));
     const fade = glbKinds.size ? { band: TREE_FADE_BAND, kinds: [...glbKinds] } : null;
     if (fade) TREE_UNIFORMS.uLodFade.value.set(lod0Distance - TREE_FADE_BAND, lod0Distance);
+    // The lamp pools and the mulch under the trees on the pbr ground
+    // (ground-light.js): one map, baked once from the same placements.
+    const groundLight = materials.surface.userData.setGroundLight?.(placed);
+    if (groundLight) props.groundLight = groundLight;
     propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance, fade, tint: glbKinds.size ? (p) => (glbKinds.has(p.kind) ? treeTint(p) : null) : null });
     if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial();
     root.add(propBatch.mesh);
@@ -1115,7 +1137,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     // The weather handles (src/render/weather-view.js): the facade
     // material gets uLit (window light) and the surface material gets
     // uWet (wet ground). The uniforms appear when the shaders compile.
-    weather: { lit: [materials.building], wet: [materials.surface], sun: [materials.building] },
+    // The pbr ground, the prop lamps, the shop boards and the shop letters
+    // get uLit too (the lamp pools, the lamp globes and the hot sign cores
+    // at night, #196).
+    weather: { lit: [materials.building, materials.surface, materials.props, ...[signs?.material, glbNames?.mesh.material, names?.material].filter((m) => m?.userData.uLit)], wet: [materials.surface], sun: [materials.building] },
     get meshCount() {
       return meshes.length + (propBatch ? 1 : 0);
     },

@@ -228,6 +228,20 @@
       "credits_spent": 20,
       "credits_note": "20 Meshy credits (two prime text to motion clips). The Tripo groove cost 20 Tripo credits on 2026-11-05 (already in this file's history). Blender and the graft cost 0.",
       "review": "Real Atlanta skaters must review the move set before release."
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3, second pass)",
+      "tool": "Blender 5.2.2 LTS, scripts/blender/skater_anim_v3.py; scripts/assets/graft-clips.mjs",
+      "prompt": "The skating is not natural: no knee bend in the push off and in the turns. Marcus' idle stance is too wide.",
+      "actions": [
+        "Owner playtest feedback: no knee bend in the push and in the turns. Lowered the hips: the hip-to-ankle distance is now 77% of the leg length in the push and 84% in the coast (was 87% and 92%), and the chest leans 28 degrees (was 18).",
+        "The carves drop the hips 9 cm more and lean the chest 8 degrees more.",
+        "The idle stance is narrower: the skates are under the hips (x 0.10 and -0.10 before the stance scale, was 0.17 and -0.18).",
+        "Rebuilt and grafted: push, coast, idle, carve_left, carve_right, and the 20 restyled clips. The rest pose check passed."
+      ],
+      "result": "skater.glb 3,456,220 to 3,456,820 bytes; skater-1024.glb 2,583,608 to 2,584,208 bytes",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 115,

@@ -52,17 +52,17 @@ def ease(t):
 STYLE = {
     "nia": {
         "push_frames": 60, "coast_frames": 96, "phase": 0.0,
-        "outward": .16, "back": .15, "lift": .065, "height": .90, "coast_height": .95,
-        "lean": 12, "lean_wave": 3, "coast_lean": 6,
+        "outward": .16, "back": .15, "lift": .065, "height": .80, "coast_height": .87,
+        "lean": 24, "lean_wave": 3, "coast_lean": 12,
         "swing": (44, 44), "cross": 16, "elbow": ((34, 18), (34, 18)),
-        "torso": 15, "hip_yaw": 7, "roll": 6, "bob": .022, "nod": 0, "sharp": 1.0,
+        "torso": 15, "hip_yaw": 7, "roll": 6, "bob": .035, "nod": 0, "sharp": 1.0, "carve_drop": .09,
     },
     "marcus": {
         "push_frames": 48, "coast_frames": 48, "phase": .5,
-        "outward": .145, "back": .20, "lift": .08, "height": .87, "coast_height": .92,
-        "lean": 18, "lean_wave": 2, "coast_lean": 12,
+        "outward": .145, "back": .20, "lift": .08, "height": .77, "coast_height": .84,
+        "lean": 28, "lean_wave": 2, "coast_lean": 16,
         "swing": (40, 20), "cross": 8, "elbow": ((30, 14), (84, 10)),
-        "torso": 11, "hip_yaw": 4, "roll": 3, "bob": .03, "nod": 7, "sharp": 2.2,
+        "torso": 11, "hip_yaw": 4, "roll": 3, "bob": .04, "nod": 7, "sharp": 2.2, "carve_drop": .09,
     },
 }
 
@@ -230,8 +230,8 @@ def marcus_brake(scope):
 
 
 def marcus_idle(scope):
-    # The drum count, one bar (4 beats). Marcus stands square on a wide
-    # stance. His hands tap a cadence at his hips like drum sticks: right,
+    # The drum count, one bar (4 beats). Marcus stands square, the skates
+    # under the hips. His hands tap a cadence at his hips like drum sticks: right,
     # left, right-right. The right skate taps its toe stop on beats 2 and 4,
     # and the head nods on each beat.
     at, rot, merge = scope["at"], scope["rot"], scope["merge"]
@@ -246,8 +246,8 @@ def marcus_idle(scope):
             "Spine1": [rot(UP, -5)],
             "Neck": [rot(LEFT, -4)],
             "Head": [rot(LEFT, 10 * nod), rot(UP, -6)],
-            "L": at(.17, -.02, 0, "L", [rot(UP, 14)]),
-            "R": at(-.18, .06 if tap else .02, .05 if tap else 0, "R", [rot(UP, -16), rot(LEFT, 22 if tap else 0)]),
+            "L": at(.10, -.02, 0, "L", [rot(UP, 10)]),
+            "R": at(-.10, .06 if tap else .02, .05 if tap else 0, "R", [rot(UP, -12), rot(LEFT, 22 if tap else 0)]),
             # The upper arms stay near the ribs. A hit snaps the forearm down.
             "LeftArm": [rot(FWD, -70), rot(LEFT, -26), rot(UP, -10)],
             "RightArm": [rot(FWD, 70), rot(LEFT, -26), rot(UP, 10)],
@@ -278,9 +278,9 @@ def marcus_carve_left(scope):
 
     def key(rx, ry, rz, lx, ly, lz, down, arm):
         return merge(scope["FISTS"], {
-            "hips": (.05, .02, -.17 - down),
+            "hips": (.05, .02, -.17 - STYLE["marcus"]["carve_drop"] - down),
             "hipsRot": [rot(UP, 16), rot(FWD, -8)],
-            "Spine": [rot(LEFT, 18), rot(FWD, -9)],
+            "Spine": [rot(LEFT, 26), rot(FWD, -9)],
             "Spine1": [rot(UP, 18), rot(LEFT, 4)],
             "Neck": [rot(LEFT, -8), rot(UP, 8)],
             "Head": [rot(UP, 16), rot(LEFT, 2)],
@@ -363,6 +363,21 @@ def main():
     }
     if args.name == "nia":
         clips["brake"] = lambda: nia_brake(scope)
+
+        def deeper(fn):
+            # The ATL Ryde corner step of nia_clips.py with a deeper knee
+            # bend: the hips drop and the chest leans further into the turn.
+            loop, keys = fn()
+            out = []
+            for f, pose in keys:
+                p = dict(pose)
+                h = p.get("hips", (0, 0, 0))
+                p["hips"] = (h[0], h[1], h[2] - st["carve_drop"])
+                p["Spine"] = list(p.get("Spine", [])) + [scope["rot"](scope["LEFT"], 8)]
+                out.append((f, p))
+            return loop, out
+        clips["carve_left"] = lambda: deeper(shared["carve_left"])
+        clips["carve_right"] = lambda: deeper(shared["carve_right"])
     else:
         clips["brake"] = lambda: marcus_brake(scope)
         clips["idle"] = lambda: marcus_idle(scope)

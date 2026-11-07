@@ -1839,3 +1839,10 @@ Three gaps of the pbr art direction (#159). The toon look does not change.
 **Perf.** `npm run perf:check` on this machine (load average 22 to 36 on 14 CPUs, from other sessions): every download is under its cap (MB: low/toon 10.29, phone/toon 9.03, high/toon 11.59, low/pbr 16.5, phone/pbr 20.12, high/pbr 27.54). The geometry counts of the three toon tiers were over their caps, but the base branch was over too at the same load (base 172, 168, 237; this branch 157, 159, 236). The clips add no geometry. No cap changed. Run perf:check again on a quiet machine.
 
 **Open.** Real Atlanta skaters review the full move set (both skaters, the brake, and the new dances) before release. Owner review of the stride upper body and of Marcus' style is open. The NPC skaters share the player's `skaterEnv`, so they see the player's dance list; an NPC with the other model holds its clip when the dance is not in its GLB.
+
+**Second pass (owner playtest, 2026-11-07).**
+- The push and the turns had too little knee bend. The push hips are lower: the hip-to-ankle distance is 80% (Nia) and 77% (Marcus) of the leg length (was 90% and 87%), and the chest leans 24 and 28 degrees. The coast is 87% and 84%. The carves drop the hips 9 cm more.
+- The carve lean layer no longer includes the leg bones. The legs come from the base clip, so the carve crouch does not lift a skate off the ground in a turn under push.
+- Marcus' idle skates are under his hips.
+- The NPC skaters are off by default (`?skaters=1` turns them on). They reused the Nia and Marcus models, and other copies of the playable skaters must not ride the trail. Skater NPCs can come later with their own models. This also removes the download of the second skater GLB.
+

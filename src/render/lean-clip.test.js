@@ -27,6 +27,13 @@ describe("leanClip", () => {
     expect(deltaDeg(lean, "spine")).toBeCloseTo(14, 3);
   });
 
+  it("keeps the legs out of the layer: the base clip holds the skates on the ground", () => {
+    const coast = new THREE.AnimationClip("coast", 2, [track("mixamorigSpine", q(UP, 0)), track("mixamorigLeftUpLeg", q(UP, 0))]);
+    const carve = new THREE.AnimationClip("carve_left", 2, [track("mixamorigSpine", q(UP, 10)), track("mixamorigLeftUpLeg", q(UP, 30)), track("mixamorigRightLeg", q(UP, 30)), track("mixamorigLeftFoot", q(UP, 30))]);
+    const lean = leanClip(carve, coast, () => [0, 0, 0, 1]);
+    expect(lean.tracks.map((t) => t.name)).toEqual(["mixamorigSpine.quaternion"]);
+  });
+
   it("drops a track with no reference and no rest value", () => {
     const coast = new THREE.AnimationClip("coast", 2, [track("spine", q(UP, 0))]);
     const carve = new THREE.AnimationClip("carve_left", 2, [track("hips", q(UP, 40)), track("spine", q(UP, 10))]);

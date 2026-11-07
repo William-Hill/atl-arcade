@@ -434,7 +434,10 @@ if (params.get("view") === "iso") skaterView.group.visible = false;
 // the player. On by default on a geodata level; ?skaters=0 turns them off,
 // and ?skaters=1 turns them on for the greybox. Each skater GLB is parsed
 // once: the player and the NPCs share the parse.
-const skatersOn = params.get("skaters") === "1" || (geo && params.get("skaters") !== "0");
+// The NPC skaters reuse the Nia and Marcus models, so they are off by default:
+// other copies of the playable skaters must not ride the trail. ?skaters=1
+// turns them on (for the NPC tests and later NPC work).
+const skatersOn = params.get("skaters") === "1";
 let npcSkaters = skatersOn ? createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] }) : null;
 // One download for each model: the NPCs of one model share the bytes.
 const npcByteCache = new Map();

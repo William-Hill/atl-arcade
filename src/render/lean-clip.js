@@ -14,6 +14,11 @@ import * as THREE from "three";
 // leanClip() gives each carve track with no coast track the rest value of
 // its bone as the reference. A track with no reference and no rest value
 // is removed.
+//
+// The layer bends the body only. The legs (and their skates on the ground)
+// come from the base clip: a carve crouch added on top of a push stride
+// would lift a skate off the ground.
+const LEG = /(UpLeg|Leg|Foot|ToeBase|Toe_End)\.quaternion$/;
 
 // One pose of a clip: the rotation of each bone at the middle key, as a
 // clip of one key. The lean layers use the pose, not the motion.
@@ -35,6 +40,7 @@ export function leanClip(carve, coast, restOf, name = `lean_${carve.name}`) {
   const reference = poseClip(coast, "lean_ref");
   const have = new Set(reference.tracks.map((t) => t.name));
   target.tracks = target.tracks.filter((t) => {
+    if (LEG.test(t.name)) return false;
     if (have.has(t.name)) return true;
     const rest = restOf(t.name);
     if (!rest) return false;

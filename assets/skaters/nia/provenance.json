@@ -208,6 +208,19 @@
         "assets/skaters/nia/raw/anim-v3/build.json"
       ],
       "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3, second pass)",
+      "tool": "Blender 5.2.2 LTS, scripts/blender/skater_anim_v3.py; scripts/assets/graft-clips.mjs",
+      "prompt": "The skating is not natural: no knee bend in the push off and in the turns. Marcus' idle stance is too wide.",
+      "actions": [
+        "Owner playtest feedback: no knee bend in the push and in the turns. Lowered the hips: the hip-to-ankle distance is now 80% of the leg length in the push and 87% in the coast (was 90% and 95%), and the chest leans 24 degrees (was 12).",
+        "The carves drop the hips 9 cm more and lean the chest 8 degrees more (the ATL Ryde corner step of nia_clips.py, lower).",
+        "Rebuilt and grafted: push, coast, carve_left, carve_right. The rest pose check passed."
+      ],
+      "result": "skater.glb 2,242,308 to 2,256,876 bytes; skater-1024.glb 1,792,352 to 1,806,916 bytes",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 155,

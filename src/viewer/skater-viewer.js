@@ -97,16 +97,17 @@ function setFace(eyes, mouth) {
   return { eyes: face.eyes, mouth: face.mouth };
 }
 
-// Draws one clip as a row of frames from the three-quarter view: a contact
-// sheet. The first frame is t = 0 and the last frame is the clip end.
-function sheet(name, cols = 6) {
+// Draws one clip as a row of frames from the three-quarter view (or another
+// VIEWS key): a contact sheet. The first frame is t = 0 and the last frame
+// is the clip end.
+function sheet(name, cols = 6, view = "three-quarter") {
   const clip = clips.find((c) => c.name === name);
   if (!clip) throw new Error(`Unknown clip: ${name}`);
   paused = true;
   mixer.stopAllAction();
   const action = mixer.clipAction(clip);
   action.reset().play();
-  const dir = VIEWS["three-quarter"];
+  const dir = VIEWS[view] ?? VIEWS["three-quarter"];
   camera.position.set(TARGET.x + dir[0] * 4.2, TARGET.y + 0.3, TARGET.z + dir[1] * 4.2);
   camera.lookAt(TARGET);
   const size = renderer.getSize(new THREE.Vector2());

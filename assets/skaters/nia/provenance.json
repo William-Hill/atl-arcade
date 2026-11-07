@@ -221,6 +221,21 @@
       ],
       "result": "skater.glb 2,242,308 to 2,256,876 bytes; skater-1024.glb 1,792,352 to 1,806,916 bytes",
       "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3, third pass)",
+      "tool": "Blender 5.2.2 LTS, scripts/blender/skater_anim_v3.py --clips push,coast; scripts/assets/graft-clips.mjs",
+      "prompt": "There is still no step, no knee drive, and no ankle push-off when the skater moves forward.",
+      "actions": [
+        "Fault: the v3 push and coast poses had no foot targets (L, R), so the feet stayed at their rest targets and only the hips and the upper body moved. The v3 push turned the thigh 13.6 degrees; the v2 push turned it 38.4 degrees. The foot targets are now in the poses.",
+        "New push stroke for each leg: push out and back (0 to 0.36 of the cycle) with an ankle push-off from 0.24 (the heel comes up 30 degrees), a step (0.36 to 0.58: the skate lifts 15 cm and the knee drives forward), and a glide (0.58 to 1). The hips shift over the gliding skate.",
+        "Cycle: 52 frames for two strokes (was 60).",
+        "Rebuilt and grafted push and coast. The rest pose check passed."
+      ],
+      "result": "skater.glb 2,256,508 bytes; skater-1024.glb 1,806,548 bytes",
+      "evidence": "docs/characters/anim-v3/push-side-front.jpg (12 frames of each push, side and front)",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 155,

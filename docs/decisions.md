@@ -1846,3 +1846,5 @@ Three gaps of the pbr art direction (#159). The toon look does not change.
 - Marcus' idle skates are under his hips.
 - The NPC skaters are off by default (`?skaters=1` turns them on). They reused the Nia and Marcus models, and other copies of the playable skaters must not ride the trail. Skater NPCs can come later with their own models. This also removes the download of the second skater GLB.
 
+**Third pass (owner playtest, 2026-11-07).** The owner saw no step, no knee drive, and no ankle push-off. Cause: the v3 push and coast poses had no foot targets, so the feet stayed at their rest targets (the thigh turned 13.6 degrees in the push; 38.4 on v2). The push is now a stroke in phases for each leg: push out and back with an ankle push-off (the heel comes up 30 to 34 degrees), a step with a knee drive (the skate lifts 15 to 18 cm), and a glide with the weight over the skate. Evidence: `docs/characters/anim-v3/push-side-front.jpg`.
+

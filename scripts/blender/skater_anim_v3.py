@@ -51,15 +51,15 @@ def ease(t):
 # each stroke.
 STYLE = {
     "nia": {
-        "push_frames": 60, "coast_frames": 96, "phase": 0.0,
-        "outward": .16, "back": .15, "lift": .065, "height": .80, "coast_height": .87,
+        "push_frames": 52, "coast_frames": 96, "phase": 0.0,
+        "outward": .16, "back": .22, "lift": .15, "drive": .14, "toe": 30, "height": .80, "coast_height": .87,
         "lean": 24, "lean_wave": 3, "coast_lean": 12,
         "swing": (44, 44), "cross": 16, "elbow": ((34, 18), (34, 18)),
         "torso": 15, "hip_yaw": 7, "roll": 6, "bob": .035, "nod": 0, "sharp": 1.0, "carve_drop": .09,
     },
     "marcus": {
-        "push_frames": 48, "coast_frames": 48, "phase": .5,
-        "outward": .145, "back": .20, "lift": .08, "height": .77, "coast_height": .84,
+        "push_frames": 44, "coast_frames": 48, "phase": .5,
+        "outward": .145, "back": .26, "lift": .18, "drive": .17, "toe": 34, "height": .77, "coast_height": .84,
         "lean": 28, "lean_wave": 2, "coast_lean": 16,
         "swing": (40, 20), "cross": 8, "elbow": ((30, 14), (84, 10)),
         "torso": 11, "hip_yaw": 4, "roll": 3, "bob": .04, "nod": 7, "sharp": 2.2, "carve_drop": .09,
@@ -89,40 +89,63 @@ def make_stride(scope, arm, mesh, name):
     def pose_at(frame, pushing):
         frames = st["push_frames"] if pushing else st["coast_frames"]
         t = (frame / frames + st["phase"]) % 1
-        half = 0 if t < .5 else 1
-        # support: +1 puts the weight over the left skate, -1 over the right.
-        support = (1 if half == 0 else -1) * (1 - 2 * ease((t % .5) / .12))
+        # The stroke of one leg, as a phase p from 0 to 1 (the right leg is a
+        # half cycle later):
+        #   0.00-0.36 push: the skate goes out and back on its inside edge,
+        #             and the knee straightens. From 0.24 the heel comes up:
+        #             the ankle pushes off on the front wheels.
+        #   0.36-0.58 step: the skate lifts, the knee drives forward and up,
+        #             and the skate comes through under the hip to land a
+        #             little in front of it, the toe up.
+        #   0.58-1.00 glide: the skate carries the weight while the other leg
+        #             pushes, and it rolls back under the hip.
+        # The weight goes over the gliding skate: the hips shift to the side
+        # away from the push.
+        hip_x = -(half_width - .035) * math.cos(2 * math.pi * (t - .18))
         if not pushing:
-            support = .3 * math.sin(2 * math.pi * t)
-        hip_x = (half_width - .035) * support
+            hip_x = (half_width - .035) * .3 * math.sin(2 * math.pi * t)
+        # support: +1 puts the weight over the left skate, -1 over the right.
+        support = hip_x / (half_width - .035)
         hip_y = root.y - (.025 if pushing else .012)
         feet, targets = {}, {}
         for side, leg in legs.items():
             p = (t + (0 if side == "L" else .5)) % 1
             sign = leg["sign"]
             lift = 0
-            if pushing and p < .32:
-                q = ease(p / .32)
-                x, y, yaw = sign * (half_width + st["outward"] * q), st["back"] * q, sign * 15 * q
-            elif pushing and p < .5:
-                q = (p - .32) / .18
-                x = sign * (half_width + st["outward"] * (1 - ease(q)))
-                y = st["back"] + (-.075 - st["back"]) * ease(q)
-                lift = st["lift"] * math.sin(math.pi * q) ** 2
-                yaw = sign * (15 - 13 * ease(q))
+            pitch = 0.0
+            land_y = -st["drive"] * .55
+            if pushing and p < .36:
+                q = ease(p / .36)
+                x, y, yaw = sign * (half_width + st["outward"] * q), land_y + (st["back"] - land_y) * q, sign * 18 * q
+                pitch = st["toe"] * ease((p - .24) / .12)
+            elif pushing and p < .58:
+                q = (p - .36) / .22
+                e = ease(q)
+                x = sign * (half_width + st["outward"] * (1 - e))
+                # The skate passes under the hip and reaches forward: the knee drive.
+                y = st["back"] + (-st["drive"] - st["back"]) * ease(min(1, q * 1.15))
+                lift = st["lift"] * math.sin(math.pi * q) ** 1.5
+                yaw = sign * 18 * (1 - e)
+                # The toe hangs after the push-off, then comes up to land.
+                pitch = st["toe"] * (1 - ease(q / .45)) - 8 * math.sin(math.pi * min(1, max(0, (q - .45) / .55)))
             elif pushing:
-                q = ease((p - .5) / .5)
-                x, y, yaw = sign * half_width, -.075 * (1 - q), sign * 2 * (1 - q)
+                q = (p - .58) / .42
+                x, yaw = sign * half_width, 0.0
+                y = -st["drive"] + (land_y + st["drive"]) * ease(q / .2) if q < .2 else land_y
+                # The skate rolls back under the hip as the body goes over it.
+                y = y + (0 if q < .2 else (.04 * ease((q - .2) / .8)))
             else:
                 # The glide: the lead skate a little forward. Nia leads with
                 # the left skate, Marcus with the right.
                 x = sign * half_width
                 y = -.06 if (side == "L") == (name == "nia") else .04
                 yaw = sign * 3
-            rotation = Matrix.Rotation(math.radians(yaw), 4, "Z") @ leg["rest"].to_quaternion().to_matrix().to_4x4()
+            pitch_m = Matrix.Rotation(math.radians(pitch), 4, "X")
+            rotation = Matrix.Rotation(math.radians(yaw), 4, "Z") @ pitch_m @ leg["rest"].to_quaternion().to_matrix().to_4x4()
             z = lift - min((rotation @ point).z for point in soles[leg["name"]])
             targets[side] = Vector((x, y, z))
-            feet[side] = {"pos": targets[side] - leg["rest"].translation, "rot": [(UP, yaw)]}
+            # Pitch first, about the skate's own cross axis, then the yaw.
+            feet[side] = {"pos": targets[side] - leg["rest"].translation, "rot": [(LEFT, pitch), (UP, yaw)]}
         reach = st["height"] if pushing else st["coast_height"]
         rhythm = math.sin(2 * math.pi * t)
         accent = sharpen(rhythm, st["sharp"])
@@ -151,6 +174,7 @@ def make_stride(scope, arm, mesh, name):
         nod = st["nod"] * abs(accent) if pushing else st["nod"] * .5 * (1 + math.cos(4 * math.pi * t))
         pose = {
             "hips": (hip_x - root.x, hip_y - root.y, hip_z - root.z),
+            "L": feet["L"], "R": feet["R"],
             "hipsRot": [(UP, hip_yaw), (FWD, -2 * support * amount)],
             "Spine": [(LEFT, lean), (FWD, -roll)],
             "Spine1": [(UP, torso * .5 - hip_yaw * .6), (FWD, roll * .3)],

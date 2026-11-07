@@ -95,6 +95,7 @@ export const GRIND = {
 // `beats` sets the length on the game beat clock (BEAT.bpm). `clip` names
 // the skater clip, and `anim` names the placeholder capsule animation.
 // The sources for the dances are in docs/characters/atl-dance-references.md.
+// A dance with `skaters` plays only for those skaters (their GLB has the clip).
 export const STYLE = {
   minSpeed: 1.5, // m/s needed to start a style move. min 0.5 / typical 1.5 / max 3.
   moves: [
@@ -104,6 +105,11 @@ export const STYLE = {
       points: 150,
       anim: "tilt",
       dances: [
+        // Marcus' own dances (#107 follow-up): a retargeted Tripo motion and
+        // two Meshy text to motion clips. Real skaters review them before release.
+        { clip: "dance_jamgroove", name: "Jam Groove", skaters: ["marcus"] },
+        { clip: "dance_drumline", name: "Drumline Count", skaters: ["marcus"] },
+        { clip: "dance_jamstep", name: "Jam Step", skaters: ["marcus"] },
         { clip: "dance_bankhead", name: "Bankhead Bounce" },
         { clip: "dance_walkitout", name: "Walk It Out" },
         { clip: "dance_prep", name: "The Prep" },
@@ -125,6 +131,9 @@ export const STYLE = {
     },
   ],
 };
+
+// The dances of a move for one skater. A dance with no `skaters` list is for every skater.
+export const dancesFor = (move, skater) => move.dances.filter((d) => !d.skaters || d.skaters.includes(skater));
 
 // The length of a style move in seconds at `bpm`.
 export const styleDuration = (move, bpm = BEAT.bpm) => (move.beats * 60) / bpm;

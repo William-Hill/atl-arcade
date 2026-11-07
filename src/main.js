@@ -253,6 +253,8 @@ const facadeKitReady = (nodes, ms = numParam("kitwait") ?? 3000) => nodes && Pro
 // The skate env: the ground sampler, the props, the grindables.
 const env = createLevelEnv(level, { props: levelPropsOn, placed: propsBuild && (await propsBuild.props) });
 const skaterEnv = createSkaterEnv(level, env.grindables);
+// The style moves pick from this skater's dances (STYLE dances with `skaters`).
+skaterEnv.skater = skaterName;
 const geoMeshes = geo ? await meshBuild.meshes : null;
 performance.mark("atl:meshes");
 const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full" }) : createLevelView(level);

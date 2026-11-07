@@ -187,6 +187,27 @@
       ],
       "result": "skater.glb 2,210,000 to 2,203,728 bytes; skater-1024.glb 1,755,420 to 1,753,764 bytes",
       "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3)",
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_anim_v3.py with nia_clips.py and the leg IK of skater_runtime.py; scripts/assets/graft-clips.mjs on Node 24 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9 (npm i --no-save)",
+      "prompt": "Nia's upper body is too stiff in the skate cycle: add arm swing, torso counter-rotation, and weight shift on each push. Add a brake clip.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_anim_v3.py -- --name nia --source assets/skaters/nia/raw/forward-v2/nia-forward.blend --out assets/skaters/nia/raw/anim-v3; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater.glb assets/skaters/nia/raw/anim-v3/nia-clips-v3.glb assets/skaters/nia/skater.glb; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater-1024.glb assets/skaters/nia/raw/anim-v3/nia-clips-v3.glb assets/skaters/nia/skater-1024.glb",
+      "actions": [
+        "Keyed push (60 frames, two strokes) and coast (96 frames, 4 beats) again on the forward-v2 body. The legs keep the reviewed forward-v2 stroke (outward 0.16 m, back 0.15 m, lift 0.065 m).",
+        "Upper body: arm swing 44 degrees each way (was 26), the forward arm crosses 16 degrees toward the midline, elbow flex 34 +- 18 degrees, shoulders turn 15 degrees against a 7 degree hip turn, the chest rolls 6 degrees over the support skate, and the body drops 22 mm on each drive. The head turns against the shoulders, so the gaze stays on the line of travel.",
+        "Added brake: a T-stop, one beat. The weight is on the left skate; the right skate turns 80 degrees out and drags behind; the arms go out for balance.",
+        "Grafted push, coast, and brake into skater.glb and skater-1024.glb. The mesh, the textures (with the #203 navy joggers), the rig, and the other 23 clips are the same. The new clips use the #187 encoding (resample 1e-4, int16 rotation keys).",
+        "The script checked that the rest pose of all 67 nodes matches the shipped GLB within 1e-3. Knee pole angles L 24, R -10 degrees (the same as #170); largest knee residual 0.00 degrees over 232 keys."
+      ],
+      "result": "skater.glb 2,203,728 to 2,242,308 bytes; skater-1024.glb 1,753,764 to 1,792,352 bytes; 26 clips",
+      "local_files_not_in_git": [
+        "assets/skaters/nia/raw/anim-v3/nia-anim-v3.blend",
+        "assets/skaters/nia/raw/anim-v3/nia-clips-v3.glb",
+        "assets/skaters/nia/raw/anim-v3/build.json"
+      ],
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 155,

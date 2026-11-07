@@ -212,6 +212,30 @@ const GradeShader = {
     }`,
 };
 
+// The GTAO pass draws the scene again for its normal and depth buffer, with
+// renderer.render(). Three.js draws the sun shadow map in every
+// renderer.render() of a lit scene, so the shadow map was drawn twice per
+// frame (107 draw calls and 156 k triangles on high toon, #188). The normal
+// material reads no shadow, and the main pass has already drawn this frame's
+// map, so this pass keeps it.
+export function keepShadowMap(pass) {
+  const renderOverride = pass._renderOverride;
+  pass._renderOverride = function (renderer, ...rest) {
+    const shadowMap = renderer.shadowMap;
+    const auto = shadowMap.autoUpdate;
+    const needs = shadowMap.needsUpdate;
+    shadowMap.autoUpdate = false;
+    shadowMap.needsUpdate = false;
+    try {
+      return renderOverride.call(this, renderer, ...rest);
+    } finally {
+      shadowMap.autoUpdate = auto;
+      shadowMap.needsUpdate = needs;
+    }
+  };
+  return pass;
+}
+
 export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true, ink: inkStrength = 0.85, look = "toon" }) {
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
@@ -222,6 +246,7 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   // The tree leaf cut (src/render/leaf-cut.js): the AO sees the trunks, the
   // crown cores and the impostors, but not the leaf cards (#202).
   withLeafCut(gtao.normalMaterial);
+  keepShadowMap(gtao);
   // World units are meters: a 2.5 m radius darkens the ground at a wall
   // foot, the inside corners, and under the trees. A 1 m thickness: only
   // geometry within 1 m in depth occludes, so a pole in front of open
@@ -237,6 +262,19 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
     const cache = this._visibilityCache;
     this.scene.traverse((o) => {
       if ((o.isPoints || o.isLine || o.isLine2 || o.isSkinnedMesh) && o.visible) {
+        o.visible = false;
+        cache.push(o);
+      }
+    });
+  };
+  // The toon look: a skater's merged outline hull (src/render/toon.js)
+  // draws the same surface as its parts under the override material, so
+  // the parts stay out of this pass: one draw call per skater in place of
+  // 22 to 26 (#188). The depth and normals do not change.
+  else gtao._overrideVisibility = function () {
+    const cache = this._visibilityCache;
+    this.scene.traverse((o) => {
+      if ((o.isPoints || o.isLine || o.isLine2 || o.userData.normalStandIn?.visible) && o.visible) {
         o.visible = false;
         cache.push(o);
       }

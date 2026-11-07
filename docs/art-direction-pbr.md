@@ -190,8 +190,9 @@ Rec. 709). The middle (p50) sits between 90 and 170.
 
 ## 8. What each tier keeps
 
-The pbr look costs 8 to 12 times the toon frame per pixel on the software
-GPU (`docs/perf/baseline.md`, #191). The phone and low tiers default to
+The pbr look costs about 10 times the toon frame on the phone and low
+tiers on the software GPU, after #191 (13 to 15 times before on the same
+machine, `docs/perf/191/README.md`). The phone and low tiers default to
 toon. The table is the target for each tier with `?look=pbr` on; where
 today differs, the cell says so.
 
@@ -199,9 +200,9 @@ today differs, the cell says so.
 | --- | --- | --- | --- |
 | Default look | toon | toon | pbr |
 | Standard materials and the palette albedos | keep | keep | keep |
-| Ground scans (albedo, roughness) | 512 px, no normal (#194) | 512 px, no normal (#194) | 1024 px with normal |
+| Ground scans (albedo, roughness) | 512 px, no normal (#194), 2x anisotropic (#191) | 512 px, no normal (#194), 2x anisotropic (#191) | 1024 px with normal, 8x anisotropic |
 | Wall scans (brick, plaster) | drop | drop | keep |
-| Sky environment light | keep (small, baked rarely) | keep (small, baked rarely) | keep, baked again when the sky moves |
+| Sky environment light | 9 sky SH, no map lookup (#191) | 9 sky SH, no map lookup (#191) | keep, baked again when the sky moves |
 | Sun shadow map | drop | drop | keep |
 | GTAO | drop | drop | keep |
 | Grade (time of day, district) | keep, in the materials (#195) | keep, in one cheap pass (#195) | keep, full pass |

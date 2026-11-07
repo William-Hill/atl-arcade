@@ -10,8 +10,9 @@
 // brick or stucco wall under it. The 3:1 wall is squeezed into its square
 // cell; the mural quad stretches it back.
 //   node scripts/assets/mural-atlas.mjs [--out assets/murals] [--sheet docs/murals] [--seed 1979] [--size 2048] [--quality 0.82]
-// Writes mural-atlas.jpg (color, sRGB), mural-roughness.jpg (linear, red =
-// roughness / 0.85), provenance.json, and the contact sheet.
+// Writes mural-atlas.jpg (color, sRGB), mural-roughness.jpg (linear: green
+// and blue = roughness / 0.85, red = the paint coverage, #198),
+// provenance.json, and the contact sheet.
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -1730,7 +1731,10 @@ function paint({ size, roughSize, seed, words, designs, quality }) {
         const wallR = brick ? 0.92 + mort * 0.04 : 0.9;
         const rr = wallR + (paintR - wallR) * cov;
         const g = Math.max(0, Math.min(255, Math.round((rr / 0.85) * 255)));
-        rd[i] = g;
+        // Red is the paint coverage: the game cuts the mural where it is
+        // under one half, so the real host wall shows at the dry-brush edge
+        // (#198, src/render/murals.js).
+        rd[i] = Math.max(0, Math.min(255, Math.round(cov * 255)));
         rd[i + 1] = g;
         rd[i + 2] = g;
         rd[i + 3] = 255;
@@ -1832,7 +1836,7 @@ try {
         bytes: rough.length,
         gpuBytes: gpu(roughSize),
         encoding:
-          "gray = roughness / 0.85 (ROUGHNESS.mural), read from the green channel by MeshStandardMaterial.roughnessMap",
+          "green and blue = roughness / 0.85 (ROUGHNESS.mural), read from the green channel by MeshStandardMaterial.roughnessMap; red = paint coverage (0 bare wall, 1 paint), the mural cut-out mask at 0.5 (src/render/murals.js)",
       },
     },
     totalBytes: color.length + rough.length,

@@ -66,5 +66,16 @@
     "lm_window_normal": "512x512",
     "lm_window_rough": "256x256"
   },
-  "gpuTextureBytes": 12582912
+  "gpuTextureBytes": 12582912,
+  "webp_2026_11_07": {
+    "telephone-factory-lofts.glb": {
+      "date": "2026-11-07",
+      "issue": "#190",
+      "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+      "command": "node scripts/assets/compress-glb.mjs assets/landmarks/telephone-factory-lofts/telephone-factory-lofts.glb <out.glb>",
+      "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+      "bytes_before": 498324,
+      "bytes_after": 305768
+    }
+  }
 }

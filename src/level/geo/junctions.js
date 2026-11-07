@@ -86,10 +86,13 @@ export function convexHull(points) {
 // strip has more than one piece. A strip with no junction keeps its points
 // (and its approach trims). `flat`: true on a level with no terrain (no
 // bridge decks).
+// Cached by the strips array (the only part of the level it reads), so a
+// copy of the level with other buildings reuses it (#190).
 const JUNCTIONS = new WeakMap();
 export function streetJunctions(level, { flat = false } = {}) {
-  let byFlat = JUNCTIONS.get(level);
-  if (!byFlat) JUNCTIONS.set(level, (byFlat = new Map()));
+  const key = level.strips ?? level;
+  let byFlat = JUNCTIONS.get(key);
+  if (!byFlat) JUNCTIONS.set(key, (byFlat = new Map()));
   if (!byFlat.has(flat)) byFlat.set(flat, buildJunctions(level, flat));
   return byFlat.get(flat);
 }

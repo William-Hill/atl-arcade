@@ -108,9 +108,20 @@ const smallSkater = qualityParam === "phone" || (qualityParam !== "high" && isPh
 const skaterBytes = skaterName !== "capsule" ? fetchSkaterModel(skaterName, (n, total) => loader.progress("skater", n, total), { small: smallSkater }) : null;
 // A failed download is reported where the model loads, not here.
 skaterBytes?.catch(() => {});
+// What is not near the spawn loads after the first frame (#187, #190): the
+// NPC-only skater model, the car GLBs, the Meshy people and props, the
+// landmark GLBs, and the GLB tree batch (its impostor bake takes 1 to 2 s
+// on a software GPU).
+let firstFrameDone;
+const firstFrame = new Promise((resolve) => (firstFrameDone = resolve));
 // ?level=beltline-eastside (default, alias: beltline) or ?level=greybox (the debug level).
 const level = await loadLevel(params.get("level"));
 performance.mark("atl:level");
+// The fact card text loads now, so main.js does not wait on it later (#190):
+// while it waited, the late loads ran first and held the first frame.
+const factsModeNow = factsMode(params.get("facts"), { webdriver: Boolean(navigator.webdriver) });
+const factDataLoad = factsModeNow !== "off" && Object.hasOwn(LEVEL_FACTS, level.name) ? LEVEL_FACTS[level.name]() : null;
+factDataLoad?.catch(() => {});
 loader.step("level");
 const geo = isGeoLevel(level);
 
@@ -177,6 +188,7 @@ await Promise.all([meshBuild?.ready, farBuild?.ready, propsBuild?.ready]);
 let geoLights = null;
 let shadowPass = null;
 let sky = null;
+let bakeEnvironment = null;
 if (geo) {
   // The low tier has no shadow map: in headless SwiftShader it halved the
   // frame rate. The kit trees carry a shadow disc and the skater a blob.
@@ -205,14 +217,18 @@ if (geo) {
     // The height fog (src/render/pbr-look.js): before the first material compiles.
     if (params.get("heightfog") !== "0") installHeightFog();
     // The sky environment map: ambient light and reflections. A tier with
-    // no sky dome gets one made only for the map.
-    const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection, pbr: true });
-    scene.environment = createSkyEnvironment(renderer, envSky);
-    scene.environmentIntensity = LOOKS.pbr.environment;
-    if (!sky) {
-      envSky.mesh.geometry.dispose();
-      envSky.mesh.material.dispose();
-    }
+    // no sky dome gets one made only for the map. It bakes once the level
+    // workers are done (#190): with a software GPU the bake runs on the same
+    // CPUs and held the workers back by about 1.2 s.
+    bakeEnvironment = () => {
+      const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection, pbr: true });
+      scene.environment = createSkyEnvironment(renderer, envSky);
+      scene.environmentIntensity = LOOKS.pbr.environment;
+      if (!sky) {
+        envSky.mesh.geometry.dispose();
+        envSky.mesh.material.dispose();
+      }
+    };
   }
   const horizon = sky ? sky.fogColor : new THREE.Color(0xbfe4ff);
   scene.background = horizon.clone();
@@ -255,6 +271,8 @@ const env = createLevelEnv(level, { props: levelPropsOn, placed: propsBuild && (
 const skaterEnv = createSkaterEnv(level, env.grindables);
 const geoMeshes = geo ? await meshBuild.meshes : null;
 performance.mark("atl:meshes");
+// Before the level view: its main-thread build leaves the other CPUs free.
+bakeEnvironment?.();
 const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full" }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
@@ -295,17 +313,19 @@ if (landmarks) {
   scene.add(landmarks.root);
   landmarks.ready.catch((err) => console.error(err));
 }
-const landmarkModels = landmarkGlbs ? createLandmarkModels(level.name) : null;
+const landmarkModels = landmarkGlbs ? createLandmarkModels(level.name, { after: firstFrame }) : null;
 if (landmarkModels) {
   scene.add(landmarkModels.root);
   landmarkModels.ready.catch((err) => console.error(err));
 }
 
 // The street kit (trees, lamps, benches, roof units) loads after the level
-// shows. ?props=0 leaves it out.
+// shows. ?props=0 leaves it out. With the GLB trees (pbr), the batch goes in
+// after the first frame: the impostor bake is long (#190).
 if (geo && params.get("props") !== "0") {
-  loadPropTemplates({ glbTrees: look === "pbr" && params.get("glbtrees") !== "0" })
-    .then((templates) => levelView.addProps(env.props, templates, { renderer: params.get("impostors") !== "0" ? renderer : null }))
+  const glbTrees = look === "pbr" && params.get("glbtrees") !== "0";
+  Promise.all([loadPropTemplates({ glbTrees }), glbTrees ? firstFrame : null])
+    .then(([templates]) => levelView.addProps(env.props, templates, { renderer: params.get("impostors") !== "0" ? renderer : null }))
     .catch((err) => {
       levelView.props.error = String(err);
       console.error(err);
@@ -351,14 +371,14 @@ const pedsView = peds ? createPedsView(peds, { look }) : null;
 if (pedsView) scene.add(pedsView.group);
 // The Meshy people (assets/people/) for the nearest walkers, pbr look only;
 // ?pedglb=0 leaves them out (src/render/ped-models.js).
-const pedModels = pedsView && look === "pbr" && params.get("pedglb") !== "0" && PED_MODEL_COUNT[quality] > 0 ? createPedModels({ count: PED_MODEL_COUNT[quality] }) : null;
+const pedModels = pedsView && look === "pbr" && params.get("pedglb") !== "0" && PED_MODEL_COUNT[quality] > 0 ? createPedModels({ count: PED_MODEL_COUNT[quality], after: firstFrame }) : null;
 if (pedModels) {
   scene.add(pedModels.group);
   pedModels.ready.catch((err) => console.error(err));
 }
 // The Meshy fountains, bollards and BeltLine props at their placements in
 // env.props (src/render/people-props-view.js); ?meshyprops=0 hides them.
-const meshyProps = geo && params.get("props") !== "0" && params.get("meshyprops") !== "0" ? createMeshyPropsView(env.props) : null;
+const meshyProps = geo && params.get("props") !== "0" && params.get("meshyprops") !== "0" ? createMeshyPropsView(env.props, { after: firstFrame }) : null;
 if (meshyProps) {
   scene.add(meshyProps.group);
   meshyProps.ready.catch((err) => console.error(err));
@@ -373,7 +393,8 @@ if (carView) {
   // (src/render/car-models.js). ?carglb=0 keeps the kit cars.
   if (look === "pbr" && params.get("carglb") !== "0") {
     const cars = [...parked, ...(traffic ? traffic.cars : [])];
-    loadCarModels([...new Set(cars.map((c) => c.kind))])
+    firstFrame
+      .then(() => loadCarModels([...new Set(cars.map((c) => c.kind))]))
       .then((models) => {
         const view = createCarModelView(models, cars);
         scene.add(view.group);
@@ -389,8 +410,8 @@ if (carView) {
 // Fact cards (M1-07): 3 cards on the trail, from the open-data-atl site.
 // The cards show at once with the fixture text; a live text replaces it when
 // the call returns. ?facts=fixture|live|0 sets the mode (src/facts/client.js).
-const facts = { mode: factsMode(params.get("facts"), { webdriver: Boolean(navigator.webdriver) }), cards: [], live: "none" };
-const factData = facts.mode !== "off" && Object.hasOwn(LEVEL_FACTS, level.name) ? await LEVEL_FACTS[level.name]() : null;
+const facts = { mode: factsModeNow, cards: [], live: "none" };
+const factData = factDataLoad ? await factDataLoad : null;
 if (factData) {
   facts.cards = fixtureFacts(factData.specs, factData.fixture).map((card, i) => {
     const [x, z] = factData.specs[i].at;
@@ -428,13 +449,12 @@ let npcSkaters = skatersOn ? createNpcSkaters(level, { env, avoid: crowd ? crowd
 // One download for each model: the NPCs of one model share the bytes.
 const npcByteCache = new Map();
 // A model that only the NPCs use downloads after the first frame (#187), so
-// it does not slow the player's skater and the level.
-let firstFrameDone;
-const firstFrame = new Promise((resolve) => (firstFrameDone = resolve));
+// it does not slow the player's skater and the level. It is the 1024 px
+// file on every tier (#190): an NPC is never as near as the player.
 const npcBytes = (model) => {
   if (model === skaterName) return skaterBytes;
   if (!npcByteCache.has(model)) {
-    const bytes = firstFrame.then(() => fetchSkaterModel(model, null, { small: smallSkater }));
+    const bytes = firstFrame.then(() => fetchSkaterModel(model, null, { small: true }));
     // A failed download is reported where the model loads, not here.
     bytes.catch(() => {});
     npcByteCache.set(model, bytes);

@@ -35,14 +35,25 @@ export function bytesKey(buffer) {
 
 // A GLTFLoader plugin: textures whose embedded image bytes and sampler match
 // one already loaded (in any file) reuse that texture.
+// Pure: the image index of a texture that the plugin below may share: its
+// source, or its WebP source (EXT_texture_webp, #190). A texture with any
+// other extension (KTX2, a transform) gets null and loads as usual.
+export function sharedImageIndex(def) {
+  const ext = Object.keys(def.extensions ?? {});
+  if (ext.length === 0) return def.source ?? null;
+  if (ext.length === 1 && ext[0] === "EXT_texture_webp")
+    return def.extensions.EXT_texture_webp.source ?? null;
+  return null;
+}
+
 export function sharedTextures(cache = new Map()) {
   return (parser) => ({
     name: "ATL_shared_textures",
     loadTexture(index) {
       const def = parser.json.textures[index];
-      const image = parser.json.images?.[def.source];
-      if (!image || image.bufferView === undefined || def.extensions)
-        return null;
+      const source = sharedImageIndex(def);
+      const image = source === null ? null : parser.json.images?.[source];
+      if (!image || image.bufferView === undefined) return null;
       return parser
         .getDependency("bufferView", image.bufferView)
         .then((buffer) => {
@@ -50,7 +61,7 @@ export function sharedTextures(cache = new Map()) {
           if (!cache.has(key))
             cache.set(
               key,
-              parser.loadTextureImage(index, def.source, parser.textureLoader),
+              parser.loadTextureImage(index, source, parser.textureLoader),
             );
           return cache.get(key);
         });
@@ -201,7 +212,7 @@ function shadowLights(scene) {
 
 export function createLandmarkModels(
   levelName,
-  { keys = LANDMARK_MODEL_KEYS } = {},
+  { keys = LANDMARK_MODEL_KEYS, after = null } = {},
 ) {
   const root = new THREE.Group();
   root.name = "landmark-models";
@@ -209,7 +220,9 @@ export function createLandmarkModels(
   const cache = new Map();
   const loader = new GLTFLoader();
   loader.setDRACOLoader(getDracoLoader());
-  loader.register(sharedTextures(cache));
+  // First in the list: GLTFLoader asks its plugins in order, and its own
+  // EXT_texture_webp plugin would take a WebP texture before this one (#190).
+  loader.pluginCallbacks.unshift(sharedTextures(cache));
   const lit = { value: 0 };
   let manual = false;
   let source = null;
@@ -232,7 +245,9 @@ export function createLandmarkModels(
     }
     if (!manual) lit.value = source ? source.value : 0;
   };
-  const ready = import("../../assets/landmarks/sites.json").then((mod) => {
+  // `after` (a promise) holds the downloads back, for example until the
+  // first frame (#190).
+  const ready = Promise.resolve(after).then(() => import("../../assets/landmarks/sites.json")).then((mod) => {
     const sites = mod.default ?? mod;
     if (sites.level !== levelName) return;
     return Promise.all(

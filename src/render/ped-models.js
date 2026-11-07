@@ -61,7 +61,9 @@ export function walkTimeScale(speed, duration, stride = PEDS.stride) {
   return (speed * duration) / stride;
 }
 
-export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL_URLS } = {}) {
+// `after` (a promise) holds the downloads back, for example until the first
+// frame (#190).
+export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL_URLS, after = null } = {}) {
   const group = new THREE.Group();
   group.name = "ped-models";
   const skip = new Set();
@@ -69,7 +71,8 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
   const gltfs = {};
   const loader = new GLTFLoader();
   loader.setDRACOLoader(getDracoLoader());
-  const ready = Promise.all(Object.entries(urls).map(async ([k, u]) => (gltfs[k] = await loader.loadAsync(u))))
+  const ready = Promise.resolve(after)
+    .then(() => Promise.all(Object.entries(urls).map(async ([k, u]) => (gltfs[k] = await loader.loadAsync(u)))))
     .then(() => {
       stats.loaded = true;
     })

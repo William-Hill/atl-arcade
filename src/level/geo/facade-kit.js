@@ -34,6 +34,7 @@ import { AWNING_COLORS, GEO_TILE, buildingTest, muralWalls, streetTest, streetWa
 import { BELT, HOUSE_STYLES, SIGN_COLORS, STYLES, STYLE_INDEX, awningHeight, chooseStyle, floorCount, hash32, roofForm, seededRandom, wallColor } from "./styles.js";
 import { buildingSpan, terrainOf } from "./terrain.js";
 import { BULKHEAD, bulkheadBox, minRect, roofPlan } from "./roof-plan.js";
+import { claimedIds } from "./landmarks.js";
 
 export const KIT = {
   cornice: { out: 0.35, height: 0.5, minParapet: 0.5 },
@@ -966,7 +967,30 @@ export function housePorch(m, ring, style, si, base, floorH, top, front, foot = 
 }
 
 // The part counts of buildingKit() and facadeKit().
-const COUNT_KEYS = ["cornice", "coping", "belt", "roof", "sill", "pier", "crown", "bulkhead", "sign", "awning", "lintel", "head", "stack", "door", "step", "sconce", "vent", "porch", "solar"];
+const COUNT_KEYS = ["cornice", "coping", "belt", "roof", "sill", "pier", "crown", "bulkhead", "sign", "awning", "lintel", "head", "stack", "door", "step", "sconce", "vent", "porch", "solar", "muralFrame"];
+
+// The frame of a mural (#198, pbr look): a plain cast-stone cap over the
+// mural and a base under it, so the mural reads as paint on a framed wall
+// panel. `over` is how far each piece runs past the mural ends, `out` how
+// far it sticks out of the wall (the mural is 8 cm out), `height` its
+// height, and `gap` the gap between the piece and the mural edge (m).
+// `ceiling` is the trim albedo ceiling of the pbr look (pbr-palette.js
+// ALBEDO.trim): the kit faces do not get the wall calibration.
+export const MURAL_FRAME = { over: 0.12, out: 0.16, height: 0.2, gap: 0.03, ceiling: 0.7 };
+
+// Builds the cap and the base of one mural (muralWalls() in geo-mesh.js) in
+// the trim color of its style. Returns 1.
+export function muralFrame(m, mural, style, f = MURAL_FRAME) {
+  const [ax, az] = mural.a;
+  const len = Math.hypot(mural.b[0] - ax, mural.b[1] - az) || 1;
+  const t = [(mural.b[0] - ax) / len, (mural.b[1] - az) / len];
+  const top = Math.max(...style.trim);
+  const color = top > f.ceiling ? style.trim.map((v) => (v * f.ceiling) / top) : style.trim;
+  const si = STYLE_INDEX[style.id];
+  wallBox(m, mural.a, t, mural.n, -f.over, len + f.over, mural.y1 + f.gap, mural.y1 + f.gap + f.height, f.out, color, si);
+  wallBox(m, mural.a, t, mural.n, -f.over, len + f.over, mural.y0 - f.gap - f.height, mural.y0 - f.gap, f.out, color, si);
+  return 1;
+}
 
 // The kit parts for one building, into mesh `m`. Returns the part counts.
 // `span` ({ foot, base, top }, src/level/geo/terrain.js) is where the walls
@@ -1201,13 +1225,20 @@ export function houseFronts(level) {
 // `boards` are the shop name boards (shop-names.js).
 // `glb` (facadeKitPlacements().covers) maps a building id to the parts the
 // GLB facade kit replaces (pbr look); without it the kit is all procedural.
-export function facadeKit(level, fronts = frontEdges(level), boards = null, houses = houseFronts(level), glb = null) {
+// A claimed footprint (landmarks.js claimedIds()) gets no kit: its landmark
+// model draws the whole building. Before this, the cornice, coping and
+// crown of the Ponce City Market footprint stood 11 m over the roof of
+// the GLB and showed as broken lines in the sky (#200).
+// With `muralFrames` (the pbr look) each mural gets a cap and a base
+// (muralFrame()).
+export function facadeKit(level, fronts = frontEdges(level), boards = null, houses = houseFronts(level), glb = null, claimed = claimedIds(level), { muralFrames = false } = {}) {
   const tiles = new Map();
   const depthTiles = new Map();
   const counts = Object.fromEntries(COUNT_KEYS.map((k) => [k, 0]));
   const buildings = (level.buildings ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));
   const murals = new Map(muralWalls(level).map((mw) => [mw.id, mw]));
   for (const b of buildings) {
+    if (claimed.has(b.id)) continue;
     const [x, z] = b.outer[0];
     const key = `${Math.floor(x / GEO_TILE)},${Math.floor(z / GEO_TILE)}`;
     let m = tiles.get(key);
@@ -1216,8 +1247,10 @@ export function facadeKit(level, fronts = frontEdges(level), boards = null, hous
     let dm = depthTiles.get(dkey);
     if (!dm) depthTiles.set(dkey, (dm = emptyMesh(true)));
     const front = fronts.get(b.id) ?? houses.get(b.id) ?? null;
-    const c = buildingKit(m, b, buildingSpan(level, b), dm, murals.get(b.id) ?? null, front, level, boards, glb?.get(b.id) ?? null);
-    for (const k of Object.keys(counts)) counts[k] += c[k];
+    const mural = murals.get(b.id) ?? null;
+    const c = buildingKit(m, b, buildingSpan(level, b), dm, mural, front, level, boards, glb?.get(b.id) ?? null);
+    if (muralFrames && mural) c.muralFrame = muralFrame(m, mural, STYLES[STYLE_INDEX[chooseStyle(b, level)]]);
+    for (const k of Object.keys(counts)) counts[k] += c[k] ?? 0;
   }
   const out = [...tiles.entries()]
     .filter(([, m]) => m.indices.length)

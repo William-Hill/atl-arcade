@@ -59,7 +59,7 @@ describe("level detail", () => {
       for (let i = 3; i < mesh.facade.length; i += 4) kinds.add(mesh.facade[i]);
       for (let i = 0; i < mesh.facade.length; i += 4) expect(mesh.facade[i]).toBeLessThan(STYLES.length);
     }
-    expect([...kinds].sort()).toEqual([FACE.roof, FACE.wall, FACE.cornice, FACE.blank]);
+    expect([...kinds].sort()).toEqual([FACE.roof, FACE.wall, FACE.cornice, FACE.blank, FACE.concrete]);
   });
 
   it("puts murals only on walls that face the trail, at most one per building", () => {

@@ -5,7 +5,7 @@
     "counts": {
       "crowd": 40,
       "peds": 90,
-      "glb": 5
+      "glb": 8
     },
     "stops": [
       {
@@ -15,19 +15,15 @@
           565
         ],
         "file": "pbr-high-0.png",
-        "total": 24,
+        "total": 22,
         "bySrc": {
-          "glb": 2,
-          "ped": 22
+          "glb": 22
         },
-        "near": 2,
-        "distinctNear": 2,
+        "near": 3,
+        "distinctNear": 3,
         "repeatPairsNear": 0,
         "repeated": [],
-        "height": {
-          "min": 1.5688313154340723,
-          "max": 1.8231603025388903
-        }
+        "height": null
       },
       {
         "share": 0.45,
@@ -36,20 +32,16 @@
           149
         ],
         "file": "pbr-high-1.png",
-        "total": 26,
+        "total": 18,
         "bySrc": {
-          "glb": 1,
-          "ped": 24,
-          "crowd": 1
+          "glb": 16,
+          "crowd": 2
         },
-        "near": 3,
-        "distinctNear": 3,
+        "near": 0,
+        "distinctNear": 0,
         "repeatPairsNear": 0,
         "repeated": [],
-        "height": {
-          "min": 1.6245924271363765,
-          "max": 1.8434704549820162
-        }
+        "height": null
       },
       {
         "share": 0.7,
@@ -58,37 +50,29 @@
           -356
         ],
         "file": "pbr-high-2.png",
-        "total": 50,
+        "total": 52,
         "bySrc": {
-          "glb": 4,
-          "ped": 46
+          "glb": 52
         },
-        "near": 9,
-        "distinctNear": 9,
+        "near": 10,
+        "distinctNear": 10,
         "repeatPairsNear": 0,
         "repeated": [],
-        "height": {
-          "min": 1.6229485784773714,
-          "max": 1.8978087043459526
-        }
+        "height": null
       },
       {
         "share": "close",
         "file": "pbr-high-close.png",
         "total": 13,
         "bySrc": {
-          "glb": 3,
-          "ped": 4,
+          "glb": 7,
           "crowd": 6
         },
         "near": 3,
         "distinctNear": 3,
         "repeatPairsNear": 0,
         "repeated": [],
-        "height": {
-          "min": 1.5896961534861476,
-          "max": 1.828285455419682
-        }
+        "height": null
       }
     ],
     "errors": []
@@ -109,19 +93,15 @@
           565
         ],
         "file": "pbr-phone-0.png",
-        "total": 11,
+        "total": 12,
         "bySrc": {
-          "glb": 1,
-          "ped": 10
+          "glb": 12
         },
-        "near": 2,
-        "distinctNear": 2,
+        "near": 1,
+        "distinctNear": 1,
         "repeatPairsNear": 0,
         "repeated": [],
-        "height": {
-          "min": 1.6842311684438027,
-          "max": 1.8672559759602883
-        }
+        "height": null
       },
       {
         "share": 0.45,
@@ -130,20 +110,16 @@
           149
         ],
         "file": "pbr-phone-1.png",
-        "total": 13,
+        "total": 16,
         "bySrc": {
-          "glb": 2,
-          "ped": 5,
+          "glb": 10,
           "crowd": 6
         },
         "near": 2,
         "distinctNear": 2,
         "repeatPairsNear": 0,
         "repeated": [],
-        "height": {
-          "min": 1.5766579352412373,
-          "max": 1.8255871908343397
-        }
+        "height": null
       },
       {
         "share": 0.7,
@@ -152,127 +128,29 @@
           -356
         ],
         "file": "pbr-phone-2.png",
-        "total": 29,
+        "total": 34,
         "bySrc": {
-          "glb": 2,
-          "ped": 27
+          "glb": 34
         },
-        "near": 7,
-        "distinctNear": 7,
+        "near": 8,
+        "distinctNear": 8,
         "repeatPairsNear": 0,
         "repeated": [],
-        "height": {
-          "min": 1.5520673606405035,
-          "max": 1.9039696106850168
-        }
+        "height": null
       },
       {
         "share": "close",
         "file": "pbr-phone-close.png",
-        "total": 7,
+        "total": 9,
         "bySrc": {
-          "glb": 1,
-          "ped": 1,
-          "crowd": 5
+          "glb": 3,
+          "crowd": 6
         },
         "near": 1,
         "distinctNear": 1,
         "repeatPairsNear": 0,
         "repeated": [],
-        "height": {
-          "min": 1.8206229146290571,
-          "max": 1.8206229146290571
-        }
-      }
-    ],
-    "errors": []
-  },
-  {
-    "look": "pbr",
-    "tier": "low",
-    "counts": {
-      "crowd": 40,
-      "peds": 60,
-      "glb": 0
-    },
-    "stops": [
-      {
-        "share": 0.2,
-        "at": [
-          -52,
-          565
-        ],
-        "file": "pbr-low-0.png",
-        "total": 24,
-        "bySrc": {
-          "ped": 24
-        },
-        "near": 1,
-        "distinctNear": 1,
-        "repeatPairsNear": 0,
-        "repeated": [],
-        "height": {
-          "min": 1.5896611054660752,
-          "max": 1.8652429510909132
-        }
-      },
-      {
-        "share": 0.45,
-        "at": [
-          314,
-          149
-        ],
-        "file": "pbr-low-1.png",
-        "total": 20,
-        "bySrc": {
-          "ped": 14,
-          "crowd": 6
-        },
-        "near": 4,
-        "distinctNear": 4,
-        "repeatPairsNear": 0,
-        "repeated": [],
-        "height": {
-          "min": 1.665098641992081,
-          "max": 1.8886992593342438
-        }
-      },
-      {
-        "share": 0.7,
-        "at": [
-          180,
-          -356
-        ],
-        "file": "pbr-low-2.png",
-        "total": 39,
-        "bySrc": {
-          "ped": 39
-        },
-        "near": 9,
-        "distinctNear": 9,
-        "repeatPairsNear": 0,
-        "repeated": [],
-        "height": {
-          "min": 1.5685808389238083,
-          "max": 1.9080765211116522
-        }
-      },
-      {
-        "share": "close",
-        "file": "pbr-low-close.png",
-        "total": 11,
-        "bySrc": {
-          "ped": 5,
-          "crowd": 6
-        },
-        "near": 2,
-        "distinctNear": 2,
-        "repeatPairsNear": 0,
-        "repeated": [],
-        "height": {
-          "min": 1.5269328516325913,
-          "max": 1.8840029044891708
-        }
+        "height": null
       }
     ],
     "errors": []

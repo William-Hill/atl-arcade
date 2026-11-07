@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assignPeople, nearestWalkers, personFor, PED_MODEL_COUNT, PED_MODEL_KINDS, walkTimeScale } from "./ped-models.js";
+import { nearestWalkers, personFor, PED_MODEL_KINDS, walkTimeScale } from "./ped-models.js";
 import { meshyPropLod } from "./people-props-view.js";
 
 describe("ped-models", () => {
@@ -19,22 +19,6 @@ describe("ped-models", () => {
     expect(personFor(7)).toBe(personFor(7));
     const seen = new Set(Array.from({ length: 200 }, (_, i) => personFor(i)));
     expect([...seen].sort()).toEqual([...PED_MODEL_KINDS].sort());
-  });
-  it("never draws the same person twice at once", () => {
-    for (const tier of Object.keys(PED_MODEL_COUNT)) expect(PED_MODEL_COUNT[tier]).toBeLessThanOrEqual(PED_MODEL_KINDS.length);
-    const want = Array.from({ length: 12 }, (_, i) => i * 5);
-    const people = assignPeople(want);
-    expect(people.size).toBe(PED_MODEL_KINDS.length);
-    expect(new Set(people.values()).size).toBe(people.size);
-    // The nearest walkers get a person first.
-    expect([...people.keys()]).toEqual(want.slice(0, PED_MODEL_KINDS.length));
-  });
-  it("keeps a walker's person while it stays near", () => {
-    const first = assignPeople([1, 2, 3]);
-    const next = assignPeople([9, 3, 1], first);
-    expect(next.get(3)).toBe(first.get(3));
-    expect(next.get(1)).toBe(first.get(1));
-    expect(new Set(next.values()).size).toBe(3);
   });
   it("plays the walk at the walker's pace", () => {
     expect(walkTimeScale(1.45, 1, 1.45)).toBeCloseTo(1);

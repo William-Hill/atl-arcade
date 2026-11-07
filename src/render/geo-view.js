@@ -223,6 +223,8 @@ float facadeKFrame = 0.0;
 float facadeConcrete = 0.0;
 // The plaster scan grain (-1..1) of a scan sample.
 float plasterGrain(float s) { return clamp((s - ${PLASTER_SCAN.mean.toFixed(4)}) / ${PLASTER_SCAN.spread.toFixed(4)}, -1.0, 1.0); }
+#define BRICK_TILE ${brickInfo.tileMeters.toFixed(3)}
+#define STONE_TILE ${stoneInfo.tileMeters.toFixed(3)}
 // The grain at a wall point m (meters): the fine scan grain, and the same
 // scan ${PLASTER_SCAN.coarse} times larger for patches that still read at
 // street distance (the fine grain averages out in the mipmaps).
@@ -231,8 +233,6 @@ float plasterMottle(vec2 m) {
   float coarse = plasterGrain(texture2D(uStoneRough, m / (STONE_TILE * ${PLASTER_SCAN.coarse.toFixed(1)}) + vec2(0.37, 0.61)).r);
   return clamp(0.4 * fine + 0.8 * coarse, -1.0, 1.0);
 }
-#define BRICK_TILE ${brickInfo.tileMeters.toFixed(3)}
-#define STONE_TILE ${stoneInfo.tileMeters.toFixed(3)}
 ${DETAIL_GLSL}
 #endif
 // The center (cell fraction) of the shop window on the ground floor.

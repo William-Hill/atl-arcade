@@ -1,0 +1,142 @@
+[
+  {
+    "name": "159-pcm",
+    "commit": "e2e10ac6d5e35b2286bd8080a086a4d3a9ea44a0",
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-98%2C2.5%2C-812%2C-190%2C22%2C-858",
+    "tune": null,
+    "renderer": {
+      "calls": 188,
+      "triangles": 388583,
+      "textures": 81,
+      "geometries": 74
+    },
+    "look": {
+      "toneMapping": 7,
+      "exposure": 1.0976805,
+      "environment": 0.6,
+      "sun": 3.9858
+    },
+    "grade": {
+      "uContrast": 1.14,
+      "uSat": 1.1236000000000002,
+      "uWarm": 0.3353,
+      "uLift": 0,
+      "uTint": {
+        "x": 1.03,
+        "y": 1,
+        "z": 0.96
+      }
+    },
+    "bloom": 0.28,
+    "weather": {
+      "kind": "clear",
+      "elevation": 79.54625955917935
+    },
+    "seconds": 95
+  },
+  {
+    "name": "159-trail",
+    "commit": "e2e10ac6d5e35b2286bd8080a086a4d3a9ea44a0",
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312%2C2%2C-175%2C334%2C3%2C-80",
+    "tune": null,
+    "renderer": {
+      "calls": 304,
+      "triangles": 834053,
+      "textures": 185,
+      "geometries": 139
+    },
+    "look": {
+      "toneMapping": 7,
+      "exposure": 1.0976805,
+      "environment": 0.6,
+      "sun": 3.9858
+    },
+    "grade": {
+      "uContrast": 1.14,
+      "uSat": 1.114897004175366,
+      "uWarm": 0.3353,
+      "uLift": 0,
+      "uTint": {
+        "x": 1.0117896265805337,
+        "y": 1,
+        "z": 0.9946311202583984
+      }
+    },
+    "bloom": 0.28,
+    "weather": {
+      "kind": "clear",
+      "elevation": 79.54625955917935
+    },
+    "seconds": 143
+  },
+  {
+    "name": "159-krog",
+    "commit": "e2e10ac6d5e35b2286bd8080a086a4d3a9ea44a0",
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-150%2C2%2C780%2C-70%2C5%2C850",
+    "tune": null,
+    "renderer": {
+      "calls": 230,
+      "triangles": 512638,
+      "textures": 100,
+      "geometries": 83
+    },
+    "look": {
+      "toneMapping": 7,
+      "exposure": 1.0976805,
+      "environment": 0.6,
+      "sun": 3.9858
+    },
+    "grade": {
+      "uContrast": 1.14,
+      "uSat": 1.1448,
+      "uWarm": 0.3353,
+      "uLift": 0,
+      "uTint": {
+        "x": 1,
+        "y": 1.02,
+        "z": 0.98
+      }
+    },
+    "bloom": 0.28,
+    "weather": {
+      "kind": "clear",
+      "elevation": 79.54625955917935
+    },
+    "seconds": 122
+  },
+  {
+    "name": "159-night-street",
+    "commit": "e2e10ac6d5e35b2286bd8080a086a4d3a9ea44a0",
+    "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=22.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-80%2C2.5%2C640%2C-120%2C5%2C615",
+    "tune": null,
+    "renderer": {
+      "calls": 295,
+      "triangles": 1045646,
+      "textures": 89,
+      "geometries": 122
+    },
+    "look": {
+      "toneMapping": 7,
+      "exposure": 0.924,
+      "environment": 1.7999999999999998,
+      "sun": 0
+    },
+    "grade": {
+      "uContrast": 1.04,
+      "uSat": 1.2096000000000002,
+      "uWarm": 0.4311,
+      "uLift": 0.006,
+      "uTint": {
+        "x": 1,
+        "y": 1.02,
+        "z": 0.98
+      }
+    },
+    "bloom": 0.28,
+    "weather": {
+      "kind": "clear",
+      "elevation": -17.483573669187262
+    },
+    "seconds": 220
+  }
+]

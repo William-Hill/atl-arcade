@@ -867,7 +867,7 @@ function runScript(entries, { position, yaw } = {}) {
 // Mouse drag on the canvas and the right stick turn the follow camera.
 let lookInput = null;
 if (view === "follow") {
-  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater, props: env.props, canopy: params.get("canopycam") !== "0" });
+  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater, props: env.props, canopy: params.get("canopycam") !== "0", fence: env.fence });
   lookInput = createLookInput({ element: renderer.domElement });
 }
 

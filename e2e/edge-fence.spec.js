@@ -47,3 +47,36 @@ for (const look of ["toon", "pbr"]) {
     expect(errors, `page errors: ${errors.join(" | ")}`).toEqual([]);
   });
 }
+
+// Playtest 2026-11-08: the follow camera swung outside the fence, and the
+// banner hid the skater. Nia stands 1.5 m from the east fence and faces
+// west, so the camera behind her is on the fence side. With no fence test
+// the camera sits about 5 m behind her, past the fence. Every camera sample
+// must stay inside the inner face of the fence.
+test("the follow camera stays inside the east edge fence", async ({ page }) => {
+  test.setTimeout(300000);
+  const errors = [];
+  page.on("pageerror", (err) => errors.push(String(err)));
+  await page.goto(`/?level=beltline-eastside&mute=1&quality=low&look=toon&time=14&weather=clear&governor=0&run=free&peds=0&skaters=0&traffic=0`);
+  await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 150000 });
+
+  const result = await page.evaluate(async ({ z }) => {
+    const { fence } = window.__atl.level;
+    const x = fence.maxX - 1.5;
+    const y = window.__atl.level.sample(x, z)?.height ?? 0;
+    window.__atl.recorder.start(1);
+    await window.__atl.runScript([{ frames: 90, input: {} }], { position: [x, y, z], yaw: Math.PI });
+    const samples = window.__atl.recorder.stop();
+    return { fence, cameraX: samples.map((s) => s.camera[0]), skaterX: samples.map((s) => s.skater[0]) };
+  }, { z: LANE_Z });
+
+  expect(result.cameraX.length).toBeGreaterThan(10);
+  // The camera is behind her, on the fence side.
+  expect(result.cameraX[0]).toBeGreaterThan(result.skaterX[0]);
+  expect(Math.max(...result.cameraX)).toBeLessThan(result.fence.maxX);
+  // Let the render catch up, then take the evidence.
+  const frames = await page.evaluate(() => window.__atl.frames);
+  await page.waitForFunction((f) => window.__atl.frames > f + 30, frames, { timeout: 120000 });
+  await page.screenshot({ path: "e2e/__screenshots__/edge-fence-camera-after.png" });
+  expect(errors, `page errors: ${errors.join(" | ")}`).toEqual([]);
+});

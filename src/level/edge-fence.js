@@ -45,6 +45,26 @@ export function fenceDistance(fence, x, z) {
   return Math.min(x - fence.minX, fence.maxX - x, z - fence.minZ, fence.maxZ - z);
 }
 
+// The distance along the ray from `from` to `to` (3D points, [x, y, z]) at
+// which the ray crosses the inner face of the fence, or Infinity when it
+// stays inside. The follow camera adds this to its wall ray: the fence has
+// no physics collider, and past the bounds there is no ground to show. The
+// fence height does not count, so the camera stays inside the inner face
+// even above the fence top. A `from` on or past the inner face gives
+// Infinity: a hit at 0 would put the camera on the skater.
+export function fenceRayDistance(fence, from, to) {
+  if (!fence || !(fenceDistance(fence, from[0], from[2]) > 0)) return Infinity;
+  const dx = to[0] - from[0];
+  const dz = to[2] - from[2];
+  let t = Infinity;
+  if (dx > 0) t = Math.min(t, (fence.maxX - from[0]) / dx);
+  else if (dx < 0) t = Math.min(t, (fence.minX - from[0]) / dx);
+  if (dz > 0) t = Math.min(t, (fence.maxZ - from[2]) / dz);
+  else if (dz < 0) t = Math.min(t, (fence.minZ - from[2]) / dz);
+  if (!(t < 1)) return Infinity;
+  return t * Math.hypot(dx, to[1] - from[1], dz);
+}
+
 // True when (x, z) is in the wall band of the fence.
 export function inFence(fence, x, z) {
   const d = fenceDistance(fence, x, z);

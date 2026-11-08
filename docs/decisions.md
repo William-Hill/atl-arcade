@@ -466,7 +466,6 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Not done in this part: a ramp for each city material and a rim light on the city. These need `src/render/geo-view.js`, which PR #50 also changes. Do them after PR #50 merges.
 - Low tier gate, 2026-11-02 21:16 to 21:19, load average 15 to 18, in the order toon off, toon on, toon off, toon on: each run gave a median of 30 FPS, with averages of 34.0, 33.5, 34.2, and 34.2 FPS. Gate 55: FAIL for all four. The toon pass does not make the low tier slower. An earlier single pair gave 59.9 FPS for toon off and 30 FPS for toon on, but the repeat runs show that pair was noise. Evidence: `reports/toon/`.
 
-
 ## 2026-11-02: A second playable skater, and the pipelines compared (M1-10, #42)
 
 - Scope change: version 1 had one skater in the concept. William asked for more playable characters, so M1 now has two: Nia "Sway" Ellis (West End) and Marcus "Tempo" Reid (Old Fourth Ward). Each new skater adds art cost and a skater review, so a third skater needs a new issue.
@@ -1137,7 +1136,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Grid: 3.5-4.5 m ground floors, 3-6 m bays, board centered on the kit sign band (`facade-kit.js`), patio on the 3.5 m apron. Details in `docs/storefronts.md`.
 - Invented businesses only (`scripts/assets/storefront-businesses.json`); no real names or logos.
 
-
 ## 2026-11-04: Landmark facsimiles for the BeltLine Eastside (assets)
 
 - Ponce City Market (full building), Telephone Factory Lofts, Studioplex, New Realm Brewing, and the Eastside Trail bridges (North Avenue, Ralph McGill, Ponce de Leon, Freedom Parkway) are procedural Blender models (`scripts/blender/landmarks.py`) on the real OSM footprints at the game's heights and ground (`scripts/assets/landmark-sites.mjs` → `assets/landmarks/sites.json`, from the game's own `buildingSpan`/`bridgeDeck`). One Draco GLB per landmark with LOD nodes that share materials and tiling textures. See `docs/landmarks.md`.
@@ -1189,7 +1187,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
   uncut claimed-footprint collider as an invisible wall.
 - PCM LOD2 window light is keyed per tiled UV cell (a hash of
   `floor(vEmissiveMapUv)`), so far walls do not light all at once.
-
 
 ## 2026-11-05: epic/assets — painted murals for the pbr look (assets/murals)
 - 16 original mural designs (dogwood, peach, magnolia, brown thrasher, heron and river, skyline silhouettes, the BeltLine trail, skaters, music, porch-row neighbors, a crowd wave, a night rink) are drawn from code with the Chromium 2D canvas (`scripts/assets/mural-atlas.mjs`, seed 1979), then a per-pixel paint pass adds brush strokes, a ragged dry-brush edge over painted brick or stucco, mortar show-through, weathering, and a roughness atlas. No image model, no Meshy (0 credits), no real murals, artists' styles, or brands.
@@ -1305,7 +1302,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Grind and collision data live in one manifest (`features.json`) in model space, in the `{ points }` spline format of `src/level/splines.js`; `src/level/skate-features.js` places it (position, yaw) as level objects for `prepareGrindables()` and as a ground sampler. Edges of ledges and coping keep their own `kind` (`ledge`, `coping`): grind.js grinds any spline, and only `rail` objects get capsule colliders in `physics/world.js`.
 - Only the planter (bushes) is over 1.5k triangles, so it is the only feature with a LOD1 (30 m). Whole set: about 0.55 MB download (GLBs 155 KB, textures 396 KB).
 - Meshy/Tripo not used (cap 0); every pixel is painted in code.
-
 
 ## 2026-11-05: epic/assets — murals only on blank walls
 - A mural was pasted over the shader's windows (an 8-storey glass wall facing the trail). Murals now go only on walls with no windows behind them.
@@ -1442,7 +1438,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 ### Limits
 - No lane changes or merges, no traffic lights (stop-sign style boxes as before). Parked cars have no lamps. Headless frame rate makes the sim slow in wall time, so browser yield checks wait longer.
 
-
 ## 2026-11-05: epic/city-look — the Blender facade kit in the pbr look
 
 ### Decisions
@@ -1503,7 +1498,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 
 - A few short ways stay steeper than 10% where they meet a bridge end or the trail (path `w30977457` 39%, `w431443667` 26%); the grade limit keeps them skatable. The trail keeps its rail grades (up to 66% on the bridge approach `w83291378`), which `gradeTrail()` owns.
 - `assets/map/beltline-eastside/iso.json` (the baked isometric map) moves by half a meter with the new terrain; `iso-map.test.js` fails until it is baked again with `scripts/bake-iso-map.mjs`.
-
 
 ## 2026-11-05: epic/city-look — pedestrians on the trail, the sidewalks and the street edges
 - New: `src/sim/peds.js` (pure, seeded, Vitest in `src/sim/peds.test.js`) and `src/render/peds-view.js`, with a small hook in `src/main.js`. `?peds=0` leaves them out; `?npcseed=<n>` seeds them with the crowd. `window.__atl.peds` gives the count, the min gap, the draw calls, the triangles and the list.
@@ -1886,7 +1880,6 @@ The owner saw too many repeat characters, and maybe too many NPCs. `node scripts
 
 **Third pass (owner playtest, 2026-11-07).** The owner saw no step, no knee drive, and no ankle push-off. Cause: the v3 push and coast poses had no foot targets, so the feet stayed at their rest targets (the thigh turned 13.6 degrees in the push; 38.4 on v2). The push is now a stroke in phases for each leg: push out and back with an ankle push-off (the heel comes up 30 to 34 degrees), a step with a knee drive (the skate lifts 15 to 18 cm), and a glide with the weight over the skate. Evidence: `docs/characters/anim-v3/push-side-front.jpg`.
 
-
 ## 2026-11-07 — The skater bodies set the model scale and the skating physics
 
 The owner saw the playable skaters as too small next to the NPCs, and asked that height and weight also change the skating physics.
@@ -1895,6 +1888,26 @@ The owner saw the playable skaters as too small next to the NPCs, and asked that
 - The model scale is (height + 0.10 m) / GLB height: Nia 1.047 (1.78 m on skates), Marcus 1.112 (1.98 m on skates). `wrapModel()` applies it. The GLBs do not change.
 - `skateFor()` changes the SKATE constants (tuned for 1.75 m, 70 kg) with small scaling laws: top speed and stroke time with sqrt(height); push acceleration with weight^(-1/3) and sqrt(height); air drag with sqrt(height / weight); brake with weight^(-1/3); turn rate with height^(-1/2) weight^(-1/6); jump with weight^(-1/6) height^(1/4); collision radius with sqrt(weight / height). Each constant stays within its min and max in `constants.js`, and within 12% of SKATE. The roll friction stays the same. `skaterEnv.skate` carries the constants into `stepSkater()`; the capsule keeps SKATE.
 - The tables in the dossiers list each constant for each skater.
+
+## 2026-11-08 — A construction fence at the level edge (#229)
+
+An Autopilot playtest (run `20261107-171547`) rode east from the spawn off the BeltLine Eastside level. Past the bounds the ground sampler returns null, so the skater fell and the controller sent it back to the spawn with no warning. The level had no barrier at its edges. The greybox has barriers at each edge and does not change.
+
+**The fence.** `src/level/edge-fence.js` puts a construction fence 3 m inside the bounds, on all four sides of a geodata level. `createLevelEnv()` wraps the ground sampler with it (`withEdgeFence()`). In a band 0.5 m wide the sample is a wall. The band is wider than one step of a skater at top speed (0.2 m at 12 m/s and 60 Hz), and the controller ring probes one body radius ahead, so no step goes through it. The skater slides along the fence on a shallow approach and stops (bonks) on a head-on approach, with the existing wall response. No controller change.
+
+**The wall height.** The render shows a fence 2.2 m tall. For the controller, the wall top is 2.2 m above the ground or 2.2 m above the height `y` of the sample, when that is higher. The controller gives `y` on each sample, so the wall is always taller than a step, and a skater that falls off a roof near the edge cannot fly over it. The Vitest level test found this case (a roof at 28.9 m, 10 m from the west fence). A fixed tall wall was rejected: the photo-mode camera uses the sampler as its floor, and it would jump up at the fence. The photo-mode floor skips a sample with the id `edge-fence`.
+
+**The grind lines.** A grind does not sample the ground, so a curb ledge that crosses the fence line carried the skater through the fence (found in the PR review: `ledge:curb:w1384901292:0` ended at x = 482.83 m, past the fence). `clipGrindables()` cuts each bench and curb ledge 1 m inside the fence. At the cut end the grind stops, and the fence wall stops the skater.
+
+**The hint.** Within 5 m of the fence the HUD shows "Edge of the map. Turn around and keep skating." The soft stop with no fence was rejected: a slow-down near an invisible line does not show the player why.
+
+**The look.** Construction fencing, as AGENTS.md allows: steel posts in block feet, and a teal scrim with orange stripes and the words SKATE ATL. No police tape, no traffic barriers. On a building or a street prop the fence stands on the terrain, so it does not go over a roof. One mesh for the scrim and two instanced meshes for the posts and the feet (1666 panels on this level).
+
+**The backstop.** The out-of-bounds respawn in `stepSkate()` stays. It catches anything that gets past the fence.
+
+**Evidence.** `src/level/edge-fence.test.js`: a skater at top speed into the bound stops and does not respawn (flat ground, each of the four edges, a shallow approach, a jump, and a fall from 20 m); on the real level, at each edge, the lanes where the skater rode off before the fence now stop it. `e2e/edge-fence.spec.js` rides at full push into the east fence (`?look=toon` and `?look=pbr`, `time=14&weather=clear`, quality low): no respawn, the skater stops within 1 m of the fence, and the hint shows. Screenshots: `e2e/__screenshots__/edge-fence-east-toon.png`, `edge-fence-east-pbr.png`. The spec turns off the walkers, the NPC skaters, and the moving cars, so none of them stands in the lane.
+
+**Open.** No person played into the fence yet. The fence goes through the buildings at the edge. Where a bridge crosses the fence line, the fence stands on the deck, so a skater on the road under the bridge stops at a wall with no fence picture.
 
 ## 2026-11-08 — The skater faces the heading at the spawn (#231)
 

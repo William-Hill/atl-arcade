@@ -5,6 +5,10 @@
 import { comboString, comboValue } from "../sim/skate/combo.js";
 import { formatClock } from "../sim/skate/goals.js";
 import { startHint } from "./layout.js";
+import { nearEdge } from "../level/edge-fence.js";
+
+// The hint near the level edge fence (#229).
+export const EDGE_HINT = "Edge of the map. Turn around and keep skating.";
 
 function el(tag, className, parent) {
   const node = document.createElement(tag);
@@ -14,7 +18,8 @@ function el(tag, className, parent) {
 }
 
 // `touch` is true when the touch controls show: the hints name a tap.
-export function createHud(root, { touch = false } = {}) {
+// `fence` is the level edge fence (src/level/edge-fence.js), or null.
+export function createHud(root, { touch = false, fence = null } = {}) {
   root.innerHTML = "";
   // The score and the run timer (M1-05) share the top line.
   const top = el("div", "hud-top", root);
@@ -34,6 +39,10 @@ export function createHud(root, { touch = false } = {}) {
   const hint = el("div", "hud-hint", root);
   hint.id = "hud-hint";
   hint.textContent = startHint(touch);
+  const edge = el("div", "hud-hint hud-edge", root);
+  edge.id = "hud-edge";
+  edge.textContent = EDGE_HINT;
+  edge.hidden = true;
 
   const styleWrap = el("div", "hud-meter hud-style", root);
   el("span", "hud-label", styleWrap).textContent = "STYLE";
@@ -74,6 +83,7 @@ export function createHud(root, { touch = false } = {}) {
       styleWrap.dataset.ready = c.signatureReady ? "1" : "0";
 
       const s = run.skater;
+      edge.hidden = !nearEdge(fence, s.position[0], s.position[2]);
       if (s.state === "grind" && s.grind) {
         balanceWrap.style.display = "";
         balanceDot.style.left = `${50 + Math.max(-1, Math.min(1, s.grind.balance)) * 48}%`;
@@ -106,6 +116,6 @@ export function createHud(root, { touch = false } = {}) {
         pulse.style.transform = `scale(${1 + 0.6 * fade * fade})`;
       }
     },
-    elements: { score, timer, combo, pending, tag, pulse, styleFill, balanceWrap, balanceDot },
+    elements: { score, timer, combo, pending, tag, pulse, edge, styleFill, balanceWrap, balanceDot },
   };
 }

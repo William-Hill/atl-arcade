@@ -1921,3 +1921,13 @@ The fix:
 - The PR #225 fix for the sideways skater does not change: `sync()` sets the rotation from the yaw as before.
 
 Check: `e2e/skater-spawn.spec.js` (each skater: at the load and after a paused respawn, the model rotation is within 5 degrees of the heading, and the camera is behind the skater). It fails on the old code. Evidence: `docs/characters/spawn-231/<skater>-before-after.jpg` (Beltline spawn; top row old code, bottom row fix; left the load, right the first frame after a respawn) and `e2e/__screenshots__/spawn-231-<skater>.png`, `respawn-231-<skater>.png`.
+
+## 2026-11-08 — A baked leaf cut for the leaf cards on phone and low (#191)
+
+PR #224 measured the leaf cards of the pbr trees as the largest cost left on the phone and low tiers. Each card layer of a crown is cut with `discard` and runs the procedural leaf loop. The leaf cards stay (no look change).
+
+- **Decision: the phone and low tiers read the leaf cut from a baked texture array.** `bakeLeafCut()` (`src/render/leaf-cut.js`) draws the leaf field of the 7 leaf shapes, 8 seeds each, at load into 56 layers of 128 px with mips (RG8, 2.45 MB on the GPU, no download, no generated art file). The bake runs the same GLSL as the procedural cut. A card reads the layer of its shape and of its nearest seed with one texture read, not the loop. The coverage, the clump change by distance and the edge anti-aliasing of #202 do not change. High keeps the procedural cut (`leafCutFor()`); `?leafcut=procedural|baked` sets it.
+- **Result** (SwiftShader, phone tier, fixed cameras, method of PR #224, `docs/perf/191/leaf-cards.md`): spawn 1968 → 1456 ms (-26 %), street 1198 → 1062 ms (-11 %), park 1286 → 1123 ms (-13 %). Low: spawn -23 %, street -14 %. High: no change.
+- **The look**: the canopy silhouette and the mean leaf color stay within the limits of `e2e/leaf-cut.spec.js` (leaf part within 10 %, color within 8/255). On SwiftShader the procedural near crowns were pixel noise (the leaf hash amplifies the interpolation error of the seed); the baked leaves are whole and anti-aliased. Each card shows one of 8 layouts per shape. The dark speckle of #202 does not come back: the AO pass still skips the cards, and the mips filter the veins.
+- **Rejected**: a cheaper lit model for the cards (no lighting at all saves only 2 to 8 %); fewer card layers (half the layers saves 13 to 20 % more, but the near crowns get holes); alpha to coverage (it needs MSAA, which phone and low do not have).
+- **Open**: a real-GPU run and a phone run. #191 stays open.

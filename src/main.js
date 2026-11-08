@@ -35,6 +35,7 @@ import { createLandmarksView } from "./render/landmarks-view.js";
 import { createLandmarkModels } from "./render/landmark-models.js";
 import { claimLandmarkModels } from "./level/geo/landmarks.js";
 import { QUALITY, isPhone, pixelRatioFor, qualityFor, readDevice, rendererName } from "./render/quality.js";
+import { leafCutFor } from "./render/leaf-cut.js";
 import { setPostToggles } from "./render/post-toggles.js";
 import { choiceFrom, paramFor, readSettings, reloadHref, safeStorage, sourcesOf, writeSettings } from "./ui/settings.js";
 import { createSettingsMenu } from "./ui/settings-menu.js";
@@ -291,7 +292,7 @@ const geoMeshes = geo ? await meshBuild.meshes : null;
 performance.mark("atl:meshes");
 // Before the level view: its main-thread build leaves the other CPUs free.
 bakeEnvironment?.();
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full" }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full", leafCut: leafCutFor(quality, params.get("leafcut")) }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
@@ -357,7 +358,7 @@ if (landmarkModels) {
 if (geo && params.get("props") !== "0") {
   const glbTrees = look === "pbr" && params.get("glbtrees") !== "0";
   Promise.all([loadPropTemplates({ glbTrees }), glbTrees ? firstFrame : null])
-    .then(([templates]) => levelView.addProps(env.props, templates, { renderer: params.get("impostors") !== "0" ? renderer : null }))
+    .then(([templates]) => levelView.addProps(env.props, templates, { renderer, impostors: params.get("impostors") !== "0" }))
     .catch((err) => {
       levelView.props.error = String(err);
       console.error(err);

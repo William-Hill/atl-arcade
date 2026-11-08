@@ -15,7 +15,7 @@ import { createMuralAtlas, createMuralMaterial } from "./murals.js";
 import { ALBEDO, ALBEDO_GLSL, CONCRETE, FACADE_CALIBRATION, FACADE_FADE, PLASTER_SCAN, WALL_GRAIN, windowColorGlsl, windowMean } from "./pbr-palette.js";
 import { createPropBatch } from "./prop-batch.js";
 import { BRICK_TONE, DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, FRAME_ROUGHNESS, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
-import { TREE_UNIFORMS, createLeafDepthMaterial, markCrownCores, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
+import { TREE_UNIFORMS, bakeLeafCut, createLeafDepthMaterial, markCrownCores, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
 import { bakeTreeImpostors } from "./tree-impostors.js";
 import { getDracoLoader } from "./skater-model.js";
 import { facadeKitPlacements } from "../level/geo/facade-kit-glb.js";
@@ -974,6 +974,8 @@ export const LEAF_FLUTTER = { amplitude: 0.035, rate: 7.0 };
 // With `coverage` (the high tier: the scene draws into a MSAA target) the
 // leaf edges use alpha to coverage (#202). Without MSAA it has no effect, so
 // the phone and low tiers keep the cut at 0.5 coverage.
+// `material.userData.leafBaked` (set before the first draw, after
+// bakeLeafCut()) makes the cards read the baked leaf cut (#191).
 function createPropMaterial({ wind = true, look = "toon", leaves = false, coverage = false } = {}) {
   const material = litMaterial(look, { vertexColors: true }, { gradientMap: toonRamp({ soft: true }), roughness: ROUGHNESS.props, envLight: ENV_LIGHT.props });
   // The albedo calibration (pbr look): darker leaves and props.
@@ -1002,7 +1004,7 @@ if (distance(vColor.rgb, vec3(${LAMP_GLOBE.color.join(", ")})) < 0.02) totalEmis
       }
       if (leaves) {
         patchLeafVertex(shader);
-        patchLeafFragment(shader, { backlight: look === "pbr" });
+        patchLeafFragment(shader, { backlight: look === "pbr", baked: material.userData.leafBaked === true });
       }
       if (!wind) return;
       shader.uniforms.uWindTime = time;
@@ -1032,7 +1034,7 @@ if (distance(vColor.rgb, vec3(${LAMP_GLOBE.color.join(", ")})) < 0.02) totalEmis
           ].join("\n"),
         );
     };
-    material.customProgramCacheKey = () => `geo-props${wind ? "-wind" : ""}${leaves ? "-leaves" : ""}${lampGlow ? "-lamps" : ""}-${look}`;
+    material.customProgramCacheKey = () => `geo-props${wind ? "-wind" : ""}${leaves ? "-leaves" : ""}${material.userData.leafBaked ? "-baked" : ""}${lampGlow ? "-lamps" : ""}-${look}`;
   }
   return { material, time };
 }
@@ -1042,6 +1044,7 @@ if (distance(vColor.rgb, vec3(${LAMP_GLOBE.color.join(", ")})) < 0.02) totalEmis
 // `aprons: false` leaves out the concrete aprons of the shops (aprons.js).
 // `season` sets the tree colors: "spring", "summer" (the default), or "fall".
 // `look` picks the material set ("toon" or "pbr", src/render/look.js).
+// `leafCut`: "baked" or "procedural" (leaf-cut.js leafCutFor()).
 // `kitGlb`: the loaded Blender facade kit nodes (facade-kit-view.js
 // loadFacadeKit()) or null. The pbr look puts them in the depth tiles, and the
 // procedural kit leaves out what they replace; without them (a failed load)
@@ -1049,7 +1052,7 @@ if (distance(vColor.rgb, vec3(${LAMP_GLOBE.color.join(", ")})) < 0.02) totalEmis
 // The build options of the far surface tiles (the low tier).
 export const FAR_TERRAIN_BUILD = { terrainStep: 2, surfacesOnly: true };
 
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null, leafCoverage = false } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null, leafCoverage = false, leafCut = "procedural" } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -1156,16 +1159,17 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   // draw call); update() picks the LOD of each prop.
   let propBatch = null;
   const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null, groundLight: null };
-  // `renderer` draws the far tree impostors (tree-impostors.js).
-  const treeCost = { impostorKinds: 0, atlasBytes: 0, bakeMs: 0 };
+  // `renderer` draws the far tree impostors (tree-impostors.js, unless
+  // `impostors` is false) and the baked leaf cut.
+  const treeCost = { impostorKinds: 0, atlasBytes: 0, bakeMs: 0, leafCut: "procedural", leafBakeBytes: 0, leafBakeMs: 0 };
   const treeAtlas = { pixels: null, size: 0 };
-  function addProps(placements, templates, { renderer = null } = {}) {
+  function addProps(placements, templates, { renderer = null, impostors = true } = {}) {
     // The procedural trees take the place of the two kit trees.
     // The GLB trees take the place of the procedural ones in the pbr look,
     // in the colors of the season.
     const glb = leaves ? glbTreeTemplates(templates, season) : {};
     let far = {};
-    if (renderer && Object.keys(glb).length) {
+    if (renderer && impostors && Object.keys(glb).length) {
       const t0 = performance.now();
       const baked = bakeTreeImpostors(renderer, glb);
       far = baked.templates;
@@ -1174,6 +1178,15 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       treeCost.bakeMs = Math.round(performance.now() - t0);
       treeAtlas.pixels = baked.pixels;
       treeAtlas.size = baked.size;
+    }
+    // `leafCut` "baked" (phone and low, #191): the cards read the leaf cut
+    // from a texture array, baked once here.
+    if (leaves && leafCut === "baked" && renderer) {
+      const t0 = performance.now();
+      treeCost.leafBakeBytes = bakeLeafCut(renderer).bytes;
+      treeCost.leafBakeMs = Math.round(performance.now() - t0);
+      treeCost.leafCut = "baked";
+      propMaterial.material.userData.leafBaked = true;
     }
     const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves }), ...glb, ...far } : templates;
     const glbKinds = new Set(Object.keys(glb));

@@ -5,6 +5,7 @@ import { getDracoLoader } from "./skater-model.js";
 import { PEDS } from "../sim/peds.js";
 import { leashPoints } from "./leash.js";
 import { createPedCrowd } from "./ped-crowd.js";
+import { PED_VARIANTS, PED_VARIANT_URLS, atlasMaterial, createLookPicker, lookAtlas, lookTile, pedLooks } from "./ped-variants.js";
 
 // The Meshy people (assets/people/; docs/people-props.md) for the walkers
 // nearest the camera (src/sim/peds.js), in the pbr look: each of those
@@ -28,7 +29,8 @@ export const PED_MODEL_URLS = {
 };
 export const PED_MODEL_KINDS = ["walker_sundress", "elder_polo", "jogger", "dog_walker", "stroller_dad"];
 // How many walkers get a GLB person, by quality tier, and out to what
-// distance (m) from the camera.
+// distance (m) from the camera. Each walker shows its look (ped-variants.js):
+// a person and an outfit variant that no other walker within 40 m has.
 export const PED_MODEL_COUNT = { low: 0, phone: 3, high: 8 };
 export const PED_MODEL_RADIUS = 45;
 // Each person's walking clip, and what walks with it (x, z in the person's
@@ -69,7 +71,7 @@ export function walkTimeScale(speed, duration, stride = PEDS.stride) {
 // `crowd` (the walker pool size, needs WEBGL_multi_draw) draws the other
 // walkers as baked people too; figureSkip then hides every instanced figure
 // of peds-view.js, also while the GLBs load (unless they fail).
-export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL_URLS, after = null, crowd = 0 } = {}) {
+export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL_URLS, after = null, crowd = 0, variants = PED_VARIANTS, variantUrls = PED_VARIANT_URLS } = {}) {
   const group = new THREE.Group();
   group.name = "ped-models";
   const skip = new Set();
@@ -77,13 +79,68 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
   let crowdView = null;
   const ALL = { has: () => true };
   const gltfs = {};
+  const images = {};
   const loader = new GLTFLoader();
   loader.setDRACOLoader(getDracoLoader());
+  const imageLoader = new THREE.ImageLoader();
+  // The looks (ped-variants.js): a person and an outfit variant per walker.
+  const looks = createLookPicker(pedLooks(PED_MODEL_KINDS, variants));
+  const variantMats = new Map();
+  // The material of a rig mesh for variant `v`: a clone with the variant
+  // base color, made once per material and variant.
+  function variantMaterial(material, kind, v) {
+    if (!v || !material.map) return material;
+    const key = `${material.uuid}:${v}`;
+    if (!variantMats.has(key)) {
+      const img = images[variants[kind][v - 1]];
+      if (!img) return material;
+      const mat = material.clone();
+      // A new texture: a clone would share the image source.
+      const src = material.map;
+      const tex = new THREE.Texture(img);
+      tex.flipY = src.flipY;
+      tex.colorSpace = src.colorSpace;
+      tex.wrapS = src.wrapS;
+      tex.wrapT = src.wrapT;
+      tex.channel = src.channel;
+      tex.anisotropy = src.anisotropy;
+      tex.needsUpdate = true;
+      mat.map = tex;
+      variantMats.set(key, mat);
+    }
+    return variantMats.get(key);
+  }
   const ready = Promise.resolve(after)
-    .then(() => Promise.all(Object.entries(urls).map(async ([k, u]) => (gltfs[k] = await loader.loadAsync(u)))))
+    .then(() =>
+      Promise.all([
+        ...Object.entries(urls).map(async ([k, u]) => (gltfs[k] = await loader.loadAsync(u))),
+        // A variant that fails to load leaves its walkers in the person's
+        // own texture.
+        ...Object.entries(variantUrls).map(async ([k, u]) => (images[k] = await imageLoader.loadAsync(u).catch(() => null))),
+      ]),
+    )
     .then(async () => {
       if (crowd > 0) {
-        crowdView = await createPedCrowd(gltfs, { people: PED_MODEL_KINDS, kindOf: (id) => personFor(id), companions: PED_COMPANION, walkClip: PED_WALK_CLIP, size: crowd });
+        const atlases = {};
+        for (const kind of PED_MODEL_KINDS) {
+          const mesh = gltfs[kind]?.scene.getObjectByName(`${kind}_lod0`);
+          const base = mesh?.material?.map?.image;
+          if (base && variants[kind]?.length) atlases[kind] = (material) => atlasMaterial(material, lookAtlas(base, variants[kind].map((f) => images[f])));
+        }
+        const tile = new THREE.Color();
+        crowdView = await createPedCrowd(gltfs, {
+          people: PED_MODEL_KINDS,
+          kindOf: (id) => looks.of(id)?.kind ?? personFor(id),
+          // The batch color of a walker: its atlas tile (atlasMaterial).
+          colorOf: (id) => {
+            const [u, w] = lookTile(looks.of(id)?.v ?? 0);
+            return tile.setRGB(u, w, 0);
+          },
+          materials: atlases,
+          companions: PED_COMPANION,
+          walkClip: PED_WALK_CLIP,
+          size: crowd,
+        });
         group.add(crowdView.group);
       }
       stats.loaded = true;
@@ -139,7 +196,11 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
         leash = { mesh, hand: person.root.getObjectByName(c.leash.hand), collar: companion.root.getObjectByName(c.leash.collar), a: new THREE.Vector3(), b: new THREE.Vector3(), pts: [] };
       }
     }
-    const slot = { kind, person, companion, leash, id: -1 };
+    const meshes = [];
+    person.root.traverse((o) => {
+      if (o.isMesh) meshes.push({ mesh: o, material: o.material });
+    });
+    const slot = { kind, person, companion, leash, meshes, v: 0, id: -1 };
     pool.push(slot);
     return slot;
   }
@@ -170,6 +231,13 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
     ready,
     skip,
     stats,
+    // The look drawn for walker `id` ("kind" or "kind:v"), or null.
+    kindOf(id) {
+      const rig = pool.find((s) => s.id === id);
+      if (!rig && !crowdView) return null;
+      const l = looks.of(id);
+      return l ? (l.v ? `${l.kind}:${l.v}` : l.kind) : null;
+    },
     // The walker ids that peds-view.js must not draw.
     get figureSkip() {
       return crowd > 0 && !stats.error ? ALL : skip;
@@ -181,14 +249,18 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
       stats.drawn = 0;
       stats.crowd = 0;
       if (!stats.loaded || !state) return;
+      looks.refresh(state);
       const want = nearestWalkers(state.peds, camera.x, camera.z, count);
       const byId = new Map(state.peds.map((w) => [w.id, w]));
-      const keep = new Set(want);
-      for (const slot of pool) if (!keep.has(slot.id)) slot.id = -1;
-      for (const id of want) {
-        const kind = personFor(id);
-        const slot = pool.find((s) => s.id === id) ?? pool.find((s) => s.id === -1 && s.kind === kind) ?? make(kind);
+      const people = new Map(want.map((id) => [id, looks.of(id) ?? { kind: personFor(id), v: 0 }]));
+      for (const slot of pool) if (people.get(slot.id)?.kind !== slot.kind) slot.id = -1;
+      for (const [id, look] of people) {
+        const slot = pool.find((s) => s.id === id) ?? pool.find((s) => s.id === -1 && s.kind === look.kind) ?? make(look.kind);
         slot.id = id;
+        if (slot.v !== look.v) {
+          slot.v = look.v;
+          for (const m of slot.meshes) m.mesh.material = variantMaterial(m.material, slot.kind, look.v);
+        }
       }
       for (const slot of pool) {
         if (slot.id < 0) {

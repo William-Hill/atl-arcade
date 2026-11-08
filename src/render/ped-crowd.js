@@ -160,7 +160,10 @@ export function crowdLod(d, distances) {
 // picks the kind of walker `id`; companions: { kind: { kind, x, z } }.
 // walkClip: { kind: clip name }. size: the walker pool size. The bake
 // yields to the frame loop after each kind, so no one task is long.
-export async function createPedCrowd(gltfs, { people, kindOf, companions = {}, walkClip = {}, size, frames = CROWD_FRAMES }) {
+// colorOf(id) (optional): the batch color of walker `id`; materials (optional):
+// { kind: (material) => material } for the batch of a kind (the look atlas
+// of ped-variants.js reads its tile from the batch color).
+export async function createPedCrowd(gltfs, { people, kindOf, colorOf = null, materials = {}, companions = {}, walkClip = {}, size, frames = CROWD_FRAMES }) {
   const group = new THREE.Group();
   group.name = "ped-crowd";
   const kinds = new Set(people);
@@ -177,7 +180,7 @@ export async function createPedCrowd(gltfs, { people, kindOf, companions = {}, w
     const unique = [...new Set(baked.levels.flat())];
     const verts = unique.reduce((n, g) => n + g.attributes.position.count, 0);
     const idx = unique.reduce((n, g) => n + (g.index ? g.index.count : g.attributes.position.count), 0);
-    const mesh = new THREE.BatchedMesh(size, verts, idx, baked.material);
+    const mesh = new THREE.BatchedMesh(size, verts, idx, materials[kind] ? materials[kind](baked.material) : baked.material);
     mesh.name = `ped-crowd-${kind}`;
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -190,7 +193,7 @@ export async function createPedCrowd(gltfs, { people, kindOf, companions = {}, w
     const ids = new Map(unique.map((g) => [g, mesh.addGeometry(g)]));
     const geometry = baked.levels.map((poses) => poses.map((g) => ids.get(g)));
     group.add(mesh);
-    batches.set(kind, { mesh, geometry, distances: baked.distances, slot: new Map(), seen: new Set() });
+    batches.set(kind, { mesh, geometry, distances: baked.distances, slot: new Map(), seen: new Set(), tinted: Boolean(materials[kind] && colorOf) });
   }
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
@@ -237,7 +240,8 @@ export async function createPedCrowd(gltfs, { people, kindOf, companions = {}, w
         const frame = crowdFrame(w.phase, w.speed, frames);
         const yaw = Math.atan2(w.fx, w.fz);
         const d = Math.hypot(w.x - eye.x, w.y - eye.y, w.z - eye.z);
-        place(b, w.id, frame, d, w.x, w.y, w.z, yaw, scale);
+        const k = place(b, w.id, frame, d, w.x, w.y, w.z, yaw, scale);
+        if (b.tinted) b.mesh.setColorAt(k, colorOf(w.id));
         stats.drawn += 1;
         const c = companions[kind];
         const cb = c && batches.get(c.kind);

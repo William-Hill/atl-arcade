@@ -64,8 +64,10 @@ export const PEDS = {
 // pool edge (fogNear in src/render/quality.js). With the grid and the
 // far-step (#189), 120 walkers take about 0.3 ms per step in Node (npm run
 // perf:sim) and 0.5 to 0.6 ms in the browser; 320 take about 0.65 ms in Node.
-// `?peds=<n>` sets another count.
-export const PED_COUNT = { low: 70, phone: 50, high: 120 };
+// `?peds=<n>` sets another count. The counts were 70, 50 and 120 until
+// 2026-11-07: the owner saw too many people, and the trail read as a queue
+// (docs/decisions.md).
+export const PED_COUNT = { low: 60, phone: 45, high: 90 };
 
 // Pure: the walker count for a tier and the `peds` URL value. "0" turns the
 // walkers off (0). A positive whole number sets the count, up to 400.

@@ -5,6 +5,7 @@ import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { patchPedVertex } from "./peds-view.js";
 import { withLeafCut } from "./leaf-cut.js";
 import { GRADE_PIVOT, SPLIT, TIME_GRADES } from "./pbr-palette.js";
 
@@ -246,6 +247,16 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   // The tree leaf cut (src/render/leaf-cut.js): the AO sees the trunks, the
   // crown cores and the impostors, but not the leaf cards (#202).
   withLeafCut(gtao.normalMaterial);
+  // The walkers (src/render/peds-view.js): the walk and the hidden parts in
+  // the vertex shader. Without this, the ink drew the outline of every
+  // optional part (a skirt, a bag, a hat) on every walker.
+  const leafCompile = gtao.normalMaterial.onBeforeCompile;
+  const leafKey = gtao.normalMaterial.customProgramCacheKey;
+  gtao.normalMaterial.onBeforeCompile = (shader, r) => {
+    leafCompile(shader, r);
+    patchPedVertex(shader);
+  };
+  gtao.normalMaterial.customProgramCacheKey = () => `${leafKey()}-peds`;
   keepShadowMap(gtao);
   // World units are meters: a 2.5 m radius darkens the ground at a wall
   // foot, the inside corners, and under the trees. A 1 m thickness: only

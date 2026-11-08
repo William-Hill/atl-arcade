@@ -43,5 +43,16 @@
     "lm_trim_normal": "512x512",
     "lm_trim_rough": "256x256"
   },
-  "gpuTextureBytes": 3233109
+  "gpuTextureBytes": 3233109,
+  "webp_2026_11_07": {
+    "bridge-ponce.glb": {
+      "date": "2026-11-07",
+      "issue": "#190",
+      "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+      "command": "node scripts/assets/compress-glb.mjs assets/landmarks/bridge-ponce/bridge-ponce.glb <out.glb>",
+      "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+      "bytes_before": 82064,
+      "bytes_after": 35356
+    }
+  }
 }

@@ -42,7 +42,9 @@ function placement(p, m) {
   return m.compose(new THREE.Vector3(p.x, p.y ?? 0, p.z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), p.yaw ?? 0), new THREE.Vector3(s, s, s));
 }
 
-export function createMeshyPropsView(props, { urls = MESHY_PROP_URLS } = {}) {
+// `after` (a promise) holds the downloads back, for example until the first
+// frame (#190).
+export function createMeshyPropsView(props, { urls = MESHY_PROP_URLS, after = null } = {}) {
   const group = new THREE.Group();
   group.name = "meshy-props";
   const byKind = new Map();
@@ -53,6 +55,7 @@ export function createMeshyPropsView(props, { urls = MESHY_PROP_URLS } = {}) {
   loader.setDRACOLoader(getDracoLoader());
   const ready = Promise.all(
     [...byKind].map(async ([kind, list]) => {
+      await after;
       const gltf = await loader.loadAsync(urls[kind]);
       gltf.scene.updateMatrixWorld(true);
       const levels = [0, 1].map((lod) => {

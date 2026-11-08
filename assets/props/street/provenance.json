@@ -42,6 +42,15 @@
           1,
           0.386
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/street/drinking_fountain.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 279292,
+        "bytes_after": 145240
       }
     },
     "bollard.glb": {
@@ -79,6 +88,15 @@
           0.9,
           0.204
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/street/bollard.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 36324,
+        "bytes_after": 13148
       }
     },
     "traffic_cone.glb": {
@@ -116,6 +134,15 @@
           0.7,
           0.348
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/street/traffic_cone.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 69460,
+        "bytes_after": 31032
       }
     },
     "barricade.glb": {
@@ -153,6 +180,15 @@
           0.776,
           0.692
         ]
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/props/street/barricade.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 256592,
+        "bytes_after": 123144
       }
     }
   },

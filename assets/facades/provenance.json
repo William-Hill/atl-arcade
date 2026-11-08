@@ -17,7 +17,7 @@
   },
   "files": {
     "facade-kit.glb": {
-      "bytes": 400464,
+      "bytes": 215936,
       "nodes": 39,
       "triangles_lod0_total": 5428,
       "max_module_triangles": 836,
@@ -178,6 +178,15 @@
           "bytes": 1404,
           "triangles": 102
         }
+      },
+      "webp_2026_11_07": {
+        "date": "2026-11-07",
+        "issue": "#190",
+        "tool": "scripts/assets/compress-glb.mjs (gltf-transform 4.5.1, sharp 0.35.5, draco3dgltf 1.5.9)",
+        "command": "node scripts/assets/compress-glb.mjs assets/facades/facade-kit.glb <out.glb>",
+        "change": "textures JPEG/PNG to WebP (EXT_texture_webp), quality 82, normal maps 88; meshes Draco again (position 14, normal 10, texcoord 12); same meshes, nodes, materials and clip names",
+        "bytes_before": 400464,
+        "bytes_after": 215936
       }
     }
   }

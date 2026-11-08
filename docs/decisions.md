@@ -466,7 +466,6 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Not done in this part: a ramp for each city material and a rim light on the city. These need `src/render/geo-view.js`, which PR #50 also changes. Do them after PR #50 merges.
 - Low tier gate, 2026-11-02 21:16 to 21:19, load average 15 to 18, in the order toon off, toon on, toon off, toon on: each run gave a median of 30 FPS, with averages of 34.0, 33.5, 34.2, and 34.2 FPS. Gate 55: FAIL for all four. The toon pass does not make the low tier slower. An earlier single pair gave 59.9 FPS for toon off and 30 FPS for toon on, but the repeat runs show that pair was noise. Evidence: `reports/toon/`.
 
-
 ## 2026-11-02: A second playable skater, and the pipelines compared (M1-10, #42)
 
 - Scope change: version 1 had one skater in the concept. William asked for more playable characters, so M1 now has two: Nia "Sway" Ellis (West End) and Marcus "Tempo" Reid (Old Fourth Ward). Each new skater adds art cost and a skater review, so a third skater needs a new issue.
@@ -1137,7 +1136,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Grid: 3.5-4.5 m ground floors, 3-6 m bays, board centered on the kit sign band (`facade-kit.js`), patio on the 3.5 m apron. Details in `docs/storefronts.md`.
 - Invented businesses only (`scripts/assets/storefront-businesses.json`); no real names or logos.
 
-
 ## 2026-11-04: Landmark facsimiles for the BeltLine Eastside (assets)
 
 - Ponce City Market (full building), Telephone Factory Lofts, Studioplex, New Realm Brewing, and the Eastside Trail bridges (North Avenue, Ralph McGill, Ponce de Leon, Freedom Parkway) are procedural Blender models (`scripts/blender/landmarks.py`) on the real OSM footprints at the game's heights and ground (`scripts/assets/landmark-sites.mjs` → `assets/landmarks/sites.json`, from the game's own `buildingSpan`/`bridgeDeck`). One Draco GLB per landmark with LOD nodes that share materials and tiling textures. See `docs/landmarks.md`.
@@ -1189,7 +1187,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
   uncut claimed-footprint collider as an invisible wall.
 - PCM LOD2 window light is keyed per tiled UV cell (a hash of
   `floor(vEmissiveMapUv)`), so far walls do not light all at once.
-
 
 ## 2026-11-05: epic/assets — painted murals for the pbr look (assets/murals)
 - 16 original mural designs (dogwood, peach, magnolia, brown thrasher, heron and river, skyline silhouettes, the BeltLine trail, skaters, music, porch-row neighbors, a crowd wave, a night rink) are drawn from code with the Chromium 2D canvas (`scripts/assets/mural-atlas.mjs`, seed 1979), then a per-pixel paint pass adds brush strokes, a ragged dry-brush edge over painted brick or stucco, mortar show-through, weathering, and a roughness atlas. No image model, no Meshy (0 credits), no real murals, artists' styles, or brands.
@@ -1305,7 +1302,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Grind and collision data live in one manifest (`features.json`) in model space, in the `{ points }` spline format of `src/level/splines.js`; `src/level/skate-features.js` places it (position, yaw) as level objects for `prepareGrindables()` and as a ground sampler. Edges of ledges and coping keep their own `kind` (`ledge`, `coping`): grind.js grinds any spline, and only `rail` objects get capsule colliders in `physics/world.js`.
 - Only the planter (bushes) is over 1.5k triangles, so it is the only feature with a LOD1 (30 m). Whole set: about 0.55 MB download (GLBs 155 KB, textures 396 KB).
 - Meshy/Tripo not used (cap 0); every pixel is painted in code.
-
 
 ## 2026-11-05: epic/assets — murals only on blank walls
 - A mural was pasted over the shader's windows (an 8-storey glass wall facing the trail). Murals now go only on walls with no windows behind them.
@@ -1442,7 +1438,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 ### Limits
 - No lane changes or merges, no traffic lights (stop-sign style boxes as before). Parked cars have no lamps. Headless frame rate makes the sim slow in wall time, so browser yield checks wait longer.
 
-
 ## 2026-11-05: epic/city-look — the Blender facade kit in the pbr look
 
 ### Decisions
@@ -1503,7 +1498,6 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 
 - A few short ways stay steeper than 10% where they meet a bridge end or the trail (path `w30977457` 39%, `w431443667` 26%); the grade limit keeps them skatable. The trail keeps its rail grades (up to 66% on the bridge approach `w83291378`), which `gradeTrail()` owns.
 - `assets/map/beltline-eastside/iso.json` (the baked isometric map) moves by half a meter with the new terrain; `iso-map.test.js` fails until it is baked again with `scripts/bake-iso-map.mjs`.
-
 
 ## 2026-11-05: epic/city-look — pedestrians on the trail, the sidewalks and the street edges
 - New: `src/sim/peds.js` (pure, seeded, Vitest in `src/sim/peds.test.js`) and `src/render/peds-view.js`, with a small hook in `src/main.js`. `?peds=0` leaves them out; `?npcseed=<n>` seeds them with the crowd. `window.__atl.peds` gives the count, the min gap, the draw calls, the triangles and the list.
@@ -1886,7 +1880,6 @@ The owner saw too many repeat characters, and maybe too many NPCs. `node scripts
 
 **Third pass (owner playtest, 2026-11-07).** The owner saw no step, no knee drive, and no ankle push-off. Cause: the v3 push and coast poses had no foot targets, so the feet stayed at their rest targets (the thigh turned 13.6 degrees in the push; 38.4 on v2). The push is now a stroke in phases for each leg: push out and back with an ankle push-off (the heel comes up 30 to 34 degrees), a step with a knee drive (the skate lifts 15 to 18 cm), and a glide with the weight over the skate. Evidence: `docs/characters/anim-v3/push-side-front.jpg`.
 
-
 ## 2026-11-07 — The skater bodies set the model scale and the skating physics
 
 The owner saw the playable skaters as too small next to the NPCs, and asked that height and weight also change the skating physics.
@@ -1915,3 +1908,16 @@ An Autopilot playtest (run `20261107-171547`) rode east from the spawn off the B
 **Evidence.** `src/level/edge-fence.test.js`: a skater at top speed into the bound stops and does not respawn (flat ground, each of the four edges, a shallow approach, a jump, and a fall from 20 m); on the real level, at each edge, the lanes where the skater rode off before the fence now stop it. `e2e/edge-fence.spec.js` rides at full push into the east fence (`?look=toon` and `?look=pbr`, `time=14&weather=clear`, quality low): no respawn, the skater stops within 1 m of the fence, and the hint shows. Screenshots: `e2e/__screenshots__/edge-fence-east-toon.png`, `edge-fence-east-pbr.png`. The spec turns off the walkers, the NPC skaters, and the moving cars, so none of them stands in the lane.
 
 **Open.** No person played into the fence yet. The fence goes through the buildings at the edge. Where a bridge crosses the fence line, the fence stands on the deck, so a skater on the road under the bridge stops at a wall with no fence picture.
+
+## 2026-11-08 — The skater faces the heading at the spawn (#231)
+
+An Autopilot playtest read the model rotation at the spawn as 110.7 degrees off the sim heading. The debug reading was correct. Two causes:
+- `resetSkater()` and `fastTravel()` gave the sim a new skater, but the view kept the old rotation, clip, lean and backward facing until the next `skaterView.sync()`. While the render is paused (the Autopilot `pause` hook), `frame()` does not call `sync()`, so the old values stayed for the full pause. In a probe after a carve, the model was -236.8 degrees (Nia) and 78.4 degrees (Marcus) off the heading, in the `push` clip, with a lean of 0.22 rad. After the next frame the heading was correct, but the push pose and the lean stayed for some frames.
+- The first `requestAnimationFrame` time can be before `last` (set with `performance.now()`). The negative step made the follow camera smoothing extrapolate, so the camera state went far away (x 401317 m) and the wall ray put the camera about 65 degrees to the side of the skater. A player saw the skater from the side at the spawn, although the model faced the heading.
+
+The fix:
+- `skaterView.respawn(state)` puts the group on the new position and heading with no lean, and puts the model on the clip and the facing of the new state (`respawnAnim()`) with no fade. It applies the pose at once, so it is correct also while the render is paused. `resetSkater()` and `fastTravel()` call it.
+- `frame()` never uses a negative step.
+- The PR #225 fix for the sideways skater does not change: `sync()` sets the rotation from the yaw as before.
+
+Check: `e2e/skater-spawn.spec.js` (each skater: at the load and after a paused respawn, the model rotation is within 5 degrees of the heading, and the camera is behind the skater). It fails on the old code. Evidence: `docs/characters/spawn-231/<skater>-before-after.jpg` (Beltline spawn; top row old code, bottom row fix; left the load, right the first frame after a respawn) and `e2e/__screenshots__/spawn-231-<skater>.png`, `respawn-231-<skater>.png`.

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { EDGE_FENCE, EDGE_FENCE_ID, clipGrindables, edgeFence, fenceDistance, fencePosts, inFence, nearEdge, withEdgeFence } from "./edge-fence.js";
+import { EDGE_FENCE, EDGE_FENCE_ID, clipGrindables, edgeFence, fenceDistance, fencePosts, fenceRayDistance, inFence, nearEdge, withEdgeFence } from "./edge-fence.js";
 import { createLevelEnv } from "./ground.js";
 import { withCanopy } from "./levels.js";
 import { createGeoGroundSampler, GEO_CELL } from "./geo/geo-ground.js";
@@ -248,4 +248,48 @@ describe("the edge fence on the BeltLine Eastside level", () => {
       expect(tested).toBeGreaterThan(0);
     });
   }
+});
+
+// The follow camera ray against the fence (playtest 2026-11-08: the camera
+// swung outside the fence and the banner hid the skater).
+describe("fenceRayDistance", () => {
+  const fence = edgeFence(BOUNDS); // inner face: x -47..47, z -37..37
+
+  it("is Infinity when the camera stays inside the inner face", () => {
+    expect(fenceRayDistance(fence, [0, 1.2, 0], [-4, 3, 2])).toBe(Infinity);
+  });
+
+  it("is the distance along the ray to the face the camera crosses", () => {
+    // The skater faces west at x = 45; the camera trails east to x = 50.
+    expect(fenceRayDistance(fence, [45, 1.2, 0], [50, 1.2, 0])).toBeCloseTo(2, 9);
+    // The 3D length counts, not the ground length: rise 4 m over 3 m.
+    expect(fenceRayDistance(fence, [44, 1, 0], [50, 9, 0])).toBeCloseTo(5, 9);
+  });
+
+  it("takes the first face on a ray through a corner", () => {
+    // From (44, 0, 34) toward (50, 0, 40): x = 47 and z = 37 at the same point.
+    expect(fenceRayDistance(fence, [44, 0, 34], [50, 0, 40])).toBeCloseTo(Math.hypot(3, 3), 9);
+    // Toward (50, 0, 40): z = 37 at a quarter of the ray, x = 47 at half of it.
+    expect(fenceRayDistance(fence, [44, 0, 36], [50, 0, 40])).toBeCloseTo(Math.hypot(1.5, 1), 9);
+  });
+
+  it("ignores a pivot that is already on or past the inner face", () => {
+    expect(fenceRayDistance(fence, [47, 1.2, 0], [50, 1.2, 0])).toBe(Infinity);
+    expect(fenceRayDistance(fence, [47.2, 1.2, 0], [45, 1.2, 0])).toBe(Infinity);
+  });
+
+  it("is Infinity with no fence or a zero-length ray", () => {
+    expect(fenceRayDistance(null, [45, 1, 0], [50, 1, 0])).toBe(Infinity);
+    expect(fenceRayDistance(fence, [45, 1, 0], [45, 1, 0])).toBe(Infinity);
+  });
+
+  it("keeps the camera inside the fence through resolveClip and placeCamera", async () => {
+    const { resolveClip, placeCamera } = await import("../sim/camera.js");
+    const pivot = [46.5, 1.2, 0];
+    const cam = { position: [52, 3, 1] };
+    const full = Math.hypot(5.5, 1.8, 1);
+    const allowed = resolveClip(Infinity, full, fenceRayDistance(fence, pivot, cam.position), DT);
+    const placed = placeCamera(cam, pivot, allowed);
+    expect(fenceDistance(fence, placed.position[0], placed.position[2])).toBeGreaterThanOrEqual(0);
+  });
 });

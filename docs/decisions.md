@@ -1994,3 +1994,14 @@ PR #224 measured the leaf cards of the pbr trees as the largest cost left on the
 - **The look**: the canopy silhouette and the mean leaf color stay within the limits of `e2e/leaf-cut.spec.js` (leaf part within 10 %, color within 8/255). On SwiftShader the procedural near crowns were pixel noise (the leaf hash amplifies the interpolation error of the seed); the baked leaves are whole and anti-aliased. Each card shows one of 8 layouts per shape. The dark speckle of #202 does not come back: the AO pass still skips the cards, and the mips filter the veins.
 - **Rejected**: a cheaper lit model for the cards (no lighting at all saves only 2 to 8 %); fewer card layers (half the layers saves 13 to 20 % more, but the near crowns get holes); alpha to coverage (it needs MSAA, which phone and low do not have).
 - **Open**: a real-GPU run and a phone run. #191 stays open.
+
+## 2026-11-08 — The follow camera stays inside the edge fence
+
+The Autopilot playtest of `5514c62` (`reports/autopilot/playtest-2026-11-08-report.json`, game time 203.8 s) saw the follow camera swing outside the edge fence. The banner read mirrored, the fence hid the skater, and past the bounds the view showed sky where the ground stops. The fence of #229 is a wall only in the ground sampler. It has no Rapier collider, so the camera ray did not see it.
+
+- **Decision: the camera ray also stops at the inner face of the fence.** `fenceRayDistance()` (`src/level/edge-fence.js`, pure) gives the distance along the ray from the pivot to the camera at which the ray leaves the fence rectangle. `createFollowCamera` takes `fence` and adds that distance to the wall hit, so `resolveClip` pulls the camera in front of the fence like in front of a wall.
+- **The fence height does not count.** Past the fence there are only 3 m of ground before the bounds, so a camera above the fence top must stay inside too.
+- **A pivot on or past the inner face ignores the fence**, as a pivot inside a canopy ignores the canopy: a hit at 0 would put the camera on the skater.
+- **Rejected**: a Rapier collider for the fence. The camera needs only the inner face, and a collider would also need a group that the skater and the NPCs skip.
+
+**Evidence.** `src/level/edge-fence.test.js` (6 new tests). `e2e/edge-fence.spec.js`, "the follow camera stays inside the east edge fence": Nia stands 1.5 m from the east fence and faces west. With no fence test the camera reaches x = 487.25 m, 4.94 m past the face at 482.31 m. With the test, every camera sample stays inside. `e2e/__screenshots__/edge-fence-camera-after.png`.

@@ -1921,3 +1921,30 @@ The fix:
 - The PR #225 fix for the sideways skater does not change: `sync()` sets the rotation from the yaw as before.
 
 Check: `e2e/skater-spawn.spec.js` (each skater: at the load and after a paused respawn, the model rotation is within 5 degrees of the heading, and the camera is behind the skater). It fails on the old code. Evidence: `docs/characters/spawn-231/<skater>-before-after.jpg` (Beltline spawn; top row old code, bottom row fix; left the load, right the first frame after a respawn) and `e2e/__screenshots__/spawn-231-<skater>.png`, `respawn-231-<skater>.png`.
+
+## 2026-11-08 — Comic effects: speed lines, impact frames, bursts (#113)
+
+**What.** A render-layer effects module in `src/render/effects/`, as `docs/art-direction-pbr.md` section 11 asks:
+- Speed lines: thin warm-white (`#fff1d6`) streaks at the frame edge at high speed (from 9.5 m/s, full at 13 m/s). Each streak is on a ray from the skater and starts out of a clear circle with the skater's screen half height plus 30 %, so no streak goes over the skater.
+- Impact frame: on a bonk (the skater went 3 m/s or more before the hit) or a hard landing (0.9 s or more in the air, or a fall at 7 m/s or more). A radial burst of spikes in the district accent around the skater, for 3 rendered frames (2 on the phone tier). It counts frames, not seconds. A cooldown of 0.35 s stops a repeat. No full-screen flash.
+- Burst: on a grind start (`justSnapped`) and on an on-beat move (`run.moves[].onBeat`). A ring flat on the ground at the feet and a star beside the skater, in the accent. Only the star core goes over the bloom threshold.
+
+**The controller does not change.** `fx.js effectTriggers()` reads the skater before and after each simulation tick and the moves of the tick. `main.js simulate()` calls `effects.observe()` after `stepRun()`.
+
+**Pure and render parts.** `fx.js` holds the triggers, the timers, the tier and reduced-motion gates, the streak and spike layouts, and the accent pick, with 41 Vitest tests. `effects-view.js` draws them with two instanced meshes (one draw call each). A mesh with nothing to draw is hidden, so the layer costs 0 draw calls when no effect runs.
+
+**Emissive overlays.** The effects use their own shader materials. They do not change a material or the grade, read no light, and write no depth. The effect body is at emissive 0.8, under the night bloom threshold (0.92). The star core is at 3.2, over the day threshold (2.4), so only the core blooms. `post.js` keeps meshes with `userData.overlay` out of the GTAO normal pass, so the toon ink and the AO do not see them.
+
+**The accent.** The brightest accent of the district at the skater (`DISTRICT_LOOKS`). The dark trail accents (oxblood, navy) were rejected: on the screen they read as a dark stain, and the landmark GDD asks for no red on rings.
+
+**Gates.** `EFFECT_TIERS`: low off; phone 10 streaks, 2 impact frames, a ring and no star (no bloom on phone); high 18 streaks, 3 frames, ring and star with a core. `prefers-reduced-motion` turns all effects off on every tier, also live when the setting changes. `?fx=0` turns them off. Photo mode, the full map and the settings menu hide them.
+
+**For #221.** The burst is a general particle (position, velocity, gravity, shape star / ring / petal, flat or facing the camera, life, core). The landmark claim spawns its star-and-ring burst and its petals with `effects.burst()`, adds its own row (`claim`) to `EFFECT_TIERS` (the GDD keeps a ring on low), and uses `pulse()` for the map icon. #221 is not built here.
+
+**Both looks.** The effects show in `?look=toon` and `?look=pbr`.
+
+**Cost.** 0 draw calls with no effect, 2 with effects, on phone and high; under every cap in `docs/perf/budget.json`. See `docs/perf/113/README.md`. Frame time was not measured on a real GPU.
+
+**Evidence.** `src/render/effects/fx.test.js` (41 tests: the triggers, also from the real controller; the timers; the tier, reduced-motion and `?fx=0` gates; no streak over the skater; the spikes cover under 6 % of the frame). `e2e/effects.spec.js`: a picture of each effect in each look on the high tier, `time=14&weather=clear` (`e2e/__screenshots__/fx-{speed,impact,grind,beat}-{toon,pbr}.png`); the draw calls on each tier; a full-push ride into the edge fence starts an impact frame from the bonk flag; `prefers-reduced-motion` turns the effects off at the load and live (`fx-reduced-motion-pbr.png`).
+
+**Open.** No person played with the effects. The speed lines are faint on a bright sky. Real skaters did not review them. The landing threshold (0.9 s air or 7 m/s) is a first value.

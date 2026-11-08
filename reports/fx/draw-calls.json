@@ -1,0 +1,131 @@
+{
+  "date": "2026-11-08T05:56:02.852Z",
+  "rows": [
+    {
+      "quality": "low",
+      "look": "toon",
+      "frameIdle": 79,
+      "frameActive": 79,
+      "effectDraws": {
+        "idle": 0,
+        "active": 0,
+        "after": 0
+      },
+      "cap": 185,
+      "policy": {
+        "lines": 0,
+        "impact": 0,
+        "spikes": 0,
+        "burst": null,
+        "enabled": false
+      },
+      "lines": 0,
+      "spikes": 0,
+      "bursts": 0
+    },
+    {
+      "quality": "phone",
+      "look": "toon",
+      "frameIdle": 80,
+      "frameActive": 82,
+      "effectDraws": {
+        "idle": 0,
+        "active": 2,
+        "after": 0
+      },
+      "cap": 185,
+      "policy": {
+        "lines": 10,
+        "impact": 2,
+        "spikes": 10,
+        "burst": {
+          "star": false,
+          "ring": true,
+          "core": false
+        },
+        "enabled": true
+      },
+      "lines": 10,
+      "spikes": 10,
+      "bursts": 2
+    },
+    {
+      "quality": "phone",
+      "look": "pbr",
+      "frameIdle": 88,
+      "frameActive": 90,
+      "effectDraws": {
+        "idle": 0,
+        "active": 2,
+        "after": 0
+      },
+      "cap": 185,
+      "policy": {
+        "lines": 10,
+        "impact": 2,
+        "spikes": 10,
+        "burst": {
+          "star": false,
+          "ring": true,
+          "core": false
+        },
+        "enabled": true
+      },
+      "lines": 10,
+      "spikes": 10,
+      "bursts": 2
+    },
+    {
+      "quality": "high",
+      "look": "toon",
+      "frameIdle": 251,
+      "frameActive": 253,
+      "effectDraws": {
+        "idle": 0,
+        "active": 2,
+        "after": 0
+      },
+      "cap": 360,
+      "policy": {
+        "lines": 18,
+        "impact": 3,
+        "spikes": 16,
+        "burst": {
+          "star": true,
+          "ring": true,
+          "core": true
+        },
+        "enabled": true
+      },
+      "lines": 18,
+      "spikes": 16,
+      "bursts": 4
+    },
+    {
+      "quality": "high",
+      "look": "pbr",
+      "frameIdle": 291,
+      "frameActive": 293,
+      "effectDraws": {
+        "idle": 0,
+        "active": 2,
+        "after": 0
+      },
+      "cap": 420,
+      "policy": {
+        "lines": 18,
+        "impact": 3,
+        "spikes": 16,
+        "burst": {
+          "star": true,
+          "ring": true,
+          "core": true
+        },
+        "enabled": true
+      },
+      "lines": 18,
+      "spikes": 16,
+      "bursts": 4
+    }
+  ]
+}

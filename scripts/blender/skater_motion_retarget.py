@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 import bpy
-from mathutils import Vector
+from mathutils import Quaternion, Vector
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -163,7 +163,7 @@ def main():
         # A bone with no source bone follows its parent (pose.bones lists a parent first).
         for pb in target.pose.bones:
             if pb.name not in desired:
-                parent_delta = desired[pb.parent.name] @ rest[pb.parent.name].inverted() if pb.parent else rest[pb.name].copy().__class__()
+                parent_delta = desired[pb.parent.name] @ rest[pb.parent.name].inverted() if pb.parent else Quaternion()
                 desired[pb.name] = parent_delta @ rest[pb.name]
         for pb in target.pose.bones:
             if pb.parent:

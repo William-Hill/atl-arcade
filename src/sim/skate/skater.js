@@ -35,9 +35,20 @@ export function createSkaterEnv(level, extra = []) {
   return { grindables: [...(level ? prepareGrindables(level) : []), ...extra] };
 }
 
+// The constants with a body's skate constants, made once per body (not on
+// every tick).
+const bodyKs = new WeakMap();
+function bodyK(kIn, skate) {
+  const cached = bodyKs.get(skate);
+  if (cached && cached.grind === kIn.grind) return cached;
+  const k = { ...kIn, skate };
+  bodyKs.set(skate, k);
+  return k;
+}
+
 export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, kIn = { skate: SKATE, grind: GRIND }) {
   // skaterEnv.skate: the skate constants of this skater's body (body.js).
-  const k = skaterEnv.skate ? { ...kIn, skate: skaterEnv.skate } : kIn;
+  const k = skaterEnv.skate ? bodyK(kIn, skaterEnv.skate) : kIn;
   const grindables = skaterEnv.grindables ?? [];
   const wantsGrind = Boolean(input.grind);
   const grindEdge = wantsGrind && !prev.grindHeld;

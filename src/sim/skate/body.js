@@ -21,7 +21,7 @@ export const BODY_REF = { height: 1.75, weight: 70 };
 // wheel. A skater on skates stands this much taller than barefoot.
 export const SKATE_STACK = 0.1;
 
-export const bodyFor = (name) => SKATER_BODIES[name] ?? null;
+export const bodyFor = (name) => (Object.hasOwn(SKATER_BODIES, name ?? "") ? SKATER_BODIES[name] : null);
 
 // The model scale that makes the skater stand at the dossier height on skates.
 export function modelScale(body) {

@@ -1922,6 +1922,69 @@ The fix:
 
 Check: `e2e/skater-spawn.spec.js` (each skater: at the load and after a paused respawn, the model rotation is within 5 degrees of the heading, and the camera is behind the skater). It fails on the old code. Evidence: `docs/characters/spawn-231/<skater>-before-after.jpg` (Beltline spawn; top row old code, bottom row fix; left the load, right the first frame after a respawn) and `e2e/__screenshots__/spawn-231-<skater>.png`, `respawn-231-<skater>.png`.
 
+## 2026-11-08 — The follow camera stays out of the tree canopies (#230)
+
+The Autopilot playtest on 2026-11-07 found the follow camera inside a tree canopy on the BeltLine (129.0 s), with the skater hidden. The wall ray hits only the Rapier colliders, and the trees have none, so nothing stopped the camera in a crown.
+
+The fix is in the camera, not in the trees:
+- `src/sim/camera.js` builds a canopy volume for each tree prop (`treeVolume()`, `canopyVolumes()`): an ellipsoid around the crown and an upright cylinder around the trunk. The sizes come from the species table of the procedural trees (`TREE_SPECIES` in `src/level/geo/trees.js`) times the placement scale: the crown from the species `clear` height (the lowest leaf) to the top puff, as wide as `crownReach()`. A crape myrtle's leaning trunks get a wider cylinder.
+- `createCanopyIndex()` puts the volumes in a 16 m grid. `canopyDistance()` gives the distance from the pivot to the first volume on the segment to the camera, like the wall ray's hit.
+- `src/render/follow-camera.js` takes the nearer of the wall hit and the canopy hit, and `resolveClip()` does the rest: the camera snaps in front of the crown and eases back out after the tree, the same as at a wall. A volume that holds the pivot is skipped, so the camera never lands on the skater.
+
+Rejected: fading or hiding the crowns near the camera. That changes the tree materials, which the #191 work (leaf cards in the pbr look) owns, and a faded crown with the camera in it still fills the screen with leaves. Rejected: Rapier colliders on the crowns. The skater would hit them, and 5,496 more colliders on the BeltLine cost physics time for a camera test. Rejected: lifting the camera over the crown. Most crowns are 5 to 13 m high, so a lift goes into the crown or far above the skater; pulling in keeps her large on screen.
+
+Cost: on the BeltLine level, 5,496 trees; the index takes about 12 ms to build once (node), and one query about 1.5 µs per frame. Nothing in `docs/perf/budget.json` changes.
+
+`?canopycam=0` turns the canopy test off (for the before evidence). `window.__atl.canopy` gives the volume count, `inside(x, y, z)`, and `near(x, z, r)`; the recorder samples carry `canopyHit`.
+
+Evidence: `src/sim/camera.test.js` ("tree canopy": a magnolia around the camera goal; the camera ends outside it, pulled in toward the skater, with a clear line to her). `e2e/canopy-camera.spec.js` rides the Eastside Trail past a street tree (a red maple at x 221, z -314.7, on the slope under the raised trail) at `?level=beltline-eastside&quality=low&time=14&weather=clear`: with `?canopycam=0` the camera goes into the crown; by default no frame has the camera in a canopy and the skater is on screen. Screenshots: `e2e/__screenshots__/canopy-camera-before.png`, `canopy-camera-after.png`.
+
+Open. The volumes follow the procedural trees; the GLB trees of the pbr look (`?look=pbr`) have their own shapes, and were not checked against the volumes. The kit trees (`?trees=kit`) use the same volumes. Not checked on a phone. The 129.0 s frame of the playtest was not replayed (its video is a local file).
+## 2026-11-08 — The pbr look: a material audit test, the walker roughness, the style sheet (#157)
+
+This change does the parts of #157 that need no real GPU. The FPS gate (median over 55 FPS on the first block, high tier, real GPU) is not done here. The cloud machine renders with SwiftShader, so a frame rate from it is not a measurement. #157 stays open for that gate.
+
+**The audit.** `materialAudit()` (`src/render/pbr-palette.js`, `window.__atl.materials`) found only `MeshToonMaterial`. Now it also finds the toon ink hulls (`userData.outlineOf`), a toon ramp (`gradientMap`) on any material, and the Lambert, Phong and Matcap materials, and it lists the unlit materials by object path. `clean` is true when there is no toon material, hull, ramp or Lambert/Phong material.
+
+**The test.** `e2e/pbr-materials.spec.js` loads `?look=pbr&time=14&weather=clear&skaters=1` with all parts of the scene on: the level, the player skater, the NPC skaters with their outfits, the procedural walkers, the Meshy walkers and their outfit variants (PR #227), the crowd, the traffic with the car GLBs, and the landmark GLBs. It walks the full scene graph with the audit and fails on a toon leftover, or on an unlit material that is not on its list (lamps, fact cards, tree impostors, shadow proxies, shadow blobs). On the high tier the skater then fast-travels to each landmark GLB, so the pools that fill near the camera are in the scene, and the audit runs at each stop. The phone and low tiers are checked at the spawn. A toon run is the control: the audit must find the toon materials and the ink hulls there.
+
+**The result.** No toon material was left in the pbr look on the high, phone and low tiers (the work of 2026-11-06 and the PR #227 walkers already use `litMaterial(look, ...)`, and every view gets `look` from `main.js`). Two small fixes:
+- The skater shadow blob on the phone and low tiers had no name, so the audit could not put it on the unlit list. It is now `skater-blob`.
+- The procedural walkers used the wall roughness (0.88) for the full figure, which is out of the skin class. In the pbr look the skin part now gets 0.55 (skin class) and the other parts get 0.82 (cloth class), from `MATERIAL_CLASSES` (`PED_ROUGHNESS`, `src/render/peds-view.js`). Still one material and one draw call. The toon look does not change.
+
+**The measurement.** For the GLBs with a metal/rough map the factor is 1 and the value is in the map, so the roughness and metalness were read from the maps in the running game. People and skaters are in their classes, with three exceptions that are recorded as open items in `docs/style-sheet-pbr.md`: the landmark concrete maps read 0.61–0.64 (class 0.75–0.95), the NPC skater model of three outfits has metal noise up to 0.21 in its map (cloth must be 0), and the Meshy walkers have one map for skin and clothes. These need asset work (bake or clean the maps), not a shader rule, so this change does not hide them.
+
+**The style sheet.** `docs/style-sheet-pbr.md` now has the eight classes of #157 (brick, stucco, glass, asphalt, concrete, skin, cloth, paint) with the range from the code and the measured value in the game, the people palette from `src/render/ped-look.js`, and three new reference screenshots pinned to `time=14&weather=clear` (`scripts/art/shots-style-sheet.json`): the O4W street, Ponce City Market and the skater.
+
+**Evidence.** Vitest: `src/render/pbr-palette.test.js` (the audit finds a toon skater and its hull, and a pbr skater is clean), `src/render/peds-view.test.js` (the walker roughness is in the skin and cloth classes, and the toon walker gets no patch). Playwright: `e2e/pbr-materials.spec.js`, 4 passed (17.1 min on SwiftShader; the high-tier walk is 14.7 min).
+
+**Not done.** The 55 FPS median on a real GPU (#157 stays open). The phone-tier decision for the pbr look does not change (toon stays the default on phone and low, entry of 2026-11-07).
+## 2026-11-08 — Comic effects: speed lines, impact frames, bursts (#113)
+
+**What.** A render-layer effects module in `src/render/effects/`, as `docs/art-direction-pbr.md` section 11 asks:
+- Speed lines: thin warm-white (`#fff1d6`) streaks at the frame edge at high speed (from 9.5 m/s, full at 13 m/s). Each streak is on a ray from the skater and starts out of a clear circle with the skater's screen half height plus 30 %, so no streak goes over the skater.
+- Impact frame: on a bonk (the skater went 3 m/s or more before the hit) or a hard landing (0.9 s or more in the air, or a fall at 7 m/s or more). A radial burst of spikes in the district accent around the skater, for 3 rendered frames (2 on the phone tier). It counts frames, not seconds. A cooldown of 0.35 s stops a repeat. No full-screen flash.
+- Burst: on a grind start (`justSnapped`) and on an on-beat move (`run.moves[].onBeat`). A ring flat on the ground at the feet and a star beside the skater, in the accent. Only the star core goes over the bloom threshold.
+
+**The controller does not change.** `fx.js effectTriggers()` reads the skater before and after each simulation tick and the moves of the tick. `main.js simulate()` calls `effects.observe()` after `stepRun()`.
+
+**Pure and render parts.** `fx.js` holds the triggers, the timers, the tier and reduced-motion gates, the streak and spike layouts, and the accent pick, with 41 Vitest tests. `effects-view.js` draws them with two instanced meshes (one draw call each). A mesh with nothing to draw is hidden, so the layer costs 0 draw calls when no effect runs.
+
+**Emissive overlays.** The effects use their own shader materials. They do not change a material or the grade, read no light, and write no depth. The effect body is at emissive 0.8, under the night bloom threshold (0.92). The star core is at 3.2, over the day threshold (2.4), so only the core blooms. `post.js` keeps meshes with `userData.overlay` out of the GTAO normal pass, so the toon ink and the AO do not see them.
+
+**The accent.** The brightest accent of the district at the skater (`DISTRICT_LOOKS`). The dark trail accents (oxblood, navy) were rejected: on the screen they read as a dark stain, and the landmark GDD asks for no red on rings.
+
+**Gates.** `EFFECT_TIERS`: low off; phone 10 streaks, 2 impact frames, a ring and no star (no bloom on phone); high 18 streaks, 3 frames, ring and star with a core. `prefers-reduced-motion` turns all effects off on every tier, also live when the setting changes. `?fx=0` turns them off. Photo mode, the full map and the settings menu hide them.
+
+**For #221.** The burst is a general particle (position, velocity, gravity, shape star / ring / petal, flat or facing the camera, life, core). The landmark claim spawns its star-and-ring burst and its petals with `effects.burst()`, adds its own row (`claim`) to `EFFECT_TIERS` (the GDD keeps a ring on low), and uses `pulse()` for the map icon. #221 is not built here.
+
+**Both looks.** The effects show in `?look=toon` and `?look=pbr`.
+
+**Cost.** 0 draw calls with no effect, 2 with effects, on phone and high; under every cap in `docs/perf/budget.json`. See `docs/perf/113/README.md`. Frame time was not measured on a real GPU.
+
+**Evidence.** `src/render/effects/fx.test.js` (41 tests: the triggers, also from the real controller; the timers; the tier, reduced-motion and `?fx=0` gates; no streak over the skater; the spikes cover under 6 % of the frame). `e2e/effects.spec.js`: a picture of each effect in each look on the high tier, `time=14&weather=clear` (`e2e/__screenshots__/fx-{speed,impact,grind,beat}-{toon,pbr}.png`); the draw calls on each tier; a full-push ride into the edge fence starts an impact frame from the bonk flag; `prefers-reduced-motion` turns the effects off at the load and live (`fx-reduced-motion-pbr.png`).
+
+**Open.** No person played with the effects. The speed lines are faint on a bright sky. Real skaters did not review them. The landing threshold (0.9 s air or 7 m/s) is a first value.
 ## 2026-11-08 — A baked leaf cut for the leaf cards on phone and low (#191)
 
 PR #224 measured the leaf cards of the pbr trees as the largest cost left on the phone and low tiers. Each card layer of a crown is cut with `discard` and runs the procedural leaf loop. The leaf cards stay (no look change).

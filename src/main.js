@@ -85,6 +85,7 @@ import { NO_PERF, createFrameCost } from "./perf/frame-cost.js";
 import { createDrawSplit } from "./perf/draw-split.js";
 import { createShadowPass } from "./render/shadow-pass.js";
 import { createViewCull } from "./render/view-cull.js";
+import { createEffects } from "./render/effects/effects-view.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -513,6 +514,7 @@ if (geo && !tier.shadows) {
     new THREE.CircleGeometry(0.55, 16).rotateX(-Math.PI / 2),
     new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }),
   );
+  blob.name = "skater-blob";
   blob.renderOrder = 1;
   scene.add(blob);
 }
@@ -629,6 +631,10 @@ setPostToggles(post, savedSettings);
 // time of day and district, the fog tint, the env map bake, the skater rim.
 // ?pbrgrade=0 keeps the fixed day values (for a before/after check).
 const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: districtAnchors(level), getPost: () => post, skySh }) : null;
+// Comic effects (#113, src/render/effects/): speed lines, impact frames and
+// bursts from the controller flags. Emissive overlays: no material or grade
+// change. Off on the low tier, with prefers-reduced-motion, and with ?fx=0.
+const effects = createEffects({ scene, camera, renderer, tier: quality, anchors: geo ? districtAnchors(level) : [], off: params.get("fx") === "0" });
 // ?perf=1: the draw calls of each frame by pass and object kind (#188).
 const drawSplit = perf.enabled ? createDrawSplit(renderer) : null;
 function labelPostPasses() {
@@ -762,10 +768,12 @@ function sampleInput() {
 function simulate(dt) {
   // After the run ends the skater gets no input and rolls to a stop.
   const sampled = sampleInput();
+  const before = run.skater;
   perf.begin("skater");
   run = stepRun(run, goals && goals.ended ? {} : sampled, dt, env, skaterEnv, beat.running ? beat : null);
   perf.end("skater");
   skater = run.skater;
+  effects.observe(before, skater, run.moves);
   if (goals && !goals.ended) {
     goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
@@ -859,7 +867,7 @@ function runScript(entries, { position, yaw } = {}) {
 // Mouse drag on the canvas and the right stick turn the follow camera.
 let lookInput = null;
 if (view === "follow") {
-  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater, props: env.props, canopy: params.get("canopycam") !== "0" });
   lookInput = createLookInput({ element: renderer.domElement });
 }
 
@@ -1040,6 +1048,7 @@ function frame(now) {
   perf.begin("npcSkatersView");
   if (npcSkatersView) npcSkatersView.sync(npcSkaters, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null, camera.position, viewCull);
   perf.end("npcSkatersView");
+  effects.update(Math.min(elapsed, 0.1), { skater, active: !paused });
   perf.begin("render");
   draw();
   perf.end("render");
@@ -1051,7 +1060,7 @@ function frame(now) {
     firstFrameDone();
   }
   if (recorder.active && frames % recorder.every === 0) {
-    recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
+    recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, canopyHit: follow ? follow.lastCanopyHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
   }
   requestAnimationFrame(frame);
 }
@@ -1574,6 +1583,19 @@ window.__atl = {
   get cameraLook() {
     return follow ? { ...follow.look } : null;
   },
+  // The tree canopy volumes of the follow camera (#230): their count, and
+  // whether a point is inside one. ?canopycam=0 turns the canopy test off.
+  canopy: {
+    get count() {
+      return follow ? follow.canopy.count : 0;
+    },
+    inside(x, y, z) {
+      return follow ? follow.canopy.inside([x, y, z]) : false;
+    },
+    near(x, z, r) {
+      return follow ? follow.canopy.near(x - r, z - r, x + r, z + r) : [];
+    },
+  },
   // Moves the fixed camera (view=fixed only), for screenshots of things
   // that move, such as the crowd.
   setFixedCamera(x, y, z, lookX, lookY, lookZ) {
@@ -1605,6 +1627,10 @@ window.__atl = {
       recorder.active = false;
       return recorder.samples;
     },
+    // The samples so far, while it records.
+    get samples() {
+      return recorder.samples;
+    },
   },
   get ticks() {
     return ticks;
@@ -1634,6 +1660,17 @@ window.__atl = {
   // The shadow pass: the casters, the culled ones, the stand-ins shown.
   get shadowPass() {
     return shadowPass ? { ...shadowPass.info } : null;
+  },
+  // The comic effects (#113): the state, and the screenshot hooks.
+  // trigger("speed" | "impact") or trigger("grind" | "beat", [x, y, z]);
+  // hold(true) stops the effect clock, so a picture catches the effect.
+  effects: {
+    get info() {
+      return effects.info;
+    },
+    trigger: (kind, position) => effects.trigger(kind, position ?? [...skater.position]),
+    hold: (on) => effects.hold(on),
+    clear: () => effects.clear(),
   },
   get rendererInfo() {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };

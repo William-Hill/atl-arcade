@@ -9,14 +9,18 @@ code is correct; change this page.
 
 ## Reference screenshots
 
-Real renderer, Playwright headless (Chromium + SwiftShader), 1280×720,
-`?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&npcs=0&cars=0&view=fixed`.
-Cameras are the standard cameras in `scripts/art/shots-today.json`.
-Rebuild: `node scripts/art/pbr-frames.mjs --out <dir> today-trail today-street today-skater`.
+Real renderer, Playwright headless (Chromium + SwiftShader), 1280×720.
+Pinned light: `time=14&weather=clear` (date 06-21). Base URL:
+`?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=14&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=...`.
+The cameras are in `scripts/art/shots-style-sheet.json`.
+Rebuild: `node scripts/art/pbr-frames.mjs --shots scripts/art/shots-style-sheet.json --out <dir>`,
+then `convert -quality 85` to JPEG. The capture data is in
+`docs/style-sheet-pbr/provenance.json`.
 
-| BeltLine trail, 13:30 | O4W street, 13:30 | Skater (Nia), 13:30 |
+| Storefronts and murals, 14:00 | Ponce City Market, 14:00 | Skater (Nia) on the BeltLine, 14:00 |
 | --- | --- | --- |
-| ![trail](style-sheet-pbr/trail.jpg) | ![street](style-sheet-pbr/street.jpg) | ![skater](style-sheet-pbr/skater.jpg) |
+| ![street](style-sheet-pbr/street.jpg) | ![pcm](style-sheet-pbr/pcm.jpg) | ![skater](style-sheet-pbr/skater.jpg) |
+| Stucco, storefront glass, mural and sign paint, trail concrete, grass | Landmark brick, glass, stone trim | Skin, cloth, trail and bridge concrete, grass |
 
 ## Albedo limits
 
@@ -92,29 +96,69 @@ pane wobble) fades out under 48 to 20 px per window cell
 
 ## Roughness and metalness per material class
 
-`MATERIAL_CLASSES` in `src/render/pbr-palette.js`. "In code" is the value
-the game uses today.
+`MATERIAL_CLASSES` in `src/render/pbr-palette.js` sets the range of each
+class. "In game" is the value the game uses today. For a GLB with a
+metal/rough texture, it is the median of the texture × the material factor,
+measured in the running game (`?look=pbr&quality=high&skaters=1&time=14&weather=clear`,
+5th to 95th percentile of each map, 2026-11-08).
 
-| Class | Roughness | Metalness | In code |
+### The eight classes of #157
+
+| Class | Roughness | Metalness | In game |
 | --- | --- | --- | --- |
-| Brick | 0.80–0.92 | 0 | wall 0.88, brick scan roughness map |
-| Stucco, painted wall | 0.75–0.90 | 0 | wall 0.88, plaster scan roughness map |
-| Glass | 0.03–0.28 | 0 | per pane 0.03–0.28 (`facadeGlassRough`), 0.08 base |
-| Asphalt | 0.85–0.95 dry, 0.12–0.3 wet | 0 | scan roughness, floor 0.75, × 0.3 wet |
-| Concrete (sidewalk, trail, ledges) | 0.75–0.95 | 0 | scan roughness, floor 0.75 |
-| Grass, mulch, soil | 0.92–1.0 | 0 | scan roughness, floor 0.92 (#157) |
-| Mural paint | 0.70–0.85 | 0 | 0.85 |
-| Paint (signs, awnings, street sign blades) | 0.6–0.9 | 0 | props 0.8, shop signs 0.7, street signs 0.55 |
-| Painted and bare metal (rails, poles) | 0.25–0.6 | 0.6–1.0 | GLB values |
-| Car paint | 0.2–0.4 | 0 | procedural cars 0.32 (#157), GLB cars as authored |
-| Skin | 0.45–0.6 | 0 | floor 0.42 on skaters (`characterRoughness()`) |
-| Cloth | 0.7–0.95 | 0 | GLB values over the 0.42 floor; crowd 0.8 |
+| Brick | 0.80–0.92 | 0 | Facade wall 0.88 with the brick scan roughness map. Landmark GLB brick (`lm_brick_*`) 0.91–0.94, metal 0. |
+| Stucco (and painted walls) | 0.75–0.90 | 0 | Facade wall 0.88 with the plaster scan roughness map. |
+| Glass | 0.03–0.28 | 0 | Facade panes 0.03–0.28 (`facadeGlassRough`), base 0.08. Landmark windows (`lm_window`) median 0.22, metal 0. |
+| Asphalt | 0.85–0.95 dry, 0.12–0.30 wet | 0 | Ground scan roughness map, floor 0.75, × 0.3 when wet. |
+| Concrete (sidewalk, trail, ledges, bridges) | 0.75–0.95 (bridges 0.75–0.92, `CONCRETE`) | 0 | Ground scan, floor 0.75. Geo bridges 0.75–0.92. Landmark concrete (`lm_concrete`) 0.61–0.64: under the class, see "Open". |
+| Skin | 0.45–0.60 | 0 | Player and NPC skaters: GLB map with a floor of 0.42 (`characterRoughness()`). Procedural walkers 0.55 on the skin part (`PED_ROUGHNESS.skin`, this change). Meshy walkers one map for skin and clothes, median 0.43–0.69, metal 0.04 or less. |
+| Cloth | 0.70–0.95 | 0 | Skater GLB maps median 0.40–0.92 over the 0.42 floor. Procedural walkers 0.82 (`PED_ROUGHNESS.cloth`, this change). Capsule crowd 0.8. |
+| Paint (signs, awnings, sign blades, murals, car paint) | Sign and awning paint 0.6–0.9. Mural paint 0.70–0.85. Car paint 0.2–0.4. | 0 | Props 0.8, shop names 0.8, street sign blades 0.55, mural 0.85 with a roughness atlas, procedural cars 0.32, Meshy car GLBs median 0.28–0.29. |
 
-Metal is only for real metal. Every object in the pbr look uses
+### Other classes
+
+| Class | Roughness | Metalness | In game |
+| --- | --- | --- | --- |
+| Grass, mulch, soil | 0.92–1.0 | 0 | Ground scan, floor 0.92. |
+| Painted and bare metal (rails, poles) | 0.25–0.6 | 0.6–1.0 | Landmark sign frames and letters 0.25–0.88, metal 0 to 1. The edge fence posts are painted at metal 0 (0.45). Meshy props: the metal parts (fountain, bike dock, sculpture) read 0.7–0.97 metal; the plastic and wood parts read 0. |
+
+Metal is only for real metal. Every lit object in the pbr look uses
 `MeshStandardMaterial` (or `MeshPhysicalMaterial` from a GLB). Unlit
-`MeshBasicMaterial` stays only for emissive or baked parts: lamps, the fact
-cards, the tree impostors and the shadow blob. `window.__atl.materials`
-lists the material types in the scene and any toon material left.
+`MeshBasicMaterial` stays only for emissive or baked parts: the car lamps
+and beams, the fact cards, the tree impostors, the landmark shadow proxies
+and the skater shadow blobs. `window.__atl.materials` (`materialAudit()`)
+lists the material types, the toon materials, the ink hulls, the toon
+ramps, the Lambert and Phong materials, and the unlit materials by path.
+`e2e/pbr-materials.spec.js` fails on any of them, or on an unlit material
+that is not on its list.
+
+### People palette
+
+The procedural walkers (`src/render/ped-look.js`). The colors are sRGB
+albedo; the pbr look keeps them as they are.
+
+| Part | Colors |
+| --- | --- |
+| Skin (12 tones) | `#3b2219` `#4a2c1d` `#5a3825` `#6e4430` `#7a4b2a` `#8d5a3b` `#9c6b43` `#b07a52` `#c68e5e` `#d8a679` `#e0b48a` `#f1cfa8` |
+| Shirts | `#e03a3e` `#ffd23f` `#2ec4b6` `#ff8c42` `#9b5de5` `#8ac926` `#3a86ff` `#f15bb5` `#00bbf9` `#ffffff` `#c8102e` `#1d428a` `#f4a7b9` `#b8e0d2` `#fff1a8` `#2b2d42` `#9a9a9a` `#7a3e9d` `#e76f51` `#40916c` |
+| Pants | `#2b2d42` `#3d405b` `#4a6fa5` `#6b8cbf` `#1d2b4f` `#6b705c` `#e9d8a6` `#22223b` `#8d6346` `#5c5c5c` `#f2efe6` `#556b2f` `#7f1d1d` |
+| Hair | `#111111` `#1b1b1b` `#2e1f14` `#3b2a1a` `#4b3621` `#6d4c33` `#8a8a8a` `#c9c9c9` `#8c3b1e` `#c8a165` `#d63c8a` `#2aa198` |
+| Accents (bags, hats, jackets) | `#264653` `#e9c46a` `#f4a261` `#2a9d8f` `#e63946` `#1d3557` `#6d597a` `#8d6346` `#111111` `#f1faee` `#588157` `#ff006e` |
+
+Some shirts (`#ffffff`, `#fff1a8`, `#ffd23f`) are over the 0.6 albedo
+ceiling. They are small on screen, so the ceiling is not applied to them
+today.
+
+### Open
+
+- Landmark concrete (`lm_concrete`, `lm_roof`, `lm_trim`) reads 0.61–0.64,
+  under the concrete class (0.75). Bake the GLB maps again or raise the
+  factor.
+- The NPC skater model of the berry, lime and sunset outfits has metal
+  noise in its map (95th percentile up to 0.21). Cloth must be metal 0.
+  Clean the map (Blender-MCP) or cap the metalness of non-metal parts.
+- Meshy walkers have one map for skin and clothes. Their clothes (median
+  about 0.6) are under the cloth class.
 
 ## Light and grade
 

@@ -266,6 +266,15 @@ export function stepAnim(prev, state, dt) {
   return { anim: next, change: { from: prev.clip, to: wanted, fade } };
 }
 
+// The anim state for a skater that respawns (#231): the clip and the facing
+// of the new state at once, with no fade, and the yaw, the speed and the
+// tick of the new state as the last values, so the next frame measures no
+// turn from the old place.
+export function respawnAnim(state) {
+  const clip = clipFor(state);
+  return { ...createAnimState(), clip, lock: 0, facing: facingFor(clip, state), prevYaw: state.yaw, prevSpeed: state.speed, prevTick: state.tick ?? null };
+}
+
 // The model yaw offset: PI faces backward. The skater faces backward on the
 // ground when the switch is on. Air, rails, and dances face forward.
 export const facingFor = (clip, state = {}) => (state.backward && GROUND.has(clip) && clip !== "manual" ? Math.PI : 0);

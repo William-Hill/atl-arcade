@@ -799,6 +799,7 @@ function fastTravel(x, z) {
   const y = env.sampleGround(spot.x, spot.z, landingProbe(level, spot, ground))?.height ?? ground;
   run = teleportRun(run, level, { position: [spot.x, y, spot.z], yaw: spot.yaw });
   skater = run.skater;
+  skaterView.respawn(skater);
   if (follow) follow.reset(skater);
   events.push({ type: "travel", x: spot.x, z: spot.z });
   return { ...spot, y };
@@ -817,6 +818,9 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   if (peds) peds = makePeds();
   if (npcSkaters) npcSkaters = createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] });
   events.length = 0;
+  // The model faces the new heading at once, also while the render is
+  // paused (#231).
+  skaterView.respawn(skater);
   if (follow) follow.reset(skater);
 }
 
@@ -927,7 +931,11 @@ let renderPaused = false;
 let npcWarm = false;
 
 function frame(now) {
-  const elapsed = (now - last) / 1000;
+  // The frame time of requestAnimationFrame can be before `last` (set with
+  // performance.now() at the start or by the pause hook). A negative step
+  // sends the follow camera smoothing far away and plays the clips backward
+  // (#231), so the step is never below 0.
+  const elapsed = Math.max(0, (now - last) / 1000);
   last = now;
   if (fps.active) fps.frameMs.push(elapsed * 1000);
   if (renderPaused) {

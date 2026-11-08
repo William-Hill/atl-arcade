@@ -1895,3 +1895,16 @@ The owner saw the playable skaters as too small next to the NPCs, and asked that
 - The model scale is (height + 0.10 m) / GLB height: Nia 1.047 (1.78 m on skates), Marcus 1.112 (1.98 m on skates). `wrapModel()` applies it. The GLBs do not change.
 - `skateFor()` changes the SKATE constants (tuned for 1.75 m, 70 kg) with small scaling laws: top speed and stroke time with sqrt(height); push acceleration with weight^(-1/3) and sqrt(height); air drag with sqrt(height / weight); brake with weight^(-1/3); turn rate with height^(-1/2) weight^(-1/6); jump with weight^(-1/6) height^(1/4); collision radius with sqrt(weight / height). Each constant stays within its min and max in `constants.js`, and within 12% of SKATE. The roll friction stays the same. `skaterEnv.skate` carries the constants into `stepSkater()`; the capsule keeps SKATE.
 - The tables in the dossiers list each constant for each skater.
+
+## 2026-11-08 — The skater faces the heading at the spawn (#231)
+
+An Autopilot playtest read the model rotation at the spawn as 110.7 degrees off the sim heading. The debug reading was correct. Two causes:
+- `resetSkater()` and `fastTravel()` gave the sim a new skater, but the view kept the old rotation, clip, lean and backward facing until the next `skaterView.sync()`. While the render is paused (the Autopilot `pause` hook), `frame()` does not call `sync()`, so the old values stayed for the full pause. In a probe after a carve, the model was -236.8 degrees (Nia) and 78.4 degrees (Marcus) off the heading, in the `push` clip, with a lean of 0.22 rad. After the next frame the heading was correct, but the push pose and the lean stayed for some frames.
+- The first `requestAnimationFrame` time can be before `last` (set with `performance.now()`). The negative step made the follow camera smoothing extrapolate, so the camera state went far away (x 401317 m) and the wall ray put the camera about 65 degrees to the side of the skater. A player saw the skater from the side at the spawn, although the model faced the heading.
+
+The fix:
+- `skaterView.respawn(state)` puts the group on the new position and heading with no lean, and puts the model on the clip and the facing of the new state (`respawnAnim()`) with no fade. It applies the pose at once, so it is correct also while the render is paused. `resetSkater()` and `fastTravel()` call it.
+- `frame()` never uses a negative step.
+- The PR #225 fix for the sideways skater does not change: `sync()` sets the rotation from the yaw as before.
+
+Check: `e2e/skater-spawn.spec.js` (each skater: at the load and after a paused respawn, the model rotation is within 5 degrees of the heading, and the camera is behind the skater). It fails on the old code. Evidence: `docs/characters/spawn-231/<skater>-before-after.jpg` (Beltline spawn; top row old code, bottom row fix; left the load, right the first frame after a respawn) and `e2e/__screenshots__/spawn-231-<skater>.png`, `respawn-231-<skater>.png`.

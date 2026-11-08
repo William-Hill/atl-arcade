@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { ANIM, AIR_TRICKS, CLIPS, clipNamesFor, GRINDS, DANCE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, measureYawRate, stepAnim, stepFacing } from "./skater-anim.js";
+import { ANIM, AIR_TRICKS, CLIPS, clipNamesFor, GRINDS, DANCE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, measureYawRate, respawnAnim, stepAnim, stepFacing } from "./skater-anim.js";
 import { SKATE, STYLE } from "../sim/skate/constants.js";
 import { createSkateState, runScript, stepSkate } from "../sim/skate/controller.js";
 
@@ -217,5 +217,22 @@ describe("the yaw rate per simulation tick", () => {
     expect(measureYawRate(a, carve(12), 1 / 240)).toBeCloseTo(1.5, 6);
     expect(measureYawRate({ ...a, yawRate: 1.5 }, carve(10), 1 / 240)).toBe(1.5);
     expect(measureYawRate(a, carve(3), 1 / 60)).toBe(0); // a reset
+  });
+});
+
+describe("respawnAnim (#231)", () => {
+  it("starts on the clip and facing of the new state, with no turn from the old yaw", () => {
+    const a = respawnAnim({ state: "rolling", speed: 0, yaw: 1.464, tick: 0, style: null });
+    expect(a.clip).toBe("idle");
+    expect(a.facing).toBe(0);
+    expect(a.prevYaw).toBe(1.464);
+    const r = stepAnim(a, { state: "rolling", speed: 0, yaw: 1.464, tick: 1, style: null }, 1 / 60);
+    expect(r.change).toBeNull();
+    expect(r.anim.yawRate).toBe(0);
+  });
+
+  it("takes the facing from the new state, not from the old run", () => {
+    expect(respawnAnim({ state: "rolling", speed: 0, yaw: 0, tick: 0, backward: false, style: null }).facing).toBe(0);
+    expect(respawnAnim({ state: "rolling", speed: 0, yaw: 0, tick: 0, backward: true, style: null }).facing).toBeCloseTo(Math.PI);
   });
 });

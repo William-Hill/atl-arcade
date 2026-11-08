@@ -34,7 +34,7 @@ import {
 import { STYLES } from "../level/geo/styles.js";
 import { GROUND_ALBEDO } from "./look.js";
 import { SURFACE_COLORS } from "../level/geo/geo-mesh.js";
-import { RIM_POWER, SKATER_RIM, pbrSkater, rimWeight } from "./toon.js";
+import { RIM_POWER, SKATER_RIM, pbrSkater, rimWeight, toonSkater } from "./toon.js";
 
 const luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 const maxC = (c) => Math.max(...c);
@@ -352,6 +352,73 @@ describe("materialAudit", () => {
     const a = materialAudit(scene);
     expect(a.counts).toEqual({ MeshStandardMaterial: 1, MeshToonMaterial: 1 });
     expect(a.toon).toEqual(["left-over"]);
+    expect(a.clean).toBe(false);
+  });
+
+  it("is clean on metal/rough materials and lists the unlit ones by path", () => {
+    const scene = new THREE.Scene();
+    scene.name = "scene";
+    const group = new THREE.Group();
+    group.name = "cars";
+    scene.add(group);
+    group.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial()));
+    group.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhysicalMaterial()));
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+    lamp.name = "car-lamps";
+    group.add(lamp);
+    const a = materialAudit(scene);
+    expect(a.clean).toBe(true);
+    expect(a.unlit).toEqual(["car-lamps<cars<scene"]);
+  });
+
+  it("finds an ink hull, a toon ramp and a Lambert or Phong material", () => {
+    const scene = new THREE.Scene();
+    const skin = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
+    skin.name = "skin";
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ side: THREE.BackSide }));
+    hull.name = "skin-outline";
+    hull.userData.outlineOf = skin;
+    const ramped = new THREE.MeshStandardMaterial();
+    ramped.gradientMap = new THREE.DataTexture(new Uint8Array([0, 255]), 2, 1, THREE.RedFormat);
+    const ramp = new THREE.Mesh(new THREE.BoxGeometry(), ramped);
+    ramp.name = "ramped";
+    const phong = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhongMaterial());
+    phong.name = "phong";
+    const lambert = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshLambertMaterial());
+    lambert.name = "lambert";
+    scene.add(skin, hull, ramp, phong, lambert);
+    const a = materialAudit(scene);
+    expect(a.toon).toEqual([]);
+    expect(a.hulls).toEqual(["skin-outline<Scene"]);
+    expect(a.ramps).toEqual(["ramped<Scene"]);
+    expect(a.legacy).toEqual(["phong<Scene", "lambert<Scene"]);
+    expect(a.clean).toBe(false);
+  });
+
+  it("finds the toon swap and the ink hull of a toon skater, and none on a pbr skater", () => {
+    const make = () => {
+      const root = new THREE.Group();
+      const bone = new THREE.Bone();
+      root.add(bone);
+      const geo = new THREE.BoxGeometry();
+      const n = geo.attributes.position.count;
+      geo.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(new Uint16Array(n * 4), 4));
+      geo.setAttribute("skinWeight", new THREE.Float32BufferAttribute(new Float32Array(n * 4).map((_, i) => (i % 4 ? 0 : 1)), 4));
+      const mesh = new THREE.SkinnedMesh(geo, new THREE.MeshStandardMaterial({ color: 0x8a5a44 }));
+      mesh.name = "body";
+      root.add(mesh);
+      mesh.bind(new THREE.Skeleton([bone]));
+      return { root, scene: root };
+    };
+    const toonOne = make();
+    toonSkater(toonOne);
+    const t = materialAudit(toonOne.root);
+    expect(t.toon.length).toBeGreaterThan(0);
+    expect(t.hulls.length).toBe(1);
+    expect(t.clean).toBe(false);
+    const pbrOne = make();
+    pbrSkater(pbrOne);
+    expect(materialAudit(pbrOne.root).clean).toBe(true);
   });
 });
 

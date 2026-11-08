@@ -512,6 +512,7 @@ if (geo && !tier.shadows) {
     new THREE.CircleGeometry(0.55, 16).rotateX(-Math.PI / 2),
     new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }),
   );
+  blob.name = "skater-blob";
   blob.renderOrder = 1;
   scene.add(blob);
 }

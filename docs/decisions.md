@@ -1922,6 +1922,24 @@ The fix:
 
 Check: `e2e/skater-spawn.spec.js` (each skater: at the load and after a paused respawn, the model rotation is within 5 degrees of the heading, and the camera is behind the skater). It fails on the old code. Evidence: `docs/characters/spawn-231/<skater>-before-after.jpg` (Beltline spawn; top row old code, bottom row fix; left the load, right the first frame after a respawn) and `e2e/__screenshots__/spawn-231-<skater>.png`, `respawn-231-<skater>.png`.
 
+## 2026-11-08 — The follow camera stays out of the tree canopies (#230)
+
+The Autopilot playtest on 2026-11-07 found the follow camera inside a tree canopy on the BeltLine (129.0 s), with the skater hidden. The wall ray hits only the Rapier colliders, and the trees have none, so nothing stopped the camera in a crown.
+
+The fix is in the camera, not in the trees:
+- `src/sim/camera.js` builds a canopy volume for each tree prop (`treeVolume()`, `canopyVolumes()`): an ellipsoid around the crown and an upright cylinder around the trunk. The sizes come from the species table of the procedural trees (`TREE_SPECIES` in `src/level/geo/trees.js`) times the placement scale: the crown from the species `clear` height (the lowest leaf) to the top puff, as wide as `crownReach()`. A crape myrtle's leaning trunks get a wider cylinder.
+- `createCanopyIndex()` puts the volumes in a 16 m grid. `canopyDistance()` gives the distance from the pivot to the first volume on the segment to the camera, like the wall ray's hit.
+- `src/render/follow-camera.js` takes the nearer of the wall hit and the canopy hit, and `resolveClip()` does the rest: the camera snaps in front of the crown and eases back out after the tree, the same as at a wall. A volume that holds the pivot is skipped, so the camera never lands on the skater.
+
+Rejected: fading or hiding the crowns near the camera. That changes the tree materials, which the #191 work (leaf cards in the pbr look) owns, and a faded crown with the camera in it still fills the screen with leaves. Rejected: Rapier colliders on the crowns. The skater would hit them, and 5,496 more colliders on the BeltLine cost physics time for a camera test. Rejected: lifting the camera over the crown. Most crowns are 5 to 13 m high, so a lift goes into the crown or far above the skater; pulling in keeps her large on screen.
+
+Cost: on the BeltLine level, 5,496 trees; the index takes about 12 ms to build once (node), and one query about 1.5 µs per frame. Nothing in `docs/perf/budget.json` changes.
+
+`?canopycam=0` turns the canopy test off (for the before evidence). `window.__atl.canopy` gives the volume count, `inside(x, y, z)`, and `near(x, z, r)`; the recorder samples carry `canopyHit`.
+
+Evidence: `src/sim/camera.test.js` ("tree canopy": a magnolia around the camera goal; the camera ends outside it, pulled in toward the skater, with a clear line to her). `e2e/canopy-camera.spec.js` rides the Eastside Trail past a street tree (a red maple at x 221, z -314.7, on the slope under the raised trail) at `?level=beltline-eastside&quality=low&time=14&weather=clear`: with `?canopycam=0` the camera goes into the crown; by default no frame has the camera in a canopy and the skater is on screen. Screenshots: `e2e/__screenshots__/canopy-camera-before.png`, `canopy-camera-after.png`.
+
+Open. The volumes follow the procedural trees; the GLB trees of the pbr look (`?look=pbr`) have their own shapes, and were not checked against the volumes. The kit trees (`?trees=kit`) use the same volumes. Not checked on a phone. The 129.0 s frame of the playtest was not replayed (its video is a local file).
 ## 2026-11-08 — The pbr look: a material audit test, the walker roughness, the style sheet (#157)
 
 This change does the parts of #157 that need no real GPU. The FPS gate (median over 55 FPS on the first block, high tier, real GPU) is not done here. The cloud machine renders with SwiftShader, so a frame rate from it is not a measurement. #157 stays open for that gate.

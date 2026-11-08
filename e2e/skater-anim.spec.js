@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { SESSIONS } from "../src/playtest/sessions.js";
-import { CLIPS } from "../src/render/skater-anim.js";
+import { clipNamesFor } from "../src/render/skater-anim.js";
 
 function collectErrors(page) {
   const errors = [];
@@ -21,7 +21,7 @@ test(`every ${name} clip renders as a contact sheet`, async ({ page }) => {
   await page.goto(`/skater.html?skater=${name}`);
   await page.waitForFunction(() => window.__skater && (window.__skater.ready || window.__skater.error), null, { timeout: 30000 });
   const names = await page.evaluate(() => window.__skater.clips);
-  expect([...names].sort()).toEqual(Object.keys(CLIPS).sort());
+  expect([...names].sort()).toEqual(clipNamesFor(name).sort());
   for (const clip of names) {
     const info = await page.evaluate((n) => window.__skater.sheet(n), clip);
     expect(info.tracks).toBeGreaterThan(5);

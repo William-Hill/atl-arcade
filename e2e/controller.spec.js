@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { createSkateState, runScript } from "../src/sim/skate/controller.js";
 import { createLevelEnv } from "../src/level/ground.js";
+import { bodyFor, skateFor } from "../src/sim/skate/body.js";
+// The page rides Nia (the default skater): the pure side uses her body constants.
+const NIA = skateFor(bodyFor("nia"));
 import { GREYBOX } from "../src/level/greybox.js";
 
 // The same script runs in node through the pure controller and in the
@@ -22,7 +25,7 @@ test("the capsule follows the controller and a scripted run lands within toleran
   });
 
   const env = createLevelEnv(GREYBOX);
-  const expected = runScript(createSkateState({ position: GREYBOX.spawn.position, yaw: GREYBOX.spawn.yaw }), SCRIPT, { env }).state;
+  const expected = runScript(createSkateState({ position: GREYBOX.spawn.position, yaw: GREYBOX.spawn.yaw }), SCRIPT, { env, k: NIA }).state;
 
   await page.goto("/?level=greybox&view=orbit");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });

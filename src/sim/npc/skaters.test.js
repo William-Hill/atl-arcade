@@ -218,3 +218,21 @@ describe("NPC skaters far-step (#189)", () => {
     expect(Math.hypot(st.npcs[0].skater.position[0] - x, st.npcs[0].skater.position[2] - z)).toBeGreaterThan(0);
   });
 });
+
+
+describe("the body of an NPC skater", () => {
+  it("is SKATE, not the player's body from skaterEnv", async () => {
+    const { bodyFor, skateFor } = await import("../skate/body.js");
+    const world = worlds.greybox;
+    const run = (skaterEnv) => {
+      let st = createNpcSkaters(world.level, { specs: GREYBOX_SKATERS, env: world.env });
+      for (let i = 0; i < 600; i += 1) st = stepNpcSkaters(st, DT, world.env, skaterEnv);
+      return st.npcs.map((n) => [...n.skater.position, n.skater.speed]);
+    };
+    // The player is Marcus: his body and his dances must not reach the NPCs.
+    const asMarcus = { ...world.skaterEnv, skater: "marcus", skate: skateFor(bodyFor("marcus")) };
+    const asNia = { ...world.skaterEnv, skater: "nia", skate: skateFor(bodyFor("nia")) };
+    expect(run(asMarcus)).toEqual(run(asNia));
+    expect(bodyFor("constructor")).toBeNull();
+  });
+});

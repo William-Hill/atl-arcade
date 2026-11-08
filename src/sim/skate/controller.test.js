@@ -43,6 +43,13 @@ describe("push", () => {
     expect(createSkateState().pushing).toBe(false);
   });
 
+  it("sets braking while the brake button is held on the ground", () => {
+    const s = runScript(createSkateState(), [{ frames: 30, input: { push: true } }, { frames: 5, input: { brake: true } }]).state;
+    expect(s.braking).toBe(true);
+    expect(stepSkate(s, {}, DT).braking).toBe(false);
+    expect(createSkateState().braking).toBe(false);
+  });
+
   it("stops the thrust when the button is released", () => {
     const s = runScript(createSkateState(), [{ frames: 60, input: { push: true } }]).state;
     const after = stepSkate(s, {}, DT);

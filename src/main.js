@@ -68,6 +68,7 @@ import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
 import { parkedCars } from "./sim/traffic/parking.js";
 import { createCarView } from "./render/car-view.js";
 import { createCarModelView, loadCarModels } from "./render/car-models.js";
+import { bodyFor, skateFor } from "./sim/skate/body.js";
 import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
 import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
 import { createPbrLook, installHeightFog, installSkySh, setSkySh, validSkySh } from "./render/pbr-look.js";
@@ -279,6 +280,11 @@ const facadeKitReady = (nodes, ms = numParam("kitwait") ?? 3000) => nodes && Pro
 // The skate env: the ground sampler, the props, the grindables.
 const env = createLevelEnv(level, { props: levelPropsOn, placed: propsBuild && (await propsBuild.props) });
 const skaterEnv = createSkaterEnv(level, env.grindables);
+// The style moves pick from this skater's dances (STYLE dances with `skaters`).
+skaterEnv.skater = skaterName;
+// The skate constants follow the skater's body (src/sim/skate/body.js and the
+// dossiers in docs/characters/). The capsule keeps SKATE.
+skaterEnv.skate = skateFor(bodyFor(skaterName));
 const geoMeshes = geo ? await meshBuild.meshes : null;
 performance.mark("atl:meshes");
 // Before the level view: its main-thread build leaves the other CPUs free.
@@ -459,7 +465,10 @@ if (params.get("view") === "iso") skaterView.group.visible = false;
 // the player. On by default on a geodata level; ?skaters=0 turns them off,
 // and ?skaters=1 turns them on for the greybox. Each skater GLB is parsed
 // once: the player and the NPCs share the parse.
-const skatersOn = params.get("skaters") === "1" || (geo && params.get("skaters") !== "0");
+// The NPC skaters reuse the Nia and Marcus models, so they are off by default:
+// other copies of the playable skaters must not ride the trail. ?skaters=1
+// turns them on (for the NPC tests and later NPC work).
+const skatersOn = params.get("skaters") === "1";
 let npcSkaters = skatersOn ? createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] }) : null;
 // One download for each model: the NPCs of one model share the bytes.
 const npcByteCache = new Map();
@@ -1489,6 +1498,22 @@ window.__atl = {
     silhouette() {
       const m = skaterView.model;
       return m ? Array.from(silhouette(skaterView.group, m.skinnedMeshes)) : null;
+    },
+    // The model height (m) in the bind pose, from the wheels to the top of
+    // the head: the dossier height plus the skate (src/sim/skate/body.js).
+    restHeight() {
+      const m = skaterView.model;
+      if (!m) return null;
+      m.skinnedMesh.skeleton.pose();
+      m.root.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(m.root, true);
+      skaterView.sync(skater, 0);
+      return box.max.y - box.min.y;
+    },
+    // The skate constants of this skater's body.
+    get skate() {
+      const k = skaterEnv.skate;
+      return { maxSpeed: k.maxSpeed, pushAccel: k.pushAccel, coastDrag: k.coastDrag, carveRate: k.carveRate, brakeDecel: k.brakeDecel, jumpSpeed: k.jumpSpeed, bodyRadius: k.bodyRadius };
     },
     // The same mask with the skeleton in the bind pose (the T-pose).
     tposeSilhouette() {

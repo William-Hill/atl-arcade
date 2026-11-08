@@ -19,6 +19,9 @@ import { FIXED_DT } from "../sim/fixed-step.js";
 export const CLIPS = {
   idle: { beat: true },
   push: {},
+  // The brake: Nia does a T-stop, Marcus a toe-stop drag. It holds 0.25 s,
+  // so a short tap does not flicker.
+  brake: { beat: true, lock: 0.25 },
   coast: { beat: true },
   ride_back: { beat: true },
   carve_left: { beat: true },
@@ -42,7 +45,14 @@ export const CLIPS = {
   dance_smoothquad: { tempo: true },
   dance_spin: { tempo: true },
   dance_sitspin: { tempo: true },
+  // Marcus only: the clips are in his GLB alone.
+  dance_jamgroove: { tempo: true, skaters: ["marcus"] },
+  dance_drumline: { tempo: true, skaters: ["marcus"] },
+  dance_jamstep: { tempo: true, skaters: ["marcus"] },
 };
+
+// The clip names in the GLB of one skater.
+export const clipNamesFor = (skater) => Object.keys(CLIPS).filter((n) => !CLIPS[n].skaters || CLIPS[n].skaters.includes(skater));
 
 // The game cycles through these in order: one air trick per ramp air and
 // one grind stance per rail.
@@ -59,10 +69,12 @@ export const ANIM = {
   trickAirTime: 0.25, // s in the air off a ramp before the air trick starts.
   fade: 0.2, // s default crossfade. FADES sets the time for each change.
   turnTime: 0.35, // s for the half turn into and out of the backward ride.
+  brakeDecel: 5, // m/s^2. A harder slow-down plays the brake clip. The roll friction and drag stay under 4.8 at the top speed, and the brake is 8.
+  brakeHold: 0.1, // s. The slow-down must last this long, so a one-tick drop (a wall slide, a landing) does not play the brake.
 };
 
 const AIR = new Set(["jump", ...AIR_TRICKS]);
-const GROUND = new Set(["idle", "push", "coast", "ride_back", "carve_left", "carve_right", "manual"]);
+const GROUND = new Set(["idle", "push", "brake", "coast", "ride_back", "carve_left", "carve_right", "manual"]);
 
 // --- Fade times for each state change (#107) ---------------------------
 //
@@ -72,6 +84,7 @@ const GROUND = new Set(["idle", "push", "coast", "ride_back", "carve_left", "car
 const GROUPS = {
   idle: ["idle"],
   roll: ["push", "coast", "manual"],
+  brake: ["brake"],
   carve: ["carve_left", "carve_right"],
   back: ["ride_back"],
   jump: ["jump"],
@@ -103,6 +116,8 @@ export const FADES = [
   ["grind", "*", 0.15],
   ["*", "dance", 0.08],
   ["dance", "*", 0.25],
+  ["*", "brake", 0.12],
+  ["brake", "*", 0.25],
   ["coast", "push", 0.12],
   ["push", "coast", 0.25],
   ["carve", "carve", 0.35],
@@ -147,7 +162,10 @@ export function createAnimState() {
     wasGrind: false,
     prevYaw: null,
     prevTick: null,
+    prevSpeed: null,
     yawRate: 0,
+    decel: 0,
+    slowing: 0,
     facing: 0,
   };
 }
@@ -162,7 +180,7 @@ function wrapAngle(a) {
 // Picks the clip for one controller state. `ctx` holds the values that the
 // state does not carry: the yaw rate and the variant counters.
 export function clipFor(state, ctx = {}) {
-  const { yawRate = 0, airVariant = 0, grindVariant = 0 } = ctx;
+  const { yawRate = 0, slowing = 0, airVariant = 0, grindVariant = 0 } = ctx;
   // The sim picks the dance (state.style.clip). The fallback is the first dance.
   if (state.style) return CLIPS[state.style.clip] ? state.style.clip : DANCE_CLIPS[0];
   if (state.state === "grind") return GRINDS[grindVariant % GRINDS.length];
@@ -176,6 +194,9 @@ export function clipFor(state, ctx = {}) {
   // Backward (the switch button): the backward ride swizzles the skates, so
   // it is the clip for the push, the coast, and the carves.
   if (state.backward) return "ride_back";
+  // The brake: the brake button, or a hard slow-down for ANIM.brakeHold
+  // (slowing: the time in s over ANIM.brakeDecel).
+  if (state.braking || slowing >= ANIM.brakeHold) return "brake";
   // The push clip plays only while the push button is held. The cooldown
   // continues after a release, so it is not the check.
   if (state.pushing) return "push";
@@ -201,16 +222,31 @@ export function measureYawRate(prev, state, dt) {
   return dt > 0 ? wrapAngle(state.yaw - prev.prevYaw) / dt : 0;
 }
 
+// The slow-down in m/s^2 (positive when the speed falls), per simulation
+// tick as measureYawRate().
+export function measureDecel(prev, state, dt) {
+  if (prev.prevSpeed === null || prev.prevSpeed === undefined) return 0;
+  const drop = Math.abs(prev.prevSpeed) - Math.abs(state.speed);
+  const tick = state.tick;
+  if (Number.isFinite(tick) && Number.isFinite(prev.prevTick)) {
+    if (tick === prev.prevTick) return prev.decel ?? 0;
+    if (tick < prev.prevTick) return 0;
+    return drop / ((tick - prev.prevTick) * FIXED_DT);
+  }
+  return dt > 0 ? drop / dt : 0;
+}
+
 export function stepAnim(prev, state, dt) {
   const yawRate = measureYawRate(prev, state, dt);
-  const next = { ...prev, prevYaw: state.yaw, prevTick: state.tick ?? null, yawRate, time: prev.time + dt, lock: Math.max(0, prev.lock - dt) };
+  const decel = measureDecel(prev, state, dt);
+  const next = { ...prev, prevYaw: state.yaw, prevSpeed: state.speed, prevTick: state.tick ?? null, yawRate, decel, slowing: decel > ANIM.brakeDecel ? (prev.slowing ?? 0) + dt : 0, time: prev.time + dt, lock: Math.max(0, prev.lock - dt) };
 
   // The variant counters change once per air trick and per rail.
   const onRail = state.state === "grind";
   if (!onRail && prev.wasGrind) next.grindVariant = prev.grindVariant + 1;
   next.wasGrind = onRail;
 
-  const ctx = { yawRate, airVariant: next.airVariant, grindVariant: next.grindVariant };
+  const ctx = { yawRate, slowing: next.slowing, airVariant: next.airVariant, grindVariant: next.grindVariant };
   let wanted = clipFor(state, ctx);
   const airTrick = AIR_TRICKS.includes(wanted);
   if (!airTrick && prev.wasAirTrick) next.airVariant = prev.airVariant + 1;

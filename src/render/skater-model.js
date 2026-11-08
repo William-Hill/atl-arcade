@@ -1,3 +1,4 @@
+import { bodyFor, modelScale } from "../sim/skate/body.js";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
@@ -40,10 +41,12 @@ export function getDracoLoader() {
 }
 
 // Wraps a glTF scene so that it faces +x with the feet at the wrapper origin.
-export function wrapModel(model) {
+export function wrapModel(model, name = null) {
   const root = new THREE.Group();
   root.name = "skater-model";
   model.rotation.y = MODEL_YAW;
+  // The skater stands at the dossier height on skates (src/sim/skate/body.js).
+  model.scale.setScalar(modelScale(bodyFor(name)));
   root.add(model);
   return root;
 }
@@ -123,7 +126,7 @@ export async function cloneSkaterModel(name = "nia", bytes = null) {
   const skinnedMeshes = skinnedMeshesOf(scene);
   const skinnedMesh = skinnedMeshes[0];
   if (!skinnedMesh) throw new Error(`Skater model ${name} has no skinned mesh`);
-  return { root: wrapModel(scene), skinnedMesh, skinnedMeshes, animations: gltf.animations, face: null };
+  return { root: wrapModel(scene, name), skinnedMesh, skinnedMeshes, animations: gltf.animations, face: null };
 }
 
 // Loads a skater GLB. Returns the wrapper, the skinned meshes, the clips, and
@@ -146,5 +149,5 @@ export async function loadSkaterModel(name = "nia", bytes = null) {
   } catch (err) {
     console.warn(`Skater ${name}: no face decals (${err?.message ?? err})`);
   }
-  return { root: wrapModel(scene), skinnedMesh, skinnedMeshes, animations: gltf.animations, face };
+  return { root: wrapModel(scene, name), skinnedMesh, skinnedMeshes, animations: gltf.animations, face };
 }

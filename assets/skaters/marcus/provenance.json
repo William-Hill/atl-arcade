@@ -1,6 +1,6 @@
 {
   "asset": "Marcus \"Tempo\" Reid, the second skater (M1-10, #42)",
-  "date": "2026-11-05",
+  "date": "2026-11-07",
   "status": "shipped review candidate: corrected PBR body and forward motion, pending PR review",
   "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
   "source_image": "docs/characters/concept/marcus/marcus-tpose-front.png (see docs/characters/concept/marcus/provenance.json)",
@@ -179,6 +179,83 @@
         "No new generation and no credits. The mesh, the rig, the joint names, and the clips are the same (src/render/skater-model.test.js). The before and after five views and face close-up match (PSNR 45 dB or more)."
       ],
       "result": "skater.glb 7,813,640 to 3,182,416 bytes; skater-1024.glb 5,362,980 to 2,309,792 bytes",
+      "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3)",
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_anim_v3.py with nia_clips.py and the leg IK of skater_runtime.py; scripts/assets/graft-clips.mjs on Node 24 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9 (npm i --no-save)",
+      "prompt": "Give Marcus his own animation set, different from Nia's in posture, rhythm, and style: idle, push and coast, turns, dances, a brake, and every other clip. Add dances from Meshy text to motion and the paid Tripo jam groove test.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_anim_v3.py -- --name marcus --source assets/skaters/marcus/raw/forward-v2/marcus-forward.blend --out assets/skaters/marcus/raw/anim-v3; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_motion_retarget.py -- --name marcus --fbx <fbx> --out <dir> --base assets/skaters/marcus/raw/anim-v3/marcus-anim-v3.blend --clip <clip> [--map smplh]; node scripts/assets/graft-clips.mjs assets/skaters/marcus/<glb> assets/skaters/marcus/raw/anim-v3/marcus-clips-v3.glb assets/skaters/marcus/<glb> (once for each clip GLB)",
+      "actions": [
+        "The finger fit and seams of skater_runtime.correct_marcus() first, so the rest pose matches the shipped GLB (checked on all nodes within 1e-3).",
+        "push and coast: his own stride on the forward-v2 legs (48 frames, outward 0.145 m, back 0.20 m), a lower stance (87% leg reach), 18 degree forward lean, a sharp accent curve, the left arm swings 40 degrees while the right arm stays bent at 84 degrees like a drum stick, and the head nods on each stroke. The coast leads with the right skate (Nia leads with the left).",
+        "idle: a drum count, one bar. Wide square stance, the forearms tap a cadence at the hips (right, left, right, right-right), the right toe stop taps on beats 2 and 4, the head nods on each beat.",
+        "carve_left and carve_right: jam crossovers (the outside skate crosses over in front), the chest turns 18 degrees into the curve. Nia keeps the ATL Ryde corner step.",
+        "brake: a toe-stop drag on the left skate, one beat. Nia's brake is a T-stop with the right skate.",
+        "All other nia_clips.py clips (jump, land, three air tricks, three grinds, manual, bail, ride_back, eight dances) go through marcus_style(): the other lead foot (a mirror), a 25 mm lower and 40 mm wider stance, 5 degrees more chest lean, a head nod on each beat, and staccato timing on the loops (each pose holds for 45% of the gap, then hits the next).",
+        "New Marcus-only dances: dance_jamgroove (the Tripo 'Compact Jam-Skating Groove' test of 2026-11-05, export task cae85bcc-f987-4f34-b3ba-9db478c12f72, credits already spent), dance_drumline and dance_jamstep (Meshy text to motion, below). skater_motion_retarget.py got --map smplh for the SMPL-H skeleton of Meshy (52 bones to the Mixamo names; a Mixamo bone with no source bone follows its parent).",
+        "dance_smoothquad (the shared, retargeted Tripo dance) stays.",
+        "Knee pole angles L 14, R -16 degrees; largest knee residual 0.47 degrees over 546 keys."
+      ],
+      "meshy": {
+        "tool": "Meshy text to motion (MCP meshy_text_to_motion), mode prime, 4 s, FBX",
+        "approval": "The owner chose 'Free groove + Meshy' on 2026-11-07 (20 credits). Balance before 5,742.",
+        "motions": [
+          {
+            "clip": "dance_drumline",
+            "task_id": "01a1b6ec-e7d5-711a-8e40-90f25bebc00f",
+            "prompt": "A tall male quad roller skater dances in place on his skates to a marching drum cadence: sharp knee bounces on each beat, alternating heel-toe taps, crisp arm hits like a drum major counting time, chest pops on the accents. Knees stay apart and point over the toes. Upbeat, friendly, confident.",
+            "source_fbx": "assets/skaters/marcus/raw/meshy-motion-v1/drumline.fbx (not in git)",
+            "credits": 10
+          },
+          {
+            "clip": "dance_jamstep",
+            "task_id": "01a1b6ec-edbe-72a0-8e3c-1b7547893b4f",
+            "prompt": "A tall male quad roller skater does a jam-skating footwork groove in place: a quick crossover step to the left, a toe-stop pivot, a crossover back to the right, then a smooth shoulder shimmy with loose arms. Knees softly bent and apart. Rhythmic, smooth, and joyful.",
+            "source_fbx": "assets/skaters/marcus/raw/meshy-motion-v1/jamstep.fbx (not in git)",
+            "credits": 10
+          }
+        ]
+      },
+      "result": "skater.glb 3,182,416 to 3,456,220 bytes; skater-1024.glb 2,309,792 to 2,583,608 bytes; 29 clips",
+      "local_files_not_in_git": [
+        "assets/skaters/marcus/raw/anim-v3/marcus-anim-v3.blend",
+        "assets/skaters/marcus/raw/anim-v3/marcus-clips-v3.glb",
+        "assets/skaters/marcus/raw/anim-v3/dances/",
+        "assets/skaters/marcus/raw/meshy-motion-v1/"
+      ],
+      "credits_spent": 20,
+      "credits_note": "20 Meshy credits (two prime text to motion clips). The Tripo groove cost 20 Tripo credits on 2026-11-05 (already in this file's history). Blender and the graft cost 0.",
+      "review": "Real Atlanta skaters must review the move set before release."
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3, second pass)",
+      "tool": "Blender 5.2.2 LTS, scripts/blender/skater_anim_v3.py; scripts/assets/graft-clips.mjs",
+      "prompt": "The skating is not natural: no knee bend in the push off and in the turns. Marcus' idle stance is too wide.",
+      "actions": [
+        "Owner playtest feedback: no knee bend in the push and in the turns. Lowered the hips: the hip-to-ankle distance is now 77% of the leg length in the push and 84% in the coast (was 87% and 92%), and the chest leans 28 degrees (was 18).",
+        "The carves drop the hips 9 cm more and lean the chest 8 degrees more.",
+        "The idle stance is narrower: the skates are under the hips (x 0.10 and -0.10 before the stance scale, was 0.17 and -0.18).",
+        "Rebuilt and grafted: push, coast, idle, carve_left, carve_right, and the 20 restyled clips. The rest pose check passed."
+      ],
+      "result": "skater.glb 3,456,220 to 3,456,820 bytes; skater-1024.glb 2,583,608 to 2,584,208 bytes",
+      "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3, third pass)",
+      "tool": "Blender 5.2.2 LTS, scripts/blender/skater_anim_v3.py --clips push,coast; scripts/assets/graft-clips.mjs",
+      "prompt": "There is still no step, no knee drive, and no ankle push-off when the skater moves forward.",
+      "actions": [
+        "Fault: the v3 push and coast poses had no foot targets (L, R), so the feet stayed at their rest targets and only the hips and the upper body moved. The v3 push turned the thigh 13.6 degrees; the v2 push turned it 38.4 degrees. The foot targets are now in the poses.",
+        "New push stroke for each leg: push out and back (0 to 0.36 of the cycle) with an ankle push-off from 0.24 (the heel comes up 34 degrees), a step (0.36 to 0.58: the skate lifts 18 cm and the knee drives forward), and a glide (0.58 to 1). The hips shift over the gliding skate.",
+        "Cycle: 44 frames for two strokes (was 48).",
+        "Rebuilt and grafted push and coast. The rest pose check passed."
+      ],
+      "result": "skater.glb 3,456,120 bytes; skater-1024.glb 2,583,504 bytes",
+      "evidence": "docs/characters/anim-v3/push-side-front.jpg (12 frames of each push, side and front)",
       "credits_spent": 0
     }
   ],

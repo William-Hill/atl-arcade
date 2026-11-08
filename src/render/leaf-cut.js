@@ -33,6 +33,14 @@ export const LEAF_SHAPES = [
 // low, the shadow and AO passes). minCoverage: the coverage under which a
 // pixel is discarded with alpha to coverage (no MSAA sample under 1/8).
 export const LEAF_AA = { lod: [0.45, 1.1], clump: 0.36, clumpTone: 0.96, cut: 0.5, minCoverage: 0.06 };
+// The baked leaf cut (#191, phone and low tiers). The leaf field of each
+// leaf shape is drawn once at load, for `variants` seeds per shape, into the
+// layers of a texture array of `size` px (bakeLeafCut()). A card reads the
+// layer of its shape and of the variant nearest to its seed, so a card pixel
+// does one texture read and not the loop over its leaves. The red channel
+// holds the field (`field`: the range that it keeps), the green channel the
+// leaf tone (`tone`). The mip chain filters the field and the veins far away.
+export const LEAF_BAKE = { size: 128, variants: 8, field: [-1, 1], tone: [0.7, 1.15] };
 // The leaf code of a crown core (markCrownCores()).
 export const CORE_CODE = -5;
 
@@ -86,6 +94,42 @@ export function leafShadeRange() {
   return { min: Math.min(near, clump), max: Math.max(1.12, LEAF_AA.clumpTone) };
 }
 
+// Pure: the bake layer of a leaf code (the shape in the integer part, the
+// seed in the rest), and the code that the bake draws for that layer (the
+// seed at the center of the variant).
+export function leafBakeLayer(code, { variants } = LEAF_BAKE) {
+  const shape = Math.floor(code);
+  const variant = Math.min(Math.floor((code - shape) * variants), variants - 1);
+  return { layer: shape * variants + variant, code: shape + (variant + 0.5) / variants };
+}
+
+// Pure: the 8-bit texel [r, g] of a field value and a tone (the bake), and
+// back (the shader).
+export function encodeLeafTexel(field, tone, bake = LEAF_BAKE) {
+  const unit = (v, [a, b]) => Math.round(Math.min(Math.max((v - a) / (b - a), 0), 1) * 255);
+  return [unit(field, bake.field), unit(tone, bake.tone)];
+}
+export function decodeLeafTexel([r, g], bake = LEAF_BAKE) {
+  const back = (v, [a, b]) => a + (b - a) * (v / 255);
+  return { field: back(r, bake.field), tone: back(g, bake.tone) };
+}
+
+// Pure: the bake target grid (`columns` x `rows` tiles of `size` px) and the
+// GPU bytes of the texture array with its mip chain (2 bytes a texel).
+export function leafBakeLayout({ size, variants } = LEAF_BAKE, shapes = LEAF_SHAPES.length) {
+  const layers = shapes * variants;
+  const columns = Math.ceil(Math.sqrt(layers));
+  return { layers, columns, rows: Math.ceil(layers / columns), bytes: Math.round(size * size * 2 * layers * (4 / 3)) };
+}
+
+// Pure: the leaf cut of a tier: "baked" or "procedural". `param` (the
+// ?leafcut= URL value) wins when it is one of the two.
+export const LEAF_CUT_OF = { low: "baked", phone: "baked", high: "procedural" };
+export function leafCutFor(quality, param) {
+  if (param === "baked" || param === "procedural") return param;
+  return LEAF_CUT_OF[quality] ?? "procedural";
+}
+
 const MAX_LEAVES = Math.max(...LEAF_SHAPES.map((s) => s[0]));
 export const LEAF_SHAPE_OF = { oak: 1, pine: 2, magnolia: 3, myrtle: 4, dogwood: 5, street: 6 };
 // The bark kind of each species: 0 furrowed, 1 plates, 2 smooth and mottled.
@@ -99,14 +143,81 @@ export const TREE_UNIFORMS = {
   uTreeAtlas: { value: WHITE },
   uLodCamera: { value: new THREE.Vector3() },
   uLodFade: { value: new THREE.Vector2(1e6, 1e6 + 1) },
+  // The baked leaf cut (bakeLeafCut()), with the LEAF_BAKED define only.
+  uLeafBake: { value: emptyLeafBake() },
 };
 
+function emptyLeafBake() {
+  const t = new THREE.DataArrayTexture(new Uint8Array([255, 255]), 1, 1, 1);
+  t.format = THREE.RGFormat;
+  t.needsUpdate = true;
+  return t;
+}
+
 const shapeTable = LEAF_SHAPES.map(([n, w, l, o], i) => `${i ? "else " : ""}if (s == ${i}) { n = ${n}; size = vec2(${w.toFixed(3)}, ${l.toFixed(3)}); outline = ${o}; }`).join("\n  ");
+
+// The leaf field, also for the bake (bakeLeafCut()).
+const LEAF_FIELD_GLSL = /* glsl */ `
+// The leaf shape of shape code s: the leaf count, the leaf size in card
+// uv, and the outline.
+void leafShape(int s, out int n, out vec2 size, out int outline) {
+  n = ${LEAVES.count};
+  size = vec2(${LEAVES.size[0].toFixed(3)}, ${LEAVES.size[1].toFixed(3)});
+  outline = 0;
+  ${shapeTable}
+}
+// The leaf field of a card pixel: x > 0 in a leaf (1 at a leaf center), y
+// the leaf tone. veinOn fades the vein; a leaf farther than reach from the
+// pixel is skipped (it cannot cover it). The leaf places and angles come
+// from the code l.z.
+vec2 leafField(vec3 l, int n, vec2 size, int outline, float veinOn, float reach) {
+  float best = -1e3;
+  float tone = 1.0;
+  for (int i = 0; i < ${MAX_LEAVES}; i++) {
+    if (i >= n) break;
+    float fi = float(i);
+    vec2 c = vec2(fract(sin((l.z * 91.7 + fi) * 12.9898) * 43758.55), fract(sin((l.z * 47.3 + fi) * 78.233) * 43758.55));
+    c = ${LEAVES.margin.toFixed(2)} + ${(1 - 2 * LEAVES.margin).toFixed(2)} * c;
+    vec2 d = l.xy - c;
+    if (dot(d, d) > reach * reach) continue;
+    float ang = fract(sin((l.z * 13.1 + fi) * 37.7) * 9631.3) * 6.2832;
+    d = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * d;
+    float e;
+    float vein = 1.0;
+    if (outline == 1) {
+      float y = d.y / size.y;
+      e = max(abs(y), abs(d.x) / max(size.x * (1.0 - y * y), 1e-4));
+      vein = abs(d.x) < 0.08 * size.x ? 0.82 : 1.0;
+    } else if (outline == 2) {
+      float r = length(d);
+      float a = fract(atan(d.y, d.x) * 1.9099 + fi * 0.37);
+      e = max(r / size.y, abs(a - 0.5) * 3.2899 * r / size.x);
+    } else if (outline == 3) {
+      float r = length(d);
+      float k = d.x / max(r, 1e-5);
+      float lobe = 16.0 * k * k * k * k * k - 20.0 * k * k * k + 5.0 * k;
+      e = r / (size.x * (0.72 + 0.28 * lobe));
+      vein = abs(d.x) < 0.012 || abs(d.y) < 0.012 ? 0.85 : 1.0;
+    } else {
+      e = length(d / size);
+    }
+    if (1.0 - e > best) {
+      best = 1.0 - e;
+      tone = (0.9 + 0.22 * fract(fi * 0.618 + l.z * 3.0)) * mix(1.0, vein, veinOn);
+    }
+  }
+  return vec2(best, tone);
+}
+`;
 
 const LEAF_GLSL = /* glsl */ `
 varying vec3 vLeaf;
 varying float vFade;
 uniform sampler2D uTreeAtlas;
+#ifdef LEAF_BAKED
+uniform highp sampler2DArray uLeafBake;
+#endif
+${LEAF_FIELD_GLSL}
 float treeHash(float n) { return fract(sin(n) * 43758.5453); }
 float treeNoise(vec2 p) {
   vec2 i = floor(p);
@@ -156,61 +267,56 @@ vec4 treeTexel(vec3 l) {
   if (l.z < -0.5) return vec4(vec3(barkTone(l.xy, int(floor(0.5 - l.z)) - 1)), 1.0);
   if (l.z < 0.025) return vec4(1.0);
   int s = int(floor(l.z));
-  int n = ${LEAVES.count};
-  vec2 size = vec2(${LEAVES.size[0].toFixed(3)}, ${LEAVES.size[1].toFixed(3)});
-  int outline = 0;
-  ${shapeTable}
+  int n;
+  vec2 size;
+  int outline;
+  leafShape(s, n, size, outline);
   // The pixel size in card uv, and the clump blend by the leaf width in pixels.
-  float px = max(max(length(dFdx(l.xy)), length(dFdy(l.xy))), 1e-5);
+  vec2 uvDx = dFdx(l.xy);
+  vec2 uvDy = dFdy(l.xy);
+  float px = max(max(length(uvDx), length(uvDy)), 1e-5);
   float clump = smoothstep(${LEAF_AA.lod[0].toFixed(2)}, ${LEAF_AA.lod[1].toFixed(2)}, px / size.x);
+  // The cost of a card pixel (#191): the field runs for every card layer of
+  // a crown. A card that is one clump (clump 1) skips it: its leaf field
+  // has no weight.
+  vec2 field = vec2(-1e3, 1.0);
+#ifdef LEAF_BAKED
+  // Phone and low (#191): the field of the nearest bake variant
+  // (bakeLeafCut()). The mip chain filters the veins, so veinOn is not
+  // necessary. textureGrad: the read is in a branch, so it gets the
+  // derivatives from outside it.
+  if (clump < 0.999) {
+    float variant = min(floor(fract(l.z) * ${LEAF_BAKE.variants.toFixed(1)}), ${(LEAF_BAKE.variants - 1).toFixed(1)});
+    vec2 texel = textureGrad(uLeafBake, vec3(l.xy, float(s) * ${LEAF_BAKE.variants.toFixed(1)} + variant), uvDx, uvDy).rg;
+    field = vec2(mix(${LEAF_BAKE.field[0].toFixed(2)}, ${LEAF_BAKE.field[1].toFixed(2)}, texel.r), mix(${LEAF_BAKE.tone[0].toFixed(2)}, ${LEAF_BAKE.tone[1].toFixed(2)}, texel.g));
+  }
+#else
   // A vein line under one pixel wide gives speckle: it fades out.
   float veinOn = 1.0 - smoothstep(0.5, 1.0, px / (0.16 * size.x));
-  // The leaf field: > 0 in a leaf, 1 at a leaf center.
-  float best = -1e3;
-  float tone = 1.0;
-  // The cost of a card pixel (#191): the loop runs for every card layer of a
-  // crown. A card that is one clump (clump 1) skips the loop: its leaf field
-  // has no weight. A leaf too far from the pixel to cover it skips the turn
-  // and the shape (the leaf places and angles are the same as before).
-  int nLeaves = clump > 0.999 ? 0 : n;
-  float reach = 1.5 * max(size.x, size.y);
-  for (int i = 0; i < ${MAX_LEAVES}; i++) {
-    if (i >= nLeaves) break;
-    float fi = float(i);
-    vec2 c = vec2(fract(sin((l.z * 91.7 + fi) * 12.9898) * 43758.55), fract(sin((l.z * 47.3 + fi) * 78.233) * 43758.55));
-    c = ${LEAVES.margin.toFixed(2)} + ${(1 - 2 * LEAVES.margin).toFixed(2)} * c;
-    vec2 d = l.xy - c;
-    if (dot(d, d) > reach * reach) continue;
-    float ang = fract(sin((l.z * 13.1 + fi) * 37.7) * 9631.3) * 6.2832;
-    d = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * d;
-    float e;
-    float vein = 1.0;
-    if (outline == 1) {
-      float y = d.y / size.y;
-      e = max(abs(y), abs(d.x) / max(size.x * (1.0 - y * y), 1e-4));
-      vein = abs(d.x) < 0.08 * size.x ? 0.82 : 1.0;
-    } else if (outline == 2) {
-      float r = length(d);
-      float a = fract(atan(d.y, d.x) * 1.9099 + fi * 0.37);
-      e = max(r / size.y, abs(a - 0.5) * 3.2899 * r / size.x);
-    } else if (outline == 3) {
-      float r = length(d);
-      float k = d.x / max(r, 1e-5);
-      float lobe = 16.0 * k * k * k * k * k - 20.0 * k * k * k + 5.0 * k;
-      e = r / (size.x * (0.72 + 0.28 * lobe));
-      vein = abs(d.x) < 0.012 || abs(d.y) < 0.012 ? 0.85 : 1.0;
-    } else {
-      e = length(d / size);
-    }
-    if (1.0 - e > best) {
-      best = 1.0 - e;
-      tone = (0.9 + 0.22 * fract(fi * 0.618 + l.z * 3.0)) * mix(1.0, vein, veinOn);
-    }
-  }
+  // A leaf too far from the pixel to cover it skips the turn and the shape.
+  if (clump < 0.999) field = leafField(l, n, size, outline, veinOn, 1.5 * max(size.x, size.y));
+#endif
+  float best = field.x;
+  float tone = field.y;
   // The edge width of the field: one pixel, and not more than the leaf
   // (the needle angle has a seam where fwidth jumps).
   float w = clamp(fwidth(best), 1e-4, 2.0 * px / size.x);
   // The clump: a lobed round shape, one per card, with the mean leaf tone.
+#ifdef LEAF_BAKED
+  // A card of full leaves (clump 0) skips the clump shape. The clump edge
+  // width comes from the pixel size: fwidth() is not defined in a branch.
+  float blob = 0.0;
+  float bw = 1.0;
+  if (clump > 0.001) {
+    vec2 q = l.xy - 0.5;
+    // atan(0, 0) is undefined in GLSL: a small x offset keeps the card center defined.
+    float qa = atan(q.y, q.x + 1e-6);
+    float seed = fract(l.z);
+    float rim = ${LEAF_AA.clump.toFixed(2)} * (1.0 + 0.12 * sin(3.0 * qa + seed * 37.0) + 0.07 * sin(5.0 * qa + seed * 91.0));
+    blob = 1.0 - length(q) / rim;
+    bw = clamp(1.2 * px / rim, 1e-4, 0.5);
+  }
+#else
   vec2 q = l.xy - 0.5;
   // atan(0, 0) is undefined in GLSL: a small x offset keeps the card center defined.
   float qa = atan(q.y, q.x + 1e-6);
@@ -218,6 +324,7 @@ vec4 treeTexel(vec3 l) {
   float rim = ${LEAF_AA.clump.toFixed(2)} * (1.0 + 0.12 * sin(3.0 * qa + seed * 37.0) + 0.07 * sin(5.0 * qa + seed * 91.0));
   float blob = 1.0 - length(q) / rim;
   float bw = clamp(fwidth(blob), 1e-4, 0.5);
+#endif
   float leafCov = clamp(best / w + 0.5, 0.0, 1.0);
   float blobCov = clamp(blob / bw + 0.5, 0.0, 1.0);
   float cov = mix(leafCov, blobCov, clump);
@@ -281,8 +388,10 @@ export function crownOcclusion(up, { min, range } = CROWN_AO) {
   return min + (1 - min) * t * t * (3 - 2 * t);
 }
 
-export function patchLeafFragment(shader, { tone = true, backlight = false, cards = true } = {}) {
-  shader.fragmentShader = shader.fragmentShader
+// `baked` reads the leaf field from the baked texture array (bakeLeafCut(),
+// the phone and low tiers) and not from the leaf loop.
+export function patchLeafFragment(shader, { tone = true, backlight = false, cards = true, baked = false } = {}) {
+  shader.fragmentShader = (baked ? "#define LEAF_BAKED\n" : "") + shader.fragmentShader
     // Before main(): MeshNormalMaterial has no <common> in its fragment.
     .replace("void main() {", `${LEAF_GLSL}\nvoid main() {`)
     .replace(
@@ -345,4 +454,84 @@ export function withLeafCut(material) {
   material.customProgramCacheKey = () => `leaf-cut-nocards-${material.type}`;
   material.needsUpdate = true;
   return material;
+}
+
+// Draws the leaf field of each shape and variant with `renderer` into a
+// texture array with a mip chain (LEAF_BAKE), and makes it
+// TREE_UNIFORMS.uLeafBake. The bake runs the same GLSL as the procedural
+// cut, so a variant has the leaf places of the procedural card with the
+// same seed on the same GPU. Returns { texture, layers, bytes }.
+export function bakeLeafCut(renderer, bake = LEAF_BAKE) {
+  const { size, variants } = bake;
+  const { layers, columns, rows, bytes } = leafBakeLayout(bake);
+  const target = new THREE.WebGLRenderTarget(columns * size, rows * size, { depthBuffer: false });
+  const code = { value: 0 };
+  const range = (r) => r.map((v) => v.toFixed(3)).join(", ");
+  const material = new THREE.ShaderMaterial({
+    uniforms: { uCode: code },
+    vertexShader: "varying vec2 vUv;\nvoid main() {\n  vUv = uv;\n  gl_Position = vec4(position.xy, 0.0, 1.0);\n}",
+    fragmentShader: `${LEAF_FIELD_GLSL}
+uniform float uCode;
+varying vec2 vUv;
+void main() {
+  int n;
+  vec2 size;
+  int outline;
+  leafShape(int(floor(uCode)), n, size, outline);
+  // The full vein, and every leaf (no reach): the tone is set out of the leaves too.
+  vec2 f = leafField(vec3(vUv, uCode), n, size, outline, 1.0, 1e3);
+  vec2 fr = vec2(${range(bake.field)});
+  vec2 tr = vec2(${range(bake.tone)});
+  gl_FragColor = vec4(clamp((f.x - fr.x) / (fr.y - fr.x), 0.0, 1.0), clamp((f.y - tr.x) / (tr.y - tr.x), 0.0, 1.0), 0.0, 1.0);
+}`,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+  quad.frustumCulled = false;
+  const scene = new THREE.Scene();
+  scene.add(quad);
+  const camera = new THREE.OrthographicCamera();
+  const saved = { target: renderer.getRenderTarget(), autoClear: renderer.autoClear };
+  // Each tile covers its whole viewport: no clear (a clear takes the whole target).
+  renderer.autoClear = false;
+  for (let layer = 0; layer < layers; layer += 1) {
+    const shape = Math.floor(layer / variants);
+    code.value = leafBakeLayer(shape + ((layer % variants) + 0.5) / variants, bake).code;
+    target.viewport.set((layer % columns) * size, Math.floor(layer / columns) * size, size, size);
+    renderer.setRenderTarget(target);
+    renderer.render(scene, camera);
+  }
+  // Read back once into a plain texture array with mips (as the impostor
+  // atlas: sampling a render target gave black on SwiftShader).
+  const pixels = new Uint8Array(columns * size * rows * size * 4);
+  renderer.readRenderTargetPixels(target, 0, 0, columns * size, rows * size, pixels);
+  renderer.setRenderTarget(saved.target);
+  renderer.autoClear = saved.autoClear;
+  target.dispose();
+  quad.geometry.dispose();
+  material.dispose();
+  const data = new Uint8Array(size * size * 2 * layers);
+  const stride = columns * size;
+  for (let layer = 0; layer < layers; layer += 1) {
+    const x0 = (layer % columns) * size;
+    const y0 = Math.floor(layer / columns) * size;
+    for (let y = 0; y < size; y += 1) {
+      for (let x = 0; x < size; x += 1) {
+        const from = ((y0 + y) * stride + x0 + x) * 4;
+        const to = ((layer * size + y) * size + x) * 2;
+        data[to] = pixels[from];
+        data[to + 1] = pixels[from + 1];
+      }
+    }
+  }
+  const texture = new THREE.DataArrayTexture(data, size, size, layers);
+  texture.format = THREE.RGFormat;
+  texture.unpackAlignment = 1;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
+  texture.needsUpdate = true;
+  TREE_UNIFORMS.uLeafBake.value = texture;
+  return { texture, layers, bytes };
 }

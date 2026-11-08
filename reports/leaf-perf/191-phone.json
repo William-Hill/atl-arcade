@@ -1,0 +1,227 @@
+{
+  "date": "2026-11-08T05:56:27.114Z",
+  "renderer": "swiftshader",
+  "quality": "phone",
+  "look": "pbr",
+  "frames": 7,
+  "repeat": 2,
+  "rows": [
+    {
+      "run": 1,
+      "build": "before",
+      "variant": "default",
+      "cam": "spawn",
+      "quality": "phone",
+      "load": 2.9,
+      "medianMs": 1948,
+      "framesMs": [
+        1940,
+        1875,
+        1948,
+        1823,
+        1990,
+        1955,
+        1955
+      ]
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "variant": "default",
+      "cam": "spawn",
+      "quality": "phone",
+      "load": 3.7,
+      "medianMs": 1458,
+      "framesMs": [
+        1543,
+        1408,
+        1416,
+        1483,
+        1409,
+        1460,
+        1458
+      ]
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "variant": "default",
+      "cam": "street",
+      "quality": "phone",
+      "load": 3.6,
+      "medianMs": 1241,
+      "framesMs": [
+        1260,
+        1147,
+        1149,
+        1301,
+        1228,
+        1284,
+        1241
+      ]
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "variant": "default",
+      "cam": "street",
+      "quality": "phone",
+      "load": 3.6,
+      "medianMs": 1071,
+      "framesMs": [
+        1128,
+        1071,
+        1062,
+        1064,
+        1091,
+        1055,
+        1118
+      ]
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "variant": "default",
+      "cam": "park",
+      "quality": "phone",
+      "load": 4,
+      "medianMs": 1286,
+      "framesMs": [
+        1441,
+        1309,
+        1328,
+        1286,
+        1253,
+        1230,
+        1208
+      ]
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "variant": "default",
+      "cam": "park",
+      "quality": "phone",
+      "load": 4,
+      "medianMs": 1094,
+      "framesMs": [
+        1217,
+        1194,
+        1126,
+        1094,
+        1075,
+        1082,
+        1061
+      ]
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "variant": "default",
+      "cam": "spawn",
+      "quality": "phone",
+      "load": 3.8,
+      "medianMs": 1987,
+      "framesMs": [
+        1973,
+        1927,
+        1987,
+        2006,
+        2031,
+        2059,
+        1943
+      ]
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "variant": "default",
+      "cam": "spawn",
+      "quality": "phone",
+      "load": 4,
+      "medianMs": 1453,
+      "framesMs": [
+        1567,
+        1507,
+        1500,
+        1437,
+        1423,
+        1453,
+        1411
+      ]
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "variant": "default",
+      "cam": "street",
+      "quality": "phone",
+      "load": 3.9,
+      "medianMs": 1155,
+      "framesMs": [
+        1175,
+        1136,
+        1130,
+        1129,
+        1155,
+        1159,
+        1247
+      ]
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "variant": "default",
+      "cam": "street",
+      "quality": "phone",
+      "load": 4.2,
+      "medianMs": 1053,
+      "framesMs": [
+        1138,
+        1042,
+        1074,
+        1022,
+        1034,
+        1078,
+        1053
+      ]
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "variant": "default",
+      "cam": "park",
+      "quality": "phone",
+      "load": 4.2,
+      "medianMs": 1285,
+      "framesMs": [
+        1309,
+        1271,
+        1262,
+        1390,
+        1285,
+        1293,
+        1215
+      ]
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "variant": "default",
+      "cam": "park",
+      "quality": "phone",
+      "load": 3.9,
+      "medianMs": 1152,
+      "framesMs": [
+        1161,
+        1135,
+        1172,
+        1087,
+        1116,
+        1152,
+        1213
+      ]
+    }
+  ],
+  "errors": []
+}

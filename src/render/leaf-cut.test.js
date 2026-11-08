@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CORE_CODE, CORE_SHADE, CROWN_AO, LEAF_AA, crownOcclusion, LEAF_SHAPES, leafClump, leafCoverage, leafShadeRange, markCrownCores, patchLeafFragment } from "./leaf-cut.js";
+import { CORE_CODE, CORE_SHADE, CROWN_AO, LEAF_AA, LEAF_BAKE, LEAF_CUT_OF, crownOcclusion, decodeLeafTexel, encodeLeafTexel, leafBakeLayer, leafBakeLayout, leafCutFor, LEAF_SHAPES, leafClump, leafCoverage, leafShadeRange, markCrownCores, patchLeafFragment } from "./leaf-cut.js";
 import { ALBEDO, srgbToLinear } from "./pbr-palette.js";
 import { PUFF_CORE_CODE, SEASONS, TREE_SPECIES, seasonColors, treeTemplate } from "../level/geo/trees.js";
 import { treeTint } from "./geo-view.js";
@@ -149,5 +149,85 @@ describe("leaf cut shader patch (#202)", () => {
     const s = frag();
     patchLeafFragment(s);
     expect(s.fragmentShader).toContain("atan(q.y, q.x + 1e-6)");
+  });
+});
+
+describe("baked leaf cut (#191)", () => {
+  it("gives the phone and low tiers the baked cut and keeps the procedural cut on high", () => {
+    expect(leafCutFor("phone")).toBe("baked");
+    expect(leafCutFor("low")).toBe("baked");
+    expect(leafCutFor("high")).toBe("procedural");
+    expect(leafCutFor("unknown")).toBe("procedural");
+    // ?leafcut= wins, for an A/B check.
+    expect(leafCutFor("phone", "procedural")).toBe("procedural");
+    expect(leafCutFor("high", "baked")).toBe("baked");
+    expect(leafCutFor("phone", "other")).toBe("baked");
+    expect(Object.keys(LEAF_CUT_OF).sort()).toEqual(["high", "low", "phone"]);
+  });
+
+  it("maps a leaf code to the layer of its shape and to the nearest variant", () => {
+    const { variants } = LEAF_BAKE;
+    expect(leafBakeLayer(0.01)).toEqual({ layer: 0, code: 0.5 / variants });
+    expect(leafBakeLayer(1.999)).toEqual({ layer: 2 * variants - 1, code: 1 + (variants - 0.5) / variants });
+    for (let code = 0.001; code < LEAF_SHAPES.length; code += 0.0137) {
+      const { layer, code: drawn } = leafBakeLayer(code);
+      // The same shape, a seed within half a variant step.
+      expect(Math.floor(drawn)).toBe(Math.floor(code));
+      expect(Math.abs(drawn - code)).toBeLessThanOrEqual(0.5 / variants + 1e-9);
+      expect(layer).toBeGreaterThanOrEqual(0);
+      expect(layer).toBeLessThan(leafBakeLayout().layers);
+      // The bake draws the code of the layer: the layer of that code is the same.
+      expect(leafBakeLayer(drawn).layer).toBe(layer);
+    }
+  });
+
+  it("keeps the leaf edge within a quarter texel after the 8-bit field", () => {
+    // The field changes fastest (1 / size) across a leaf and slowest along it
+    // (1 / length). The quantization moves the edge by the field error over
+    // the slowest gradient.
+    const step = (LEAF_BAKE.field[1] - LEAF_BAKE.field[0]) / 255;
+    let worst = 0;
+    for (let f = LEAF_BAKE.field[0]; f <= LEAF_BAKE.field[1]; f += 0.001) worst = Math.max(worst, Math.abs(decodeLeafTexel(encodeLeafTexel(f, 1)).field - f));
+    expect(worst).toBeLessThanOrEqual(step / 2 + 1e-9);
+    for (const [, w, l] of LEAF_SHAPES) {
+      const shiftUv = worst * Math.max(w, l);
+      expect(shiftUv * LEAF_BAKE.size).toBeLessThan(0.25);
+    }
+    // The edge (0) and the leaf center (1) are inside the kept range.
+    expect(LEAF_BAKE.field[0]).toBeLessThan(0);
+    expect(LEAF_BAKE.field[1]).toBeGreaterThanOrEqual(1);
+    // Out of range values clamp.
+    expect(encodeLeafTexel(-50, 1)[0]).toBe(0);
+    expect(encodeLeafTexel(50, 1)[0]).toBe(255);
+  });
+
+  it("keeps every leaf tone, the veins too, in the tone range", () => {
+    // The tone is 0.9 to 1.12, a vein multiplies it by 0.82 or 0.85.
+    expect(LEAF_BAKE.tone[0]).toBeLessThanOrEqual(0.9 * 0.82);
+    expect(LEAF_BAKE.tone[1]).toBeGreaterThanOrEqual(0.9 + 0.22);
+    for (const tone of [0.9 * 0.82, 0.9 * 0.85, 1, 1.12]) expect(Math.abs(decodeLeafTexel(encodeLeafTexel(0, tone)).tone - tone)).toBeLessThan(1 / 255);
+  });
+
+  it("lays the layers out in a near square grid and counts the GPU bytes", () => {
+    const { layers, columns, rows, bytes } = leafBakeLayout();
+    expect(layers).toBe(LEAF_SHAPES.length * LEAF_BAKE.variants);
+    expect(columns * rows).toBeGreaterThanOrEqual(layers);
+    expect(columns * (rows - 1)).toBeLessThan(layers);
+    // The bake target stays inside the WebGL2 minimum texture size (2048).
+    expect(Math.max(columns, rows) * LEAF_BAKE.size).toBeLessThanOrEqual(2048);
+    expect(bytes).toBe(Math.round(LEAF_BAKE.size * LEAF_BAKE.size * 2 * layers * (4 / 3)));
+    // Under 3 MB on the GPU (2.45 MB at 128 px and 8 variants).
+    expect(bytes).toBeLessThan(3 * 1024 * 1024);
+  });
+
+  it("puts the LEAF_BAKED define first only for the baked cut", () => {
+    const frag = () => ({ fragmentShader: "void main() {\n#include <clipping_planes_fragment>\n#include <color_fragment>\n}" });
+    const baked = frag();
+    patchLeafFragment(baked, { baked: true });
+    expect(baked.fragmentShader.startsWith("#define LEAF_BAKED\n")).toBe(true);
+    expect(baked.fragmentShader).toContain("uniform highp sampler2DArray uLeafBake;");
+    const proc = frag();
+    patchLeafFragment(proc);
+    expect(proc.fragmentShader).not.toContain("#define LEAF_BAKED");
   });
 });

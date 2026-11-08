@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-08T06:01:58.639Z",
+  "renderer": "swiftshader",
+  "quality": "low",
+  "look": "pbr",
+  "frames": 7,
+  "repeat": 1,
+  "rows": [
+    {
+      "run": 1,
+      "build": "before",
+      "variant": "default",
+      "cam": "spawn",
+      "quality": "low",
+      "load": 3.8,
+      "medianMs": 2461,
+      "framesMs": [
+        2489,
+        2535,
+        2461,
+        2515,
+        2324,
+        2458,
+        2425
+      ]
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "variant": "default",
+      "cam": "spawn",
+      "quality": "low",
+      "load": 3.6,
+      "medianMs": 1898,
+      "framesMs": [
+        1909,
+        1868,
+        1887,
+        1844,
+        1898,
+        1914,
+        1957
+      ]
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "variant": "default",
+      "cam": "street",
+      "quality": "low",
+      "load": 3.3,
+      "medianMs": 1590,
+      "framesMs": [
+        1590,
+        1685,
+        1547,
+        1497,
+        1559,
+        1618,
+        1608
+      ]
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "variant": "default",
+      "cam": "street",
+      "quality": "low",
+      "load": 3.7,
+      "medianMs": 1360,
+      "framesMs": [
+        1360,
+        1350,
+        1336,
+        1325,
+        1422,
+        1433,
+        1512
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -64,3 +64,7 @@ Before (top) and after (bottom), same camera: `phone-before-after.jpg`, `low-bef
 
 - **A real GPU and a phone.** `npm run perf -- --gpu` on a laptop (high tier, pbr against toon) and a run on a mid-range phone (Pixel 6a, Galaxy A54 class) with `?look=pbr&quality=phone`. Not possible in the cloud machine. #191 and the last items of #157 (FPS over 55 on high, the phone-tier decision) stay open until then.
 - On SwiftShader the pbr frame is still about 10x the toon frame on phone and low. The largest cost left is the leaf cards (see above).
+
+## Next: the leaf cards (2026-11-08)
+
+The phone and low tiers now read a baked leaf cut: `leaf-cards.md`.

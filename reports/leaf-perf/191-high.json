@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-08T06:08:59.771Z",
+  "renderer": "swiftshader",
+  "quality": "high",
+  "look": "pbr",
+  "frames": 3,
+  "repeat": 1,
+  "rows": [
+    {
+      "run": 1,
+      "build": "before",
+      "variant": "default",
+      "cam": "spawn",
+      "quality": "high",
+      "load": 4.2,
+      "medianMs": 8134,
+      "framesMs": [
+        8552,
+        8134,
+        7950
+      ]
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "variant": "default",
+      "cam": "spawn",
+      "quality": "high",
+      "load": 3.4,
+      "medianMs": 8398,
+      "framesMs": [
+        8179,
+        8398,
+        8705
+      ]
+    }
+  ],
+  "errors": []
+}

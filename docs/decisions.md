@@ -1921,3 +1921,23 @@ The fix:
 - The PR #225 fix for the sideways skater does not change: `sync()` sets the rotation from the yaw as before.
 
 Check: `e2e/skater-spawn.spec.js` (each skater: at the load and after a paused respawn, the model rotation is within 5 degrees of the heading, and the camera is behind the skater). It fails on the old code. Evidence: `docs/characters/spawn-231/<skater>-before-after.jpg` (Beltline spawn; top row old code, bottom row fix; left the load, right the first frame after a respawn) and `e2e/__screenshots__/spawn-231-<skater>.png`, `respawn-231-<skater>.png`.
+
+## 2026-11-08 — The pbr look: a material audit test, the walker roughness, the style sheet (#157)
+
+This change does the parts of #157 that need no real GPU. The FPS gate (median over 55 FPS on the first block, high tier, real GPU) is not done here. The cloud machine renders with SwiftShader, so a frame rate from it is not a measurement. #157 stays open for that gate.
+
+**The audit.** `materialAudit()` (`src/render/pbr-palette.js`, `window.__atl.materials`) found only `MeshToonMaterial`. Now it also finds the toon ink hulls (`userData.outlineOf`), a toon ramp (`gradientMap`) on any material, and the Lambert, Phong and Matcap materials, and it lists the unlit materials by object path. `clean` is true when there is no toon material, hull, ramp or Lambert/Phong material.
+
+**The test.** `e2e/pbr-materials.spec.js` loads `?look=pbr&time=14&weather=clear&skaters=1` with all parts of the scene on: the level, the player skater, the NPC skaters with their outfits, the procedural walkers, the Meshy walkers and their outfit variants (PR #227), the crowd, the traffic with the car GLBs, and the landmark GLBs. It walks the full scene graph with the audit and fails on a toon leftover, or on an unlit material that is not on its list (lamps, fact cards, tree impostors, shadow proxies, shadow blobs). On the high tier the skater then fast-travels to each landmark GLB, so the pools that fill near the camera are in the scene, and the audit runs at each stop. The phone and low tiers are checked at the spawn. A toon run is the control: the audit must find the toon materials and the ink hulls there.
+
+**The result.** No toon material was left in the pbr look on the high, phone and low tiers (the work of 2026-11-06 and the PR #227 walkers already use `litMaterial(look, ...)`, and every view gets `look` from `main.js`). Two small fixes:
+- The skater shadow blob on the phone and low tiers had no name, so the audit could not put it on the unlit list. It is now `skater-blob`.
+- The procedural walkers used the wall roughness (0.88) for the full figure, which is out of the skin class. In the pbr look the skin part now gets 0.55 (skin class) and the other parts get 0.82 (cloth class), from `MATERIAL_CLASSES` (`PED_ROUGHNESS`, `src/render/peds-view.js`). Still one material and one draw call. The toon look does not change.
+
+**The measurement.** For the GLBs with a metal/rough map the factor is 1 and the value is in the map, so the roughness and metalness were read from the maps in the running game. People and skaters are in their classes, with three exceptions that are recorded as open items in `docs/style-sheet-pbr.md`: the landmark concrete maps read 0.61–0.64 (class 0.75–0.95), the NPC skater model of three outfits has metal noise up to 0.21 in its map (cloth must be 0), and the Meshy walkers have one map for skin and clothes. These need asset work (bake or clean the maps), not a shader rule, so this change does not hide them.
+
+**The style sheet.** `docs/style-sheet-pbr.md` now has the eight classes of #157 (brick, stucco, glass, asphalt, concrete, skin, cloth, paint) with the range from the code and the measured value in the game, the people palette from `src/render/ped-look.js`, and three new reference screenshots pinned to `time=14&weather=clear` (`scripts/art/shots-style-sheet.json`): the O4W street, Ponce City Market and the skater.
+
+**Evidence.** Vitest: `src/render/pbr-palette.test.js` (the audit finds a toon skater and its hull, and a pbr skater is clean), `src/render/peds-view.test.js` (the walker roughness is in the skin and cloth classes, and the toon walker gets no patch). Playwright: `e2e/pbr-materials.spec.js`, 4 passed (17.1 min on SwiftShader; the high-tier walk is 14.7 min).
+
+**Not done.** The 55 FPS median on a real GPU (#157 stays open). The phone-tier decision for the pbr look does not change (toon stays the default on phone and low, entry of 2026-11-07).

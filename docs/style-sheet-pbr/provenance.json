@@ -1,64 +1,64 @@
 {
-  "note": "Reference screenshots for docs/style-sheet-pbr.md (#157). Captures of the real renderer; no generated art.",
+  "note": "Reference screenshots for docs/style-sheet-pbr.md (#157), pinned to time=14 and weather=clear. Captures of the real renderer; no generated art.",
   "frames": [
     {
-      "file": "trail.jpg",
-      "title": "BeltLine trail, 13:30",
+      "file": "street.jpg",
+      "title": "Storefronts and murals, 14:00",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
       "prompt": null,
       "credits": 0,
       "settings": {
-        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=312,2,-175,334,3,-80",
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=14&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-80,2.5,640,-120,5,615",
         "viewport": [
           1280,
           720
         ],
-        "capture": "node scripts/art/pbr-frames.mjs --out <dir> today-trail today-street today-skater",
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-style-sheet.json --out <dir>",
         "convert": "ImageMagick convert -quality 85"
       },
-      "commit": "93a23d056926422423b217b824bd2f9ff86a56c4",
-      "date": "2026-11-06",
+      "commit": "91640ff8a3525bfd43455ab28c1955e4f3aa7c48 plus the working tree of this change (branch claude/cool-goodall-o1d9jl)",
+      "date": "2026-11-08",
       "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
     },
     {
-      "file": "street.jpg",
-      "title": "Street with storefronts and murals, 13:30",
+      "file": "pcm.jpg",
+      "title": "Ponce City Market, 14:00",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
       "prompt": null,
       "credits": 0,
       "settings": {
-        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-80,2.5,640,-120,5,615",
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=14&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=-98,2.5,-812,-190,22,-858",
         "viewport": [
           1280,
           720
         ],
-        "capture": "node scripts/art/pbr-frames.mjs --out <dir> today-trail today-street today-skater",
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-style-sheet.json --out <dir>",
         "convert": "ImageMagick convert -quality 85"
       },
-      "commit": "93a23d056926422423b217b824bd2f9ff86a56c4",
-      "date": "2026-11-06",
+      "commit": "91640ff8a3525bfd43455ab28c1955e4f3aa7c48 plus the working tree of this change (branch claude/cool-goodall-o1d9jl)",
+      "date": "2026-11-08",
       "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
     },
     {
       "file": "skater.jpg",
-      "title": "Skater close-up (Nia), 13:30",
+      "title": "Skater (Nia) on the BeltLine, 14:00",
       "tool": "Skate ATL game renderer (Three.js 0.186.1, ?look=pbr, Chromium SwiftShader via Playwright 1.63.0)",
       "method": "in-game capture (no image model)",
       "prompt": null,
       "credits": 0,
       "settings": {
-        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=13.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=338.9,1.4,-2.9,337.07,0.95,-1.3",
+        "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=14&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&cam=338.9,1.4,-2.9,337.07,0.95,-1.3",
         "viewport": [
           1280,
           720
         ],
-        "capture": "node scripts/art/pbr-frames.mjs --out <dir> today-trail today-street today-skater",
+        "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-style-sheet.json --out <dir>",
         "convert": "ImageMagick convert -quality 85"
       },
-      "commit": "93a23d056926422423b217b824bd2f9ff86a56c4",
-      "date": "2026-11-06",
+      "commit": "91640ff8a3525bfd43455ab28c1955e4f3aa7c48 plus the working tree of this change (branch claude/cool-goodall-o1d9jl)",
+      "date": "2026-11-08",
       "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
     }
   ]

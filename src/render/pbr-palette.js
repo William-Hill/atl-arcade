@@ -403,21 +403,50 @@ export function heightFogFactor(dist, dy, near, far, f = HEIGHT_FOG) {
   return Math.max(k, f.haze * hk * smooth(near * f.hazeStart, far, dist));
 }
 
-// Pure: count the materials of a scene graph by type. `root` is any object
-// with `traverse(fn)` (a THREE.Object3D) whose meshes have `material`.
-// Returns { counts: { MeshStandardMaterial: n, ... }, toon: [names] }.
+// The lit material types that are not metal/rough: a leftover in the pbr
+// look, as a toon material is.
+const LEGACY_LIT = new Set(["MeshLambertMaterial", "MeshPhongMaterial", "MeshMatcapMaterial"]);
+// The unlit types: allowed in the pbr look only for emissive or baked parts
+// (lamps, fact cards, impostors, shadow proxies). The caller checks the names.
+const UNLIT = new Set(["MeshBasicMaterial", "SpriteMaterial", "PointsMaterial"]);
+
+// Pure: the name of `o` and of up to `depth` parents, as "a<b<c".
+export function objectPath(o, depth = 4) {
+  const names = [];
+  for (let q = o; q && names.length <= depth; q = q.parent) names.push(q.name || q.type || "?");
+  return names.join("<");
+}
+
+// Pure: count the materials of a scene graph by type and find the toon
+// leftovers (#157). `root` is any object with `traverse(fn)` (a
+// THREE.Object3D) whose meshes have `material`. Returns:
+//   counts  { MeshStandardMaterial: n, ... }, each material counted once
+//   toon    names of the meshes with a MeshToonMaterial
+//   hulls   paths of the toon ink hulls (userData.outlineOf, toon.js)
+//   ramps   paths of the materials with a toon ramp (gradientMap)
+//   legacy  paths of the Lambert, Phong and Matcap materials
+//   unlit   paths of the unlit materials (MeshBasic, Sprite, Points)
+//   clean   true when toon, hulls, ramps and legacy are empty
 export function materialAudit(root) {
   const counts = {};
   const toon = [];
+  const hulls = [];
+  const ramps = [];
+  const legacy = [];
+  const unlit = [];
   const seen = new Set();
   root.traverse((o) => {
     if (!o.material || !(o.isMesh || o.isPoints || o.isLine || o.isSprite)) return;
+    if (o.userData?.outlineOf) hulls.push(objectPath(o));
     for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
       if (!m || seen.has(m)) continue;
       seen.add(m);
       counts[m.type] = (counts[m.type] ?? 0) + 1;
       if (m.isMeshToonMaterial || m.type === "MeshToonMaterial") toon.push(o.name || m.name || "(unnamed)");
+      else if (m.gradientMap) ramps.push(objectPath(o));
+      if (LEGACY_LIT.has(m.type)) legacy.push(objectPath(o));
+      if (UNLIT.has(m.type)) unlit.push(objectPath(o));
     }
   });
-  return { counts, toon };
+  return { counts, toon, hulls, ramps, legacy, unlit, clean: !toon.length && !hulls.length && !ramps.length && !legacy.length };
 }

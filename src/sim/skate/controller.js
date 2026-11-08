@@ -114,7 +114,9 @@ export function stepSkate(prev, input = {}, dt, env = FLAT_GROUND, k = SKATE) {
 }
 
 // A skater below the level or past its bounds can never get back, so it
-// goes back to the spawn point. The level barriers make this a backstop.
+// goes back to the spawn point. This is a backstop: the level barriers stop
+// the skater first (the greybox barriers, and the edge fence of a geodata
+// level, src/level/edge-fence.js).
 export function isLost(s, bounds, k = SKATE) {
   const [x, y, z] = s.position;
   const m = k.boundsMargin;

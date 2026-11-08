@@ -50,6 +50,8 @@ import { ATLANTA } from "./sim/weather.js";
 import { addTiltShift } from "./render/tilt-shift.js";
 import { createPhotoPanel } from "./ui/photo-panel.js";
 import { createStreetSigns } from "./render/street-signs.js";
+import { createEdgeFenceView } from "./render/edge-fence-view.js";
+import { EDGE_FENCE_ID } from "./level/edge-fence.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
 import { createTouchInput } from "./input/touch.js";
@@ -321,6 +323,20 @@ if (geo && params.get("weather") !== "0") {
 // ?signs=0 leaves them out.
 const streetSigns = geo && params.get("signs") !== "0" ? createStreetSigns(env.props.filter((p) => p.kind === "street_sign"), { look }) : null;
 if (streetSigns) scene.add(streetSigns.group);
+
+// The construction fence at the level edge (#229, src/level/edge-fence.js).
+// The controller wall is in env.sampleGround; this is its picture. On a
+// building or a street prop the fence stands on the terrain.
+const buildingIds = geo ? new Set((level.buildings ?? []).map((b) => b.id)) : null;
+const edgeFence = geo && env.fence
+  ? createEdgeFenceView(env.fence, {
+      sample: env.sampleGroundNoFence,
+      floor: (x, z) => terrainOf(level).height(x, z) + (level.surfaces?.ground ?? 0),
+      isSolid: (id) => buildingIds.has(id) || String(id).startsWith("prop:"),
+      look,
+    })
+  : null;
+if (edgeFence) scene.add(edgeFence.group);
 
 // Landmark models on the real roofs (img2threejs towers, rooftop signs).
 // ?landmarks=0 leaves them out.
@@ -677,7 +693,7 @@ if (touch) document.body.classList.add("touch");
 const input = createInput({ target: window, touch });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
-const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch) });
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence });
 // Goals, the run timer, and the results screen (M1-05). The goal list is
 // data per level (src/level/goals.js). ?run=free turns the timer off.
 const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
@@ -852,7 +868,11 @@ const photo = createPhotoPanel({
   render: draw,
   sampleLook: (dt) => mapLook(photoLook.sample(), dt),
   // The camera height selects the floor below the camera, not a bridge deck above it.
-  floor: (x, z, y) => env.sampleGround(x, z, y)?.height ?? null,
+  // The edge fence wall is for the skater only: the camera has no floor there.
+  floor: (x, z, y) => {
+    const g = env.sampleGround(x, z, y);
+    return g && g.id !== EDGE_FENCE_ID ? g.height : null;
+  },
   onChange: (open) => {
     if (controls) controls.enabled = !open;
     input.reset();
@@ -1118,6 +1138,8 @@ window.__atl = {
     stats: level.stats ?? null,
     bounds: level.bounds,
     spawn: level.spawn,
+    // The edge fence (#229): its rectangle and its panel count, or null.
+    fence: env.fence ? { ...env.fence, panels: edgeFence ? edgeFence.panels : 0 } : null,
     get meshCount() {
       return geo ? levelView.meshCount : level.objects.length;
     },

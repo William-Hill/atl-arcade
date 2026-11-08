@@ -1895,3 +1895,21 @@ The owner saw the playable skaters as too small next to the NPCs, and asked that
 - The model scale is (height + 0.10 m) / GLB height: Nia 1.047 (1.78 m on skates), Marcus 1.112 (1.98 m on skates). `wrapModel()` applies it. The GLBs do not change.
 - `skateFor()` changes the SKATE constants (tuned for 1.75 m, 70 kg) with small scaling laws: top speed and stroke time with sqrt(height); push acceleration with weight^(-1/3) and sqrt(height); air drag with sqrt(height / weight); brake with weight^(-1/3); turn rate with height^(-1/2) weight^(-1/6); jump with weight^(-1/6) height^(1/4); collision radius with sqrt(weight / height). Each constant stays within its min and max in `constants.js`, and within 12% of SKATE. The roll friction stays the same. `skaterEnv.skate` carries the constants into `stepSkater()`; the capsule keeps SKATE.
 - The tables in the dossiers list each constant for each skater.
+
+## 2026-11-08 — A construction fence at the level edge (#229)
+
+An Autopilot playtest (run `20261107-171547`) rode east from the spawn off the BeltLine Eastside level. Past the bounds the ground sampler returns null, so the skater fell and the controller sent it back to the spawn with no warning. The level had no barrier at its edges. The greybox has barriers at each edge and does not change.
+
+**The fence.** `src/level/edge-fence.js` puts a construction fence 3 m inside the bounds, on all four sides of a geodata level. `createLevelEnv()` wraps the ground sampler with it (`withEdgeFence()`). In a band 0.5 m wide the sample is a wall. The band is wider than one step of a skater at top speed (0.2 m at 12 m/s and 60 Hz), and the controller ring probes one body radius ahead, so no step goes through it. The skater slides along the fence on a shallow approach and stops (bonks) on a head-on approach, with the existing wall response. No controller change.
+
+**The wall height.** The render shows a fence 2.2 m tall. For the controller, the wall top is 2.2 m above the ground or 2.2 m above the height `y` of the sample, when that is higher. The controller gives `y` on each sample, so the wall is always taller than a step, and a skater that falls off a roof near the edge cannot fly over it. The Vitest level test found this case (a roof at 28.9 m, 10 m from the west fence). A fixed tall wall was rejected: the photo-mode camera uses the sampler as its floor, and it would jump up at the fence. The photo-mode floor skips a sample with the id `edge-fence`.
+
+**The hint.** Within 5 m of the fence the HUD shows "Edge of the map. Turn around and keep skating." The soft stop with no fence was rejected: a slow-down near an invisible line does not show the player why.
+
+**The look.** Construction fencing, as AGENTS.md allows: steel posts in block feet, and a teal scrim with orange stripes and the words SKATE ATL. No police tape, no traffic barriers. On a building or a street prop the fence stands on the terrain, so it does not go over a roof. One mesh for the scrim and two instanced meshes for the posts and the feet (1666 panels on this level).
+
+**The backstop.** The out-of-bounds respawn in `stepSkate()` stays. It catches anything that gets past the fence.
+
+**Evidence.** `src/level/edge-fence.test.js`: a skater at top speed into the bound stops and does not respawn (flat ground, each of the four edges, a shallow approach, a jump, and a fall from 20 m); on the real level, at each edge, the lanes where the skater rode off before the fence now stop it. `e2e/edge-fence.spec.js` rides at full push into the east fence (`?look=toon` and `?look=pbr`, `time=14&weather=clear`, quality low): no respawn, the skater stops within 1 m of the fence, and the hint shows. Screenshots: `e2e/__screenshots__/edge-fence-east-toon.png`, `edge-fence-east-pbr.png`. The spec turns off the walkers, the NPC skaters, and the moving cars, so none of them stands in the lane.
+
+**Open.** No person played into the fence yet. The fence goes through the buildings at the edge. Where a bridge crosses the fence line, the fence stands on the deck, so a skater on the road under the bridge stops at a wall with no fence picture.

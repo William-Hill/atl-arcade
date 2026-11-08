@@ -8,6 +8,7 @@ import { rampSurface } from "./ramp.js";
 import { createGeoGroundSampler, GEO_CELL } from "./geo/geo-ground.js";
 import { levelProps, propObstacles } from "./geo/props.js";
 import { benchLedges, curbLedges } from "./geo/grindables.js";
+import { edgeFence, withEdgeFence } from "./edge-fence.js";
 
 export function createGroundSampler(level) {
   const boxes = level.objects.filter((o) => o.size && o.kind !== "rail");
@@ -38,18 +39,25 @@ export function createGroundSampler(level) {
 // with the street props as solid obstacles. `props` lists the placements
 // for the render. `{ props: false }` leaves the props out (the M1-03 level).
 // `placed`: the props, made before by levelProps(level) (in a worker, #98).
+// A geodata level also gets the edge fence (edge-fence.js, #229): a wall a
+// short distance inside the bounds, so the skater cannot ride off the level.
+// `fence` is the fence rectangle for the render and the HUD, or null, and
+// `sampleGroundNoFence` is the ground with no fence (for the fence render).
+// The greybox has its own barriers at each edge.
 export function createLevelEnv(level, { props = true, placed: made = null } = {}) {
   const geo = typeof level.format === "string" && level.format.startsWith("geo-level/");
-  if (!geo) return { sampleGround: createGroundSampler(level), bounds: level.bounds, spawn: level.spawn, props: [], grindables: [] };
+  if (!geo) return { sampleGround: createGroundSampler(level), bounds: level.bounds, spawn: level.spawn, props: [], grindables: [], fence: null };
   const placed = props ? (made ?? levelProps(level)) : [];
   const obstacles = propObstacles(placed.filter((p) => !p.roof));
-  const sampleGround = createGeoGroundSampler(level, GEO_CELL, { obstacles });
+  const ground = createGeoGroundSampler(level, GEO_CELL, { obstacles });
+  const fence = edgeFence(level.bounds);
+  const sampleGround = withEdgeFence(ground, fence);
   // The skate features (#136): the OSM benches and the curbs are ledges.
   const streetIds = new Set((level.strips ?? []).filter((s) => s.kind === "street").map((s) => s.id));
   const isStreet = (x, z) => {
-    const id = sampleGround(x, z)?.id;
+    const id = ground(x, z)?.id;
     return streetIds.has(id) || Boolean(id?.startsWith("junction:"));
   };
   const grindables = [...benchLedges(level, placed), ...curbLedges(level, isStreet)];
-  return { sampleGround, bounds: level.bounds, spawn: level.spawn, props: placed, grindables };
+  return { sampleGround, sampleGroundNoFence: ground, bounds: level.bounds, spawn: level.spawn, props: placed, grindables, fence };
 }

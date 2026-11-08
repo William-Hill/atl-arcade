@@ -1,16 +1,20 @@
 import * as THREE from "three";
-import { NO_LOOK, cameraPivot, createCameraState, createLook, placeCamera, resolveClip, stepCamera, stepLook } from "../sim/camera.js";
+import { NO_LOOK, cameraPivot, canopyVolumes, createCanopyIndex, createCameraState, createLook, placeCamera, resolveClip, stepCamera, stepLook } from "../sim/camera.js";
 import { ALL_GROUPS, GROUP, collisionGroups } from "../physics/world.js";
 
 // Applies the pure camera state to a Three.js camera and keeps it out of
-// walls with a Rapier ray from the skater pivot toward the camera.
-export function createFollowCamera(camera, { RAPIER, world, skater }) {
+// walls with a Rapier ray from the skater pivot toward the camera. The
+// trees have no colliders, so the same ray also tests the canopy volumes of
+// the tree props (src/sim/camera.js, #230); `canopy: false` turns that off.
+export function createFollowCamera(camera, { RAPIER, world, skater, props = [], canopy: canopyOn = true }) {
   let state = createCameraState(skater);
+  const canopy = createCanopyIndex(canopyVolumes(props));
   const rayGroups = collisionGroups(ALL_GROUPS, GROUP.wall | GROUP.ground | GROUP.ledge);
   const origin = new THREE.Vector3();
   const dir = new THREE.Vector3();
   let look = createLook();
   let lastHit = null;
+  let lastCanopyHit = null;
   let allowed = Infinity;
 
   function wallDistance(cam, pivot) {
@@ -31,8 +35,11 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
       look = stepLook(look, lookDelta ?? NO_LOOK, dt);
       state = stepCamera(state, current, dt, undefined, look);
       const pivot = cameraPivot(current);
-      const distance = wallDistance(state, pivot);
-      lastHit = Number.isFinite(distance) ? distance : null;
+      const wall = wallDistance(state, pivot);
+      const leaves = canopyOn && canopy.count ? canopy.distance(pivot, state.position) : Infinity;
+      const distance = Math.min(wall, leaves);
+      lastHit = Number.isFinite(wall) ? wall : null;
+      lastCanopyHit = Number.isFinite(leaves) ? leaves : null;
       const full = Math.hypot(state.position[0] - pivot[0], state.position[1] - pivot[1], state.position[2] - pivot[2]);
       allowed = resolveClip(allowed, full, distance, dt);
       const placed = placeCamera(state, pivot, allowed);
@@ -53,5 +60,10 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
     get lastHit() {
       return lastHit;
     },
+    get lastCanopyHit() {
+      return lastCanopyHit;
+    },
+    // The canopy volumes, for the Playwright tests.
+    canopy,
   };
 }

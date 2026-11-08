@@ -84,6 +84,7 @@ import { NO_PERF, createFrameCost } from "./perf/frame-cost.js";
 import { createDrawSplit } from "./perf/draw-split.js";
 import { createShadowPass } from "./render/shadow-pass.js";
 import { createViewCull } from "./render/view-cull.js";
+import { createEffects } from "./render/effects/effects-view.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -628,6 +629,10 @@ setPostToggles(post, savedSettings);
 // time of day and district, the fog tint, the env map bake, the skater rim.
 // ?pbrgrade=0 keeps the fixed day values (for a before/after check).
 const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: districtAnchors(level), getPost: () => post, skySh }) : null;
+// Comic effects (#113, src/render/effects/): speed lines, impact frames and
+// bursts from the controller flags. Emissive overlays: no material or grade
+// change. Off on the low tier, with prefers-reduced-motion, and with ?fx=0.
+const effects = createEffects({ scene, camera, renderer, tier: quality, anchors: geo ? districtAnchors(level) : [], off: params.get("fx") === "0" });
 // ?perf=1: the draw calls of each frame by pass and object kind (#188).
 const drawSplit = perf.enabled ? createDrawSplit(renderer) : null;
 function labelPostPasses() {
@@ -761,10 +766,12 @@ function sampleInput() {
 function simulate(dt) {
   // After the run ends the skater gets no input and rolls to a stop.
   const sampled = sampleInput();
+  const before = run.skater;
   perf.begin("skater");
   run = stepRun(run, goals && goals.ended ? {} : sampled, dt, env, skaterEnv, beat.running ? beat : null);
   perf.end("skater");
   skater = run.skater;
+  effects.observe(before, skater, run.moves);
   if (goals && !goals.ended) {
     goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
@@ -1039,6 +1046,7 @@ function frame(now) {
   perf.begin("npcSkatersView");
   if (npcSkatersView) npcSkatersView.sync(npcSkaters, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null, camera.position, viewCull);
   perf.end("npcSkatersView");
+  effects.update(Math.min(elapsed, 0.1), { skater, active: !paused });
   perf.begin("render");
   draw();
   perf.end("render");
@@ -1633,6 +1641,17 @@ window.__atl = {
   // The shadow pass: the casters, the culled ones, the stand-ins shown.
   get shadowPass() {
     return shadowPass ? { ...shadowPass.info } : null;
+  },
+  // The comic effects (#113): the state, and the screenshot hooks.
+  // trigger("speed" | "impact") or trigger("grind" | "beat", [x, y, z]);
+  // hold(true) stops the effect clock, so a picture catches the effect.
+  effects: {
+    get info() {
+      return effects.info;
+    },
+    trigger: (kind, position) => effects.trigger(kind, position ?? [...skater.position]),
+    hold: (on) => effects.hold(on),
+    clear: () => effects.clear(),
   },
   get rendererInfo() {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };

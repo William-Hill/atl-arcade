@@ -31,8 +31,13 @@ test("the window rooms do not change when the camera turns", async ({ page }) =>
   const b = await frameAt(page, LOOK_B);
   await page.screenshot({ path: "e2e/__screenshots__/window-rooms.png" });
 
-  const result = await page.evaluate(
-    async ({ a, b, eye, lookA, lookB }) => {
+  // The compare runs in a blank page: in the game page it waited behind the
+  // render loop (a high pbr frame takes about 1.3 s on SwiftShader) and the
+  // test timed out under load.
+  const fov = await page.evaluate(() => window.__atl.fov ?? 60);
+  const blank = await page.context().newPage();
+  const result = await blank.evaluate(
+    async ({ a, b, eye, lookA, lookB, fov }) => {
       const load = async (s) => {
         const bmp = await createImageBitmap(await (await fetch(`data:image/png;base64,${s}`)).blob());
         const c = new OffscreenCanvas(bmp.width, bmp.height);
@@ -56,7 +61,7 @@ test("the window rooms do not change when the camera turns", async ({ page }) =>
         const r = unit(cross(f, [0, 1, 0]));
         return { f, r, u: cross(r, f) };
       };
-      const ty = Math.tan(((window.__atl.fov ?? 60) * Math.PI) / 360);
+      const ty = Math.tan((fov * Math.PI) / 360);
       const tx = ty * (W / H);
       const ka = basis(lookA);
       const kb = basis(lookB);
@@ -89,8 +94,9 @@ test("the window rooms do not change when the camera turns", async ({ page }) =>
       }
       return { W, H, compared, changed, ratio: changed / compared };
     },
-    { a, b, eye: EYE, lookA: LOOK_A, lookB: LOOK_B },
+    { a, b, eye: EYE, lookA: LOOK_A, lookB: LOOK_B, fov },
   );
+  await blank.close();
 
   console.log(`window rooms: ${result.changed} of ${result.compared} pixels changed (${(result.ratio * 100).toFixed(2)}%)`);
   expect(result.compared).toBeGreaterThan(10000);

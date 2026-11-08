@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { litMaterial } from "./look.js";
+import { clampToClass } from "./pbr-palette.js";
 import { F, pedLook, lookKey } from "./ped-look.js";
 
 // Three.js view of the walkers from src/sim/peds.js, the gen-city way: one
@@ -180,12 +181,27 @@ if (!pedOn) transformed = vec3(0.0);`,
     );
 }
 
+// The roughness of the walker parts in the pbr look (#157): the skin in the
+// skin class, everything else (clothes, hair, bags, shoes) in the cloth
+// class of MATERIAL_CLASSES (src/render/pbr-palette.js, docs/style-sheet-pbr.md).
+export const PED_ROUGHNESS = {
+  skin: clampToClass("skin", 0.55).roughness,
+  cloth: clampToClass("cloth", 0.82).roughness,
+};
+
 function pedMaterial(look, gradientMap) {
-  const mat = litMaterial(look, { vertexColors: true }, { gradientMap });
+  const pbr = look === "pbr";
+  const mat = litMaterial(look, { vertexColors: true }, { gradientMap, roughness: PED_ROUGHNESS.cloth });
   mat.onBeforeCompile = (shader) => {
     patchPedVertex(shader);
+    if (pbr) {
+      // The skin part takes the skin roughness; the rest keeps the cloth value.
+      shader.fragmentShader = shader.fragmentShader
+        .replace("#include <common>", "#include <common>\nvarying float vPedSkin;")
+        .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, ${PED_ROUGHNESS.skin.toFixed(3)}, vPedSkin);`);
+    }
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nattribute vec3 pedSkin;\nattribute vec3 pedPants;\nattribute vec3 pedHair;\nattribute vec3 pedAccent;")
+      .replace("#include <common>", `#include <common>\nattribute vec3 pedSkin;\nattribute vec3 pedPants;\nattribute vec3 pedHair;\nattribute vec3 pedAccent;${pbr ? "\nvarying float vPedSkin;" : ""}`)
       .replace(
         "#include <color_vertex>",
         `vColor = vec4(color, 1.0);
@@ -200,10 +216,10 @@ else if (pedCh == ${CH.skin}) vColor.rgb = pedSkin;
 else if (pedCh == ${CH.hair}) vColor.rgb = pedHair;
 else if (pedCh == ${CH.accent}) vColor.rgb = pedAccent;
 else if (pedCh == ${CH.shoe}) vColor.rgb = pedGene(${F.shoeWhite}) ? vec3(0.86, 0.86, 0.84) : pedGene(${F.shoeAccent}) ? pedAccent : vColor.rgb;
-else if (pedCh == ${CH.sleeve}) vColor.rgb = pedGene(${F.jacket}) ? pedAccent : pedShirt;`,
+else if (pedCh == ${CH.sleeve}) vColor.rgb = pedGene(${F.jacket}) ? pedAccent : pedShirt;${pbr ? `\nvPedSkin = pedCh == ${CH.skin} ? 1.0 : 0.0;` : ""}`,
       );
   };
-  mat.customProgramCacheKey = () => `peds-v2-${look}`;
+  mat.customProgramCacheKey = () => `peds-v3-${look}`;
   return mat;
 }
 

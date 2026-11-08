@@ -513,6 +513,7 @@ if (geo && !tier.shadows) {
     new THREE.CircleGeometry(0.55, 16).rotateX(-Math.PI / 2),
     new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }),
   );
+  blob.name = "skater-blob";
   blob.renderOrder = 1;
   scene.add(blob);
 }
@@ -865,7 +866,7 @@ function runScript(entries, { position, yaw } = {}) {
 // Mouse drag on the canvas and the right stick turn the follow camera.
 let lookInput = null;
 if (view === "follow") {
-  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater, props: env.props, canopy: params.get("canopycam") !== "0" });
   lookInput = createLookInput({ element: renderer.domElement });
 }
 
@@ -1058,7 +1059,7 @@ function frame(now) {
     firstFrameDone();
   }
   if (recorder.active && frames % recorder.every === 0) {
-    recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
+    recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, canopyHit: follow ? follow.lastCanopyHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
   }
   requestAnimationFrame(frame);
 }
@@ -1581,6 +1582,19 @@ window.__atl = {
   get cameraLook() {
     return follow ? { ...follow.look } : null;
   },
+  // The tree canopy volumes of the follow camera (#230): their count, and
+  // whether a point is inside one. ?canopycam=0 turns the canopy test off.
+  canopy: {
+    get count() {
+      return follow ? follow.canopy.count : 0;
+    },
+    inside(x, y, z) {
+      return follow ? follow.canopy.inside([x, y, z]) : false;
+    },
+    near(x, z, r) {
+      return follow ? follow.canopy.near(x - r, z - r, x + r, z + r) : [];
+    },
+  },
   // Moves the fixed camera (view=fixed only), for screenshots of things
   // that move, such as the crowd.
   setFixedCamera(x, y, z, lookX, lookY, lookZ) {
@@ -1610,6 +1624,10 @@ window.__atl = {
     },
     stop() {
       recorder.active = false;
+      return recorder.samples;
+    },
+    // The samples so far, while it records.
+    get samples() {
       return recorder.samples;
     },
   },

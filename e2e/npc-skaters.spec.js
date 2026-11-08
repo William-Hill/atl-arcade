@@ -31,7 +31,7 @@ async function waitForSkaters(page) {
 test("NPC skaters ride the trail in other outfits and do tricks, with no fall and no bonk", async ({ page }) => {
   test.setTimeout(240000);
   const errors = collectErrors(page);
-  await open(page, "view=fixed");
+  await open(page, "view=fixed&skaters=1");
   await waitForSkaters(page);
   const start = await page.evaluate(() => ({ count: window.__atl.skaters.count, failed: window.__atl.skaters.failed, ticks: window.__atl.ticks, list: window.__atl.skaters.list }));
   expect(start.count).toBeGreaterThanOrEqual(4);
@@ -110,5 +110,10 @@ test("the NPC skaters never change the player's ride or combo", async ({ page })
 
 test("?skaters=0 turns the NPC skaters off", async ({ page }) => {
   await open(page, "view=fixed&skater=capsule&skaters=0");
+  expect(await page.evaluate(() => window.__atl.skaters)).toBeNull();
+});
+
+test("the NPC skaters are off by default: no other Nia or Marcus on the trail", async ({ page }) => {
+  await open(page, "view=fixed&skater=capsule");
   expect(await page.evaluate(() => window.__atl.skaters)).toBeNull();
 });

@@ -405,6 +405,21 @@ export function skaterObstacles(state) {
 // `beat` is { time, bpm } of the beat clock, or null. `focus` is the camera
 // [x, z]: with it, an NPC far from the camera and the player steps less
 // often (PILOT.far); without it, every NPC steps on every tick.
+// The skate env of one NPC: the player's grindables and the dances of the
+// NPC's own model. The NPC skates with SKATE, not the player's body: the NPC
+// pilots are tuned for SKATE. Made once per model.
+const npcEnvs = new WeakMap();
+function npcEnv(skaterEnv, model) {
+  let byModel = npcEnvs.get(skaterEnv);
+  if (!byModel) npcEnvs.set(skaterEnv, (byModel = new Map()));
+  let e = byModel.get(model);
+  if (!e) {
+    e = { ...skaterEnv, skater: model, skate: null };
+    byModel.set(model, e);
+  }
+  return e;
+}
+
 export function stepNpcSkaters(state, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, { player = null, crowd = [], beat = null, focus = null } = {}) {
   const viewers = focus ? [focus] : [];
   if (focus && player) viewers.push([player[0], player[2]]);
@@ -425,7 +440,7 @@ export function stepNpcSkaters(state, dt, env = FLAT_GROUND, skaterEnv = { grind
     });
     const { input, npc: n } = pilotInput(npc, h, { obstacles, beat });
     const prev = npc.skater;
-    const skater = stepSkater(prev, input, h, env, skaterEnv);
+    const skater = stepSkater(prev, input, h, env, npcEnv(skaterEnv, npc.spec.model));
     if (skater.bonked) n.stats.bonks += 1;
     if (skater.wallSlide) n.stats.slides += 1;
     if (skater.justFell) n.stats.falls += 1;

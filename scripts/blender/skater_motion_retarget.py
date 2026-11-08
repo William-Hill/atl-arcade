@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 import bpy
-from mathutils import Vector
+from mathutils import Quaternion, Vector
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -21,6 +21,27 @@ def leg_length(arm):
                   for part in ("UpLeg", "Leg", "Foot")]
         total += sum((b - a).length for a, b in zip(points, points[1:]))
     return total / 2
+
+
+# SMPL-H bone names (Meshy text to motion) to Mixamo names. A Mixamo bone
+# with no SMPL-H bone (the finger tips, HeadTop_End, the toe ends) keeps its
+# local rest rotation: it follows its parent.
+SIDES = {"L_": "Left", "R_": "Right"}
+SMPLH = {"Pelvis": "Hips", "Spine1": "Spine", "Spine2": "Spine1", "Spine3": "Spine2",
+         "Neck": "Neck", "Head": "Head"}
+for _p, _side in SIDES.items():
+    SMPLH.update({_p + "Hip": _side + "UpLeg", _p + "Knee": _side + "Leg", _p + "Ankle": _side + "Foot",
+                  _p + "Foot": _side + "ToeBase", _p + "Collar": _side + "Shoulder", _p + "Shoulder": _side + "Arm",
+                  _p + "Elbow": _side + "ForeArm", _p + "Wrist": _side + "Hand"})
+    for _f in ("Index", "Middle", "Ring", "Pinky", "Thumb"):
+        for _i in (1, 2, 3):
+            SMPLH[f"{_p}{_f}{_i}"] = f"{_side}Hand{_f}{_i}"
+
+
+def rename_smplh(source):
+    for bone in source.data.bones:
+        if bone.name in SMPLH:
+            bone.name = "mixamorig:" + SMPLH[bone.name]
 
 
 def sample_motion(source, frames):
@@ -70,6 +91,8 @@ def main():
     parser.add_argument("--clip", default="coast")
     parser.add_argument("--preserve-actions", action="store_true")
     parser.add_argument("--glb", type=Path, help="Override the exported GLB path.")
+    parser.add_argument("--map", choices=("mixamo", "smplh"), default="mixamo",
+                        help="The source skeleton. smplh: a Meshy text to motion FBX.")
     parser.add_argument("--blend", type=Path, help="Override the saved .blend path.")
     args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:])
     base = args.base or (ROOT / "assets/skaters" / args.name / "raw" /
@@ -94,8 +117,12 @@ def main():
         bpy.ops.import_scene.fbx(filepath=str(args.fbx.resolve()))
         imported = [o for o in bpy.data.objects if o not in existing]
         source = next(o for o in imported if o.type == "ARMATURE")
-        assert len(source.data.bones) == len(target.data.bones) == 65
-        assert set(source.data.bones.keys()) == set(target.data.bones.keys())
+        if args.map == "smplh":
+            rename_smplh(source)
+            assert set(source.data.bones.keys()) <= set(target.data.bones.keys())
+        else:
+            assert len(source.data.bones) == len(target.data.bones) == 65
+            assert set(source.data.bones.keys()) == set(target.data.bones.keys())
         action = source.animation_data.action
         assert action
         source_fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
@@ -133,6 +160,11 @@ def main():
     for frame, (deltas, translation) in enumerate(samples):
         bpy.context.scene.frame_set(frame)
         desired = {name: delta @ rest[name] for name, delta in deltas.items()}
+        # A bone with no source bone follows its parent (pose.bones lists a parent first).
+        for pb in target.pose.bones:
+            if pb.name not in desired:
+                parent_delta = desired[pb.parent.name] @ rest[pb.parent.name].inverted() if pb.parent else Quaternion()
+                desired[pb.name] = parent_delta @ rest[pb.name]
         for pb in target.pose.bones:
             if pb.parent:
                 q = rest[pb.name].inverted() @ rest[pb.parent.name] @ desired[pb.parent.name].inverted() @ desired[pb.name]

@@ -229,10 +229,16 @@ function popCheck() {
   view.setFootIk(false);
   const bones = view.model.skinnedMesh.skeleton.bones;
   const prev = bones.map((b) => b.quaternion.clone());
+  // The largest bone turn since the last call, and that bone.
+  let worstBone = null;
   const turn = () => {
     let max = 0;
     bones.forEach((b, i) => {
-      max = Math.max(max, b.quaternion.angleTo(prev[i]));
+      const a = b.quaternion.angleTo(prev[i]);
+      if (a > max) {
+        max = a;
+        worstBone = b.name;
+      }
       prev[i].copy(b.quaternion);
     });
     return max;
@@ -263,6 +269,7 @@ function popCheck() {
   run(120, () => stateAt(spot));
   turn();
   let change = 0;
+  let changeAt = null;
   let frame = 0;
   const changes = [];
   let last = view.clip;
@@ -275,11 +282,14 @@ function popCheck() {
         changes.push({ frame, from: last, to: view.clip });
         last = view.clip;
       }
-      if (changes.some((c) => frame - c.frame < 30)) change = Math.max(change, t);
+      if (changes.some((c) => frame - c.frame < 30) && t > change) {
+        change = t;
+        changeAt = { frame, bone: worstBone, clip: view.clip };
+      }
     }
   }
   view.setFootIk(true);
-  return { steady, change, changes };
+  return { steady, change, changeAt, changes };
 }
 
 // The cost of the foot IK: the mean ms per frame over 300 frames on the

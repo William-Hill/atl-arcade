@@ -17,6 +17,37 @@ Status: draft for M1-01 (#11). Real Atlanta skaters must review this dossier bef
 
 Nia is an original character. She is not based on a real person, a real crew, or a real rink.
 
+## Body
+
+These values set the model scale and the skating physics in the game. The source of truth is `SKATER_BODIES` in `src/sim/skate/body.js`. Change both together.
+
+| Field | Value |
+|---|---|
+| Height (barefoot) | 1.68 m (5 ft 6 in) |
+| Height on skates | 1.78 m (the quad skate adds 0.10 m) |
+| Weight | 61 kg (134 lb) |
+| Build | Athletic, a strong lower body |
+| Stance | Regular: the left skate leads |
+| Skates | High-top quad skates, cream boots, gold 58 mm wheels, peach toe stops |
+| Model scale | 1.047 (the GLB is 1.70 m from the wheels to the top of the head) |
+
+### Effect on the skating physics
+
+`skateFor()` changes the reference constants (`SKATE`, tuned for a 1.75 m, 70 kg skater) with small scaling laws: longer legs give a longer stroke, a heavier skater coasts further and turns wider. Nia is shorter and lighter than the reference, so she pushes up to speed quicker and turns tighter, with a slightly lower top speed.
+
+| Constant | Reference body | Nia | Change |
+|---|---:|---:|---:|
+| Top speed after pushes (`maxSpeed`, m/s) | 12 | 11.76 | -2.0% |
+| Push acceleration (`pushAccel`, m/s²) | 8 | 8.206 | +2.6% |
+| Time of one stroke (`pushCooldown`, s) | 0.4 | 0.3919 | -2.0% |
+| Air drag (a lower value coasts further) (`coastDrag`, 1/m) | 0.025 | 0.02624 | +5.0% |
+| Brake (toe stop) (`brakeDecel`, m/s²) | 8 | 8.376 | +4.7% |
+| Turn rate at full carve speed (`carveRate`, rad/s) | 2.4 | 2.506 | +4.4% |
+| Jump speed (vertical) (`jumpSpeed`, m/s) | 5 | 5.064 | +1.3% |
+| Collision radius (`bodyRadius`, m) | 0.3 | 0.2858 | -4.7% |
+
+The roll friction (`coastDecel`) does not change: it is the same per kilogram.
+
 ## Story
 
 Nia learned to skate at the Saturday adult sessions at her neighborhood rink. Now she teaches the beginner hour there. In the day, she paints murals on the walls of local shops.
@@ -35,7 +66,7 @@ Her voice lines must be short, positive, and in plain words. Do not write slang 
 
 | Part | Design |
 |---|---|
-| Body | Athletic, medium height, a strong lower body |
+| Body | Athletic, medium height (1.68 m), a strong lower body |
 | Skin | Deep brown |
 | Hair | Box braids in a high bun, held close to the head |
 | Top | A cropped bomber jacket in peach orange, over a cream tank top |

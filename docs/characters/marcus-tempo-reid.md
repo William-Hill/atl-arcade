@@ -17,6 +17,37 @@ Status: draft for M1-10 (#42). Real Atlanta skaters must review this dossier bef
 
 Marcus is an original character. He is not based on a real person, a real crew, a real school, or a real rink.
 
+## Body
+
+These values set the model scale and the skating physics in the game. The source of truth is `SKATER_BODIES` in `src/sim/skate/body.js`. Change both together.
+
+| Field | Value |
+|---|---|
+| Height (barefoot) | 1.88 m (6 ft 2 in) |
+| Height on skates | 1.98 m (the quad skate adds 0.10 m) |
+| Weight | 79 kg (174 lb) |
+| Build | Tall and lean, long legs |
+| Stance | Goofy: the right skate leads |
+| Skates | High-top quad skates, black boots, teal 58 mm wheels, white toe stops |
+| Model scale | 1.112 (the GLB is 1.78 m from the wheels to the top of the head) |
+
+### Effect on the skating physics
+
+`skateFor()` changes the reference constants (`SKATE`, tuned for a 1.75 m, 70 kg skater) with small scaling laws: longer legs give a longer stroke, a heavier skater coasts further and turns wider. Marcus is taller and heavier than the reference, so he has a higher top speed and a longer coast, but he takes longer to reach speed and turns wider.
+
+| Constant | Reference body | Marcus | Change |
+|---|---:|---:|---:|
+| Top speed after pushes (`maxSpeed`, m/s) | 12 | 12.44 | +3.6% |
+| Push acceleration (`pushAccel`, m/s²) | 8 | 7.964 | -0.4% |
+| Time of one stroke (`pushCooldown`, s) | 0.4 | 0.4146 | +3.6% |
+| Air drag (a lower value coasts further) (`coastDrag`, 1/m) | 0.025 | 0.02439 | -2.4% |
+| Brake (toe stop) (`brakeDecel`, m/s²) | 8 | 7.684 | -4.0% |
+| Turn rate at full carve speed (`carveRate`, rad/s) | 2.4 | 2.269 | -5.4% |
+| Jump speed (vertical) (`jumpSpeed`, m/s) | 5 | 4.989 | -0.2% |
+| Collision radius (`bodyRadius`, m) | 0.3 | 0.3075 | +2.5% |
+
+The roll friction (`coastDecel`) does not change: it is the same per kilogram.
+
 ## Story
 
 Marcus grew up two blocks from the Eastside Trail of the BeltLine. He learned to skate on the trail on Sunday mornings. Now he teaches the drum line at a middle school and counts every move like a drum cadence.
@@ -35,7 +66,7 @@ His voice lines must be short, positive, and in plain words. Do not write slang 
 
 | Part | Design |
 |---|---|
-| Body | Tall and lean, long legs |
+| Body | Tall (1.88 m) and lean, long legs |
 | Skin | Brown |
 | Hair | A high-top fade, a short neat beard |
 | Top | A short teal track jacket with white stripes on the sleeves, over a white tee |

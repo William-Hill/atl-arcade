@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { ANIM, AIR_TRICKS, CLIPS, GRINDS, DANCE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, measureYawRate, stepAnim, stepFacing } from "./skater-anim.js";
+import { ANIM, AIR_TRICKS, CLIPS, clipNamesFor, GRINDS, DANCE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, measureYawRate, stepAnim, stepFacing } from "./skater-anim.js";
 import { SKATE, STYLE } from "../sim/skate/constants.js";
 import { createSkateState, runScript, stepSkate } from "../sim/skate/controller.js";
 
@@ -19,11 +19,16 @@ function run(states, dt = 1 / 60) {
 }
 
 describe("the state -> clip table", () => {
-  it("covers every clip in the GLB", () => {
-    const buf = readFileSync(new URL("../../assets/skaters/nia/skater.glb", import.meta.url));
-    const json = JSON.parse(buf.toString("utf8", 20, 20 + buf.readUInt32LE(12)));
-    const names = json.animations.map((a) => a.name).sort();
-    expect(names).toEqual(Object.keys(CLIPS).sort());
+  it("covers every clip in each skater GLB", () => {
+    for (const skater of ["nia", "marcus"]) {
+      for (const file of ["skater.glb", "skater-1024.glb"]) {
+        const buf = readFileSync(new URL(`../../assets/skaters/${skater}/${file}`, import.meta.url));
+        const json = JSON.parse(buf.toString("utf8", 20, 20 + buf.readUInt32LE(12)));
+        const names = json.animations.map((a) => a.name).sort();
+        expect(names, `${skater}/${file}`).toEqual(clipNamesFor(skater).sort());
+      }
+    }
+    expect(clipNamesFor("marcus").length).toBe(clipNamesFor("nia").length + 3);
   });
 
   it("has a clip for every dance of every style move", () => {
@@ -44,6 +49,45 @@ describe("the state -> clip table", () => {
     expect(clipFor(rolling({ backward: true, pushing: true }))).toBe("ride_back");
     expect(clipFor(rolling({ backward: true, speed: 0 }))).toBe("idle");
     expect(clipFor({ ...rolling({ backward: true }), state: "grind" })).toBe("grind_frontside");
+  });
+
+  it("brakes on the brake button or a hard slow-down, forward only", () => {
+    expect(clipFor(rolling({ braking: true }))).toBe("brake");
+    expect(clipFor(rolling({ braking: true, pushing: true }))).toBe("brake");
+    expect(clipFor(rolling({ braking: true, speed: 0.1 }))).toBe("idle");
+    expect(clipFor(rolling({ braking: true, backward: true }))).toBe("ride_back");
+    expect(clipFor(rolling(), { slowing: ANIM.brakeHold })).toBe("brake");
+    expect(clipFor(rolling(), { slowing: 0 })).toBe("coast");
+    // The roll friction and drag at the top speed do not count as a brake.
+    const drag = SKATE.coastDecel + SKATE.coastDrag * SKATE.maxSpeed ** 2;
+    expect(drag).toBeLessThan(ANIM.brakeDecel);
+  });
+
+  it("brakes on a hard slow-down that lasts, not on a one-tick drop", () => {
+    const at = (speed, tick) => rolling({ speed, tick });
+    // A one-tick drop of 1 m/s (60 m/s^2), then a steady speed: no brake.
+    const drop = run([at(4, 1), at(4, 2), at(3, 3), at(3, 4), at(3, 5), at(3, 6), at(3, 7), at(3, 8), at(3, 9)]);
+    expect(drop.changes.map((c) => c.to)).not.toContain("brake");
+    // 8 m/s^2 for 12 ticks (0.2 s): the brake starts after 0.1 s.
+    const hard = run(Array.from({ length: 14 }, (_, i) => at(8 - (8 / 60) * i, i + 1)));
+    expect(hard.changes.map((c) => c.to)).toContain("brake");
+  });
+
+  it("plays the brake while the controller brakes, and holds it for its lock", () => {
+    const fast = runScript(createSkateState(), [{ frames: 120, input: { push: true } }]).state;
+    const { states } = runScript(fast, [{ frames: 20, input: {} }, { frames: 30, input: { brake: true } }, { frames: 20, input: {} }, { frames: 3, input: { brake: true } }, { frames: 6, input: {} }], { trace: true });
+    expect(states[30].braking).toBe(true);
+    let anim = createAnimState();
+    const clips = [];
+    for (const st of states) {
+      anim = stepAnim(anim, st, 1 / 60).anim;
+      clips.push(anim.clip);
+    }
+    expect(clips[19]).toBe("coast");
+    expect(clips[25]).toBe("brake");
+    expect(clips[69]).toBe("coast");
+    // A short tap: six frames after the release, the 0.25 s lock still holds the brake.
+    expect(clips.at(-1)).toBe("brake");
   });
 
   it("goes from push to coast in one tick when the player releases push at speed (#61)", () => {

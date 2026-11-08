@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createSkater, createSkaterEnv, stepSkater } from "./skater.js";
-import { GRIND } from "./constants.js";
+import { GRIND, STYLE, dancesFor } from "./constants.js";
 import { GREYBOX } from "../../level/greybox.js";
 import { createGroundSampler } from "../../level/ground.js";
 
@@ -76,5 +76,26 @@ describe("grind buffer", () => {
   it("does not snap on a tap made too early", () => {
     const n = snapFrame();
     expect(tapAt(n - Math.ceil(GRIND.buffer * 60) - 5)).toBe(false);
+  });
+});
+
+describe("the dances of each skater", () => {
+  const press = (skater) => {
+    let s = createSkater();
+    for (let i = 0; i < 60; i += 1) s = stepSkater(s, { push: true }, 1 / 60, undefined, { grindables: [], skater });
+    s = stepSkater(s, { style1: true }, 1 / 60, undefined, { grindables: [], skater });
+    return s.style?.clip;
+  };
+
+  it("gives Marcus his own groove first, and keeps his dances from other skaters", () => {
+    expect(press("marcus")).toBe("dance_jamgroove");
+    expect(press("nia")).toBe("dance_bankhead");
+    expect(press(undefined)).toBe("dance_bankhead");
+  });
+
+  it("lists the shared dances for every skater", () => {
+    const groove = STYLE.moves[0];
+    expect(dancesFor(groove, "nia").some((d) => d.skaters)).toBe(false);
+    expect(dancesFor(groove, "marcus").length).toBe(dancesFor(groove, "nia").length + 3);
   });
 });

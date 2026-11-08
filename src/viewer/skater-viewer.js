@@ -3,6 +3,9 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createRenderer, fitToWindow } from "../render/renderer.js";
 import { fetchSkaterModel, loadSkaterModel } from "../render/skater-model.js";
 import { EYES, MOUTHS } from "../render/face-anim.js";
+import { pbrSkater } from "../render/toon.js";
+import { bodyFor, modelScale } from "../sim/skate/body.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 // Test page for a skater model: skater.html?skater=nia&view=front.
 // The model faces +x, as in the game. +z is the skater's right.
@@ -16,7 +19,9 @@ const VIEWS = {
 // Until the model loads: a 1.7 m skater centered at hip height.
 const TARGET = new THREE.Vector3(0, 0.85, 0);
 // The face close-up: ?view=face. The face center is about 1.44 m up.
-const FACE_TARGET = new THREE.Vector3(0, 1.44, 0);
+// The face of the 1.70 m GLB, before the dossier scale (body.js).
+const FACE_Y = 1.44;
+const FACE_TARGET = new THREE.Vector3(0, FACE_Y, 0);
 let radius = 0.95;
 let currentView = "three-quarter";
 // True once the user rotates or zooms: a resize then keeps their camera.
@@ -95,16 +100,17 @@ function setFace(eyes, mouth) {
   return { eyes: face.eyes, mouth: face.mouth };
 }
 
-// Draws one clip as a row of frames from the three-quarter view: a contact
-// sheet. The first frame is t = 0 and the last frame is the clip end.
-function sheet(name, cols = 6) {
+// Draws one clip as a row of frames from the three-quarter view (or another
+// VIEWS key): a contact sheet. The first frame is t = 0 and the last frame
+// is the clip end.
+function sheet(name, cols = 6, view = "three-quarter") {
   const clip = clips.find((c) => c.name === name);
   if (!clip) throw new Error(`Unknown clip: ${name}`);
   paused = true;
   mixer.stopAllAction();
   const action = mixer.clipAction(clip);
   action.reset().play();
-  const dir = VIEWS["three-quarter"];
+  const dir = VIEWS[view] ?? VIEWS["three-quarter"];
   camera.position.set(TARGET.x + dir[0] * 4.2, TARGET.y + 0.3, TARGET.z + dir[1] * 4.2);
   camera.lookAt(TARGET);
   const size = renderer.getSize(new THREE.Vector2());
@@ -146,7 +152,15 @@ try {
   const name = params.get("skater") ?? "nia";
   const small = params.get("small") === "1";
   const model = await loadSkaterModel(name, small ? fetchSkaterModel(name, null, { small }) : null);
+  // ?look=pbr: the materials of the game's pbr look, lit by a room
+  // environment map. Without it, the viewer shows the GLB materials.
+  if (params.get("look") === "pbr") {
+    scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+    pbrSkater(model);
+  }
   scene.add(model.root);
+  // The model stands at the dossier height: the face moves with the scale.
+  FACE_TARGET.y = FACE_Y * modelScale(bodyFor(name));
   clips = model.animations;
   face = model.face;
   if (face && params.get("face")) {

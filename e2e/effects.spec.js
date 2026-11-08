@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
 // Issue #113: the comic effects (src/render/effects/). The tests:
@@ -91,30 +91,38 @@ for (const look of ["toon", "pbr"]) {
 
 test("the draw calls of the effects on each tier", async ({ page }) => {
   test.setTimeout(2400000);
-  const budget = JSON.parse(await import("node:fs").then((fs) => fs.readFileSync("docs/perf/budget.json", "utf8")));
+  const budget = JSON.parse(readFileSync("docs/perf/budget.json", "utf8"));
   const rows = [];
   for (const [quality, look] of [["low", "toon"], ["phone", "toon"], ["phone", "pbr"], ["high", "toon"], ["high", "pbr"]]) {
     await page.goto(`${BASE}&quality=${quality}&look=${look}`);
     await ready(page);
+    // The frame total changes while the props and trees load; wait for them.
+    await page.waitForFunction(() => window.__atl.level.props && (window.__atl.level.props.loaded || window.__atl.level.props.error), null, { timeout: 300000 });
+    await page.waitForLoadState("networkidle");
     await nextFrames(page, 4);
+    const idleDraws = (await page.evaluate(() => window.__atl.effects.info)).draws;
     const idle = await calls(page);
     const info = await show(page, "all");
+    await nextFrames(page, 1);
+    // The effect meshes count their own draws (onAfterRender), so the
+    // number does not depend on the rest of the frame.
+    const draws = (await page.evaluate(() => window.__atl.effects.info)).draws;
     const active = await calls(page);
     await off(page);
-    const after = await calls(page);
+    const offDraws = (await page.evaluate(() => window.__atl.effects.info)).draws;
     const key = look === "pbr" ? `${quality}/pbr` : quality;
     const cap = budget.tiers[key]?.calls ?? budget.tiers[quality].calls;
-    rows.push({ quality, look, idle, active, added: active - idle, after, cap, policy: info.policy, lines: info.lines, spikes: info.spikes, bursts: info.bursts });
+    rows.push({ quality, look, frameIdle: idle, frameActive: active, effectDraws: { idle: idleDraws, active: draws, after: offDraws }, cap, policy: info.policy, lines: info.lines, spikes: info.spikes, bursts: info.bursts });
+    expect(idleDraws).toBe(0);
+    expect(offDraws).toBe(0);
     if (quality === "low") {
       // Off on the low tier: no meshes draw.
       expect(info.enabled).toBe(false);
-      expect(active - idle).toBe(0);
+      expect(draws).toBe(0);
     } else {
-      // At most 2 draw calls (the screen mesh and the burst mesh), and none
-      // when no effect runs.
-      expect(active - idle).toBeGreaterThan(0);
-      expect(active - idle).toBeLessThanOrEqual(2);
-      expect(after).toBe(idle);
+      // The screen mesh and the burst mesh: 2 draw calls.
+      expect(draws).toBe(2);
+      expect(idle + draws).toBeLessThanOrEqual(cap);
     }
   }
   mkdirSync("reports/fx", { recursive: true });

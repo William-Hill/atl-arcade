@@ -202,6 +202,12 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
   let hold = false;
   let forceSpeed = null;
   const info = { lines: 0, spikes: 0, bursts: 0, impacts: 0, triggers: { bonk: 0, land: 0, grind: 0, beat: 0 } };
+  // The draw calls of the effect meshes in the last frame (all passes).
+  let draws = 0;
+  let lastDraws = 0;
+  const countDraw = () => {
+    draws += 1;
+  };
 
   // The screen mesh.
   const screen = instanced(SCREEN_MAX, { corners: [0, -1, 1, -1, 1, 1, 0, -1, 1, 1, 0, 1], instance: { seg: 4, width: 3, tint: 4 } });
@@ -225,6 +231,8 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
   burstMesh.visible = false;
   burstMesh.userData.overlay = true;
 
+  screenMesh.onAfterRender = countDraw;
+  burstMesh.onAfterRender = countDraw;
   if (scene) {
     scene.add(burstMesh);
     scene.add(screenMesh);
@@ -317,6 +325,8 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
     // Each rendered frame, before the draw. `active` false (photo mode, a
     // pause) fades the speed lines and hides the layer.
     update(dt, { skater, active = true } = {}) {
+      lastDraws = draws;
+      draws = 0;
       if (!policy.enabled) return;
       fx = stepFx(fx, hold ? 0 : dt, { speed: forceSpeed ?? skater?.speed ?? 0, active });
       const size = renderer ? renderer.getDrawingBufferSize(new THREE.Vector2()) : new THREE.Vector2(1280, 720);
@@ -382,7 +392,7 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
       forceSpeed = null;
     },
     get info() {
-      return { ...info, enabled: policy.enabled, reducedMotion: reduced, policy: { ...policy }, speed: fx.speed, impactFrames: fx.impact.frames, visible: { screen: screenMesh.visible, bursts: burstMesh.visible } };
+      return { ...info, draws: lastDraws, enabled: policy.enabled, reducedMotion: reduced, policy: { ...policy }, speed: fx.speed, impactFrames: fx.impact.frames, visible: { screen: screenMesh.visible, bursts: burstMesh.visible } };
     },
     meshes: [screenMesh, burstMesh],
     dispose() {

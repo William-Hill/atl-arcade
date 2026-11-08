@@ -254,14 +254,14 @@ export function createNpcView(crowd, { drawDistance = NPC_DRAW_DISTANCE, look = 
   const skin = new Map();
   const pants = new Map();
   const hair = new Map();
-  const size = new Map();
+  const heightScale = new Map();
   for (const n of crowd.npcs) {
     const l = crowdLook(n.id);
     shirt.set(n.id, new THREE.Color(l.shirt));
     skin.set(n.id, new THREE.Color(l.skin));
     pants.set(n.id, new THREE.Color(l.pants));
     hair.set(n.id, new THREE.Color(l.hair));
-    size.set(n.id, new THREE.Vector3().setScalar(l.scale));
+    heightScale.set(n.id, new THREE.Vector3().setScalar(l.scale));
   }
 
   const m = new THREE.Matrix4();
@@ -307,7 +307,7 @@ export function createNpcView(crowd, { drawDistance = NPC_DRAW_DISTANCE, look = 
         e.set(gait.sway * Math.sin(n.phase) * moving + wobble, Math.atan2(-n.fz, n.fx), 0);
         q.setFromEuler(e);
         p.set(n.x, n.y + bob, n.z);
-        m.compose(p, q, size.get(n.id));
+        m.compose(p, q, heightScale.get(n.id));
         mesh.setMatrixAt(k, m);
         mesh.setColorAt(k, shirt.get(n.id));
         for (const [name, c] of [

@@ -105,9 +105,11 @@ export function lookAtlas(base, images) {
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d");
+  // A variant that failed to load shows the person's own texture in its
+  // tile, as the rigs do (ped-models.js), not an empty (black) tile.
   [base, ...images].forEach((img, v) => {
     const [u, w] = lookTile(v);
-    if (img) ctx.drawImage(img, u * size, w * size, half, half);
+    ctx.drawImage(img ?? base, u * size, w * size, half, half);
   });
   const tex = new THREE.CanvasTexture(canvas);
   tex.flipY = false;

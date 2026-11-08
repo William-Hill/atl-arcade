@@ -1269,8 +1269,8 @@ window.__atl = {
         if (!w.live) continue;
         const d = seen(w.x, w.y, w.z);
         if (d < 0) continue;
-        const glb = pedModels?.figureSkip.has(w.id) && pedModels.kindOf(w.id);
-        out.push({ src: glb ? "glb" : "ped", id: w.id, d, key: glb ? pedModels.kindOf(w.id) : pedsView.lookKey(w.look), height: glb ? null : pedsView.heightOf(w.look) });
+        const glb = pedModels?.figureSkip.has(w.id) ? pedModels.kindOf(w.id) : null;
+        out.push({ src: glb ? "glb" : "ped", id: w.id, d, key: glb ?? pedsView.lookKey(w.look), height: glb ? null : pedsView.heightOf(w.look) });
       }
       return out.sort((a, b) => a.d - b.d);
     },

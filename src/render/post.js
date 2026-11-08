@@ -273,7 +273,7 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   if (pbr) gtao._overrideVisibility = function () {
     const cache = this._visibilityCache;
     this.scene.traverse((o) => {
-      if ((o.isPoints || o.isLine || o.isLine2 || o.isSkinnedMesh || o.userData.character) && o.visible) {
+      if ((o.isPoints || o.isLine || o.isLine2 || o.isSkinnedMesh || o.userData.character || o.userData.overlay) && o.visible) {
         o.visible = false;
         cache.push(o);
       }
@@ -283,10 +283,13 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
   // draws the same surface as its parts under the override material, so
   // the parts stay out of this pass: one draw call per skater in place of
   // 22 to 26 (#188). The depth and normals do not change.
+  // In both looks, an overlay (the comic effects, #113, userData.overlay)
+  // stays out: it is drawn in clip space or as a billboard, so the override
+  // material cannot draw it, and it must not get ink or AO.
   else gtao._overrideVisibility = function () {
     const cache = this._visibilityCache;
     this.scene.traverse((o) => {
-      if ((o.isPoints || o.isLine || o.isLine2 || o.userData.normalStandIn?.visible) && o.visible) {
+      if ((o.isPoints || o.isLine || o.isLine2 || o.userData.normalStandIn?.visible || o.userData.overlay) && o.visible) {
         o.visible = false;
         cache.push(o);
       }

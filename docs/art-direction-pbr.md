@@ -395,6 +395,17 @@ Comic effects ride on the pbr look as a layer, not a new look:
 - Off on the low tier and with `prefers-reduced-motion`.
 - Effects are emissive overlays; they never change materials or the grade.
 
+The code (2026-11-08): `src/render/effects/fx.js` (pure: triggers, timers,
+tier and reduced-motion gates, layouts) and `effects-view.js` (2 instanced
+meshes, 0 draw calls when no effect runs, at most 2 when effects run). The
+effect body is at emissive 0.8 (under the 0.92 night bloom threshold); only
+the star core is at 3.2 (over the 2.4 day threshold). The accent is the
+brightest accent of the district at the skater, so the dark trail accents
+(oxblood, navy) are not used. Phone: 10 streaks, 2 impact frames, a ring
+and no star. Both looks get the effects. `?fx=0` turns them off. The
+landmark claim (#221) spawns its burst and petals with `effects.burst()`
+and adds its own tier row to `EFFECT_TIERS`.
+
 ## 12. What stays out (AGENTS.md political rules)
 
 - Every neighborhood at its best: no decline, no stigma, no boarded

@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { EDGE_FENCE, EDGE_FENCE_ID, edgeFence, fenceDistance, fencePosts, inFence, nearEdge, withEdgeFence } from "./edge-fence.js";
+import { EDGE_FENCE, EDGE_FENCE_ID, clipGrindables, edgeFence, fenceDistance, fencePosts, inFence, nearEdge, withEdgeFence } from "./edge-fence.js";
 import { createLevelEnv } from "./ground.js";
 import { withCanopy } from "./levels.js";
 import { createGeoGroundSampler, GEO_CELL } from "./geo/geo-ground.js";
 import { propObstacles } from "./geo/props.js";
 import { createSkateState, stepSkate } from "../sim/skate/controller.js";
 import { SKATE } from "../sim/skate/constants.js";
+import { createSkater, stepSkater } from "../sim/skate/skater.js";
 
 const BOUNDS = { minX: -50, maxX: 50, minZ: -40, maxZ: 40 };
 const DT = 1 / 60;
@@ -138,6 +139,72 @@ describe("the edge fence stops the skater (#229)", () => {
   });
 });
 
+// A ledge on flat ground, 0.4 m high, along +x from x0 to x1 at z = 0.
+function ledge(x0, x1, id = "ledge:test") {
+  const points = [];
+  for (let x = x0; x <= x1; x += 2) points.push([x, 0.4, 0]);
+  const total = (points.length - 1) * 2;
+  return { id, kind: "ledge", points, total, box: { minX: x0, maxX: points.at(-1)[0], minZ: 0, maxZ: 0 } };
+}
+
+describe("clipGrindables", () => {
+  const f = edgeFence(BOUNDS);
+
+  it("keeps a grindable inside the fence as it is", () => {
+    const g = ledge(0, 20);
+    expect(clipGrindables([g], f)).toEqual([g]);
+    expect(clipGrindables([g], null)).toEqual([g]);
+  });
+
+  it("cuts a grindable that crosses the fence line `margin` m inside the fence", () => {
+    const [g] = clipGrindables([ledge(30, 60)], f, { margin: 1 });
+    expect(g.id).toBe("ledge:test");
+    expect(g.points[0]).toEqual([30, 0.4, 0]);
+    expect(g.points.at(-1)[0]).toBeCloseTo(f.maxX - 1);
+    expect(g.total).toBeCloseTo(f.maxX - 1 - 30);
+    expect(g.box.maxX).toBeCloseTo(f.maxX - 1);
+  });
+
+  it("splits a grindable that leaves and comes back, and drops a part outside", () => {
+    // Out past the east fence and back: a U along x, with the far end outside.
+    const points = [[40, 0.4, 0], [55, 0.4, 0], [55, 0.4, 4], [40, 0.4, 4]];
+    const parts = clipGrindables([{ id: "u", kind: "ledge", points, total: 34 }], f, { margin: 1 });
+    expect(parts.map((p) => p.id)).toEqual(["u:a", "u:b"]);
+    for (const p of parts) for (const [x] of p.points) expect(x).toBeLessThanOrEqual(f.maxX - 1 + 1e-9);
+    expect(clipGrindables([ledge(52, 60)], f)).toEqual([]);
+  });
+});
+
+describe("a grind does not go through the edge fence", () => {
+  // Grind along a ledge that runs past the fence and the bounds.
+  function grindRide(grindables) {
+    const env = flatEnv();
+    let s = createSkater(null, { position: [24, 0, 0.3], yaw: 0 });
+    s.speed = SKATE.maxSpeed;
+    let snaps = 0;
+    let respawns = 0;
+    for (let i = 0; i < Math.round(5 / DT); i += 1) {
+      s = stepSkater(s, { push: true, grind: true }, DT, env, { grindables });
+      if (s.justSnapped) snaps += 1;
+      if (s.respawned) respawns += 1;
+    }
+    return { s, snaps, respawns, env };
+  }
+
+  it("without the cut, the grind carries the skater through the fence", () => {
+    const { snaps, respawns } = grindRide([ledge(20, 70)]);
+    expect(snaps).toBeGreaterThan(0);
+    expect(respawns).toBe(1);
+  });
+
+  it("with the cut, the grind ends before the fence and the skater stays in", () => {
+    const { s, snaps, respawns, env } = grindRide(clipGrindables([ledge(20, 70)], edgeFence(BOUNDS)));
+    expect(snaps).toBeGreaterThan(0);
+    expect(respawns).toBe(0);
+    expect(fenceDistance(env.fence, s.position[0], s.position[2])).toBeGreaterThan(0);
+  });
+});
+
 describe("the edge fence on the BeltLine Eastside level", () => {
   // The level with its canopy trees, as the game loads it (levels.js).
   const read = (name) => JSON.parse(readFileSync(new URL(`../../levels/beltline-eastside/${name}`, import.meta.url), "utf8"));
@@ -149,6 +216,11 @@ describe("the edge fence on the BeltLine Eastside level", () => {
 
   it("has a fence", () => {
     expect(env.fence).toMatchObject({ maxX: b.maxX - EDGE_FENCE.inset });
+  });
+
+  it("ends every grindable (benches, curbs) before the fence", () => {
+    expect(env.grindables.length).toBeGreaterThan(100);
+    for (const g of env.grindables) for (const [x, , z] of g.points) expect(fenceDistance(env.fence, x, z), g.id).toBeGreaterThan(0.99);
   });
 
   // For each edge: lanes 60 m from the edge, toward it. On a lane where the

@@ -8,7 +8,7 @@ import { rampSurface } from "./ramp.js";
 import { createGeoGroundSampler, GEO_CELL } from "./geo/geo-ground.js";
 import { levelProps, propObstacles } from "./geo/props.js";
 import { benchLedges, curbLedges } from "./geo/grindables.js";
-import { edgeFence, withEdgeFence } from "./edge-fence.js";
+import { clipGrindables, edgeFence, withEdgeFence } from "./edge-fence.js";
 
 export function createGroundSampler(level) {
   const boxes = level.objects.filter((o) => o.size && o.kind !== "rail");
@@ -58,6 +58,7 @@ export function createLevelEnv(level, { props = true, placed: made = null } = {}
     const id = ground(x, z)?.id;
     return streetIds.has(id) || Boolean(id?.startsWith("junction:"));
   };
-  const grindables = [...benchLedges(level, placed), ...curbLedges(level, isStreet)];
+  // A grind does not sample the ground, so the ledges stop before the fence.
+  const grindables = clipGrindables([...benchLedges(level, placed), ...curbLedges(level, isStreet)], fence);
   return { sampleGround, sampleGroundNoFence: ground, bounds: level.bounds, spawn: level.spawn, props: placed, grindables, fence };
 }

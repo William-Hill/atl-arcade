@@ -101,3 +101,83 @@ export function fencePosts(fence, panel = EDGE_FENCE.panel) {
   posts.push([...corners[0]]);
   return posts;
 }
+
+// Pure: the grindables cut to the fenced area, `margin` m inside the inner
+// face of the fence. A grind does not sample the ground, so a curb ledge
+// that crosses the fence line would carry the skater through the fence. A
+// cut grind ends before the fence; the skater then leaves the ledge and the
+// fence wall stops it. A grindable cut in two parts becomes two grindables
+// (ids ":a", ":b", ...). A part shorter than `minLength` m is dropped.
+export function clipGrindables(grindables, fence, { margin = 1, minLength = 1 } = {}) {
+  if (!fence) return grindables;
+  const r = { minX: fence.minX + margin, maxX: fence.maxX - margin, minZ: fence.minZ + margin, maxZ: fence.maxZ - margin };
+  const inside = ([x, , z]) => x >= r.minX && x <= r.maxX && z >= r.minZ && z <= r.maxZ;
+  const out = [];
+  for (const g of grindables) {
+    if (g.points.every(inside)) {
+      out.push(g);
+      continue;
+    }
+    const runs = [];
+    let run = null;
+    for (let i = 0; i < g.points.length - 1; i += 1) {
+      const part = clipSegment(g.points[i], g.points[i + 1], r);
+      if (!part) {
+        run = null;
+        continue;
+      }
+      const [a, b] = part;
+      const startsHere = a !== g.points[i];
+      if (!run || startsHere) {
+        run = [a];
+        runs.push(run);
+      }
+      run.push(b);
+      if (b !== g.points[i + 1]) run = null;
+    }
+    const kept = runs.filter((pts) => lineLength(pts) >= minLength);
+    kept.forEach((pts, k) => {
+      const id = kept.length === 1 ? g.id : `${g.id}:${String.fromCharCode(97 + k)}`;
+      out.push({ ...g, id, points: pts, total: lineLength(pts), ...(g.box ? { box: lineBox(pts) } : {}) });
+    });
+  }
+  return out;
+}
+
+// Liang-Barsky in the ground plane. Returns [a, b] (the input point objects
+// where an end is not cut), or null when the segment is outside.
+function clipSegment(p, q, r) {
+  const dx = q[0] - p[0];
+  const dz = q[2] - p[2];
+  let t0 = 0;
+  let t1 = 1;
+  for (const [den, num] of [[-dx, p[0] - r.minX], [dx, r.maxX - p[0]], [-dz, p[2] - r.minZ], [dz, r.maxZ - p[2]]]) {
+    if (den === 0) {
+      if (num < 0) return null;
+      continue;
+    }
+    const t = num / den;
+    if (den < 0) t0 = Math.max(t0, t);
+    else t1 = Math.min(t1, t);
+    if (t0 > t1) return null;
+  }
+  const at = (t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t];
+  return [t0 === 0 ? p : at(t0), t1 === 1 ? q : at(t1)];
+}
+
+function lineLength(points) {
+  let s = 0;
+  for (let i = 0; i < points.length - 1; i += 1) s += Math.hypot(points[i + 1][0] - points[i][0], points[i + 1][1] - points[i][1], points[i + 1][2] - points[i][2]);
+  return s;
+}
+
+function lineBox(points) {
+  const b = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+  for (const [x, , z] of points) {
+    b.minX = Math.min(b.minX, x);
+    b.maxX = Math.max(b.maxX, x);
+    b.minZ = Math.min(b.minZ, z);
+    b.maxZ = Math.max(b.maxZ, z);
+  }
+  return b;
+}

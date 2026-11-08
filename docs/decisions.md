@@ -1904,6 +1904,8 @@ An Autopilot playtest (run `20261107-171547`) rode east from the spawn off the B
 
 **The wall height.** The render shows a fence 2.2 m tall. For the controller, the wall top is 2.2 m above the ground or 2.2 m above the height `y` of the sample, when that is higher. The controller gives `y` on each sample, so the wall is always taller than a step, and a skater that falls off a roof near the edge cannot fly over it. The Vitest level test found this case (a roof at 28.9 m, 10 m from the west fence). A fixed tall wall was rejected: the photo-mode camera uses the sampler as its floor, and it would jump up at the fence. The photo-mode floor skips a sample with the id `edge-fence`.
 
+**The grind lines.** A grind does not sample the ground, so a curb ledge that crosses the fence line carried the skater through the fence (found in the PR review: `ledge:curb:w1384901292:0` ended at x = 482.83 m, past the fence). `clipGrindables()` cuts each bench and curb ledge 1 m inside the fence. At the cut end the grind stops, and the fence wall stops the skater.
+
 **The hint.** Within 5 m of the fence the HUD shows "Edge of the map. Turn around and keep skating." The soft stop with no fence was rejected: a slow-down near an invisible line does not show the player why.
 
 **The look.** Construction fencing, as AGENTS.md allows: steel posts in block feet, and a teal scrim with orange stripes and the words SKATE ATL. No police tape, no traffic barriers. On a building or a street prop the fence stands on the terrain, so it does not go over a roof. One mesh for the scrim and two instanced meshes for the posts and the feet (1666 panels on this level).

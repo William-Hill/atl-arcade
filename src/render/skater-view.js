@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { SKATER_BODY } from "../sim/skate/constants.js";
 import { cheer, createFaceState, stepFace } from "./face-anim.js";
-import { CLIPS, beatPhase, createAnimState, grooveRate, stepAnim, stepFacing } from "./skater-anim.js";
+import { CLIPS, beatPhase, createAnimState, grooveRate, respawnAnim, stepAnim, stepFacing } from "./skater-anim.js";
 import { createBlend, leanLayers, leanTarget, rollFor, startBlend, stepBlend, stepLean } from "./anim-blend.js";
 import { ikWanted, legBoneNames, planFeet, solveTwoBone, stepIkWeight } from "./foot-ik.js";
 import { leanClip, restFrom } from "./lean-clip.js";
@@ -293,6 +293,28 @@ export function createSkaterView({ lean: leanOn = true, footIk = false, sampleGr
     place(state) {
       group.position.set(state.position[0], state.position[1], state.position[2]);
       group.rotation.y = state.yaw;
+    },
+    // Puts the view on a new skater at once (#231): a respawn or a fast
+    // travel. The group gets the state position and heading, with no lean.
+    // The model gets the clip and the facing of the new state, with no fade
+    // and no turn from the old facing. The pose is applied at once, so it is
+    // correct also while the render is paused (the Autopilot).
+    respawn(state) {
+      group.position.set(state.position[0], state.position[1], state.position[2]);
+      group.rotation.set(0, state.yaw, 0, "YXZ");
+      lean = 0;
+      anim = respawnAnim(state);
+      facing = anim.facing;
+      pivot.rotation.y = facing;
+      if (!mixer) return;
+      restoreBones();
+      ikWeight = 0;
+      blend = null;
+      current = null;
+      enter(anim.clip, 0);
+      applyWeights();
+      applyLean();
+      mixer.update(0);
     },
     // beat: optional { time, bpm } from the game beat clock. Without it the
     // view counts its own time at the default BPM.

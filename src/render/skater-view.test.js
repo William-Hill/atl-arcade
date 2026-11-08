@@ -11,6 +11,29 @@ describe("place (#189)", () => {
   });
 });
 
+// The spawn state of a new run: standing, speed 0, the first tick.
+const spawn = (yaw) => ({ state: "rolling", speed: 0, yaw, position: [337, 24, -1.3], tick: 0, backward: false, style: null });
+const FIVE_DEG = (5 * Math.PI) / 180;
+
+describe("respawn (#231)", () => {
+  it("faces the new heading at once, after a carve on the old heading", () => {
+    const view = createSkaterView();
+    // Ride and carve to the left on the old heading.
+    for (let t = 1; t <= 30; t += 1) view.sync({ state: "rolling", speed: 6, yaw: -2 + t * 0.04, position: [t, 0, 0], tick: t, pushing: true, style: null }, 1 / 60);
+    expect(Math.abs(view.lean)).toBeGreaterThan(0);
+    view.respawn(spawn(1.464));
+    expect(Math.abs(view.group.rotation.y - 1.464)).toBeLessThan(FIVE_DEG);
+    expect(view.group.rotation.x).toBe(0);
+    expect(view.group.rotation.z).toBe(0);
+    expect(view.lean).toBe(0);
+    expect(view.group.position.toArray()).toEqual([337, 24, -1.3]);
+    // The next frame measures no turn from the old heading.
+    view.sync(spawn(1.464), 1 / 60);
+    expect(Math.abs(view.group.rotation.y - 1.464)).toBeLessThan(FIVE_DEG);
+    expect(Math.abs(view.lean)).toBeLessThan(1e-6);
+  });
+});
+
 // Axes: yaw 0 faces +x and positive yaw turns left (toward -z), so +z is the
 // skater's right. A positive balance makes the skater fall off the right.
 function upAfterLean(balance) {

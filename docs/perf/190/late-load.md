@@ -64,7 +64,18 @@ The same within the noise of the ride: the scene at the end of the ride is the s
 
 `node scripts/late-load-look.mjs --tiers high,phone` takes 3 fixed views (the mural nearest the spawn, the trail, a street) after every late group has loaded, with the deferral and with `?lateload=0`, and a second default run for the noise. The pictures are in `look/`.
 
-LOOK_RESULTS
+Mean pixel difference (0 to 255) and the share of pixels that differ by more than 24:
+
+| Tier | View | Late vs `?lateload=0` | Late vs late (noise) |
+|---|---|---|---|
+| phone pbr | mural | 0.00 (0.00%) | 0.00 (0.00%) |
+| phone pbr | trail | 0.00 (0.00%) | 0.00 (0.00%) |
+| phone pbr | street | 0.00 (0.00%) | 0.00 (0.00%) |
+| high pbr | mural | 1.08 (1.14%) | 4.35 (7.78%) |
+| high pbr | trail | 0.90 (0.13%) | 2.06 (0.95%) |
+| high pbr | street | 0.20 (0.01%) | 1.11 (1.55%) |
+
+Phone pbr gives the same pixels. On high pbr, the difference is smaller than the difference between two runs of the same build (the clouds of the high sky move). So once everything has loaded, the look does not change.
 
 ## Tried and rejected: compile the shaders while the physics builds
 

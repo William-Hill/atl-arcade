@@ -54,6 +54,7 @@ async function aimAt(page, what, [x, z], { dist = 5.5, height = 1.7, side = 1.5,
       const list = window.__atl.peds.list;
       const ok = {
         sit: (w) => w.goal === "bench" && w.leg === "stay",
+        bench: (w) => w.goal === "bench" && w.leg === "stay",
         bus: (w) => w.goal === "bus" && w.leg === "stay",
         shop: (w) => w.goal === "shop" && w.leg === "stay",
         talk: (w) => w.pose === 3,
@@ -118,7 +119,7 @@ test.describe("walker activities, desktop (#133)", () => {
   test.setTimeout(900000);
 
   for (const look of ["pbr", "toon"]) {
-    test(`sit on a bench, wait at a bus stop, stop at a shop, and talk (${look})`, async ({ page }) => {
+    test(`talk and stop at a shop door at Krog Street Market (${look})`, async ({ page }) => {
       const errors = collectErrors(page);
       await open(page, `quality=high&look=${look}`);
       // Three kinds of activity besides a walk, in one pool, after a short time.
@@ -135,14 +136,24 @@ test.describe("walker activities, desktop (#133)", () => {
       await shoot(page, `talk-krog-${look}`);
       expect(await findAtPlace(page, "shop", KROG, { dist: -4, side: 3 }), "a stop at a shop door near Krog Street Market").not.toBeNull();
       await shoot(page, `shop-krog-${look}`);
+      expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+    });
 
+    test(`sit on a bench by the trail (${look})`, async ({ page }) => {
+      const errors = collectErrors(page);
+      await open(page, `quality=high&look=${look}`);
       await visit(page, SPAWN);
-      const sit = await find(page, "sit", SPAWN, { dist: 3.5, height: 1.4, side: 1 });
+      const sit = (await find(page, "sit", SPAWN, { dist: 3.5, height: 1.4, side: 1 })) ?? (await findAtPlace(page, "bench", SPAWN, { dist: 3.5, height: 1.4, side: 1 }));
       expect(sit, "a walker on a bench by the trail").not.toBeNull();
       await shoot(page, `sit-trail-${look}`);
       // Seated (POSE.sit).
       expect(sit.pose).toBe(1);
+      expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+    });
 
+    test(`wait at a bus stop (${look})`, async ({ page }) => {
+      const errors = collectErrors(page);
+      await open(page, `quality=high&look=${look}`);
       expect(await findAtPlace(page, "bus", PCM, { dist: 4.5, side: 2 }), "a walker at a bus stop").not.toBeNull();
       await shoot(page, `bus-${look}`);
       expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);

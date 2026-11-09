@@ -128,3 +128,44 @@ for (const name of SKATERS) {
     expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
   });
 }
+
+// Review of #232: a respawn in the sim (the skater falls under the level
+// floor) puts the view on the spawn at once, as resetSkater() does. The
+// carve lean of the old run does not carry over.
+test("nia: a fall out of the level respawns the view at once (review of #232)", async ({ page }) => {
+  test.setTimeout(90000);
+  const errors = collectErrors(page);
+  await page.goto(`/?level=greybox&mute=1&skater=nia`);
+  await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
+  await page.waitForTimeout(500);
+  const keys = await page.evaluate(() => window.__atl.input.bindings.keyboard);
+  await page.keyboard.down(keys.push[0]);
+  await page.keyboard.down(keys.left[0]);
+  await page.waitForTimeout(1500);
+  await page.keyboard.up(keys.push[0]);
+  await page.keyboard.up(keys.left[0]);
+  const after = await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const a = window.__atl;
+        const lean = a.skaterModel.lean;
+        const seen = a.events.filter((e) => e.type === "respawn").length;
+        // Drop the skater under the fall floor: the next sim step respawns it.
+        a.skater.position[1] = -50;
+        const check = () => {
+          if (a.events.filter((e) => e.type === "respawn").length > seen) {
+            // This frame ran the respawn step and the view sync.
+            resolve({ before: lean, lean: a.skaterModel.lean, clip: a.skaterModel.clip, yaw: a.skater.yaw, rotation: a.skaterRotation });
+            return;
+          }
+          requestAnimationFrame(check);
+        };
+        requestAnimationFrame(check);
+      }),
+  );
+  expect(Math.abs(after.before)).toBeGreaterThan(0.02);
+  expect(Math.abs(after.lean)).toBeLessThan(0.01);
+  expect(after.clip).toBe("idle");
+  expect(Math.abs(wrap(after.rotation.y - after.yaw))).toBeLessThan(FIVE_DEG);
+  expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+});

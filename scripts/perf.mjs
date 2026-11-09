@@ -29,7 +29,7 @@ import { preview } from "vite";
 import { chromium } from "@playwright/test";
 import { chainStrips, followLineScript } from "../src/playtest/trail-script.js";
 import { createLevelEnv } from "../src/level/ground.js";
-import { checkBudget, classifyUrl, frameStats, renderMarkdown, spliceMarkdown } from "./perf-lib.mjs";
+import { checkBudget, classifyUrl, firstFrameMB, frameStats, renderMarkdown, spliceMarkdown } from "./perf-lib.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const args = process.argv.slice(2);
@@ -110,6 +110,9 @@ async function oneRun(quality, look, n) {
   // frame does not step the tier down during the ride.
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
+  // The default resource timing buffer keeps 250 entries; the high pbr run
+  // asks for about 310 files, so the late ones had no start time (#190).
+  await page.addInitScript(() => performance.setResourceTimingBufferSize(2000));
   const cdp = await ctx.newCDPSession(page);
   await cdp.send("Network.enable");
   await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
@@ -170,6 +173,10 @@ async function oneRun(quality, look, n) {
     requests += 1;
   }
   const total = Object.values(bytes).reduce((a, b) => a + b, 0);
+  const files = [...reqs.values()]
+    .filter((r) => r.bytes != null && !r.url.startsWith("data:"))
+    .map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024), startMs: started.get(r.url) ?? null }))
+    .sort((a, b) => b.kB - a.kB);
   const row = {
     quality,
     look,
@@ -191,10 +198,11 @@ async function oneRun(quality, look, n) {
     systems: data.perf.systems,
     top: [...reqs.values()].filter((r) => r.bytes != null).sort((a, b) => b.bytes - a.bytes).slice(0, 8).map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024) })),
     // Every file (bytes on the wire) and when it started, from the navigation (#190).
-    files: [...reqs.values()]
-      .filter((r) => r.bytes != null && !r.url.startsWith("data:"))
-      .map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024), startMs: started.get(r.url) ?? null }))
-      .sort((a, b) => b.kB - a.kB),
+    files,
+    // The MB asked for before the first frame (#190).
+    firstDownloadMB: firstFrameMB(files, firstFrameMs),
+    // The late downloads of the game (src/render/late-load.js).
+    lateLoads: await page.evaluate(() => window.__atl.lateLoads ?? null),
     perfFrames: data.perf.frames,
     // The last frame's draw calls by pass and object kind (#188).
     drawSplit: data.drawSplit,
@@ -238,7 +246,7 @@ try {
         save();
         const s = row.systems;
         console.log(
-          `${quality.padEnd(5)} ${look.padEnd(4)} mean ${row.frame.meanMs} ms, p95 ${row.frame.p95Ms} ms, ${row.calls} calls, ${row.triangles} tris, heap ${row.heapMB} MB, first frame ${row.firstFrameMs} ms, ${row.downloadMB.total} MB` +
+          `${quality.padEnd(5)} ${look.padEnd(4)} mean ${row.frame.meanMs} ms, p95 ${row.frame.p95Ms} ms, ${row.calls} calls, ${row.triangles} tris, heap ${row.heapMB} MB, first frame ${row.firstFrameMs} ms, ${row.downloadMB.total} MB (${row.firstDownloadMB} MB before the first frame)` +
             ` | render ${s.render?.meanMs} ms, walkers ${s.walkers?.meanMs}+${s.walkersView?.meanMs}, traffic ${s.traffic?.meanMs}+${s.trafficView?.meanMs}, npc ${s.npcSkaters?.meanMs}+${s.npcSkatersView?.meanMs} (load ${row.load})`,
         );
       }

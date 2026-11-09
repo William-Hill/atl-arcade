@@ -12,6 +12,39 @@ export function classifyUrl(url, mime = "") {
   return "other";
 }
 
+// Pure: the MB of the files asked for before the first frame (#190). A file
+// with no start time (the page itself) counts as before.
+export function firstFrameMB(files, firstFrameMs) {
+  if (!files || firstFrameMs == null) return null;
+  const kB = files.filter((f) => f.startMs == null || f.startMs < firstFrameMs).reduce((s, f) => s + f.kB, 0);
+  return Math.round((kB / 1024) * 100) / 100;
+}
+
+// The pbr download groups (#190), by the file name without its build hash.
+// The order matters: the first match wins.
+export const DOWNLOAD_GROUPS = [
+  ["skater", /\/skater(-1024)?[-.]/],
+  ["physics", /rapier/],
+  ["cars", /\/(vehicles_lod|sedan|taxi|van|bus|box_truck|hatchback|pickup|city_bike|e_scooter)[-.]/],
+  ["people", /\/(jogger|cyclist|dog_walker|dog|elder_polo|stroller_dad|stroller|walker_sundress|runner|commuter|[a-z_]*walker[a-z_]*)(_v\d+)?(-[^/]*)?\.(glb|jpe?g|webp)$/],
+  ["meshy props", /\/(drinking_fountain|food_cart|sculpture_ribbon|picnic_table|bike_dock|patio_umbrella|bollard)[-.]/],
+  ["landmark GLBs", /\/(ponce-city-market|telephone-factory-lofts|studioplex|new-realm-brewing|bridge-[a-z-]+|[a-z-]+-lofts)[-.][^/]*glb/],
+  ["street kit", /\/(street-kit|painted_wooden_bench)[-.]/],
+  ["GLB trees", /\/(oak|magnolia|dogwood|myrtle|pine|street)[-.][^/]*glb/],
+  ["facade kit", /\/facade-kit[-.]/],
+  ["murals", /\/mural-(atlas|roughness)[-.]/],
+  ["pbr ground", /\/(albedo|normal|orm)-(512|1024)[-.]/],
+  ["js", /\.m?js$/],
+  ["wasm", /\.wasm$/],
+];
+
+// Pure: the group of a file (DOWNLOAD_GROUPS), or "other".
+export function downloadGroupOf(file) {
+  const path = String(file).split(/[?#]/)[0];
+  for (const [name, re] of DOWNLOAD_GROUPS) if (re.test(path)) return name;
+  return "other";
+}
+
 function percentile(sorted, p) {
   if (sorted.length === 0) return null;
   return sorted[Math.min(sorted.length - 1, Math.floor((sorted.length - 1) * p))];
@@ -46,6 +79,7 @@ export const METRICS = {
   meanMs: (r) => r.frame.meanMs,
   p95Ms: (r) => r.frame.p95Ms,
   firstFrameMs: (r) => r.firstFrameMs,
+  firstDownloadMB: (r) => r.firstDownloadMB ?? firstFrameMB(r.files, r.firstFrameMs),
 };
 
 // Pure: the list of "tier/look metric value > cap" lines. The budget is
@@ -96,6 +130,7 @@ export function mergeRuns(runs) {
       textures: mid(g.map((r) => r.textures)),
       heapMB: mid(g.map((r) => r.heapMB)),
       firstFrameMs: mid(g.map((r) => r.firstFrameMs)),
+      firstDownloadMB: mid(g.map((r) => METRICS.firstDownloadMB(r))),
       stepsPerFrame: mid(g.map((r) => r.stepsPerFrame)),
       downloadMB: Object.fromEntries(Object.keys(g[0].downloadMB).map((k) => [k, mid(g.map((r) => r.downloadMB[k]))])),
       systems,
@@ -115,11 +150,11 @@ export function renderMarkdown(result) {
   lines.push("");
   lines.push("Download (MB on the wire, gzip as the host serves it):");
   lines.push("");
-  lines.push("| Tier | Look | JS | GLB | Textures | WASM | Data | Other | Total |");
-  lines.push("|---|---|---|---|---|---|---|---|---|");
+  lines.push("| Tier | Look | JS | GLB | Textures | WASM | Data | Other | Total | Before first frame |");
+  lines.push("|---|---|---|---|---|---|---|---|---|---|");
   for (const r of rows) {
     const d = r.downloadMB;
-    lines.push(`| ${r.quality} | ${r.look} | ${d.js} | ${d.glb} | ${d.textures} | ${d.wasm} | ${d.data} | ${d.other} | ${d.total} |`);
+    lines.push(`| ${r.quality} | ${r.look} | ${d.js} | ${d.glb} | ${d.textures} | ${d.wasm} | ${d.data} | ${d.other} | ${d.total} | ${r.firstDownloadMB ?? "-"} |`);
   }
   lines.push("");
   lines.push("Cost by system (`?perf=1`, CPU ms on the main thread). A sim system (skater, walkers, crowd, traffic, NPC skaters) runs once per 1/60 s step; the table gives its cost per step, which is its cost per frame at 60 FPS. A view or the render runs once per frame; the table gives the mean per frame. `render` is the CPU side of `renderer.render` only: the software GPU works in another process.");

@@ -83,6 +83,7 @@ export function createRain({ count = 1800 } = {}) {
       }`,
   });
   const mesh = new THREE.Mesh(geo, material);
+  mesh.name = "rain";
   mesh.frustumCulled = false;
   mesh.renderOrder = 900;
   return {

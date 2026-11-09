@@ -1,0 +1,78 @@
+{
+  "date": "2026-11-09T06:50:40.789Z",
+  "maxBoost": 5.165369448787765,
+  "shakeSeq": 1,
+  "info": {
+    "camera": {
+      "fovBoost": 0,
+      "fov": 60,
+      "shake": {
+        "t": 0,
+        "amp": 0,
+        "seq": 1,
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "sfx": {
+      "bonk": 1,
+      "land": 0,
+      "scrapeTicks": 0,
+      "played": 1,
+      "last": {
+        "kind": "bonk",
+        "gain": 0.6,
+        "freq": 85,
+        "length": 0.22,
+        "knock": 0.2
+      },
+      "running": true,
+      "muted": false
+    },
+    "effects": {
+      "bonk": 1,
+      "land": 0,
+      "grind": 0,
+      "beat": 0,
+      "dust": 0,
+      "sparks": 0
+    }
+  },
+  "fx": {
+    "lines": 0,
+    "spikes": 0,
+    "bursts": 0,
+    "impacts": 1,
+    "triggers": {
+      "bonk": 1,
+      "land": 0,
+      "grind": 0,
+      "beat": 0,
+      "dust": 0,
+      "sparks": 0
+    },
+    "draws": 0,
+    "enabled": true,
+    "reducedMotion": false,
+    "policy": {
+      "lines": 10,
+      "impact": 2,
+      "spikes": 10,
+      "burst": {
+        "star": false,
+        "ring": true,
+        "core": false
+      },
+      "dust": 4,
+      "sparks": 2,
+      "enabled": true
+    },
+    "speed": 0,
+    "impactFrames": 0,
+    "visible": {
+      "screen": false,
+      "bursts": false
+    }
+  }
+}

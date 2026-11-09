@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-08T05:56:02.852Z",
+  "date": "2026-11-09T06:32:51.663Z",
   "rows": [
     {
       "quality": "low",
@@ -17,6 +17,8 @@
         "impact": 0,
         "spikes": 0,
         "burst": null,
+        "dust": 0,
+        "sparks": 0,
         "enabled": false
       },
       "lines": 0,
@@ -43,6 +45,8 @@
           "ring": true,
           "core": false
         },
+        "dust": 4,
+        "sparks": 2,
         "enabled": true
       },
       "lines": 10,
@@ -69,6 +73,8 @@
           "ring": true,
           "core": false
         },
+        "dust": 4,
+        "sparks": 2,
         "enabled": true
       },
       "lines": 10,
@@ -95,6 +101,8 @@
           "ring": true,
           "core": true
         },
+        "dust": 7,
+        "sparks": 3,
         "enabled": true
       },
       "lines": 18,
@@ -121,6 +129,8 @@
           "ring": true,
           "core": true
         },
+        "dust": 7,
+        "sparks": 3,
         "enabled": true
       },
       "lines": 18,

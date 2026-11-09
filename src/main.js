@@ -63,7 +63,7 @@ import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
 import { createNpcView, NPC_DRAW_DISTANCE } from "./render/npc-view.js";
-import { PED_RADIUS, createPeds, pedCount, pedMinGap, stepPeds } from "./sim/peds.js";
+import { PED_RADIUS, createPeds, pedActivities, pedCount, pedMinGap, stepPeds } from "./sim/peds.js";
 import { createPedsView } from "./render/peds-view.js";
 import { createPedModels, PED_MODEL_COUNT } from "./render/ped-models.js";
 import { createMeshyPropsView } from "./render/people-props-view.js";
@@ -406,6 +406,8 @@ const pedsOn = geo && pedTotal > 0;
 const pedHeight = pedsOn ? streetHeightSampler(createGeoGroundSampler({ ...level, buildings: [] }), (x, z) => (levelTerrain && !levelTerrain.flat ? levelTerrain.height(x, z) : 0)) : null;
 const makePeds = () => createPeds(level, { seed: npcSeed, count: pedTotal, radius: PED_RADIUS[quality], heightAt: pedHeight, props: env.props });
 let peds = pedsOn ? makePeds() : null;
+// Combo points for the walker cheer on the next step, from __atl.peds.cheer().
+let pedCheer = 0;
 const pedsView = peds ? createPedsView(peds, { look }) : null;
 if (pedsView) scene.add(pedsView.group);
 // The Meshy people (assets/people/) for the walkers, pbr look only: rigged
@@ -795,7 +797,8 @@ function simulate(dt) {
   if (traffic) traffic = stepTraffic(traffic, dt, skater.position, { focus: [camera.position.x, camera.position.z] });
   perf.end("traffic");
   perf.begin("walkers");
-  if (peds) stepPeds(peds, dt, { focus: [camera.position.x, camera.position.z], nia: skater.position, others: [...(crowd ? crowd.npcs : []), ...(npcSkaters ? skaterObstacles(npcSkaters) : [])] });
+  if (peds) stepPeds(peds, dt, { focus: [camera.position.x, camera.position.z], nia: skater.position, others: [...(crowd ? crowd.npcs : []), ...(npcSkaters ? skaterObstacles(npcSkaters) : [])], banked: run.banked + pedCheer });
+  pedCheer = 0;
   perf.end("walkers");
   perf.begin("npcSkaters");
   if (npcSkaters) npcSkaters = stepNpcSkaters(npcSkaters, dt, env, skaterEnv, { player: skater.position, crowd: crowd ? crowd.npcs : [], focus: [camera.position.x, camera.position.z], beat: beat.running ? { time: beat.now(), bpm: beat.bpm } : null });
@@ -1310,7 +1313,22 @@ window.__atl = {
           return pedsView.triangles;
         },
         get list() {
-          return peds.peds.filter((p) => p.live).map((p) => ({ id: p.id, kind: peds.routes[p.route].kind, x: p.x, y: p.y, z: p.z, speed: p.speed, phase: p.phase }));
+          return peds.peds.filter((p) => p.live).map((p) => ({ id: p.id, kind: peds.routes[p.route].kind, x: p.x, y: p.y, z: p.z, speed: p.speed, phase: p.phase, pose: p.pose, role: p.role, goal: p.goal?.kind ?? null, leg: p.leg, fx: p.fx, fz: p.fz }));
+        },
+        // What the walkers do (#133): counts by activity, the cheers so far,
+        // and the places (bench seats, bus stop and shop door slots).
+        get activities() {
+          return pedActivities(peds);
+        },
+        get cheers() {
+          return peds.cheers;
+        },
+        // A banked combo of `points` for the walker cheer, as if Nia banked it.
+        cheer(points) {
+          pedCheer = points;
+        },
+        get places() {
+          return peds.places.list.map((p) => ({ id: p.id, kind: p.kind, x: p.x, z: p.z, user: p.user }));
         },
       }
     : null,

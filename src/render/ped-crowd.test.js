@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { CROWD_FRAMES, bakePose, createPedCrowd, crowdFrame, crowdGrow, crowdLod, staticMeshes } from "./ped-crowd.js";
+import { CROWD_FRAMES, CROWD_POSE, bakePose, createPedCrowd, crowdFrame, crowdGrow, crowdLod, staticMeshes } from "./ped-crowd.js";
+import { POSE } from "../sim/ped-activity.js";
 
 // A two-bone strip: the lower vertices follow bone 0, the upper ones bone 1.
 function strip() {
@@ -32,6 +33,14 @@ describe("the baked walker crowd", () => {
     expect(crowdFrame(Math.PI * 2 - 1e-6, 1.2)).toBe(CROWD_FRAMES - 1);
     expect(crowdFrame(1, 0.05)).toBe(CROWD_FRAMES);
     expect(crowdFrame(1, NaN)).toBe(CROWD_FRAMES);
+  });
+
+  it("picks the seat, the cheer and the idle pose for a pose (#133); a jog walks", () => {
+    expect(crowdFrame(1, 0, CROWD_FRAMES, POSE.sit)).toBe(CROWD_FRAMES + CROWD_POSE.sit);
+    expect(crowdFrame(1, 0, CROWD_FRAMES, POSE.cheer)).toBe(CROWD_FRAMES + CROWD_POSE.cheer);
+    expect(crowdFrame(1, 0, CROWD_FRAMES, POSE.talk)).toBe(CROWD_FRAMES + CROWD_POSE.idle);
+    expect(crowdFrame(Math.PI, 2.8, CROWD_FRAMES, POSE.jog)).toBe(CROWD_FRAMES / 2);
+    expect(crowdFrame(Math.PI, 1.2, CROWD_FRAMES, POSE.walk)).toBe(CROWD_FRAMES / 2);
   });
 
   it("grows the walkers in over the outer band of the pool", () => {

@@ -3,6 +3,7 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { litMaterial } from "./look.js";
 import { clampToClass } from "./pbr-palette.js";
 import { F, pedLook, lookKey } from "./ped-look.js";
+import { POSE } from "../sim/ped-activity.js";
 
 // Three.js view of the walkers from src/sim/peds.js, the gen-city way: one
 // part-packed figure in one instanced mesh (one draw call), and the walk
@@ -16,8 +17,10 @@ import { F, pedLook, lookKey } from "./ped-look.js";
 //
 // The figure faces +x, like the skater and the crowd, and stands on y = 0.
 
-// The joints (m above the ground) and the swing of a walk cycle (rad).
-export const WALK = { hip: 0.86, shoulder: 1.42, leg: 0.45, arm: 0.4, bob: 0.035 };
+// The joints (m above the ground) and the swing of a walk cycle (rad). A
+// seated walker (#133) has its hip at `seat` and its shins down from the
+// knee.
+export const WALK = { hip: 0.86, knee: 0.46, shoulder: 1.42, leg: 0.45, arm: 0.4, bob: 0.035, seat: 0.47, jog: 1.4 };
 // The top of the head of the figure at scale 1 (m). The instance scale is
 // the walker height over this.
 export const HEAD_TOP = WALK.shoulder + 0.22 + 0.13;
@@ -27,9 +30,12 @@ export const HEAD_TOP = WALK.shoulder + 0.22 + 0.13;
 const CH = { fixed: 0, shirt: 1, pants: 2, skin: 3, hair: 4, accent: 5, shoe: 6, sleeve: 7 };
 
 // The swing channels: [leg side, arm side, joint height]. A leg swings with
-// its side, an arm against the leg on its side.
+// its side, an arm against the leg on its side. A part under the knee has a
+// negative joint height: it swings at the hip in a walk and hangs from the
+// knee in a seat.
 const BODY = [0, 0, 0];
 const leg = (side) => [side, 0, WALK.hip];
+const shin = (side) => [side, 0, -WALK.hip];
 const arm = (side) => [0, side, WALK.shoulder];
 
 // pedInfo.x is PED_MARK + the channel: a mesh without the ped attributes
@@ -73,13 +79,14 @@ export function pedGeometry() {
   const p = [];
   for (const side of [-1, 1]) {
     const sw = leg(side);
+    const lo = shin(side);
     const z = side * 0.1;
     // The thigh, the shin (skin under shorts and skirts), the long pants
     // over the shin, and the shoe.
     p.push(part(box(0.15, 0.42, 0.16), { ch: CH.pants, swing: sw, at: [0, hip - 0.21, z] }));
-    p.push(part(box(0.11, 0.4, 0.12), { ch: CH.skin, swing: sw, at: [0, 0.27, z] }));
-    p.push(part(box(0.14, 0.41, 0.15), { ch: CH.pants, bit: F.longPants, swing: sw, at: [0, 0.275, z] }));
-    p.push(part(box(0.23, 0.08, 0.13), { color: 0x2b2b2b, ch: CH.shoe, swing: sw, at: [0.04, 0.04, z] }));
+    p.push(part(box(0.11, 0.4, 0.12), { ch: CH.skin, swing: lo, at: [0, 0.27, z] }));
+    p.push(part(box(0.14, 0.41, 0.15), { ch: CH.pants, bit: F.longPants, swing: lo, at: [0, 0.275, z] }));
+    p.push(part(box(0.23, 0.08, 0.13), { color: 0x2b2b2b, ch: CH.shoe, swing: lo, at: [0.04, 0.04, z] }));
   }
   // The skirt (or the skirt of a dress), from the waist to the knee.
   p.push(part(new THREE.CylinderGeometry(0.2, 0.27, 0.44, 8), { ch: CH.pants, bit: F.skirt, at: [0, hip - 0.12, 0], scale: [0.85, 1, 1.15] }));
@@ -125,16 +132,20 @@ export function pedGeometry() {
   return g;
 }
 
-// The walk in the vertex shader. pedAnim = (phase, stride, genes): the phase
-// advances with the distance walked (src/sim/peds.js), the stride (0..1) is
-// how far the limbs swing (0 standing), and the genes are the feature bits.
+// The walk in the vertex shader. pedAnim = (phase, stride, genes, pose): the
+// phase advances with the distance walked (src/sim/peds.js), the stride
+// (0..WALK.jog) is how far the limbs swing (0 standing), the genes are the
+// feature bits, and the pose is POSE (src/sim/ped-activity.js): a seat
+// (thighs forward, shins down, the hip at the seat), a cheer (both arms up
+// and waving, a small hop), or a talk (one hand moves). In a pose the phase
+// is the clock of the wave or the hand.
 // A part turns about its joint on the z axis (the figure faces +x), so the
 // normal turns too. A part whose bit is off folds to one point and draws
 // nothing.
 const WALK_GLSL = /* glsl */ `
 attribute vec3 pedPart;
 attribute vec2 pedInfo;
-attribute vec3 pedAnim;
+attribute vec4 pedAnim;
 vec3 pedTurn(vec3 v, float a) {
   float c = cos(a);
   float s = sin(a);
@@ -157,9 +168,16 @@ export function patchPedVertex(shader) {
         `bool pedIs = pedInfo.x > ${(PED_MARK - 0.5).toFixed(1)};
 float pedSwing = pedIs ? sin(pedAnim.x) * pedAnim.y : 0.0;
 float pedA = (pedPart.x * ${WALK.leg.toFixed(3)} - pedPart.y * ${WALK.arm.toFixed(3)}) * pedSwing;
+int pedPose = pedIs ? int(pedAnim.w + 0.5) : 0;
+bool pedSit = pedPose == ${POSE.sit} && pedPart.x != 0.0;
+if (pedSit) pedA = 1.5708;
+if (pedIs && pedPose == ${POSE.cheer} && pedPart.y != 0.0) pedA = 2.75 + 0.25 * sin(pedAnim.x + pedPart.y);
+if (pedIs && pedPose == ${POSE.talk} && pedPart.y > 0.0) pedA = 0.75 + 0.3 * sin(pedAnim.x * 2.0);
+// A seated shin hangs straight down: it does not turn.
+float pedN = pedSit && pedPart.z < 0.0 ? 0.0 : pedA;
 int pedBit = int(pedInfo.y + 0.5) - 1;
 bool pedOn = !pedIs || pedBit < 0 || pedGene(pedBit);
-vec3 objectNormal = pedTurn(vec3(normal), pedA);
+vec3 objectNormal = pedTurn(vec3(normal), pedN);
 #ifdef USE_TANGENT
 vec3 objectTangent = vec3(tangent.xyz);
 #endif`,
@@ -167,11 +185,17 @@ vec3 objectTangent = vec3(tangent.xyz);
       .replace(
         "#include <begin_vertex>",
         `vec3 transformed = vec3(position);
-if (pedIs && pedPart.z > 0.0) {
-  transformed.y -= pedPart.z;
+if (pedSit && pedPart.z < 0.0) {
+  // The thigh turned the knee forward to the hip height.
+  transformed.xy += vec2(${(WALK.hip - WALK.knee).toFixed(3)});
+} else if (pedIs && pedPart.z != 0.0) {
+  float pedJ = abs(pedPart.z);
+  transformed.y -= pedJ;
   transformed = pedTurn(transformed, pedA);
-  transformed.y += pedPart.z;
+  transformed.y += pedJ;
 }
+if (pedIs && pedPose == ${POSE.sit}) transformed += vec3(-0.12, ${(WALK.seat - WALK.hip).toFixed(3)}, 0.0);
+if (pedIs && pedPose == ${POSE.cheer}) transformed.y += 0.05 * abs(sin(pedAnim.x));
 // The body is highest when the legs pass each other.
 if (pedIs) transformed.y += ${WALK.bob.toFixed(3)} * pedAnim.y * (abs(cos(pedAnim.x)) - 0.5);
 #ifdef USE_ALPHAHASH
@@ -219,7 +243,7 @@ else if (pedCh == ${CH.shoe}) vColor.rgb = pedGene(${F.shoeWhite}) ? vec3(0.86, 
 else if (pedCh == ${CH.sleeve}) vColor.rgb = pedGene(${F.jacket}) ? pedAccent : pedShirt;${pbr ? `\nvPedSkin = pedCh == ${CH.skin} ? 1.0 : 0.0;` : ""}`,
       );
   };
-  mat.customProgramCacheKey = () => `peds-v3-${look}`;
+  mat.customProgramCacheKey = () => `peds-v4-${look}`;
   return mat;
 }
 
@@ -234,6 +258,15 @@ function rampTexture() {
 }
 
 export { pedLook };
+
+// Pure: how far the limbs of walker `w` swing (0 standing, 1 a walk, up to
+// WALK.jog for a jog). A pose (a seat, a cheer, a talk) does not swing.
+export function pedStride(w) {
+  const pose = w.pose ?? POSE.walk;
+  if (pose === POSE.jog) return Math.min(WALK.jog, w.speed / 2);
+  if (pose !== POSE.walk) return 0;
+  return Math.min(1, w.speed / 1.1);
+}
 
 // Builds the mesh for a pool of walkers. sync(state) packs the live walkers
 // into its instances. Call it once a frame.
@@ -261,7 +294,7 @@ export function createPedsView(state, { look = "toon" } = {}) {
   const pantsAttr = attr("pedPants", 3);
   const hairAttr = attr("pedHair", 3);
   const accentAttr = attr("pedAccent", 3);
-  const animAttr = attr("pedAnim", 3);
+  const animAttr = attr("pedAnim", 4);
   mesh.count = 0;
   group.add(mesh);
   const meshes = [mesh];
@@ -333,7 +366,7 @@ export function createPedsView(state, { look = "toon" } = {}) {
         put(pantsAttr, k, l.pantsC);
         put(hairAttr, k, l.hairC);
         put(accentAttr, k, l.accentC);
-        animAttr.setXYZ(k, w.phase, Math.min(1, w.speed / 1.1), l.genes);
+        animAttr.setXYZW(k, w.phase, pedStride(w), l.genes, w.pose ?? POSE.walk);
       }
       mesh.instanceMatrix.needsUpdate = true;
       mesh.instanceColor.needsUpdate = true;

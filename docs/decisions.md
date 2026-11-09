@@ -2006,6 +2006,17 @@ The Autopilot playtest of `5514c62` (`reports/autopilot/playtest-2026-11-08-repo
 
 **Evidence.** `src/level/edge-fence.test.js` (6 new tests). `e2e/edge-fence.spec.js`, "the follow camera stays inside the east edge fence": Nia stands 1.5 m from the east fence and faces west. With no fence test the camera reaches x = 487.25 m, 4.94 m past the face at 482.31 m. With the test, every camera sample stays inside. `e2e/__screenshots__/edge-fence-camera-after.png`.
 
+## 2026-11-09 — The pbr street kit, GLB trees, murals and ground maps load after the first frame (#190)
+
+PR #226 moved the cars, the Meshy people and props, the landmark GLBs and the NPC-only skater after the first frame. The per-file list (`docs/perf/190/pbr-downloads.md`) showed four more pbr groups that loaded before the first frame but are not in it: the GLB trees and the street kit (the pbr prop batch already waited for the first frame; only the download came first), the painted mural atlas, and the pbr ground maps.
+
+- **Decision: these four groups start after the first frame on the pbr look.** `src/render/late-load.js` (pure, tested) holds the plan and the gate, and records when each group starts and ends (`__atl.lateLoads`). Until a group arrives, the fallback is the one the code already had: no prop batch, the host wall in place of a mural (the dry-brush cut reads 0), and the mean scan color on the ground. `?lateload=0` loads them at once. The toon look does not change.
+- **Result** (SwiftShader, 2 runs per row, `docs/perf/190/late-load.md`): the MB asked for before the first frame go from 6.74 to 4.33 (low pbr), 6.31 to 3.90 (phone pbr) and 8.57 to 4.54 (high pbr). The total download, draw calls and triangles do not change. On an emulated 1.6 Mbps link the first frame comes 5.7 s (phone pbr, 25.8 → 20.1 s) and 10.1 s (high pbr, 33.3 → 23.1 s) sooner. On localhost and on Fast 4G the first frame is CPU-bound on this machine and does not change beyond the noise.
+- **The budget caps the new number.** `perf.mjs` writes `firstDownloadMB`; `docs/perf/budget.json` caps it on the pbr look (low 4.8, phone 4.3, high 5.0 MB). The resource timing buffer of `perf.mjs` and `load-check.mjs` is now 2000 entries: the default of 250 lost the start times of the late files on high pbr.
+- **A deferred props load waits up to 120 s for each GLB** (`LATE_PROP_TIMEOUT_MS`), not 15 s. With the 15 s limit, on a 1.6 Mbps link every GLB tree missed it after the first frame (the cars, people and landmarks share the link) and the procedural trees stayed. The base build lost 2 of 6 species there too. Nothing in the first frame waits for the props, so the longer limit costs no time.
+- **Kept before the first frame**: the facade kit on high (it is on the walls near the spawn, and the view waits up to 3 s for it), the img2threejs landmark towers and the wall detail maps (both looks, small).
+- **Rejected**: a shader compile with `compileAsync()` while the physics builds. On SwiftShader (no `KHR_parallel_shader_compile`) it made the high pbr first frame 0.3 to 1.1 s later. A real-GPU run can test it again.
+- **Open**: the 6 s first frame on high pbr is not met on this machine (7.7 s before and 8.0 s after, localhost); the first frame there is the level view build and the first draw, not the downloads. No real GPU, phone, or network run.
 ## 2026-11-09 — Review findings of the PBR epic PRs #232 to #238
 
 The reviews of the PRs that merged into `epic/city-look` on 2026-11-08 left minor findings open. This change examines each finding in the code and fixes it.

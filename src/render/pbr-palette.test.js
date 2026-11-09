@@ -395,6 +395,27 @@ describe("materialAudit", () => {
     expect(a.clean).toBe(false);
   });
 
+  // Review of #235: the audit did not see the shader and line materials.
+  it("puts the shader, raw shader and line materials in the other bucket", () => {
+    const scene = new THREE.Scene();
+    const sky = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.ShaderMaterial());
+    sky.name = "sky";
+    const raw = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.RawShaderMaterial());
+    raw.name = "raw";
+    const line = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial());
+    line.name = "edge";
+    const std = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
+    const basic = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+    basic.name = "lamp";
+    const phong = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshPhongMaterial());
+    scene.add(sky, raw, line, std, basic, phong, new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshToonMaterial()));
+    const a = materialAudit(scene);
+    expect(a.other).toEqual(["ShaderMaterial sky<Scene", "RawShaderMaterial raw<Scene", "LineBasicMaterial edge<Scene"]);
+    expect(a.unlit).toEqual(["lamp<Scene"]);
+    expect(a.legacy).toHaveLength(1);
+    expect(a.toon).toHaveLength(1);
+  });
+
   it("finds the toon swap and the ink hull of a toon skater, and none on a pbr skater", () => {
     const make = () => {
       const root = new THREE.Group();

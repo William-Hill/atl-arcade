@@ -5,8 +5,8 @@ import { expect, test } from "@playwright/test";
 // skaters, the walkers and their Meshy outfits, the crowd, the traffic and
 // the landmark GLBs), walks the whole scene graph with the material audit
 // (materialAudit() in src/render/pbr-palette.js, window.__atl.materials),
-// and fails on a toon material, an ink hull, a toon ramp, or a Lambert or
-// Phong material. On the high tier the skater then goes to each landmark
+// and fails on a toon material, an ink hull, a toon ramp, a Lambert or
+// Phong material, or an unlit or other material type that is not on its list. On the high tier the skater then goes to each landmark
 // GLB, so the pools that fill near the camera (walker kinds, car models)
 // are in the scene, and the audit runs again. A toon control run shows that
 // the audit finds the toon materials.
@@ -22,8 +22,21 @@ const UNLIT_OK = [
   /<fact-card-/, // the fact cards (a UI panel in the world)
   /^skater-shadow</, // the shadow blob of a GLB skater (player and NPC skaters)
   /^skater-blob<Scene$/, // the shadow blob on a tier with no shadow map (phone, low)
-  /impostor/, // the tree impostors (baked)
-  /^lamp|lamp-pool|lamps</, // the street lamp heads and pools (emissive)
+  // The patterns below test the mesh name (the path up to the first "<"),
+  // not a parent name, so a new mesh under one of these groups is not
+  // allowed by accident.
+  /^[\w-]*impostor[\w-]*(<|$)/, // the tree impostors (baked)
+  /^(lamp|lamps|lamp-pool)(<|$)/, // the street lamp heads and pools (emissive)
+];
+
+// The other material types (ShaderMaterial, RawShaderMaterial,
+// LineBasicMaterial, ...) that the pbr look keeps, as "Type mesh<parent".
+// Any other one is a leftover or a new material that needs a decision.
+const OTHER_OK = [
+  /^ShaderMaterial sky<Scene$/, // the sky dome (src/render/sky.js)
+  /^ShaderMaterial rain<Scene$/, // the rain streaks (src/render/rain.js)
+  /^ShaderMaterial fx-(bursts|screen)<Scene$/, // the effects (src/render/effects/effects-view.js)
+  /^LineBasicMaterial debug-colliders<Scene$/, // the collider lines (?debug, hidden by default)
 ];
 
 async function waitLoaded(page) {
@@ -64,6 +77,8 @@ function expectNoToon(audit, where) {
   expect(audit.legacy, `Lambert or Phong materials ${where}`).toEqual([]);
   const odd = audit.unlit.filter((p) => !UNLIT_OK.some((re) => re.test(p)));
   expect(odd, `unlit materials not on the list ${where}`).toEqual([]);
+  const other = audit.other.filter((p) => !OTHER_OK.some((re) => re.test(p)));
+  expect(other, `other material types not on the list ${where}`).toEqual([]);
   expect(audit.counts.MeshToonMaterial ?? 0).toBe(0);
   expect((audit.counts.MeshStandardMaterial ?? 0) + (audit.counts.MeshPhysicalMaterial ?? 0)).toBeGreaterThan(50);
 }
@@ -104,7 +119,10 @@ test("pbr look, high tier: no toon material on the level, the skaters, the peopl
   });
   expect(sites.length).toBeGreaterThan(0);
   for (const [x, z] of sites) {
-    await page.evaluate(([px, pz]) => window.__atl.fastTravel(px, pz), [x, z]);
+    // fastTravel() gives null when no trail, path or street is near: the
+    // audit then does not see the landmark, so the spec fails.
+    const spot = await page.evaluate(([px, pz]) => window.__atl.fastTravel(px, pz), [x, z]);
+    expect(spot, `a fast travel spot near (${Math.round(x)}, ${Math.round(z)})`).not.toBeNull();
     await page.waitForTimeout(3000);
     await settle(page);
     expectNoToon(await page.evaluate(() => window.__atl.materials), `near (${Math.round(x)}, ${Math.round(z)})`);

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { POSE } from "../sim/ped-activity.js";
 
 // The far walkers of the pbr look as the same Meshy people as the near ones
 // (ped-models.js), so a walker no longer turns from a blocky figure into a
@@ -15,9 +16,17 @@ export const CROWD_FRAMES = 8;
 // Under this speed (m/s) a walker shows the idle pose.
 export const CROWD_IDLE_SPEED = 0.15;
 
+// The baked poses after the walk frames: the idle pose, a seat and a cheer
+// (#133), as offsets from `frames`.
+export const CROWD_POSE = { idle: 0, sit: 1, cheer: 2 };
+const POSE_OFFSET = { [POSE.sit]: CROWD_POSE.sit, [POSE.cheer]: CROWD_POSE.cheer, [POSE.talk]: CROWD_POSE.idle };
+
 // Pure: the pose index of a walker: 0..frames-1 for the walk (from its
-// stride phase, radians, one turn per stride), `frames` for the idle pose.
-export function crowdFrame(phase, speed, frames = CROWD_FRAMES) {
+// stride phase, radians, one turn per stride), `frames` for the idle pose,
+// and frames + 1 and + 2 for a seat and a cheer (`pose`, POSE of
+// src/sim/ped-activity.js). A jog shows the walk frames.
+export function crowdFrame(phase, speed, frames = CROWD_FRAMES, pose = POSE.walk) {
+  if (POSE_OFFSET[pose] !== undefined) return frames + POSE_OFFSET[pose];
   if (!(speed >= CROWD_IDLE_SPEED)) return frames;
   const turn = phase / (Math.PI * 2);
   const f = Math.floor((turn - Math.floor(turn)) * frames);
@@ -92,7 +101,8 @@ export function bakePose(mesh, root) {
   return out;
 }
 
-// The poses of one GLB by LOD: levels[l] = [walk frames..., idle], and
+// The poses of one GLB by LOD: levels[l] = [walk frames..., idle, sit,
+// cheer] (a GLB with no sit or cheer clip, the dog, takes the idle pose), and
 // the distance (m) from which each LOD shows (the node's lodDistance).
 // A mesh with no skin (the stroller) gives one pose for all frames.
 function bakeKind(gltf, walkName, frames) {
@@ -107,6 +117,8 @@ function bakeKind(gltf, walkName, frames) {
   const clip = (n) => gltf.animations.find((c) => c.name === n);
   const walk = clip(walkName) ?? clip("walk") ?? gltf.animations[0];
   const idle = clip("idle");
+  const sit = clip("sit");
+  const cheer = clip("cheer");
   const mixer = new THREE.AnimationMixer(scene);
   const at = (mesh, c, t) => {
     mixer.stopAllAction();
@@ -118,11 +130,15 @@ function bakeKind(gltf, walkName, frames) {
   const levels = lods.map((mesh) => {
     if (!mesh.isSkinnedMesh) {
       const g = staticMeshes(mesh, scene);
-      return Array.from({ length: frames + 1 }, () => g);
+      return Array.from({ length: frames + 3 }, () => g);
     }
     const poses = [];
     for (let f = 0; f < frames; f += 1) poses.push(at(mesh, walk, walk ? (f / frames) * walk.duration : 0));
-    poses.push(at(mesh, idle ?? walk, 0));
+    const still = at(mesh, idle ?? walk, 0);
+    poses.push(still);
+    // The seat at the start of its idle loop; the cheer with the arms up.
+    poses.push(sit ? at(mesh, sit, 0) : still);
+    poses.push(cheer ? at(mesh, cheer, cheer.duration * 0.35) : still);
     return poses;
   });
   mixer.stopAllAction();
@@ -237,7 +253,7 @@ export async function createPedCrowd(gltfs, { people, kindOf, colorOf = null, ma
         const kind = kindOf(w.id);
         const b = batches.get(kind);
         if (!b) continue;
-        const frame = crowdFrame(w.phase, w.speed, frames);
+        const frame = crowdFrame(w.phase, w.speed, frames, w.pose);
         const yaw = Math.atan2(w.fx, w.fz);
         const d = Math.hypot(w.x - eye.x, w.y - eye.y, w.z - eye.z);
         const k = place(b, w.id, frame, d, w.x, w.y, w.z, yaw, scale);

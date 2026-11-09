@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { nearestWalkers, personFor, PED_MODEL_KINDS, walkTimeScale } from "./ped-models.js";
+import { nearestWalkers, personFor, poseClip, PED_MODEL_KINDS, walkTimeScale } from "./ped-models.js";
+import { readFileSync } from "node:fs";
+import { POSE } from "../sim/ped-activity.js";
 import { meshyPropLod } from "./people-props-view.js";
 
 describe("ped-models", () => {
@@ -33,5 +35,17 @@ describe("people-props-view", () => {
     expect(meshyPropLod(25, 20)).toBe(1);
     expect(meshyPropLod(500, 20)).toBe(-1);
     expect(meshyPropLod(50, 60, 160)).toBe(0);
+  });
+
+  it("plays the clip of each pose (#133), and every person GLB has it", () => {
+    expect(poseClip(POSE.walk)).toBe(null);
+    expect(poseClip(POSE.sit)).toEqual({ name: "sit", pace: false });
+    expect(poseClip(POSE.cheer)).toEqual({ name: "cheer", pace: false });
+    expect(poseClip(POSE.talk)).toEqual({ name: "idle", pace: false });
+    expect(poseClip(POSE.jog)).toEqual({ name: "run", pace: true });
+    const manifest = JSON.parse(readFileSync(new URL("../../assets/people/manifest.json", import.meta.url), "utf8"));
+    for (const kind of PED_MODEL_KINDS) {
+      for (const pose of [POSE.sit, POSE.cheer, POSE.talk, POSE.jog]) expect(Object.keys(manifest.assets[kind].clips), `${kind} ${pose}`).toContain(poseClip(pose).name);
+    }
   });
 });

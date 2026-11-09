@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { getDracoLoader } from "./skater-model.js";
 import { PEDS } from "../sim/peds.js";
+import { ACT, POSE } from "../sim/ped-activity.js";
 import { leashPoints } from "./leash.js";
 import { createPedCrowd } from "./ped-crowd.js";
 import { PED_VARIANTS, PED_VARIANT_URLS, atlasMaterial, createLookPicker, lookAtlas, lookTile, pedLooks } from "./ped-variants.js";
@@ -64,6 +65,18 @@ export function nearestWalkers(peds, x, z, count, radius = PED_MODEL_RADIUS) {
 // (a walk cycle covers PEDS.stride m).
 export function walkTimeScale(speed, duration, stride = PEDS.stride) {
   return (speed * duration) / stride;
+}
+
+// The clip of each pose (#133); every person GLB has them
+// (assets/people/manifest.json). A talk plays the idle clip.
+export const POSE_CLIP = { [POSE.sit]: "sit", [POSE.cheer]: "cheer", [POSE.talk]: "idle", [POSE.jog]: "run" };
+
+// Pure: the clip a walker plays: { name, pace } (pace: true when the clip
+// time follows the walker's speed). A walk is null: the walk and idle blend.
+export function poseClip(pose) {
+  const name = POSE_CLIP[pose];
+  if (!name) return null;
+  return { name, pace: pose === POSE.jog };
 }
 
 // `after` (a promise) holds the downloads back, for example until the first
@@ -173,7 +186,18 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
     const walk = walkClip ? mixer.clipAction(walkClip).play() : null;
     const idleClip = clip("idle");
     const idle = idleClip ? mixer.clipAction(idleClip).play() : null;
-    return { kind, root, mixer, walk, idle, duration: walkClip?.duration ?? 1, lods: lods.filter(Boolean) };
+    // The pose clips (a seat, a cheer, a run), made on first use.
+    const poses = new Map();
+    const poseAction = (name) => {
+      if (!poses.has(name)) {
+        const c = clip(name);
+        const a = c ? mixer.clipAction(c) : null;
+        if (a) a.play().setEffectiveWeight(0);
+        poses.set(name, a);
+      }
+      return poses.get(name);
+    };
+    return { kind, root, mixer, walk, idle, poseAction, pose: null, duration: walkClip?.duration ?? 1, lods: lods.filter(Boolean) };
   }
 
   // A person bound to a walker, with its companion and leash.
@@ -209,13 +233,26 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
     if (slot.companion) slot.companion.root.visible = on;
     if (slot.leash) slot.leash.mesh.visible = on;
   };
-  function pace(r, speed, dt, d) {
+  function pace(r, speed, dt, d, pose = POSE.walk) {
+    const pc = r.poseAction ? poseClip(pose) : null;
+    const act = pc ? r.poseAction(pc.name) : null;
+    if (r.pose && r.pose !== act && r.pose !== r.idle && r.pose !== r.walk) r.pose.setEffectiveWeight(0);
+    if (act && r.pose !== act && act !== r.idle) act.reset();
+    r.pose = act;
+    if (act) {
+      // A pose clip alone; the run keeps pace with the jog.
+      act.setEffectiveWeight(1);
+      act.timeScale = pc.pace ? walkTimeScale(speed, act.getClip().duration, ACT.jogStride) : 1;
+      // The talk pose is the idle action itself (one action per clip).
+      if (r.walk && r.walk !== act) r.walk.setEffectiveWeight(0);
+      if (r.idle && r.idle !== act) r.idle.setEffectiveWeight(0);
+    }
     const w = Math.min(1, speed / 0.3);
-    if (r.walk) {
+    if (r.walk && !act) {
       r.walk.setEffectiveWeight(r.idle ? w : 1);
       r.walk.timeScale = walkTimeScale(speed, r.duration);
     }
-    if (r.idle) r.idle.setEffectiveWeight(r.walk ? 1 - w : 1);
+    if (r.idle && !act) r.idle.setEffectiveWeight(r.walk ? 1 - w : 1);
     r.mixer.update(dt);
     let k = 0;
     r.lods.forEach((l, i) => {
@@ -276,7 +313,7 @@ export function createPedModels({ count = PED_MODEL_COUNT.high, urls = PED_MODEL
         slot.person.root.position.set(w.x, w.y, w.z);
         slot.person.root.rotation.y = yaw;
         const seen = !view || view.sees(w.x, w.y + 0.9, w.z, slot.companion ? 2 : 1);
-        if (seen) pace(slot.person, w.speed, dt, d);
+        if (seen) pace(slot.person, w.speed, dt, d, w.pose);
         if (slot.companion) {
           const c = PED_COMPANION[slot.kind];
           off.set(c.x, 0, c.z).applyAxisAngle(up, yaw);

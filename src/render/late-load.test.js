@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { LATE_GROUPS, createLateLoads, lateLoadPlan } from "./late-load.js";
+import { LATE_GROUPS, LATE_PROP_TIMEOUT_MS, createLateLoads, lateLoadPlan, propTimeoutFor } from "./late-load.js";
+import { EXTRA_PROP_TIMEOUT_MS } from "./geo-view.js";
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
@@ -79,5 +80,14 @@ describe("createLateLoads", () => {
     late.loaded("ground");
     expect(late.info().started.ground).toBe(1);
     expect(late.info().done.ground).toBe(1);
+  });
+});
+
+describe("propTimeoutFor", () => {
+  it("gives the deferred props a longer limit than the default", () => {
+    expect(propTimeoutFor(lateLoadPlan({ look: "pbr" }))).toBe(LATE_PROP_TIMEOUT_MS);
+    expect(LATE_PROP_TIMEOUT_MS).toBeGreaterThan(EXTRA_PROP_TIMEOUT_MS);
+    expect(propTimeoutFor(lateLoadPlan({ look: "toon" }))).toBeUndefined();
+    expect(propTimeoutFor(lateLoadPlan({ look: "pbr", lateload: "0" }))).toBeUndefined();
   });
 });

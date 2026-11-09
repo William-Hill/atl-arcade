@@ -77,6 +77,12 @@ Mean pixel difference (0 to 255) and the share of pixels that differ by more tha
 
 Phone pbr gives the same pixels. On high pbr, the difference is smaller than the difference between two runs of the same build (the clouds of the high sky move). So once everything has loaded, the look does not change.
 
+## A longer limit for the late prop GLBs
+
+Each extra prop GLB and tree GLB has a 15 s limit (`EXTRA_PROP_TIMEOUT_MS` in `geo-view.js`); a GLB that misses it keeps its procedural tree or kit prop for the whole session. After the first frame the props share the link with the cars, the people and the landmarks of #226. On the 1.6 Mbps link (high pbr) the first version of this change lost every GLB tree species to the limit (0 impostor kinds, 7 time-outs). The base build lost 2 of the 6 species there too (12 impostor kinds). Under heavy machine load the same happened on localhost: two phone checks of `e2e/leaf-cut.spec.js` failed because the before picture had the procedural trees.
+
+So a deferred props load has a limit of 120 s (`LATE_PROP_TIMEOUT_MS`, `propTimeoutFor()` in `late-load.js`). Nothing in the first frame waits for it. At 1.6 Mbps all the late files of high pbr (about 14 MB) take about 70 s. With it, the 1.6 Mbps high pbr run has all 18 impostor kinds and no time-out (scratch probe, 1 run). `e2e/late-load.spec.js` checks that the GLB trees arrive (impostor kinds over 0, no time-out warning). The perf and load runs above are from the build before this fix; the fix changes no byte and nothing before the first frame.
+
 ## Tried and rejected: compile the shaders while the physics builds
 
 The profile of the high pbr first frame has 2.0 to 2.3 s in the first draw (`getUniforms`, the program link). A `renderer.compileAsync()` before the physics build (with a render target, so that the programs match the ones of the post chain) linked 24 of the 63 programs before the first draw, but the first frame was 0.3 to 1.1 s later, not sooner: SwiftShader does not expose `KHR_parallel_shader_compile`, still compiles at the first draw, and the GPU process takes CPU from the physics build. It may help on a real GPU; that needs a real-GPU run. The code is not in this PR.

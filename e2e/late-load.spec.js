@@ -40,6 +40,8 @@ async function lateFiles(page) {
 test("the pbr look asks for the late files only after the first frame, and they arrive", async ({ page }) => {
   test.setTimeout(240000);
   const errors = collectErrors(page);
+  const warnings = [];
+  page.on("console", (msg) => msg.type() === "warning" && warnings.push(msg.text()));
   await open(page);
 
   const plan = await page.evaluate(() => window.__atl.lateLoads.plan);
@@ -72,6 +74,9 @@ test("the pbr look asks for the late files only after the first frame, and they 
   // The props went in: the batch has instances.
   const props = await page.evaluate(() => window.__atl.level.props);
   expect(props.loaded).toBe(true);
+  // The GLB trees came, not the procedural fallback: their far impostors are baked.
+  expect(await page.evaluate(() => window.__atl.trees.impostorKinds)).toBeGreaterThan(0);
+  expect(warnings.filter((w) => /tree glb|extra prop/.test(w))).toEqual([]);
   expect(errors).toEqual([]);
 });
 

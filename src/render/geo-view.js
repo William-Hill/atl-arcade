@@ -828,11 +828,12 @@ export const TREE_GLB_URLS = {
 // not stop the kit: the kind gets its fallback kit template. With
 // `glbTrees` the Blender tree templates come too; a species that fails
 // keeps its procedural tree.
-export async function loadPropTemplates({ glbTrees = false } = {}) {
+// `timeoutMs` is the limit for each extra GLB and tree GLB.
+export async function loadPropTemplates({ glbTrees = false, timeoutMs = EXTRA_PROP_TIMEOUT_MS } = {}) {
   const kinds = Object.keys(EXTRA_PROP_URLS);
-  const extras = kinds.map((k) => withTimeout(loadKitTemplates(EXTRA_PROP_URLS[k]), EXTRA_PROP_TIMEOUT_MS, k));
+  const extras = kinds.map((k) => withTimeout(loadKitTemplates(EXTRA_PROP_URLS[k]), timeoutMs, k));
   const species = glbTrees ? Object.keys(TREE_GLB_URLS) : [];
-  const treeLoads = species.map((k) => withTimeout(loadKitTemplates(TREE_GLB_URLS[k]), EXTRA_PROP_TIMEOUT_MS, `tree ${k}`));
+  const treeLoads = species.map((k) => withTimeout(loadKitTemplates(TREE_GLB_URLS[k]), timeoutMs, `tree ${k}`));
   const [kit, results, treeResults] = await Promise.all([loadKitTemplates(), Promise.allSettled(extras), Promise.allSettled(treeLoads)]);
   for (const problem of addExtraTemplates(kit, kinds, results)) console.warn(`extra prop: ${problem}`);
   treeResults.forEach((r, i) => {

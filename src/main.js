@@ -86,7 +86,7 @@ import { createDrawSplit } from "./perf/draw-split.js";
 import { createShadowPass } from "./render/shadow-pass.js";
 import { createViewCull } from "./render/view-cull.js";
 import { createEffects } from "./render/effects/effects-view.js";
-import { createLateLoads, lateLoadPlan } from "./render/late-load.js";
+import { createLateLoads, lateLoadPlan, propTimeoutFor } from "./render/late-load.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -362,7 +362,7 @@ if (landmarkModels) {
 // after the first frame: the impostor bake is long (#190).
 if (geo && params.get("props") !== "0") {
   const glbTrees = look === "pbr" && params.get("glbtrees") !== "0";
-  Promise.all([lateLoads.run("props", () => loadPropTemplates({ glbTrees })), glbTrees ? firstFrame : null])
+  Promise.all([lateLoads.run("props", () => loadPropTemplates({ glbTrees, timeoutMs: propTimeoutFor(lateLoads.plan) })), glbTrees ? firstFrame : null])
     .then(([templates]) => levelView.addProps(env.props, templates, { renderer, impostors: params.get("impostors") !== "0" }))
     .catch((err) => {
       levelView.props.error = String(err);

@@ -15,6 +15,19 @@
 
 export const LATE_GROUPS = ["props", "murals", "ground"];
 
+// The limit (ms) for each prop GLB when the props load after the first frame.
+// Then they share the link with the cars, the people and the landmarks
+// (#226), and nothing waits for them, so the 15 s limit of
+// geo-view.js EXTRA_PROP_TIMEOUT_MS is too short: on a 1.6 Mbps link every
+// GLB tree missed it and the procedural trees stayed. At 1.6 Mbps all the
+// late files of high pbr (about 14 MB) take about 70 s.
+export const LATE_PROP_TIMEOUT_MS = 120000;
+
+// Pure: the limit for each prop GLB, or undefined for the default.
+export function propTimeoutFor(plan) {
+  return plan.props ? LATE_PROP_TIMEOUT_MS : undefined;
+}
+
 // Pure: which groups wait for the first frame. Only the pbr look defers;
 // ?lateload=0 loads every group at once (for a before/after check in one build).
 export function lateLoadPlan({ look = "toon", lateload = null } = {}) {

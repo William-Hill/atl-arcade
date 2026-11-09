@@ -1,0 +1,66 @@
+{
+  "date": "2026-11-09T06:39:17.245Z",
+  "device": "Pixel 7",
+  "cpuThrottle": 1,
+  "gpu": "swiftshader",
+  "network": "9 Mbps / 1.5 Mbps / 60 ms",
+  "firstContentfulPaintMs": 176,
+  "loadScreen": true,
+  "firstGameFrameMs": 16572,
+  "skaterReadyMs": 100029,
+  "quality": "high",
+  "marks": {
+    "level": 1244,
+    "meshes": 4509,
+    "view": 6213,
+    "scene": 6927,
+    "physics": 6927,
+    "world": 7491,
+    "first-frame": 9920
+  },
+  "longTasks": {
+    "count": 3,
+    "totalMs": 12457,
+    "maxMs": 8868,
+    "list": [
+      {
+        "start": 4015,
+        "ms": 3507
+      },
+      {
+        "start": 7522,
+        "ms": 82
+      },
+      {
+        "start": 7607,
+        "ms": 8868
+      }
+    ]
+  },
+  "requests": 246,
+  "transferMB": 18.38,
+  "beforeFirstFrameMB": 4.54,
+  "top5": [
+    {
+      "file": "/assets/skater-C9FYxjUD.glb",
+      "kB": 2204
+    },
+    {
+      "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+      "kB": 1149
+    },
+    {
+      "file": "/assets/normal-1024-B1R5BzzO.webp",
+      "kB": 1049
+    },
+    {
+      "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+      "kB": 863
+    },
+    {
+      "file": "/assets/albedo-1024-CC1PaCBT.webp",
+      "kB": 785
+    }
+  ],
+  "loadAverage": "3.67 3.78 3.82"
+}

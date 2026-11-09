@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkBudget, classifyUrl, frameStats, mergeRuns, renderMarkdown, spliceMarkdown } from "./perf-lib.mjs";
+import { checkBudget, classifyUrl, downloadGroupOf, firstFrameMB, frameStats, mergeRuns, renderMarkdown, spliceMarkdown } from "./perf-lib.mjs";
 
 const run = (over = {}) => ({
   quality: "low",
@@ -63,5 +63,58 @@ describe("perf lib", () => {
     expect(out).not.toContain("old");
     expect(out.startsWith("# A\n<!-- perf:begin -->\n")).toBe(true);
     expect(out.endsWith("<!-- perf:end -->\nB\n")).toBe(true);
+  });
+});
+
+describe("perf lib: the download before the first frame (#190)", () => {
+  const files = [
+    { file: "/", kB: 1, startMs: null },
+    { file: "/assets/skater-B_jE0GB_.glb", kB: 2048, startMs: 90 },
+    { file: "/assets/oak-BqKxyhcO.glb", kB: 512, startMs: 3000 },
+    { file: "/assets/vehicles_lod-BE1gXgF8.glb", kB: 512, startMs: 5000 },
+  ];
+
+  it("counts the files asked for before the first frame", () => {
+    expect(firstFrameMB(files, 4000)).toBe(2.5);
+    expect(firstFrameMB(files, 3000)).toBe(2);
+    expect(firstFrameMB(files, null)).toBe(null);
+    expect(firstFrameMB(null, 4000)).toBe(null);
+  });
+
+  it("checks the firstDownloadMB cap", () => {
+    expect(checkBudget([run({ files, firstFrameMs: 4000 })], { tiers: { low: { firstDownloadMB: 2 } } })).toEqual(["low/toon firstDownloadMB 2.5 > 2"]);
+    expect(checkBudget([run({ firstDownloadMB: 1.5 })], { tiers: { low: { firstDownloadMB: 2 } } })).toEqual([]);
+  });
+
+  it("puts the column in the download table", () => {
+    const md = renderMarkdown({ date: "2026-11-09T00:00:00Z", gpu: "x", machine: { cpus: 4 }, viewport: "1280x720 @1", rideSeconds: 15, runs: [run({ firstDownloadMB: 4.2 })] });
+    expect(md).toMatch(/\| Before first frame \|/);
+    expect(md).toMatch(/\| 12 \| 4\.2 \|/);
+  });
+
+  it("puts each file in its group, built or not", () => {
+    const cases = {
+      "/assets/skater-1024-8j3oaqJY.glb": "skater",
+      "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm": "physics",
+      "/assets/vehicles_lod-BE1gXgF8.glb": "cars",
+      "/assets/bus-9aEW4-OE.glb": "cars",
+      "/assets/dog_walker-Bs0n0Vu_.glb": "people",
+      "/assets/dog-QirLDCw1.glb": "people",
+      "/assets/people/jogger.glb": "people",
+      "/assets/elder_polo_v2-CQyQ2Uc_.jpg": "people",
+      "/assets/bollard-CpV2BZKX.glb": "meshy props",
+      "/assets/ponce-city-market-D093VQas.glb": "landmark GLBs",
+      "/assets/bridge-north-ave-BgJsj2sY.glb": "landmark GLBs",
+      "/assets/street-kit-CEVzTpPi.glb": "street kit",
+      "/assets/street-DbOGjA0p.glb": "GLB trees",
+      "/assets/trees/oak.glb": "GLB trees",
+      "/assets/facade-kit-BPFEyRLI.glb": "facade kit",
+      "/assets/mural-atlas-DNK9NS_Z.jpg": "murals",
+      "/assets/normal-1024-B1R5BzzO.webp": "pbr ground",
+      "/assets/orm-512-DdVlRKVR.webp": "pbr ground",
+      "/assets/main-CCfys8ot.js": "js",
+      "/assets/normal-D4GkI7qp.jpg": "other",
+    };
+    for (const [file, group] of Object.entries(cases)) expect(downloadGroupOf(file), file).toBe(group);
   });
 });

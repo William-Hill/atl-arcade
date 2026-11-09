@@ -86,6 +86,7 @@ import { createDrawSplit } from "./perf/draw-split.js";
 import { createShadowPass } from "./render/shadow-pass.js";
 import { createViewCull } from "./render/view-cull.js";
 import { createEffects } from "./render/effects/effects-view.js";
+import { createLateLoads, lateLoadPlan } from "./render/late-load.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -153,6 +154,9 @@ const GEO_FOG_NEAR = tier.fogNear;
 // The city look (src/render/look.js): pbr on the high tier, toon on the
 // others. ?look=toon|pbr sets it.
 const look = geo ? lookFor(paramFor("look", params, savedSettings), quality) : "toon";
+// The pbr street kit, GLB trees, mural atlas and ground maps load after the
+// first frame (#190, src/render/late-load.js). ?lateload=0 loads them at once.
+const lateLoads = createLateLoads(lateLoadPlan({ look, lateload: params.get("lateload") }), firstFrame, { now: () => Math.round(performance.now()) });
 // The pbr look draws the Blender landmark GLBs (src/render/landmark-models.js)
 // in place of the buildings on their footprints, so the footprints are claimed
 // before the meshes build. ?landmarkglb=0 keeps the generic buildings.
@@ -293,7 +297,7 @@ const geoMeshes = geo ? await meshBuild.meshes : null;
 performance.mark("atl:meshes");
 // Before the level view: its main-thread build leaves the other CPUs free.
 bakeEnvironment?.();
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full", leafCut: leafCutFor(quality, params.get("leafcut")) }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full", leafCut: leafCutFor(quality, params.get("leafcut")), defer: { ground: (load) => lateLoads.run("ground", load), murals: (load) => lateLoads.run("murals", load) } }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
@@ -358,7 +362,7 @@ if (landmarkModels) {
 // after the first frame: the impostor bake is long (#190).
 if (geo && params.get("props") !== "0") {
   const glbTrees = look === "pbr" && params.get("glbtrees") !== "0";
-  Promise.all([loadPropTemplates({ glbTrees }), glbTrees ? firstFrame : null])
+  Promise.all([lateLoads.run("props", () => loadPropTemplates({ glbTrees })), glbTrees ? firstFrame : null])
     .then(([templates]) => levelView.addProps(env.props, templates, { renderer, impostors: params.get("impostors") !== "0" }))
     .catch((err) => {
       levelView.props.error = String(err);
@@ -1069,6 +1073,11 @@ requestAnimationFrame(frame);
 
 // Read by the Playwright tests.
 window.__atl = {
+  // The late downloads (#190): the plan, and when each group started and
+  // finished, in ms from the navigation.
+  get lateLoads() {
+    return lateLoads.info();
+  },
   // The far tree impostors (tree-impostors.js): atlas bytes, bake time, kinds.
   get trees() {
     return geo && levelView.treeCost ? { ...levelView.treeCost } : null;

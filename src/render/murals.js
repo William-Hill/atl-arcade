@@ -160,10 +160,37 @@ function urlParams() {
   return new URLSearchParams(search);
 }
 
+// Starts a load at once (the default `defer`).
+const now = (load) => load();
+
+// Loads an image into `tex` when `defer` starts the load (late-load.js
+// run(); by default at once). Until then the texture has no image.
+function loadInto(tex, url, defer, onError) {
+  const load = () =>
+    new Promise((resolve, reject) => {
+      new THREE.ImageLoader().load(
+        url,
+        (image) => {
+          tex.image = image;
+          tex.needsUpdate = true;
+          resolve(tex);
+        },
+        undefined,
+        (err) => {
+          onError?.();
+          reject(err);
+        },
+      );
+    });
+  Promise.resolve(defer(load)).catch((err) => console.warn(`mural: ${url}: ${err?.message ?? err}`));
+  return tex;
+}
+
 // The painted atlas as a texture. If the image fails, the texture gets the
 // canvas atlas.
-function loadPaintedAtlas(size) {
-  const tex = new THREE.TextureLoader().load(MURAL_ATLAS_URL, undefined, undefined, () => {
+function loadPaintedAtlas(size, defer) {
+  const tex = new THREE.Texture();
+  loadInto(tex, MURAL_ATLAS_URL, defer, () => {
     tex.image = drawCanvasAtlas(size);
     tex.needsUpdate = true;
   });
@@ -175,8 +202,10 @@ function loadPaintedAtlas(size) {
 
 // The roughness atlas for the painted murals (a linear texture). Green and
 // blue are the roughness; red is the paint coverage (#198).
-export function createMuralRoughness() {
-  const tex = new THREE.TextureLoader().load(MURAL_ROUGHNESS_URL);
+// `defer` as in createMuralAtlas(). Until it loads, the edge cut
+// (withMuralEdge) reads 0 and the host wall shows in place of the mural.
+export function createMuralRoughness({ defer = now } = {}) {
+  const tex = loadInto(new THREE.Texture(), MURAL_ROUGHNESS_URL, defer);
   tex.colorSpace = THREE.NoColorSpace;
   return tex;
 }
@@ -207,18 +236,21 @@ if (texture2D(roughnessMap, vRoughnessMapUv).r < ${cut.toFixed(3)}) discard;
 // The mural material. The pbr look with the painted atlas also gets the
 // roughness atlas and the dry-brush cut. The toon look (and the canvas
 // atlas) keeps the atlas alone. `litMaterial` is look.js litMaterial().
-export function createMuralMaterial(look, litMaterial, options) {
-  const map = createMuralAtlas(1024, { look });
+// `defer(load)` starts the painted atlas downloads (#190: after the first
+// frame on the pbr look).
+export function createMuralMaterial(look, litMaterial, options, { defer = now } = {}) {
+  const map = createMuralAtlas(1024, { look, defer });
   if (look !== "pbr" || map.userData.muralSource !== "painted") return litMaterial(look, { map }, options);
-  return withMuralEdge(litMaterial(look, { map, roughnessMap: createMuralRoughness() }, options));
+  return withMuralEdge(litMaterial(look, { map, roughnessMap: createMuralRoughness({ defer }) }, options));
 }
 
 // `look` is the city look ("toon" or "pbr"); without it the URL decides
-// (muralSource).
-export function createMuralAtlas(size = 1024, { look = null } = {}) {
+// (muralSource). `defer(load)` starts the painted atlas download; by default
+// it starts at once.
+export function createMuralAtlas(size = 1024, { look = null, defer = now } = {}) {
   const params = urlParams();
   const source = muralSource({ look, murals: params.get("murals"), lookParam: params.get("look"), quality: params.get("quality") });
-  if (source === "painted") return loadPaintedAtlas(size);
+  if (source === "painted") return loadPaintedAtlas(size, defer);
   const tex = new THREE.CanvasTexture(drawCanvasAtlas(size));
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;

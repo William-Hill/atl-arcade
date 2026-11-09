@@ -24,6 +24,7 @@ import { gzipSync } from "node:zlib";
 import { dirname, resolve, sep } from "node:path";
 import { preview } from "vite";
 import { chromium, devices } from "@playwright/test";
+import { firstFrameMB } from "./perf-lib.mjs";
 
 const args = process.argv.slice(2);
 const arg = (name, fallback) => {
@@ -86,6 +87,8 @@ try {
 
   // The long tasks (over 50 ms) on the main thread, up to the first game frame (#98).
   await page.addInitScript(() => {
+    // Keep a start time for every file (the default buffer keeps 250).
+    performance.setResourceTimingBufferSize(2000);
     window.__longTasks = [];
     try {
       new PerformanceObserver((list) => {
@@ -112,6 +115,10 @@ try {
   await page.waitForTimeout(2000);
   const files = [...reqs.values()].filter((r) => r.bytes != null);
   const total = files.reduce((a, r) => a + r.bytes, 0);
+  // The bytes asked for before the first game frame (#190).
+  const timing = await page.evaluate(() => ({ ff: performance.getEntriesByName("atl:first-frame")[0]?.startTime ?? null, started: performance.getEntriesByType("resource").map((e) => [e.name, Math.round(e.startTime)]) }));
+  const started = new Map(timing.started);
+  const beforeFirstFrame = firstFrameMB(files.filter((r) => !r.url.startsWith("data:")).map((r) => ({ file: r.url, kB: r.bytes / 1024, startMs: started.get(r.url) ?? null })), timing.ff);
   result = {
     date: new Date().toISOString(),
     device: "Pixel 7",
@@ -129,6 +136,7 @@ try {
     longTasks: { count: longTasks.length, totalMs: longTasks.reduce((a, t) => a + t.ms, 0), maxMs: longTasks.reduce((a, t) => Math.max(a, t.ms), 0), list: longTasks },
     requests: files.length,
     transferMB: +(total / 1048576).toFixed(2),
+    beforeFirstFrameMB: beforeFirstFrame,
     top5: [...files].sort((a, b) => b.bytes - a.bytes).slice(0, 5).map((r) => ({ file: r.url.replace(/^https?:\/\/[^/]+/, ""), kB: Math.round(r.bytes / 1024) })),
     loadAverage: loadavg().map((n) => +n.toFixed(2)).join(" "),
   };

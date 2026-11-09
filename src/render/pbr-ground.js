@@ -125,6 +125,8 @@ export function groundAlbedo(kind) {
 // change at skating height (#191).
 export const GROUND_ANISOTROPY = { high: 8, small: 2 };
 
+// Returns the uniform and a function that starts the download (#190: the
+// caller decides when).
 function loadArray(url, fill, { srgb = false, onLoad, anisotropy = 8 } = {}) {
   const n = GROUND_LAYERS.length;
   const data = new Uint8Array(n * 4);
@@ -136,12 +138,16 @@ function loadArray(url, fill, { srgb = false, onLoad, anisotropy = 8 } = {}) {
     holder.value = t;
     onLoad?.(t);
   };
-  fetch(url)
-    .then((r) => r.blob())
-    .then((blob) => createImageBitmap(blob, { colorSpaceConversion: "none", premultiplyAlpha: "none" }))
-    .then(done)
-    .catch((err) => console.warn(`pbr ground: ${url}: ${err}`));
-  return holder;
+  const load = () =>
+    fetch(url)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.blob();
+      })
+      .then((blob) => createImageBitmap(blob, { colorSpaceConversion: "none", premultiplyAlpha: "none" }))
+      .then(done)
+      .catch((err) => console.warn(`pbr ground: ${url}: ${err}`));
+  return [holder, load];
 }
 
 function arrayTexture(image, srgb, mips, anisotropy = 8) {
@@ -168,8 +174,10 @@ function blackMap() {
 const srgb8 = (v) => Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
 
 // The pbr surface material. One material for every ground tile, as the toon
-// surface. `tier` is "high" or "small".
-export function createPbrSurfaceMaterial({ tier = "high" } = {}) {
+// surface. `tier` is "high" or "small". `defer(load)` starts the map
+// downloads (late-load.js run()); by default they start at once. Until the
+// maps load, each layer has the mean color of its scan.
+export function createPbrSurfaceMaterial({ tier = "high", defer = (load) => load() } = {}) {
   const mat = litMaterial("pbr", { vertexColors: true }, { roughness: ROUGHNESS.ground, envLight: ENV_LIGHT.ground });
   mat.color.setScalar(GROUND_COLOR_SCALE);
   const files = groundFiles(tier);
@@ -178,9 +186,12 @@ export function createPbrSurfaceMaterial({ tier = "high" } = {}) {
   mat.defines = normal ? { GROUND_NORMAL: 1 } : {};
   const kinds = Object.keys(PBR_GROUND_OF);
   const anisotropy = GROUND_ANISOTROPY[tier] ?? 8;
+  const [albedo, loadAlbedo] = loadArray(URLS[files.albedo], sets.map((s) => [...s.meanLinear.map(srgb8), 255]), { srgb: true, anisotropy });
+  const [orm, loadOrm] = loadArray(URLS[files.orm], sets.map((s) => [Math.round(s.aoMean * 255), Math.round(s.roughMean * 255), 0, 255]), { anisotropy });
+  const [normalMap, loadNormal] = normal ? loadArray(URLS[files.normal], sets.map(() => [128, 128, 255, 255]), { anisotropy }) : [null, null];
   const uniforms = {
-    uGroundAlbedo: loadArray(URLS[files.albedo], sets.map((s) => [...s.meanLinear.map(srgb8), 255]), { srgb: true, anisotropy }),
-    uGroundOrm: loadArray(URLS[files.orm], sets.map((s) => [Math.round(s.aoMean * 255), Math.round(s.roughMean * 255), 0, 255]), { anisotropy }),
+    uGroundAlbedo: albedo,
+    uGroundOrm: orm,
     uGroundMean: { value: sets.map((s) => new THREE.Vector3(...s.meanLinear)) },
     uGroundAoMean: { value: sets.map((s) => s.aoMean) },
     uGroundTile: { value: sets.map((s) => s.tileMeters) },
@@ -199,7 +210,8 @@ export function createPbrSurfaceMaterial({ tier = "high" } = {}) {
     uGroundLight: { value: blackMap() },
     uGroundLightBox: { value: new THREE.Vector4(0, 0, 1, 1) },
   };
-  if (normal) uniforms.uGroundNormal = loadArray(URLS[files.normal], sets.map(() => [128, 128, 255, 255]), { anisotropy });
+  if (normal) uniforms.uGroundNormal = normalMap;
+  Promise.resolve(defer(() => Promise.all([loadAlbedo(), loadOrm(), loadNormal?.()]))).catch((err) => console.warn(`pbr ground: ${err}`));
   mat.userData.uWet = uniforms.uWet;
   mat.userData.uLit = uniforms.uLit;
   // Bakes the ground light map from the prop placements (the lamps and the

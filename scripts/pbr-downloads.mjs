@@ -17,9 +17,9 @@ const mb = (kB) => (kB / 1024).toFixed(2);
 
 const groups = [...DOWNLOAD_GROUPS.map(([g]) => g), "other"];
 const lines = [];
-lines.push(`${look} look, ${result.date.slice(0, 10)}, MB on the wire before / after the first frame (run 1).`);
+lines.push(`${look} look, ${result.date.slice(0, 10)}, MB on the wire asked for up to the first frame (to FF) and after it (after FF), run 1.`);
 lines.push("");
-lines.push(`| Group | ${runs.map((r) => `${r.quality} before | ${r.quality} after`).join(" | ")} |`);
+lines.push(`| Group | ${runs.map((r) => `${r.quality} to FF | ${r.quality} after FF`).join(" | ")} |`);
 lines.push(`|---|${runs.map(() => "---|---").join("|")}|`);
 const sum = (r, g, b) => r.files.filter((f) => (g == null || downloadGroupOf(f.file) === g) && before(r, f) === b).reduce((s, f) => s + f.kB, 0);
 for (const g of groups) {

@@ -10,6 +10,7 @@ import {
   landFall,
   motionPolicy,
   shakeAngles,
+  shakePunch,
   shakeEnvelope,
   sparkSpecs,
   startShake,
@@ -125,8 +126,26 @@ describe("camera shake", () => {
     }
     expect(peak).toBeGreaterThan(FEEL.shake.amp * 0.3);
     expect(peak).toBeLessThanOrEqual(FEEL.shake.amp);
-    // About 1.3 degrees at most.
-    expect(FEEL.shake.amp).toBeLessThan(0.03);
+    // Big enough to see in a playtest (2026-11-09: 1.3 degrees was not),
+    // and at most about 2.9 degrees.
+    expect(FEEL.shake.amp).toBeGreaterThan(0.035);
+    expect(FEEL.shake.amp).toBeLessThan(0.05);
+  });
+
+  it("pushes the camera toward the skater at the hit, then lets go with the shake", () => {
+    expect(shakePunch(createShake())).toBe(0);
+    let s = startShake(createShake(), 1);
+    expect(shakePunch(s)).toBeCloseTo(FEEL.shake.punch, 9);
+    const half = shakePunch(startShake(createShake(), 0.5));
+    expect(half).toBeCloseTo(FEEL.shake.punch * 0.5, 9);
+    s = stepShake(s, FEEL.shake.duration / 2);
+    expect(shakePunch(s)).toBeGreaterThan(0);
+    expect(shakePunch(s)).toBeLessThan(FEEL.shake.punch);
+    s = stepShake(s, FEEL.shake.duration);
+    expect(shakePunch(s)).toBe(0);
+    // A short push: under half a meter.
+    expect(FEEL.shake.punch).toBeGreaterThan(0.2);
+    expect(FEEL.shake.punch).toBeLessThan(0.5);
   });
 
   it("a weak hit does not cut a strong shake; a strong hit restarts a weak one", () => {

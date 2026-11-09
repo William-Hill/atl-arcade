@@ -1,8 +1,9 @@
 import * as THREE from "three";
-import { NO_LOOK, cameraPivot, canopyVolumes, createCanopyIndex, createCameraState, createLook, placeCamera, resolveClip, stepCamera, stepLook } from "../sim/camera.js";
+import { NO_LOOK, cameraGoal, cameraPivot, canopyVolumes, chooseSwing, createCanopyIndex, createCameraState, createLook, isVert, orbitAbout, placeCamera, resolveClip, stepCamera, stepLook, stepSwing } from "../sim/camera.js";
+import { CAMERA } from "../sim/skate/constants.js";
 import { ALL_GROUPS, GROUP, collisionGroups } from "../physics/world.js";
 import { fenceRayDistance } from "../level/edge-fence.js";
-import { createShake, feelTriggers, fovTarget, motionPolicy, shakeAngles, startShake, stepFov, stepShake } from "./effects/feel.js";
+import { createShake, feelTriggers, fovTarget, motionPolicy, shakeAngles, shakePunch, startShake, stepFov, stepShake } from "./effects/feel.js";
 
 // Applies the pure camera state to a Three.js camera and keeps it out of
 // walls with a Rapier ray from the skater pivot toward the camera. The
@@ -11,11 +12,15 @@ import { createShake, feelTriggers, fovTarget, motionPolicy, shakeAngles, startS
 // The edge fence has no collider either, so the ray also stops at the inner
 // face of `fence` (src/level/edge-fence.js, playtest 2026-11-08).
 //
+// A wall or the fence close to the skater would pull the camera in to her
+// back, so the camera swings around her to a clear side first (`swing`, an
+// orbit offset like the look yaw; src/sim/camera.js, playtest 2026-11-09).
+//
 // Game feel (#105, src/render/effects/feel.js): a short shake on a bonk and
 // a wider field of view at high speed. `motion()` gives the reduced-motion
 // and ?fx=0 state ({ reducedMotion, off }); with either, both stay off. The
-// shake is a small rotation after the placement, so it cannot move the
-// camera into a wall. The base field of view is camera.userData.baseFov
+// shake is a small rotation after the placement and a short push toward the
+// skater along the clear ray, so it cannot move the camera into a wall. The base field of view is camera.userData.baseFov
 // (renderer.js sets it for the screen shape).
 export function createFollowCamera(camera, { RAPIER, world, skater, props = [], canopy: canopyOn = true, fence = null, motion = () => ({}) }) {
   let state = createCameraState(skater);
@@ -31,6 +36,7 @@ export function createFollowCamera(camera, { RAPIER, world, skater, props = [], 
   let fovBoost = 0;
   let forcedBoost = null;
   let shakeAt = null;
+  let swing = 0;
   if (camera.isPerspectiveCamera && camera.userData.baseFov === undefined) camera.userData.baseFov = camera.fov;
 
   function wallDistance(cam, pivot) {
@@ -43,6 +49,14 @@ export function createFollowCamera(camera, { RAPIER, world, skater, props = [], 
     const hit = world.castRay(ray, len, true, undefined, rayGroups);
     if (!hit) return Infinity;
     return hit.timeOfImpact ?? hit.toi;
+  }
+
+  // The blockers on the ray from the pivot to a camera point: the walls
+  // (Rapier), the edge fence and the tree canopies.
+  function blockers(pivot, position) {
+    const wall = Math.min(wallDistance({ position }, pivot), fenceRayDistance(fence, pivot, position));
+    const leaves = canopyOn && canopy.count ? canopy.distance(pivot, position) : Infinity;
+    return { wall, leaves, distance: Math.min(wall, leaves) };
   }
 
   function applyFeel(current, dt) {
@@ -70,17 +84,38 @@ export function createFollowCamera(camera, { RAPIER, world, skater, props = [], 
     // `lookDelta` is { yaw, pitch } in rad for this frame (mapLook), or null.
     update(current, dt, lookDelta = null) {
       look = stepLook(look, lookDelta ?? NO_LOOK, dt);
-      state = stepCamera(state, current, dt, undefined, look);
+      const orbit = (offset) => (offset === 0 ? look : { yaw: look.yaw + offset, pitch: look.pitch });
+      state = stepCamera(state, current, dt, undefined, orbit(swing));
       const pivot = cameraPivot(current);
-      const wall = Math.min(wallDistance(state, pivot), fenceRayDistance(fence, pivot, state.position));
-      const leaves = canopyOn && canopy.count ? canopy.distance(pivot, state.position) : Infinity;
-      const distance = Math.min(wall, leaves);
-      lastHit = Number.isFinite(wall) ? wall : null;
-      lastCanopyHit = Number.isFinite(leaves) ? leaves : null;
-      const full = Math.hypot(state.position[0] - pivot[0], state.position[1] - pivot[1], state.position[2] - pivot[2]);
-      allowed = resolveClip(allowed, full, distance, dt);
+      let hits = blockers(pivot, state.position);
+      let full = Math.hypot(state.position[0] - pivot[0], state.position[1] - pivot[1], state.position[2] - pivot[2]);
+      // Swing around the skater when a blocker is close (not on vert, where
+      // the orbit yaw holds). The probes test the camera goal at each offset.
+      if (!isVert(current) && (swing !== 0 || hits.distance < CAMERA.swingBelow * full)) {
+        const goalAt = (offset) => cameraGoal(current, state.yaw, CAMERA, orbit(offset)).position;
+        const g = goalAt(0);
+        const range = Math.hypot(g[0] - pivot[0], g[1] - pivot[1], g[2] - pivot[2]);
+        const target = chooseSwing((offset) => blockers(pivot, goalAt(offset)).distance, range, swing);
+        const next = stepSwing(swing, target, dt);
+        if (next !== swing) {
+          state = { ...state, position: orbitAbout(state.position, current.position, next - swing) };
+          swing = next;
+          hits = blockers(pivot, state.position);
+          full = Math.hypot(state.position[0] - pivot[0], state.position[1] - pivot[1], state.position[2] - pivot[2]);
+        }
+      }
+      lastHit = Number.isFinite(hits.wall) ? hits.wall : null;
+      lastCanopyHit = Number.isFinite(hits.leaves) ? hits.leaves : null;
+      allowed = resolveClip(allowed, full, hits.distance, dt);
       const placed = placeCamera(state, pivot, allowed);
-      camera.position.set(placed.position[0], placed.position[1], placed.position[2]);
+      // The bonk punch: toward the pivot on the clear ray, never past 1 m from it.
+      const punch = motionPolicy(motion()).shake ? Math.min(shakePunch(shake), Math.max(0, Math.min(allowed, full) - 1)) : 0;
+      const pos = placed.position;
+      if (punch > 0) {
+        const d = Math.hypot(pos[0] - pivot[0], pos[1] - pivot[1], pos[2] - pivot[2]);
+        const f = d > 1e-6 ? (d - punch) / d : 1;
+        camera.position.set(pivot[0] + (pos[0] - pivot[0]) * f, pivot[1] + (pos[1] - pivot[1]) * f, pivot[2] + (pos[2] - pivot[2]) * f);
+      } else camera.position.set(pos[0], pos[1], pos[2]);
       camera.lookAt(placed.lookAt[0], placed.lookAt[1], placed.lookAt[2]);
       applyFeel(current, dt);
     },
@@ -107,6 +142,7 @@ export function createFollowCamera(camera, { RAPIER, world, skater, props = [], 
       state = createCameraState(current);
       look = createLook();
       allowed = Infinity;
+      swing = 0;
       shake = createShake();
       fovBoost = 0;
     },
@@ -115,6 +151,10 @@ export function createFollowCamera(camera, { RAPIER, world, skater, props = [], 
     },
     get look() {
       return look;
+    },
+    // The orbit offset (rad) of the swing around a close blocker.
+    get swing() {
+      return swing;
     },
     get lastHit() {
       return lastHit;

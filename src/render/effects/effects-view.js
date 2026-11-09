@@ -12,10 +12,12 @@ import {
   effectsPolicy,
   impactFrameDone,
   impactSpikes,
+  screenAnchor,
   speedLineSegments,
   startImpact,
   stepFx,
 } from "./fx.js";
+import { dustSpecs, feelTriggers, sparkSpecs } from "./feel.js";
 
 // Comic effects (#113): the render layer. The pure logic is in fx.js.
 //
@@ -35,9 +37,14 @@ import {
 //
 // Other systems spawn their own particles with burst() (the landmark
 // claim, #221) and read `policy` for the tier and reduced-motion gates.
+//
+// Game feel (#105, feel.js) adds two particle kinds to the burst mesh, so
+// they cost no draw call more: a dust puff on a landing and sparks while the
+// skater slides along a wall.
 
 const SCREEN_MAX = 40;
-const SHAPES = { star: 0, ring: 1, petal: 2 };
+const NONE = Object.freeze([]);
+const SHAPES = { star: 0, ring: 1, petal: 2, spark: 3, puff: 4 };
 
 // Clip-space quads: corner.x (position.x) goes 0..1 along the segment, corner.y -1..1
 // across it. `seg` is the segment in NDC, `width` the widths in px at each
@@ -128,16 +135,24 @@ const burstFragment = /* glsl */ `
     } else if (shape < 1.5) {
       // A ring.
       m = 1.0 - smoothstep(0.07, 0.07 + aa, abs(r - 0.82));
-    } else {
+    } else if (shape < 2.5) {
       // A petal: an ellipse.
       vec2 p = vUv * vec2(1.0, 1.8);
       m = 1.0 - smoothstep(0.9 - aa, 0.9, length(p));
+    } else if (shape < 3.5) {
+      // A spark: a thin streak with a pale center.
+      vec2 p = vUv * vec2(1.0, 5.0);
+      m = 1.0 - smoothstep(0.6, 1.0, length(p));
+    } else {
+      // A dust puff: a soft disc.
+      m = 0.85 * (1.0 - smoothstep(0.25, 1.0, r));
     }
     float a = m * vParams.y;
     if (a < 0.003) discard;
     // The hot core: only it goes over the bloom threshold.
     float hot = vParams.w > 0.0 ? 1.0 - smoothstep(0.1, 0.24, r) : 0.0;
     vec3 col = mix(vColor, uCore * vParams.w, hot);
+    if (shape > 2.5 && shape < 3.5) col = mix(col, vec3(0.9, 0.82, 0.62), 1.0 - smoothstep(0.0, 0.45, length(vUv * vec2(1.0, 5.0))));
     gl_FragColor = vec4(col, a);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -201,7 +216,7 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
   let fx = createFx();
   let hold = false;
   let forceSpeed = null;
-  const info = { lines: 0, spikes: 0, bursts: 0, impacts: 0, triggers: { bonk: 0, land: 0, grind: 0, beat: 0 } };
+  const info = { lines: 0, spikes: 0, bursts: 0, impacts: 0, triggers: { bonk: 0, land: 0, grind: 0, beat: 0, dust: 0, sparks: 0 } };
   // The draw calls of the effect meshes in the last frame (all passes).
   let draws = 0;
   let lastDraws = 0;
@@ -231,6 +246,8 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
   burstMesh.visible = false;
   burstMesh.userData.overlay = true;
 
+  const screenAttrs = Object.values(screen.arrays);
+  const burstAttrs = Object.values(bursts.arrays);
   screenMesh.onAfterRender = countDraw;
   burstMesh.onAfterRender = countDraw;
   if (scene) {
@@ -257,29 +274,68 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
   }
 
   const v = new THREE.Vector3();
+  // Kept, so a frame makes no new vector (review of #236).
+  const size = new THREE.Vector2(1280, 720);
+  const anchor = { x: 0, y: 0, r: 0 };
+  const lineWidths = [0, 0];
+  const spikeWidths = [0, 0];
   function anchorOf(skater) {
     const [x, y, z] = skater.position;
-    v.set(x, y + 0.9, z).project(camera);
-    const ax = v.x;
-    const ay = v.y;
-    const behind = v.z > 1;
-    v.set(x, y + 1.75, z).project(camera);
-    const hy = v.y;
-    v.set(x, y, z).project(camera);
-    return { x: ax, y: ay, r: behind ? 0 : Math.abs(hy - v.y) / 2 };
+    // A point behind the camera projects mirrored (screenAnchor()). The
+    // camera-space z tells which side of the camera the skater is on.
+    v.set(x, y + 0.9, z).applyMatrix4(camera.matrixWorldInverse);
+    const behind = v.z > 0;
+    v.applyMatrix4(camera.projectionMatrix);
+    const a = screenAnchor(v.x, v.y, behind);
+    anchor.x = a.x;
+    anchor.y = a.y;
+    anchor.r = 0;
+    if (!behind) {
+      v.set(x, y + 1.75, z).project(camera);
+      const hy = v.y;
+      v.set(x, y, z).project(camera);
+      anchor.r = Math.abs(hy - v.y) / 2;
+    }
+    return anchor;
   }
 
+  // Write the attribute values by index: no temporary arrays each frame.
   function writeSegments(list, color, widths, style, from) {
-    const { seg, width, tint } = screen.arrays;
+    const seg = screen.arrays.seg.array;
+    const width = screen.arrays.width.array;
+    const tint = screen.arrays.tint.array;
     let i = from;
     for (const s of list) {
       if (i >= SCREEN_MAX) break;
-      seg.array.set([s.ax, s.ay, s.bx, s.by], i * 4);
-      width.array.set([widths[0], widths[1], style], i * 3);
-      tint.array.set([color[0], color[1], color[2], s.alpha], i * 4);
+      const a = i * 4;
+      seg[a] = s.ax;
+      seg[a + 1] = s.ay;
+      seg[a + 2] = s.bx;
+      seg[a + 3] = s.by;
+      tint[a] = color[0];
+      tint[a + 1] = color[1];
+      tint[a + 2] = color[2];
+      tint[a + 3] = s.alpha;
+      const b = i * 3;
+      width[b] = widths[0];
+      width[b + 1] = widths[1];
+      width[b + 2] = style;
       i += 1;
     }
     return i;
+  }
+
+  // Game feel (#105): the dust of a landing and the sparks of a wall slide.
+  function spawnDust(position, strength, seed) {
+    for (const spec of dustSpecs(position, strength, policy.dust, seed)) fx = addBurst(fx, spec);
+  }
+  function spawnSparks(skater, strength, tick) {
+    const [vx, , vz] = skater.velocity ?? [0, 0, 0];
+    const n = Math.hypot(vx, vz);
+    // With no horizontal velocity, use the yaw (controller.js heading()).
+    const yaw = skater.yaw ?? 0;
+    const heading = n > 1e-6 ? [vx / n, vz / n] : [Math.cos(yaw), -Math.sin(yaw)];
+    for (const spec of sparkSpecs(skater.position, heading, strength, policy.sparks, tick)) fx = addBurst(fx, spec);
   }
 
   function spawn(reason, position) {
@@ -316,6 +372,16 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
           if (fx.impact.seq !== before) info.impacts += 1;
         } else spawn(t.reason, next.position);
       }
+      if (!policy.dust && !policy.sparks) return;
+      const feel = feelTriggers(prev, next);
+      if (feel.land && feel.land.strength > 0 && policy.dust) {
+        info.triggers.dust += 1;
+        spawnDust(next.position, feel.land.strength, next.tick ?? 0);
+      }
+      if (feel.slide && feel.slide.strength > 0 && policy.sparks) {
+        info.triggers.sparks += 1;
+        spawnSparks(next, feel.slide.strength, next.tick ?? 0);
+      }
     },
     // Add one particle (see fx.js addBurst()). The caller gates it with
     // its own policy row.
@@ -329,49 +395,82 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
       draws = 0;
       if (!policy.enabled) return;
       fx = stepFx(fx, hold ? 0 : dt, { speed: forceSpeed ?? skater?.speed ?? 0, active });
-      const size = renderer ? renderer.getDrawingBufferSize(new THREE.Vector2()) : new THREE.Vector2(1280, 720);
+      if (renderer) renderer.getDrawingBufferSize(size);
       screenMat.uniforms.uRes.value.copy(size);
       const aspect = size.x / Math.max(1, size.y);
       const pr = renderer ? Math.max(1, renderer.getPixelRatio()) : 1;
-      const anchor = skater ? anchorOf(skater) : { x: 0, y: 0, r: 0 };
+      if (skater) anchorOf(skater);
+      else anchor.x = anchor.y = anchor.r = 0;
 
       let n = 0;
-      const lines = active ? speedLineSegments(policy.lines, fx.time, anchor, aspect, fx.speed) : [];
-      n = writeSegments(lines, line, [1.5 * pr, 3.5 * pr], 0, n);
+      const lines = active ? speedLineSegments(policy.lines, fx.time, anchor, aspect, fx.speed) : NONE;
+      lineWidths[0] = 1.5 * pr;
+      lineWidths[1] = 3.5 * pr;
+      n = writeSegments(lines, line, lineWidths, 0, n);
       info.lines = lines.length;
-      let spikes = [];
+      let spikes = NONE;
       if (active && fx.impact.frames > 0) {
         const frame = policy.impact - fx.impact.frames;
         spikes = impactSpikes(policy.spikes, fx.impact.seq, frame, anchor, aspect);
         const { color } = skater ? accentAt(skater.position[0], skater.position[2]) : { color: line };
-        n = writeSegments(spikes, color, [14 * pr, 1.5 * pr], 1, n);
+        spikeWidths[0] = 14 * pr;
+        spikeWidths[1] = 1.5 * pr;
+        n = writeSegments(spikes, color, spikeWidths, 1, n);
         if (!hold) fx = impactFrameDone(fx);
       }
       info.spikes = spikes.length;
       screen.geo.instanceCount = n;
-      for (const a of Object.values(screen.arrays)) a.needsUpdate = true;
+      // No upload when nothing draws.
+      if (n > 0) for (const a of screenAttrs) a.needsUpdate = true;
       screenMesh.visible = n > 0;
 
-      const { center, color, params, orient } = bursts.arrays;
+      const center = bursts.arrays.center.array;
+      const color = bursts.arrays.color.array;
+      const params = bursts.arrays.params.array;
+      const orient = bursts.arrays.orient.array;
       let m = 0;
       if (active) {
         for (const b of fx.bursts) {
           const env = burstEnvelope(b.t / b.life);
-          center.array.set(b.position, m * 3);
-          color.array.set(b.color ?? line, m * 3);
-          params.array.set([b.size * env.scale, env.alpha, SHAPES[b.shape] ?? 0, b.core ? FX.emissive.core : 0], m * 4);
-          orient.array.set([b.rotation + b.spin * b.t, b.flat ? 1 : 0], m * 2);
+          const c = b.color ?? line;
+          const i3 = m * 3;
+          center[i3] = b.position[0];
+          center[i3 + 1] = b.position[1];
+          center[i3 + 2] = b.position[2];
+          color[i3] = c[0];
+          color[i3 + 1] = c[1];
+          color[i3 + 2] = c[2];
+          const i4 = m * 4;
+          params[i4] = b.size * env.scale;
+          params[i4 + 1] = env.alpha * (b.opacity ?? 1);
+          params[i4 + 2] = SHAPES[b.shape] ?? 0;
+          params[i4 + 3] = b.core ? FX.emissive.core : 0;
+          orient[m * 2] = b.rotation + b.spin * b.t;
+          orient[m * 2 + 1] = b.flat ? 1 : 0;
           m += 1;
         }
       }
       bursts.geo.instanceCount = m;
-      for (const a of Object.values(bursts.arrays)) a.needsUpdate = true;
+      if (m > 0) for (const a of burstAttrs) a.needsUpdate = true;
       burstMesh.visible = m > 0;
       info.bursts = m;
     },
     // The screenshot hooks: show an effect and hold it still.
-    trigger(kind, position) {
+    // Game feel (#105): trigger("dust", position, { strength }) and
+    // trigger("sparks", position, { skater, strength }); `skater` gives the
+    // heading of the sparks.
+    trigger(kind, position, opts = {}) {
       if (!policy.enabled) return;
+      if (kind === "dust" || kind === "sparks") {
+        if (kind === "dust") spawnDust(position, opts.strength ?? 1, 1);
+        // Sparks of several ticks, aged, so a held picture shows a spray.
+        else for (let t = 0; t < 10; t += 1) {
+          spawnSparks({ ...opts.skater, position }, opts.strength ?? 1, t);
+          fx = stepFx(fx, 1 / 60, { speed: forceSpeed ?? 0 });
+        }
+        if (kind === "dust") fx = stepFx(fx, 0.16, { speed: forceSpeed ?? 0 });
+        return;
+      }
       if (kind === "speed") {
         forceSpeed = 99;
         fx = { ...fx, speed: 1 };
@@ -392,7 +491,7 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
       forceSpeed = null;
     },
     get info() {
-      return { ...info, draws: lastDraws, enabled: policy.enabled, reducedMotion: reduced, policy: { ...policy }, speed: fx.speed, impactFrames: fx.impact.frames, visible: { screen: screenMesh.visible, bursts: burstMesh.visible } };
+      return { ...info, triggers: { ...info.triggers }, draws: lastDraws, enabled: policy.enabled, reducedMotion: reduced, policy: { ...policy }, speed: fx.speed, impactFrames: fx.impact.frames, visible: { screen: screenMesh.visible, bursts: burstMesh.visible } };
     },
     meshes: [screenMesh, burstMesh],
     dispose() {

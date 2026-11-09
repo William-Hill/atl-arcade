@@ -27,7 +27,8 @@ export const FX = {
   // wall from rest does not flash on each tick. A hard landing: this air
   // time, or this fall speed at the touchdown.
   impact: { bonkSpeed: 3, hardAirTime: 0.9, hardFallSpeed: 7, cooldown: 0.35 },
-  burst: { life: 0.45, size: 0.55, beatSize: 0.8, max: 48 },
+  // `max` is the particle pool, shared with the dust and sparks (#105).
+  burst: { life: 0.45, size: 0.55, beatSize: 0.8, max: 96 },
   // The streak layout. Distances are fractions of the way from the skater
   // to the frame edge, along the streak ray; `clear` is the least distance
   // from the skater in NDC y units (clearRadius()).
@@ -56,6 +57,10 @@ export const EFFECT_TIERS = {
     phone: { star: false, ring: true, core: false },
     high: { star: true, ring: true, core: true },
   },
+  // Game feel (#105, feel.js): the dust puffs of a landing, and the sparks
+  // per simulation tick of a wall slide.
+  dust: { low: 0, phone: 4, high: 7 },
+  sparks: { low: 0, phone: 2, high: 3 },
 };
 
 // Pure: the effects policy for a tier. `reducedMotion` (the
@@ -156,6 +161,7 @@ export function addBurst(fx, spec, k = FX) {
     spin: spec.spin ?? 0,
     rotation: spec.rotation ?? 0,
     flat: Boolean(spec.flat),
+    opacity: spec.opacity ?? 1,
   };
   const bursts = [...fx.bursts, b];
   while (bursts.length > k.burst.max) bursts.shift();
@@ -218,6 +224,21 @@ export function edgeDistance(ax, ay, dx, dy, aspect) {
 // least `min`.
 export function clearRadius(anchor, min) {
   return Math.max(min, (anchor?.r ?? 0) * 1.3);
+}
+
+// Pure: the screen anchor of a point from its projection. A point behind
+// the camera projects through the eye, so its NDC x and y are mirrored: turn
+// them back and push the point out to the frame edge, so the effects keep
+// the side of the screen the skater is on. `behind` is true when the point
+// is behind the camera (camera-space z > 0).
+export function screenAnchor(ndcX, ndcY, behind) {
+  if (!behind) return { x: ndcX, y: ndcY };
+  const x = -ndcX;
+  const y = -ndcY;
+  const m = Math.max(Math.abs(x), Math.abs(y));
+  if (m < 1e-6) return { x: 0, y: -1 };
+  const s = Math.max(1, 1 / m);
+  return { x: x * s, y: y * s };
 }
 
 // Clamp the anchor (the skater on the screen, NDC) inside the frame.

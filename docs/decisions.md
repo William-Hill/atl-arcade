@@ -2030,3 +2030,28 @@ The reviews of the PRs that merged into `epic/city-look` on 2026-11-08 left mino
 - **Provenance**: `docs/style-sheet-pbr/provenance.json` names the merge commit of PR #235 (`6eca11de`).
 
 **Evidence.** `src/sim/camera.test.js` (each crown vertex of each procedural variant is in its volume; the index gives the same answers as the plain test over 300 random queries), `e2e/canopy-camera.spec.js` (each GLB crown vertex is in its volume), `src/render/pbr-palette.test.js`, `src/render/leaf-cut.test.js` (the old texture is freed; the shadow pass gets the baked cut; the program cache key changes with `leafBaked`), `src/render/skater-view.test.js` and `e2e/skater-spawn.spec.js` (a fall under the floor: the carve lean is 0 in the first frame; it was 0.041 rad before the fix).
+## 2026-11-09 — Game feel: bonk shake, landing dust, wall sparks, speed view, sounds (#105)
+
+**What.** #105 asks for feedback on hits, speed and landings. The comic effects of #113 already give the speed lines, the impact frames and the grind and beat bursts, and #107 gave the carve lean. This change adds the rest:
+- Bonk: a camera shake of 0.3 s, at most 0.022 rad (1.3°), as a rotation after the camera placement, so the shake cannot move the camera into a wall. A bonk under 1.5 m/s (a push into a wall from rest) gives no shake. A bonk sound: a low sine thud and a short noise knock, louder and lower for a faster hit.
+- Wall slide: orange sparks that fly back from the skates on each slide tick (3 per tick on high, 2 on phone, none on low), and a scrape sound (band-passed noise, louder and brighter at speed).
+- Landing: a dust puff from a fall of 2.5 m/s or more (about 0.16 m), with more, bigger and faster puffs for a higher fall (7 on high, 4 on phone, none on low). A landing sound from the fall height: a wheel clack on a small drop, a deep thud on a big one.
+- Speed: the field of view opens by up to 7° between 8 and 13 m/s (the speed lines start at 9.5 m/s). It opens over 0.5 s and closes over 0.9 s.
+
+**The controller does not change.** `src/render/effects/feel.js` (pure) reads the flags `bonked`, `wallSlide`, `justLanded`, `speed` and `velocity` from the skater before and after each simulation tick. `main.js simulate()` gives each tick to `effects.observe()`, `sfx.observe()` and `follow.observe()`. The fall height is `v² / 2g` with the controller's gravity (20 m/s²).
+
+**Pure and render parts.** `feel.js` holds the triggers, the shake, the field-of-view curve and the dust and spark layouts (20 Vitest tests, also from the real controller). `src/audio/sfx-math.js` holds the sound levels (`src/audio/sfx.test.js`, 7 tests, with a fake AudioContext). `follow-camera.js` applies the shake and the field of view. `renderer.js` keeps the base field of view for the screen shape in `camera.userData.baseFov`; the boost adds to it.
+
+**Particles.** The dust (a soft disc, `puff`) and the sparks (a thin streak, `spark`) are new shapes of the #113 burst mesh, so they add no draw call. The particle pool is 96 (was 48). The colors stay under the night bloom threshold (0.92), so they do not bloom.
+
+**Sounds.** Synthesized with Web Audio on the beat clock's AudioContext. There are no sample files, so no license and no `provenance.json`. They play after the first key or pointer press, like the music, and not with `?mute=1`. The scrape fades to 0 by itself when the slide ticks stop (the slide ends, a pause, photo mode).
+
+**Gates.** `prefers-reduced-motion` and `?fx=0` turn off the shake, the field of view, the dust and the sparks on every tier, also live. The sounds stay on with reduced motion: it is about motion on the screen. The low tier keeps the shake and the field of view (no render cost) and has no particles (the #113 layer is off there).
+
+**Review fixes from PR #236** (`effects-view.js`): one kept `Vector2` for the drawing buffer size and one kept anchor; the attribute values are written by index, with no temporary arrays; the attributes upload only when the mesh draws. `anchorOf()` used mirrored x and y when the skater was behind the camera: the new `screenAnchor()` (`fx.js`) turns them back and puts the anchor at the frame edge. `watchReducedMotion()` now has Vitest tests with a fake `matchMedia` (`effects-view.test.js`, 10 tests). `effects.info.triggers` is now a copy, so two reads do not share one object (`e2e/feel.spec.js` found this).
+
+**Cost.** 0 new draw calls. The phone frame time does not get worse: see `docs/perf/105/README.md`.
+
+**Evidence.** `src/render/effects/feel.test.js`, `src/render/effects/effects-view.test.js`, `src/audio/sfx.test.js`. `e2e/feel.spec.js`: a picture of each effect on phone/toon and high/pbr (`e2e/__screenshots__/feel-{none,shake,fov,dust,sparks}-{phone-toon,high-pbr}.png`); a slide along the edge fence makes sparks and a scrape; a 3 m drop makes dust and a landing sound for about 3 m; a full-push ride into the edge fence opens the field of view, then the bonk shakes and plays a sound on a running AudioContext; reduced motion keeps the camera still and draws no particles, and the sounds stay.
+
+**Open.** No person played with the effects or listened to the sounds. Real skaters must review the feel and the tuning (the shake size, the field-of-view range, the dust and spark amounts, the sounds), together with `wallBonkAngle`, `wallSlideKeep`, the push and the carve (AGENTS.md). The sounds were not heard on a real speaker. The frame time was not measured on a real GPU or a real phone.

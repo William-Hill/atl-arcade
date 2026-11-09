@@ -30,6 +30,8 @@ const browser = await chromium.launch({ args: ["--no-sandbox", "--enable-unsafe-
 
 async function shots(quality, extra) {
   const page = await (await browser.newContext({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 1 })).newPage();
+  // A high pbr frame takes seconds on a software GPU.
+  page.setDefaultTimeout(300000);
   await page.goto(`${base}/?${QUERY}&quality=${quality}&look=pbr${extra}`);
   await page.waitForFunction(() => window.__atl?.ready && window.__atl.frames > 2, null, { timeout: 180000 });
   await page.waitForFunction(

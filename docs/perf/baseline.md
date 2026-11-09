@@ -93,7 +93,7 @@ Cost by system (`?perf=1`, CPU ms on the main thread). A sim system (skater, wal
 | phone | 185 | 375,000 (pbr 420,000) | 235 (pbr 375) | 100 | 8.5 (pbr 16.5) | 1.0 |
 | high | 360 (pbr 420) | 1,070,000 (pbr 1,200,000) | 400 | 100 | 10.4 (pbr 21.5) | 1.0 |
 
-The download caps are from #190 (2026-11-07). `budget.json` is the source; this table follows it.
+The download caps are from #190 (2026-11-07). `budget.json` also caps `firstDownloadMB` on the pbr look (low 4.8, phone 4.3, high 5.0 MB, #190, 2026-11-09). `budget.json` is the source; this table follows it.
 
 ### Targets (on real devices, to reach by version 1)
 
@@ -119,6 +119,7 @@ The numbers are from the 2026-11-06 baseline above. Each one is a GitHub issue l
 4. **The sim and view CPU per frame, walkers first** (#189). On high, the walkers take 1.5 to 1.7 ms per step (120 walkers) and their view 0.15 to 1.26 ms (pbr: the Meshy people); traffic 0.8 to 1.1 ms plus 0.45 to 0.75 ms for the view; NPC skaters 0.8 to 0.9 ms plus 0.85 ms. The other views take 2.5 ms. Together that is about 7.2 ms (toon) to 10 ms (pbr) of CPU per frame on high before the render, on this machine's CPU; on low toon it is about 4.4 ms. The `render` CPU (the Three.js side of the draw) is 7 to 35 ms per frame on top.
 5. **The pbr look's extra downloads and the first frame** (#190). The pbr look adds 6 to 17 MB to the download: high pbr is 36.7 MB (30.3 MB GLB, 4.5 MB textures) against 19.6 MB for high toon. The car GLB (`vehicles_lod`, 1.7 MB) is the largest after the skaters. The first frame on localhost with no network limit is 5.7 s (phone toon) to 12.5 s (high pbr).
    **Done in #190** (the results above are from it): WebP textures in the 38 pbr GLBs, the far content after the first frame, the env map bake after the level workers. High pbr 27.3 → 19.5 MB and 10.3 → 6.2 s (median of 5.9 and 6.6 s); high toon 11.3 → 9.4 MB and 6.0 → 5.4 s. The rest of the high pbr first frame is the shader link of the first draw (1.5 s against 0.6 to 0.9 s for toon), which is #191. Per-file lists: `files` in `docs/perf/baseline.json` (each file with its start time). Marks and long tasks: `node scripts/first-frame-probe.mjs --quality high --look pbr`. See `docs/decisions.md` and `docs/perf/190/`.
+   **Second #190 step** (2026-11-09): the street kit, the GLB trees, the painted mural atlas and the pbr ground maps also load after the first frame (`src/render/late-load.js`). The MB asked for before the first frame (`firstDownloadMB`, new column) go down: low pbr 6.74 → 4.33, phone pbr 6.31 → 3.90, high pbr 8.57 → 4.54. On an emulated 1.6 Mbps link the first frame comes 5.7 s (phone pbr) and 10.1 s (high pbr) sooner. On localhost and on Fast 4G the first frame is CPU-bound and does not change. See `docs/perf/190/late-load.md`.
 
 ## Not verified
 

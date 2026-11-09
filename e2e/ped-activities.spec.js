@@ -199,7 +199,10 @@ test.describe("walker activities, desktop (#133)", () => {
     const cheer = await page.evaluate(() => ({ cheers: window.__atl.peds.cheers, now: window.__atl.peds.activities.cheer }));
     expect(cheer.cheers).toBeGreaterThan(before);
     expect(cheer.now).toBeGreaterThan(0);
-    expect(await aimAt(page, "cheer", SPAWN, { dist: 6, side: 3, height: 2.2 })).not.toBeNull();
+    // Close in front of one cheering walker, with a new cheer for the shot.
+    await page.evaluate(() => window.__atl.peds.cheer(5000));
+    await frames(page, 1);
+    expect(await aimAt(page, "cheer", SPAWN, { dist: 3.2, side: 0.6, height: 1.6 })).not.toBeNull();
     await shoot(page, "cheer-trail-pbr");
     expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
   });

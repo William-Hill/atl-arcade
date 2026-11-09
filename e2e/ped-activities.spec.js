@@ -41,61 +41,78 @@ async function frames(page, n) {
 // Sends the camera high over (x, z): the pool scatters around it.
 async function visit(page, [x, z]) {
   await page.evaluate(([x, z]) => window.__atl.setFixedCamera(x + 0.01, 30, z + 20, x, 0, z), [x, z]);
-  await frames(page, 20);
+  await frames(page, 10);
 }
 
-// Finds a live walker for `what` (an activity), nearest to (x, z), and puts
-// the camera `dist` m in front of it. Returns the walker or null.
+// The tests of each activity, on a walker of window.__atl.peds.list.
+const ACTIVITY = {
+  sit: (w) => w.goal === "bench" && w.leg === "stay",
+  bench: (w) => w.goal === "bench" && w.leg === "stay",
+  bus: (w) => w.goal === "bus" && w.leg === "stay",
+  shop: (w) => w.goal === "shop" && w.leg === "stay",
+  talk: (w) => w.pose === 3,
+  group: (w) => w.role === "member" && w.speed > 0.3,
+  jog: (w) => w.pose === 4 && w.speed > 1.5,
+  cheer: (w) => w.pose === 2,
+};
+
+// The live walker `id` if it is still in the activity `what`, else null.
+async function walker(page, what, id) {
+  const w = await page.evaluate((id) => window.__atl.peds.list.find((w) => w.id === id) ?? null, id);
+  return w && ACTIVITY[what](w) ? w : null;
+}
+
+// Finds a live walker in the activity `what` anywhere in the pool, nearest
+// to `at`, moves the camera to it in hops of under 60 m (a longer move
+// scatters the pool again, PEDS.jump), and puts the camera `dist` m in front
+// of it. Returns the walker or null.
 // With `toward` ([x, z], a building), the camera is on the far side of the
 // walker from it, so the building is behind the walker.
-async function aimAt(page, what, [x, z], { dist = 5.5, height = 1.7, side = 1.5, toward = null } = {}) {
-  return page.evaluate(
-    ({ what, x, z, dist, height, side, toward }) => {
-      const list = window.__atl.peds.list;
-      const ok = {
-        sit: (w) => w.goal === "bench" && w.leg === "stay",
-        bench: (w) => w.goal === "bench" && w.leg === "stay",
-        bus: (w) => w.goal === "bus" && w.leg === "stay",
-        shop: (w) => w.goal === "shop" && w.leg === "stay",
-        talk: (w) => w.pose === 3,
-        group: (w) => w.role === "member" && w.speed > 0.3,
-        jog: (w) => w.pose === 4 && w.speed > 1.5,
-        cheer: (w) => w.pose === 2,
-      }[what];
-      // Near the camera: a camera move over 60 m scatters the pool again
-      // (PEDS.jump), and the walker would be gone.
-      const [ex, , ez] = window.__atl.cameraPosition;
-      const pick = list.filter((w) => ok(w) && Math.hypot(w.x - ex, w.z - ez) < 45).sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z))[0];
-      if (!pick) return null;
-      // In front of the walker (fx, fz is the way it faces), a little to the side.
-      let [fx, fz] = [pick.fx, pick.fz];
-      if (toward) {
-        const d = Math.hypot(pick.x - toward[0], pick.z - toward[1]) || 1;
-        [fx, fz] = [(pick.x - toward[0]) / d, (pick.z - toward[1]) / d];
-      }
-      const cx = pick.x + fx * dist - fz * side;
-      const cz = pick.z + fz * dist + fx * side;
-      const look = toward ? [pick.x - fx * 6, pick.y + 2, pick.z - fz * 6] : [pick.x, pick.y + 0.9, pick.z];
-      window.__atl.setFixedCamera(cx, pick.y + height, cz, look[0], look[1], look[2]);
-      return pick;
-    },
-    { what, x, z, dist, height, side, toward },
-  );
+async function aimAt(page, what, at, { dist = 5.5, height = 1.7, side = 1.5, toward = null } = {}) {
+  const list = await page.evaluate(() => window.__atl.peds.list);
+  const pick = list.filter(ACTIVITY[what]).sort((a, b) => Math.hypot(a.x - at[0], a.z - at[1]) - Math.hypot(b.x - at[0], b.z - at[1]))[0];
+  if (!pick) return null;
+  let w = pick;
+  for (let hop = 0; hop < 8; hop += 1) {
+    const [ex, , ez] = await page.evaluate(() => window.__atl.cameraPosition);
+    const d = Math.hypot(w.x - ex, w.z - ez);
+    if (d < 40) break;
+    const k = Math.min(1, 50 / d);
+    const cx = ex + (w.x - ex) * k;
+    const cz = ez + (w.z - ez) * k;
+    await page.evaluate(([cx, cz, x, z]) => window.__atl.setFixedCamera(cx, 25, cz, x, 0, z), [cx, cz, w.x, w.z]);
+    await frames(page, 1);
+    w = await walker(page, what, pick.id);
+    if (!w) return null;
+  }
+  // In front of the walker (fx, fz is the way it faces), a little to the side.
+  let [fx, fz] = [w.fx, w.fz];
+  if (toward) {
+    const d = Math.hypot(w.x - toward[0], w.z - toward[1]) || 1;
+    [fx, fz] = [(w.x - toward[0]) / d, (w.z - toward[1]) / d];
+  }
+  const cx = w.x + fx * dist - fz * side;
+  const cz = w.z + fz * dist + fx * side;
+  const look = toward ? [w.x - fx * 6, w.y + 2, w.z - fz * 6] : [w.x, w.y + 0.9, w.z];
+  await page.evaluate((a) => window.__atl.setFixedCamera(...a), [cx, w.y + height, cz, ...look]);
+  return w;
 }
 
 // Waits until a walker in the activity shows up, up to `tries` checks.
-async function find(page, what, at, opts, tries = 20) {
+async function find(page, what, at, opts, tries = 8) {
   for (let i = 0; i < tries; i += 1) {
     const w = await aimAt(page, what, at, opts);
     if (w) return w;
-    await frames(page, 15);
+    await frames(page, 10);
   }
   return null;
 }
 
-// Visits the places of `kind` nearest to `at`, in turn, until a walker
-// stays at one; then aims at that walker. Returns the walker or null.
-async function findAtPlace(page, kind, at, opts, places = 8) {
+// A walker at a place of `kind`: first in the pool; else visit the places
+// of `kind` nearest to `at`, in turn. Returns the walker or null.
+async function findAtPlace(page, kind, at, opts, places = 4) {
+  const now = await find(page, kind, at, opts, 2);
+  if (now) return now;
   const list = await page.evaluate((k) => window.__atl.peds.places.filter((p) => p.kind === k), kind);
   list.sort((a, b) => Math.hypot(a.x - at[0], a.z - at[1]) - Math.hypot(b.x - at[0], b.z - at[1]));
   // One visit per 20 m: the slots of one stop or one door are close.
@@ -103,7 +120,7 @@ async function findAtPlace(page, kind, at, opts, places = 8) {
   for (const p of list) if (spots.length < places && spots.every((q) => Math.hypot(q.x - p.x, q.z - p.z) > 20)) spots.push(p);
   for (const p of spots) {
     await visit(page, [p.x, p.z]);
-    const w = await find(page, kind, [p.x, p.z], opts, 4);
+    const w = await find(page, kind, [p.x, p.z], opts, 2);
     if (w) return w;
   }
   return null;

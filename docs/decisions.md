@@ -2087,3 +2087,13 @@ The walkers (`src/sim/peds.js`) did a walk and a short stop near a shop. Now the
 **Evidence.** `src/sim/camera.test.js` (8 swing tests: a wall 0.4 m from the skater gives a hit under 1.2 m, the swing clears it within 0.3 s at 60 fps, and `orbitAbout` matches the look offset). `src/render/effects/feel.test.js` (the shake size and the punch). `e2e/camera-pushin.spec.js`: 0.4 m from the east fence, riding north and away from it at 0.6 rad, the nearest camera distance was 1.00 m before this change and 4.19 m after it; a wall slide along the fence stays at 7.1 m; the camera stays inside the fence (`e2e/__screenshots__/camera-pushin-after.png`). The edge fence, canopy camera, feel and spawn e2e specs pass (15 tests). `e2e/__screenshots__/feel-shake-{phone-toon,high-pbr}.png` show the bigger shake.
 
 **Open.** No person played it. Real skaters must review the shake size and the punch (AGENTS.md). The swing probes cast up to 11 rays on a frame while a blocker is close; the frame time was not measured on a real device.
+
+## 2026-11-09 — The skater Blender sources go into git
+
+**Problem.** `.gitignore` excludes `assets/skaters/*/raw/`, so the Blender sources of the skaters were only on the author's machine. A cloud session with Blender 5.2 could not key new clips for #107 (slide, bonk and hard landing clips, clip blends, foot IK).
+
+**Decision.** The source of `scripts/blender/skater_anim_v3.py` goes into git for each skater: `assets/skaters/nia/source/nia-forward.blend` (7,342,935 bytes) and `assets/skaters/marcus/source/marcus-forward.blend` (12,529,233 bytes), with a `provenance.json` next to each. Nia's file linked its 88 textures from `raw/`, so they are now packed into it. Marcus's file already packed its 80 textures. Both files are Blender 5.2 files. The rest of `raw/` stays out of git (1.7 GB of exports and work files).
+
+**Exception.** AGENTS.md blocks GLB files over 10 MB. Marcus's `.blend` is 12.5 MB. The owner accepted it on 2026-11-09: it is a source file, the browser never downloads it, and a smaller texture would make the source worse than the shipped skater.
+
+**Evidence.** In Blender 5.2.2, both files have 0 external images, 0 missing files and 0 libraries. `skater_anim_v3.py --name nia --source assets/skaters/nia/source/nia-forward.blend` ran to exit 0 (5 clips, knee residual 0.0 degrees).

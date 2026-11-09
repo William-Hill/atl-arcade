@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { CORE_CODE, CORE_SHADE, CROWN_AO, LEAF_AA, LEAF_BAKE, LEAF_CUT_OF, crownOcclusion, decodeLeafTexel, encodeLeafTexel, leafBakeLayer, leafBakeLayout, leafCutFor, LEAF_SHAPES, leafClump, leafCoverage, leafShadeRange, markCrownCores, patchLeafFragment } from "./leaf-cut.js";
+import { CORE_CODE, CORE_SHADE, CROWN_AO, LEAF_AA, LEAF_BAKE, LEAF_CUT_OF, TREE_UNIFORMS, bakeLeafCut, createLeafDepthMaterial, crownOcclusion, decodeLeafTexel, encodeLeafTexel, leafBakeLayer, leafBakeLayout, leafCutFor, LEAF_SHAPES, leafClump, leafCoverage, leafShadeRange, markCrownCores, patchLeafFragment } from "./leaf-cut.js";
 import { ALBEDO, srgbToLinear } from "./pbr-palette.js";
 import { PUFF_CORE_CODE, SEASONS, TREE_SPECIES, seasonColors, treeTemplate } from "../level/geo/trees.js";
-import { treeTint } from "./geo-view.js";
+import { createPropMaterial, treeTint } from "./geo-view.js";
 
 const luma = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 
@@ -229,5 +229,54 @@ describe("baked leaf cut (#191)", () => {
     const proc = frag();
     patchLeafFragment(proc);
     expect(proc.fragmentShader).not.toContain("#define LEAF_BAKED");
+  });
+});
+
+// Review findings of #237.
+describe("baked leaf cut: texture, shadow and program cache", () => {
+  // A renderer stub: bakeLeafCut() only sets targets, draws and reads back.
+  const stubRenderer = () => ({
+    autoClear: true,
+    getRenderTarget: () => null,
+    setRenderTarget() {},
+    render() {},
+    readRenderTargetPixels(_t, _x, _y, w, h, out) {
+      out.fill(128, 0, w * h * 4);
+    },
+  });
+  const small = { ...LEAF_BAKE, size: 4 };
+
+  it("frees the old texture when a new bake replaces it", () => {
+    const first = bakeLeafCut(stubRenderer(), small).texture;
+    expect(TREE_UNIFORMS.uLeafBake.value).toBe(first);
+    let freed = 0;
+    first.addEventListener("dispose", () => (freed += 1));
+    const second = bakeLeafCut(stubRenderer(), small).texture;
+    expect(TREE_UNIFORMS.uLeafBake.value).toBe(second);
+    expect(freed).toBe(1);
+  });
+
+  it("gives the shadow pass the baked cut when the cards use it", () => {
+    const shader = () => ({ uniforms: {}, vertexShader: "#include <common>\nvoid main() {\n#include <begin_vertex>\n}", fragmentShader: "void main() {\n#include <clipping_planes_fragment>\n}" });
+    const baked = createLeafDepthMaterial({ baked: true });
+    const procedural = createLeafDepthMaterial();
+    const b = shader();
+    baked.onBeforeCompile(b);
+    const p = shader();
+    procedural.onBeforeCompile(p);
+    expect(b.fragmentShader.startsWith("#define LEAF_BAKED\n")).toBe(true);
+    expect(p.fragmentShader).not.toContain("#define LEAF_BAKED");
+    expect(b.uniforms.uLeafBake).toBe(TREE_UNIFORMS.uLeafBake);
+    expect(baked.customProgramCacheKey()).not.toBe(procedural.customProgramCacheKey());
+  });
+
+  it("changes the prop material program cache key with leafBaked", () => {
+    const { material } = createPropMaterial({ look: "pbr", leaves: true });
+    const before = material.customProgramCacheKey();
+    material.userData.leafBaked = true;
+    const after = material.customProgramCacheKey();
+    expect(after).not.toBe(before);
+    expect(after).toContain("-baked");
+    expect(before).not.toContain("-baked");
   });
 });

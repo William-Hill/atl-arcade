@@ -165,6 +165,57 @@ export function placeCamera(cam, pivot, allowed) {
   return { ...cam, position: [0, 1, 2].map((i) => pivot[i] + d[i] * f) };
 }
 
+// --- Swing (playtest 2026-11-09) -----------------------------------------
+//
+// A wall or the edge fence close to the skater blocks the ray to the camera
+// goal behind her, and resolveClip pulls the camera in to 1 m or less: her
+// back fills the screen. So the follow camera tries orbit offsets around her
+// (like the look yaw) and swings to the nearest offset with a clear ray.
+// resolveClip still keeps the camera in front of a wall on every frame.
+
+// Pure: the orbit offset (rad) to swing to. `clearAt(offset)` gives the
+// distance from the pivot to the first blocker on the ray toward the camera
+// goal at that offset (Infinity for none). `range` is the unblocked pivot to
+// goal distance, `current` the offset now. Behind the skater (0) wins when it
+// is clear; then the smallest clear offset, on the side of `current` first.
+// When no offset is clear, the offset with the most room, if it is better
+// than `current`.
+export function chooseSwing(clearAt, range, current = 0, k = CAMERA) {
+  const need = k.swingBelow * range;
+  if (clearAt(0) >= need) return 0;
+  const side = current < 0 ? -1 : 1;
+  let best = current;
+  let room = clearAt(current);
+  for (let i = 1; i * k.swingStep <= k.swingMax + 1e-9; i += 1) {
+    const step = i * k.swingStep;
+    for (const offset of [side * step, -side * step]) {
+      const d = clearAt(offset);
+      if (d >= need) return offset;
+      if (d > room + 0.05) {
+        best = offset;
+        room = d;
+      }
+    }
+  }
+  return best;
+}
+
+// Pure: move the offset toward the target at no more than swingRate.
+export function stepSwing(offset, target, dt, k = CAMERA) {
+  const max = k.swingRate * dt;
+  return offset + Math.max(-max, Math.min(max, target - offset));
+}
+
+// Pure: `point` turned by `angle` rad about the vertical through `center`,
+// in the same sense as an orbit (look) yaw offset.
+export function orbitAbout(point, center, angle) {
+  const x = point[0] - center[0];
+  const z = point[2] - center[2];
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return [center[0] + x * c + z * s, point[1], center[2] + z * c - x * s];
+}
+
 // --- Tree canopies (#230) -----------------------------------------------
 //
 // The wall ray hits the Rapier colliders, and the trees have none (a skater

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CAMERA, SKATE } from "./skate/constants.js";
-import { NO_LOOK, cameraGoal, createCameraState, createLook, mapLook, stepCamera, stepLook } from "./camera.js";
+import { NO_LOOK, cameraGoal, cameraPivot, chooseSwing, createCameraState, createLook, mapLook, orbitAbout, stepCamera, stepLook, stepSwing } from "./camera.js";
 import { createSkateState } from "./skate/controller.js";
 
 function skaterAt(position, yaw, speed) {
@@ -439,5 +439,76 @@ describe("tree canopy", () => {
     expect(box).toHaveLength(volumes.length);
     index.near(0, 0, 0, 0);
     expect(box).toHaveLength(volumes.length);
+  });
+});
+
+// Playtest 2026-11-09: a wall or the edge fence close to the skater pulled the
+// camera in to 0.77 m. The camera now swings around her to a clear side.
+describe("swing around a close blocker", () => {
+  // A wall along x = 0.4 m east of the skater (the edge fence), and a probe
+  // that gives the distance from the pivot to the wall on the ray toward the
+  // camera goal for an orbit offset.
+  const skater = skaterAt([0, 0, 0], Math.PI / 2 + 0.6, 6); // north, away from the wall at 0.6 rad
+  const pivot = cameraPivot(skater);
+  const goalAt = (offset) => cameraGoal(skater, skater.yaw, CAMERA, { yaw: offset, pitch: 0 }).position;
+  const wallX = 0.4;
+  const hit = (offset) => {
+    const g = goalAt(offset);
+    const dx = g[0] - pivot[0];
+    const len = Math.hypot(dx, g[1] - pivot[1], g[2] - pivot[2]);
+    if (g[0] <= wallX) return Infinity;
+    return (len * (wallX - pivot[0])) / dx;
+  };
+  const range = Math.hypot(...goalAt(0).map((v, i) => v - pivot[i]));
+
+  it("keeps the camera behind the skater when nothing blocks it", () => {
+    expect(chooseSwing(() => Infinity, range, 0)).toBe(0);
+  });
+
+  it("swings to the nearest clear side when a blocker is close", () => {
+    expect(hit(0)).toBeLessThan(1.2);
+    const target = chooseSwing(hit, range, 0);
+    expect(target).not.toBe(0);
+    expect(hit(target)).toBeGreaterThanOrEqual(CAMERA.swingBelow * range);
+    // The smallest clear swing: one step less is still blocked.
+    const back = target - Math.sign(target) * CAMERA.swingStep;
+    if (Math.abs(back) > 1e-9) expect(hit(back)).toBeLessThan(CAMERA.swingBelow * range);
+  });
+
+  it("goes back behind the skater when the blocker clears", () => {
+    expect(chooseSwing(() => Infinity, range, 0.9)).toBe(0);
+  });
+
+  it("keeps the side it already swung to", () => {
+    const both = () => Infinity;
+    const blocked0 = (o) => (Math.abs(o) < 1e-9 ? 0.5 : both(o));
+    expect(chooseSwing(blocked0, range, -0.3)).toBeLessThan(0);
+    expect(chooseSwing(blocked0, range, 0.3)).toBeGreaterThan(0);
+  });
+
+  it("goes to the clearest offset when no offset is clear, and holds when nothing is better", () => {
+    const probe = (o) => 1 + Math.max(0, -o);
+    expect(chooseSwing(probe, range, 0)).toBeCloseTo(-CAMERA.swingMax, 6);
+    expect(chooseSwing(() => 1, range, 0.3)).toBe(0.3);
+  });
+
+  it("swings at most swingRate per second", () => {
+    expect(stepSwing(0, 1, 0.1)).toBeCloseTo(CAMERA.swingRate * 0.1, 9);
+    expect(stepSwing(0.95, 1, 0.1)).toBe(1);
+    expect(stepSwing(0, -1, 0.1)).toBeCloseTo(-CAMERA.swingRate * 0.1, 9);
+  });
+
+  it("orbitAbout turns a camera point like the look offset does", () => {
+    const a = goalAt(0);
+    const b = orbitAbout(a, skater.position, 0.7);
+    const want = goalAt(0.7);
+    for (let i = 0; i < 3; i += 1) expect(b[i]).toBeCloseTo(want[i], 9);
+  });
+
+  it("a frame loop gets the camera clear of the wall within 0.3 s", () => {
+    let offset = 0;
+    const dt = 1 / 60;
+    for (let i = 0; i < 18; i += 1) offset = stepSwing(offset, chooseSwing(hit, range, offset), dt);
+    expect(hit(offset)).toBeGreaterThanOrEqual(CAMERA.swingBelow * range);
   });
 });

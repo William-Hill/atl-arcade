@@ -20,8 +20,10 @@ export const FEEL = {
   // fall height from the fall speed.
   gravity: 20,
   // A bonk under `minSpeed` (a push into a wall from rest) gives no shake.
-  // The shake is full at `fullSpeed`. `amp` is the peak rotation.
-  shake: { minSpeed: 1.5, fullSpeed: 11, amp: 0.022, duration: 0.3, freq: 23 },
+  // The shake is full at `fullSpeed`. `amp` is the peak rotation; `punch`
+  // the peak push (m) of the camera toward the skater. The playtest of
+  // 2026-11-09 did not see a shake of 0.022 rad for 0.3 s with no push.
+  shake: { minSpeed: 1.5, fullSpeed: 11, amp: 0.04, duration: 0.45, freq: 23, punch: 0.35 },
   // The field of view opens by up to `boost` degrees between `start` and
   // `full` (the speed lines start at 9.5 and are full at 13).
   fov: { start: 8, full: 13, boost: 7, attack: 0.5, release: 0.9 },
@@ -121,6 +123,14 @@ export function shakeAngles(shake, k = FEEL) {
   // Each new shake starts at another phase; the first at phase 0.
   const p = Math.max(0, shake.seq - 1) * 1.7;
   return { pitch: e * Math.sin(w + p), yaw: 0.6 * e * Math.sin(1.37 * w + 2.1 + p), roll: 0.8 * e * Math.sin(0.71 * w + 4.2 + p) };
+}
+
+// Pure: the push (m) of the camera toward the skater now: the full punch for
+// the hit strength at the start, then down with the shake. The push is along
+// the clear ray from the pivot to the camera, so it cannot move the camera
+// into a wall.
+export function shakePunch(shake, k = FEEL) {
+  return k.shake.punch * (shake.amp / k.shake.amp) * shakeEnvelope(shake, k);
 }
 
 // Pure: the field-of-view boost (deg) for a skater speed.

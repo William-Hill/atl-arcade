@@ -61,7 +61,10 @@ async function aimAt(page, what, [x, z], { dist = 5.5, height = 1.7, side = 1.5,
         jog: (w) => w.pose === 4 && w.speed > 1.5,
         cheer: (w) => w.pose === 2,
       }[what];
-      const pick = list.filter(ok).sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z))[0];
+      // Near the camera: a camera move over 60 m scatters the pool again
+      // (PEDS.jump), and the walker would be gone.
+      const [ex, , ez] = window.__atl.cameraPosition;
+      const pick = list.filter((w) => ok(w) && Math.hypot(w.x - ex, w.z - ez) < 45).sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z))[0];
       if (!pick) return null;
       // In front of the walker (fx, fz is the way it faces), a little to the side.
       let [fx, fz] = [pick.fx, pick.fz];
@@ -85,6 +88,22 @@ async function find(page, what, at, opts, tries = 20) {
     const w = await aimAt(page, what, at, opts);
     if (w) return w;
     await frames(page, 15);
+  }
+  return null;
+}
+
+// Visits the places of `kind` nearest to `at`, in turn, until a walker
+// stays at one; then aims at that walker. Returns the walker or null.
+async function findAtPlace(page, kind, at, opts, places = 8) {
+  const list = await page.evaluate((k) => window.__atl.peds.places.filter((p) => p.kind === k), kind);
+  list.sort((a, b) => Math.hypot(a.x - at[0], a.z - at[1]) - Math.hypot(b.x - at[0], b.z - at[1]));
+  // One visit per 20 m: the slots of one stop or one door are close.
+  const spots = [];
+  for (const p of list) if (spots.length < places && spots.every((q) => Math.hypot(q.x - p.x, q.z - p.z) > 20)) spots.push(p);
+  for (const p of spots) {
+    await visit(page, [p.x, p.z]);
+    const w = await find(page, kind, [p.x, p.z], opts, 4);
+    if (w) return w;
   }
   return null;
 }
@@ -114,7 +133,7 @@ test.describe("walker activities, desktop (#133)", () => {
 
       expect(await find(page, "talk", KROG, { dist: 4.5, side: 2.5 }), "a talk at Krog Street Market").not.toBeNull();
       await shoot(page, `talk-krog-${look}`);
-      expect(await find(page, "shop", KROG, { dist: -4, side: 3 }), "a stop at a shop door near Krog Street Market").not.toBeNull();
+      expect(await findAtPlace(page, "shop", KROG, { dist: -4, side: 3 }), "a stop at a shop door near Krog Street Market").not.toBeNull();
       await shoot(page, `shop-krog-${look}`);
 
       await visit(page, SPAWN);
@@ -124,10 +143,7 @@ test.describe("walker activities, desktop (#133)", () => {
       // Seated (POSE.sit).
       expect(sit.pose).toBe(1);
 
-      const stops = await page.evaluate(() => window.__atl.peds.places.filter((p) => p.kind === "bus"));
-      const stop = stops.reduce((a, b) => (Math.hypot(b.x - PCM_X, b.z - PCM_Z) < Math.hypot(a.x - PCM_X, a.z - PCM_Z) ? b : a), stops[0]);
-      await visit(page, [stop.x, stop.z]);
-      expect(await find(page, "bus", [stop.x, stop.z], { dist: 4.5, side: 2 }, 40), "a walker at a bus stop").not.toBeNull();
+      expect(await findAtPlace(page, "bus", PCM, { dist: 4.5, side: 2 }), "a walker at a bus stop").not.toBeNull();
       await shoot(page, `bus-${look}`);
       expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
     });
@@ -208,4 +224,3 @@ test.describe("walker activities, phone (#133)", () => {
   });
 });
 
-const [PCM_X, PCM_Z] = PCM;

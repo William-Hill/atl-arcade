@@ -26,7 +26,7 @@ export const DOWNLOAD_GROUPS = [
   ["skater", /\/skater(-1024)?[-.]/],
   ["physics", /rapier/],
   ["cars", /\/(vehicles_lod|sedan|taxi|van|bus|box_truck|hatchback|pickup|city_bike|e_scooter)[-.]/],
-  ["people", /\/(jogger|cyclist|dog_walker|dog|elder_polo|stroller_dad|stroller|walker_sundress|runner|commuter|[a-z_]*walker[a-z_]*)[-.][^/]*glb$/],
+  ["people", /\/(jogger|cyclist|dog_walker|dog|elder_polo|stroller_dad|stroller|walker_sundress|runner|commuter|[a-z_]*walker[a-z_]*)(_v\d+)?(-[^/]*)?\.(glb|jpe?g|webp)$/],
   ["meshy props", /\/(drinking_fountain|food_cart|sculpture_ribbon|picnic_table|bike_dock|patio_umbrella|bollard)[-.]/],
   ["landmark GLBs", /\/(ponce-city-market|telephone-factory-lofts|studioplex|new-realm-brewing|bridge-[a-z-]+|[a-z-]+-lofts)[-.][^/]*glb/],
   ["street kit", /\/(street-kit|painted_wooden_bench)[-.]/],

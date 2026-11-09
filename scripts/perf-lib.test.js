@@ -101,6 +101,7 @@ describe("perf lib: the download before the first frame (#190)", () => {
       "/assets/dog_walker-Bs0n0Vu_.glb": "people",
       "/assets/dog-QirLDCw1.glb": "people",
       "/assets/people/jogger.glb": "people",
+      "/assets/elder_polo_v2-CQyQ2Uc_.jpg": "people",
       "/assets/bollard-CpV2BZKX.glb": "meshy props",
       "/assets/ponce-city-market-D093VQas.glb": "landmark GLBs",
       "/assets/bridge-north-ave-BgJsj2sY.glb": "landmark GLBs",

@@ -17,7 +17,7 @@
         "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-style-sheet.json --out <dir>",
         "convert": "ImageMagick convert -quality 85"
       },
-      "commit": "91640ff8a3525bfd43455ab28c1955e4f3aa7c48 plus the working tree of this change (branch claude/cool-goodall-o1d9jl)",
+      "commit": "6eca11de8023ea5b220d11fcd6f3912715447320 (the merge commit of PR #235)",
       "date": "2026-11-08",
       "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
     },
@@ -37,7 +37,7 @@
         "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-style-sheet.json --out <dir>",
         "convert": "ImageMagick convert -quality 85"
       },
-      "commit": "91640ff8a3525bfd43455ab28c1955e4f3aa7c48 plus the working tree of this change (branch claude/cool-goodall-o1d9jl)",
+      "commit": "6eca11de8023ea5b220d11fcd6f3912715447320 (the merge commit of PR #235)",
       "date": "2026-11-08",
       "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
     },
@@ -57,7 +57,7 @@
         "capture": "node scripts/art/pbr-frames.mjs --shots scripts/art/shots-style-sheet.json --out <dir>",
         "convert": "ImageMagick convert -quality 85"
       },
-      "commit": "91640ff8a3525bfd43455ab28c1955e4f3aa7c48 plus the working tree of this change (branch claude/cool-goodall-o1d9jl)",
+      "commit": "6eca11de8023ea5b220d11fcd6f3912715447320 (the merge commit of PR #235)",
       "date": "2026-11-08",
       "license": "Same as the game (renderer output of the repository's own scene and CC0 scans)"
     }

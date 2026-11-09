@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-09T06:40:18.223Z",
+  "device": "Pixel 7",
+  "cpuThrottle": 1,
+  "gpu": "swiftshader",
+  "network": "9 Mbps / 1.5 Mbps / 60 ms",
+  "firstContentfulPaintMs": 180,
+  "loadScreen": true,
+  "firstGameFrameMs": 10455,
+  "skaterReadyMs": 39298,
+  "quality": "low",
+  "marks": {
+    "level": 1256,
+    "meshes": 4339,
+    "view": 7032,
+    "scene": 7785,
+    "physics": 7790,
+    "world": 8356,
+    "first-frame": 9071
+  },
+  "longTasks": {
+    "count": 2,
+    "totalMs": 6460,
+    "maxMs": 4545,
+    "list": [
+      {
+        "start": 3895,
+        "ms": 4545
+      },
+      {
+        "start": 8487,
+        "ms": 1915
+      }
+    ]
+  },
+  "requests": 171,
+  "transferMB": 9.85,
+  "beforeFirstFrameMB": 6.31,
+  "top5": [
+    {
+      "file": "/assets/skater-1024-BCRCEH1M.glb",
+      "kB": 1764
+    },
+    {
+      "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+      "kB": 1149
+    },
+    {
+      "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+      "kB": 863
+    },
+    {
+      "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+      "kB": 760
+    },
+    {
+      "file": "/assets/ponce-city-market-D093VQas.glb",
+      "kB": 498
+    }
+  ],
+  "loadAverage": "4.16 3.91 3.86"
+}

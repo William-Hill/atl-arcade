@@ -828,11 +828,12 @@ export const TREE_GLB_URLS = {
 // not stop the kit: the kind gets its fallback kit template. With
 // `glbTrees` the Blender tree templates come too; a species that fails
 // keeps its procedural tree.
-export async function loadPropTemplates({ glbTrees = false } = {}) {
+// `timeoutMs` is the limit for each extra GLB and tree GLB.
+export async function loadPropTemplates({ glbTrees = false, timeoutMs = EXTRA_PROP_TIMEOUT_MS } = {}) {
   const kinds = Object.keys(EXTRA_PROP_URLS);
-  const extras = kinds.map((k) => withTimeout(loadKitTemplates(EXTRA_PROP_URLS[k]), EXTRA_PROP_TIMEOUT_MS, k));
+  const extras = kinds.map((k) => withTimeout(loadKitTemplates(EXTRA_PROP_URLS[k]), timeoutMs, k));
   const species = glbTrees ? Object.keys(TREE_GLB_URLS) : [];
-  const treeLoads = species.map((k) => withTimeout(loadKitTemplates(TREE_GLB_URLS[k]), EXTRA_PROP_TIMEOUT_MS, `tree ${k}`));
+  const treeLoads = species.map((k) => withTimeout(loadKitTemplates(TREE_GLB_URLS[k]), timeoutMs, `tree ${k}`));
   const [kit, results, treeResults] = await Promise.all([loadKitTemplates(), Promise.allSettled(extras), Promise.allSettled(treeLoads)]);
   for (const problem of addExtraTemplates(kit, kinds, results)) console.warn(`extra prop: ${problem}`);
   treeResults.forEach((r, i) => {
@@ -976,7 +977,7 @@ export const LEAF_FLUTTER = { amplitude: 0.035, rate: 7.0 };
 // the phone and low tiers keep the cut at 0.5 coverage.
 // `material.userData.leafBaked` (set before the first draw, after
 // bakeLeafCut()) makes the cards read the baked leaf cut (#191).
-function createPropMaterial({ wind = true, look = "toon", leaves = false, coverage = false } = {}) {
+export function createPropMaterial({ wind = true, look = "toon", leaves = false, coverage = false } = {}) {
   const material = litMaterial(look, { vertexColors: true }, { gradientMap: toonRamp({ soft: true }), roughness: ROUGHNESS.props, envLight: ENV_LIGHT.props });
   // The albedo calibration (pbr look): darker leaves and props.
   if (look === "pbr") material.color.setScalar(0.8);
@@ -1049,10 +1050,12 @@ if (distance(vColor.rgb, vec3(${LAMP_GLOBE.color.join(", ")})) < 0.02) totalEmis
 // loadFacadeKit()) or null. The pbr look puts them in the depth tiles, and the
 // procedural kit leaves out what they replace; without them (a failed load)
 // the full procedural kit stays.
+// `defer`: { ground, murals }, each a function that starts a download
+// (late-load.js run()). By default the downloads start at once (#190).
 // The build options of the far surface tiles (the low tier).
 export const FAR_TERRAIN_BUILD = { terrainStep: 2, surfacesOnly: true };
 
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null, leafCoverage = false, leafCut = "procedural" } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null, leafCoverage = false, leafCut = "procedural", defer = {} } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -1060,13 +1063,13 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const materials = {
     // The pbr look gets the PBR ground sets on every tier (#158): the full
     // maps with groundDetail, the small ones (no normal map) without.
-    surface: look === "pbr" && pbrGround ? createPbrSurfaceMaterial({ tier: groundDetail ? "high" : "small" }) : createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null, look }),
+    surface: look === "pbr" && pbrGround ? createPbrSurfaceMaterial({ tier: groundDetail ? "high" : "small", defer: defer.ground }) : createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null, look }),
     building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors, look, detailMaps: look === "pbr" ? loadWallDetail() : null }),
     props: null,
     get mural() {
       // The pbr look: the painted atlas, its roughness, and the dry-brush
       // cut that shows the host wall (murals.js, #198).
-      if (!muralMap) muralMap = look === "pbr" ? createMuralMaterial(look, litMaterial, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural }) : litMaterial(look, { map: createMuralAtlas() }, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural });
+      if (!muralMap) muralMap = look === "pbr" ? createMuralMaterial(look, litMaterial, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural }, { defer: defer.murals }) : litMaterial(look, { map: createMuralAtlas() }, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural });
       return muralMap;
     },
   };
@@ -1199,7 +1202,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     const groundLight = materials.surface.userData.setGroundLight?.(placed);
     if (groundLight) props.groundLight = groundLight;
     propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance, fade, tint: glbKinds.size ? (p) => (glbKinds.has(p.kind) ? treeTint(p) : null) : null });
-    if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial();
+    if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial({ baked: propMaterial.material.userData.leafBaked === true });
     root.add(propBatch.mesh);
     byId.set("props", propBatch.mesh);
     props.count = placements.length;

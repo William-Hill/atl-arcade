@@ -1,0 +1,1178 @@
+{
+  "date": "2026-11-09T05:42:35.538Z",
+  "level": "beltline-eastside",
+  "gpu": "swiftshader (software, CPU)",
+  "machine": {
+    "cpus": 4,
+    "model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "platform": "linux"
+  },
+  "viewport": "1280x720 @1",
+  "rideSeconds": 15,
+  "maxWallSeconds": 150,
+  "extra": "",
+  "runs": [
+    {
+      "quality": "low",
+      "look": "pbr",
+      "run": 1,
+      "load": 2.1,
+      "finished": false,
+      "wallSeconds": 150,
+      "frame": {
+        "frames": 62,
+        "meanMs": 2231.9,
+        "p95Ms": 4749.7,
+        "medianFps": 0.5
+      },
+      "calls": 95,
+      "triangles": 309809,
+      "geometries": 102,
+      "textures": 125,
+      "heapMB": 39.3,
+      "firstFrameMs": 7820,
+      "settledMs": 25244,
+      "requests": 171,
+      "downloadMB": {
+        "js": 0.82,
+        "glb": 6.58,
+        "textures": 1.7,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 10.28
+      },
+      "stepsPerFrame": 4.463,
+      "systems": {
+        "skater": {
+          "meanMs": 0.452,
+          "p95Ms": 0.9,
+          "perStepMs": 0.101
+        },
+        "walkers": {
+          "meanMs": 1.875,
+          "p95Ms": 4.2,
+          "perStepMs": 0.42
+        },
+        "walkersView": {
+          "meanMs": 0.281,
+          "p95Ms": 0.6
+        },
+        "crowd": {
+          "meanMs": 0.658,
+          "p95Ms": 1.8,
+          "perStepMs": 0.147
+        },
+        "crowdView": {
+          "meanMs": 0.115,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 1.237,
+          "p95Ms": 3.4,
+          "perStepMs": 0.277
+        },
+        "trafficView": {
+          "meanMs": 0.561,
+          "p95Ms": 2.3
+        },
+        "npcSkaters": {
+          "meanMs": 0.001,
+          "p95Ms": 0,
+          "perStepMs": 0
+        },
+        "npcSkatersView": {
+          "meanMs": 0.001,
+          "p95Ms": 0
+        },
+        "views": {
+          "meanMs": 2.315,
+          "p95Ms": 4.8
+        },
+        "render": {
+          "meanMs": 107.448,
+          "p95Ms": 8.5
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-C9FYxjUD.glb",
+          "kB": 2204
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863
+        },
+        {
+          "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+          "kB": 760
+        },
+        {
+          "file": "/assets/ponce-city-market-D093VQas.glb",
+          "kB": 498
+        },
+        {
+          "file": "/assets/telephone-factory-lofts-CERsImqr.glb",
+          "kB": 299
+        },
+        {
+          "file": "/assets/studioplex-BteTaU7W.glb",
+          "kB": 254
+        },
+        {
+          "file": "/assets/main-DqSNL6jj.js",
+          "kB": 252
+        }
+      ],
+      "files": [
+        {
+          "file": "/assets/skater-C9FYxjUD.glb",
+          "kB": 2204,
+          "startMs": 137
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149,
+          "startMs": 137
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863,
+          "startMs": 6440
+        },
+        {
+          "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+          "kB": 760,
+          "startMs": 7829
+        },
+        {
+          "file": "/assets/ponce-city-market-D093VQas.glb",
+          "kB": 498,
+          "startMs": 8088
+        },
+        {
+          "file": "/assets/telephone-factory-lofts-CERsImqr.glb",
+          "kB": 299,
+          "startMs": 8088
+        },
+        {
+          "file": "/assets/studioplex-BteTaU7W.glb",
+          "kB": 254,
+          "startMs": 8088
+        },
+        {
+          "file": "/assets/main-DqSNL6jj.js",
+          "kB": 252,
+          "startMs": 18
+        },
+        {
+          "file": "/assets/new-realm-brewing-DtbtyIcW.glb",
+          "kB": 238,
+          "startMs": 8088
+        },
+        {
+          "file": "/assets/city_bike-D-sClH5p.glb",
+          "kB": 232,
+          "startMs": 7827
+        },
+        {
+          "file": "/assets/magnolia-DLSxodB6.glb",
+          "kB": 198,
+          "startMs": 5933
+        },
+        {
+          "file": "/assets/oak-BqKxyhcO.glb",
+          "kB": 195,
+          "startMs": 5933
+        },
+        {
+          "file": "/assets/street-DbOGjA0p.glb",
+          "kB": 176,
+          "startMs": 5934
+        },
+        {
+          "file": "/assets/street-kit-CEVzTpPi.glb",
+          "kB": 172,
+          "startMs": 5934
+        },
+        {
+          "file": "/assets/albedo-512-CVkYzdCy.webp",
+          "kB": 171,
+          "startMs": 5638
+        },
+        {
+          "file": "/assets/dogwood-bAl_mhrW.glb",
+          "kB": 171,
+          "startMs": 5934
+        },
+        {
+          "file": "/assets/myrtle-BeI4adI5.glb",
+          "kB": 167,
+          "startMs": 5933
+        },
+        {
+          "file": "/assets/level-P0Jlx-wE.js",
+          "kB": 150,
+          "startMs": 138
+        },
+        {
+          "file": "/assets/orm-512-DdVlRKVR.webp",
+          "kB": 143,
+          "startMs": 5639
+        },
+        {
+          "file": "/assets/drinking_fountain-fJffefrf.glb",
+          "kB": 142,
+          "startMs": 7820
+        },
+        {
+          "file": "/assets/food_cart-ORA-njsd.glb",
+          "kB": 135,
+          "startMs": 7826
+        },
+        {
+          "file": "/assets/pine-DsyQCneN.glb",
+          "kB": 133,
+          "startMs": 5933
+        },
+        {
+          "file": "/assets/e_scooter-DLKGHIs4.glb",
+          "kB": 124,
+          "startMs": 7828
+        },
+        {
+          "file": "/assets/sculpture_ribbon-CmaZmN7b.glb",
+          "kB": 120,
+          "startMs": 7828
+        },
+        {
+          "file": "/assets/toon-Bss5lxZF.js",
+          "kB": 112,
+          "startMs": 18
+        },
+        {
+          "file": "/assets/picnic_table-DB9GnjIv.glb",
+          "kB": 107,
+          "startMs": 7824
+        },
+        {
+          "file": "/assets/three.core-CVy_Bt7O.js",
+          "kB": 98,
+          "startMs": 18
+        },
+        {
+          "file": "/assets/bike_dock-7gVh7EsC.glb",
+          "kB": 97,
+          "startMs": 7827
+        },
+        {
+          "file": "/assets/patio_umbrella-DxRH0H_H.glb",
+          "kB": 92,
+          "startMs": 7825
+        },
+        {
+          "file": "/assets/normal-D4GkI7qp.jpg",
+          "kB": 85,
+          "startMs": 6440
+        },
+        {
+          "file": "/assets/krog-street-market-front-D5o4CyQn.js",
+          "kB": 82,
+          "startMs": 6440
+        },
+        {
+          "file": "/assets/eyes-B3QFcDm-.png",
+          "kB": 78,
+          "startMs": 20652
+        },
+        {
+          "file": "/assets/bridge-freedom-parkway-DoYPFtES.glb",
+          "kB": 70,
+          "startMs": 8089
+        },
+        {
+          "file": "/assets/draco_decoder-Z1_iN-Ht.wasm",
+          "kB": 62,
+          "startMs": 6470
+        },
+        {
+          "file": "/assets/color-BtNklngQ.jpg",
+          "kB": 62,
+          "startMs": 8264
+        },
+        {
+          "file": "/assets/ground-BgTcJRfM.js",
+          "kB": 53,
+          "startMs": 20
+        },
+        {
+          "file": "/assets/color-BV2rtnvG.jpg",
+          "kB": 53,
+          "startMs": 6440
+        },
+        {
+          "file": "/assets/mouth-Cl-cWCsG.png",
+          "kB": 48,
+          "startMs": 20653
+        },
+        {
+          "file": "/assets/mural-roughness-DD_SFCYm.jpg",
+          "kB": 45,
+          "startMs": 6440
+        },
+        {
+          "file": "/assets/normal-CYUCL9bN.jpg",
+          "kB": 45,
+          "startMs": 8264
+        },
+        {
+          "file": "/assets/sites-DbZ0lCcz.js",
+          "kB": 40,
+          "startMs": 7830
+        },
+        {
+          "file": "/assets/bridge-north-ave-BgJsj2sY.glb",
+          "kB": 38,
+          "startMs": 8089
+        },
+        {
+          "file": "/assets/rough-DRyqwfIO.jpg",
+          "kB": 37,
+          "startMs": 6440
+        },
+        {
+          "file": "/assets/rough-BXNYb3II.jpg",
+          "kB": 36,
+          "startMs": 8264
+        },
+        {
+          "file": "/assets/bridge-ralph-mcgill-CsdmIq88.glb",
+          "kB": 35,
+          "startMs": 8089
+        },
+        {
+          "file": "/assets/bridge-ponce-JSUkFFcb.glb",
+          "kB": 35,
+          "startMs": 8089
+        },
+        {
+          "file": "/assets/normal-Ixg8iKIY.jpg",
+          "kB": 31,
+          "startMs": 6440
+        },
+        {
+          "file": "/assets/painted_wooden_bench-CHJUVtri.glb",
+          "kB": 30,
+          "startMs": 5932
+        },
+        {
+          "file": "/assets/canopy-1cYdyB7n.js",
+          "kB": 28,
+          "startMs": 138
+        },
+        {
+          "file": "/assets/color-BuU1_ljC.jpg",
+          "kB": 27,
+          "startMs": 8264
+        },
+        {
+          "file": "/assets/rough-E-6uzbhF.jpg",
+          "kB": 16,
+          "startMs": 6440
+        },
+        {
+          "file": "/assets/bollard-CpV2BZKX.glb",
+          "kB": 13,
+          "startMs": 7821
+        },
+        {
+          "file": "/assets/draco_wasm_wrapper-fZCQGLGb.js",
+          "kB": 12,
+          "startMs": 6470
+        },
+        {
+          "file": "/assets/renderer-CRr8GUa2.js",
+          "kB": 5,
+          "startMs": 19
+        },
+        {
+          "file": "/assets/main-Cp1morUc.css",
+          "kB": 4,
+          "startMs": 20
+        },
+        {
+          "file": "/?level=beltline-eastside&quality=low&look=pbr&perf=1&mute=1&npcseed=1&governor=0&run=free",
+          "kB": 1,
+          "startMs": null
+        },
+        {
+          "file": "/assets/facts-bGIMEI3D.js",
+          "kB": 1,
+          "startMs": 384
+        },
+        {
+          "file": "/assets/beltline-eastside-DARaoZtw.js",
+          "kB": 1,
+          "startMs": 399
+        },
+        {
+          "file": "/assets/RoomEnvironment-BC0Mq_S6.js",
+          "kB": 1,
+          "startMs": 5930
+        },
+        {
+          "file": "/assets/RoomEnvironment-DHS0y444.js",
+          "kB": 0,
+          "startMs": 5930
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/38eb1339-55e6-452b-9f4a-0e2150a29d63",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/99915084-71f7-4334-b644-90728367246a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/88419bbe-982a-4a0a-ac03-cf3b9da45564",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ea7adde5-e864-4e00-adce-c50eb1fc367c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/57fc21e9-7a26-4ebe-935a-fa667a5b2abf",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2dd1b63a-f271-4908-a05e-3af8a84e2bdf",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e34ba2a4-5b1a-440a-9b94-c1590047b5f1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/727d99c0-0805-4dbf-addc-fbed708dbf2e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d99a532a-2ee0-42c1-bc6d-b84f9092c20d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4fbd2a73-1a1f-4d80-ae30-3074faef9b8c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/66b10f97-fb72-4d75-9c46-8c52581940e4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/dd75b4b5-704b-413a-a850-13ee1924927f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/42551cef-c6df-4992-947b-d5d1937ba8d2",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c1d4f8e5-0298-4551-9207-7a6c5d8c3cf3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5750d050-fc75-4387-950c-561b850a37c6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/08601647-d0b3-47d9-9102-4ae0bace3afd",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9060a20d-68c1-4617-9e3d-6d893decffdf",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4a25fc7b-752d-4528-b010-c46828f9ce65",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1e638c74-9318-4ee6-a6a1-fae1c0cec59e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/eaf9ef86-8d52-443a-9643-dc6834ecde18",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/44f13821-5630-436a-a362-e948b0e7c1b7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6a83c732-84f2-4474-9846-4ca929ef00db",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/80e766a0-c93b-4e6b-95a7-29cdc020a3f3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/24907526-cf61-47b9-b3b2-5438300bfd70",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/129b776e-6b14-487a-834f-ef017b687459",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ddce056c-884f-476d-970b-a7f4894e1a99",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e4c7cd97-fb69-4a3c-93e9-3c4abd04e9d3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/40ef543a-795b-4435-a051-8244d10eca01",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/7d5e84a7-bf6f-4415-9d78-aaca31d1b12e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/faca81f8-28d1-4ef8-8221-c13e8f828dbe",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/603d78b8-e43b-40fd-b9cc-b6f7637baca1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/361c2c14-1125-4493-9c02-6dd19b552a31",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ffc0a1ce-c239-4447-aa0e-7dcb5956e79e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8b5693ba-24d8-4c38-8f6c-01842082d637",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/978067ae-9007-4cba-9658-e14a848ae207",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/af4ab39f-4e12-4610-8ffd-84bf098266c0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/bbdcd57d-a698-4fc7-a8c0-c205c5ee206e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/afd036f8-bf70-4f1a-b307-fde6b44eb39f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/06f16f73-2f14-4c9b-999d-81239df40c7f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/86dcb692-7432-4511-9418-22475d6ca5b0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2d538e0d-22a8-43f6-a0f6-3de38e02cbb8",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/aa447dba-61a0-450f-b161-2f485deb1788",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/393f1ff7-dda8-437c-829e-152e542963a1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6c932df3-8893-428d-83a4-1ddda9f32155",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5ac68e9c-c28d-4a97-9795-10712e696cc8",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/40c7a84b-30a4-4ea5-95db-114ae8b04d08",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/fa86e0be-ea8c-45b9-b3f0-7325340628c5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ba00a43b-57e9-41f5-abf5-008ac0fd199a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/93600513-243b-4973-b675-d0c50014ddeb",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/26faae38-8e03-400c-8222-f37a8edc5e5e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e79b40d0-d0d4-4092-8ba3-df70c58c2684",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5f87764e-74f2-4ab5-8f12-8fc4647417ac",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3a391a0d-368f-42bc-ba2b-36fd97d8c8e4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/13ef1f1d-8ea8-45c7-9abc-c8d417790add",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/56c93ec5-8a24-4db5-99ae-0299d33704fa",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e60e0550-8ba9-4656-88d0-b5c4e6ea3e10",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/730b7f20-40e6-4834-82e9-5ff24d4842d9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1be48328-3d17-4755-b729-e507c2df8522",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/338e77d5-901e-4f65-ba77-4172db96e5c6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/df97ed92-e894-4030-8d89-574077005fad",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b415dcb9-9150-476a-a539-6b9c3bdda07b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/86607c94-75f8-4410-a9e3-aa2626bbe4ee",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/16b43959-a78c-4a61-8924-84678e109a44",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3ff56244-7844-481b-a123-fb5c2a757d6a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/7142016d-da64-400b-ab94-93ed9d30edc5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d3caf325-7a07-4ce1-ae03-b1280d0da5b2",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/656f3fa4-a1fa-4eb9-bc24-bc45cc210dcd",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/89ab5762-945c-4606-bd4c-63dfbbd9bb1c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/df43464e-ff96-4cda-a902-c38d53e538cb",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/7d485dc8-fe4d-48a9-be77-13d459b0cf6a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/41e88380-968a-428f-aa94-c674de9b9d7d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/12cb24a1-4745-4119-848d-274b0b76e038",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e9c2d37f-ba14-4f23-9dc4-51038f979bb7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0d394d81-06c6-419e-ae26-f807c48ea716",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/feb9e288-1a25-4991-a3d7-fadd98730c65",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9ff49c97-f6c5-4398-96d9-542ae70069cd",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9053901b-92d3-4633-8db8-c9a47f574ebb",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3e42b80d-5906-479e-adc7-41a14e9515b6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1a077904-cc71-448b-9173-a06e45367b6e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/48cb2740-8c44-4c7d-a350-f02e2daac4f5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2455488c-b165-4d91-be2a-deea5965b316",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/14b1133f-e999-4f13-ac07-fd041d9aaac1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0b4b050b-e988-469c-be72-2ac84bf8ce85",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/caa7d3b7-13b7-4981-99ef-9e690ae1dc86",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c37e2f62-5de6-4867-a31e-8701f82ca5da",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/bdca3f97-80b0-4297-a116-f7316ff2320b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a5b0173d-651e-4bb1-ba79-3122f1aadc66",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/115c32e6-67f7-4658-9e81-532e259afc3e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/541c1640-fe3e-4d97-a8e6-d737e2876bf7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f7cccd0f-dba3-4cef-bbdc-6b0793c9ac2f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b84b157e-e2b9-489d-80b2-b20f2110688a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/863b40e2-8d12-4cc7-8852-c337f1c45c68",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e1c6d52f-88fa-4e24-bdbc-23891715cad4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c955907e-869c-4068-9f4d-4e33617daad8",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4444fc81-111f-4bae-95f8-e894fcc64934",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/45130d8e-0ff5-48c1-95cb-edfb6cbd92be",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9a85c8da-2412-4b1f-86a9-a1c7f07b5fc0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5d09b36c-f63e-4a06-9072-a0404e73d077",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0edbb64d-aae2-44c9-b2f2-5e241e2c8d95",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9e0f9588-ccbb-4f31-8882-b113bc7d49a9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e8e48fff-ef67-4c57-a932-29e490d571f9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/78eb0736-88cc-4f76-9a1e-74aeac43a79a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e17b0284-a766-4712-b9b6-b085ac9750af",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c60325a6-f136-4f0f-b2ba-2ee5d1036e89",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/54bb1a98-fc09-474d-a0ef-bf0c9195d2e4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ab614a6a-2a2e-48eb-9b70-9d5c621d14ac",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c99df41f-2919-4f46-8e95-9ccd773b7dc2",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6200bb00-d385-4822-875f-cbb87b302d7d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a4d25080-f608-42c8-a737-3db9d03b928d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/65d18d81-b10d-4433-af86-efcb05a9840f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5199a230-6d76-42b3-be86-ec1d684cba8e",
+          "kB": 0,
+          "startMs": null
+        }
+      ],
+      "firstDownloadMB": 6.74,
+      "lateLoads": null,
+      "perfFrames": 67,
+      "drawSplit": {
+        "total": {
+          "calls": 95,
+          "triangles": 309809
+        },
+        "byPass": {
+          "main": {
+            "calls": 95,
+            "triangles": 309809
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "mesh:surface-far",
+            "calls": 22,
+            "triangles": 40995
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 22,
+            "triangles": 23472
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 10,
+            "triangles": 6198
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 7,
+            "triangles": 44124
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:telephone-factory-lofts_lod",
+            "calls": 6,
+            "triangles": 1089
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-ralph-mcgill_lod",
+            "calls": 3,
+            "triangles": 260
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 3,
+            "triangles": 6
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-freedom-parkway_lod",
+            "calls": 2,
+            "triangles": 7592
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 85434
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds",
+            "calls": 1,
+            "triangles": 46800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:edge-fence-posts",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:edge-fence-feet",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 4162
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:edge-fence-scrim",
+            "calls": 1,
+            "triangles": 3320
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1512
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 892
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 528
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 302
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "main",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:skater-blob",
+            "calls": 1,
+            "triangles": 16
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-beams",
+            "calls": 1,
+            "triangles": 6
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": null,
+      "errors": []
+    }
+  ]
+}

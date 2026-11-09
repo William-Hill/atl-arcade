@@ -2005,3 +2005,17 @@ The Autopilot playtest of `5514c62` (`reports/autopilot/playtest-2026-11-08-repo
 - **Rejected**: a Rapier collider for the fence. The camera needs only the inner face, and a collider would also need a group that the skater and the NPCs skip.
 
 **Evidence.** `src/level/edge-fence.test.js` (6 new tests). `e2e/edge-fence.spec.js`, "the follow camera stays inside the east edge fence": Nia stands 1.5 m from the east fence and faces west. With no fence test the camera reaches x = 487.25 m, 4.94 m past the face at 482.31 m. With the test, every camera sample stays inside. `e2e/__screenshots__/edge-fence-camera-after.png`.
+
+## 2026-11-09 — Review findings of the PBR epic PRs #232 to #238
+
+The reviews of the PRs that merged into `epic/city-look` on 2026-11-08 left minor findings open. This change examines each finding in the code and fixes it.
+
+- **Decision: the camera canopy volume of a tree comes from a fit for each species and variant.** `treeVolume()` (`src/sim/camera.js`) used the species table only. It did not use the `grow` scale (0.9 to 1.15) and the crown offset (up to 0.3 m) of the variant. A measurement showed up to 4 % of the crown vertices outside the volume, for the procedural trees and for the GLB trees of the pbr look, to 1.44 times the radius (dogwood 2, GLB). `scripts/canopy-fit.mjs` reads both meshes of each variant (the GLB files in Chromium, because they use Draco) and writes `src/sim/canopy-fit.js` with `fitCrown()`. The ellipsoid stays round about the trunk, so the yaw of a placement does not change it, and one table is correct for the toon look and the pbr look. The toon volumes become a little larger.
+- **The canopy index does not allocate in a query.** `distance()` and `inside()` use numeric cell keys, one reused list and a stamp for each volume. `near()` still gives a new array, for the tests and the debug hook.
+- **`e2e/canopy-camera.spec.js` writes its screenshots to the test output folder.** `CANOPY_SHOTS=1` updates the committed evidence.
+- **The material audit has an `other` bucket.** `materialAudit()` lists each material type that is not metal/rough, toon, legacy or unlit (`ShaderMaterial`, `RawShaderMaterial`, `LineBasicMaterial`). `e2e/pbr-materials.spec.js` fails on a type that is not on `OTHER_OK`: the sky, the rain (now named `rain`), the effects and the collider lines. The impostor and lamp patterns of `UNLIT_OK` now test the mesh name only. The spec fails when `fastTravel()` gives null.
+- **The baked leaf cut**: a new bake frees the old texture. The shadow depth material reads the baked cut when the cards do, so the shadow holes match the leaves.
+- **A sim respawn** (out of bounds or under the fall floor) calls `skaterView.respawn()`, as a reset does. `respawn()` also clears the face state and the foot IK plan of the old run.
+- **Provenance**: `docs/style-sheet-pbr/provenance.json` names the merge commit of PR #235 (`6eca11de`).
+
+**Evidence.** `src/sim/camera.test.js` (each crown vertex of each procedural variant is in its volume; the index gives the same answers as the plain test over 300 random queries), `e2e/canopy-camera.spec.js` (each GLB crown vertex is in its volume), `src/render/pbr-palette.test.js`, `src/render/leaf-cut.test.js` (the old texture is freed; the shadow pass gets the baked cut; the program cache key changes with `leafBaked`), `src/render/skater-view.test.js` and `e2e/skater-spawn.spec.js` (a fall under the floor: the carve lean is 0 in the first frame; it was 0.041 rad before the fix).

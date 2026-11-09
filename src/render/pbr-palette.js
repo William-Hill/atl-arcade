@@ -409,6 +409,10 @@ const LEGACY_LIT = new Set(["MeshLambertMaterial", "MeshPhongMaterial", "MeshMat
 // The unlit types: allowed in the pbr look only for emissive or baked parts
 // (lamps, fact cards, impostors, shadow proxies). The caller checks the names.
 const UNLIT = new Set(["MeshBasicMaterial", "SpriteMaterial", "PointsMaterial"]);
+// The metal/rough types of the pbr look. Every type that is not here, not
+// toon, not legacy and not unlit (a ShaderMaterial, a RawShaderMaterial, a
+// LineBasicMaterial, ...) goes in the `other` bucket for the caller to check.
+const PBR_LIT = new Set(["MeshStandardMaterial", "MeshPhysicalMaterial"]);
 
 // Pure: the name of `o` and of up to `depth` parents, as "a<b<c".
 export function objectPath(o, depth = 4) {
@@ -426,6 +430,8 @@ export function objectPath(o, depth = 4) {
 //   ramps   paths of the materials with a toon ramp (gradientMap)
 //   legacy  paths of the Lambert, Phong and Matcap materials
 //   unlit   paths of the unlit materials (MeshBasic, Sprite, Points)
+//   other   "Type path" of every other material type (ShaderMaterial,
+//           RawShaderMaterial, LineBasicMaterial, ...)
 //   clean   true when toon, hulls, ramps and legacy are empty
 export function materialAudit(root) {
   const counts = {};
@@ -434,6 +440,7 @@ export function materialAudit(root) {
   const ramps = [];
   const legacy = [];
   const unlit = [];
+  const other = [];
   const seen = new Set();
   root.traverse((o) => {
     if (!o.material || !(o.isMesh || o.isPoints || o.isLine || o.isSprite)) return;
@@ -442,11 +449,13 @@ export function materialAudit(root) {
       if (!m || seen.has(m)) continue;
       seen.add(m);
       counts[m.type] = (counts[m.type] ?? 0) + 1;
-      if (m.isMeshToonMaterial || m.type === "MeshToonMaterial") toon.push(o.name || m.name || "(unnamed)");
+      const isToon = m.isMeshToonMaterial || m.type === "MeshToonMaterial";
+      if (isToon) toon.push(o.name || m.name || "(unnamed)");
       else if (m.gradientMap) ramps.push(objectPath(o));
       if (LEGACY_LIT.has(m.type)) legacy.push(objectPath(o));
       if (UNLIT.has(m.type)) unlit.push(objectPath(o));
+      else if (!PBR_LIT.has(m.type) && !LEGACY_LIT.has(m.type) && !isToon) other.push(`${m.type} ${objectPath(o)}`);
     }
   });
-  return { counts, toon, hulls, ramps, legacy, unlit, clean: !toon.length && !hulls.length && !ramps.length && !legacy.length };
+  return { counts, toon, hulls, ramps, legacy, unlit, other, clean: !toon.length && !hulls.length && !ramps.length && !legacy.length };
 }

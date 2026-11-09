@@ -299,10 +299,14 @@ export function createSkaterView({ lean: leanOn = true, footIk = false, sampleGr
     // The model gets the clip and the facing of the new state, with no fade
     // and no turn from the old facing. The pose is applied at once, so it is
     // correct also while the render is paused (the Autopilot).
+    // The face (a cheer, a blink) and the foot IK plan of the old run do
+    // not carry over.
     respawn(state) {
       group.position.set(state.position[0], state.position[1], state.position[2]);
       group.rotation.set(0, state.yaw, 0, "YXZ");
       lean = 0;
+      faceState = createFaceState();
+      ikPlan = null;
       anim = respawnAnim(state);
       facing = anim.facing;
       pivot.rotation.y = facing;

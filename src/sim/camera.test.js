@@ -261,8 +261,18 @@ describe("player look", () => {
 });
 
 // #230: the follow camera went inside a tree canopy and hid the skater.
-import { canopyDistance, canopyVolumes, createCanopyIndex, insideVolume, treeVolume } from "./camera.js";
-import { TREE_SPECIES } from "../level/geo/trees.js";
+import { canopyDistance, canopyVolumes, createCanopyIndex, fitCrown, insideVolume, treeVolume } from "./camera.js";
+import { TREE_SPECIES, TREE_VARIANTS, treeKindFor, treeTemplate } from "../level/geo/trees.js";
+import { CANOPY_FIT } from "./canopy-fit.js";
+
+// A tree placement at x on the line z = 0 that gets `variant` of `species`.
+function placementOf(species, variant, extra = {}) {
+  for (let x = 0; x < 100; x += 0.7) {
+    const p = { kind: "tree_round", species, x, y: 0, z: 0, yaw: 0, ...extra };
+    if (treeKindFor(p) === `tree:${species}:${variant}`) return p;
+  }
+  throw new Error(`no placement for ${species}:${variant}`);
+}
 
 describe("tree canopy", () => {
   // The camera step of follow-camera.js, with the canopy as the only blocker.
@@ -282,10 +292,12 @@ describe("tree canopy", () => {
   }
 
   it("builds a crown and a trunk volume for a tree prop, and none for a bench", () => {
-    const v = treeVolume({ kind: "tree_round", species: "oak", x: 4, y: 1, z: -2, yaw: 0, scale: 1.2 });
-    const oak = TREE_SPECIES.oak;
+    const p = { kind: "tree_round", species: "oak", x: 4, y: 1, z: -2, yaw: 0, scale: 1.2 };
+    const v = treeVolume(p);
+    const fit = CANOPY_FIT.oak[Number(treeKindFor(p).split(":")[2])];
     expect(v.crown.center[0]).toBe(4);
-    expect(v.crown.center[1] - v.crown.radii[1]).toBeCloseTo(1 + oak.clear * 1.2, 9);
+    expect(v.crown.center[1]).toBeCloseTo(1 + fit.y * 1.2, 9);
+    expect(v.crown.radii).toEqual([fit.reach * 1.2, fit.h * 1.2, fit.reach * 1.2]);
     expect(v.trunk.y0).toBe(1);
     expect(treeVolume({ kind: "bench", x: 0, y: 0, z: 0 })).toBe(null);
     expect(canopyVolumes([{ kind: "bench", x: 0, y: 0, z: 0 }, { kind: "tree_tall", x: 1, y: 0, z: 1 }])).toHaveLength(1);
@@ -352,5 +364,80 @@ describe("tree canopy", () => {
       expect(index.inside(q)).toBe(volumes.some((v) => insideVolume(v, q)));
     }
     expect(index.distance([1, 1, 3], [60, 3, 3])).toBe(canopyDistance([1, 1, 3], [60, 3, 3], volumes));
+  });
+
+  // Review of #234: the volume ignored the variant `grow` scale and the
+  // crown offset, so a large crown reached past it.
+  it("holds every crown vertex of each procedural tree variant, at any scale and yaw", () => {
+    for (const species of Object.keys(TREE_SPECIES)) {
+      for (let variant = 0; variant < TREE_VARIANTS; variant += 1) {
+        for (const scale of [1, 1.3]) {
+          const p = placementOf(species, variant, { scale, y: 0.5 });
+          const v = treeVolume(p);
+          for (const cards of [false, true]) {
+            const P = treeTemplate(species, variant, 0, "summer", { cards }).positions;
+            const yaw = 1.1;
+            for (let i = 0; i < P.length; i += 3) {
+              if (P[i + 1] < TREE_SPECIES[species].clear) continue; // the trunk under the crown
+              const x = P[i] * Math.cos(yaw) + P[i + 2] * Math.sin(yaw);
+              const z = -P[i] * Math.sin(yaw) + P[i + 2] * Math.cos(yaw);
+              const q = [p.x + x * scale, p.y + P[i + 1] * scale, p.z + z * scale];
+              if (!insideVolume(v, q)) throw new Error(`${species}:${variant} ${cards ? "cards" : "puffs"} vertex ${i / 3} is outside the volume`);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it("has a fit for each species and variant", () => {
+    for (const species of Object.keys(TREE_SPECIES)) {
+      expect(CANOPY_FIT[species]).toHaveLength(TREE_VARIANTS);
+      for (const f of CANOPY_FIT[species]) expect(f.reach).toBeGreaterThan(0);
+    }
+  });
+
+  it("fits the smallest round ellipsoid over the crown bottom", () => {
+    // Points on a sphere of radius 2 at height 5, and a trunk under it.
+    const pts = [];
+    for (let i = 0; i < 400; i += 1) {
+      const a = i * 2.39996;
+      const y = 1 - (2 * (i + 0.5)) / 400;
+      const r = Math.sqrt(1 - y * y);
+      pts.push(Math.cos(a) * r * 2, 5 + y * 2, Math.sin(a) * r * 2);
+    }
+    const trunk = [0.3, 0, 0, 0.3, 2.9, 0];
+    const f = fitCrown([pts, trunk], 3, { pad: 0 });
+    expect(f.y).toBeCloseTo(5, 0);
+    expect(f.h).toBeLessThan(2.6);
+    expect(f.reach).toBeLessThan(2.6);
+    for (let i = 0; i < pts.length; i += 3) {
+      const t = (pts[i + 1] - f.y) / f.h;
+      expect(Math.hypot(pts[i], pts[i + 2]) / f.reach).toBeLessThanOrEqual(Math.sqrt(1 - t * t) + 1e-9);
+    }
+    expect(fitCrown([trunk], 3)).toBe(null);
+  });
+
+  // Review of #234: distance() and near() made a Set, arrays and string
+  // keys each frame.
+  it("answers the same as the plain test with reused lists, across many queries", () => {
+    const props = [];
+    for (let i = 0; i < 80; i += 1) props.push({ kind: "tree_round", species: i % 2 ? "oak" : "magnolia", x: (i % 10) * 9 - 40, y: 0, z: Math.floor(i / 10) * 9 - 30, yaw: 0 });
+    const volumes = canopyVolumes(props);
+    const index = createCanopyIndex(volumes, 8);
+    let seed = 7;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 100 - 50;
+    for (let n = 0; n < 300; n += 1) {
+      const a = [rand(), 3, rand()];
+      const b = [rand(), 6, rand()];
+      expect(index.distance(a, b)).toBe(canopyDistance(a, b, volumes));
+      expect(index.inside(a)).toBe(volumes.some((v) => insideVolume(v, a)));
+    }
+    // near() lists each volume once, and its list is the caller's own.
+    const box = index.near(-50, -50, 50, 50);
+    expect(new Set(box).size).toBe(box.length);
+    expect(box).toHaveLength(volumes.length);
+    index.near(0, 0, 0, 0);
+    expect(box).toHaveLength(volumes.length);
   });
 });

@@ -977,7 +977,7 @@ export const LEAF_FLUTTER = { amplitude: 0.035, rate: 7.0 };
 // the phone and low tiers keep the cut at 0.5 coverage.
 // `material.userData.leafBaked` (set before the first draw, after
 // bakeLeafCut()) makes the cards read the baked leaf cut (#191).
-function createPropMaterial({ wind = true, look = "toon", leaves = false, coverage = false } = {}) {
+export function createPropMaterial({ wind = true, look = "toon", leaves = false, coverage = false } = {}) {
   const material = litMaterial(look, { vertexColors: true }, { gradientMap: toonRamp({ soft: true }), roughness: ROUGHNESS.props, envLight: ENV_LIGHT.props });
   // The albedo calibration (pbr look): darker leaves and props.
   if (look === "pbr") material.color.setScalar(0.8);
@@ -1202,7 +1202,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     const groundLight = materials.surface.userData.setGroundLight?.(placed);
     if (groundLight) props.groundLight = groundLight;
     propBatch = createPropBatch(placed, all, materials.props, { lod0Distance, drawDistance, fade, tint: glbKinds.size ? (p) => (glbKinds.has(p.kind) ? treeTint(p) : null) : null });
-    if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial();
+    if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial({ baked: propMaterial.material.userData.leafBaked === true });
     root.add(propBatch.mesh);
     byId.set("props", propBatch.mesh);
     props.count = placements.length;

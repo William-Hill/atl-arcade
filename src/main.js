@@ -801,7 +801,11 @@ function simulate(dt) {
     skaterView.cheer();
   }
   if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
-  if (skater.respawned) events.push({ tick: run.tick, type: "respawn" });
+  if (skater.respawned) {
+    events.push({ tick: run.tick, type: "respawn" });
+    // An out-of-bounds respawn in the sim: the view goes to the spawn at once, as after a reset (#231).
+    skaterView.respawn(skater);
+  }
   for (const id of run.factsCollected) {
     events.push({ tick: run.tick, type: "fact", id, count: run.cards.count });
     const card = facts.cards.find((c) => c.id === id);

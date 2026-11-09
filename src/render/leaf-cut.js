@@ -429,13 +429,15 @@ if (vLeaf.z > 0.025 || vLeaf.z < -9.5) {
 }
 
 // The depth material for the prop batch shadow: the leaf cut, no wind.
-export function createLeafDepthMaterial() {
+// `baked` reads the baked leaf cut, as the prop material does with
+// `userData.leafBaked`, so the shadow holes match the leaves on screen.
+export function createLeafDepthMaterial({ baked = false } = {}) {
   const mat = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
   mat.onBeforeCompile = (shader) => {
     patchLeafVertex(shader);
-    patchLeafFragment(shader, { tone: false });
+    patchLeafFragment(shader, { tone: false, baked });
   };
-  mat.customProgramCacheKey = () => "geo-props-leaf-depth";
+  mat.customProgramCacheKey = () => `geo-props-leaf-depth${baked ? "-baked" : ""}`;
   return mat;
 }
 
@@ -532,6 +534,9 @@ void main() {
   texture.magFilter = THREE.LinearFilter;
   texture.generateMipmaps = true;
   texture.needsUpdate = true;
+  // A second bake (a new view) frees the GPU copy of the old texture.
+  const old = TREE_UNIFORMS.uLeafBake.value;
   TREE_UNIFORMS.uLeafBake.value = texture;
+  if (old && old !== texture) old.dispose();
   return { texture, layers, bytes };
 }

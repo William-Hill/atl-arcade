@@ -17,7 +17,8 @@
 
 import { CAMERA, SKATE } from "./skate/constants.js";
 import { heading } from "./skate/controller.js";
-import { TREE_SPECIES, crownReach, isTreeKind, treeKindFor } from "../level/geo/trees.js";
+import { TREE_SPECIES, isTreeKind, treeKindFor } from "../level/geo/trees.js";
+import { CANOPY_FIT } from "./canopy-fit.js";
 
 export const NO_LOOK = Object.freeze({ yaw: 0, pitch: 0 });
 
@@ -174,40 +175,87 @@ export function placeCamera(cam, pivot, allowed) {
 // the crown and eases it back out after the tree. The tree meshes do not
 // change.
 //
-// The sizes come from the species table of the procedural trees
-// (src/level/geo/trees.js), times the placement scale: the crown spans from
-// the species `clear` height (the lowest leaf) to the top puff, as wide as
-// `crownReach`. A pivot inside a volume ignores that volume: the camera
-// cannot help there, and a hit at 0 would put the camera on the skater.
+// The crown sizes come from CANOPY_FIT (src/sim/canopy-fit.js): for each
+// species and variant, the smallest crown ellipsoid that holds both tree
+// meshes of that variant, the procedural tree (src/level/geo/trees.js, with
+// its `grow` scale and crown offset) and the Blender GLB tree of the pbr look
+// (assets/trees). scripts/canopy-fit.mjs makes the table with fitCrown().
+// The ellipsoid is round about the trunk, so the placement yaw does not
+// change it. The size is times the placement scale. A pivot inside a volume
+// ignores that volume: the camera cannot help there, and a hit at 0 would
+// put the camera on the skater.
 
 
-// The species of a tree placement, as the render picks it.
+// The species and variant of a tree placement, as the render picks them.
 function speciesOf(p) {
-  if (p.species && TREE_SPECIES[p.species]) return p.species;
-  return treeKindFor(p).split(":")[1];
+  const [, species, variant] = treeKindFor(p).split(":");
+  return { species: p.species && TREE_SPECIES[p.species] ? p.species : species, variant: Number(variant) };
 }
 
-// Pure: the canopy volume of one species at a placement, or null for a
-// prop that is not a tree. { crown: { center, radii }, trunk: { x, z, r,
-// y0, y1 } } in world meters.
+// Pure: the smallest upright crown ellipsoid, round about the trunk axis,
+// that holds every point at or over `bottom`. `meshes`: flat [x, y, z, ...]
+// position arrays in the template space. The ellipsoid bottom stays at most
+// `drop` m under `bottom`. `pad` makes it a little larger. Returns
+// { y, h, reach } in m: the center height, the half height and the radius,
+// or null when no point is at or over `bottom`.
+export function fitCrown(meshes, bottom, { drop = 1, pad = 0.02, steps = 48 } = {}) {
+  const ys = [];
+  const rs = [];
+  let top = -Infinity;
+  for (const P of meshes) {
+    for (let i = 0; i < P.length; i += 3) {
+      if (P[i + 1] < bottom) continue;
+      ys.push(P[i + 1]);
+      rs.push(Math.hypot(P[i], P[i + 2]));
+      top = Math.max(top, P[i + 1]);
+    }
+  }
+  if (!ys.length) return null;
+  let best = null;
+  for (let a = 0; a <= steps; a += 1) {
+    const y = bottom + ((top - bottom) * a) / steps;
+    const need = Math.max(top - y, y - bottom, 1e-3);
+    for (let b = 1; b <= steps; b += 1) {
+      const h = need * (1 + (b / steps) * 1.5);
+      if (y - h < bottom - drop) break;
+      let reach = 0;
+      for (let i = 0; i < ys.length; i += 1) {
+        const t = (ys[i] - y) / h;
+        reach = Math.max(reach, rs[i] / Math.sqrt(1 - t * t));
+      }
+      const cost = reach * reach * h;
+      if (!best || cost < best.cost) best = { y, h, reach, cost };
+    }
+  }
+  if (!best) {
+    // No ellipsoid fits over `bottom - drop`: a sphere around the points.
+    const y = (top + bottom) / 2;
+    const h = (top - bottom) / 2 + drop;
+    best = { y, h, reach: Math.max(...rs.map((r, i) => r / Math.sqrt(1 - ((ys[i] - y) / h) ** 2))) };
+  }
+  const k = 1 + pad;
+  return { y: best.y, h: best.h * k, reach: best.reach * k };
+}
+
+// Pure: the canopy volume of one tree at a placement, or null for a prop
+// that is not a tree. { crown: { center, radii }, trunk: { x, z, r, y0, y1 } }
+// in world meters.
 export function treeVolume(p) {
   if (!isTreeKind(p.kind) && !p.species) return null;
-  const species = speciesOf(p);
+  const { species, variant } = speciesOf(p);
   const sp = TREE_SPECIES[species];
-  if (!sp) return null;
+  const fit = CANOPY_FIT[species]?.[variant];
+  if (!sp || !fit) return null;
   const s = p.scale ?? 1;
   const y = p.y ?? 0;
-  const [cy, , ry] = sp.crown;
-  const rMax = sp.puffs[2];
-  const bottom = sp.clear * s;
-  const top = (cy + ry + rMax) * s;
-  const half = (top - bottom) / 2;
-  const reach = crownReach(species) * s;
+  const reach = fit.reach * s;
+  const half = fit.h * s;
+  const center = y + fit.y * s;
   // A leaning trunk (the crape myrtle) gets a wider cylinder.
   const trunkR = (sp.trunk.radius + sp.trunk.lean * sp.trunk.height * 0.5) * s;
   return {
-    crown: { center: [p.x, y + bottom + half, p.z], radii: [reach, half, reach] },
-    trunk: { x: p.x, z: p.z, r: trunkR, y0: y, y1: y + bottom + half },
+    crown: { center: [p.x, center, p.z], radii: [reach, half, reach] },
+    trunk: { x: p.x, z: p.z, r: trunkR, y0: y, y1: center },
   };
 }
 
@@ -273,24 +321,34 @@ function trunkEntry(t, o, d) {
     }
   }
   if (Math.abs(d[1]) > 1e-12) {
-    for (const cap of [t.y0, t.y1]) {
-      const s = (cap - o[1]) / d[1];
+    for (let k = 0; k < 2; k += 1) {
+      const s = ((k === 0 ? t.y0 : t.y1) - o[1]) / d[1];
       if (s >= 0 && s < best && Math.hypot(ox + d[0] * s, oz + d[2] * s) <= t.r) best = s;
     }
   }
   return best;
 }
 
+// The unit ray direction of canopyDistance, reused each call.
+const RAY_DIR = [0, 0, 0];
+
 // Pure: the distance from `from` toward `to` to the first canopy volume on
 // the segment, or Infinity. Like the wall ray's hit distance. A volume
 // that holds `from` is skipped.
 export function canopyDistance(from, to, volumes) {
-  const d = [to[0] - from[0], to[1] - from[1], to[2] - from[2]];
-  const len = Math.hypot(d[0], d[1], d[2]);
+  const dx = to[0] - from[0];
+  const dy = to[1] - from[1];
+  const dz = to[2] - from[2];
+  const len = Math.hypot(dx, dy, dz);
   if (len < 1e-9) return Infinity;
-  const u = [d[0] / len, d[1] / len, d[2] / len];
+  // A reused unit vector: this runs each frame.
+  const u = RAY_DIR;
+  u[0] = dx / len;
+  u[1] = dy / len;
+  u[2] = dz / len;
   let best = Infinity;
-  for (const v of volumes) {
+  for (let i = 0; i < volumes.length; i += 1) {
+    const v = volumes[i];
     if (insideVolume(v, from)) continue;
     const t = Math.min(crownEntry(v.crown, from, u), trunkEntry(v.trunk, from, u));
     if (t < best) best = t;
@@ -300,42 +358,69 @@ export function canopyDistance(from, to, volumes) {
 
 // Pure: a grid of canopy volumes for fast segment queries. `cell` in m.
 // `distance(from, to)` is canopyDistance over the volumes near the segment;
-// `inside(q)` says if a point is in any volume.
+// `inside(q)` says if a point is in any volume. `near()` gives a new array
+// (for tests and debug). `distance` and `inside` run each frame, so they
+// use numeric cell keys and reuse one list and one stamp per volume: no
+// new Set, array or string per query.
 export function createCanopyIndex(volumes, cell = 16) {
   const grid = new Map();
-  const keyOf = (ix, iz) => `${ix},${iz}`;
+  // A numeric key for a cell. The 2^21 span holds +/- 16,000 km of 16 m cells.
+  const SPAN = 2097152;
+  const keyOf = (ix, iz) => (ix + SPAN / 2) * SPAN + (iz + SPAN / 2);
   volumes.forEach((v, i) => {
     const r = Math.max(v.crown.radii[0], v.crown.radii[2], v.trunk.r);
     for (let ix = Math.floor((v.crown.center[0] - r) / cell); ix <= Math.floor((v.crown.center[0] + r) / cell); ix += 1) {
       for (let iz = Math.floor((v.crown.center[2] - r) / cell); iz <= Math.floor((v.crown.center[2] + r) / cell); iz += 1) {
         const k = keyOf(ix, iz);
-        if (!grid.has(k)) grid.set(k, []);
-        grid.get(k).push(i);
+        let list = grid.get(k);
+        if (!list) grid.set(k, (list = []));
+        list.push(i);
       }
     }
   });
-  function near(minX, minZ, maxX, maxZ) {
-    const seen = new Set();
-    const out = [];
-    for (let ix = Math.floor(minX / cell); ix <= Math.floor(maxX / cell); ix += 1) {
-      for (let iz = Math.floor(minZ / cell); iz <= Math.floor(maxZ / cell); iz += 1) {
-        for (const i of grid.get(keyOf(ix, iz)) ?? []) {
-          if (seen.has(i)) continue;
-          seen.add(i);
-          out.push(volumes[i]);
+  // The query stamp of each volume: a volume is in the list once per query.
+  const stamps = new Uint32Array(volumes.length);
+  let stamp = 0;
+  const found = [];
+  // Fills `found` with the volumes in the cells of the box. Returns its length.
+  function collect(minX, minZ, maxX, maxZ) {
+    found.length = 0;
+    stamp += 1;
+    if (stamp === 0xffffffff) {
+      stamps.fill(0);
+      stamp = 1;
+    }
+    const x1 = Math.floor(maxX / cell);
+    const z0 = Math.floor(minZ / cell);
+    const z1 = Math.floor(maxZ / cell);
+    for (let ix = Math.floor(minX / cell); ix <= x1; ix += 1) {
+      for (let iz = z0; iz <= z1; iz += 1) {
+        const list = grid.get(keyOf(ix, iz));
+        if (!list) continue;
+        for (let j = 0; j < list.length; j += 1) {
+          const i = list[j];
+          if (stamps[i] === stamp) continue;
+          stamps[i] = stamp;
+          found.push(volumes[i]);
         }
       }
     }
-    return out;
+    return found.length;
   }
   return {
     count: volumes.length,
-    near,
+    near(minX, minZ, maxX, maxZ) {
+      collect(minX, minZ, maxX, maxZ);
+      return found.slice();
+    },
     distance(from, to) {
-      return canopyDistance(from, to, near(Math.min(from[0], to[0]), Math.min(from[2], to[2]), Math.max(from[0], to[0]), Math.max(from[2], to[2])));
+      if (!collect(Math.min(from[0], to[0]), Math.min(from[2], to[2]), Math.max(from[0], to[0]), Math.max(from[2], to[2]))) return Infinity;
+      return canopyDistance(from, to, found);
     },
     inside(q) {
-      return near(q[0], q[2], q[0], q[2]).some((v) => insideVolume(v, q));
+      collect(q[0], q[2], q[0], q[2]);
+      for (let i = 0; i < found.length; i += 1) if (insideVolume(found[i], q)) return true;
+      return false;
     },
   };
 }

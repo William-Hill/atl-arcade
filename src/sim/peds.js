@@ -783,7 +783,57 @@ function stepGoal(state, p, dt) {
   p.speed = 0;
 }
 
-// A group member: it keeps its slot beside or behind the leader.
+// The nearest street prop ahead of a walker that its circle would touch on
+// its line, as the side step (in the route offset frame) that clears it and
+// the distance ahead; null when no prop is in the way.
+const propWay = { fwd: 0, need: 0, target: 0 };
+function propAhead(state, p) {
+  const rx = -p.fz;
+  const rz = p.fx;
+  const ix = Math.floor(p.x / 8);
+  const iz = Math.floor(p.z / 8);
+  let nearest = Infinity;
+  for (let a = ix - 1; a <= ix + 1; a += 1) {
+    for (let b = iz - 1; b <= iz + 1; b += 1) {
+      for (const o of state.props.get(`${a},${b}`) ?? []) {
+        const dx = o.x - p.x;
+        const dz = o.z - p.z;
+        const fwd = dx * p.fx + dz * p.fz;
+        const lat = dx * rx + dz * rz;
+        const need = PEDS.radius + o.r + PEDS.margin;
+        if (fwd < -need * 0.5 || fwd > PEDS.look || Math.abs(lat) >= need || fwd >= nearest) continue;
+        nearest = fwd;
+        const side = lat > 0 ? -1 : lat < 0 ? 1 : -p.dir;
+        propWay.fwd = fwd;
+        propWay.need = need;
+        propWay.target = p.offset + p.dir * side * (need - Math.abs(lat) + 0.05);
+      }
+    }
+  }
+  return nearest < Infinity ? propWay : null;
+}
+
+// True when a walker at (x, z) would overlap a street prop that it does not
+// overlap at (fx, fz) already, or overlap it more (so a walker that is in a
+// prop can still walk out).
+function hitsProp(state, x, z, fx, fz) {
+  const ix = Math.floor(x / 8);
+  const iz = Math.floor(z / 8);
+  for (let a = ix - 1; a <= ix + 1; a += 1) {
+    for (let b = iz - 1; b <= iz + 1; b += 1) {
+      for (const o of state.props.get(`${a},${b}`) ?? []) {
+        const need = PEDS.radius + o.r;
+        const d2 = (o.x - x) ** 2 + (o.z - z) ** 2;
+        if (d2 < need * need && d2 < (o.x - fx) ** 2 + (o.z - fz) ** 2) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// A group member: it keeps its slot beside or behind the leader. A street
+// prop in the way moves it out of its slot (it steps around the prop as a
+// walker does); a member held still too long leaves the group.
 function stepMember(state, p, lead, dt) {
   const route = state.routes[p.route];
   p.dir = lead.dir;
@@ -803,13 +853,20 @@ function stepMember(state, p, lead, dt) {
     leaveGroup(state, p);
     return;
   }
-  const want = clamp(lead.speed + ds * 1.2, 0, p.cruise * 1.4);
+  let want = clamp(lead.speed + ds * 1.2, 0, p.cruise * 1.4);
+  let target = slot.offset;
+  const prop = propAhead(state, p);
+  if (prop) {
+    target = prop.target;
+    const k = clamp((prop.fwd - prop.need * 0.6) / PEDS.look, 0, 1);
+    want = Math.min(want, p.cruise * (prop.fwd < prop.need * 0.6 ? 0 : 0.35 + 0.65 * k));
+  }
   p.speed = want > p.speed ? Math.min(want, p.speed + PEDS.accel * 2 * dt) : Math.max(want, p.speed - PEDS.accel * 2 * dt);
   const step = PEDS.asideSpeed * 1.5 * dt;
-  const offset = clamp(p.offset + clamp(slot.offset - p.offset, -step, step), -room, room);
+  const offset = clamp(p.offset + clamp(target - p.offset, -step, step), -room, room);
   const s = clamp(p.s + p.dir * p.speed * dt, 0.5, route.path.length - 0.5);
   const [nx, nz] = pathOffsetPoint(route.path, s, offset);
-  if (!routeOpen(state.built, route, s + p.dir * PEDS.radius) || overlapsPed(state, p, nx, nz) || touchesMover(state.movers, nx, nz, [p.x, p.z])) {
+  if (!routeOpen(state.built, route, s + p.dir * PEDS.radius) || overlapsPed(state, p, nx, nz) || touchesMover(state.movers, nx, nz, [p.x, p.z]) || hitsProp(state, nx, nz, p.x, p.z)) {
     p.speed = 0;
     p.stuck += dt;
     if (p.stuck > PEDS.stuck) leaveGroup(state, p);

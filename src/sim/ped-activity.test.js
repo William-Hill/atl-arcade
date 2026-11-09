@@ -286,6 +286,30 @@ describe("the activities in the walker pool", () => {
     expect(roomAt(r, after.s)).toBeGreaterThanOrEqual(Math.abs(after.offset));
   });
 
+  it("keeps the group members off the street props", () => {
+    // The Codex repro: seed 3, 90 walkers at Krog Street Market. Member 66
+    // walked into the tree at (-0.09, 837.89) before the fix.
+    const focus = centroid("Krog Street Market");
+    const state = createPeds(level, { seed: 3, count: 90, props: env.props, focus });
+    let worst = Infinity;
+    let members = 0;
+    run(state, 60, { focus }, (st) => {
+      for (const p of st.peds) {
+        if (!p.live || p.lead < 0) continue;
+        members += 1;
+        const ix = Math.floor(p.x / 8);
+        const iz = Math.floor(p.z / 8);
+        for (let a = ix - 1; a <= ix + 1; a += 1) {
+          for (let b = iz - 1; b <= iz + 1; b += 1) {
+            for (const o of st.props.get(`${a},${b}`) ?? []) worst = Math.min(worst, Math.hypot(p.x - o.x, p.z - o.z) - o.r - PEDS.radius);
+          }
+        }
+      }
+    });
+    expect(members).toBeGreaterThan(0);
+    expect(worst).toBeGreaterThanOrEqual(0);
+  });
+
   it("starts some walkers at a place, in their stay", () => {
     const state = createPeds(level, { seed: 1, count: 90, radius: 200, props: env.props });
     const at = state.peds.filter((p) => p.live && p.leg === "stay");

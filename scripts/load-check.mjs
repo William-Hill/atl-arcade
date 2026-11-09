@@ -8,7 +8,7 @@
 // - the bytes on the wire, and the five biggest files.
 //
 // Run `npm run build` first. Usage:
-//   node scripts/load-check.mjs [--cpu 4] [--gpu] [--out reports/load-check.json] [--budget 4000]
+//   node scripts/load-check.mjs [--cpu 4] [--gpu] [--out reports/load-check.json] [--budget 4000] [--down 9] [--rtt 60]
 // --gpu uses the machine GPU (ANGLE Metal on a Mac); without it, Chromium
 // uses SwiftShader. --budget fails the run when the first game frame is
 // later than that many ms.
@@ -38,6 +38,9 @@ const gpu = args.includes("--gpu");
 const port = Number(arg("port", "5187"));
 // --dist serves another build folder, to compare two builds.
 const dist = arg("dist", "dist");
+// --down <Mbps> and --rtt <ms> set another link (#190: 1.6 and 150 for a 3G link).
+const downMbps = Number(arg("down", "9"));
+const rttMs = Number(arg("rtt", "60"));
 
 // Gzip the .wasm files, as the host does.
 const wasmGzip = {
@@ -76,7 +79,7 @@ try {
   const cdp = await ctx.newCDPSession(page);
   await cdp.send("Network.enable");
   await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
-  await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: 60, downloadThroughput: 9e6 / 8, uploadThroughput: 1.5e6 / 8 });
+  await cdp.send("Network.emulateNetworkConditions", { offline: false, latency: rttMs, downloadThroughput: (downMbps * 1e6) / 8, uploadThroughput: 1.5e6 / 8 });
   if (cpu > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: cpu });
   const reqs = new Map();
   cdp.on("Network.responseReceived", (e) => reqs.set(e.requestId, { url: e.response.url }));
@@ -124,7 +127,7 @@ try {
     device: "Pixel 7",
     cpuThrottle: cpu,
     gpu: gpu ? "machine" : "swiftshader",
-    network: "9 Mbps / 1.5 Mbps / 60 ms",
+    network: `${downMbps} Mbps / 1.5 Mbps / ${rttMs} ms`,
     firstContentfulPaintMs: Math.round(fcp),
     loadScreen,
     firstGameFrameMs: firstFrame,

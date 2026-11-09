@@ -23,6 +23,7 @@ import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
 import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
 import { beatClockOptions, trackChoices, writeChoice } from "./audio/music-tracks.js";
+import { createSfx } from "./audio/sfx.js";
 import { loadLevel, resolveLevelName } from "./level/levels.js";
 import { goalsFor } from "./level/goals.js";
 import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
@@ -721,6 +722,8 @@ function collectFactCard(id) {
 const beat = new BeatClock(beatClockOptions(params, settingsStorage));
 beat.muted = params.get("mute") === "1";
 beat.preload();
+// Game-feel sounds (#105): bonk, landing and wall scrape on the beat clock's context.
+const sfx = createSfx(beat);
 const musicChoices = beat.tracks.length ? trackChoices(beat.tracks) : [];
 const onTrack = (id) => {
   writeChoice(settingsStorage, id);
@@ -774,6 +777,8 @@ function simulate(dt) {
   perf.end("skater");
   skater = run.skater;
   effects.observe(before, skater, run.moves);
+  sfx.observe(before, skater);
+  follow?.observe(before, skater);
   if (goals && !goals.ended) {
     goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
@@ -867,7 +872,7 @@ function runScript(entries, { position, yaw } = {}) {
 // Mouse drag on the canvas and the right stick turn the follow camera.
 let lookInput = null;
 if (view === "follow") {
-  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater, props: env.props, canopy: params.get("canopycam") !== "0", fence: env.fence });
+  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater, props: env.props, canopy: params.get("canopycam") !== "0", fence: env.fence, motion: () => ({ reducedMotion: effects.reducedMotion, off: params.get("fx") === "0" }) });
   lookInput = createLookInput({ element: renderer.domElement });
 }
 
@@ -1671,6 +1676,18 @@ window.__atl = {
     trigger: (kind, position) => effects.trigger(kind, position ?? [...skater.position]),
     hold: (on) => effects.hold(on),
     clear: () => effects.clear(),
+  },
+  // Game feel (#105): the camera and sound state, and the screenshot hooks.
+  // trigger("shake" | "dust" | "sparks", { strength, hold }); holdFov(deg | null).
+  feel: {
+    get info() {
+      return { camera: follow ? follow.feel : null, sfx: sfx.info, effects: effects.info.triggers };
+    },
+    trigger(kind, { strength = 1, hold = null } = {}) {
+      if (kind === "shake") follow?.bump(strength, hold);
+      else effects.trigger(kind, [...skater.position], { strength, skater });
+    },
+    holdFov: (deg) => follow?.holdFov(deg),
   },
   get rendererInfo() {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };

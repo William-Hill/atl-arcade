@@ -12,6 +12,9 @@ import { seededRandom } from "../level/geo/styles.js";
 // image fails to load).
 
 export const MURAL_ATLAS_URL = new URL("../../assets/murals/mural-atlas.jpg", import.meta.url).href;
+// The same atlas at 1024 px, for pbr lite (#246): a quarter of the GPU
+// memory and about a third of the download.
+export const MURAL_ATLAS_SMALL_URL = new URL("../../assets/murals/mural-atlas-1024.jpg", import.meta.url).href;
 // Roughness / 0.85 in gray (MeshStandardMaterial reads green), for a
 // material with roughness ROUGHNESS.mural (look.js). See docs/murals.md.
 export const MURAL_ROUGHNESS_URL = new URL("../../assets/murals/mural-roughness.jpg", import.meta.url).href;
@@ -188,9 +191,9 @@ function loadInto(tex, url, defer, onError) {
 
 // The painted atlas as a texture. If the image fails, the texture gets the
 // canvas atlas.
-function loadPaintedAtlas(size, defer) {
+function loadPaintedAtlas(size, defer, small = false) {
   const tex = new THREE.Texture();
-  loadInto(tex, MURAL_ATLAS_URL, defer, () => {
+  loadInto(tex, small ? MURAL_ATLAS_SMALL_URL : MURAL_ATLAS_URL, defer, () => {
     tex.image = drawCanvasAtlas(size);
     tex.needsUpdate = true;
   });
@@ -238,8 +241,8 @@ if (texture2D(roughnessMap, vRoughnessMapUv).r < ${cut.toFixed(3)}) discard;
 // atlas) keeps the atlas alone. `litMaterial` is look.js litMaterial().
 // `defer(load)` starts the painted atlas downloads (#190: after the first
 // frame on the pbr look).
-export function createMuralMaterial(look, litMaterial, options, { defer = now } = {}) {
-  const map = createMuralAtlas(1024, { look, defer });
+export function createMuralMaterial(look, litMaterial, options, { defer = now, small = false } = {}) {
+  const map = createMuralAtlas(1024, { look, defer, small });
   if (look !== "pbr" || map.userData.muralSource !== "painted") return litMaterial(look, { map }, options);
   return withMuralEdge(litMaterial(look, { map, roughnessMap: createMuralRoughness({ defer }) }, options));
 }
@@ -247,10 +250,11 @@ export function createMuralMaterial(look, litMaterial, options, { defer = now } 
 // `look` is the city look ("toon" or "pbr"); without it the URL decides
 // (muralSource). `defer(load)` starts the painted atlas download; by default
 // it starts at once.
-export function createMuralAtlas(size = 1024, { look = null, defer = now } = {}) {
+// `small`: the 1024 px painted atlas (pbr lite).
+export function createMuralAtlas(size = 1024, { look = null, defer = now, small = false } = {}) {
   const params = urlParams();
   const source = muralSource({ look, murals: params.get("murals"), lookParam: params.get("look"), quality: params.get("quality") });
-  if (source === "painted") return loadPaintedAtlas(size, defer);
+  if (source === "painted") return loadPaintedAtlas(size, defer, small);
   const tex = new THREE.CanvasTexture(drawCanvasAtlas(size));
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;

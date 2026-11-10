@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildPropMeshes } from "./geo-mesh.js";
 import { levelProps } from "./props.js";
-import { LEAF_CARDS, PUFF_CORE_CODE, SEASONS, TREE_SPECIES, TREE_VARIANTS, isTreeKind, seasonColors, treeKindFor, treeTemplate, treeTemplates, withProceduralTrees } from "./trees.js";
+import { LEAF_CARDS, PUFF_CORE_CODE, cardsPerPuff, leafCore, SEASONS, TREE_SPECIES, TREE_VARIANTS, isTreeKind, seasonColors, treeKindFor, treeTemplate, treeTemplates, withProceduralTrees } from "./trees.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
 const SPECIES = Object.keys(TREE_SPECIES);
@@ -219,5 +219,34 @@ describe("leaf cards", () => {
     const b = treeTemplate("myrtle", 0, 0, "summer", { cards: true });
     expect(Array.from(a.positions)).toEqual(Array.from(b.positions));
     expect(Array.from(a.leaf)).toEqual(Array.from(b.leaf));
+  });
+});
+
+describe("a thin shell of leaf cards (pbr lite, #246)", () => {
+  it("reads the cards option", () => {
+    expect(cardsPerPuff(true)).toBe(LEAF_CARDS.perPuff);
+    expect(cardsPerPuff(6)).toBe(6);
+    expect(cardsPerPuff(99)).toBe(LEAF_CARDS.perPuff);
+    expect(cardsPerPuff(false)).toBe(0);
+    expect(cardsPerPuff(undefined)).toBe(0);
+  });
+  it("grows the core as the cards go", () => {
+    expect(leafCore(LEAF_CARDS.perPuff)).toBeCloseTo(LEAF_CARDS.core);
+    expect(leafCore(0)).toBe(1);
+    expect(leafCore(6)).toBeGreaterThan(LEAF_CARDS.core);
+  });
+  it("puts a third of the card vertices on a tree with 6 cards per puff", () => {
+    const full = treeTemplate("oak", 0, 0, "summer", { cards: true });
+    const thin = treeTemplate("oak", 0, 0, "summer", { cards: 6 });
+    const plain = treeTemplate("oak", 0, 0);
+    const cardVerts = (t) => (t.positions.length - plain.positions.length) / 3;
+    expect(cardVerts(thin)).toBe(cardVerts(full) / 3);
+    expect(thin.leaf).toBeDefined();
+    // The same call as before #246 gives the same tree.
+    expect(Array.from(treeTemplate("oak", 0, 0, "summer", { cards: true }).positions)).toEqual(Array.from(full.positions));
+  });
+  it("gives no cards and no leaf data with 0", () => {
+    const none = treeTemplate("oak", 0, 0, "summer", { cards: 0 });
+    expect(Array.from(none.positions)).toEqual(Array.from(treeTemplate("oak", 0, 0).positions));
   });
 });

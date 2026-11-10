@@ -466,14 +466,16 @@ export function landmarkObs(run, { teleported = false } = {}) {
 const idList = (v) => (Array.isArray(v) ? [...new Set(v.filter((id) => typeof id === "string"))] : []);
 
 function cleanSave(raw, k) {
-  const levels = {};
-  if (raw && typeof raw === "object" && raw.v === k.saveVersion && raw.levels && typeof raw.levels === "object") {
+  const entries = [];
+  if (raw && typeof raw === "object" && raw.v === k.saveVersion && raw.levels && typeof raw.levels === "object" && !Array.isArray(raw.levels)) {
     for (const [name, p] of Object.entries(raw.levels)) {
       if (!p || typeof p !== "object") continue;
-      levels[name] = { found: idList(p.found), claimed: idList(p.claimed), outfits: Number.isInteger(p.outfits) && p.outfits > 0 ? p.outfits : 0 };
+      entries.push([name, { found: idList(p.found), claimed: idList(p.claimed), outfits: Number.isInteger(p.outfits) && p.outfits > 0 ? p.outfits : 0 }]);
     }
   }
-  return { v: k.saveVersion, levels };
+  // Object.fromEntries defines own keys: a level named "__proto__" in a
+  // hostile save is a plain entry and never the prototype of `levels`.
+  return { v: k.saveVersion, levels: Object.fromEntries(entries) };
 }
 
 // Returns { save, ok, foreign }. `ok` is false when the storage is missing

@@ -686,6 +686,21 @@ describe("AC-6 and E-6: the save", () => {
     expect(levelProgress({ v: 1, levels: {} }, "__proto__")).toEqual({ found: [], claimed: [], outfits: 0 });
   });
 
+  it("reads a level named __proto__ in a hostile save as a plain entry, with no change to a prototype", () => {
+    const text = '{"v":1,"levels":{"__proto__":{"found":["bridge"],"claimed":[],"outfits":2},"constructor":{"found":["x"]},"test-level":{"found":["park"]}}}';
+    const { save, ok } = readLandmarkSave(fakeStorage({ [KEY]: text }));
+    expect(ok).toBe(true);
+    expect(Object.getPrototypeOf(save.levels)).toBe(Object.prototype);
+    expect(Object.keys(save.levels).sort()).toEqual(["__proto__", "constructor", "test-level"]);
+    expect({}.found).toBeUndefined();
+    expect(levelProgress(save, "__proto__")).toEqual({ found: ["bridge"], claimed: [], outfits: 2 });
+    expect(levelProgress(save, "toString")).toEqual({ found: [], claimed: [], outfits: 0 });
+    // The tracker of the real level reads only its own entry.
+    expect(createLandmarkTracker({ data: SPOTS, level: LEVEL, storage: fakeStorage({ [KEY]: text }) }).state.found).toEqual(["park"]);
+    // A level list that is an array is a wrong shape.
+    expect(readLandmarkSave(fakeStorage({ [KEY]: '{"v":1,"levels":[{"found":["q"]}]}' })).save.levels).toEqual({});
+  });
+
   it("does not write over a save of another version until a spot changes", () => {
     const text = JSON.stringify({ v: 2, levels: {} });
     const storage = fakeStorage({ [KEY]: text });

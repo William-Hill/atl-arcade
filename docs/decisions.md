@@ -2152,5 +2152,5 @@ The landmark discovery feature (`design/gdd/landmark-discovery.md`) needs histor
 
 ### Evidence and limits
 
-- Vitest: `src/sim/landmarks.test.js`, 74 tests: AC-2, AC-4, AC-5, AC-6, F-1 to F-8, E-1, E-2, E-4, E-6, the blocked storage, the test hook, and 5 tests with the real controller on the Beltline level. `npm test`: 1621 of 1622 pass; the 1 failure is the 5 s timeout in `facade-kit.test.js`, which fails the same way on `epic/city-look`.
+- Vitest: `src/sim/landmarks.test.js`, 75 tests: AC-2, AC-4, AC-5, AC-6, F-1 to F-8, E-1, E-2, E-4, E-6, the blocked storage, a hostile save (`__proto__` level), the test hook, and 5 tests with the real controller on the Beltline level. `npm test`: 1621 of 1622 pass; the 1 failure is the 5 s timeout in `facade-kit.test.js`, which fails the same way on `epic/city-look`.
 - Not verified: nothing runs in a browser, because the module is not in the game yet. No person played a challenge. The real grind, line and combo spots of the file are tested with scripted observations only; only the Freedom Parkway gap ran with the real controller.

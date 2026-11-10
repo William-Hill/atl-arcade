@@ -4,10 +4,11 @@
 // A native <dialog> opened with showModal(): the browser keeps the focus in
 // it, Escape closes it, and the page behind it is inert. The game stops while
 // it is open. Each change saves at once. The ink and the bloom apply at
-// once; the tier, the look, the walkers and the shadows need a reload, and
+// once, and so does the reduced motion (#97); the tier, the look, the
+// walkers and the shadows need a reload, and
 // the menu says so and offers a "Reload now" button.
 
-import { PED_CHOICES, TIERS, applicableKeys, effectiveSettings, liveToggles, normalizeSettings, reloadKeys, tierPeds } from "./settings.js";
+import { PED_CHOICES, TIERS, applicableKeys, effectiveReducedMotion, effectiveSettings, liveToggles, normalizeSettings, reduceMotionChoice, reloadKeys, tierPeds } from "./settings.js";
 
 export const SETTINGS_KEY_CODE = "KeyO";
 
@@ -92,8 +93,10 @@ function option(parent, { type, name, value, id, title, hint }) {
 // onSave(settings): saves. onLive(settings): applies the ink and the bloom.
 // reload(keys, carry): reloads the page; `carry` is the choice when storage
 // did not keep it, else null. canOpen(): false while photo mode or the
-// full map is open. onChange(open).
-export function createSettingsMenu({ root = document.body, running, choice, sources, autoQuality, post = () => ({ kind: null, look: running.look }), onSave = () => {}, onLive = () => {}, reload = () => {}, canOpen = () => true, onChange = () => {} }) {
+// full map is open. onChange(open). deviceMotion(): the
+// prefers-reduced-motion media query now (#97). onMotion(settings) applies
+// the reduced-motion choice at once.
+export function createSettingsMenu({ root = document.body, running, choice, sources, autoQuality, post = () => ({ kind: null, look: running.look }), onSave = () => {}, onLive = () => {}, onMotion = () => {}, deviceMotion = () => false, reload = () => {}, canOpen = () => true, onChange = () => {} }) {
   if (!document.getElementById("settings-menu-style")) el("style", document.head, { id: "settings-menu-style", textContent: STYLE });
 
   let state = normalizeSettings(choice);
@@ -143,6 +146,9 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
     shadows: option(fxSet, { type: "checkbox", name: "shadows", value: "on", id: "settings-shadows", title: "Shadows", hint: "Sun shadows. Applies after a reload." }),
     ink: option(fxSet, { type: "checkbox", name: "ink", value: "on", id: "settings-ink", title: "Ink outlines", hint: "Applies at once." }),
     bloom: option(fxSet, { type: "checkbox", name: "bloom", value: "on", id: "settings-bloom", title: "Bloom", hint: "Applies at once." }),
+    // #97 (MOB-11): the camera shake, the wider view at speed, the beat
+    // pulse motion and the comic effects. The sounds stay.
+    reduceMotion: option(fxSet, { type: "checkbox", name: "reduce-motion", value: "on", id: "settings-reduce-motion", title: "Reduce motion", hint: "Applies at once." }),
   };
 
   const status = el("p", dialog, { className: "settings-status", id: "settings-status" });
@@ -175,6 +181,9 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
     pedsNote.hidden = !pedsNote.textContent;
 
     fx.shadows.input.checked = next.shadows;
+    const device = deviceMotion();
+    fx.reduceMotion.input.checked = effectiveReducedMotion(state.reduceMotion, device);
+    fx.reduceMotion.small.textContent = `No camera shake, wider view, beat pulse motion or comic effects. Sounds stay. ${state.reduceMotion === "auto" ? `Follows your device (${device ? "on" : "off"}).` : "Your choice."} Applies at once.`;
     // The live toggles need the matching pass in the running chain.
     const p = post();
     const live = liveToggles(p.kind, p.look);
@@ -203,6 +212,7 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
     const saved = onSave(state) !== false;
     stored = saved;
     if (key === "ink" || key === "bloom") onLive(state);
+    if (key === "reduceMotion") onMotion(state);
     show();
     const note = saved ? "Saved." : "Your browser does not keep settings, so this lasts for this page only.";
     const list = blocked.map((k) => KEY_TEXT[k]).join(", ");
@@ -235,6 +245,7 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
     const def = effectiveSettings({ ...state, shadows: "auto" }, autoQuality).shadows;
     change({ shadows: fx.shadows.input.checked === def ? "auto" : fx.shadows.input.checked }, "shadows");
   });
+  fx.reduceMotion.input.addEventListener("change", () => change({ reduceMotion: reduceMotionChoice(fx.reduceMotion.input.checked, deviceMotion()) }, "reduceMotion"));
   for (const key of ["ink", "bloom"]) fx[key].input.addEventListener("change", () => change({ [key]: fx[key].input.checked }, key));
 
   toggleButton.addEventListener("click", () => toggle());

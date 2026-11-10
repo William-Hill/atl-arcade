@@ -54,6 +54,8 @@ async function centers(page) {
       grind: c(".touch-grind"),
       style1: c(".touch-style1"),
       style2: c(".touch-style2"),
+      switch: c(".touch-switch"),
+      stickBase: c(".touch-stick-base"),
       viewport: { w: innerWidth, h: innerHeight },
     };
   });
@@ -77,11 +79,31 @@ for (const name of ["iPhone 15", "Pixel 7"]) {
       expect(await page.evaluate(() => window.__atl.input.touch)).toBe(true);
       expect(await page.locator("#shell-info").isVisible()).toBe(false);
       const c = await centers(page);
-      for (const b of [c.jump, c.grind, c.style1, c.style2]) {
+      for (const b of [c.jump, c.grind, c.style1, c.style2, c.switch]) {
         expect(Math.min(b.w, b.h)).toBeGreaterThanOrEqual(44);
         expect(b.x + b.w / 2).toBeLessThanOrEqual(c.viewport.w);
         expect(b.y + b.h / 2).toBeLessThanOrEqual(c.viewport.h);
       }
+    });
+
+    test("every button label fits inside its circle with 4 px to spare", async ({ page }) => {
+      await ready(page);
+      const rows = await page.evaluate(() =>
+        [...document.querySelectorAll(".touch-btn")].map((el) => {
+          const r = el.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          const t = range.getBoundingClientRect();
+          const radius = (r.width - 2 * parseFloat(getComputedStyle(el).borderLeftWidth)) / 2;
+          const cx = r.left + r.width / 2;
+          const cy = r.top + r.height / 2;
+          // The farthest corner of the text box from the circle center.
+          const corner = Math.hypot(Math.max(Math.abs(t.left - cx), Math.abs(t.right - cx)), Math.max(Math.abs(t.top - cy), Math.abs(t.bottom - cy)));
+          return { label: el.textContent, spare: radius - corner };
+        }),
+      );
+      expect(rows.map((r) => r.label)).toEqual(["JUMP", "GRIND", "GROOVE", "SPIN", "SWITCH"]);
+      for (const r of rows) expect(r.spare, `${r.label} spare px`).toBeGreaterThanOrEqual(4);
     });
 
     test("touch only: push, steer, grind the straight rail, and jump", async ({ page }) => {
@@ -118,6 +140,38 @@ for (const name of ["iPhone 15", "Pixel 7"]) {
       await expect.poll(() => page.evaluate(() => window.__atl.skater.yaw), { timeout: 10000 }).toBeGreaterThan(yaw0 + 0.3);
       await f.end(1);
 
+      expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+    });
+
+    test("SWITCH turns the skater to ride backward, and back again", async ({ page }) => {
+      const errors = collectErrors(page);
+      await ready(page);
+      const c = await centers(page);
+      // SWITCH does not cover the stick base at rest.
+      const a = c.switch;
+      const b = c.stickBase;
+      const apart = a.x + a.w / 2 <= b.x - b.w / 2 || b.x + b.w / 2 <= a.x - a.w / 2 || a.y + a.h / 2 <= b.y - b.h / 2 || b.y + b.h / 2 <= a.y - a.h / 2;
+      expect(apart, "SWITCH and the stick base overlap").toBe(true);
+      const f = await fingers(page);
+      await page.evaluate(() => window.__atl.resetSkater([-26, 0, -2], 0));
+      // Push with the stick, then let go: she keeps rolling. CDP lifts one
+      // finger of two only when the last finger lifts, so each button press
+      // here is the only finger down.
+      await f.start(1, c.stick.x, c.stick.y);
+      await f.move(1, c.stick.x, c.stick.y - 50);
+      await expect.poll(() => page.evaluate(() => window.__atl.skater.speed), { timeout: 15000 }).toBeGreaterThan(2);
+      await f.end(1);
+      expect(await page.evaluate(() => window.__atl.skater.backward)).toBe(false);
+      await f.start(2, c.switch.x, c.switch.y);
+      await expect.poll(() => page.evaluate(() => window.__atl.skater.backward), { timeout: 5000 }).toBe(true);
+      // A held SWITCH does not flip the skater again.
+      await page.waitForTimeout(500);
+      expect(await page.evaluate(() => window.__atl.skater.backward)).toBe(true);
+      await f.end(2);
+      // A short tap also counts.
+      await f.start(2, c.switch.x, c.switch.y);
+      await f.end(2);
+      await expect.poll(() => page.evaluate(() => window.__atl.skater.backward), { timeout: 5000 }).toBe(false);
       expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
     });
 

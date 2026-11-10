@@ -79,7 +79,10 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
 .hud-label { font-size: 14px; letter-spacing: 0.08em; min-width: 72px; }
 .hud-bar { position: relative; width: 180px; height: 10px; background: rgba(255, 255, 255, 0.15); border-radius: 5px; overflow: hidden; }
 .hud-fill { height: 100%; width: 0; background: var(--atl-pink); transition: width 0.15s; }
-.hud-style[data-ready="1"] .hud-fill { background: #7ef0c2; }
+/* Style ready (#97, MOB-12): the label reads "★ READY" (hud.js) and the
+   full bar gets stripes, so the cue does not need color vision. */
+.hud-style[data-ready="1"] .hud-fill { background: repeating-linear-gradient(135deg, #7ef0c2 0 5px, #1f8f68 5px 10px); }
+.hud-style[data-ready="1"] .hud-label { color: #7ef0c2; font-weight: 700; }
 .hud-dot { position: absolute; top: -2px; width: 14px; height: 14px; margin-left: -7px; border-radius: 7px; background: #ffd166; }
 
 .hud-pulse {
@@ -169,7 +172,7 @@ body.touch #shell-info { display: none; }
 .touch-stick-base {
   position: absolute;
   /* The rest position hints where the stick is. A touch moves it. */
-  left: calc(96px + env(safe-area-inset-left));
+  left: calc(88px + env(safe-area-inset-left));
   top: calc(100% - 112px - env(safe-area-inset-bottom));
   width: 128px;
   height: 128px;
@@ -210,6 +213,7 @@ body.touch #shell-info { display: none; }
   font: 700 13px/1 system-ui, sans-serif;
   letter-spacing: 0.04em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  padding: 0;
   pointer-events: auto;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
@@ -217,11 +221,16 @@ body.touch #shell-info { display: none; }
 /* A held button also gets smaller, so the state does not show by color only. */
 .touch-btn[data-down="1"] { background: rgba(255, 95, 178, 0.75); border-color: #fff; transform: scale(0.92); }
 
-/* A thumb arc: JUMP is the biggest and nearest the corner. */
+/* A thumb arc: JUMP is the biggest and nearest the corner. The top row
+   (SPIN, GROOVE, SWITCH) ends 162 px above the pad bottom, under the
+   landscape minimap (184 px). SWITCH ends 190 px from the pad right edge, so
+   on a 360 px screen it stays clear of the stick base (#65 re-run). Each
+   label has 4 px or more of space to the inner edge of its circle. */
 .touch-jump { right: 0; bottom: 0; width: 88px; height: 88px; font-size: 15px; }
 .touch-grind { right: 100px; bottom: 4px; width: 76px; height: 76px; }
-.touch-style1 { right: 92px; bottom: 96px; width: 64px; height: 64px; font-size: 11px; }
-.touch-style2 { right: 8px; bottom: 104px; width: 64px; height: 64px; font-size: 12px; }
+.touch-style1 { right: 66px; bottom: 98px; width: 64px; height: 64px; font-size: 11px; letter-spacing: 0.02em; }
+.touch-style2 { right: 0; bottom: 100px; width: 62px; height: 62px; font-size: 12px; }
+.touch-switch { right: 134px; bottom: 90px; width: 56px; height: 56px; font-size: 10px; letter-spacing: 0; }
 
 
 /* The minimap (#86, src/ui/minimap.js). A desktop shows it in the bottom
@@ -613,4 +622,82 @@ body.results-open #touch-controls { display: none; }
   #fullmap .fullmap-hint { display: none; }
   #fullmap .fullmap-title { min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #fullmap .fullmap-legend { display: none; }
+}
+
+/* The fullscreen button and the "turn your phone" hint (#97, MOB-9),
+   touch screens only (src/ui/screen-controls.js). Text #f3f3f7 on the
+   dark pill is 4.5:1 or more over any scene; the targets are 44 px. */
+#fullscreen-toggle, #turn-hint button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  background: var(--hud-pill);
+  color: var(--atl-paper);
+  font: 600 13px system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#fullscreen-toggle { position: fixed; z-index: 20; }
+#fullscreen-toggle:focus-visible, #turn-hint button:focus-visible { outline: 3px solid #ff5fb2; outline-offset: 2px; }
+/* Landscape: at the bottom, between the stick zone and the touch buttons. */
+@media (orientation: landscape) {
+  #fullscreen-toggle {
+    right: calc(16px + 200px + 16px + env(safe-area-inset-right));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+/* Portrait: the top center buttons covered the skater select (a tap on
+   Marcus opened the settings). So SETTINGS, PHOTO and FULL SCREEN go in a
+   column under the minimap (top 76 px, 120 px high), at its right edge.
+   The key hints (O, P) are for a keyboard, so a touch screen hides them.
+   "html body.touch" wins over the style tags of photo-panel.js and
+   settings-menu.js. */
+@media (orientation: portrait) {
+  html body.touch #settings-toggle,
+  html body.touch #photo-toggle,
+  #fullscreen-toggle {
+    left: auto;
+    right: calc(10px + env(safe-area-inset-right));
+    bottom: auto;
+    transform: none;
+    min-height: 44px;
+  }
+  html body.touch #settings-toggle { top: calc(204px + env(safe-area-inset-top)); }
+  html body.touch #photo-toggle { top: calc(256px + env(safe-area-inset-top)); }
+  #fullscreen-toggle { top: calc(308px + env(safe-area-inset-top)); }
+  html body.touch #settings-toggle kbd, html body.touch #photo-toggle kbd { display: none; }
+}
+#turn-hint {
+  position: fixed;
+  left: 50%;
+  /* Under the portrait button column (it ends at 352 px). */
+  top: calc(364px + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 6px 6px 6px 14px;
+  border: 2px solid #ffd166;
+  border-radius: 10px;
+  background: var(--hud-pill);
+  color: var(--atl-paper);
+  font: 600 15px/1.3 system-ui, sans-serif;
+}
+#turn-hint[hidden] { display: none; }
+body.photo-open #fullscreen-toggle, body.photo-open #turn-hint { visibility: hidden; }
+/* A portrait tablet (wider than 600 px) keeps the 160 px touch minimap at
+   96 px from the top, so it ends at 256 px. The column and the hint go 64 px
+   lower, under it. */
+@media (orientation: portrait) and (min-width: 601px) {
+  html body.touch #settings-toggle { top: calc(268px + env(safe-area-inset-top)); }
+  html body.touch #photo-toggle { top: calc(320px + env(safe-area-inset-top)); }
+  #fullscreen-toggle { top: calc(372px + env(safe-area-inset-top)); }
+  #turn-hint { top: calc(428px + env(safe-area-inset-top)); }
 }

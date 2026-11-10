@@ -6,7 +6,9 @@
 // with +x to the right and +y down (screen axes).
 // - Left and right steer. The stick left steers left, which is +steer.
 // - Up pushes. Down brakes.
-// The buttons are JUMP, GRIND, GROOVE (style1), and SPIN (style2).
+// The buttons are JUMP, GRIND, GROOVE (style1), SPIN (style2), and SWITCH
+// (switch: ride backward, or forward again). The skater turns on the press
+// of SWITCH (src/sim/skate/skater.js), so a hold does not flip it again.
 
 export const TOUCH = {
   radius: 56, // px from the stick base to the edge of its travel
@@ -15,7 +17,7 @@ export const TOUCH = {
   brakeY: 0.55, // stick y at or below this (down) brakes
 };
 
-export const TOUCH_BUTTONS = ["jump", "grind", "style1", "style2"];
+export const TOUCH_BUTTONS = ["jump", "grind", "style1", "style2", "switch"];
 
 // The stick vector for a thumb at `point` on a stick with its base at
 // `origin`, clamped to the unit circle.
@@ -35,7 +37,7 @@ export function steerFromX(x, deadzone = TOUCH.deadzone) {
   return -Math.sign(x) * v;
 }
 
-// `state` is { stick: { x, y } | null, buttons: { jump, grind, style1, style2 } }.
+// `state` is { stick: { x, y } | null, buttons: { jump, grind, style1, style2, switch } }.
 export function mapTouch(state, k = TOUCH) {
   const stick = state.stick;
   const b = state.buttons ?? {};
@@ -48,7 +50,7 @@ export function mapTouch(state, k = TOUCH) {
     grind: Boolean(b.grind),
     style1: Boolean(b.style1),
     style2: Boolean(b.style2),
-    switch: false,
+    switch: Boolean(b.switch),
   };
 }
 
@@ -58,4 +60,34 @@ export function wantsTouch(param, { maxTouchPoints = 0, coarse = false } = {}) {
   if (param === "1") return true;
   if (param === "0") return false;
   return coarse || maxTouchPoints > 0;
+}
+
+// The held state of the touch buttons, per pointer, so two thumbs work at the
+// same time. A press counts in the next `snapshot()` also when the finger
+// lifts before it: at a low frame rate a short tap can start and end between
+// two input samples, and the tap must not be lost. `snapshot()` is called
+// once per input sample.
+export function createButtonState(actions = TOUCH_BUTTONS) {
+  const held = Object.fromEntries(actions.map((a) => [a, new Set()]));
+  const pressed = new Set();
+  return {
+    down(action, pointerId) {
+      held[action].add(pointerId);
+      pressed.add(action);
+    },
+    up(action, pointerId) {
+      held[action].delete(pointerId);
+    },
+    isDown(action) {
+      return held[action].size > 0;
+    },
+    get any() {
+      return actions.some((a) => held[a].size > 0);
+    },
+    snapshot() {
+      const out = Object.fromEntries(actions.map((a) => [a, held[a].size > 0 || pressed.has(a)]));
+      pressed.clear();
+      return out;
+    },
+  };
 }

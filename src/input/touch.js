@@ -1,4 +1,4 @@
-// Touch overlay for phones: a floating stick under the left thumb and four
+// Touch overlay for phones: a floating stick under the left thumb and five
 // buttons under the right thumb. It keeps the held state per pointer, so two
 // thumbs work at the same time. `sample()` returns the controller input
 // shape through the pure mapTouch() in src/input/touch-map.js.
@@ -6,13 +6,15 @@
 // The overlay covers only the stick zone and the buttons. A drag on the rest
 // of the screen reaches the canvas and turns the camera (src/input/look.js).
 
-import { TOUCH, mapTouch, stickVector } from "./touch-map.js";
+import { TOUCH, createButtonState, mapTouch, stickVector } from "./touch-map.js";
 
 const BUTTONS = [
   { action: "jump", label: "JUMP" },
   { action: "grind", label: "GRIND" },
   { action: "style1", label: "GROOVE" },
   { action: "style2", label: "SPIN" },
+  // Ride backward, or forward again (the R key, the LB button).
+  { action: "switch", label: "SWITCH", aria: "Switch: ride backward or forward" },
 ];
 
 export function createTouchInput({ parent = document.body, radius = TOUCH.radius } = {}) {
@@ -33,22 +35,23 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
 
   const pad = document.createElement("div");
   pad.className = "touch-buttons";
-  const held = { jump: new Set(), grind: new Set(), style1: new Set(), style2: new Set() };
+  const held = createButtonState(BUTTONS.map((b) => b.action));
   for (const b of BUTTONS) {
     const el = document.createElement("button");
     el.type = "button";
     el.className = `touch-btn touch-${b.action}`;
     el.dataset.action = b.action;
     el.textContent = b.label;
+    if (b.aria) el.setAttribute("aria-label", b.aria);
     const down = (e) => {
       e.preventDefault();
-      held[b.action].add(e.pointerId);
+      held.down(b.action, e.pointerId);
       el.setPointerCapture?.(e.pointerId);
       el.dataset.down = "1";
     };
     const up = (e) => {
-      held[b.action].delete(e.pointerId);
-      if (held[b.action].size === 0) el.dataset.down = "0";
+      held.up(b.action, e.pointerId);
+      if (!held.isDown(b.action)) el.dataset.down = "0";
     };
     el.addEventListener("pointerdown", down);
     el.addEventListener("pointerup", up);
@@ -106,18 +109,14 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
   zone.addEventListener("contextmenu", (e) => e.preventDefault());
   release();
 
-  function buttons() {
-    return { jump: held.jump.size > 0, grind: held.grind.size > 0, style1: held.style1.size > 0, style2: held.style2.size > 0 };
-  }
-
   return {
     element: root,
     sample() {
-      return mapTouch({ stick, buttons: buttons() });
+      return mapTouch({ stick, buttons: held.snapshot() });
     },
     // True while a thumb is on the stick or on a button.
     get touching() {
-      return stickId !== null || Object.values(held).some((s) => s.size > 0);
+      return stickId !== null || held.any;
     },
     dispose() {
       root.remove();

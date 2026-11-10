@@ -578,6 +578,8 @@ if (skaterName !== "capsule") {
   skaterLoad(skaterName)
     .then((loaded) => {
       loader.step("skater");
+      // A switch that applied first keeps its skater.
+      if (skaterModel.swaps > 0) return;
       skaterView.attachModel(loaded);
       skaterModel.loaded = true;
     })

@@ -4,12 +4,20 @@
 // not download it.
 
 import { GREYBOX } from "./greybox.js";
+import { withSkatepark } from "./skatepark.js";
 
 export const LEVELS = {
   greybox: async () => GREYBOX,
   "beltline-eastside": async () => {
-    const [level, canopy] = await Promise.all([import("../../levels/beltline-eastside/level.json"), import("../../levels/beltline-eastside/canopy.json")]);
-    return withCanopy(level.default, canopy.default);
+    const [level, canopy, skatepark, features] = await Promise.all([
+      import("../../levels/beltline-eastside/level.json"),
+      import("../../levels/beltline-eastside/canopy.json"),
+      import("../../levels/beltline-eastside/skatepark.json"),
+      import("../../assets/skate-features/features.json"),
+    ]);
+    // The skatepark (#222) grades the terrain under its pad, so it goes in
+    // before anything reads the ground.
+    return withSkatepark(withCanopy(level.default, canopy.default), skatepark.default, features.default);
   },
 };
 

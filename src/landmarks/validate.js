@@ -6,7 +6,8 @@
 // validateLandmarks(data, ctx) returns a list of error strings. An empty
 // list means the file can ship. `ctx` holds the facts about the level that
 // the checks need, so this module reads no file:
-//   level        the level (bounds, buildings, areas, strips)
+//   level        the level (bounds, buildings, areas, strips), with the
+//                skatepark pad of the level in its areas (#222)
 //   grindables   [{ id, total, points: [[x, y, z]] }] from createLevelEnv()
 //   goals        the goals of the level (goals.json `goals`), optional
 //   permissions  the file names in docs/permissions/, optional
@@ -148,7 +149,8 @@ function checkZone(label, zone, r, level, err) {
   return true;
 }
 
-function checkChallenge(spot, ctx, err) {
+// `rings` are the footprint shapes of the spot, or null.
+function checkChallenge(spot, ctx, err, rings = null) {
   const R = LANDMARK_RULES;
   const c = spot.challenge;
   const { level } = ctx;
@@ -196,7 +198,10 @@ function checkChallenge(spot, ctx, err) {
   }
 
   if (c.type === "combo") {
-    if (checkZone("challenge.zone", c.zone, R.comboR, level, err) && !onPaved([c.zone.x, c.zone.z], level)) err("challenge.zone center is not on a trail, a path, or a sidewalk");
+    // A skate spot (#222) is paved itself: its footprint is the pad of the
+    // skatepark, so a zone center on the pad is good.
+    const onPad = spot.kind === "skate" && c.zone && Boolean(rings?.some((r) => pointInRings(c.zone.x, c.zone.z, r)));
+    if (checkZone("challenge.zone", c.zone, R.comboR, level, err) && !onPad && !onPaved([c.zone.x, c.zone.z], level)) err(spot.kind === "skate" ? "challenge.zone center is not on the skatepark pad, a trail, a path, or a sidewalk" : "challenge.zone center is not on a trail, a path, or a sidewalk");
     if (c.points !== R.comboPoints[c.tier]) err(`challenge.points is ${c.points} (the tier gives ${R.comboPoints[c.tier]})`);
   }
 }
@@ -241,6 +246,8 @@ function checkSpot(spot, ctx, err) {
   // The footprint and the find value.
   const rings = footprintShapes(spot.footprint, level, err);
   if (rings && !rings.some((r) => pointInRings(spot.at[0], spot.at[1], r))) err("`at` is not inside the footprint");
+  // A skate spot is a place to skate: it needs the pad of its skatepark.
+  if (spot.kind === "skate" && spot.footprint == null) err("a skate spot needs a footprint (the area of its skatepark pad)");
   const f = spot.find;
   if (!f || typeof f !== "object" || (f.edge == null) === (f.r == null)) err("`find` needs `edge` (m to the footprint) or `r` (m to a point), not both");
   else if (f.edge != null) {
@@ -279,7 +286,7 @@ function checkSpot(spot, ctx, err) {
   // The challenge and the credit.
   if (spot.kind === "edge") {
     if (spot.challenge != null) err("an edge marker has no challenge");
-  } else checkChallenge(spot, ctx, err);
+  } else checkChallenge(spot, ctx, err, rings);
   if (spot.kind === "art") checkCredit(spot, ctx, err);
   else if (spot.credit != null) err("`credit` is for an art spot only");
 }

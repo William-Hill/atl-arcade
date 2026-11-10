@@ -34,8 +34,16 @@ import { createRun, stepRun, teleportRun } from "./skate/run.js";
 import { createSkaterEnv } from "./skate/skater.js";
 import { createLevelEnv } from "../level/ground.js";
 import { goalsFor } from "../level/goals.js";
-import BELTLINE from "../../levels/beltline-eastside/level.json";
+import { withSkatepark } from "../level/skatepark.js";
+import BELTLINE_FILE from "../../levels/beltline-eastside/level.json";
+import BELTLINE_SKATEPARK from "../../levels/beltline-eastside/skatepark.json";
+import SKATE_FEATURES from "../../assets/skate-features/features.json";
 import BELTLINE_SPOTS from "../../levels/beltline-eastside/landmarks.json";
+
+// The level as the game loads it (src/level/levels.js): the skatepark (#222)
+// adds its pad to the areas, and the skatepark spot has that pad as its
+// footprint.
+const BELTLINE = withSkatepark(BELTLINE_FILE, BELTLINE_SKATEPARK, SKATE_FEATURES);
 
 const DT = 1 / 60;
 
@@ -442,14 +450,14 @@ describe("F-1: claim points", () => {
     expect(next.claimed).toHaveLength(5);
   });
 
-  it("sums the 20 spots of the GDD to 5800, and the 12 spots of the Beltline file to 3500", () => {
+  it("sums the 20 spots of the GDD to 5800, and the 13 spots of the Beltline file to 4000", () => {
     const tiers = (easy, typical, hard) => [...Array(easy).fill("easy"), ...Array(typical).fill("typical"), ...Array(hard).fill("hard")].map((tier) => ({ kind: "building", tier }));
     expect(claimPointsTotal(tiers(8, 9, 3))).toBe(5800);
     const counts = landmarkCounts(BELTLINE_SPOTS);
     const fromCounts = counts.tiers.easy * 200 + counts.tiers.typical * 300 + counts.tiers.hard * 500;
     expect(claimPointsTotal(BELTLINE_SPOTS.spots)).toBe(fromCounts);
-    expect(counts.tiers).toEqual({ easy: 5, typical: 5, hard: 2 });
-    expect(fromCounts).toBe(3500);
+    expect(counts.tiers).toEqual({ easy: 5, typical: 5, hard: 3 });
+    expect(fromCounts).toBe(4000);
   });
 });
 
@@ -535,12 +543,12 @@ describe("F-8: the collection", () => {
     expect([6, 7, 13, 14, 19, 20].map((n) => outfitsFor(n, 20))).toEqual([0, 1, 1, 2, 2, 3]);
   });
 
-  it("takes N from the claim spots of the file: 5, 9 and 12 for the Beltline file", () => {
+  it("takes N from the claim spots of the file: 5, 10 and 13 for the Beltline file", () => {
     const s = createLandmarks(prepareLandmarks(BELTLINE_SPOTS, BELTLINE));
     expect(s.claimSpots).toBe(landmarkCounts(BELTLINE_SPOTS).claim);
-    expect(s.claimSpots).toBe(12);
-    expect(landmarkView(s).unlocks).toEqual({ at: [5, 9, 12], unlocked: 0 });
-    expect(landmarkView(s).counts).toEqual({ spots: 14, claimSpots: 12, found: 0, claimed: 0 });
+    expect(s.claimSpots).toBe(13);
+    expect(landmarkView(s).unlocks).toEqual({ at: [5, 10, 13], unlocked: 0 });
+    expect(landmarkView(s).counts).toEqual({ spots: 15, claimSpots: 13, found: 0, claimed: 0 });
   });
 
   it("counts the unlocks as the claims come in, and a reset keeps them", () => {
@@ -812,9 +820,9 @@ describe("with the real controller on the Beltline level", () => {
   }
   const HOP = [{ frames: 90, input: { push: true } }, { frames: 1, input: { push: true, jump: true } }, { frames: 90, input: {} }];
 
-  it("prepares the 12 claim spots and the 2 edge markers of the file", () => {
-    expect(spots).toHaveLength(14);
-    expect(spots.filter((s) => s.challenge)).toHaveLength(12);
+  it("prepares the 13 claim spots and the 2 edge markers of the file", () => {
+    expect(spots).toHaveLength(15);
+    expect(spots.filter((s) => s.challenge)).toHaveLength(13);
     expect(spots.filter((s) => s.kind === "edge").every((s) => s.challenge === null)).toBe(true);
     // Each value of a challenge in the file is the value of its tier.
     for (const s of spots.filter((x) => x.challenge)) {

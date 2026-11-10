@@ -237,7 +237,16 @@ export function createSkaterView({ lean: leanOn = true, footIk = false, sampleGr
       leanOn = Boolean(on);
     },
     // loaded: the result of loadSkaterModel().
+    // A second call swaps the skater in place (#97, MOB-13): the old model
+    // and its mixer go, and the new model starts with no clip history.
+    // sync() or respawn() then gives it the pose of the run state.
     attachModel(loaded) {
+      if (model) {
+        restoreBones();
+        mixer?.stopAllAction();
+        mixer?.uncacheRoot(model.root);
+        pivot.remove(model.root);
+      }
       model = loaded;
       body.visible = false;
       nose.visible = false;

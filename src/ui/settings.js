@@ -21,7 +21,9 @@ export const TIERS = ["low", "phone", "high"];
 export const LOOK_NAMES = ["toon", "pbr"];
 // The walker counts in the menu. "auto" is the tier's count (PED_COUNT).
 export const PED_CHOICES = [0, 25, 50, 120, 200];
-export const DEFAULT_SETTINGS = { quality: "auto", look: "auto", peds: "auto", shadows: "auto", ink: true, bloom: true };
+// `reduceMotion` (#97): "auto" follows prefers-reduced-motion; true or
+// false is the player's choice.
+export const DEFAULT_SETTINGS = { quality: "auto", look: "auto", peds: "auto", shadows: "auto", ink: true, bloom: true, reduceMotion: "auto" };
 // The settings that need a reload, and the URL flag of each.
 export const RELOAD_KEYS = ["quality", "look", "peds", "shadows"];
 export const URL_FLAGS = { quality: "quality", look: "look", peds: "peds" };
@@ -38,7 +40,22 @@ export function normalizeSettings(raw) {
     shadows: typeof r.shadows === "boolean" ? r.shadows : "auto",
     ink: typeof r.ink === "boolean" ? r.ink : true,
     bloom: typeof r.bloom === "boolean" ? r.bloom : true,
+    reduceMotion: typeof r.reduceMotion === "boolean" ? r.reduceMotion : "auto",
   };
+}
+
+// Pure: the reduced-motion state that runs (#97). `setting` is the saved
+// choice ("auto", true or false); `device` is the prefers-reduced-motion
+// media query. The choice wins; "auto" follows the device.
+export function effectiveReducedMotion(setting, device) {
+  return typeof setting === "boolean" ? setting : Boolean(device);
+}
+
+// Pure: the value to save when the player sets the box to `checked`. The
+// value that agrees with the device is "auto", so a later change of the
+// device setting applies again.
+export function reduceMotionChoice(checked, device) {
+  return Boolean(checked) === Boolean(device) ? "auto" : Boolean(checked);
 }
 
 // The saved settings, or the defaults when storage is missing, throws, or

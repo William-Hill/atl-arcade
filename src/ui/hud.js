@@ -10,6 +10,25 @@ import { nearEdge } from "../level/edge-fence.js";
 // The hint near the level edge fence (#229).
 export const EDGE_HINT = "Edge of the map. Turn around and keep skating.";
 
+// The style meter label, and the label when the signature move is ready
+// (#97, MOB-12). The ready label has a text and a star shape, so the cue
+// does not need color vision. The full bar also gets stripes (shell.css).
+export const STYLE_LABEL = "STYLE";
+export const STYLE_READY_LABEL = "\u2605 READY";
+
+export function styleLabel(ready) {
+  return ready ? STYLE_READY_LABEL : STYLE_LABEL;
+}
+
+// Pure: the beat pulse at a beat phase (0 at the beat, 1 just before the
+// next). The ring flashes and grows on each beat. With reduced motion
+// (#97, MOB-11) it does not grow; it only gets brighter and darker, so the
+// beat still shows.
+export function pulseLook(beatPhase, reducedMotion = false) {
+  const fade = 1 - beatPhase;
+  return { opacity: 0.25 + 0.75 * fade * fade, scale: reducedMotion ? 1 : 1 + 0.6 * fade * fade };
+}
+
 function el(tag, className, parent) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -19,7 +38,8 @@ function el(tag, className, parent) {
 
 // `touch` is true when the touch controls show: the hints name a tap.
 // `fence` is the level edge fence (src/level/edge-fence.js), or null.
-export function createHud(root, { touch = false, fence = null } = {}) {
+// `reducedMotion()` is true when the beat pulse must not move (#97).
+export function createHud(root, { touch = false, fence = null, reducedMotion = () => false } = {}) {
   root.innerHTML = "";
   // The score and the run timer (M1-05) share the top line.
   const top = el("div", "hud-top", root);
@@ -45,7 +65,9 @@ export function createHud(root, { touch = false, fence = null } = {}) {
   edge.hidden = true;
 
   const styleWrap = el("div", "hud-meter hud-style", root);
-  el("span", "hud-label", styleWrap).textContent = "STYLE";
+  const styleText = el("span", "hud-label", styleWrap);
+  styleText.id = "hud-style-label";
+  styleText.textContent = STYLE_LABEL;
   const styleBar = el("div", "hud-bar", styleWrap);
   const styleFill = el("div", "hud-fill", styleBar);
   styleFill.id = "hud-style-fill";
@@ -81,6 +103,8 @@ export function createHud(root, { touch = false, fence = null } = {}) {
       }
       styleFill.style.width = `${Math.round(c.style * 100)}%`;
       styleWrap.dataset.ready = c.signatureReady ? "1" : "0";
+      const label = styleLabel(c.signatureReady);
+      if (styleText.textContent !== label) styleText.textContent = label;
 
       const s = run.skater;
       edge.hidden = !nearEdge(fence, s.position[0], s.position[2]);
@@ -111,11 +135,11 @@ export function createHud(root, { touch = false, fence = null } = {}) {
         pulse.style.display = "none";
       } else {
         pulse.style.display = "";
-        const fade = 1 - beatPhase;
-        pulse.style.opacity = String(0.25 + 0.75 * fade * fade);
-        pulse.style.transform = `scale(${1 + 0.6 * fade * fade})`;
+        const look = pulseLook(beatPhase, reducedMotion());
+        pulse.style.opacity = String(look.opacity);
+        pulse.style.transform = `scale(${look.scale})`;
       }
     },
-    elements: { score, timer, combo, pending, tag, pulse, edge, styleFill, balanceWrap, balanceDot },
+    elements: { score, timer, combo, pending, tag, pulse, edge, styleWrap, styleText, styleFill, balanceWrap, balanceDot },
   };
 }

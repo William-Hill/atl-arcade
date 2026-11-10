@@ -441,6 +441,44 @@
       }
     },
     {
+      "id": "historic-fourth-ward-skatepark",
+      "kind": "skate",
+      "name": "Thomas Taylor Memorial Skatepark",
+      "at": [264.4, 3.3],
+      "footprint": {"areas": ["skatepark:h4w-skatepark"]},
+      "find": {"r": 20},
+      "short": "Atlanta's first public skatepark, open since spring 2011.",
+      "card": [
+        {
+          "text": "It is Atlanta's first public skatepark, designed with input from the local skateboard community.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/parks-trails/thomas-taylor-memorial-skatepark/"}
+        },
+        {
+          "text": "The skatepark opened in spring 2011.",
+          "source": {"name": "Historic Fourth Ward Park Conservancy", "url": "https://www.h4wpc.org/skate-park/"}
+        },
+        {
+          "text": "Tony Hawk appeared at the grand opening, and his foundation gave $25,000 toward construction.",
+          "source": {"name": "Historic Fourth Ward Park Conservancy", "url": "https://www.h4wpc.org/skate-park/"}
+        },
+        {
+          "text": "The skatepark was renamed in 2024 to honor Thomas F. Taylor, a skateboarder and advocate for Atlanta skating.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/parks-trails/thomas-taylor-memorial-skatepark/"}
+        },
+        {
+          "text": "Solar panels offset roughly 50 percent of the park's energy costs.",
+          "source": {"name": "Historic Fourth Ward Park Conservancy", "url": "https://www.h4wpc.org/skate-park/"}
+        }
+      ],
+      "challenge": {
+        "type": "combo",
+        "tier": "hard",
+        "hint": "Land a 2,000 point combo in the skatepark",
+        "zone": {"x": 272.3, "z": -1.5, "r": 10},
+        "points": 2000
+      }
+    },
+    {
       "id": "inman-park-historic-district",
       "kind": "edge",
       "name": "Inman Park Historic District",

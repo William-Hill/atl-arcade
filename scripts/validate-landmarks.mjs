@@ -10,6 +10,7 @@ import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createLevelEnv } from "../src/level/ground.js";
+import { withSkatepark } from "../src/level/skatepark.js";
 import { landmarkCounts, validateLandmarks } from "../src/landmarks/validate.js";
 
 const root = resolve(import.meta.dirname, "..");
@@ -18,7 +19,10 @@ const read = (p) => JSON.parse(readFileSync(p, "utf8"));
 // The facts about a level that the validator needs.
 export function landmarkContext(name) {
   const dir = resolve(root, "levels", name);
-  const level = read(resolve(dir, "level.json"));
+  // The level as the game loads it (src/level/levels.js): a skatepark adds
+  // its pad to the areas and its rails and ledges to the grindables (#222).
+  const parkFile = resolve(dir, "skatepark.json");
+  const level = existsSync(parkFile) ? withSkatepark(read(resolve(dir, "level.json")), read(parkFile), read(resolve(root, "assets/skate-features/features.json"))) : read(resolve(dir, "level.json"));
   const goalsFile = resolve(dir, "goals.json");
   const permissions = resolve(root, "docs/permissions");
   return {

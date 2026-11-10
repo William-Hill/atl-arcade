@@ -189,6 +189,33 @@ describe("geometry helpers", () => {
   });
 });
 
+describe("a skate spot (#222)", () => {
+  // The pad of a skatepark is an area of the level, off the trail.
+  const skate = (over = {}) =>
+    building({
+      id: "skate-spot",
+      kind: "skate",
+      name: "Skatepark",
+      at: [0, 20],
+      footprint: { areas: ["a1"] },
+      find: { r: 20 },
+      challenge: { type: "combo", tier: "hard", hint: "Land a 2,000 point combo in the skatepark", zone: { x: 5, z: 25, r: 10 }, points: 2000 },
+      ...over,
+    });
+
+  it("passes with a combo zone on its pad, off every trail and path", () => {
+    expect(onPaved([5, 25], LEVEL)).toBe(false);
+    expect(errorsOf(skate())).toEqual([]);
+  });
+
+  it("needs the pad as its footprint, and the zone center on the pad or on a paved way", () => {
+    expect(errorsOf(skate({ footprint: undefined }))).toEqual(expect.arrayContaining([expect.stringMatching(/a skate spot needs a footprint/)]));
+    expect(errorsOf(skate({ challenge: { type: "combo", tier: "hard", hint: "Land a 2,000 point combo", zone: { x: 60, z: 25, r: 10 }, points: 2000 } }))[0]).toMatch(/not on the skatepark pad, a trail, a path, or a sidewalk/);
+    // The pad does not count for another kind of spot.
+    expect(errorsOf(skate({ kind: "park" }))[0]).toMatch(/not on a trail, a path, or a sidewalk/);
+  });
+});
+
 describe("levels/beltline-eastside/landmarks.json", () => {
   let data;
   let errors;
@@ -200,9 +227,22 @@ describe("levels/beltline-eastside/landmarks.json", () => {
     expect(errors).toEqual([]);
   });
 
-  it("has no art spot and no skate spot until their gates clear", () => {
-    // Art: written permission (GDD open question 5). Skate: issue #222.
-    expect(data.spots.filter((s) => s.kind === "art" || s.kind === "skate")).toEqual([]);
+  it("has no art spot until its gate clears", () => {
+    // Art: written permission (GDD open question 5).
+    expect(data.spots.filter((s) => s.kind === "art")).toEqual([]);
+  });
+
+  it("has the skatepark as the one skate spot: a hard combo on its pad (#222)", () => {
+    const skate = data.spots.filter((s) => s.kind === "skate");
+    expect(skate.map((s) => s.id)).toEqual(["historic-fourth-ward-skatepark"]);
+    const [spot] = skate;
+    expect(spot.name).toBe("Thomas Taylor Memorial Skatepark");
+    expect(spot.footprint).toEqual({ areas: ["skatepark:h4w-skatepark"] });
+    expect(spot.challenge).toMatchObject({ type: "combo", tier: "hard", points: 2000 });
+    expect(spot.challenge.zone.r).toBe(LANDMARK_RULES.comboR);
+    // The sources say "spring 2011" and "2011", not a month.
+    for (const text of [spot.short, ...spot.card.map((f) => f.text)]) expect(text).not.toMatch(/June/);
+    for (const f of spot.card) expect(f.source.url).toMatch(/^https:\/\/(beltline\.org\/parks-trails\/thomas-taylor-memorial-skatepark\/|www\.h4wpc\.org\/skate-park\/)$/);
   });
 
   it("has the 2 edge markers, and each existing gap goal at most once", () => {

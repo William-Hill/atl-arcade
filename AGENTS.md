@@ -18,7 +18,7 @@ Skate ATL: a free-skate roller skate game in real Atlanta neighborhoods, Tony Ha
 - Every neighborhood is shown at its best. No decline, no stigma.
 - No crime, police, or traffic danger as content. Obstacles are cones, crowds, and construction.
 - Murals, not graffiti.
-- Facts are positive or neutral, sourced from the open data catalog.
+- Facts are positive or neutral, sourced from the open data catalog. Landmark story cards may also cite a public source (see `docs/decisions.md`, 2026-11-07).
 - Real skaters review the move set before release.
 
 ## Pipeline

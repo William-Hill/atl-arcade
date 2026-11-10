@@ -48,7 +48,7 @@ Scope of version 1 on the BeltLine Eastside level: 20 claim spots and 2 edge mar
 1. **One data file per level.** `levels/<level>/landmarks.json` lists the spots. Each spot has these fields:
    - `id`, `kind` (`building` / `bridge` / `park` / `skate` / `art` / `edge`), `name`, and the map point `at` [x, z].
    - The ride-in zone (`find.r`).
-   - `short`: 1 fact line, 90 characters or fewer.
+   - `short`: 1 fact line, 90 characters or fewer. It restates one fact of the `card` and uses the source of that fact.
    - `card`: 3 to 5 facts. Each fact has a `source` (name and URL).
    - `challenge`: the claim challenge (none for `edge`).
    - `art` only: `credit` = { `artist`, `title`, `year`, `permission`, `ref` }. The credit is "cleared" when `permission` is `written` and `ref` names the permission record in `docs/permissions/`. A validator rejects an art spot without a cleared credit.
@@ -57,10 +57,10 @@ Scope of version 1 on the BeltLine Eastside level: 20 claim spots and 2 edge mar
 2. **Found.** The skater enters the find zone of a spot for the first time in the save. The spot becomes Found. A banner shows the name and the `short` line for 3 s. Play does not pause.
 3. **Hint.** After a spot is Found, the HUD goal line shows its challenge, for example "Claim it: hop the gap under the bridge". A ring marks the challenge zone in the world.
 4. **Challenge types.** Each type uses data from the skate controller, and the controller stays unchanged:
-   - `gap`: the skater is in the air when the skater passes through the zone. This type is the same as the existing gap goals.
+   - `gap`: the skater is in the air in the zone, and then lands with no bail, after the minimum air time (`COMBO.minAirTime`). A hard gap also needs the landing in its landing zone. A bail or a respawn drops the attempt. This type is the same as the existing gap goals (`src/sim/skate/goals.js`).
    - `grind`: the skater grinds a feature in the zone for `meters` or more in 1 grind.
    - `line`: the skater passes through 2 or 3 checkpoints in order within `seconds`, with no bail.
-   - `combo`: the skater lands a combo of `points` or more, and the landing point is in the zone.
+   - `combo`: the skater banks a combo of `points` or more, and the last link of the combo is in the zone. The bank position does not count (Formulas, Combo challenge).
 5. **Claimed.** The skater completes the challenge. The spot becomes Claimed. The game shows "SPOT CLAIMED", banks the claim points, and unlocks the story card. Play does not pause.
 6. **The save.** The Found and Claimed states stay in the browser across runs, for each level. Key `atl.landmarks`, value `{ "v": 1, "levels": { "<level>": { "found": [ids], "claimed": [ids] } } }`. A run also records which spots it claimed, for the results screen.
 7. **No stop to read.** The full story card shows only on the results screen and on the full map, never during play (pillar 3).
@@ -84,8 +84,8 @@ A state never goes back, except through "Reset progress" in the settings menu. A
 |---|---|---|
 | Skate controller (`src/sim`) | in | Position, airborne, grind (feature id, length), combo landed (points, position), bail |
 | Minimap and full map (`src/ui/minimap.js`, `fullmap.js`) | out | The spot list and the state of each spot. These replace `mapLandmarks()` for landmarks. |
-| Full map info panel | out | Found: `short` and "Claim it to unlock". Claimed: the full card with sources. A "Guide" tab shows the count, n of 20 claimed and m of 22 found. |
-| Score | out | Claim points go to the banked score. |
+| Full map info panel | out | Found: `short` and "Claim it to unlock". Claimed: the full card with sources. A "Guide" tab shows the count, n of N claimed and m of M found. N and M come from the spots that ship (Edge Cases). |
+| Score | out | Claim points go to the medal total only (`medalScore()` = banked score + run claim sum). The score goal reads the banked score without claim points, so the results screen keeps 2 totals. |
 | Goal list (`goals.json`) | out | Each existing gap goal becomes the `gap` challenge of the spot at the same zone. Only a `gap` challenge at the same zone completes a gap goal; a bridge with a grind or line challenge does not. |
 | Fact cards (`src/sim/fact-cards.js`) | none | The fact cards stay a separate system with the same values. |
 | Results screen | out | The spots claimed in this run, with "NEW" on first claims and the cards to read. |
@@ -140,7 +140,7 @@ Buildings and parks: the skater is Found when the distance to the footprint outl
 | Grind time | t_tier | float s | easy 1.5 / typical 2.5 / hard 4 | Min 1 |
 | Rail length | L_rail | float m | 8 to 60 | Not verified |
 
-**Output range:** easy 9 m, typical 15 m, hard 24 m. A rail shorter than 11 m cannot host a hard grind: the validator rejects it, and the level designer picks the typical tier or another feature. **Example:** typical on a 30 m rail: min(15, 24) = 15 m.
+**Output range:** easy 9 m, typical 15 m, hard 24 m. A tier needs a rail of `v_g * t_tier / 0.8` or more: easy 11.25 m, typical 18.75 m, hard 30 m. On a shorter rail, `0.8 * L_rail` would give a hard grind shorter than an easy one (an 11 m rail gives 8.8 m). The validator rejects a tier on a rail that is too short, and the level designer picks a lower tier or another feature. **Example:** typical on a 30 m rail: min(15, 24) = 15 m.
 
 ### Line challenge
 
@@ -205,10 +205,11 @@ Buildings and parks: the skater is Found when the distance to the footprint outl
 
 - **If 2 find zones overlap:** Both spots become Found in the same step. The nearer spot shows its banner first, and the other spot waits in the queue (Section D rules).
 - **If the skater starts the run inside a find zone:** The game checks find zones only after the run timer starts. Then the spot becomes Found normally.
+- **If the run is a free run (`?run=free`, no run timer):** The find checks and the challenges start at the first frame of play, and they do not stop.
 - **If the skater uses "Travel here" on the full map into a find zone:** The spot becomes Found. A challenge ignores the travel step, so a jump in the air cannot complete a gap challenge.
 - **If the skater completes a challenge before the spot is Found:** The spot becomes Found and Claimed in the same step. Only the "SPOT CLAIMED" banner shows.
 - **If the skater bails during a line challenge:** The attempt resets. The ring stays.
-- **If the run timer ends during an attempt:** The attempt continues in the 10 s overtime (`goals.json` `overtime`). If the overtime also ends, the game drops the attempt.
+- **If the run timer ends during an attempt:** The run end rule does not change: the run ends when no combo is active, or when the 10 s overtime (`goals.json` `overtime`) ends. A combo attempt can finish in the overtime. A line, gap or grind attempt that is open when the run ends is dropped. A landmark attempt does not extend the run.
 - **If the run cap for claim points is full:** The claim still counts and the card unlocks. The banner shows "SPOT CLAIMED" with no points.
 - **If browser storage is not available (private window or blocked storage):** The game keeps the claims for the current run only. The settings menu shows "Progress is not saved in this browser."
 - **If the save has spot ids that the level file does not have:** The game ignores those ids. A new spot starts as Unknown. The save has a version number.
@@ -277,7 +278,7 @@ Source: `art-director` proposal, 2026-11-07. Rules: `docs/art-direction-pbr.md` 
 
 ### The Found and Claimed moments
 
-- **Banner position:** center, 30 vh from the top, below the fact pop-up (`shell.css`, top 88 px) and clear of the HUD and the minimap. Width `min(520px, 100vw - 600px)`, the same as the pop-up.
+- **Banner position:** center, 30 vh from the top, below the fact pop-up (`shell.css`, top 88 px) and clear of the HUD and the minimap. Width on a desktop: `min(520px, 100vw - 600px)`, the same as the pop-up. On a compact screen (`max-width: 600px` or `max-height: 500px`) the banner uses the compact width of the fact pop-up (`shell.css`): `min(420px, 100vw - 24px)` minus the safe-area insets in portrait. The banner never gets a width under 280 px. Test it at 390 x 844 and 360 x 640.
 - **Found banner:** dark pill (`--hud-pill`) with a 3 px `#ffd166` border; name in `system-ui` 800 weight, 22 px; the `short` line in 600 weight, 17 px.
 - **Claimed banner:** the pill fills with the district accent, with dark ink text. "SPOT CLAIMED" in 800 weight, 28 px, 0.1 em letter spacing. No other gold fill shows on the screen. Contrast 4.5:1 or more.
 - **Claim effect (first piece of #113):** a star-and-ring burst at the skater's feet for 0.4 s, in the district accent from `DISTRICT_LOOKS`. Bloom on the hot core only. The ground ring turns gold and fades in 0.5 s. Phone: ring only. Low: no bloom. No impact frame.
@@ -321,7 +322,7 @@ Kind glyphs (single stroke, 16 px grid): building = flat roof with 2 windows; br
 
 ## UI Requirements
 
-- **Full map:** a "Guide" tab lists all spots by kind, with "n of 20 claimed" and "m of 22 found". A click or a tap on a spot opens its card (Claimed or edge Found), or its `short` line and "Claim it to unlock" (Found), or "Not found yet" (Unknown). "Travel here" stays.
+- **Full map:** a "Guide" tab lists all spots by kind, with "n of N claimed" and "m of M found". N is the count of claim spots that ship, and M is the count of all spots that ship (claim spots and edge markers). Both come from `landmarks.json`, never from a fixed number. A click or a tap on a spot opens its card (Claimed or edge Found), or its `short` line and "Claim it to unlock" (Found), or "Not found yet" (Unknown). "Travel here" stays.
 - **Minimap:** the same 3 icon states and the edge square, 14 px or more.
 - **Results screen:** a row of the cards that this run claimed, with "NEW" stamps. A tap or a click opens a card. Play never pauses for a card.
 - **Settings menu:** "Reset progress" with a confirm dialog, and the notice "Progress is not saved in this browser" when storage fails.
@@ -348,8 +349,8 @@ Source: `qa-lead` proposal, 2026-11-07. Tags: [unit] = Vitest; [e2e] = Playwrigh
 
 - **F-1 Claim points** **GIVEN** a typical spot, `run_cap` 1000, `run_claim_sum` 800, **WHEN** the first claim occurs, **THEN** 200 points are awarded. A claim when the cap is full awards 0 and still unlocks the card. The 20 spots sum to 5800. [unit]
 - **F-2 Find check** **GIVEN** a building, **WHEN** the skater is 8.0 m from the outline, **THEN** Found; at 8.01 m, not Found; inside the footprint, Found. A bridge at 20 m and an art spot at 14 m use the same inclusive edge. [unit]
-- **F-3 Gap** **GIVEN** a typical gap, **WHEN** the skater is in the air 8.0 m from the point, **THEN** Claimed; on the ground, or at 8.01 m, not Claimed. Easy = 12 m; hard = 5 m plus a 3 m landing zone. [unit] (P)
-- **F-4 Grind** **GIVEN** a typical grind on a 30 m rail, **WHEN** 1 grind reaches 15 m, **THEN** Claimed; 14.9 m is not. A grind that leaves the zone counts its full length. The validator rejects a hard grind on a rail under 11 m. [unit] (P)
+- **F-3 Gap** **GIVEN** a typical gap, **WHEN** the skater is in the air 8.0 m from the point and then lands with no bail after the minimum air time, **THEN** Claimed at the landing. On the ground, at 8.01 m, a bail before the landing, or less air time, not Claimed. Easy = 12 m; hard = 5 m plus a landing in a 3 m landing zone. [unit] (P)
+- **F-4 Grind** **GIVEN** a typical grind on a 30 m rail, **WHEN** 1 grind reaches 15 m, **THEN** Claimed; 14.9 m is not. A grind that leaves the zone counts its full length. The validator rejects a tier on a rail under its minimum (easy 11.25 m, typical 18.75 m, hard 30 m). [unit] (P)
 - **F-5 Line** **GIVEN** a typical line with n = 3, **WHEN** the timer starts at checkpoint 1, **THEN** T = 14 s, and a finish in order within 14 s claims. A bail or a late finish resets the attempt, and the ring stays. [unit] (P)
 - **F-6 Combo** **GIVEN** a typical combo spot, **WHEN** a combo of 1200 ends with the last link 10.0 m from the spot, **THEN** Claimed; 999 points or 10.01 m, not Claimed. The bank position is ignored. [unit]
 - **F-7 Banner** **GIVEN** q = 0, 1, 2, **WHEN** a Found banner shows, **THEN** it shows for 3.0, 2.1, 1.5 s. Claimed shows before Found. The queue holds 2 Found banners; a third Found has no banner, but its state and icon change. Claimed banners are never dropped. [unit]
@@ -369,7 +370,7 @@ Source: `qa-lead` proposal, 2026-11-07. Tags: [unit] = Vitest; [e2e] = Playwrigh
 ### Map icons
 
 - **M-1** **GIVEN** a spot in each state (Unknown, Found, Claimed, edge Found), **WHEN** the minimap renders in the toon look and in `?look=pbr`, **THEN** the icons match the icon table, each 14 px or more. [e2e]
-- **M-2** **GIVEN** the same 4 states, **WHEN** the full map renders in both looks, **THEN** the icons are 24 px, the Guide tab shows "n of 20 claimed" and "m of 22 found", and a click on a spot opens the panel for its state. [e2e]
+- **M-2** **GIVEN** the same 4 states, **WHEN** the full map renders in both looks, **THEN** the icons are 24 px, the Guide tab shows "n of N claimed" and "m of M found" with N and M from the shipped `landmarks.json`, and a click on a spot opens the panel for its state. [e2e]
 - **M-3** **GIVEN** a grayscale screenshot, **WHEN** a reviewer compares the 4 states, **THEN** shape and mark tell them apart. [manual]
 
 ### Performance and motion

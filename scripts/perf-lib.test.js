@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkBudget, classifyUrl, downloadGroupOf, firstFrameMB, frameStats, mergeRuns, renderMarkdown, spliceMarkdown } from "./perf-lib.mjs";
+import { checkBudget, toonRatios, classifyUrl, downloadGroupOf, firstFrameMB, frameStats, mergeRuns, renderMarkdown, spliceMarkdown } from "./perf-lib.mjs";
 
 const run = (over = {}) => ({
   quality: "low",
@@ -116,5 +116,37 @@ describe("perf lib: the download before the first frame (#190)", () => {
       "/assets/normal-D4GkI7qp.jpg": "other",
     };
     for (const [file, group] of Object.entries(cases)) expect(downloadGroupOf(file), file).toBe(group);
+  });
+});
+
+describe("perf lib: caps relative to toon (#246, pbr lite on the phone tier)", () => {
+  const budget = { tiers: { phone: { calls: 185 }, "phone/pbr": { vsToon: { calls: 1.25, textureMB: 1.5, downloadMB: 1.5 } } } };
+  const toon = run({ quality: "phone", calls: 80, textureMB: 40, run: 1 });
+  const pbr = (over) => run({ quality: "phone", look: "pbr", calls: 90, textureMB: 50, run: 1, ...over });
+
+  it("passes when the look is inside every ratio", () => {
+    expect(checkBudget([pbr(), toon], budget)).toEqual([]);
+    expect(toonRatios([pbr(), toon], budget)).toContainEqual({ run: "phone/pbr", metric: "calls", value: 90, toon: 80, ratio: 1.13, cap: 1.25 });
+  });
+
+  it("fails when a metric grows past its ratio", () => {
+    expect(checkBudget([pbr({ calls: 120 }), toon], budget)).toEqual(["phone/pbr calls 120 is 1.5x toon (80) > 1.25x"]);
+    expect(checkBudget([pbr({ textureMB: 70 }), toon], budget)).toEqual(["phone/pbr textureMB 70 is 1.75x toon (40) > 1.5x"]);
+    const big = { js: 1, glb: 12, textures: 4, wasm: 1, data: 3, other: 0, total: 21 };
+    expect(checkBudget([pbr({ downloadMB: big }), toon], budget)).toEqual(["phone/pbr downloadMB 21 is 1.75x toon (12) > 1.5x"]);
+  });
+
+  it("compares with the toon run of the same pass", () => {
+    const runs = [pbr({ run: 1 }), toon, pbr({ run: 2, calls: 120 }), run({ quality: "phone", calls: 100, textureMB: 40, run: 2 })];
+    expect(checkBudget(runs, budget)).toEqual([]);
+  });
+
+  it("fails when there is no toon run or no value to compare", () => {
+    expect(checkBudget([pbr()], budget)).toEqual(["phone/pbr vsToon: no phone/toon run to compare with (run both looks)"]);
+    expect(checkBudget([pbr({ textureMB: null }), toon], budget)).toEqual(["phone/pbr vsToon textureMB: no value (null against toon 40)"]);
+  });
+
+  it("does not apply the ratios to the toon run or to another tier", () => {
+    expect(checkBudget([toon, run({ quality: "high", look: "pbr", calls: 150 })], budget)).toEqual([]);
   });
 });

@@ -6,6 +6,20 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## #246 pbr lite on the phone tier, 2026-11-10
+
+Branch `claude/246-pbr-lite-phone` from `epic/city-look`; no PR yet (the owner asks for it). Decision (the owner): the pbr look stays on phones as "pbr lite"; see `docs/decisions.md`, 2026-11-10, and `docs/perf/246/README.md`.
+
+| Part | Where | Verified |
+|---|---|---|
+| Ranked costs | `scripts/phone-look-perf.mjs`, `scripts/phone-look-split.mjs`, `docs/perf/246/*.json` | SwiftShader runs on the audit's 4 phone profiles: the Blender tree leaf cards are 79 % of the extra frame by the spawn, then the pbr ground shader |
+| Pbr lite | `src/render/pbr-lite.js`, `trees.js` (`cards: 6`), `pbr-ground.js` (`GROUND_CUTS`), `murals.js` (1024 px atlas) | pbr / toon 4.0x to 10.3x before, 3.1x to 5.6x after (12 rows); download 15.77 to 14.16 MB; Playwright screenshots of toon, full pbr and pbr lite at 2 cameras (`e2e/__screenshots__/pbr-lite-*.jpg`, `docs/perf/246/*.jpg`) |
+| Budget | `docs/perf/budget.json` `phone/pbr`, `vsToon` in `scripts/perf-lib.mjs` | `perf:check` (phone tier, both looks): PASS for pbr lite, exit 1 for the old phone pbr (`&pbrlite=0`) |
+| Governor step to toon | `src/render/governor.js`, `src/render/look-down.js`, `src/ui/hud.js` | Vitest; Playwright: a 1 ms budget reloads pbr lite into toon and shows the HUD line once |
+| Frame-time readout | `?fps=1`, `src/perf/frame-readout.js` | Vitest; Playwright screenshot |
+
+#246 NOT verified: the frame time on a real phone. This machine has no GPU; every frame time is SwiftShader and only compares looks. The #246 acceptance (a real mid-range phone under the #24 target) is open; the owner's steps are at the end of `docs/perf/246/README.md`. No person looked at pbr lite on a phone screen. Not done: 512 px textures for the Meshy people. The audit file `mobile-pbr/FINDINGS.md` is not on this branch.
+
 ## #107 animation code, 2026-11-06
 
 Branch `claude/107-anim-blends` from `epic/city-look`; PR into `epic/city-look`. Code only: per-transition fade times (`fadeFor()` in `src/render/skater-anim.js`), a weight blender with no reset in the middle of a fade (`src/render/anim-blend.js`), the carve lean (body bank and additive carve pose), and foot IK on stairs and ramps (`src/render/foot-ik.js`, off on the phone tier). Evidence: `e2e/skater-blend.spec.js`, contact sheets `e2e/__screenshots__/anim-107-*.png`; details in `docs/decisions.md`. Not done: the wall slide, bonk, and hard landing clips (Blender and the gitignored `.blend` files); real skaters did not review it.

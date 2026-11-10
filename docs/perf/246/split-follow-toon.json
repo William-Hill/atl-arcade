@@ -1,0 +1,133 @@
+{
+ "date": "2026-11-10T08:51:57.096Z",
+ "renderer": "swiftshader (software, CPU)",
+ "cam": "follow",
+ "look": "toon",
+ "extra": "",
+ "rows": [
+  {
+   "kind": "edge-fence",
+   "objects": 1,
+   "ms": 99,
+   "saved": 52
+  },
+  {
+   "kind": "skater",
+   "objects": 1,
+   "ms": 118,
+   "saved": 33
+  },
+  {
+   "kind": "Group",
+   "objects": 1,
+   "ms": 129,
+   "saved": 22
+  },
+  {
+   "kind": "peds",
+   "objects": 1,
+   "ms": 131,
+   "saved": 20
+  },
+  {
+   "kind": "fact-cards",
+   "objects": 1,
+   "ms": 132,
+   "saved": 19
+  },
+  {
+   "kind": "props",
+   "objects": 1,
+   "ms": 133,
+   "saved": 18
+  },
+  {
+   "kind": "skater-blob",
+   "objects": 1,
+   "ms": 134,
+   "saved": 17
+  },
+  {
+   "kind": "meshy-prop-sculpture_ribbon_lod",
+   "objects": 1,
+   "ms": 135,
+   "saved": 16
+  },
+  {
+   "kind": "surface",
+   "objects": 130,
+   "ms": 137,
+   "saved": 14
+  },
+  {
+   "kind": "meshy-prop-drinking_fountain_lod",
+   "objects": 1,
+   "ms": 139,
+   "saved": 12
+  },
+  {
+   "kind": "mural",
+   "objects": 18,
+   "ms": 141,
+   "saved": 10
+  },
+  {
+   "kind": "meshy-prop-picnic_table_lod",
+   "objects": 1,
+   "ms": 141,
+   "saved": 10
+  },
+  {
+   "kind": "meshy-prop-patio_umbrella_lod",
+   "objects": 1,
+   "ms": 142,
+   "saved": 9
+  },
+  {
+   "kind": "building",
+   "objects": 119,
+   "ms": 143,
+   "saved": 8
+  },
+  {
+   "kind": "street-signs",
+   "objects": 3,
+   "ms": 143,
+   "saved": 8
+  },
+  {
+   "kind": "npcs",
+   "objects": 1,
+   "ms": 143,
+   "saved": 8
+  },
+  {
+   "kind": "cars",
+   "objects": 1,
+   "ms": 143,
+   "saved": 8
+  },
+  {
+   "kind": "meshy-prop-food_cart_lod",
+   "objects": 1,
+   "ms": 145,
+   "saved": 6
+  },
+  {
+   "kind": "(all)",
+   "ms": 151,
+   "saved": 0
+  },
+  {
+   "kind": "(all, again)",
+   "ms": 143,
+   "saved": 0
+  },
+  {
+   "kind": "landmarks",
+   "objects": 1,
+   "ms": 152,
+   "saved": -1
+  }
+ ]
+}

@@ -2256,3 +2256,11 @@ Finding MOB2-2 of the mobile audit: on the phone tier the pbr look took 6 to 9 t
 - The caps for `phone/pbr` in `docs/perf/budget.json` move with the count, about 10% over this run: `textureMB` 360 to 400, and the ratio to toon 1.5 to 1.65. The other tiers have no `textureMB` cap.
 - The same run stopped at the 150 s wall limit and counted 349,980 triangles for `phone/pbr`, against a cap of 350,000; an earlier run counted 292,758. The triangle count depends on where the ride stops, so this cap is at its limit on a slow machine.
 
+## 2026-11-10: The phone pbr triangle cap after the skatepark, and a longer wall limit for the budget check (#246)
+
+- After the merge of the skatepark (#222), `phone/pbr` was over its new triangle cap. The cause was the measurement first: on the software GPU the pbr ride did not finish in the 150 s wall limit, so the count came from where the ride stopped, and the people near the camera change it a lot. Three runs of the pbr lite code gave 292,758, 349,980 and 431,903 triangles; in the last one the people alone were 82,000 triangles more than in the run before it (the dog walker batch 3,600 and 49,041).
+- `npm run perf:check` now runs with `--max-wall 240`, so the phone pbr ride finishes (154 s in the run below) and the count is from the end of the ride, the same place as the toon count.
+- With the ride finished, on the base with the skatepark: 361,072 triangles for pbr lite and 309,591 for toon (1.17 times). The caps of `phone/pbr` move to about 10% over this run: `triangles` 350,000 to 397,000 and the ratio to toon 1.15 to 1.28. The cap of the base before #246 was 420,000.
+- The people are the largest gap between the 2 looks on a phone: 119,534 triangles in pbr lite and 45,730 in toon in this run. A coarser people model near the camera is the next cut to try if a real phone needs it. It costs parity, so it is not in this change.
+- One run, at a load average of up to 4.1 on 4 CPUs. Run `npm run perf:check` again on a quiet machine before a cap moves again.
+

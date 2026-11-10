@@ -207,5 +207,7 @@ describe("the BeltLine skatepark (#222)", () => {
     expect(loaded.skatepark.name).toBe("Thomas Taylor Memorial Skatepark");
     expect(loaded.skatepark.top).toBeCloseTo(sp.top, 6);
     expect(createLevelEnv(loaded).props.every((p) => distanceToRing(p.x, p.z, loaded.skatepark.outer) > SKATEPARK.propMargin)).toBe(true);
-  });
+    // The props of the whole level with its canopy trees: about 4 s alone,
+    // and over the default 5 s when the full suite runs beside it.
+  }, 30000);
 });

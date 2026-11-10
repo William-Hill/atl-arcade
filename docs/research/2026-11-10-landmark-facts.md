@@ -117,9 +117,9 @@ Limits:
 - **The final stage of the Ponce de Leon Avenue ramp to the Eastside Trail was completed in November 2025.**
   - Source: Atlanta BeltLine, Inc., https://beltline.org/learn/current-projects/ponce-streetscape/
   - Quote: "The final stage of the ramp was completed in November 2025 and opened for public usage."
-- **A monumental Caddo bear sculpture by Chase Kahwinhut Earles was installed on the trail in front of Ponce City Market.**
-  - Source: Atlanta BeltLine, Inc., https://beltline.org/blog/art-on-the-atlanta-beltline-unveils-indigenous-sculpture-showcasing-ancient-traditional-caddo-pottery/
-  - Quote: "As part of Art on the Atlanta Beltline , a new monumental work of art is now installed on the highly-trafficked Eastside Trail in front of Ponce City Market."
+- **The Eastside Trail was the first finished section of the Atlanta BeltLine in the old rail corridor.**
+  - Source: Atlanta BeltLine, Inc., https://beltline.org/parks-trails/eastside-trail/
+  - Quote: "A combination of multi-use trail and linear greenspace, the Eastside Trail was the first finished section of the Atlanta Beltline in the old rail corridor."
 
 ### North Avenue Bridge
 
@@ -129,12 +129,12 @@ Limits:
 - **The North Avenue bridge connects the Old Fourth Ward and Poncey-Highland neighborhoods.**
   - Source: Atlanta BeltLine, Inc., https://beltline.org/blog/10-must-visit-photo-spots-on-the-beltline/
   - Quote: "Connecting Old Fourth Ward to Poncey-Highlands, North Avenue bridge connects two vibrant neighborhoods!"
+- **With traffic below and buildings above, the North Avenue Bridge is a favorite place for photos.**
+  - Source: Atlanta BeltLine, Inc., https://beltline.org/blog/10-must-visit-photo-spots-on-the-beltline/
+  - Quote: "Whether it’s the traffic below or the buildings above, the North Avenue Bridge has become an Atlanta staple—and a super cool place for photos."
 - **The giant puppet Little Amal's Eastside Trail walk was planned with a stop on the North Avenue Bridge.**
   - Source: Atlanta BeltLine, Inc., https://beltline.org/blog/welcoming-little-amal-to-the-atlanta-beltline/
   - Quote: "She’ll begin her walk behind Ponce City Market on the Eastside Trail and make her way south to the field at Thomas Taylor Memorial Skatepark, stopping on the North Avenue Bridge and at the plaza at 760 Ralph McGill for surprise performances."
-- **The Eastside Trail was the first finished section of the Atlanta BeltLine in the old rail corridor.**
-  - Source: Atlanta BeltLine, Inc., https://beltline.org/parks-trails/eastside-trail/
-  - Quote: "A combination of multi-use trail and linear greenspace, the Eastside Trail was the first finished section of the Atlanta Beltline in the old rail corridor."
 
 ### Ralph McGill Boulevard Bridge
 
@@ -303,7 +303,7 @@ Why: no written permission from an artist exists (`docs/permissions/` has no rec
 | Naw’-tsiʔ: Caddo Bear Effigy | Chase Kahwinhut Earles, 2021 | https://beltline.org/art/effigies/ |
 | Northern White | David Landis, 2012 | https://beltline.org/art/northern-white/ |
 
-"Beltline Shed" is on no Atlanta BeltLine art page. The "Northern White" page is about the northern white rhino; a card for it must keep to the credit and the material.
+"Beltline Shed" is on no Atlanta BeltLine art page. No card fact names one of these pieces or its artist: a first version of the Ponce de Leon Avenue Bridge card named the Caddo bear sculpture ("Naw'-tsiʔ") and Chase Kahwinhut Earles, and that fact is out. The "Northern White" page is about the northern white rhino; a card for it must keep to the credit and the material.
 
 
 ## Numbers that the sources give in 2 ways (not in the game)

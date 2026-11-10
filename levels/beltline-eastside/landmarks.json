@@ -274,11 +274,8 @@
           "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/learn/current-projects/ponce-streetscape/"}
         },
         {
-          "text": "A monumental Caddo bear sculpture by Chase Kahwinhut Earles was installed on the trail in front of Ponce City Market.",
-          "source": {
-            "name": "Atlanta BeltLine, Inc.",
-            "url": "https://beltline.org/blog/art-on-the-atlanta-beltline-unveils-indigenous-sculpture-showcasing-ancient-traditional-caddo-pottery/"
-          }
+          "text": "The Eastside Trail was the first finished section of the Atlanta BeltLine in the old rail corridor.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/parks-trails/eastside-trail/"}
         }
       ],
       "challenge": {"type": "gap", "tier": "typical", "hint": "Hop on the bridge over Ponce", "zone": {"x": -123.7, "z": -953.4, "r": 8}}
@@ -300,12 +297,12 @@
           "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/10-must-visit-photo-spots-on-the-beltline/"}
         },
         {
-          "text": "The giant puppet Little Amal's Eastside Trail walk was planned with a stop on the North Avenue Bridge.",
-          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/welcoming-little-amal-to-the-atlanta-beltline/"}
+          "text": "With traffic below and buildings above, the North Avenue Bridge is a favorite place for photos.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/10-must-visit-photo-spots-on-the-beltline/"}
         },
         {
-          "text": "The Eastside Trail was the first finished section of the Atlanta BeltLine in the old rail corridor.",
-          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/parks-trails/eastside-trail/"}
+          "text": "The giant puppet Little Amal's Eastside Trail walk was planned with a stop on the North Avenue Bridge.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/welcoming-little-amal-to-the-atlanta-beltline/"}
         }
       ],
       "challenge": {

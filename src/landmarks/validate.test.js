@@ -108,6 +108,8 @@ describe("validateLandmarks", () => {
     expect(isPrimarySource("https://beltline.org/places-to-go/eastside-trail")).toBe(true);
     expect(isPrimarySource("https://www.nps.gov/malu/index.htm")).toBe(true);
     expect(isPrimarySource("https://notnps.gov/x")).toBe(false);
+    // Not in the list of docs/decisions.md.
+    expect(isPrimarySource("https://www.archives.gov/x")).toBe(false);
     expect(isPrimarySource("https://en.wikipedia.org/wiki/X", "wikipedia.org")).toBe(false);
   });
 

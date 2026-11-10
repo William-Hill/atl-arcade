@@ -205,7 +205,7 @@ Buildings and parks: the skater is Found when the distance to the footprint outl
 
 - **If 2 find zones overlap:** Both spots become Found in the same step. The nearer spot shows its banner first, and the other spot waits in the queue (Section D rules).
 - **If the skater starts the run inside a find zone:** The game checks find zones only after the run timer starts. Then the spot becomes Found normally.
-- **If the run is a free run (`?run=free`, no run timer):** The find checks and the challenges start at the first frame of play, and they do not stop.
+- **If the run is a free run (`?run=free`, no run timer):** The find checks start at the first frame of play, so spots become Found. A free run has no results screen and no medals, so no spot becomes Claimed in it, and no challenge ring shows. The first claim of each spot, with its points, stays for a timed run.
 - **If the skater uses "Travel here" on the full map into a find zone:** The spot becomes Found. A challenge ignores the travel step, so a jump in the air cannot complete a gap challenge.
 - **If the skater completes a challenge before the spot is Found:** The spot becomes Found and Claimed in the same step. Only the "SPOT CLAIMED" banner shows.
 - **If the skater bails during a line challenge:** The attempt resets. The ring stays.
@@ -214,7 +214,7 @@ Buildings and parks: the skater is Found when the distance to the footprint outl
 - **If browser storage is not available (private window or blocked storage):** The game keeps the claims for the current run only. The settings menu shows "Progress is not saved in this browser."
 - **If the save has spot ids that the level file does not have:** The game ignores those ids. A new spot starts as Unknown. The save has a version number.
 - **If a spot fails its source check** (art credit not cleared, or no primary source)**:** The spot stays out of `landmarks.json`, and the map shows no icon. N counts only the spots that ship, and the outfit unlocks use that N.
-- **If a fact card pop-up and a banner show at the same time:** Each one has its own screen position, so both show.
+- **If a fact card pop-up and a banner show at the same time:** On a desktop, each one has its own screen position, so both show. On a compact screen (`max-width: 600px` or `max-height: 500px`) the 2 positions overlap (at 360 x 640 the pop-up starts at 206 px), so the banner waits in its queue until the pop-up closes. The banner time starts when the banner shows.
 - **If photo mode is open:** The simulation pauses, so no Found or Claimed change occurs.
 - **If a grind starts in the zone and leaves it:** The full length of the grind counts.
 - **If the player switches skater:** The progress belongs to the save, not to the skater.
@@ -278,7 +278,7 @@ Source: `art-director` proposal, 2026-11-07. Rules: `docs/art-direction-pbr.md` 
 
 ### The Found and Claimed moments
 
-- **Banner position:** center, 30 vh from the top, below the fact pop-up (`shell.css`, top 88 px) and clear of the HUD and the minimap. Width on a desktop: `min(520px, 100vw - 600px)`, the same as the pop-up. On a compact screen (`max-width: 600px` or `max-height: 500px`) the banner uses the compact width of the fact pop-up (`shell.css`): `min(420px, 100vw - 24px)` minus the safe-area insets in portrait. The banner never gets a width under 280 px. Test it at 390 x 844 and 360 x 640.
+- **Banner position:** center, 30 vh from the top, below the fact pop-up (`shell.css`, top 88 px) and clear of the HUD and the minimap. Width on a desktop: `min(520px, 100vw - 600px)`, the same as the pop-up. On a compact screen (`max-width: 600px` or `max-height: 500px`) the banner uses the compact width of the fact pop-up (`shell.css`): `min(420px, 100vw - 24px)` minus the safe-area insets in portrait. The banner never gets a width under 280 px. Test it at 390 x 844 and 360 x 640. On a compact screen the banner and the fact pop-up never show at the same time (Edge Cases); test a banner and a pop-up that start in the same step at 360 x 640.
 - **Found banner:** dark pill (`--hud-pill`) with a 3 px `#ffd166` border; name in `system-ui` 800 weight, 22 px; the `short` line in 600 weight, 17 px.
 - **Claimed banner:** the pill fills with the district accent, with dark ink text. "SPOT CLAIMED" in 800 weight, 28 px, 0.1 em letter spacing. No other gold fill shows on the screen. Contrast 4.5:1 or more.
 - **Claim effect (first piece of #113):** a star-and-ring burst at the skater's feet for 0.4 s, in the district accent from `DISTRICT_LOOKS`. Bloom on the hot core only. The ground ring turns gold and fades in 0.5 s. Phone: ring only. Low: no bloom. No impact frame.

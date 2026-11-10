@@ -686,3 +686,12 @@ body.results-open #touch-controls { display: none; }
 }
 #turn-hint[hidden] { display: none; }
 body.photo-open #fullscreen-toggle, body.photo-open #turn-hint { visibility: hidden; }
+/* A portrait tablet (wider than 600 px) keeps the 160 px touch minimap at
+   96 px from the top, so it ends at 256 px. The column and the hint go 64 px
+   lower, under it. */
+@media (orientation: portrait) and (min-width: 601px) {
+  html body.touch #settings-toggle { top: calc(268px + env(safe-area-inset-top)); }
+  html body.touch #photo-toggle { top: calc(320px + env(safe-area-inset-top)); }
+  #fullscreen-toggle { top: calc(372px + env(safe-area-inset-top)); }
+  #turn-hint { top: calc(428px + env(safe-area-inset-top)); }
+}

@@ -10,6 +10,18 @@
 
 Branch `claude/107-anim-blends` from `epic/city-look`; PR into `epic/city-look`. Code only: per-transition fade times (`fadeFor()` in `src/render/skater-anim.js`), a weight blender with no reset in the middle of a fade (`src/render/anim-blend.js`), the carve lean (body bank and additive carve pose), and foot IK on stairs and ramps (`src/render/foot-ik.js`, off on the phone tier). Evidence: `e2e/skater-blend.spec.js`, contact sheets `e2e/__screenshots__/anim-107-*.png`; details in `docs/decisions.md`. Not done: the wall slide, bonk, and hard landing clips (Blender and the gitignored `.blend` files); real skaters did not review it.
 
+## Landmark discovery (epic #223), 2026-11-10
+
+| Issue | Branch | PR | Verified |
+|---|---|---|---|
+| #216 Landmark data file, facts with sources, validator | `claude/clever-hamilton-qxs6up` (from `epic/city-look`) | no PR yet | `npm run validate:landmarks` passes: 12 claim spots and 2 edge markers; Vitest `src/landmarks/validate.test.js` 17 of 17 pass; `npm run build` runs the validator first and passes; 7 quotes fetched again from the source pages and found |
+
+| #217 Pure landmark module (states, find check, challenges, claim points, banner queue, save) | `claude/217-landmark-module` (from `epic/city-look`) | no PR yet | Vitest `src/sim/landmarks.test.js` 75 of 75 pass (AC-2, AC-4, AC-5, AC-6, F-1 to F-8, E-1, E-2, E-4, E-6; 5 tests with the real controller on the Beltline level); `git diff epic/city-look -- src/sim/skate` is empty; `npm test` 1621 of 1622 pass (the `facade-kit.test.js` timeout) |
+
+#217 not verified: the module is not in `src/main.js`, so nothing ran in a browser; no person played a challenge; the grind, line and combo spots of the real file ran with scripted observations only. Claim points of the file: 3500 (not 5800); outfit unlocks at 5, 9 and 12. See `docs/decisions.md`, 2026-11-10, "The pure landmark module". Next: #218 (the maps) and #219 (rings, banners, chimes) call `createLandmarkTracker` and put `landmarkTestHook` at `window.__atl.landmarks` in a dev build.
+
+#216 not verified: no person played a challenge or read a fact. 8 GDD spots are out (4 art spots, the skatepark, Excelsior Mill, Atlanta Art Park, Parque en el centro bonito); see `docs/decisions.md`, 2026-11-10, and `docs/research/2026-11-10-landmark-facts.md`. `npm test` in the cloud container: 1546 of 1548 pass; the 2 failures are 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js` (6 to 8 s on this machine), and they fail the same way on `epic/city-look`. The GDD itself is still in PR #228.
+
 ## M2 early work, 2026-11-03
 
 | Issue | Branch | PR | Verified |

@@ -121,7 +121,7 @@ test.describe("phone width", () => {
     await ready(page);
     const overlap = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
     const toggle = await page.locator("#settings-toggle").boundingBox();
-    for (const sel of ["#photo-toggle", "#attribution", "#minimap", ".touch-jump", ".touch-grind", ".touch-style1", ".touch-style2", ".touch-stick-base", '#skater-select button[data-skater="nia"]', '#skater-select button[data-skater="marcus"]', "#fullscreen-toggle"]) {
+    for (const sel of ["#photo-toggle", "#attribution", "#minimap", ".touch-jump", ".touch-grind", ".touch-style1", ".touch-style2", ".touch-switch", ".touch-stick-base", '#skater-select button[data-skater="nia"]', '#skater-select button[data-skater="marcus"]', "#fullscreen-toggle"]) {
       const box = await page.locator(sel).first().boundingBox();
       if (box) expect(overlap(toggle, box), sel).toBe(false);
     }

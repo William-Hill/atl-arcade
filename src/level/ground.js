@@ -9,6 +9,7 @@ import { createGeoGroundSampler, GEO_CELL } from "./geo/geo-ground.js";
 import { levelProps, propObstacles } from "./geo/props.js";
 import { benchLedges, curbLedges } from "./geo/grindables.js";
 import { clipGrindables, edgeFence, withEdgeFence } from "./edge-fence.js";
+import { offPad, skateparkGrindables, withSkateparkGround } from "./skatepark.js";
 
 export function createGroundSampler(level) {
   const boxes = level.objects.filter((o) => o.size && o.kind !== "rail");
@@ -44,12 +45,15 @@ export function createGroundSampler(level) {
 // `fence` is the fence rectangle for the render and the HUD, or null, and
 // `sampleGroundNoFence` is the ground with no fence (for the fence render).
 // The greybox has its own barriers at each edge.
+// A level with a skatepark (`level.skatepark`, skatepark.js withSkatepark(),
+// #222) has the ramps and ledge tops in its ground, the rails, ledges and
+// copings in its grindables, and no prop on the pad.
 export function createLevelEnv(level, { props = true, placed: made = null } = {}) {
   const geo = typeof level.format === "string" && level.format.startsWith("geo-level/");
   if (!geo) return { sampleGround: createGroundSampler(level), bounds: level.bounds, spawn: level.spawn, props: [], grindables: [], fence: null };
-  const placed = props ? (made ?? levelProps(level)) : [];
+  const placed = offPad(props ? (made ?? levelProps(level)) : [], level.skatepark);
   const obstacles = propObstacles(placed.filter((p) => !p.roof));
-  const ground = createGeoGroundSampler(level, GEO_CELL, { obstacles });
+  const ground = withSkateparkGround(createGeoGroundSampler(level, GEO_CELL, { obstacles }), level.skatepark);
   const fence = edgeFence(level.bounds);
   const sampleGround = withEdgeFence(ground, fence);
   // The skate features (#136): the OSM benches and the curbs are ledges.
@@ -59,6 +63,6 @@ export function createLevelEnv(level, { props = true, placed: made = null } = {}
     return streetIds.has(id) || Boolean(id?.startsWith("junction:"));
   };
   // A grind does not sample the ground, so the ledges stop before the fence.
-  const grindables = clipGrindables([...benchLedges(level, placed), ...curbLedges(level, isStreet)], fence);
+  const grindables = clipGrindables([...benchLedges(level, placed), ...curbLedges(level, isStreet), ...skateparkGrindables(level.skatepark)], fence);
   return { sampleGround, sampleGroundNoFence: ground, bounds: level.bounds, spawn: level.spawn, props: placed, grindables, fence };
 }

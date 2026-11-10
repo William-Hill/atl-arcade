@@ -1,0 +1,35 @@
+{
+  "v": 1,
+  "id": "h4w-skatepark",
+  "name": "Thomas Taylor Memorial Skatepark",
+  "note": "The skate spot of #222. `center` is the pad center [x, z] in level meters; `axis` is the direction of the pad's long side (+u) as a unit [x, z]; `size` is [length along u, width along v] in m. +v is 90 degrees clockwise from +u seen from above (+z south), so v grows to the south-southeast here. A feature has `at` [u, v] (its model origin, the ground center) and `turn` in degrees: 0 puts the model's long side (+x) along +u and its front (+z) along +v; a positive turn is counterclockwise seen from above. Feature ids are the keys of assets/skate-features/features.json.",
+  "placement": {
+    "approximate": true,
+    "source": "OpenStreetMap way 182470291 (leisure=pitch, sport=skateboard): the center 33.76472, -84.36039 as recorded in docs/research/2026-11-02-stage-accuracy-and-characters.md, which is [264.4, 3.3] in level meters. The outline of the way is not in levels/beltline-eastside/raw/, so the pad is a 30 m by 14 m rectangle on that center, along the middle line between the OSM paths w182470305 and w186813134.",
+    "osm": {
+      "way": 182470291,
+      "lat": 33.76472,
+      "lon": -84.36039
+    }
+  },
+  "center": [264.4, 3.3],
+  "axis": [0.947, -0.321],
+  "size": [30, 14],
+  "grade": {
+    "full": 12,
+    "blend": 20
+  },
+  "features": [
+    { "id": "long-rail", "feature": "rail_flatbar_9m", "at": [-8.5, -3.5], "turn": 0 },
+    { "id": "line-ledge", "feature": "ledge_concrete_6m", "at": [4, -3.5], "turn": 0 },
+    { "id": "end-rail", "feature": "rail_round_3m", "at": [11.5, -3.5], "turn": 0 },
+    { "id": "planter", "feature": "ledge_planter", "at": [-2, -6.2], "turn": 0 },
+    { "id": "bank", "feature": "ramp_bank", "at": [-13.5, 3], "turn": 90 },
+    { "id": "kicker", "feature": "ramp_kicker", "at": [-8, 0], "turn": -90 },
+    { "id": "pyramid", "feature": "ramp_pyramid", "at": [-1, 3], "turn": 0 },
+    { "id": "manual-pad", "feature": "manual_pad", "at": [6, 3], "turn": 0 },
+    { "id": "quarter", "feature": "ramp_quarter", "at": [13.6, 3], "turn": -90 },
+    { "id": "block", "feature": "bench_block", "at": [8, 6.5], "turn": 0 },
+    { "id": "bench", "feature": "bench_trail", "at": [-8, 6.6], "turn": 180 }
+  ]
+}

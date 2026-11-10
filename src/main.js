@@ -30,6 +30,7 @@ import { goalsFor } from "./level/goals.js";
 import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
 import { createResults } from "./ui/results.js";
 import { createLevelEnv } from "./level/ground.js";
+import { createSkateparkView } from "./render/skatepark-view.js";
 import { meshWorkerCount, startGeoMeshBuild, startLevelProps } from "./level/geo/geo-mesh-async.js";
 import { terrainOf } from "./level/geo/terrain.js";
 import { FAR_TERRAIN_BUILD, createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
@@ -352,6 +353,13 @@ const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(l
 if (landmarks) {
   scene.add(landmarks.root);
   landmarks.ready.catch((err) => console.error(err));
+}
+// The skatepark features (#222): the models of level.skatepark, one draw
+// call. ?skatepark=0 hides the models (the ground and the rails stay).
+const skateparkView = geo && level.skatepark && params.get("skatepark") !== "0" ? createSkateparkView(level.skatepark, { look, after: firstFrame, low: quality !== "high", shadows: tier.shadows }) : null;
+if (skateparkView) {
+  scene.add(skateparkView.group);
+  skateparkView.ready.catch((err) => console.error(err));
 }
 const landmarkModels = landmarkGlbs ? createLandmarkModels(level.name, { after: firstFrame }) : null;
 if (landmarkModels) {
@@ -1248,6 +1256,11 @@ window.__atl = {
     },
     get landmarks() {
       return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null } : null;
+    },
+    // The skatepark (#222): the pad, the placements and the model stats.
+    get skatepark() {
+      const sp = level.skatepark;
+      return sp ? { id: sp.id, name: sp.name, center: sp.center, yaw: sp.yaw, size: sp.size, top: sp.top, placements: sp.placements.map((p) => ({ id: p.id, name: p.name, position: p.position, yaw: p.yaw })), view: skateparkView ? { ...skateparkView.stats } : null } : null;
     },
     // The ground under (x, z), from the pure sampler. With `y`, a bridge
     // high over y is left out (the skater is under it).

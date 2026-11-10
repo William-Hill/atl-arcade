@@ -2126,3 +2126,31 @@ The landmark discovery feature (`design/gdd/landmark-discovery.md`) needs histor
 - Vitest: `src/landmarks/validate.test.js`, 17 tests (each rule on a small test level, and the real file).
 - Not verified: no person played a challenge, so no zone, rail or checkpoint is checked in the game. No person read the facts or opened the links. The outfit unlock counts of the GDD (7, 14, 20) do not fit 12 spots; with the GDD fractions they are 5, 9 and 12.
 - New Realm Brewing and Krog Street Market have 3 facts each from one Atlanta BeltLine page; the Stove Works year and products have no primary source yet.
+
+## 2026-11-10: The pure landmark module (#217)
+
+### Decisions
+
+- Place: `src/sim/landmarks.js`, with `src/sim/landmarks.test.js`. It has no DOM, no Three.js and no file access. It imports `LANDMARK_RULES` and `outlineDistance` from `src/landmarks/validate.js` and `COMBO.minAirTime` from `src/sim/skate/constants.js`. No file under `src/sim/skate` changes (GDD AC-4). The module is not in `src/main.js` yet: #218 and #219 call it.
+- Input: one step takes an observation `{ position, airborne, landed, bailed, teleported, grind: { id, s }, linked, banked }`. `landmarkObs(run)` makes it from a run of `src/sim/skate/run.js`. The step also takes `active`: false before the run timer starts and after the run and its overtime end. Then no spot changes and the open attempts are dropped; the banners still count down.
+- Tier values: a challenge reads the value in the file (`zone.r`, `meters`, `seconds`, `points`); the validator already holds each one to its tier. A value that the file leaves out comes from `LANDMARK_RULES`. The claim points, the run cap, the checkpoint radius, the banner times and the unlock fractions are in `LANDMARKS` in the module.
+- Claim points of the file: 5 easy, 5 typical and 2 hard spots give 5 × 200 + 5 × 300 + 2 × 500 = 3500 points over the whole save, not the 5800 of the GDD (20 spots). The test computes the sum from the file and also checks that the 20 spots of the GDD give 5800.
+- Outfit unlocks: `unlockCounts(N)` with N = the claim spots of the file. The Beltline file gives 5, 9 and 12. The fractions count in whole percent, so a float product cannot move a count.
+- Gap: the rule is the rule of the gap goals (`src/sim/skate/goals.js`): in the air inside the zone, 0.2 s or more of air, then a landing with no bail. A hard gap also needs the landing in its landing zone. So the spot and the goal `gap-freedom-parkway` complete on the same tick (tested with the real controller). `gapGoalOf(spot, goals)` gives the goal of a spot: only a `gap` challenge with the same zone has one. The goal list itself stays in `stepGoals`, so a bridge that is already Claimed still needs the gap in each run.
+- Grind: one grind on the feature must touch the zone and reach `meters`. The claim comes on the tick the length is reached, not at the end of the grind. The length is the change of the rail position `s`, in either direction.
+- Line: the timer starts at checkpoint 1 and starts again on each tick the skater is in checkpoint 1. A checkpoint out of order does not count and does not reset the attempt. A time over `seconds` or a bail drops the attempt.
+- Combo: the check runs on the bank tick with the banked value (pending × multiplier) and the position of the last link. The distance is to the center of `challenge.zone`, not to the map point `at`: the 3 combo spots of the file have their zone on the trail.
+- Banner queue: a banner on show is not cut. Its time is set when it starts, from the count of banners that wait then. 2 Found banners can wait; the newest one past that is dropped. When a spot is Claimed while its Found banner still waits, that Found banner leaves the queue.
+- Save: the level entry has one more field than the GDD: `outfits`, the most outfits the level unlocked. "Reset progress" clears `found` and `claimed` of every level and keeps `outfits`. An id that the level file does not have is ignored and is not written back. A value that is not JSON or has another version reads as empty; the first change of a spot writes version 1 over it. The storage is an injected object. When it is missing or throws, the tracker keeps the states in memory and `tracker.saved` is false (for the notice in the settings menu).
+- Medals: `medalScore(score, state)` adds the claim points of the run. The results screen must use it for the medal only; the score goal reads the banked score (#220).
+- Test hook (GDD Open Question 2): `landmarkTestHook(tracker, { dev })` gives `states`, `view`, `banner`, `run`, `saved`, `find`, `claim` and `reset`, and null when `dev` is false. #219 puts it at `window.__atl.landmarks` in a dev build. The draw calls are not in it.
+
+### Open GDD points
+
+- The GDD table "Interactions with Other Systems" says claim points go to the banked score; the Formulas section and #217 say medals only. This module follows #217.
+- The GDD says the Found banner shows for 3.0 s (AC-2) and also 2.1 s with 1 banner that waits (F-7). Here the first of 2 banners of one step shows for 2.1 s, because 1 banner waits when it starts.
+
+### Evidence and limits
+
+- Vitest: `src/sim/landmarks.test.js`, 74 tests: AC-2, AC-4, AC-5, AC-6, F-1 to F-8, E-1, E-2, E-4, E-6, the blocked storage, the test hook, and 5 tests with the real controller on the Beltline level. `npm test`: 1621 of 1622 pass; the 1 failure is the 5 s timeout in `facade-kit.test.js`, which fails the same way on `epic/city-look`.
+- Not verified: nothing runs in a browser, because the module is not in the game yet. No person played a challenge. The real grind, line and combo spots of the file are tested with scripted observations only; only the Freedom Parkway gap ran with the real controller.

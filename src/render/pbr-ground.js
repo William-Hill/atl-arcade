@@ -196,7 +196,9 @@ export function createPbrSurfaceMaterial({ tier = "high", defer = (load) => load
   const sets = groundSets.sets;
   const normal = Boolean(files.normal);
   mat.defines = normal ? { GROUND_NORMAL: 1 } : {};
-  for (const c of cuts) if (GROUND_CUTS[c]) mat.defines[GROUND_CUTS[c]] = 1;
+  // Own keys only: the names can come from the address (?groundcuts).
+  const defines = cuts.filter((c) => Object.hasOwn(GROUND_CUTS, c)).map((c) => GROUND_CUTS[c]);
+  for (const d of defines) mat.defines[d] = 1;
   const kinds = Object.keys(PBR_GROUND_OF);
   const anisotropy = anisotropyOption ?? GROUND_ANISOTROPY[tier] ?? 8;
   const [albedo, loadAlbedo] = loadArray(URLS[files.albedo], sets.map((s) => [...s.meanLinear.map(srgb8), 255]), { srgb: true, anisotropy });
@@ -409,6 +411,6 @@ if (groundSet >= 0) {
 }`,
       );
   };
-  mat.customProgramCacheKey = () => `surface-pbr-ground-v2-${tier}-${cuts.join("+")}`;
+  mat.customProgramCacheKey = () => `surface-pbr-ground-v2-${tier}-${defines.join("+")}`;
   return mat;
 }

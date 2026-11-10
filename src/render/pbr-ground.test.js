@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { SURFACE_COLORS, stripColor } from "../level/geo/geo-mesh.js";
 import { DETAIL_NORMAL, GROUND_ALBEDO } from "./look.js";
 import { ALBEDO, MATERIAL_CLASSES } from "./pbr-palette.js";
-import { GROUND_LAYERS, GROUND_ROUGHNESS_FLOOR, LAWN, PBR_GROUND_OF, groundAlbedo, groundBudget, groundFiles, lawnTone, pbrGroundTier } from "./pbr-ground.js";
+import { GROUND_LAYERS, GROUND_ROUGHNESS_FLOOR, LAWN, PBR_GROUND_OF, createPbrSurfaceMaterial, groundAlbedo, groundBudget, groundFiles, lawnTone, pbrGroundTier } from "./pbr-ground.js";
 import sets from "../../assets/ground/pbr/sets.json";
 
 const ROOT = new URL("../../", import.meta.url);
@@ -164,5 +164,20 @@ describe("the pbr lawn (#197)", () => {
       expect(bed[0]).toBeGreaterThan(bed[1]);
       expect(bed[1]).toBeGreaterThan(bed[2]);
     }
+  });
+});
+
+describe("the ground cuts of pbr lite (#246)", () => {
+  const defer = () => {}; // no download
+  it("has no cut define without cuts (the high tier's shader)", () => {
+    expect(createPbrSurfaceMaterial({ defer }).defines).toEqual({ GROUND_NORMAL: 1 });
+  });
+  it("turns a known cut into its define", () => {
+    expect(createPbrSurfaceMaterial({ tier: "small", defer, cuts: ["oneAlbedo"] }).defines).toEqual({ GROUND_ONE_ALBEDO: 1 });
+  });
+  it("ignores a name that is not a cut (the names can come from ?groundcuts)", () => {
+    const mat = createPbrSurfaceMaterial({ tier: "small", defer, cuts: ["constructor", "toString", "__proto__", "nope"] });
+    expect(mat.defines).toEqual({});
+    expect(mat.customProgramCacheKey()).toBe(createPbrSurfaceMaterial({ tier: "small", defer }).customProgramCacheKey());
   });
 });

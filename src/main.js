@@ -165,7 +165,7 @@ const look = geo ? lookFor(paramFor("look", params, savedSettings), quality) : "
 const pbrLite = isPbrLite({ look, quality, param: params.get("pbrlite") });
 const lite = pbrLite ? PBR_LITE : null;
 // A pbr lite value, or its URL override (to tune one cut at a time).
-const liteNum = (name, value) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : value);
+const liteNum = (name, value) => numParam(name) ?? value;
 // The pbr street kit, GLB trees, mural atlas and ground maps load after the
 // first frame (#190, src/render/late-load.js). ?lateload=0 loads them at once.
 const lateLoads = createLateLoads(lateLoadPlan({ look, lateload: params.get("lateload") }), firstFrame, { now: () => Math.round(performance.now()) });
@@ -689,11 +689,16 @@ let governor = geo && quality !== "low" && params.get("governor") !== "0" ? crea
 let lookDownDone = null;
 function stepLookDown(to) {
   if (lookDownDone) return;
-  const plan = lookDownPlan(window.location.href, settingsStorage ? readSettings(settingsStorage) : null, to);
-  if (plan.saved) writeSettings(settingsStorage, plan.saved);
+  let plan = lookDownPlan(window.location.href, settingsStorage ? readSettings(settingsStorage) : null, to);
+  // The save can fail (full or blocked storage). Then the address carries the
+  // look: with neither, the next page starts in pbr again and steps down
+  // again, in a loop.
+  if (plan.saved && !writeSettings(settingsStorage, plan.saved)) plan = lookDownPlan(window.location.href, null, to);
   lookDownDone = { to, href: plan.href, medianMs: governor?.last ?? null };
   governor = null;
-  window.location.assign(plan.href);
+  // replace(), not assign(): the Back button must not go to the slow page,
+  // which would step down and come here again.
+  window.location.replace(plan.href);
 }
 function applyRung(rung) {
   if (isLookDown(rung, look)) return stepLookDown(rung.look);

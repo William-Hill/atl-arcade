@@ -113,7 +113,8 @@ test.describe("pbr lite", () => {
     await page.goto("/?level=beltline-eastside&mute=1&quality=phone&governor=0");
     await page.waitForFunction(() => window.__atl && window.__atl.ready, null, { timeout: 240000 });
     await page.evaluate(() => localStorage.setItem("atl.settings.v1", JSON.stringify({ look: "pbr" })));
-    await page.goto("/?level=beltline-eastside&mute=1&quality=phone&govbudget=1");
+    // ?noticems: on a busy machine the 8 s of the line can end before the check.
+    await page.goto("/?level=beltline-eastside&mute=1&quality=phone&govbudget=1&noticems=40000");
     await page.waitForFunction(() => window.__atl && window.__atl.ready, null, { timeout: 240000 });
     expect(await page.evaluate(() => window.__atl.render)).toMatchObject({ look: "pbr", lite: true });
     await page.waitForURL(/lookdown=1/, { timeout: 300000 });
@@ -126,6 +127,27 @@ test.describe("pbr lite", () => {
     await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 0, null, { timeout: 240000 });
     expect(await page.evaluate(() => window.__atl.look)).toBe("toon");
     await expect(page.locator("#hud-notice")).toBeHidden();
+  });
+
+  test("a save that fails does not loop: the address carries the toon look", async ({ page }) => {
+    // Storage that holds a pbr choice and refuses every write (a full quota).
+    await page.addInitScript(() => {
+      const set = Storage.prototype.setItem;
+      set.call(localStorage, "atl.settings.v1", JSON.stringify({ look: "pbr" }));
+      Storage.prototype.setItem = () => {
+        throw new DOMException("full", "QuotaExceededError");
+      };
+    });
+    await page.goto("/?level=beltline-eastside&mute=1&quality=phone&govbudget=1");
+    await page.waitForFunction(() => window.__atl && window.__atl.ready, null, { timeout: 240000 });
+    expect(await page.evaluate(() => window.__atl.render)).toMatchObject({ look: "pbr", lite: true });
+    await page.waitForURL(/look=toon/, { timeout: 300000 });
+    await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 0, null, { timeout: 240000 });
+    // The saved choice is still pbr, and the page runs toon.
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("atl.settings.v1")).look)).toBe("pbr");
+    expect(await page.evaluate(() => window.__atl.look)).toBe("toon");
+    // The step replaced the slow page in the history: Back does not go to it.
+    expect(await page.evaluate(() => window.history.length)).toBe(2);
   });
 
   test("pbr lite stays when the frames are inside the budget", async ({ page }) => {

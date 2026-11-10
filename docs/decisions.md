@@ -422,6 +422,7 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Why: the stage accuracy research (PR #48) found 51 houses over 20 m from Overture, and towers next to Ponce City Market that were too short. William picked "Height fixes".
 - Cap: an Overture height over `OVERTURE_CAP` for its OSM type is capped (house 12 m, bungalow 10 m, terrace 14 m, garage 6 m, shed 5 m). An OSM height or levels tag is not capped. 98 buildings are capped; no house is now over 20 m.
 - Overrides: `levels/beltline-eastside/heights.json` has a height and a source URL for 4 buildings: Signal House (21 stories, 68.2 m), Overline Residences (18 stories, 58.6 m), the Kroger store under 725 Ponce (7 m), and 619 Ponce (4 stories, 17.8 m). The story counts come from the PR #48 research; I did not check the sources again.
+
 ## 2026-11-02: Procedural trees with wind (BeltLine level)
 
 - Why: the roadmap (`docs/research/2026-11-02-beltline-quality-roadmap.md`, item 3) and the stage accuracy report (`docs/research/2026-11-02-stage-accuracy-and-characters.md`) rank the tree canopy high. William picked this work on 2026-11-02.
@@ -1058,6 +1059,7 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The footway spur `w1118177210` goes from the footway deck (9.5 m) to the ground (4.8 m) in 10 m, as in the OSM data: a 47% ramp.
 - The ground sampler is about 1.4 times slower (deck heights now read the terrain).
 - Not checked: the low tier far terrain at the bridge ends.
+
 ## 2026-11-04: Road detail (#138) and sidewalk detail (#136)
 
 ### Road detail (#138)
@@ -1079,6 +1081,7 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Aprons (`src/level/geo/aprons.js`): a concrete strip of 1.8 m on each wall of a storefront building, and 3.5 m on the front wall, in the sidewalk color, 0.012 m over the ground. The view drapes it and merges it into the surface tiles. It is render-only and on the high tier only (`?aprons=0` turns it off). BeltLine: 4,506 triangles before the drape, 42,374 after.
 - Front wall (`frontEdge()` in `src/level/geo/facade-kit.js`): with no street wall, a wall of at least 0.7 of the longest wall with the nearest street (the median of 3 sample lines, before a footprint) wins, then the most open ground. The sign band turns the corner onto a next wall that faces a street or 20 m of open ground. The lab building (w270469054) now has its front on the north wall, which faces the park and the road, not the south wall 8 m from a neighbor.
 - Ink (`src/render/post.js`): a crease must hold for 2 pixels, so a face under one pixel wide (a sign band top, a name panel end) does not give a dotted line.
+
 ## 2026-11-04: Day/season weather drives the scene (claude/day-weather-look)
 
 - `src/sim/weather.js` (pure): the real solar position for the level's `origin` lat/lon (declination + hour angle + longitude offset from the zone meridian, simple DST window), a deterministic seasonal weather draw from Atlanta climate normals (wet winters, summer afternoon storm cells, clear falls), and `skyState`, which composes them into renderer values: sun color from Kasten-Young airmass transmittance (from gen-city's sky.ts), cloud/fog/window-lit/wet/rain factors, and a night city-glow term.
@@ -1194,6 +1197,7 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
 - `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
 - `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
+
 ## 2026-11-05: epic/assets — traffic vehicle LODs and a shared 512 px atlas
 - `scripts/blender/vehicle_lods.py` (Blender 5.2.3, no Meshy) builds, per kind, LOD1 (collapse decimate to ~35% of LOD0 triangles, same `body > steer_FL/FR > wheel_FL/FR`, `body > wheel_RL/RR` rig and pivots) and LOD2 (~10%, wheels merged into the body).
 - Packaging: one sibling file, `assets/vehicles/vehicles_lod.glb` (1.8 MB, Draco), with all 7 kinds' LOD1/LOD2 on one material. Why not inside each `<kind>.glb`: the low tiers would still download and upload the 1024 px LOD0 textures; why not 14 sibling GLBs: one shared atlas lets every far car of every kind draw in one BatchedMesh call instead of 7, and one request instead of 14.
@@ -1208,6 +1212,7 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Designs are drawn at 3:1 and squeezed into the square cells, because `muralWalls()` makes most murals about 3:1 (median 3.1); the old canvas cells are square and stretch three times wider on the wall. A UV crop for walls far from 3:1 is documented for the parent in `docs/murals.md` (geo-mesh.js is not changed).
 - `src/render/murals.js` loads `assets/murals/mural-atlas.jpg` (2048 px, 883 KB, 22.3 MB GPU) in the pbr look and keeps the canvas atlas for the toon look, for `?murals=canvas`, and when the image fails. The cells and words are unchanged, so geo-mesh.js needs no change.
 - `murals.js` cannot see the GPU tier: it reads `?look` / `?quality` unless geo-view passes `createMuralAtlas(1024, { look })`. That one-line change and the roughness map (`createMuralRoughness()`, 34 KB, 1.4 MB GPU) are left to the parent (`docs/murals.md`). No normal map: mortar relief is below one texel at these wall sizes.
+
 ## 2026-11-05 — Body repair after rejected skater videos
 
 - Treat the earlier `raw/*-animated.glb` videos as rejected outputs.
@@ -1296,6 +1301,7 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - Two five-second Tripo motion tests remain approved at 20 credits each.
   The MCP exposes no text-to-motion tool and the carrier task returns 404, so
   generation stays a follow-up Studio task.
+
 ## 2026-11-05: epic/assets — skateable features as PBR GLBs (assets/skate-features)
 - 18 procedural Blender features (`scripts/blender/skate_features.py`): flat bars 3/6/9 m, round rails 3/6 m, down rails on 4 and 7 stairs, a kinked rail (3 down, landing, 3 down), concrete ledges 3/6 m, a granite-capped planter ledge, a manual pad, a quarter pipe, a kicker, a bank, a pyramid/funbox, a trail bench with a steel edge, and a block bench. No skatestoppers anywhere: the game welcomes skating. See `docs/skate-features.md`.
 - One material and one trim sheet (color 1024², normal 1024², ORM 512², strips tiling in U) for the whole set, external to the GLBs: one download, one GPU upload (about 12 MB), one material for batching. `shareSkateFeatureMaterial()` (`src/render/skate-feature-models.js`) undoes GLTFLoader's per-file copies.
@@ -1342,6 +1348,7 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - `e2e/beltline.spec.js` and `e2e/phone-tier.spec.js` pass. `e2e/streets.spec.js` loads the high tier and the low tier with no console error and with the bench and curb ledges, and takes the pictures in `reports/streets/before/` (main: 4 intersections and a crosswalk) and `reports/streets/after/` (the same, and a sidewalk). The iso map is baked again (153 tiles).
 - Not verified: the median FPS gate (55). `npm run playtest:beltline` gave 15 FPS and 20 FPS at load averages of 19 to 22. The same harness on main, in a second worktree, did not load in 30 s at that load, so there is no comparison. Measure the gate again on a quiet machine.
 - The level setup (`createLevelEnv()`) takes about 400 ms, against about 210 ms on main: the sidewalk layout (about 100 ms), the medians, the junctions, and the ledges. Each one is computed once for each level object.
+
 ## 2026-11-04: More detailed buildings: porches, shop boards, roof gear, lintels (#135)
 
 ### Decisions
@@ -1600,6 +1607,7 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 
 - A URL with no `level` opens `beltline-eastside` (`DEFAULT_LEVEL` in `src/level/levels.js`). This replaces "The greybox stays the default" in the M1 shell entry.
 - The greybox is the debug level. Open it with `?level=greybox`. The e2e specs that need the greybox ask for it by name.
+
 ## 2026-11-06 — Fewer walkers (performance)
 
 - The owner reported too many NPCs and a slow game. The walker step (`stepPeds`) was the main cost: 320 walkers on the high tier took 7.0 ms per frame in Node, 140 took 1.6 ms, and 120 took 1.3 ms.
@@ -1940,6 +1948,7 @@ Cost: on the BeltLine level, 5,496 trees; the index takes about 12 ms to build o
 Evidence: `src/sim/camera.test.js` ("tree canopy": a magnolia around the camera goal; the camera ends outside it, pulled in toward the skater, with a clear line to her). `e2e/canopy-camera.spec.js` rides the Eastside Trail past a street tree (a red maple at x 221, z -314.7, on the slope under the raised trail) at `?level=beltline-eastside&quality=low&time=14&weather=clear`: with `?canopycam=0` the camera goes into the crown; by default no frame has the camera in a canopy and the skater is on screen. Screenshots: `e2e/__screenshots__/canopy-camera-before.png`, `canopy-camera-after.png`.
 
 Open. The volumes follow the procedural trees; the GLB trees of the pbr look (`?look=pbr`) have their own shapes, and were not checked against the volumes. The kit trees (`?trees=kit`) use the same volumes. Not checked on a phone. The 129.0 s frame of the playtest was not replayed (its video is a local file).
+
 ## 2026-11-08 — The pbr look: a material audit test, the walker roughness, the style sheet (#157)
 
 This change does the parts of #157 that need no real GPU. The FPS gate (median over 55 FPS on the first block, high tier, real GPU) is not done here. The cloud machine renders with SwiftShader, so a frame rate from it is not a measurement. #157 stays open for that gate.
@@ -1959,6 +1968,7 @@ This change does the parts of #157 that need no real GPU. The FPS gate (median o
 **Evidence.** Vitest: `src/render/pbr-palette.test.js` (the audit finds a toon skater and its hull, and a pbr skater is clean), `src/render/peds-view.test.js` (the walker roughness is in the skin and cloth classes, and the toon walker gets no patch). Playwright: `e2e/pbr-materials.spec.js`, 4 passed (17.1 min on SwiftShader; the high-tier walk is 14.7 min).
 
 **Not done.** The 55 FPS median on a real GPU (#157 stays open). The phone-tier decision for the pbr look does not change (toon stays the default on phone and low, entry of 2026-11-07).
+
 ## 2026-11-08 — Comic effects: speed lines, impact frames, bursts (#113)
 
 **What.** A render-layer effects module in `src/render/effects/`, as `docs/art-direction-pbr.md` section 11 asks:
@@ -1985,6 +1995,7 @@ This change does the parts of #157 that need no real GPU. The FPS gate (median o
 **Evidence.** `src/render/effects/fx.test.js` (41 tests: the triggers, also from the real controller; the timers; the tier, reduced-motion and `?fx=0` gates; no streak over the skater; the spikes cover under 6 % of the frame). `e2e/effects.spec.js`: a picture of each effect in each look on the high tier, `time=14&weather=clear` (`e2e/__screenshots__/fx-{speed,impact,grind,beat}-{toon,pbr}.png`); the draw calls on each tier; a full-push ride into the edge fence starts an impact frame from the bonk flag; `prefers-reduced-motion` turns the effects off at the load and live (`fx-reduced-motion-pbr.png`).
 
 **Open.** No person played with the effects. The speed lines are faint on a bright sky. Real skaters did not review them. The landing threshold (0.9 s air or 7 m/s) is a first value.
+
 ## 2026-11-08 — A baked leaf cut for the leaf cards on phone and low (#191)
 
 PR #224 measured the leaf cards of the pbr trees as the largest cost left on the phone and low tiers. Each card layer of a crown is cut with `discard` and runs the procedural leaf loop. The leaf cards stay (no look change).
@@ -2017,6 +2028,7 @@ PR #226 moved the cars, the Meshy people and props, the landmark GLBs and the NP
 - **Kept before the first frame**: the facade kit on high (it is on the walls near the spawn, and the view waits up to 3 s for it), the img2threejs landmark towers and the wall detail maps (both looks, small).
 - **Rejected**: a shader compile with `compileAsync()` while the physics builds. On SwiftShader (no `KHR_parallel_shader_compile`) it made the high pbr first frame 0.3 to 1.1 s later. A real-GPU run can test it again.
 - **Open**: the 6 s first frame on high pbr is not met on this machine (7.7 s before and 8.0 s after, localhost); the first frame there is the level view build and the first draw, not the downloads. No real GPU, phone, or network run.
+
 ## 2026-11-09 — Review findings of the PBR epic PRs #232 to #238
 
 The reviews of the PRs that merged into `epic/city-look` on 2026-11-08 left minor findings open. This change examines each finding in the code and fixes it.
@@ -2030,6 +2042,7 @@ The reviews of the PRs that merged into `epic/city-look` on 2026-11-08 left mino
 - **Provenance**: `docs/style-sheet-pbr/provenance.json` names the merge commit of PR #235 (`6eca11de`).
 
 **Evidence.** `src/sim/camera.test.js` (each crown vertex of each procedural variant is in its volume; the index gives the same answers as the plain test over 300 random queries), `e2e/canopy-camera.spec.js` (each GLB crown vertex is in its volume), `src/render/pbr-palette.test.js`, `src/render/leaf-cut.test.js` (the old texture is freed; the shadow pass gets the baked cut; the program cache key changes with `leafBaked`), `src/render/skater-view.test.js` and `e2e/skater-spawn.spec.js` (a fall under the floor: the carve lean is 0 in the first frame; it was 0.041 rad before the fix).
+
 ## 2026-11-09 — Game feel: bonk shake, landing dust, wall sparks, speed view, sounds (#105)
 
 **What.** #105 asks for feedback on hits, speed and landings. The comic effects of #113 already give the speed lines, the impact frames and the grind and beat bursts, and #107 gave the carve lean. This change adds the rest:
@@ -2055,6 +2068,7 @@ The reviews of the PRs that merged into `epic/city-look` on 2026-11-08 left mino
 **Evidence.** `src/render/effects/feel.test.js`, `src/render/effects/effects-view.test.js`, `src/audio/sfx.test.js`. `e2e/feel.spec.js`: a picture of each effect on phone/toon and high/pbr (`e2e/__screenshots__/feel-{none,shake,fov,dust,sparks}-{phone-toon,high-pbr}.png`); a slide along the edge fence makes sparks and a scrape; a 3 m drop makes dust and a landing sound for about 3 m; a full-push ride into the edge fence opens the field of view, then the bonk shakes and plays a sound on a running AudioContext; reduced motion keeps the camera still and draws no particles, and the sounds stay.
 
 **Open.** No person played with the effects or listened to the sounds. Real skaters must review the feel and the tuning (the shake size, the field-of-view range, the dust and spark amounts, the sounds), together with `wallBonkAngle`, `wallSlideKeep`, the push and the carve (AGENTS.md). The sounds were not heard on a real speaker. The frame time was not measured on a real GPU or a real phone.
+
 ## 2026-11-09 — Walkers: groups, talks, jogs, places to be, and a cheer (#133)
 
 The walkers (`src/sim/peds.js`) did a walk and a short stop near a shop. Now they also do other activities. The walker count per tier does not change (`PED_COUNT` 90/60/45, the owner decision of 2026-11-07).
@@ -2126,6 +2140,34 @@ The landmark discovery feature (`design/gdd/landmark-discovery.md`) needs histor
 - Vitest: `src/landmarks/validate.test.js`, 17 tests (each rule on a small test level, and the real file).
 - Not verified: no person played a challenge, so no zone, rail or checkpoint is checked in the game. No person read the facts or opened the links. The outfit unlock counts of the GDD (7, 14, 20) do not fit 12 spots; with the GDD fractions they are 5, 9 and 12.
 - New Realm Brewing and Krog Street Market have 3 facts each from one Atlanta BeltLine page; the Stove Works year and products have no primary source yet.
+
+## 2026-11-10: The pure landmark module (#217)
+
+### Decisions
+
+- Place: `src/sim/landmarks.js`, with `src/sim/landmarks.test.js`. It has no DOM, no Three.js and no file access. It imports `LANDMARK_RULES` and `outlineDistance` from `src/landmarks/validate.js` and `COMBO.minAirTime` from `src/sim/skate/constants.js`. No file under `src/sim/skate` changes (GDD AC-4). The module is not in `src/main.js` yet: #218 and #219 call it.
+- Input: one step takes an observation `{ position, airborne, landed, bailed, teleported, grind: { id, s }, linked, banked }`. `landmarkObs(run)` makes it from a run of `src/sim/skate/run.js`. The step also takes `active`: false before the run timer starts and after the run and its overtime end. Then no spot changes and the open attempts are dropped; the banners still count down.
+- Tier values: a challenge reads the value in the file (`zone.r`, `meters`, `seconds`, `points`); the validator already holds each one to its tier. A value that the file leaves out comes from `LANDMARK_RULES`. The claim points, the run cap, the checkpoint radius, the banner times and the unlock fractions are in `LANDMARKS` in the module.
+- Claim points of the file: 5 easy, 5 typical and 2 hard spots give 5 × 200 + 5 × 300 + 2 × 500 = 3500 points over the whole save, not the 5800 of the GDD (20 spots). The test computes the sum from the file and also checks that the 20 spots of the GDD give 5800.
+- Outfit unlocks: `unlockCounts(N)` with N = the claim spots of the file. The Beltline file gives 5, 9 and 12. The fractions count in whole percent, so a float product cannot move a count.
+- Gap: the rule is the rule of the gap goals (`src/sim/skate/goals.js`): in the air inside the zone, 0.2 s or more of air, then a landing with no bail. A hard gap also needs the landing in its landing zone. So the spot and the goal `gap-freedom-parkway` complete on the same tick (tested with the real controller). `gapGoalOf(spot, goals)` gives the goal of a spot: only a `gap` challenge with the same zone has one. The goal list itself stays in `stepGoals`, so a bridge that is already Claimed still needs the gap in each run.
+- Grind: one grind on the feature must touch the zone and reach `meters`. The claim comes on the tick the length is reached, not at the end of the grind. The length is the change of the rail position `s`, in either direction.
+- Line: the timer starts at checkpoint 1 and starts again on each tick the skater is in checkpoint 1. A checkpoint out of order does not count and does not reset the attempt. A time over `seconds` or a bail drops the attempt.
+- Combo: the check runs on the bank tick with the banked value (pending × multiplier) and the position of the last link. The distance is to the center of `challenge.zone`, not to the map point `at`: the 3 combo spots of the file have their zone on the trail.
+- Banner queue: a banner on show is not cut. Its time is set when it starts, from the count of banners that wait then. 2 Found banners can wait; the newest one past that is dropped. When a spot is Claimed while its Found banner still waits, that Found banner leaves the queue.
+- Save: the level entry has one more field than the GDD: `outfits`, the most outfits the level unlocked. "Reset progress" clears `found` and `claimed` of every level and keeps `outfits`. An id that the level file does not have is ignored and is not written back. A value that is not JSON or has another version reads as empty; the first change of a spot writes version 1 over it. The storage is an injected object. When it is missing or throws, the tracker keeps the states in memory and `tracker.saved` is false (for the notice in the settings menu).
+- Medals: `medalScore(score, state)` adds the claim points of the run. The results screen must use it for the medal only; the score goal reads the banked score (#220).
+- Test hook (GDD Open Question 2): `landmarkTestHook(tracker, { dev })` gives `states`, `view`, `banner`, `run`, `saved`, `find`, `claim` and `reset`, and null when `dev` is false. #219 puts it at `window.__atl.landmarks` in a dev build. The draw calls are not in it.
+
+### Open GDD points
+
+- The GDD table "Interactions with Other Systems" says claim points go to the banked score; the Formulas section and #217 say medals only. This module follows #217.
+- The GDD says the Found banner shows for 3.0 s (AC-2) and also 2.1 s with 1 banner that waits (F-7). Here the first of 2 banners of one step shows for 2.1 s, because 1 banner waits when it starts.
+
+### Evidence and limits
+
+- Vitest: `src/sim/landmarks.test.js`, 75 tests: AC-2, AC-4, AC-5, AC-6, F-1 to F-8, E-1, E-2, E-4, E-6, the blocked storage, a hostile save (`__proto__` level), the test hook, and 5 tests with the real controller on the Beltline level. `npm test`: 1621 of 1622 pass; the 1 failure is the 5 s timeout in `facade-kit.test.js`, which fails the same way on `epic/city-look`.
+- Not verified: nothing runs in a browser, because the module is not in the game yet. No person played a challenge. The real grind, line and combo spots of the file are tested with scripted observations only; only the Freedom Parkway gap ran with the real controller.
 
 ## 2026-11-10 — Mobile audit re-run on the city look, and a SWITCH button for touch
 

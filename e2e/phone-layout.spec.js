@@ -38,6 +38,7 @@ function boxes(page) {
       ["grind", ".touch-grind"],
       ["groove", ".touch-style1"],
       ["spin", ".touch-style2"],
+      ["switch", ".touch-switch"],
     ];
     const out = [];
     for (const [name, sel] of items) {

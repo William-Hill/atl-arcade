@@ -135,6 +135,8 @@ describe("validateLandmarks", () => {
     expect(errorsOf(grind({ tier: "typical", feature: "rail:short", meters: 15 }))[0]).toMatch(/challenge.meters is 15/);
     // min(24, 0.8 * 30) = 24 m on the 30 m rail.
     expect(errorsOf(grind({ tier: "hard", feature: "rail:long", meters: 24, zone: { x: 10, z: 2, r: 15 } }))).toEqual([]);
+    // The zone holds the middle of the rail and neither of its 2 points.
+    expect(errorsOf(grind({ tier: "typical", feature: "rail:long", meters: 15, zone: { x: 15, z: 2, r: 8 } }))).toEqual([]);
     expect(grindMeters("typical", 12.5)).toBe(10);
     expect(grindMeters("easy", 9.96)).toBe(8);
     expect(grindMeters("hard", 60)).toBe(24);

@@ -179,7 +179,7 @@ function checkChallenge(spot, ctx, err) {
     if (!g) return err(`challenge.feature "${c.feature}" is not a grind feature of the level`);
     if (c.tier === "hard" && g.total < R.grindHardRailMin) err(`a hard grind needs a rail of ${R.grindHardRailMin} m or more ("${c.feature}" is ${g.total.toFixed(1)} m)`);
     if (c.meters !== grindMeters(c.tier, g.total)) err(`challenge.meters is ${c.meters} (the tier and the ${g.total.toFixed(1)} m rail give ${grindMeters(c.tier, g.total)})`);
-    if (ok && !g.points.some((p) => dist([p[0], p[2]], [c.zone.x, c.zone.z]) <= c.zone.r)) err(`the feature "${c.feature}" does not pass through challenge.zone`);
+    if (ok && !railInZone(g.points, c.zone)) err(`the feature "${c.feature}" does not pass through challenge.zone`);
   }
 
   if (c.type === "line") {
@@ -199,6 +199,15 @@ function checkChallenge(spot, ctx, err) {
     if (checkZone("challenge.zone", c.zone, R.comboR, level, err) && !onPaved([c.zone.x, c.zone.z], level)) err("challenge.zone center is not on a trail, a path, or a sidewalk");
     if (c.points !== R.comboPoints[c.tier]) err(`challenge.points is ${c.points} (the tier gives ${R.comboPoints[c.tier]})`);
   }
+}
+
+// True when a rail ([[x, y, z]]) passes through a zone: a vertex or a part
+// of a segment is inside the circle.
+function railInZone(points, zone) {
+  const c = [zone.x, zone.z];
+  if (points.length === 1) return dist([points[0][0], points[0][2]], c) <= zone.r;
+  for (let i = 0; i < points.length - 1; i += 1) if (segmentDistance(c, [points[i][0], points[i][2]], [points[i + 1][0], points[i + 1][2]]) <= zone.r) return true;
+  return false;
 }
 
 // The meters of a grind challenge: the tier value, or 0.8 of the rail when

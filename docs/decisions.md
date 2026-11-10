@@ -2098,6 +2098,10 @@ The walkers (`src/sim/peds.js`) did a walk and a short stop near a shop. Now the
 
 **Evidence.** In Blender 5.2.2, both files have 0 external images, 0 missing files and 0 libraries. `skater_anim_v3.py --name nia --source assets/skaters/nia/source/nia-forward.blend` ran to exit 0 (5 clips, knee residual 0.0 degrees).
 
+## 2026-11-07: Landmark facts may cite public sources (landmark discovery GDD)
+
+The landmark discovery feature (`design/gdd/landmark-discovery.md`) needs history facts, for example the 1926 Sears, Roebuck building at Ponce City Market. The Atlanta open data catalog has numbers about parks, stations and neighborhoods, but it has no landmark history. The rule in `AGENTS.md` ("facts sourced from the open data catalog") changes for landmark story cards: a fact comes from the open data catalog or from a cited public source (National Register / NPS, City of Atlanta, Atlanta History Center, Georgia Encyclopedia, Atlanta BeltLine Inc., or the landmark's own site). Every fact keeps a source name and URL, and stays positive or neutral. Wikipedia is a pointer only, never the source. Fact cards (`levels/<level>/facts.json`) keep the catalog-only rule. Research: `docs/research/2026-11-07-eastside-landmarks.md`.
+
 ## 2026-11-10: Landmark data file and validator (#216)
 
 ### Decisions
@@ -2107,7 +2111,7 @@ The walkers (`src/sim/peds.js`) did a walk and a short stop near a shop. Now the
   - Historic Fourth Ward Skatepark: it ships after #222.
   - Excelsior Mill: the sources are good, but the level has no building at 695 North Ave, so its position is not verified.
   - Atlanta Art Park and Parque en el centro bonito: no accepted source has a fact about them.
-- Sources: the Historic Fourth Ward Park Conservancy (h4wpc.org) and the Freedom Park Conservancy (freedompark.org) count as primary sources, with the list of 2026-11-07. A spot can cite its own site when it names the host in `site`. The validator (`src/landmarks/validate.js`, `PRIMARY_HOSTS`, `POINTER_HOSTS`) rejects every other host.
+- Sources: the Historic Fourth Ward Park Conservancy (h4wpc.org) and the Freedom Park Conservancy (freedompark.org) count as primary sources, with the list of 2026-11-07 (the entry above, the same text as in #228). A spot can cite its own site when it names the host in `site`. The validator (`src/landmarks/validate.js`, `PRIMARY_HOSTS`, `POINTER_HOSTS`) rejects every other host.
 - Evidence: the sentence behind each fact is in `docs/research/2026-11-10-landmark-facts.md`, with the facts for the spots that are out.
 - Schema: `v`, `level`, `spots`. A spot has `id`, `kind`, `name`, `at`, `footprint` (`building` or `areas`, level ids), `find` (`edge`, or `r` with an optional `at`), `site`, `short`, `card`, `challenge`, and `credit` (art only). A challenge has `type`, `tier`, `hint`, and the values of its type: `zone` (gap, combo, grind), `landing` (hard gap), `goal` (the gap goal of `goals.json` at the same zone), `feature` and `meters` (grind), `checkpoints` and `seconds` (line), `points` (combo).
 - Find zones: Ponce City Market, Telephone Factory Lofts and New Realm Brewing use a circle on the trail (`find.r`), not the edge distance. The trail is 41 m, 21 m and 18 m from their outlines, and the edge distance stops at 12 m.

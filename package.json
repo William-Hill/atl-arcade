@@ -6,6 +6,8 @@
   "description": "ATL Arcade — Atlanta games on real open data. Skate ATL first.",
   "scripts": {
     "dev": "vite",
+    "validate:landmarks": "node scripts/validate-landmarks.mjs",
+    "prebuild": "npm run validate:landmarks",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

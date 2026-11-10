@@ -196,6 +196,19 @@ machine, `docs/perf/191/README.md`). The phone and low tiers default to
 toon. The table is the target for each tier with `?look=pbr` on; where
 today differs, the cell says so.
 
+**Pbr lite (#246, 2026-11-10).** The pbr look on the phone tier is "pbr
+lite" (`src/render/pbr-lite.js`). The owner's decision: the pbr look stays
+on phones, in the settings menu too, as near to the full look as the phone
+can pay for. Pbr lite keeps the standard materials and the palette, the
+grade, the sky light, the ground scans, the painted murals, the Meshy
+people and the GLB cars. It cuts the Blender trees (300 to 520 leaf cards a
+tree, about 80 % of the extra frame time by the spawn): the trees are the
+procedural species trees with a solid crown and 6 leaf cards on each crown
+puff. The mural atlas is 1024 px. When the frames stay slow, the governor
+steps the pixel ratio down and then goes to the toon look, with one HUD
+line. The numbers are in `docs/perf/246/README.md`. The high tier does not
+change, and `?pbrlite=0` gives the phone tier's old pbr look.
+
 | Feature | Low (`?quality=low`) | Phone | High |
 | --- | --- | --- | --- |
 | Default look | toon | toon | pbr |
@@ -212,13 +225,14 @@ today differs, the cell says so.
 | Skater rim light | keep | keep | keep |
 | Far windows as bold colors | keep | keep | keep |
 | Facade kit, interiors, markings, aprons | drop | drop | keep |
-| Leaf cards | drop (impostors) | drop (impostors) | keep near trees |
-| Murals | painted atlas at 1024 px (today 2048) | painted atlas at 1024 px (today 2048) | 2048 px painted atlas |
+| Leaf cards | drop (impostors); today the Blender trees with the baked cut | 6 cards on each crown puff of the procedural trees, baked cut, no Blender trees (pbr lite, #246) | keep near trees |
+| Murals | painted atlas at 1024 px (today 2048) | painted atlas at 1024 px (pbr lite, #246) | 2048 px painted atlas |
 | Skater textures | 1024 px | 1024 px | 2048 px |
 | NPC textures | 512 px | 512 px | up to 1024 px |
 | Draw distance | 320 m | 320 m | 650 m |
 | Lamp pools at night | keep (decals) | keep (decals) | keep |
 | Comic effects (#113) | drop | keep, reduced | keep |
+| Governor (slow frames) | none | pixel ratio 1.5, 1.25, 1, then the toon look with one HUD line (#246) | pixel ratio 2, 1.25, 1, then no post pass |
 
 Budget caps per tier are in `docs/perf/budget.json`; no art change may go
 over them.

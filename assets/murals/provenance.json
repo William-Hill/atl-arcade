@@ -37,6 +37,25 @@
       "bytes": 46088,
       "gpuBytes": 1394606,
       "encoding": "green and blue = roughness / 0.85 (ROUGHNESS.mural), read from the green channel by MeshStandardMaterial.roughnessMap; red = paint coverage (0 bare wall, 1 paint), the mural cut-out mask at 0.5 (src/render/murals.js)"
+    },
+    "mural-atlas-1024.jpg": {
+      "size": [
+        1024,
+        1024
+      ],
+      "colorSpace": "srgb",
+      "bytes": 252212,
+      "gpuBytes": 5592405,
+      "layout": "the same 4 x 4 cells as mural-atlas.jpg",
+      "derived": {
+        "from": "mural-atlas.jpg",
+        "date": "2026-11-10",
+        "tool": "ImageMagick 6 convert",
+        "command": "convert assets/murals/mural-atlas.jpg -filter Lanczos -resize 1024x1024 -quality 82 -strip assets/murals/mural-atlas-1024.jpg",
+        "prompt": "none (no generative model)",
+        "credits": 0,
+        "use": "pbr lite (the pbr look on the phone tier, #246): docs/art-direction-pbr.md section 8 gives the phone tier a 1024 px mural atlas"
+      }
     }
   },
   "totalBytes": 929229,

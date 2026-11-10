@@ -29,7 +29,7 @@ import { preview } from "vite";
 import { chromium } from "@playwright/test";
 import { chainStrips, followLineScript } from "../src/playtest/trail-script.js";
 import { createLevelEnv } from "../src/level/ground.js";
-import { checkBudget, classifyUrl, firstFrameMB, frameStats, renderMarkdown, spliceMarkdown } from "./perf-lib.mjs";
+import { checkBudget, toonRatios, classifyUrl, firstFrameMB, frameStats, renderMarkdown, spliceMarkdown } from "./perf-lib.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const args = process.argv.slice(2);
@@ -157,7 +157,7 @@ async function oneRun(quality, look, n) {
       const done = a.runScript(script, start);
       const end = await Promise.race([done, new Promise((r) => setTimeout(() => r(null), timeoutMs))]);
       const wallMs = performance.now() - t0;
-      return { finished: Boolean(end), wallMs, frameMs: a.fps.stop(), perf: a.perf.report(), info: a.rendererInfo, drawSplit: a.drawSplit, render: a.render };
+      return { finished: Boolean(end), wallMs, frameMs: a.fps.stop(), perf: a.perf.report(), info: a.rendererInfo, textureMemory: a.textureMemory ?? null, drawSplit: a.drawSplit, render: a.render };
     },
     { script: ride, start: { position: levelJson.spawn.position, yaw: levelJson.spawn.yaw }, timeoutMs },
   );
@@ -189,6 +189,9 @@ async function oneRun(quality, look, n) {
     triangles: data.info.triangles,
     geometries: data.info.geometries,
     textures: data.info.textures,
+    // The estimate of the GPU texture memory of the scene (#246).
+    textureMB: data.textureMemory?.MB ?? null,
+    textureTop: data.textureMemory?.top ?? null,
     heapMB: round(heap.usedSize / 1048576),
     firstFrameMs: round(firstFrameMs, 0),
     settledMs,
@@ -278,6 +281,7 @@ if (budgetPath) {
   // load of 50 (docs/decisions.md, 2026-11-06, the gates of epic/city-look).
   const busy = runs.filter((r) => r.load > cpus().length);
   if (busy.length) console.warn(`the load average was over the CPU count (${cpus().length}) in ${busy.length} run(s), up to ${Math.max(...busy.map((r) => r.load))}; the geometry counts can be too high. Run perf:check again on a quiet machine before you raise a cap.`);
+  for (const t of toonRatios(runs, budget)) console.log(`${t.run} ${t.metric} ${t.value} is ${t.ratio}x toon (${t.toon}), cap ${t.cap}x`);
   const over = checkBudget(runs, budget);
   for (const o of over) console.error(`OVER BUDGET ${o}`);
   if (over.length) process.exit(1);

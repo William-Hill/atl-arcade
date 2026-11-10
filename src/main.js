@@ -42,7 +42,11 @@ import { leafCutFor } from "./render/leaf-cut.js";
 import { setPostToggles } from "./render/post-toggles.js";
 import { choiceFrom, paramFor, readSettings, reloadHref, safeStorage, sourcesOf, writeSettings } from "./ui/settings.js";
 import { createSettingsMenu } from "./ui/settings-menu.js";
-import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
+import { GOVERNOR, LITE_GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
+import { LOOK_DOWN_NOTICE_MS, isLookDown, lookDownNotice, lookDownPlan } from "./render/look-down.js";
+import { PBR_LITE, isPbrLite } from "./render/pbr-lite.js";
+import { createFrameReadout, readoutDue, readoutPush, readoutStats, readoutText } from "./perf/frame-readout.js";
+import { sceneTextureMemory } from "./perf/texture-memory.js";
 import { createSky } from "./render/sky.js";
 import { LOOKS, createSkyEnvironment, lookFor, toneMappingOf } from "./render/look.js";
 import { labBuildings, labCamera } from "./level/geo/lab.js";
@@ -157,6 +161,13 @@ const GEO_FOG_NEAR = tier.fogNear;
 // The city look (src/render/look.js): pbr on the high tier, toon on the
 // others. ?look=toon|pbr sets it.
 const look = geo ? lookFor(paramFor("look", params, savedSettings), quality) : "toon";
+// Pbr lite (#246, src/render/pbr-lite.js): the pbr look on the phone tier,
+// with the costly parts cut. ?pbrlite=0 keeps the phone pbr look as it was
+// (for a before/after check in one build).
+const pbrLite = isPbrLite({ look, quality, param: params.get("pbrlite") });
+const lite = pbrLite ? PBR_LITE : null;
+// A pbr lite value, or its URL override (to tune one cut at a time).
+const liteNum = (name, value) => numParam(name) ?? value;
 // The pbr street kit, GLB trees, mural atlas and ground maps load after the
 // first frame (#190, src/render/late-load.js). ?lateload=0 loads them at once.
 const lateLoads = createLateLoads(lateLoadPlan({ look, lateload: params.get("lateload") }), firstFrame, { now: () => Math.round(performance.now()) });
@@ -300,7 +311,7 @@ const geoMeshes = geo ? await meshBuild.meshes : null;
 performance.mark("atl:meshes");
 // Before the level view: its main-thread build leaves the other CPUs free.
 bakeEnvironment?.();
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full", leafCut: leafCutFor(quality, params.get("leafcut")), defer: { ground: (load) => lateLoads.run("ground", load), murals: (load) => lateLoads.run("murals", load) } }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full", leafCut: leafCutFor(quality, params.get("leafcut")), leafCards: liteNum("leafcards", lite?.leafCards) ?? true, smallMurals: (liteNum("muralsize", lite?.muralSize) ?? 2048) <= 1024, groundAnisotropy: numParam("groundaniso") ?? null, groundCuts: params.has("groundcuts") ? params.get("groundcuts").split(",").filter(Boolean) : (lite?.groundCuts ?? []), defer: { ground: (load) => lateLoads.run("ground", load), murals: (load) => lateLoads.run("murals", load) } }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
@@ -371,7 +382,8 @@ if (landmarkModels) {
 // shows. ?props=0 leaves it out. With the GLB trees (pbr), the batch goes in
 // after the first frame: the impostor bake is long (#190).
 if (geo && params.get("props") !== "0") {
-  const glbTrees = look === "pbr" && params.get("glbtrees") !== "0";
+  // Pbr lite draws the procedural trees: no Blender tree GLBs to download.
+  const glbTrees = look === "pbr" && params.get("glbtrees") !== "0" && typeof liteNum("leafcards", lite?.leafCards) !== "number";
   Promise.all([lateLoads.run("props", () => loadPropTemplates({ glbTrees, timeoutMs: propTimeoutFor(lateLoads.plan) })), glbTrees ? firstFrame : null])
     .then(([templates]) => levelView.addProps(env.props, templates, { renderer, impostors: params.get("impostors") !== "0" }))
     .catch((err) => {
@@ -717,9 +729,31 @@ function draw() {
 // the headless playtest gate, so it has no governor. ?governor=0 turns it off,
 // and ?govbudget=<ms> sets the frame budget (for tests and tuning).
 const govBudget = Number(params.get("govbudget"));
-const govConfig = Number.isFinite(govBudget) && govBudget > 0 ? { ...GOVERNOR, budgetMs: govBudget } : GOVERNOR;
-let governor = geo && quality !== "low" && params.get("governor") !== "0" ? createGovernor(ladderFor(tier), govConfig) : null;
+// Pbr lite (#246) has one more step at the end: the toon look
+// (src/render/look-down.js). ?lookdown=0 leaves that step out.
+const lookDownOn = pbrLite && params.get("lookdown") !== "0";
+const govBase = lookDownOn ? LITE_GOVERNOR : GOVERNOR;
+const govConfig = Number.isFinite(govBudget) && govBudget > 0 ? { ...govBase, budgetMs: govBudget } : govBase;
+let governor = geo && quality !== "low" && params.get("governor") !== "0" ? createGovernor(ladderFor(tier, { lookDown: lookDownOn }), govConfig) : null;
+// The step from pbr lite to toon. The look builds the scene, so it is a
+// reload: the saved look and the ?look flag go to toon, and the next page
+// shows one HUD line.
+let lookDownDone = null;
+function stepLookDown(to) {
+  if (lookDownDone) return;
+  let plan = lookDownPlan(window.location.href, settingsStorage ? readSettings(settingsStorage) : null, to);
+  // The save can fail (full or blocked storage). Then the address carries the
+  // look: with neither, the next page starts in pbr again and steps down
+  // again, in a loop.
+  if (plan.saved && !writeSettings(settingsStorage, plan.saved)) plan = lookDownPlan(window.location.href, null, to);
+  lookDownDone = { to, href: plan.href, medianMs: governor?.last ?? null };
+  governor = null;
+  // replace(), not assign(): the Back button must not go to the slow page,
+  // which would step down and come here again.
+  window.location.replace(plan.href);
+}
 function applyRung(rung) {
+  if (isLookDown(rung, look)) return stepLookDown(rung.look);
   renderer.setPixelRatio(pixelRatioFor(window.devicePixelRatio, rung.pixelRatio));
   if (!rung.post && post) {
     post.dispose();
@@ -763,6 +797,19 @@ let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 runReady = true;
 const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion });
+// After the step from pbr lite to toon (#246): one line, one time. The flag
+// leaves the address, so a refresh does not show the line again.
+const lookNotice = lookDownNotice(window.location.href);
+if (lookNotice.text) {
+  // After the first frame: before it, the loader covers the HUD.
+  // ?noticems=<ms> sets how long it stays (for a screenshot on a slow machine).
+  firstFrame.then(() => hud.notice(lookNotice.text, numParam("noticems") ?? LOOK_DOWN_NOTICE_MS));
+  window.history.replaceState(window.history.state, "", lookNotice.href);
+}
+// ?fps=1: the median frame time of the last 2 minutes on the screen (#246),
+// to read on a real phone (src/perf/frame-readout.js).
+const frameReadout = params.get("fps") === "1" ? createFrameReadout() : null;
+const frameReadoutEl = frameReadout ? document.body.appendChild(Object.assign(document.createElement("div"), { id: "fps-readout" })) : null;
 // Goals, the run timer, and the results screen (M1-05). The goal list is
 // data per level (src/level/goals.js). ?run=free turns the timer off.
 const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
@@ -1040,6 +1087,10 @@ function frame(now) {
   const elapsed = Math.max(0, (now - last) / 1000);
   last = now;
   if (fps.active) fps.frameMs.push(elapsed * 1000);
+  if (frameReadout) {
+    readoutPush(frameReadout, elapsed * 1000);
+    if (readoutDue(frameReadout)) frameReadoutEl.textContent = readoutText(readoutStats(frameReadout), { look, lite: pbrLite, quality, pixelRatio: renderer.getPixelRatio(), rung: governor ? governor.rung : null }).join("\n");
+  }
   if (renderPaused) {
     requestAnimationFrame(frame);
     return;
@@ -1181,7 +1232,17 @@ window.__atl = {
   },
   // The render settings now, after any governor step.
   get render() {
-    return { quality, pixelRatio: renderer.getPixelRatio(), post: post ? post.kind : null, rung: governor ? governor.rung : null, lastMedianMs: governor ? governor.last : null };
+    return { quality, look, lite: pbrLite, pixelRatio: renderer.getPixelRatio(), post: post ? post.kind : null, rung: governor ? governor.rung : null, ladder: governor ? governor.ladder : null, lastMedianMs: governor ? governor.last : null, lookDown: lookDownDone };
+  },
+  // Pbr lite (#246): the pbr look on the phone tier, and what it cuts.
+  pbrLite: pbrLite ? { ...PBR_LITE } : null,
+  // The frame-time readout (?fps=1), or null.
+  get frameReadout() {
+    return frameReadout ? readoutStats(frameReadout) : null;
+  },
+  // An estimate of the GPU memory of the scene's textures (src/perf/texture-memory.js).
+  get textureMemory() {
+    return sceneTextureMemory(scene, [], renderer);
   },
   // The day/season weather (src/render/weather-view.js): the kind, the
   // clock, the sun elevation, and the window/wet/rain factors. Null on the

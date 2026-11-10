@@ -1,0 +1,513 @@
+{
+ "date": "2026-11-10T08:57:38.142Z",
+ "renderer": "swiftshader (software, CPU)",
+ "quality": "phone",
+ "seconds": 12,
+ "minFrames": 5,
+ "rows": [
+  {
+   "profile": "iphone15-port",
+   "cam": "follow",
+   "variant": "toon",
+   "look": "toon",
+   "medianMs": 151,
+   "p95Ms": 156,
+   "frames": 5,
+   "calls": 66,
+   "triangles": 250944,
+   "textures": 82,
+   "geometries": 72,
+   "textureMB": 241.2,
+   "textureTop": [
+    {
+     "name": "street-signs--1,-1.map",
+     "width": 1024,
+     "height": 4096,
+     "depth": 1,
+     "bytes": 22369621
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "mural--1,-6.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "drinking_fountain_color",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "patio_umbrella_color",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "picnic_table_color",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "bike_dock_color",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    }
+   ],
+   "lite": false,
+   "canvas": [
+    589,
+    988
+   ],
+   "pixelRatio": 1.5,
+   "post": "lite",
+   "downloadMB": 7.49,
+   "requests": 134,
+   "renderCpuMs": 59.509,
+   "load": 2.1,
+   "errors": []
+  },
+  {
+   "profile": "iphone15-port",
+   "cam": "follow",
+   "variant": "pbr lite",
+   "look": "pbr",
+   "medianMs": 799,
+   "p95Ms": 844,
+   "frames": 5,
+   "calls": 81,
+   "triangles": 272846,
+   "textures": 169,
+   "geometries": 88,
+   "textureMB": 328.5,
+   "textureTop": [
+    {
+     "name": "street-signs--1,-1.map",
+     "width": 1024,
+     "height": 4096,
+     "depth": 1,
+     "bytes": 22369621
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "mural--1,-6.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-walker_sundress.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-elder_polo.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-jogger.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-dog_walker.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    }
+   ],
+   "lite": true,
+   "canvas": [
+    589,
+    988
+   ],
+   "pixelRatio": 1.5,
+   "post": "lite",
+   "downloadMB": 14.16,
+   "requests": 207,
+   "renderCpuMs": 38.818,
+   "load": 2.3,
+   "errors": []
+  },
+  {
+   "profile": "iphone15-port",
+   "cam": "follow",
+   "variant": "meanOrm",
+   "look": "pbr",
+   "medianMs": 787,
+   "p95Ms": 794,
+   "frames": 5,
+   "calls": 81,
+   "triangles": 272846,
+   "textures": 168,
+   "geometries": 88,
+   "textureMB": 328.5,
+   "textureTop": [
+    {
+     "name": "street-signs--1,-1.map",
+     "width": 1024,
+     "height": 4096,
+     "depth": 1,
+     "bytes": 22369621
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "mural--1,-6.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-walker_sundress.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-elder_polo.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-jogger.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-dog_walker.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    }
+   ],
+   "lite": true,
+   "canvas": [
+    589,
+    988
+   ],
+   "pixelRatio": 1.5,
+   "post": "lite",
+   "downloadMB": 14.02,
+   "requests": 206,
+   "renderCpuMs": 30.298,
+   "load": 3.7,
+   "errors": []
+  },
+  {
+   "profile": "iphone15-port",
+   "cam": "follow",
+   "variant": "oneAlbedo",
+   "look": "pbr",
+   "medianMs": 674,
+   "p95Ms": 712,
+   "frames": 5,
+   "calls": 80,
+   "triangles": 300261,
+   "textures": 170,
+   "geometries": 86,
+   "textureMB": 336.5,
+   "textureTop": [
+    {
+     "name": "street-signs--1,-1.map",
+     "width": 1024,
+     "height": 4096,
+     "depth": 1,
+     "bytes": 22369621
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "mural--1,-6.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-walker_sundress.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-elder_polo.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-jogger.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-dog_walker.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    }
+   ],
+   "lite": true,
+   "canvas": [
+    589,
+    988
+   ],
+   "pixelRatio": 1.5,
+   "post": "lite",
+   "downloadMB": 14.16,
+   "requests": 207,
+   "renderCpuMs": 28.157,
+   "load": 3.7,
+   "errors": []
+  },
+  {
+   "profile": "iphone15-port",
+   "cam": "follow",
+   "variant": "flatLawn",
+   "look": "pbr",
+   "medianMs": 781,
+   "p95Ms": 886,
+   "frames": 5,
+   "calls": 83,
+   "triangles": 268539,
+   "textures": 172,
+   "geometries": 91,
+   "textureMB": 328.5,
+   "textureTop": [
+    {
+     "name": "street-signs--1,-1.map",
+     "width": 1024,
+     "height": 4096,
+     "depth": 1,
+     "bytes": 22369621
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "mural--1,-6.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-walker_sundress.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-elder_polo.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-jogger.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-dog_walker.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    }
+   ],
+   "lite": true,
+   "canvas": [
+    589,
+    988
+   ],
+   "pixelRatio": 1.5,
+   "post": "lite",
+   "downloadMB": 14.16,
+   "requests": 207,
+   "renderCpuMs": 30.756,
+   "load": 4.2,
+   "errors": []
+  },
+  {
+   "profile": "iphone15-port",
+   "cam": "follow",
+   "variant": "all three",
+   "look": "pbr",
+   "medianMs": 635,
+   "p95Ms": 710,
+   "frames": 5,
+   "calls": 80,
+   "triangles": 300261,
+   "textures": 169,
+   "geometries": 86,
+   "textureMB": 336.5,
+   "textureTop": [
+    {
+     "name": "street-signs--1,-1.map",
+     "width": 1024,
+     "height": 4096,
+     "depth": 1,
+     "bytes": 22369621
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "PMREM.cubeUv",
+     "width": 768,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 6291456
+    },
+    {
+     "name": "mural--1,-6.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-walker_sundress.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-elder_polo.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-jogger.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    },
+    {
+     "name": "ped-crowd-dog_walker.map",
+     "width": 1024,
+     "height": 1024,
+     "depth": 1,
+     "bytes": 5592405
+    }
+   ],
+   "lite": true,
+   "canvas": [
+    589,
+    988
+   ],
+   "pixelRatio": 1.5,
+   "post": "lite",
+   "downloadMB": 14.02,
+   "requests": 206,
+   "renderCpuMs": 28.337,
+   "load": 4,
+   "errors": []
+  }
+ ]
+}

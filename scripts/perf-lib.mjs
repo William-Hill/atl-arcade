@@ -80,11 +80,19 @@ export const METRICS = {
   p95Ms: (r) => r.frame.p95Ms,
   firstFrameMs: (r) => r.firstFrameMs,
   firstDownloadMB: (r) => r.firstDownloadMB ?? firstFrameMB(r.files, r.firstFrameMs),
+  // The estimate of the GPU texture memory (src/perf/texture-memory.js, #246).
+  textureMB: (r) => r.textureMB ?? null,
 };
 
 // Pure: the list of "tier/look metric value > cap" lines. The budget is
 // { tiers: { low: { calls: 60, ... }, "phone/pbr": { ... } } }. A "tier/look"
 // entry adds to (and overrides) the caps of its tier.
+//
+// A "vsToon" entry in a "tier/look" block caps a metric as a ratio to the
+// toon run of the same tier in the same pass (#246: pbr lite on the phone
+// tier): { "vsToon": { "calls": 1.25 } } fails when the look draws more than
+// 1.25 times the toon calls. With no toon run of that tier and pass, the
+// ratio caps fail too: a check that cannot compare must not pass.
 export function checkBudget(runs, budget) {
   const over = [];
   for (const r of runs) {
@@ -95,8 +103,43 @@ export function checkBudget(runs, budget) {
       const v = get(r);
       if (v != null && v > cap) over.push(`${r.quality}/${r.look} ${name} ${v} > ${cap}`);
     }
+    const ratios = caps.vsToon;
+    if (!ratios || r.look === "toon") continue;
+    const toon = runs.find((t) => t.quality === r.quality && t.look === "toon" && (t.run ?? 0) === (r.run ?? 0));
+    if (!toon) {
+      over.push(`${r.quality}/${r.look} vsToon: no ${r.quality}/toon run to compare with (run both looks)`);
+      continue;
+    }
+    for (const [name, cap] of Object.entries(ratios)) {
+      const get = METRICS[name];
+      if (!get) continue;
+      const v = get(r);
+      const base = get(toon);
+      if (v == null || base == null || !(base > 0)) {
+        over.push(`${r.quality}/${r.look} vsToon ${name}: no value (${v} against toon ${base})`);
+        continue;
+      }
+      const ratio = Math.round((v / base) * 100) / 100;
+      if (ratio > cap) over.push(`${r.quality}/${r.look} ${name} ${v} is ${ratio}x toon (${base}) > ${cap}x`);
+    }
   }
   return over;
+}
+
+// Pure: the ratio of each vsToon metric of a run to its toon run, for the log.
+export function toonRatios(runs, budget) {
+  const out = [];
+  for (const r of runs) {
+    const ratios = budget.tiers?.[`${r.quality}/${r.look}`]?.vsToon;
+    const toon = runs.find((t) => t.quality === r.quality && t.look === "toon" && (t.run ?? 0) === (r.run ?? 0));
+    if (!ratios || !toon || r.look === "toon") continue;
+    for (const [name, cap] of Object.entries(ratios)) {
+      const v = METRICS[name]?.(r);
+      const base = METRICS[name]?.(toon);
+      if (v != null && base > 0) out.push({ run: `${r.quality}/${r.look}`, metric: name, value: v, toon: base, ratio: Math.round((v / base) * 100) / 100, cap });
+    }
+  }
+  return out;
 }
 
 const SYSTEM_ORDER = ["render", "skater", "walkers", "walkersView", "crowd", "crowdView", "traffic", "trafficView", "npcSkaters", "npcSkatersView", "views"];

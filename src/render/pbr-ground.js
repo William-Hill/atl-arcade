@@ -125,6 +125,16 @@ export function groundAlbedo(kind) {
 // change at skating height (#191).
 export const GROUND_ANISOTROPY = { high: 8, small: 2 };
 
+// Cuts of the ground shader for pbr lite (#246), each a shader define:
+// - "oneAlbedo": no second, larger albedo sample against the tile repeat.
+//   On the phone tier that sample was about 16 % of the frame in the play
+//   view (docs/perf/246/README.md), and the frames with and without it
+//   look the same at skating height.
+// Tried and not kept (each under 3 %, inside the noise): the mean roughness
+// and AO in place of the ORM sample, and a lawn with no slow value and hue
+// change.
+export const GROUND_CUTS = { oneAlbedo: "GROUND_ONE_ALBEDO" };
+
 // Returns the uniform and a function that starts the download (#190: the
 // caller decides when).
 function loadArray(url, fill, { srgb = false, onLoad, anisotropy = 8 } = {}) {
@@ -177,15 +187,20 @@ const srgb8 = (v) => Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math
 // surface. `tier` is "high" or "small". `defer(load)` starts the map
 // downloads (late-load.js run()); by default they start at once. Until the
 // maps load, each layer has the mean color of its scan.
-export function createPbrSurfaceMaterial({ tier = "high", defer = (load) => load() } = {}) {
+// `anisotropy` overrides the tier's GROUND_ANISOTROPY (an A/B check).
+// `cuts` (pbr lite, #246) is a list of GROUND_CUTS names.
+export function createPbrSurfaceMaterial({ tier = "high", defer = (load) => load(), anisotropy: anisotropyOption = null, cuts = [] } = {}) {
   const mat = litMaterial("pbr", { vertexColors: true }, { roughness: ROUGHNESS.ground, envLight: ENV_LIGHT.ground });
   mat.color.setScalar(GROUND_COLOR_SCALE);
   const files = groundFiles(tier);
   const sets = groundSets.sets;
   const normal = Boolean(files.normal);
   mat.defines = normal ? { GROUND_NORMAL: 1 } : {};
+  // Own keys only: the names can come from the address (?groundcuts).
+  const defines = cuts.filter((c) => Object.hasOwn(GROUND_CUTS, c)).map((c) => GROUND_CUTS[c]);
+  for (const d of defines) mat.defines[d] = 1;
   const kinds = Object.keys(PBR_GROUND_OF);
-  const anisotropy = GROUND_ANISOTROPY[tier] ?? 8;
+  const anisotropy = anisotropyOption ?? GROUND_ANISOTROPY[tier] ?? 8;
   const [albedo, loadAlbedo] = loadArray(URLS[files.albedo], sets.map((s) => [...s.meanLinear.map(srgb8), 255]), { srgb: true, anisotropy });
   const [orm, loadOrm] = loadArray(URLS[files.orm], sets.map((s) => [Math.round(s.aoMean * 255), Math.round(s.roughMean * 255), 0, 255]), { anisotropy });
   const [normalMap, loadNormal] = normal ? loadArray(URLS[files.normal], sets.map(() => [128, 128, 255, 255]), { anisotropy }) : [null, null];
@@ -312,7 +327,11 @@ ${DETAIL_GLSL}`,
     // A second, rotated, larger sample breaks the tile repeat.
     mat2 rot = mat2(0.8, -0.6, 0.6, 0.8);
     float big = 1.0 / 4.7;
+#ifdef GROUND_ONE_ALBEDO
+    vec3 b = vec3(1.0);
+#else
     vec3 b = textureGrad(uGroundAlbedo, vec3(rot * groundUv * big, L), rot * groundDx * big, rot * groundDy * big).rgb / mean;
+#endif
     vec3 det = clamp(a * mix(vec3(1.0), b, 0.45), 0.3, 2.5);
     float fade = 1.0 - smoothstep(90.0, 280.0, length(vViewPosition));
     // The scans are sampled in world x and z, so a vertical face (a curb
@@ -392,6 +411,6 @@ if (groundSet >= 0) {
 }`,
       );
   };
-  mat.customProgramCacheKey = () => `surface-pbr-ground-v2-${tier}`;
+  mat.customProgramCacheKey = () => `surface-pbr-ground-v2-${tier}-${defines.join("+")}`;
   return mat;
 }

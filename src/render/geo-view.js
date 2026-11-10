@@ -1046,6 +1046,10 @@ if (distance(vColor.rgb, vec3(${LAMP_GLOBE.color.join(", ")})) < 0.02) totalEmis
 // `season` sets the tree colors: "spring", "summer" (the default), or "fall".
 // `look` picks the material set ("toon" or "pbr", src/render/look.js).
 // `leafCut`: "baked" or "procedural" (leaf-cut.js leafCutFor()).
+// `leafCards` (pbr look): true keeps the Blender trees with their leaf cards;
+// `smallMurals` (pbr look): the 1024 px painted mural atlas (pbr lite).
+// `leafCards` a number draws the procedural trees with that many cards on each crown
+// puff and no Blender tree (pbr lite, #246), and 0 gives them no cards.
 // `kitGlb`: the loaded Blender facade kit nodes (facade-kit-view.js
 // loadFacadeKit()) or null. The pbr look puts them in the depth tiles, and the
 // procedural kit leaves out what they replace; without them (a failed load)
@@ -1055,7 +1059,7 @@ if (distance(vColor.rgb, vec3(${LAMP_GLOBE.color.join(", ")})) < 0.02) totalEmis
 // The build options of the far surface tiles (the low tier).
 export const FAR_TERRAIN_BUILD = { terrainStep: 2, surfacesOnly: true };
 
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null, leafCoverage = false, leafCut = "procedural", defer = {} } = {}) {
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, farTerrainDistance = FAR_TERRAIN_DISTANCE, trees = true, wind = true, season = "summer", look = "toon", kitGlb = null, pbrGround = true, farMeshes = null, leafCoverage = false, leafCut = "procedural", leafCards = true, smallMurals = false, groundAnisotropy = null, groundCuts = [], defer = {} } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -1063,18 +1067,19 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   const materials = {
     // The pbr look gets the PBR ground sets on every tier (#158): the full
     // maps with groundDetail, the small ones (no normal map) without.
-    surface: look === "pbr" && pbrGround ? createPbrSurfaceMaterial({ tier: groundDetail ? "high" : "small", defer: defer.ground }) : createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null, look }),
+    surface: look === "pbr" && pbrGround ? createPbrSurfaceMaterial({ tier: groundDetail ? "high" : "small", defer: defer.ground, anisotropy: groundAnisotropy, cuts: groundCuts }) : createSurfaceMaterial(gradientMap, { maps: groundDetail ? loadGroundMaps() : null, look }),
     building: createFacadeMaterial(gradientMap, { brickMap: loadBrickMap(), interiors, look, detailMaps: look === "pbr" ? loadWallDetail() : null }),
     props: null,
     get mural() {
       // The pbr look: the painted atlas, its roughness, and the dry-brush
       // cut that shows the host wall (murals.js, #198).
-      if (!muralMap) muralMap = look === "pbr" ? createMuralMaterial(look, litMaterial, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural }, { defer: defer.murals }) : litMaterial(look, { map: createMuralAtlas() }, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural });
+      if (!muralMap) muralMap = look === "pbr" ? createMuralMaterial(look, litMaterial, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural }, { defer: defer.murals, small: smallMurals }) : litMaterial(look, { map: createMuralAtlas() }, { gradientMap, roughness: ROUGHNESS.mural, envLight: ENV_LIGHT.mural });
       return muralMap;
     },
   };
   // The leaf cards on the trees come with the pbr look (look.js).
-  const leaves = trees && look === "pbr";
+  const lightTrees = typeof leafCards === "number";
+  const leaves = trees && look === "pbr" && leafCards !== false && leafCards !== 0;
   const propMaterial = createPropMaterial({ wind, look, leaves, coverage: leafCoverage });
   materials.props = propMaterial.material;
   const byId = new Map();
@@ -1170,7 +1175,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     // The procedural trees take the place of the two kit trees.
     // The GLB trees take the place of the procedural ones in the pbr look,
     // in the colors of the season.
-    const glb = leaves ? glbTreeTemplates(templates, season) : {};
+    const glb = leaves && !lightTrees ? glbTreeTemplates(templates, season) : {};
     let far = {};
     if (renderer && impostors && Object.keys(glb).length) {
       const t0 = performance.now();
@@ -1191,7 +1196,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
       treeCost.leafCut = "baked";
       propMaterial.material.userData.leafBaked = true;
     }
-    const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves }), ...glb, ...far } : templates;
+    const all = trees ? { ...templates, ...treeTemplates({ season, cards: leaves ? leafCards : false }), ...glb, ...far } : templates;
     const glbKinds = new Set(Object.keys(glb));
     // Each GLB tree gets its own turn when the data gives none.
     const placed = (trees ? withProceduralTrees(placements) : placements).map((p) => (glbKinds.has(p.kind) && !p.yaw ? { ...p, yaw: Math.round(unitHash(p.x * 3.7 + p.z * 0.29) * 6283) / 1000 } : p));

@@ -19,7 +19,8 @@ import { isoTilesFor } from "./ui/iso-tiles.js";
 import { travelSpot, landingProbe } from "./level/geo/travel.js";
 import { ISO, isoBasis, isoCameraPose, levelIsoGrid, tileCenter } from "./level/geo/iso-map.js";
 import { mapLandmarks } from "./ui/minimap-math.js";
-import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
+import { createScreenControls } from "./ui/screen-controls.js";
+import { createSkaterSelect, createSkaterSwitch, resolveSkater, skaterUrl } from "./ui/skater-select.js";
 import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
 import { beatClockOptions, trackChoices, writeChoice } from "./audio/music-tracks.js";
@@ -530,15 +531,55 @@ if (geo && !tier.shadows) {
 // skater (src/ui/skater-select.js), and ?skater=capsule keeps the capsule.
 // The skater gets the toon look (src/render/toon.js); ?toon=0 keeps the GLB
 // materials.
-createSkaterSelect(document.body, skaterName);
-const skaterModel = { name: skaterName, loaded: false, error: null };
-if (skaterName !== "capsule") {
-  loadSkaterModel(skaterName, skaterBytes)
-    .then((loaded) => {
-      loader.step("skater");
+const skaterModel = { name: skaterName, loaded: false, error: null, swaps: 0 };
+// One load for each skater, with its look applied. A switch back reuses it.
+const skaterLoads = new Map();
+function skaterLoad(name) {
+  if (!skaterLoads.has(name)) {
+    // A phone keeps the 1024 px skater after a switch too (#74).
+    const bytes = name === skaterName ? skaterBytes : fetchSkaterModel(name, null, { small: smallSkater });
+    const p = loadSkaterModel(name, bytes).then((loaded) => {
       // The look picks the skater's materials: toon swap + ink hull, or the
       // pbr env-lit standard materials. ?toon=0 keeps the raw GLB shading.
       if (params.get("toon") !== "0") (look === "pbr" ? pbrSkater : toonSkater)(loaded);
+      return loaded;
+    });
+    p.catch(() => skaterLoads.delete(name));
+    skaterLoads.set(name, p);
+  }
+  return skaterLoads.get(name);
+}
+// True when the run state exists (below), so a switch can pose the new model.
+let runReady = false;
+// The skater select switches the skater in place (#97, MOB-13): the run,
+// the score and the place stay. The skate constants and the dances follow
+// the new skater, as after a reload.
+const skaterSwitch = createSkaterSwitch({
+  current: skaterName,
+  load: skaterLoad,
+  apply: (name, loaded) => {
+    skaterView.attachModel(loaded);
+    skaterEnv.skater = name;
+    skaterEnv.skate = skateFor(bodyFor(name));
+    if (runReady) skaterView.respawn(skater);
+    skaterModel.name = name;
+    skaterModel.loaded = true;
+    skaterModel.error = null;
+    skaterModel.swaps += 1;
+    history.replaceState(history.state, "", skaterUrl(window.location.href, name));
+  },
+  onError: (name, err) => {
+    skaterModel.error = String(err);
+    console.error(err);
+  },
+});
+createSkaterSelect(document.body, skaterName, { onSelect: (name) => skaterSwitch.select(name) });
+if (skaterName !== "capsule") {
+  skaterLoad(skaterName)
+    .then((loaded) => {
+      loader.step("skater");
+      // A switch that applied first keeps its skater.
+      if (skaterModel.swaps > 0) return;
       skaterView.attachModel(loaded);
       skaterModel.loaded = true;
     })
@@ -642,6 +683,9 @@ const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? create
 // bursts from the controller flags. Emissive overlays: no material or grade
 // change. Off on the low tier, with prefers-reduced-motion, and with ?fx=0.
 const effects = createEffects({ scene, camera, renderer, tier: quality, anchors: geo ? districtAnchors(level) : [], off: params.get("fx") === "0" });
+// The reduced-motion choice of the settings menu (#97) wins over the media query.
+const motionChoice = (s) => (typeof s.reduceMotion === "boolean" ? s.reduceMotion : null);
+effects.setReducedMotion(motionChoice(savedSettings));
 // ?perf=1: the draw calls of each frame by pass and object kind (#188).
 const drawSplit = perf.enabled ? createDrawSplit(renderer) : null;
 function labelPostPasses() {
@@ -704,10 +748,13 @@ const touch = wantsTouch(params.get("touch"), { maxTouchPoints: navigator.maxTou
   ? createTouchInput({ parent: document.body })
   : null;
 if (touch) document.body.classList.add("touch");
+// The fullscreen button and the "turn your phone" hint (#97), touch only.
+createScreenControls({ touch: Boolean(touch), after: firstFrame });
 const input = createInput({ target: window, touch });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
-const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence });
+runReady = true;
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion });
 // Goals, the run timer, and the results screen (M1-05). The goal list is
 // data per level (src/level/goals.js). ?run=free turns the timer off.
 const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
@@ -920,6 +967,8 @@ const settingsMenu = createSettingsMenu({
   post: () => ({ kind: post ? post.kind : null, look }),
   onSave: (s) => writeSettings(settingsStorage, s),
   onLive: (s) => setPostToggles(post, s),
+  onMotion: (s) => effects.setReducedMotion(motionChoice(s)),
+  deviceMotion: () => effects.deviceReducedMotion,
   reload: (keys, carry) => window.location.assign(reloadHref(window.location.href, keys, carry)),
   canOpen: () => !photo.isOpen && !fullmap?.isOpen,
   onChange: () => input.reset(),
@@ -1532,6 +1581,17 @@ window.__atl = {
     },
     get error() {
       return skaterModel.error;
+    },
+    // The skater that loads for a switch, or null; the count of switches.
+    get pending() {
+      return skaterSwitch.pending;
+    },
+    get swaps() {
+      return skaterModel.swaps;
+    },
+    // The skate constants that run now (they follow the skater).
+    get skate() {
+      return skaterEnv.skate;
     },
     get clip() {
       return skaterView.clip;

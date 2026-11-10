@@ -63,6 +63,26 @@ describe("watchReducedMotion", () => {
     fx.dispose();
     expect(win.listeners.size).toBe(0);
   });
+
+  it("the player's choice wins over the media query, and null follows it again (#97)", () => {
+    const win = fakeWindow(true);
+    const fx = createEffects({ tier: "high", win });
+    expect(fx.policy.enabled).toBe(false);
+    fx.setReducedMotion(false);
+    expect(fx.reducedMotion).toBe(false);
+    expect(fx.deviceReducedMotion).toBe(true);
+    expect(fx.policy.enabled).toBe(true);
+    win.flip(false);
+    win.flip(true);
+    expect(fx.reducedMotion).toBe(false);
+    fx.setReducedMotion(true);
+    expect(fx.policy.enabled).toBe(false);
+    fx.setReducedMotion(null);
+    win.flip(false);
+    expect(fx.reducedMotion).toBe(false);
+    expect(fx.policy.enabled).toBe(true);
+    fx.dispose();
+  });
 });
 
 describe("screen anchor", () => {

@@ -3,7 +3,9 @@ import {
   DEFAULT_SETTINGS,
   SETTINGS_KEY,
   choiceFrom,
+  effectiveReducedMotion,
   effectiveSettings,
+  reduceMotionChoice,
   liveToggles,
   normalizeSettings,
   paramFor,
@@ -43,7 +45,7 @@ describe("normalizeSettings", () => {
   });
 
   it("keeps good values and clamps the walker count", () => {
-    expect(normalizeSettings({ quality: "phone", look: "pbr", peds: 50, shadows: false, ink: false, bloom: false })).toEqual({ quality: "phone", look: "pbr", peds: 50, shadows: false, ink: false, bloom: false });
+    expect(normalizeSettings({ quality: "phone", look: "pbr", peds: 50, shadows: false, ink: false, bloom: false, reduceMotion: true })).toEqual({ quality: "phone", look: "pbr", peds: 50, shadows: false, ink: false, bloom: false, reduceMotion: true });
     expect(normalizeSettings({ peds: "999" }).peds).toBe(400);
     expect(normalizeSettings({ peds: -3 }).peds).toBe(0);
     expect(normalizeSettings({ peds: "0" }).peds).toBe(0);
@@ -156,5 +158,29 @@ describe("liveToggles", () => {
     expect(liveToggles("full", "pbr")).toEqual({ ink: false, bloom: true });
     expect(liveToggles("lite", "toon")).toEqual({ ink: true, bloom: false });
     expect(liveToggles(null, "toon")).toEqual({ ink: false, bloom: false });
+  });
+});
+
+describe("the reduced-motion option (#97)", () => {
+  it("starts from the device and keeps a saved choice", () => {
+    expect(normalizeSettings({}).reduceMotion).toBe("auto");
+    expect(normalizeSettings({ reduceMotion: "yes" }).reduceMotion).toBe("auto");
+    expect(normalizeSettings({ reduceMotion: false }).reduceMotion).toBe(false);
+    expect(effectiveReducedMotion("auto", true)).toBe(true);
+    expect(effectiveReducedMotion("auto", false)).toBe(false);
+    expect(effectiveReducedMotion(false, true)).toBe(false);
+    expect(effectiveReducedMotion(true, false)).toBe(true);
+  });
+
+  it("saves auto when the box agrees with the device", () => {
+    expect(reduceMotionChoice(true, true)).toBe("auto");
+    expect(reduceMotionChoice(false, false)).toBe("auto");
+    expect(reduceMotionChoice(false, true)).toBe(false);
+    expect(reduceMotionChoice(true, false)).toBe(true);
+  });
+
+  it("is a live setting, not a reload setting", () => {
+    expect(sourcesOf(new URLSearchParams(""), normalizeSettings({ reduceMotion: true })).reduceMotion).toBe("saved");
+    expect(reloadKeys(effectiveSettings(DEFAULT_SETTINGS, "high"), effectiveSettings({ ...DEFAULT_SETTINGS, reduceMotion: true }, "high"))).toEqual([]);
   });
 });

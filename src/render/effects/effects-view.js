@@ -205,12 +205,18 @@ export function watchReducedMotion(win = globalThis.window, onChange = () => {})
 // anchors (styles.js districtAnchors()) for the accent color, `off` is
 // ?fx=0. `win` is the window for the reduced-motion query.
 export function createEffects({ scene, camera, renderer, tier, anchors = [], off = false, win = globalThis.window } = {}) {
+  // `device` is the media query; `override` is the player's choice in the
+  // settings menu (#97), or null to follow the device.
+  let device = false;
+  let override = null;
   let reduced = false;
   const watch = watchReducedMotion(win, (r) => {
-    reduced = r;
+    device = r;
+    reduced = override ?? device;
     applyPolicy();
   });
-  reduced = watch.reduced;
+  device = watch.reduced;
+  reduced = device;
 
   let policy = effectsPolicy(tier, { reducedMotion: reduced, off });
   let fx = createFx();
@@ -358,6 +364,16 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
     },
     get reducedMotion() {
       return reduced;
+    },
+    // The prefers-reduced-motion media query now.
+    get deviceReducedMotion() {
+      return device;
+    },
+    // The player's choice (#97): true or false, or null to follow the device.
+    setReducedMotion(value) {
+      override = typeof value === "boolean" ? value : null;
+      reduced = override ?? device;
+      applyPolicy();
     },
     // The district accent at (x, z), linear and scaled to the body emissive.
     accentAt,

@@ -18,6 +18,8 @@ Branch `claude/246-pbr-lite-phone` from `epic/city-look`; no PR yet (the owner a
 | Governor step to toon | `src/render/governor.js`, `src/render/look-down.js`, `src/ui/hud.js` | Vitest; Playwright: a 1 ms budget reloads pbr lite into toon and shows the HUD line once |
 | Frame-time readout | `?fps=1`, `src/perf/frame-readout.js` | Vitest; Playwright screenshot |
 
+#246 tests, cloud container: `npm test` 1587 of 1589 pass (the 2 failures are the known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`). Playwright `pbr-lite`, `phone-tier`, `settings`, `late-load`, `leaf-cut`: 18 pass (the 5 `ground-pbr` tests skip themselves). The full e2e suite did not run. On the phone tier, `leaf-cut.spec.js` with `look=pbr` now draws the pbr lite trees.
+
 #246 NOT verified: the frame time on a real phone. This machine has no GPU; every frame time is SwiftShader and only compares looks. The #246 acceptance (a real mid-range phone under the #24 target) is open; the owner's steps are at the end of `docs/perf/246/README.md`. No person looked at pbr lite on a phone screen. Not done: 512 px textures for the Meshy people. The audit file `mobile-pbr/FINDINGS.md` is not on this branch.
 
 ## #107 animation code, 2026-11-06

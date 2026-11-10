@@ -169,7 +169,7 @@ body.touch #shell-info { display: none; }
 .touch-stick-base {
   position: absolute;
   /* The rest position hints where the stick is. A touch moves it. */
-  left: calc(96px + env(safe-area-inset-left));
+  left: calc(88px + env(safe-area-inset-left));
   top: calc(100% - 112px - env(safe-area-inset-bottom));
   width: 128px;
   height: 128px;
@@ -210,6 +210,7 @@ body.touch #shell-info { display: none; }
   font: 700 13px/1 system-ui, sans-serif;
   letter-spacing: 0.04em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  padding: 0;
   pointer-events: auto;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
@@ -217,11 +218,16 @@ body.touch #shell-info { display: none; }
 /* A held button also gets smaller, so the state does not show by color only. */
 .touch-btn[data-down="1"] { background: rgba(255, 95, 178, 0.75); border-color: #fff; transform: scale(0.92); }
 
-/* A thumb arc: JUMP is the biggest and nearest the corner. */
+/* A thumb arc: JUMP is the biggest and nearest the corner. The top row
+   (SPIN, GROOVE, SWITCH) ends 162 px above the pad bottom, under the
+   landscape minimap (184 px). SWITCH ends 190 px from the pad right edge, so
+   on a 360 px screen it stays clear of the stick base (#65 re-run). Each
+   label has 4 px or more of space to the inner edge of its circle. */
 .touch-jump { right: 0; bottom: 0; width: 88px; height: 88px; font-size: 15px; }
 .touch-grind { right: 100px; bottom: 4px; width: 76px; height: 76px; }
-.touch-style1 { right: 92px; bottom: 96px; width: 64px; height: 64px; font-size: 11px; }
-.touch-style2 { right: 8px; bottom: 104px; width: 64px; height: 64px; font-size: 12px; }
+.touch-style1 { right: 66px; bottom: 98px; width: 64px; height: 64px; font-size: 11px; letter-spacing: 0.02em; }
+.touch-style2 { right: 0; bottom: 100px; width: 62px; height: 62px; font-size: 12px; }
+.touch-switch { right: 134px; bottom: 90px; width: 56px; height: 56px; font-size: 10px; letter-spacing: 0; }
 
 
 /* The minimap (#86, src/ui/minimap.js). A desktop shows it in the bottom

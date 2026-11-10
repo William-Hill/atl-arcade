@@ -2097,3 +2097,17 @@ The walkers (`src/sim/peds.js`) did a walk and a short stop near a shop. Now the
 **Exception.** AGENTS.md blocks GLB files over 10 MB. Marcus's `.blend` is 12.5 MB. The owner accepted it on 2026-11-09: it is a source file, the browser never downloads it, and a smaller texture would make the source worse than the shipped skater.
 
 **Evidence.** In Blender 5.2.2, both files have 0 external images, 0 missing files and 0 libraries. `skater_anim_v3.py --name nia --source assets/skaters/nia/source/nia-forward.blend` ran to exit 0 (5 clips, knee residual 0.0 degrees).
+
+## 2026-11-10 — Mobile audit re-run on the city look, and a SWITCH button for touch
+
+**Problem.** The mobile audit #65 ran before the pbr look, the phone tier, the late loads (#190), the edge fence (#229), game feel (#105), more walkers (#133) and the camera swing (#243). A touch player could not skate backward: `mapTouch()` always gave `switch: false`, and the touch overlay had no button for it. A button tap that started and ended between two input samples was lost.
+
+**Decision.**
+- The audit runs again with the #65 method on four profiles (iPhone 15 portrait and landscape, Pixel 7, 360x640), on the phone tier, in both looks. The report is `production/audits/2026-11-playability/mobile-pbr/FINDINGS.md`. The frame times are from SwiftShader and compare the runs only; they are not phone numbers.
+- The touch overlay gets a fifth button, SWITCH (56 px). It is in the top row of the thumb arc with GROOVE and SPIN. The stick base rest place moves 8 px to the left, so SWITCH stays clear of it on a 360 px screen. Each label has 4 px or more of space inside its circle.
+- `createButtonState()` in `src/input/touch-map.js` keeps the touch buttons per pointer, and keeps a press for one input sample after a short tap.
+- New P1 findings go to #245 (the PHOTO and SETTINGS buttons cover the skater buttons in portrait) and #246 (the pbr look on the phone tier). The other open items stay with #97 and #74.
+
+**Evidence.** `src/input/touch-map.test.js` (SWITCH, the button list, the tap latch). `e2e/touch.spec.js` on iPhone 15 and Pixel 7: SWITCH turns the skater backward and forward again, a held SWITCH does not flip her twice, every label fits its circle. The audit touch run: every touch action works in toon on the four profiles (`touch.json`). `e2e/phone-layout.spec.js` "landscape › no item overlaps" fails on `balance x stick` on the base branch and on this branch (MOB2-5).
+
+**Open.** No person played it on a real phone. Real skaters did not review the SWITCH place. CDP lifts one finger of two only when the last finger lifts, so a button tap while the stick is held was not tested.

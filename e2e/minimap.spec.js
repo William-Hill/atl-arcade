@@ -105,6 +105,7 @@ for (const size of [
           ["grind", ".touch-grind"],
           ["groove", ".touch-style1"],
           ["spin", ".touch-style2"],
+          ["switch", ".touch-switch"],
           ["hud", "#hud-score"],
           ["style", ".hud-style"],
           ["pulse", "#hud-pulse"],

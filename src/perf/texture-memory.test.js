@@ -45,4 +45,24 @@ describe("sceneTextureMemory", () => {
     expect(m.bytes).toBe(4 * 256 * 256 + 4 * 128 * 128);
     expect(m.top[0]).toMatchObject({ width: 256, height: 256 });
   });
+
+  it("counts the textures a material gets in onBeforeCompile", () => {
+    const tex = (n) => new THREE.DataTexture(new Uint8Array(4 * n * n), n, n);
+    const [albedo, orm, detail, list0, list1, own] = [64, 32, 16, 8, 4, 2].map(tex);
+    const scene = new THREE.Scene();
+    const geo = new THREE.BufferGeometry();
+    // An accessor in userData, as createPbrSurfaceMaterial() has.
+    const ground = new THREE.MeshStandardMaterial();
+    ground.userData.groundTextures = () => [albedo, orm];
+    ground.userData.other = () => [own]; // Not a "...Textures" name: not called.
+    // The uniforms of the compiled shader, as three.js keeps them.
+    const facade = new THREE.MeshStandardMaterial();
+    const compiled = new Map([[facade, { uniforms: { uDetail: { value: detail }, uList: { value: [list0, list1] }, uTime: { value: 1 } } }]]);
+    const renderer = { properties: { has: (m) => compiled.has(m), get: (m) => compiled.get(m) } };
+    scene.add(new THREE.Mesh(geo, ground), new THREE.Mesh(geo, facade), new THREE.Mesh(geo, ground));
+    expect(sceneTextureMemory(scene).count).toBe(2);
+    const m = sceneTextureMemory(scene, [], renderer);
+    expect(m.count).toBe(5);
+    expect(m.bytes).toBe(4 * (64 * 64 + 32 * 32 + 16 * 16 + 8 * 8 + 4 * 4));
+  });
 });

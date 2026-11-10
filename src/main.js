@@ -1234,7 +1234,7 @@ window.__atl = {
   },
   // An estimate of the GPU memory of the scene's textures (src/perf/texture-memory.js).
   get textureMemory() {
-    return sceneTextureMemory(scene);
+    return sceneTextureMemory(scene, [], renderer);
   },
   // The day/season weather (src/render/weather-view.js): the kind, the
   // clock, the sun elevation, and the window/wet/rain factors. Null on the

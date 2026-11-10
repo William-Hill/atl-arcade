@@ -34,24 +34,53 @@ export function textureFacts(t) {
   };
 }
 
-// The textures of a scene: every texture in a material property or a
-// uniform of a drawn object, the scene environment and background, each
-// counted once. Returns { count, bytes, MB, top } (top: the 8 largest).
-export function sceneTextureMemory(scene, extra = []) {
+// The textures of a scene, each counted once: every texture in a material
+// property or a uniform of a drawn object, the scene environment and
+// background, and the textures a material gets in onBeforeCompile. Those
+// last ones are uniforms of the compiled shader, not of the material, so
+// they come from 2 places:
+// - `renderer` (optional): three.js keeps the uniforms of the compiled
+//   shader in renderer.properties.get(material).uniforms.
+// - material.userData: a texture, a list of textures, or a function with a
+//   name that ends in "Textures" and returns a list (pbr-ground.js
+//   `groundTextures`). This also counts a material that has not drawn yet.
+// Returns { count, bytes, MB, top } (top: the 8 largest).
+export function sceneTextureMemory(scene, extra = [], renderer = null) {
   const seen = new Map();
   const add = (t, where) => {
     if (!t?.isTexture || seen.has(t.uuid)) return;
     const f = textureFacts(t);
     seen.set(t.uuid, { name: t.name || where, width: f.width, height: f.height, depth: f.depth, bytes: textureBytes(f) });
   };
+  const addUniforms = (uniforms, where) => {
+    for (const [key, u] of Object.entries(uniforms ?? {})) {
+      for (const v of Array.isArray(u?.value) ? u.value : [u?.value]) add(v, `${where}.${key}`);
+    }
+  };
   add(scene.environment, "environment");
   add(scene.background, "background");
   for (const t of extra) add(t, "extra");
+  const done = new Set();
   scene.traverse((o) => {
     for (const m of [o.material, o.customDepthMaterial].flat()) {
-      if (!m) continue;
-      for (const [key, v] of Object.entries(m)) if (v?.isTexture) add(v, `${o.name || o.type}.${key}`);
-      for (const [key, u] of Object.entries(m.uniforms ?? {})) if (u?.value?.isTexture) add(u.value, `${o.name || o.type}.${key}`);
+      if (!m || done.has(m)) continue;
+      done.add(m);
+      const where = o.name || o.type;
+      for (const [key, v] of Object.entries(m)) if (v?.isTexture) add(v, `${where}.${key}`);
+      addUniforms(m.uniforms, where);
+      if (renderer?.properties?.has?.(m)) addUniforms(renderer.properties.get(m).uniforms, where);
+      for (const [key, v] of Object.entries(m.userData ?? {})) {
+        let list = v;
+        if (typeof v === "function") {
+          if (!key.endsWith("Textures")) continue;
+          try {
+            list = v();
+          } catch {
+            continue;
+          }
+        }
+        for (const t of Array.isArray(list) ? list : [list]) add(t, `${where}.${key}`);
+      }
     }
   });
   const list = [...seen.values()].sort((a, b) => b.bytes - a.bytes);

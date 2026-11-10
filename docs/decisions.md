@@ -2098,6 +2098,35 @@ The walkers (`src/sim/peds.js`) did a walk and a short stop near a shop. Now the
 
 **Evidence.** In Blender 5.2.2, both files have 0 external images, 0 missing files and 0 libraries. `skater_anim_v3.py --name nia --source assets/skaters/nia/source/nia-forward.blend` ran to exit 0 (5 clips, knee residual 0.0 degrees).
 
+## 2026-11-07: Landmark facts may cite public sources (landmark discovery GDD)
+
+The landmark discovery feature (`design/gdd/landmark-discovery.md`) needs history facts, for example the 1926 Sears, Roebuck building at Ponce City Market. The Atlanta open data catalog has numbers about parks, stations and neighborhoods, but it has no landmark history. The rule in `AGENTS.md` ("facts sourced from the open data catalog") changes for landmark story cards: a fact comes from the open data catalog or from a cited public source (National Register / NPS, City of Atlanta, Atlanta History Center, Georgia Encyclopedia, Atlanta BeltLine Inc., or the landmark's own site). Every fact keeps a source name and URL, and stays positive or neutral. Wikipedia is a pointer only, never the source. Fact cards (`levels/<level>/facts.json`) keep the catalog-only rule. Research: `docs/research/2026-11-07-eastside-landmarks.md`.
+
+## 2026-11-10: Landmark data file and validator (#216)
+
+### Decisions
+
+- `levels/beltline-eastside/landmarks.json` has 12 claim spots and 2 edge markers, not the 20 and 2 of the GDD (`design/gdd/landmark-discovery.md`). 8 spots are out:
+  - The 4 art spots: no written permission from an artist exists (`docs/permissions/` has no record).
+  - Historic Fourth Ward Skatepark: it ships after #222.
+  - Excelsior Mill: the sources are good, but the level has no building at 695 North Ave, so its position is not verified.
+  - Atlanta Art Park and Parque en el centro bonito: no accepted source has a fact about them.
+- Sources: the Historic Fourth Ward Park Conservancy (h4wpc.org) and the Freedom Park Conservancy (freedompark.org) count as primary sources, with the list of 2026-11-07 (the entry above, the same text as in #228). A spot can cite its own site when it names the host in `site`. The validator (`src/landmarks/validate.js`, `PRIMARY_HOSTS`, `POINTER_HOSTS`) rejects every other host.
+- Art in a fact: no card fact names a trail art piece or its artist until the credit of that piece is cleared. The first Ponce de Leon Avenue Bridge card named the Caddo bear sculpture; that fact is out.
+- Host list: `PRIMARY_HOSTS` holds only the hosts of the 2026-11-07 list and the 2 conservancies. A new host needs an entry here first.
+- Evidence: the sentence behind each fact is in `docs/research/2026-11-10-landmark-facts.md`, with the facts for the spots that are out.
+- Schema: `v`, `level`, `spots`. A spot has `id`, `kind`, `name`, `at`, `footprint` (`building` or `areas`, level ids), `find` (`edge`, or `r` with an optional `at`), `site`, `short`, `card`, `challenge`, and `credit` (art only). A challenge has `type`, `tier`, `hint`, and the values of its type: `zone` (gap, combo, grind), `landing` (hard gap), `goal` (the gap goal of `goals.json` at the same zone), `feature` and `meters` (grind), `checkpoints` and `seconds` (line), `points` (combo).
+- Find zones: Ponce City Market, Telephone Factory Lofts and New Realm Brewing use a circle on the trail (`find.r`), not the edge distance. The trail is 41 m, 21 m and 18 m from their outlines, and the edge distance stops at 12 m.
+- Challenges differ from the GDD tier map where the level has no feature: the tiers are 5 easy, 5 typical and 2 hard. Only 3 spots have a grind feature in reach (curb ledges at Krog Street, Ponce de Leon Avenue and Ralph McGill Boulevard). The Ralph McGill curb is on the street below the trail bridge.
+- Goals: the Freedom Parkway bridge spot has the zone of the goal `gap-freedom-parkway`. The goal `gap-stone-mountain` matches none of the 4 bridges of the GDD, so no spot has it.
+- Build: `npm run build` runs `npm run validate:landmarks` first (`prebuild`). An error stops the build.
+
+### Evidence and limits
+
+- Vitest: `src/landmarks/validate.test.js`, 17 tests (each rule on a small test level, and the real file).
+- Not verified: no person played a challenge, so no zone, rail or checkpoint is checked in the game. No person read the facts or opened the links. The outfit unlock counts of the GDD (7, 14, 20) do not fit 12 spots; with the GDD fractions they are 5, 9 and 12.
+- New Realm Brewing and Krog Street Market have 3 facts each from one Atlanta BeltLine page; the Stove Works year and products have no primary source yet.
+
 ## 2026-11-10 — Mobile audit re-run on the city look, and a SWITCH button for touch
 
 **Problem.** The mobile audit #65 ran before the pbr look, the phone tier, the late loads (#190), the edge fence (#229), game feel (#105), more walkers (#133) and the camera swing (#243). A touch player could not skate backward: `mapTouch()` always gave `switch: false`, and the touch overlay had no button for it. A button tap that started and ended between two input samples was lost.

@@ -42,9 +42,11 @@ export const LANDMARK_RULES = {
 // A fact needs a primary source (docs/decisions.md, 2026-11-07): the
 // National Register / National Park Service, the National Archives, the
 // City of Atlanta, the Atlanta History Center, the Atlanta Preservation
-// Center, the New Georgia Encyclopedia, or Atlanta BeltLine, Inc. A spot can
-// also cite its own site: it names that host in `site`.
-export const PRIMARY_HOSTS = ["nps.gov", "archives.gov", "atlantaga.gov", "atlantahistorycenter.com", "atlantapreservationcenter.com", "georgiaencyclopedia.org", "beltline.org"];
+// Center, the New Georgia Encyclopedia, or Atlanta BeltLine, Inc. The 2 park
+// conservancies of the level count too (docs/decisions.md, 2026-11-10): the
+// Historic Fourth Ward Park Conservancy and the Freedom Park Conservancy.
+// A spot can also cite its own site: it names that host in `site`.
+export const PRIMARY_HOSTS = ["nps.gov", "archives.gov", "atlantaga.gov", "atlantahistorycenter.com", "atlantapreservationcenter.com", "georgiaencyclopedia.org", "beltline.org", "h4wpc.org", "freedompark.org"];
 
 // Pointers only, never a source. A spot cannot name one of them as its site.
 export const POINTER_HOSTS = ["wikipedia.org", "wikimedia.org", "wikidata.org", "atlasobscura.com", "historypointer.com", "hmdb.org", "yelp.com", "tripadvisor.com", "facebook.com", "instagram.com", "reddit.com"];

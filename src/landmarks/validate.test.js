@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { LANDMARK_RULES, isPrimarySource, landmarkCounts, onPaved, outlineDistance, validateLandmarks } from "./validate.js";
 import { checkLevel } from "../../scripts/validate-landmarks.mjs";
@@ -177,11 +176,8 @@ describe("geometry helpers", () => {
   });
 });
 
-// The data file lands in the next commit, after the source checks.
-const HAS_FILE = existsSync(new URL("../../levels/beltline-eastside/landmarks.json", import.meta.url));
-
-describe.skipIf(!HAS_FILE)("levels/beltline-eastside/landmarks.json", () => {
-  const { data, errors } = HAS_FILE ? checkLevel("beltline-eastside") : { data: { spots: [] }, errors: [] };
+describe("levels/beltline-eastside/landmarks.json", () => {
+  const { data, errors } = checkLevel("beltline-eastside");
 
   it("passes the validator (AC-1, S-1, S-2, S-3)", () => {
     expect(errors).toEqual([]);

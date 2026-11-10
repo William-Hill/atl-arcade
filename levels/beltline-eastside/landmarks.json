@@ -1,0 +1,520 @@
+{
+  "v": 1,
+  "level": "beltline-eastside",
+  "note": "Landmark spots (#216). Design: design/gdd/landmark-discovery.md. `at` and every zone are [x, z] in level meters. `find.edge` is the distance to the footprint; `find.r` is a circle at `find.at` (or `at`). Each fact has a primary source; the quote behind each fact is in docs/research/2026-11-10-landmark-facts.md. Check a change with `npm run validate:landmarks`.",
+  "spots": [
+    {
+      "id": "ponce-city-market",
+      "kind": "building",
+      "name": "Ponce City Market",
+      "at": [-213.7, -873.8],
+      "footprint": {"building": "w184803195"},
+      "find": {"at": [-111.5, -895.5], "r": 20},
+      "site": "poncecitymarket.com",
+      "short": "Opened in 1926 as a nine-story Sears, Roebuck and Co. store and warehouse.",
+      "card": [
+        {
+          "text": "The Sears, Roebuck and Co. building opened to customers in 1926, nine stories of reinforced concrete and brick.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/e6ea8468-be89-4793-905c-317118b0e59e"
+          }
+        },
+        {
+          "text": "Atlantans flocked to the opening of the Sears retail store on August 2, 1926.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/e6ea8468-be89-4793-905c-317118b0e59e"
+          }
+        },
+        {
+          "text": "Its central tower facing Ponce de Leon Avenue carries Italian Renaissance Revival ornament.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/e6ea8468-be89-4793-905c-317118b0e59e"
+          }
+        },
+        {
+          "text": "Nimmons & Company designed it, along with Sears' other distribution centers of the mid-1920s.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/e6ea8468-be89-4793-905c-317118b0e59e"
+          }
+        },
+        {
+          "text": "Shops, the Central Food Hall and BeltLine access opened at Ponce City Market in 2015.",
+          "source": {"name": "Ponce City Market", "url": "https://poncecitymarket.com/history/"}
+        }
+      ],
+      "challenge": {"type": "combo", "tier": "hard", "hint": "Land a 2,000 point combo on the trail", "zone": {"x": -111.5, "z": -895.5, "r": 10}, "points": 2000}
+    },
+    {
+      "id": "ford-factory-lofts",
+      "kind": "building",
+      "name": "Ford Factory Lofts",
+      "at": [-85.6, -894.5],
+      "footprint": {"building": "w182531217"},
+      "find": {"edge": 12},
+      "short": "Ford built Model T's here from 1915 in a plant with rail cars rolling inside.",
+      "card": [
+        {
+          "text": "The Ford Motor Company Assembly Plant was built in 1914-15, four stories of reinforced concrete.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/89e18d7b-3b58-4434-9d83-bce98f805556"
+          }
+        },
+        {
+          "text": "Model T's (1915-1927), Model A's (1927-1932) and V-8's (1932-1937) were assembled here.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/89e18d7b-3b58-4434-9d83-bce98f805556"
+          }
+        },
+        {
+          "text": "The building was headquarters of Ford's Southeastern operations from 1915 to 1942.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/89e18d7b-3b58-4434-9d83-bce98f805556"
+          }
+        },
+        {
+          "text": "A reinforced second floor carried a railbed, so rail cars rolled into the building to unload.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/89e18d7b-3b58-4434-9d83-bce98f805556"
+          }
+        },
+        {
+          "text": "It is one of three surviving early Ford assembly plants in the South, with Houston and Dallas.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/89e18d7b-3b58-4434-9d83-bce98f805556"
+          }
+        }
+      ],
+      "challenge": {
+        "type": "grind",
+        "tier": "easy",
+        "hint": "Grind the Ponce curb for 9 m",
+        "feature": "ledge:curb:w1389205812:1",
+        "zone": {"x": -103, "z": -952.6, "r": 15},
+        "meters": 9
+      }
+    },
+    {
+      "id": "new-realm-brewing",
+      "kind": "building",
+      "name": "New Realm Brewing",
+      "at": [119.8, -475.9],
+      "footprint": {"building": "w961282227"},
+      "find": {"at": [95.8, -455], "r": 14},
+      "short": "A favorite on the Eastside Trail since 2018, with a rooftop view of the city.",
+      "card": [
+        {
+          "text": "New Realm Brewing Company has been a favorite along the Eastside Trail since 2018.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/the-beltline-from-above/"}
+        },
+        {
+          "text": "Its rooftop looks out over the city and one of the busiest parts of the BeltLine corridor.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/the-beltline-from-above/"}
+        },
+        {
+          "text": "New Realm makes its own beer and spirits and hosts trivia, vintage market pop-ups and live music.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/the-beltline-from-above/"}
+        }
+      ],
+      "challenge": {"type": "combo", "tier": "easy", "hint": "Land a 600 point combo on the trail", "zone": {"x": 95.8, "z": -455, "r": 10}, "points": 600}
+    },
+    {
+      "id": "telephone-factory-lofts",
+      "kind": "building",
+      "name": "Telephone Factory Lofts",
+      "at": [229.1, -365.6],
+      "footprint": {"building": "w185605331"},
+      "find": {"at": [196.3, -337], "r": 14},
+      "short": "Built 1939-1941 for Western Electric, maker of Bell telephones.",
+      "card": [
+        {
+          "text": "The Western Electric Company Building was constructed from 1939 to 1941.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/d8095a36-1aa1-4e20-8b0c-ff521bb7cf30"
+          }
+        },
+        {
+          "text": "Western Electric's in-house architect Walter R. Kattelle designed it in the Streamline Moderne style.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/d8095a36-1aa1-4e20-8b0c-ff521bb7cf30"
+          }
+        },
+        {
+          "text": "Western Electric built it for warehousing, repair and light manufacturing.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/d8095a36-1aa1-4e20-8b0c-ff521bb7cf30"
+          }
+        },
+        {
+          "text": "The original plans show classrooms, so the building trained employees as well as housing their work.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/d8095a36-1aa1-4e20-8b0c-ff521bb7cf30"
+          }
+        },
+        {
+          "text": "Today each floor of the old manufacturing and office section holds 18 loft apartments.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/d8095a36-1aa1-4e20-8b0c-ff521bb7cf30"
+          }
+        }
+      ],
+      "challenge": {
+        "type": "line",
+        "tier": "typical",
+        "hint": "Ride the 3 rings in order in 14 s",
+        "checkpoints": [[166.9, -371], [186.4, -348.2], [206.1, -325.5]],
+        "seconds": 14
+      }
+    },
+    {
+      "id": "krog-street-market",
+      "kind": "building",
+      "name": "Krog Street Market",
+      "at": [-71.6, 850.2],
+      "footprint": {"building": "r5413435"},
+      "find": {"edge": 8},
+      "short": "A dining hall and shops on the former Atlanta Stove Works factory site.",
+      "card": [
+        {
+          "text": "Krog Street Market stands on the former Atlanta Stove Works factory site.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/things-to-do/shopping-dining/"}
+        },
+        {
+          "text": "Krog Street Market is in Inman Park, right along the BeltLine Eastside Trail.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/things-to-do/shopping-dining/"}
+        },
+        {
+          "text": "It has a communal dining hall and shops you can reach on foot, by bike, or by car.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/things-to-do/shopping-dining/"}
+        }
+      ],
+      "challenge": {
+        "type": "grind",
+        "tier": "typical",
+        "hint": "Grind the Krog Street curb for 15 m",
+        "feature": "ledge:curb:w742982435:0",
+        "zone": {"x": -98.3, "z": 890, "r": 20},
+        "meters": 15
+      }
+    },
+    {
+      "id": "studioplex",
+      "kind": "building",
+      "name": "Studioplex",
+      "at": [-280.8, 944.9],
+      "footprint": {"building": "r11742136"},
+      "find": {"edge": 12},
+      "short": "A 1905 cotton warehouse on Auburn Avenue, now loft apartments.",
+      "card": [
+        {
+          "text": "The Atlantic Compress Company built the large cotton warehouse and platform in 1905.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/NRHP/GetAsset/aed2eed0-43c2-4073-b83b-1277caacc2c9"
+          }
+        },
+        {
+          "text": "From the early 1920s until 1944 the Southeastern Compress and Warehouse Company ran the facility.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/NRHP/GetAsset/aed2eed0-43c2-4073-b83b-1277caacc2c9"
+          }
+        },
+        {
+          "text": "Southeastern ran eighteen warehouses and could store 750,000 bales of cotton at one time.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/NRHP/GetAsset/aed2eed0-43c2-4073-b83b-1277caacc2c9"
+          }
+        },
+        {
+          "text": "A 100,000-gallon concrete water tower, built in 1907, stands northwest of the warehouse.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/NRHP/GetAsset/aed2eed0-43c2-4073-b83b-1277caacc2c9"
+          }
+        },
+        {
+          "text": "A certified rehabilitation converted the cotton warehouse to loft apartments.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/NRHP/GetAsset/aed2eed0-43c2-4073-b83b-1277caacc2c9"
+          }
+        }
+      ],
+      "challenge": {"type": "gap", "tier": "easy", "hint": "Hop on the Auburn Avenue sidewalk", "zone": {"x": -320.8, "z": 901.3, "r": 12}}
+    },
+    {
+      "id": "ponce-de-leon-bridge",
+      "kind": "bridge",
+      "name": "Ponce de Leon Avenue Bridge",
+      "at": [-124.5, -957.3],
+      "find": {"r": 20},
+      "short": "A ramp joins Ponce de Leon Avenue to the trail at the bridge by Ponce City Market.",
+      "card": [
+        {
+          "text": "Ponce streetscape work includes a ramp to the Eastside Trail at the northwest corner of the Ponce de Leon Avenue bridge.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/eastside-ponce-streetscape-project/"}
+        },
+        {
+          "text": "The final stage of the Ponce de Leon Avenue ramp to the Eastside Trail was completed in November 2025.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/learn/current-projects/ponce-streetscape/"}
+        },
+        {
+          "text": "A monumental Caddo bear sculpture by Chase Kahwinhut Earles was installed on the trail in front of Ponce City Market.",
+          "source": {
+            "name": "Atlanta BeltLine, Inc.",
+            "url": "https://beltline.org/blog/art-on-the-atlanta-beltline-unveils-indigenous-sculpture-showcasing-ancient-traditional-caddo-pottery/"
+          }
+        }
+      ],
+      "challenge": {"type": "gap", "tier": "typical", "hint": "Hop on the bridge over Ponce", "zone": {"x": -123.7, "z": -953.4, "r": 8}}
+    },
+    {
+      "id": "north-avenue-bridge",
+      "kind": "bridge",
+      "name": "North Avenue Bridge",
+      "at": [-63.4, -709.8],
+      "find": {"r": 20},
+      "short": "North Avenue Bridge crosses the street with the Atlanta skyline behind it.",
+      "card": [
+        {
+          "text": "North Avenue Bridge on the Eastside Trail crosses the street with the skyline in the background.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/10-must-visit-photo-spots-on-the-beltline/"}
+        },
+        {
+          "text": "The North Avenue bridge connects the Old Fourth Ward and Poncey-Highland neighborhoods.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/10-must-visit-photo-spots-on-the-beltline/"}
+        },
+        {
+          "text": "The giant puppet Little Amal's Eastside Trail walk was planned with a stop on the North Avenue Bridge.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/welcoming-little-amal-to-the-atlanta-beltline/"}
+        },
+        {
+          "text": "The Eastside Trail was the first finished section of the Atlanta BeltLine in the old rail corridor.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/parks-trails/eastside-trail/"}
+        }
+      ],
+      "challenge": {
+        "type": "line",
+        "tier": "hard",
+        "hint": "Ride the 3 rings in order in 14 s",
+        "checkpoints": [[-67.8, -743.6], [-63.1, -708.9], [-44.9, -679]],
+        "seconds": 14
+      }
+    },
+    {
+      "id": "ralph-mcgill-bridge",
+      "kind": "bridge",
+      "name": "Ralph McGill Boulevard Bridge",
+      "at": [225.4, -302.6],
+      "find": {"r": 20},
+      "short": "A tower for chimney swifts stands on the trail just north of Ralph McGill Blvd.",
+      "card": [
+        {
+          "text": "In April 2021 a chimney swift tower was installed on the Eastside Trail north of Ralph McGill Blvd.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/chimney-swift-towers-installed-on-westside-and-eastside-trails/"}
+        },
+        {
+          "text": "Georgia Audubon and Atlanta BeltLine, Inc. partnered on the towers to support chimney swift birds.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/chimney-swift-towers-installed-on-westside-and-eastside-trails/"}
+        },
+        {
+          "text": "The trail link to Historic Fourth Ward Park is the first phase of the development at 760 Ralph McGill Boulevard.",
+          "source": {
+            "name": "Atlanta BeltLine, Inc.",
+            "url": "https://beltline.org/blog/new-city-reopens-connection-between-eastside-trail-and-historic-fourth-ward-park/"
+          }
+        },
+        {
+          "text": "New stairs and an elevator reconnecting the trail and Historic Fourth Ward Park opened in April 2021.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/atlanta-beltline-design-and-construction-updates-april-2021/"}
+        }
+      ],
+      "challenge": {
+        "type": "grind",
+        "tier": "typical",
+        "hint": "Grind the curb below the bridge for 15 m",
+        "feature": "ledge:curb:w1389689840:0",
+        "zone": {"x": 215, "z": -291.7, "r": 15},
+        "meters": 15
+      }
+    },
+    {
+      "id": "freedom-parkway-bridge",
+      "kind": "bridge",
+      "name": "Freedom Parkway Bridge",
+      "at": [336, 18.6],
+      "find": {"r": 20},
+      "short": "A BeltLine Marketplace sits under the John Lewis Freedom Parkway Bridge.",
+      "card": [
+        {
+          "text": "A BeltLine Marketplace sits underneath the John Lewis Freedom Parkway Bridge on the Eastside Trail.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/blog/celebrate-small-business-saturday-at-atlanta-beltline-marketplace/"}
+        },
+        {
+          "text": "The skatepark sits alongside the BeltLine corridor in the shadow of Freedom Parkway.",
+          "source": {"name": "Historic Fourth Ward Park Conservancy", "url": "https://www.h4wpc.org/skate-park/"}
+        },
+        {
+          "text": "The Atlanta BeltLine is easily reached from Freedom Park's trail network.",
+          "source": {"name": "Freedom Park Conservancy", "url": "https://www.freedompark.org/about-us"}
+        }
+      ],
+      "challenge": {"type": "gap", "tier": "easy", "hint": "Hop under the Freedom Parkway bridge", "zone": {"x": 336, "z": 18.6, "r": 12}, "goal": "gap-freedom-parkway"}
+    },
+    {
+      "id": "historic-fourth-ward-park",
+      "kind": "park",
+      "name": "Historic Fourth Ward Park",
+      "at": [-164.2, -379.9],
+      "footprint": {"areas": ["w182470312"]},
+      "find": {"edge": 8},
+      "short": "The park's lake doubles as a stormwater basin; the park opened in 2011.",
+      "card": [
+        {"text": "Historic Fourth Ward Park opened in 2011.", "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/about-us/history/"}},
+        {
+          "text": "The centerpiece of the park is a lake that doubles as a stormwater retention basin.",
+          "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/parks-trails/historic-fourth-ward-park/"}
+        },
+        {
+          "text": "The lake's permanent pool comes from natural groundwater.",
+          "source": {"name": "Historic Fourth Ward Park Conservancy", "url": "https://www.h4wpc.org/faq/"}
+        },
+        {
+          "text": "Residents, businesses, the city's watershed department and Atlanta BeltLine, Inc. designed the park together.",
+          "source": {"name": "Historic Fourth Ward Park Conservancy", "url": "https://www.h4wpc.org/clear-creek-basin/"}
+        },
+        {
+          "text": "The Historic Fourth Ward Park Conservancy was formed in 2008 as the park's non-profit support arm.",
+          "source": {"name": "Historic Fourth Ward Park Conservancy", "url": "https://www.h4wpc.org/history-of-the-area-park/"}
+        }
+      ],
+      "challenge": {"type": "combo", "tier": "typical", "hint": "Land a 1,000 point combo by the pond", "zone": {"x": -130.1, "z": -456.6, "r": 10}, "points": 1000}
+    },
+    {
+      "id": "freedom-park",
+      "kind": "park",
+      "name": "Freedom Park",
+      "at": [-66.9, 257.9],
+      "footprint": {"areas": ["r12045420-4", "r12045420-2"]},
+      "find": {"edge": 8},
+      "short": "Freedom Park links 7 neighborhoods with 8 miles of paths on 130+ acres.",
+      "card": [
+        {
+          "text": "Freedom Park has 130+ acres and 8 miles of paths for walking, jogging, and cycling.",
+          "source": {"name": "Freedom Park Conservancy", "url": "https://www.freedompark.org/about-us"}
+        },
+        {
+          "text": "Freedom Park links 7 neighborhoods, including Inman Park, Old Fourth Ward, and Poncey-Highland.",
+          "source": {"name": "Freedom Park Conservancy", "url": "https://www.freedompark.org/about-us"}
+        },
+        {
+          "text": "Since 2007 the city of Atlanta has designated Freedom Park as Atlanta's Art Park.",
+          "source": {"name": "Freedom Park Conservancy", "url": "https://www.freedompark.org/visit-your-park"}
+        },
+        {
+          "text": "Freedom Park is the only park in the world that includes two Nobel Peace Centers.",
+          "source": {"name": "Freedom Park Conservancy", "url": "https://www.freedompark.org/about-us"}
+        },
+        {
+          "text": "Freedom Park is Atlanta's largest linear park.",
+          "source": {"name": "Freedom Park Conservancy", "url": "https://www.freedompark.org/about-us"}
+        }
+      ],
+      "challenge": {
+        "type": "line",
+        "tier": "easy",
+        "hint": "Ride the 3 rings in order in 24 s",
+        "checkpoints": [[-0.1, 219.1], [-35, 238.6], [-69.2, 259.4]],
+        "seconds": 24
+      }
+    },
+    {
+      "id": "inman-park-historic-district",
+      "kind": "edge",
+      "name": "Inman Park Historic District",
+      "at": [477.5, 757.3],
+      "find": {"r": 20},
+      "short": "Atlanta's first planned suburb, laid out from 1889 by Joel Hurt.",
+      "card": [
+        {
+          "text": "Inman Park was the first planned residential suburb developed in Atlanta.",
+          "source": {"name": "National Park Service, National Register of Historic Places", "url": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/73000621_text"}
+        },
+        {
+          "text": "Developer Joel Hurt laid out the roughly 135-acre neighborhood from 1889 to 1891.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/23f221d5-096e-4454-b6a3-4815012cfec2"
+          }
+        },
+        {
+          "text": "Inman Park featured one of the nation's first electric streetcar lines, along Edgewood Avenue.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/23f221d5-096e-4454-b6a3-4815012cfec2"
+          }
+        },
+        {
+          "text": "Coca-Cola founder Asa Candler and hardware founder George E. King built homes in Inman Park.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/23f221d5-096e-4454-b6a3-4815012cfec2"
+          }
+        },
+        {
+          "text": "The Inman Park Historic District was listed in the National Register of Historic Places in 1973.",
+          "source": {
+            "name": "National Park Service, National Register of Historic Places",
+            "url": "https://npgallery.nps.gov/GetAsset/23f221d5-096e-4454-b6a3-4815012cfec2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "jimmy-carter-library",
+      "kind": "edge",
+      "name": "Jimmy Carter Presidential Library and Museum",
+      "at": [480.8, -187.4],
+      "find": {"r": 20},
+      "site": "jimmycarterlibrary.gov",
+      "short": "Dedicated October 1, 1986; home to a life-size replica of the Oval Office.",
+      "card": [
+        {
+          "text": "The Jimmy Carter Presidential Library and Museum was dedicated on October 1, 1986.",
+          "source": {"name": "Jimmy Carter Presidential Library and Museum", "url": "https://www.jimmycarterlibrary.gov/about_us"}
+        },
+        {
+          "text": "Ground was broken on October 2, 1984; donations from friends around the world raised $26 million.",
+          "source": {"name": "Jimmy Carter Presidential Library and Museum", "url": "https://www.jimmycarterlibrary.gov/about_us"}
+        },
+        {
+          "text": "Japanese master gardener Kinsaku Nakane designed its Japanese Garden.",
+          "source": {"name": "Jimmy Carter Presidential Library and Museum", "url": "https://www.jimmycarterlibrary.gov/about_us"}
+        },
+        {
+          "text": "The library houses 40,000,000 pages, 1,000,000 photographs and 2,500 hours of video.",
+          "source": {"name": "Jimmy Carter Presidential Library and Museum", "url": "https://www.jimmycarterlibrary.gov/about_us"}
+        },
+        {
+          "text": "The museum has a life-size replica of the Oval Office and a Camp David cabin-style exhibit.",
+          "source": {"name": "Jimmy Carter Presidential Library and Museum", "url": "https://www.jimmycarterlibrary.gov/museum"}
+        }
+      ]
+    }
+  ]
+}

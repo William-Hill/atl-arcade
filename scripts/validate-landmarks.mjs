@@ -6,8 +6,9 @@
 // with code 1 on the first file with an error, so `npm run build` fails
 // (the `prebuild` script runs it).
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { createLevelEnv } from "../src/level/ground.js";
 import { landmarkCounts, validateLandmarks } from "../src/landmarks/validate.js";
 
@@ -33,7 +34,10 @@ export function checkLevel(name) {
   return { data, errors: validateLandmarks(data, landmarkContext(name)) };
 }
 
-if (import.meta.filename === resolve(process.argv[1] ?? "")) {
+// True when node runs this file (also through a symlink), not on an import.
+const isMain = Boolean(process.argv[1]) && existsSync(process.argv[1]) && pathToFileURL(realpathSync(process.argv[1])).href === pathToFileURL(realpathSync(import.meta.filename)).href;
+
+if (isMain) {
   const asked = process.argv.slice(2);
   const levels = asked.length > 0 ? asked : readdirSync(resolve(root, "levels")).filter((n) => existsSync(resolve(root, "levels", n, "landmarks.json")));
   let failed = false;

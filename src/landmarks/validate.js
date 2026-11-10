@@ -11,6 +11,9 @@
 //   goals        the goals of the level (goals.json `goals`), optional
 //   permissions  the file names in docs/permissions/, optional
 
+import { EDGE_FENCE } from "../level/edge-fence.js";
+import { distanceToSegment, pointInRings } from "../level/geo/geo-ground.js";
+
 // The tuning values of the GDD that the data must agree with.
 export const LANDMARK_RULES = {
   kinds: ["building", "bridge", "park", "skate", "art", "edge"],
@@ -24,6 +27,7 @@ export const LANDMARK_RULES = {
   findR: { min: 10, max: 28 }, // m, r_find
   gapR: { easy: 12, typical: 8, hard: 5 }, // m, k_tier * L_air
   gapLanding: 3, // m, the landing zone of a hard gap
+  gapLandingReach: 12, // m, the most from the gap zone to its landing zone
   grindMeters: { easy: 9, typical: 15, hard: 24 }, // v_g (6 m/s) * t_tier
   grindRailShare: 0.8, // of the rail length, the most a challenge asks
   grindHardRailMin: 11, // m, a shorter rail cannot host a hard grind
@@ -36,7 +40,7 @@ export const LANDMARK_RULES = {
   comboPoints: { easy: 600, typical: 1000, hard: 2000 },
   comboR: 10, // m, r_combo
   pavedReach: 1.5, // m past the half width of a strip that still counts as on it
-  fenceInset: 3, // m, EDGE_FENCE.inset (src/level/edge-fence.js)
+  fenceInset: EDGE_FENCE.inset, // m
 };
 
 // A fact needs a primary source (docs/decisions.md, 2026-11-07): the
@@ -77,32 +81,16 @@ export function isPrimarySource(url, site = null) {
   if (!host) return false;
   if (POINTER_HOSTS.some((b) => under(host, b))) return false;
   if (PRIMARY_HOSTS.some((b) => under(host, b))) return true;
-  return Boolean(site) && under(host, String(site).toLowerCase());
+  return typeof site === "string" && site.includes(".") && under(host, site.toLowerCase());
 }
 
-function pointInRing(p, ring) {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
-    const a = ring[i];
-    const b = ring[j];
-    if (a[1] > p[1] !== b[1] > p[1] && p[0] < ((b[0] - a[0]) * (p[1] - a[1])) / (b[1] - a[1]) + a[0]) inside = !inside;
-  }
-  return inside;
-}
+const segmentDistance = (p, a, b) => distanceToSegment(p[0], p[1], a[0], a[1], b[0], b[1]);
 
-function segmentDistance(p, a, b) {
-  const dx = b[0] - a[0];
-  const dz = b[1] - a[1];
-  const len = dx * dx + dz * dz;
-  const t = len === 0 ? 0 : Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / len));
-  return Math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dz * t);
-}
-
-// The distance from a point to a closed outline; 0 inside it.
-export function outlineDistance(p, ring) {
-  if (pointInRing(p, ring)) return 0;
+// The distance from a point to a shape ([outer, ...holes]); 0 inside it.
+export function outlineDistance(p, rings) {
+  if (pointInRings(p[0], p[1], rings)) return 0;
   let best = Infinity;
-  for (let i = 0; i < ring.length; i += 1) best = Math.min(best, segmentDistance(p, ring[i], ring[(i + 1) % ring.length]));
+  for (const ring of rings) for (let i = 0; i < ring.length; i += 1) best = Math.min(best, segmentDistance(p, ring[i], ring[(i + 1) % ring.length]));
   return best;
 }
 
@@ -123,20 +111,21 @@ function inFence(p, level, margin = 0) {
   return p[0] >= b.minX + k && p[0] <= b.maxX - k && p[1] >= b.minZ + k && p[1] <= b.maxZ - k;
 }
 
-// The outlines of a spot footprint ({ building } or { areas }), or null.
-function footprintRings(fp, level, at, err) {
+// The shapes ([outer, ...holes]) of a spot footprint ({ building } or
+// { areas }), or null.
+function footprintShapes(fp, level, err) {
   if (fp == null) return null;
   if (typeof fp.building === "string") {
     const b = (level.buildings ?? []).find((x) => x.id === fp.building);
     if (!b) return err(`footprint.building "${fp.building}" is not a building of the level`), null;
-    return [b.outer];
+    return [[b.outer, ...(b.holes ?? [])]];
   }
   if (Array.isArray(fp.areas) && fp.areas.length > 0) {
     const rings = [];
     for (const id of fp.areas) {
       const a = (level.areas ?? []).find((x) => x.id === id);
       if (!a) return err(`footprint.areas "${id}" is not an area of the level`), null;
-      rings.push(a.outer);
+      rings.push([a.outer, ...(a.holes ?? [])]);
     }
     return rings;
   }
@@ -171,7 +160,10 @@ function checkChallenge(spot, ctx, err) {
   if (c.type === "gap") {
     if (checkZone("challenge.zone", c.zone, R.gapR[c.tier], level, err) && !onPaved([c.zone.x, c.zone.z], level)) err("challenge.zone center is not on a trail, a path, or a sidewalk");
     if (c.tier === "hard") {
-      if (checkZone("challenge.landing", c.landing, R.gapLanding, level, err) && !onPaved([c.landing.x, c.landing.z], level)) err("challenge.landing center is not on a trail, a path, or a sidewalk");
+      if (checkZone("challenge.landing", c.landing, R.gapLanding, level, err)) {
+        if (!onPaved([c.landing.x, c.landing.z], level)) err("challenge.landing center is not on a trail, a path, or a sidewalk");
+        if (c.zone && dist([c.landing.x, c.landing.z], [c.zone.x, c.zone.z]) > R.gapLandingReach) err(`challenge.landing is more than ${R.gapLandingReach} m from challenge.zone`);
+      }
     } else if (c.landing != null) err("challenge.landing is for a hard gap only");
     if (c.goal != null) {
       const g = (ctx.goals ?? []).find((x) => x.id === c.goal);
@@ -186,8 +178,7 @@ function checkChallenge(spot, ctx, err) {
     const g = (ctx.grindables ?? []).find((x) => x.id === c.feature);
     if (!g) return err(`challenge.feature "${c.feature}" is not a grind feature of the level`);
     if (c.tier === "hard" && g.total < R.grindHardRailMin) err(`a hard grind needs a rail of ${R.grindHardRailMin} m or more ("${c.feature}" is ${g.total.toFixed(1)} m)`);
-    const meters = Math.min(R.grindMeters[c.tier], Math.floor(R.grindRailShare * g.total * 10) / 10);
-    if (c.meters !== meters) err(`challenge.meters is ${c.meters} (the tier and the ${g.total.toFixed(1)} m rail give ${meters})`);
+    if (c.meters !== grindMeters(c.tier, g.total)) err(`challenge.meters is ${c.meters} (the tier and the ${g.total.toFixed(1)} m rail give ${grindMeters(c.tier, g.total)})`);
     if (ok && !g.points.some((p) => dist([p[0], p[2]], [c.zone.x, c.zone.z]) <= c.zone.r)) err(`the feature "${c.feature}" does not pass through challenge.zone`);
   }
 
@@ -210,6 +201,15 @@ function checkChallenge(spot, ctx, err) {
   }
 }
 
+// The meters of a grind challenge: the tier value, or 0.8 of the rail when
+// the rail is short. The rail length counts to 0.1 m, in whole tenths, so
+// the result does not depend on a float product.
+export function grindMeters(tier, railLength) {
+  const R = LANDMARK_RULES;
+  const tenths = Math.round(railLength * 10);
+  return Math.min(R.grindMeters[tier], Math.floor((tenths * Math.round(R.grindRailShare * 100)) / 100) / 10);
+}
+
 function checkCredit(spot, ctx, err) {
   const c = spot.credit;
   if (!c || typeof c !== "object") return err("an art spot needs a `credit`");
@@ -230,8 +230,8 @@ function checkSpot(spot, ctx, err) {
   if (spot.at[0] < b.minX || spot.at[0] > b.maxX || spot.at[1] < b.minZ || spot.at[1] > b.maxZ) err("`at` is outside the level bounds");
 
   // The footprint and the find value.
-  const rings = footprintRings(spot.footprint, level, spot.at, err);
-  if (rings && !rings.some((r) => pointInRing(spot.at, r))) err("`at` is not inside the footprint");
+  const rings = footprintShapes(spot.footprint, level, err);
+  if (rings && !rings.some((r) => pointInRings(spot.at[0], spot.at[1], r))) err("`at` is not inside the footprint");
   const f = spot.find;
   if (!f || typeof f !== "object" || (f.edge == null) === (f.r == null)) err("`find` needs `edge` (m to the footprint) or `r` (m to a point), not both");
   else if (f.edge != null) {
@@ -251,7 +251,8 @@ function checkSpot(spot, ctx, err) {
   // The text.
   checkText("short", spot.short, R.shortMax, err);
   if (spot.site != null) {
-    if (!isText(spot.site) || POINTER_HOSTS.some((h) => under(spot.site.toLowerCase(), h))) err(`site "${spot.site}" cannot be a source`);
+    // A full host name: a bare suffix ("com") would take in every host under it.
+    if (!isText(spot.site) || !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(spot.site) || POINTER_HOSTS.some((h) => under(spot.site, h))) err(`site "${spot.site}" cannot be a source`);
   }
   if (!Array.isArray(spot.card) || spot.card.length < R.cardMin || spot.card.length > R.cardMax) err(`card needs ${R.cardMin} to ${R.cardMax} facts (has ${Array.isArray(spot.card) ? spot.card.length : 0})`);
   const seen = new Set();

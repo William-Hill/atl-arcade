@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { LANDMARK_RULES, isPrimarySource, landmarkCounts, onPaved, outlineDistance, validateLandmarks } from "./validate.js";
+import { beforeAll, describe, expect, it } from "vitest";
+import { LANDMARK_RULES, grindMeters, isPrimarySource, landmarkCounts, onPaved, outlineDistance, validateLandmarks } from "./validate.js";
 import { checkLevel } from "../../scripts/validate-landmarks.mjs";
 
 // A small level: a trail along z = 0, a square building north of it, a
@@ -102,6 +102,9 @@ describe("validateLandmarks", () => {
     // The spot's own site is a source when the spot names it.
     expect(errorsOf(building({ site: "oldwarehouse.example", card: [fact(1), fact(2), fact(3, "https://www.oldwarehouse.example/history")] }))).toEqual([]);
     expect(errorsOf(building({ site: "wikipedia.org" }))[0]).toMatch(/cannot be a source/);
+    // A bare suffix is not a site: it would take in every host under it.
+    expect(errorsOf(building({ site: "example", card: [fact(1), fact(2), fact(3, "https://www.oldwarehouse.example/history")] }))[0]).toMatch(/cannot be a source/);
+    expect(isPrimarySource("https://some-blog.com/post", "com")).toBe(false);
     expect(isPrimarySource("https://beltline.org/places-to-go/eastside-trail")).toBe(true);
     expect(isPrimarySource("https://www.nps.gov/malu/index.htm")).toBe(true);
     expect(isPrimarySource("https://notnps.gov/x")).toBe(false);
@@ -132,6 +135,9 @@ describe("validateLandmarks", () => {
     expect(errorsOf(grind({ tier: "typical", feature: "rail:short", meters: 15 }))[0]).toMatch(/challenge.meters is 15/);
     // min(24, 0.8 * 30) = 24 m on the 30 m rail.
     expect(errorsOf(grind({ tier: "hard", feature: "rail:long", meters: 24, zone: { x: 10, z: 2, r: 15 } }))).toEqual([]);
+    expect(grindMeters("typical", 12.5)).toBe(10);
+    expect(grindMeters("easy", 9.96)).toBe(8);
+    expect(grindMeters("hard", 60)).toBe(24);
     expect(errorsOf(grind({ tier: "easy", feature: "rail:none", meters: 9 }))[0]).toMatch(/not a grind feature of the level/);
     expect(errorsOf(grind({ tier: "easy", feature: "rail:long", meters: 9 }))[0]).toMatch(/does not pass through challenge.zone/);
   });
@@ -142,6 +148,7 @@ describe("validateLandmarks", () => {
     expect(errorsOf(gap({ tier: "typical", zone: { x: 0, z: 30, r: 8 } }))[0]).toMatch(/not on a trail, a path, or a sidewalk/);
     expect(errorsOf(gap({ tier: "hard", zone: { x: 0, z: 0, r: 5 } }))[0]).toMatch(/challenge.landing needs/);
     expect(errorsOf(gap({ tier: "hard", zone: { x: 0, z: 0, r: 5 }, landing: { x: 6, z: 0, r: 3 } }))).toEqual([]);
+    expect(errorsOf(gap({ tier: "hard", zone: { x: 0, z: 0, r: 5 }, landing: { x: 60, z: 0, r: 3 } }))[0]).toMatch(/more than 12 m from challenge.zone/);
     expect(errorsOf(gap({ tier: "easy", zone: { x: 40, z: 0, r: 12 }, goal: "gap-test" }))[0]).toMatch(/not the zone of the goal/);
 
     const line = (c) => building({ challenge: { type: "line", hint: "Ride the rings in order", ...c } });
@@ -162,8 +169,10 @@ describe("validateLandmarks", () => {
 });
 
 describe("geometry helpers", () => {
-  it("measures the distance to an outline, 0 inside it", () => {
-    const ring = LEVEL.buildings[0].outer;
+  it("measures the distance to a shape, 0 inside it and not 0 in a hole", () => {
+    const withHole = [LEVEL.buildings[0].outer, [[-2, -20], [2, -20], [2, -16], [-2, -16]]];
+    expect(outlineDistance([0, -18], withHole)).toBeCloseTo(2);
+    const ring = [LEVEL.buildings[0].outer];
     expect(outlineDistance([0, -18], ring)).toBe(0);
     expect(outlineDistance([0, 2], ring)).toBeCloseTo(8);
     expect(outlineDistance([13, -2], ring)).toBeCloseTo(5);
@@ -177,7 +186,11 @@ describe("geometry helpers", () => {
 });
 
 describe("levels/beltline-eastside/landmarks.json", () => {
-  const { data, errors } = checkLevel("beltline-eastside");
+  let data;
+  let errors;
+  beforeAll(() => {
+    ({ data, errors } = checkLevel("beltline-eastside"));
+  });
 
   it("passes the validator (AC-1, S-1, S-2, S-3)", () => {
     expect(errors).toEqual([]);

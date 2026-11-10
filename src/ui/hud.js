@@ -43,6 +43,12 @@ export function createHud(root, { touch = false, fence = null } = {}) {
   edge.id = "hud-edge";
   edge.textContent = EDGE_HINT;
   edge.hidden = true;
+  // A one-time line from the game, for example the look step-down (#246).
+  const notice = el("div", "hud-hint hud-notice", root);
+  notice.id = "hud-notice";
+  notice.setAttribute("role", "status");
+  notice.hidden = true;
+  let noticeTimer = null;
 
   const styleWrap = el("div", "hud-meter hud-style", root);
   el("span", "hud-label", styleWrap).textContent = "STYLE";
@@ -116,6 +122,15 @@ export function createHud(root, { touch = false, fence = null } = {}) {
         pulse.style.transform = `scale(${1 + 0.6 * fade * fade})`;
       }
     },
-    elements: { score, timer, combo, pending, tag, pulse, edge, styleFill, balanceWrap, balanceDot },
+    // Shows one plain line for `ms`, then hides it.
+    notice(text, ms = 6000) {
+      notice.textContent = text;
+      notice.hidden = false;
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => {
+        notice.hidden = true;
+      }, ms);
+    },
+    elements: { score, timer, combo, pending, tag, pulse, edge, notice, styleFill, balanceWrap, balanceDot },
   };
 }

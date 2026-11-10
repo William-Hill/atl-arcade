@@ -95,6 +95,24 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
 }
 .hud-tag[data-beat="PERFECT"] { color: #7ef0c2; }
 .hud-hint { font-size: 14px; color: #ffd166; margin-top: 4px; }
+.hud-notice { color: #fff; }
+
+/* The frame-time readout (?fps=1, #246): large enough to read on a phone
+   held in the hand. It sits at mid height on the left, clear of the HUD
+   (top left), the map (top right) and the touch controls (bottom). */
+#fps-readout {
+  position: fixed;
+  left: calc(8px + env(safe-area-inset-left));
+  top: 38%;
+  z-index: 30;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(11, 11, 18, 0.88);
+  color: #fff;
+  font: 600 14px/1.35 ui-monospace, Menlo, Consolas, monospace;
+  white-space: pre;
+  pointer-events: none;
+}
 
 /* Map data attribution (ODbL). Shown on every geodata level. */
 #attribution {

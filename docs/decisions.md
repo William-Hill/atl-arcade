@@ -2212,3 +2212,11 @@ Finding MOB2-2 of the mobile audit: on the phone tier the pbr look took 6 to 9 t
 - **Readout**: `?fps=1` shows the median and p95 frame time of the last 2 minutes, the look, the tier, the pixel ratio and the governor rung (`src/perf/frame-readout.js`).
 - **Rejected**: no leaf cards at all (450 ms by the spawn against 654 ms with 6 cards, but every crown is a smooth blob); pixel ratio 1.25 as the start of pbr lite (the governor takes that step only on a phone that needs it); ground anisotropy 1, the mean ORM, a flat lawn (each inside the noise or a visible loss); hiding pbr in the menu (the owner's decision).
 - **Limits**: no real phone and no real GPU. The acceptance of #246 (the frame time on a real mid-range phone under the #24 target) is NOT verified; the steps for the owner are in `docs/perf/246/README.md`. The step to toon restarts the run at the spawn. The Meshy people (3.97 MB) are the largest pbr download left; 512 px people textures are not done. The audit file `production/audits/2026-11-playability/mobile-pbr/FINDINGS.md` is not on `epic/city-look`; the issue text stood in for it.
+
+## 2026-11-10: The texture memory estimate counts compile-time textures, and its caps move (#246)
+
+- A review found that the texture memory estimate (`src/perf/texture-memory.js`) did not count the textures that a material gets in `onBeforeCompile`: the pbr ground arrays, the facade detail maps and the baked leaf textures. It now reads the uniforms of the compiled shader from the renderer, and the texture accessors in `material.userData`.
+- The cost of the game did not change; the count did. Phone tier, one run on 2026-11-10: pbr lite 366.1 MB (333.8 MB with the old count) and toon 243.5 MB, so pbr lite is 1.5 times toon, not 1.38 times.
+- The caps for `phone/pbr` in `docs/perf/budget.json` move with the count, about 10% over this run: `textureMB` 360 to 400, and the ratio to toon 1.5 to 1.65. The other tiers have no `textureMB` cap.
+- The same run stopped at the 150 s wall limit and counted 349,980 triangles for `phone/pbr`, against a cap of 350,000; an earlier run counted 292,758. The triangle count depends on where the ride stops, so this cap is at its limit on a slow machine.
+

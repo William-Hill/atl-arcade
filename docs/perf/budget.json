@@ -4,7 +4,7 @@
     "low": { "calls": 185, "triangles": 310000, "geometries": 160, "textures": 260, "heapMB": 100, "downloadMB": 9.0, "jsMB": 1.0 },
     "low/pbr": { "downloadMB": 13.7, "firstDownloadMB": 4.8, "geometries": 190, "textures": 365 },
     "phone": { "calls": 185, "triangles": 375000, "geometries": 155, "textures": 235, "heapMB": 100, "downloadMB": 8.5, "jsMB": 1.0 },
-    "phone/pbr": { "calls": 125, "triangles": 350000, "geometries": 160, "textures": 225, "textureMB": 360, "downloadMB": 13.5, "firstDownloadMB": 4.3, "vsToon": { "calls": 1.3, "triangles": 1.15, "textureMB": 1.5, "downloadMB": 2.35 } },
+    "phone/pbr": { "calls": 125, "triangles": 350000, "geometries": 160, "textures": 225, "textureMB": 400, "downloadMB": 13.5, "firstDownloadMB": 4.3, "vsToon": { "calls": 1.3, "triangles": 1.15, "textureMB": 1.65, "downloadMB": 2.35 } },
     "high": { "calls": 360, "triangles": 1070000, "geometries": 220, "textures": 400, "heapMB": 100, "downloadMB": 10.4, "jsMB": 1.0 },
     "high/pbr": { "calls": 420, "triangles": 1200000, "geometries": 245, "textures": 480, "downloadMB": 21.5, "firstDownloadMB": 5.0 }
   }

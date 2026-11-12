@@ -8,8 +8,10 @@ import { expect, test, devices } from "@playwright/test";
 // keyboard; the Guide tab with its 2 counts.
 //
 // The spot states are set through the dev test hook (window.__atl.landmarks,
-// src/sim/landmarks.js landmarkTestHook), so this spec does not need the
-// game to step the tracker (#219).
+// src/sim/landmarks.js landmarkTestHook). The game steps the tracker since
+// #219, and the spawn is in the find zone of the Freedom Parkway bridge, so
+// ready() first moves the skater to a place with no find zone near and sets
+// every spot Unknown again. The places of moveSkater() are in no find zone.
 
 const { defaultBrowserType, ...pixel } = devices["Pixel 7"]; // eslint-disable-line no-unused-vars
 const PHONE = { ...pixel, viewport: { width: 390, height: 844 } };
@@ -29,6 +31,15 @@ const EAST = { unknown: "freedom-parkway-bridge", found: "ralph-mcgill-bridge", 
 async function ready(page, query = "") {
   await page.goto(`/?level=beltline-eastside&mute=1${query}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5 && window.__atl.fullmap && window.__atl.minimap?.state.draws > 0 && window.__atl.landmarks, null, { timeout: 120000 });
+  await page.evaluate(() => {
+    const [x, z] = [150, 600];
+    window.__atl.resetSkater([x, window.__atl.level.sample(x, z)?.height ?? 0, z], 1.5);
+    window.__atl.landmarks.reset();
+  });
+  // A few frames, and still no spot found.
+  const frames = await page.evaluate(() => window.__atl.frames);
+  await page.waitForFunction((f) => window.__atl.frames > f + 3, frames);
+  expect(Object.values(await page.evaluate(() => window.__atl.landmarks.states())).every((st) => st === "unknown")).toBe(true);
 }
 
 async function setStates(page) {

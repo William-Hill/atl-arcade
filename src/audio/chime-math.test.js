@@ -82,6 +82,14 @@ describe("the music duck", () => {
 });
 
 describe("one chime at a time", () => {
+  it("keeps 2 Found chimes that wait at most, as the Found banners, and never drops a Claimed chime", () => {
+    let q = [];
+    for (let i = 0; i < 5; i += 1) q = queueChime(q, "found");
+    expect(q).toEqual(["found", "found"]);
+    for (let i = 0; i < 3; i += 1) q = queueChime(q, "claimed");
+    expect(q).toEqual(["claimed", "claimed", "claimed", "found", "found"]);
+  });
+
   it("plays a Claimed chime before a Found chime that waits", () => {
     let q = queueChime([], "found");
     q = queueChime(q, "found");

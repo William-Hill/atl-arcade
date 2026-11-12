@@ -591,7 +591,6 @@ body.results-open #touch-controls { display: none; }
   /* A phone in landscape: between the HUD column and the minimap. */
   #landmark-banner { top: max(30vh, calc(84px + env(safe-area-inset-top))); width: max(280px, min(380px, calc(100vw - 2 * (232px + env(safe-area-inset-right))))); }
 }
-body.photo-open #landmark-banner { visibility: hidden; }
 
 /* The HUD goal line (#219): the challenge of the nearest Found landmark. */
 /* At most 276 px wide, so the HUD column ends left of the banner on every

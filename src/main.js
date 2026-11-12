@@ -876,6 +876,9 @@ const landmarkAnchors = geo ? districtAnchors(level) : [];
 const chimes = createChimes(beat);
 // True for the first tick after "Travel here": a challenge ignores that tick.
 let landmarkTravel = false;
+// The landmark view of the last frame, and the state it was made from.
+let landmarkViewOf = null;
+let landmarkViewNow = null;
 const musicChoices = beat.tracks.length ? trackChoices(beat.tracks) : [];
 const onTrack = (id) => {
   writeChoice(settingsStorage, id);
@@ -1205,15 +1208,21 @@ function frame(now) {
   }
   // Landmark discovery (#219): the goal line, the banner, the rings and the
   // chimes read the landmark state. While the game is paused nothing moves.
-  const landmarkNow = landmarkTracker ? landmarkTracker.view() : null;
+  // The view is made again only when the landmark state changes.
+  if (landmarkTracker && landmarkTracker.state !== landmarkViewOf) {
+    landmarkViewOf = landmarkTracker.state;
+    landmarkViewNow = landmarkTracker.view();
+  }
+  const landmarkNow = landmarkViewNow;
   hud.update(run, now, beat.running ? beat.phase() : null, goals, landmarkNow ? (goalLine(landmarkNow, skater.position, { timed: landmarkTimed })?.text ?? null) : null);
   if (landmarkNow) {
     // The banner hides while the fact pop-up shows, while the game is paused
     // (its time stops too), and under the results screen.
-    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown), accent: districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
+    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown), accent: () => districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
     landmarkRings?.update(landmarkNow.spots, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed, night: weatherView?.state.night ?? 0 });
   }
-  if (!paused) chimes.update();
+  if (paused) chimes.clear();
+  else chimes.update();
   if (results && goals.ended && !results.shown) results.show(runResults());
   if (minimap) minimap.update(skater);
   if (fullmap) fullmap.update(skater);

@@ -33,6 +33,7 @@ export const CHIMES = {
   division: 2, // a chime can start on a beat or a half beat
   lead: 0.02, // s, the shortest time from now to a scheduled start
   duck: { to: 0.5, attack: 0.08, release: 0.3 },
+  foundMax: 2, // Found chimes that can wait (LANDMARKS.banner.foundQueueMax)
 };
 
 // The length of a chime (s): the end of its last sound.
@@ -72,9 +73,11 @@ export function duckPoints(at, length, base, now = at, k = CHIMES) {
 }
 
 // The chimes that wait, in play order: Claimed before Found, then the
-// order they came in. Returns a new list.
-export function queueChime(queue, type) {
-  if (type !== "claimed") return [...queue, type];
+// order they came in. At most `foundMax` Found chimes wait, as the Found
+// banners (a third Found banner is dropped, so its chime is too). Returns a
+// new list.
+export function queueChime(queue, type, foundMax = CHIMES.foundMax) {
+  if (type !== "claimed") return queue.filter((t) => t !== "claimed").length >= foundMax ? queue : [...queue, type];
   const at = queue.findIndex((t) => t !== "claimed");
   return at < 0 ? [...queue, type] : [...queue.slice(0, at), type, ...queue.slice(at)];
 }

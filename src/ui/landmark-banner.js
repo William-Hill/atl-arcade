@@ -95,8 +95,9 @@ export function createLandmarkBanner(parent, { reducedMotion = () => false } = {
   return {
     // `current` is the banner on show (state.banner.current) or null.
     // `held` is true while the fact pop-up shows: the banner waits.
-    // `accent` is the district accent (a hex color) for a Claimed banner.
-    update(current, { held = false, accent = "#c9962e" } = {}) {
+    // `accent()` gives the district accent (a hex color) for a Claimed
+    // banner; it is called only when a Claimed banner starts.
+    update(current, { held = false, accent = () => "#c9962e" } = {}) {
       if (!current || held) {
         if (!root.hidden) root.hidden = true;
         if (!current) shownKey = null;
@@ -112,7 +113,7 @@ export function createLandmarkBanner(parent, { reducedMotion = () => false } = {
         points.hidden = !lines.points;
         root.dataset.type = current.type;
         root.dataset.spot = current.id;
-        if (current.type === "claimed") root.style.setProperty("--lb-fill", claimedFill(accent));
+        if (current.type === "claimed") root.style.setProperty("--lb-fill", claimedFill(typeof accent === "function" ? accent() : accent));
         else root.style.removeProperty("--lb-fill");
         state.shown += 1;
         state[current.type] += 1;

@@ -79,8 +79,13 @@ export function createChimes(clock, k = CHIMES) {
     if (!gain) return false;
     const base = clock.musicGainValue ?? gain.value;
     const points = duckPoints(at, length, base, c.currentTime, k);
-    gain.cancelScheduledValues(points[0].t);
-    gain.setValueAtTime(base, points[0].t);
+    // Hold the gain where it is now (inside the release of the chime before,
+    // perhaps) and fall from there: no jump back to the full gain.
+    if (gain.cancelAndHoldAtTime) gain.cancelAndHoldAtTime(points[0].t);
+    else {
+      gain.cancelScheduledValues(points[0].t);
+      gain.setValueAtTime(gain.value, points[0].t);
+    }
     for (const p of points.slice(1)) gain.linearRampToValueAtTime(p.value, p.t);
     return true;
   }
@@ -107,6 +112,12 @@ export function createChimes(clock, k = CHIMES) {
       if (!context()) return;
       queue = queueChime(queue, type);
       info.waiting = queue.length;
+    },
+    // The game paused (photo mode, a menu): a chime that waits is dropped,
+    // so it does not sound long after its find.
+    clear() {
+      queue = [];
+      info.waiting = 0;
     },
     // Each frame while the simulation runs: starts the next chime when the
     // one before it has ended.

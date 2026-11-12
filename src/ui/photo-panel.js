@@ -126,6 +126,12 @@ export function createPhotoPanel({ root = document.body, canvas, camera, tiltShi
     if (state.open) return;
     saved.position.copy(camera.position);
     saved.quaternion.copy(camera.quaternion);
+    // A photo uses the base view, not the speed FOV or the zoom punch of the
+    // camera effects (#253). The follow camera sets its FOV again on close.
+    if (camera.userData.baseFov !== undefined && camera.fov !== camera.userData.baseFov) {
+      camera.fov = camera.userData.baseFov;
+      camera.updateProjectionMatrix();
+    }
     const dir = camera.getWorldDirection(camera.position.clone());
     state = openPhoto(state, camera.position.toArray(), dir.toArray());
     keys.clear();

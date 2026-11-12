@@ -1122,3 +1122,12 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 ## 2026-11-07: Landmark facts may cite public sources (landmark discovery GDD)
 
 The landmark discovery feature (`design/gdd/landmark-discovery.md`) needs history facts, for example the 1926 Sears, Roebuck building at Ponce City Market. The Atlanta open data catalog has numbers about parks, stations and neighborhoods, but it has no landmark history. The rule in `AGENTS.md` ("facts sourced from the open data catalog") changes for landmark story cards: a fact comes from the open data catalog or from a cited public source (National Register / NPS, City of Atlanta, Atlanta History Center, Georgia Encyclopedia, Atlanta BeltLine Inc., or the landmark's own site). Every fact keeps a source name and URL, and stays positive or neutral. Wikipedia is a pointer only, never the source. Fact cards (`levels/<level>/facts.json`) keep the catalog-only rule. Research: `docs/research/2026-11-07-eastside-landmarks.md`.
+
+## 2026-11-11: Camera effects as a pure module on top of the follow camera (#253)
+
+The follow camera gets short effects for the big moments of a run, as RenderATL Rush has (`src/fx/cameraEvents.js` there): a speed FOV, a landing dip, a shake on a hard landing or a fall, a grind lean, a zoom punch and a flash on a gap or a big bank. The pure module `src/sim/camera-fx.js` reads the skater and the sim events and gives offsets. `src/render/follow-camera.js` applies them after the wall clip.
+
+- The offsets are 0 at a standstill and under 1.5 m/s, so the base FOV from `fovFor` (#73) stays exact for the tests and the phone layout.
+- The shake is a sum of sines, not `Math.random`, so a replay gives the same frames. While the wall clip holds the camera in front of a wall, the dip and the shake stop, because they move the camera off the clip ray. A photo uses the base FOV.
+- The flash is a DOM layer, not a post pass, so it works on every quality tier and never goes into a photo mode save.
+- `prefers-reduced-motion: reduce` or `?camfx=0` keeps only the speed FOV, at half size. The game has no settings toggle for it yet.

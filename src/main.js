@@ -548,7 +548,7 @@ function simulate(dt) {
   if (skater.justSnapped) events.push({ tick: skater.tick, type: "snap", id: skater.grind.id, s: skater.grind.s });
   if (skater.justExited) events.push({ tick: skater.tick, type: "exit", reason: skater.exitReason, position: [...skater.position] });
   if (skater.justFell) events.push({ tick: skater.tick, type: "fall", position: [...skater.position] });
-  if (skater.justLanded) events.push({ tick: skater.tick, type: "land", groundId: skater.groundId, speed: skater.speed });
+  if (skater.justLanded) events.push({ tick: skater.tick, type: "land", groundId: skater.groundId, speed: skater.speed, fall: skater.landFall ?? 0 });
   if (skater.justJumped) events.push({ tick: skater.tick, type: "jump" });
 }
 

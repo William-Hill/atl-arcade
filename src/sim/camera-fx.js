@@ -90,11 +90,18 @@ export function landingImpact(fallSpeed, k = CAMERA_FX) {
 // (src/main.js). `opts.reduced` turns off all but the speed FOV.
 export function stepCameraFx(fx, skater, events = [], dt = 0, opts = {}, k = CAMERA_FX) {
   const reduced = Boolean(opts.reduced);
-  let { dip, punch, trauma, flash, airVy } = fx;
+  let { dip, punch, airVy } = fx;
+  // The old trauma and flash decay first. A new hit this frame then shows at
+  // its full size on this frame, even with a long frame.
+  let trauma = Math.max(fx.trauma - k.traumaDecay * dt, 0);
+  let flash = Math.max(fx.flash - k.flashDecay * dt, 0);
 
   for (const ev of events) {
     if (ev.type === "land") {
-      const hit = landingImpact(Math.max(-airVy, 0), k);
+      // The controller gives the fall speed of the landing tick (`fall`).
+      // An older event with no `fall` uses the last air frame.
+      const fall = Number.isFinite(ev.fall) ? ev.fall : Math.max(-airVy, 0);
+      const hit = landingImpact(fall, k);
       // One landing uses the fall speed once. A landing with no air frame
       // seen (a short drop inside one frame) gives no dip.
       airVy = 0;
@@ -120,9 +127,9 @@ export function stepCameraFx(fx, skater, events = [], dt = 0, opts = {}, k = CAM
     fov: chase(fx.fov, fovTarget, k.fovRate, dt),
     dip: reduced ? REST : stepSpring(dip, k.dipOmega, dt),
     punch: reduced ? REST : stepSpring(punch, k.punchOmega, dt),
-    trauma: reduced ? 0 : Math.max(trauma - k.traumaDecay * dt, 0),
+    trauma: reduced ? 0 : trauma,
     roll: reduced ? 0 : chase(fx.roll, balance * k.grindRoll, k.rollRate, dt),
-    flash: reduced ? 0 : Math.max(flash - k.flashDecay * dt, 0),
+    flash: reduced ? 0 : flash,
     // The last vertical velocity in the air: the fall speed of the next landing.
     airVy: skater.state === "air" ? (skater.velocity?.[1] ?? 0) : airVy,
     reduced,

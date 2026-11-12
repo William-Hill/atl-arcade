@@ -506,6 +506,9 @@ function stepAir(s, input, dt, env, k) {
     s.groundId = g.id;
     s.state = "rolling";
     s.justLanded = true;
+    // The fall speed into the surface on this landing (m/s), for the camera
+    // effects (#253). The projection below removes it from the velocity.
+    s.landFall = Math.max(-d, 0);
     s.velocity = vt;
   }
 }

@@ -140,6 +140,23 @@ describe("landing fall speed", () => {
   });
 });
 
+describe("a long frame", () => {
+  it("shows a new bank flash and a new fall shake at full size on their first frame", () => {
+    const fx = stepCameraFx(createCameraFx(), rest, [{ type: "bank", points: CAMERA_FX.bigBank }, { type: "fall" }], 0.1);
+    expect(fx.flash).toBe(CAMERA_FX.bankFlash);
+    expect(fx.trauma).toBe(CAMERA_FX.fallTrauma);
+  });
+
+  it("uses the fall speed of the land event when it has one", () => {
+    // The last air frame saw 2 m/s, but the landing tick fell at 12 m/s.
+    let fx = stepCameraFx(createCameraFx(), { state: "air", speed: 5, velocity: [5, -2, 0] }, [], DT);
+    fx = stepCameraFx(fx, rest, [{ type: "land", fall: 12 }], DT);
+    expect(fx.trauma).toBeCloseTo(landingImpact(12).trauma, 9);
+    // A 2 m/s fall gives no dip; the 12 m/s fall does.
+    expect(fx.dip.v).toBeLessThan(0);
+  });
+});
+
 describe("shake frequency", () => {
   it("has its main wave at shakeFreq Hz", () => {
     expect(shakeNoise(0.25, 0)).toBeCloseTo(0.5 + 0.3 * Math.sin(2 * Math.PI * 0.25 * 2.31) + 0.2 * Math.sin(2 * Math.PI * 0.25 * 4.17), 9);
@@ -184,7 +201,7 @@ describe("zoom punch and flash", () => {
 
   it("flashes on a gap", () => {
     const fx = stepCameraFx(createCameraFx(), rest, [{ type: "gap" }], DT);
-    expect(cameraFxOffsets(fx).flash).toBeCloseTo(CAMERA_FX.gapFlash - CAMERA_FX.flashDecay * DT, 6);
+    expect(cameraFxOffsets(fx).flash).toBe(CAMERA_FX.gapFlash);
   });
 
   it("punches on a big bank only", () => {

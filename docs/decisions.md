@@ -2288,5 +2288,6 @@ Finding MOB2-2 of the mobile audit: on the phone tier the pbr look took 6 to 9 t
 
 - Vitest: `src/ui/landmark-icons.test.js`, 28 tests; `src/ui/minimap-math.test.js` for `mapParks`.
 - Playwright: `e2e/landmark-map.spec.js`, 11 tests; screenshots `e2e/__screenshots__/landmark-map-*` and `landmark-panel-*`. The spec sets the states with the test hook.
+- `npm run perf:check -- --tiers phone`: budget PASS (95 draw calls in toon, 111 in pbr lite; the maps are 2D canvases and add no draw call to the scene). The low and high tiers were not checked.
 - M-3 is a manual check: `landmark-map-grayscale*.png` are the pictures, and a person must judge them.
 - Not verified: no person used the maps or read a panel; no real phone; the pulse has no picture (the test reads a counter). The 2D maps are the same code in both looks, so the pbr pictures differ only in the 3D scene behind the minimap.

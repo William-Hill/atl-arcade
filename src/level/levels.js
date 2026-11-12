@@ -32,6 +32,17 @@ export function withCanopy(level, canopy) {
   return { ...level, canopy, attribution };
 }
 
+// The landmark spots of a level (levels/<level>/landmarks.json, #216), by
+// level name. A level with no file has no spots.
+export const LANDMARK_FILES = {
+  "beltline-eastside": async () => (await import("../../levels/beltline-eastside/landmarks.json")).default,
+};
+
+// The landmark data of a loaded level, or null.
+export async function loadLandmarks(name) {
+  return Object.hasOwn(LANDMARK_FILES, name) ? LANDMARK_FILES[name]() : null;
+}
+
 export const DEFAULT_LEVEL = "beltline-eastside";
 
 export const LEVEL_ALIASES = { beltline: "beltline-eastside" };

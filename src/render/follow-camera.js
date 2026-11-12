@@ -1,11 +1,21 @@
 import * as THREE from "three";
 import { NO_LOOK, cameraPivot, createCameraState, createLook, placeCamera, resolveClip, stepCamera, stepLook } from "../sim/camera.js";
+import { cameraFxOffsets, createCameraFx, stepCameraFx } from "../sim/camera-fx.js";
 import { ALL_GROUPS, GROUP, collisionGroups } from "../physics/world.js";
 
 // Applies the pure camera state to a Three.js camera and keeps it out of
 // walls with a Rapier ray from the skater pivot toward the camera.
+//
+// The camera effects (#253, src/sim/camera-fx.js) go on top of the placed
+// pose: the FOV offset on the base FOV (`camera.userData.baseFov`, from
+// fitToWindow), a shake and a dip in the camera's own right and up axes, and
+// a roll. They go on after the wall clip. The shake (0.08 m at most) stays
+// inside the clip margin (0.3 m), so an effect never puts the camera through
+// a wall.
 export function createFollowCamera(camera, { RAPIER, world, skater }) {
   let state = createCameraState(skater);
+  let fx = createCameraFx();
+  let offsets = cameraFxOffsets(fx);
   const rayGroups = collisionGroups(ALL_GROUPS, GROUP.wall | GROUP.ground | GROUP.ledge);
   const origin = new THREE.Vector3();
   const dir = new THREE.Vector3();
@@ -27,7 +37,9 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
 
   return {
     // `lookDelta` is { yaw, pitch } in rad for this frame (mapLook), or null.
-    update(current, dt, lookDelta = null) {
+    // `events` are the sim events since the last frame. `fxOpts.reduced`
+    // keeps only a smaller speed FOV (prefers-reduced-motion, ?camfx=0).
+    update(current, dt, lookDelta = null, events = [], fxOpts = {}) {
       look = stepLook(look, lookDelta ?? NO_LOOK, dt);
       state = stepCamera(state, current, dt, undefined, look);
       const pivot = cameraPivot(current);
@@ -38,9 +50,23 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
       const placed = placeCamera(state, pivot, allowed);
       camera.position.set(placed.position[0], placed.position[1], placed.position[2]);
       camera.lookAt(placed.lookAt[0], placed.lookAt[1], placed.lookAt[2]);
+
+      fx = stepCameraFx(fx, current, events, dt, fxOpts);
+      offsets = cameraFxOffsets(fx);
+      if (offsets.right !== 0) camera.translateX(offsets.right);
+      if (offsets.up !== 0) camera.translateY(offsets.up);
+      if (offsets.roll !== 0) camera.rotateZ(offsets.roll);
+      const base = camera.userData.baseFov ?? camera.fov;
+      const fov = base + offsets.fov;
+      if (camera.fov !== fov) {
+        camera.fov = fov;
+        camera.updateProjectionMatrix();
+      }
     },
     reset(current) {
       state = createCameraState(current);
+      fx = createCameraFx();
+      offsets = cameraFxOffsets(fx);
       look = createLook();
       allowed = Infinity;
     },
@@ -49,6 +75,10 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
     },
     get look() {
       return look;
+    },
+    // The effect offsets of the last frame: { fov, right, up, roll, flash }.
+    get fx() {
+      return offsets;
     },
     get lastHit() {
       return lastHit;

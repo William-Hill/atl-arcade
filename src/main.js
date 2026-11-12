@@ -9,6 +9,7 @@ import { createLoader } from "./ui/loader.js";
 import { toonSkater } from "./render/toon.js";
 import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
+import { createScreenFlash } from "./ui/screen-flash.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkaterEnv } from "./sim/skate/skater.js";
 import { createRun, stepRun, teleportRun } from "./sim/skate/run.js";
@@ -489,6 +490,8 @@ const minimap =
     : null;
 // Simulation events for the tests and the playtest harness.
 const events = [];
+// The index of the first event the camera effects (#253) have not read yet.
+let camFxEvent = 0;
 
 // Beat clock: starts on the first key or pointer press (browser audio
 // policy). The beat never gates input; moves that land near a beat earn
@@ -579,6 +582,7 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   if (traffic) traffic = makeTraffic();
   if (npcSkaters) npcSkaters = createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] });
   events.length = 0;
+  camFxEvent = 0;
   if (follow) follow.reset(skater);
 }
 
@@ -603,6 +607,13 @@ if (view === "follow") {
   follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
   lookInput = createLookInput({ element: renderer.domElement });
 }
+
+// Camera effects (#253): ?camfx=0 or the system reduced-motion setting
+// keeps only a smaller speed FOV. The media query is live.
+const reducedMotionQuery = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+const camFxOff = params.get("camfx") === "0";
+const camFxReduced = () => camFxOff || Boolean(reducedMotionQuery?.matches);
+const screenFlash = follow ? createScreenFlash() : null;
 
 // Photo mode (#90, src/ui/photo-panel.js): P or the PHOTO button. The
 // simulation stops and a free camera moves while it is open.
@@ -706,8 +717,11 @@ function frame(now) {
   }
   if (follow && !paused) {
     const dt = Math.min(elapsed, 0.1);
-    follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
+    const fresh = events.slice(camFxEvent);
+    camFxEvent = events.length;
+    follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null, fresh, { reduced: camFxReduced() });
   }
+  if (screenFlash) screenFlash.set(paused || !follow ? 0 : follow.fx.flash);
   hud.update(run, now, beat.running ? beat.phase() : null, goals);
   if (results && goals.ended && !results.shown) results.show(computeResults(goalsJson(goals, goalDef), goalDef));
   if (minimap) minimap.update(skater);
@@ -1172,6 +1186,10 @@ window.__atl = {
   skaterScreenHeight,
   get fov() {
     return camera.fov;
+  },
+  // Camera effects (#253): the offsets of the last frame and the gate.
+  get cameraFx() {
+    return follow ? { ...follow.fx, reduced: camFxReduced(), baseFov: camera.userData.baseFov ?? camera.fov, flashShown: screenFlash ? screenFlash.amount : 0 } : null;
   },
   get rendererInfo() {
     return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };

@@ -29,5 +29,7 @@ export function fitToWindow(renderer, camera) {
   // A short landscape screen (a phone on its side) gets a narrower view, so
   // the skater is large enough to read (#73).
   camera.fov = fovFor(width, height);
+  // The follow camera adds its effect offset (#253) to this base FOV.
+  camera.userData.baseFov = camera.fov;
   camera.updateProjectionMatrix();
 }

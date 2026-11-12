@@ -95,6 +95,12 @@ import { createShadowPass } from "./render/shadow-pass.js";
 import { createViewCull } from "./render/view-cull.js";
 import { createEffects } from "./render/effects/effects-view.js";
 import { createLateLoads, lateLoadPlan, propTimeoutFor } from "./render/late-load.js";
+import { medalScore } from "./sim/landmarks.js";
+import { goalLine, landmarkStepArgs, withClaimMedal, withGapGoal } from "./landmarks/play.js";
+import { createLandmarkRings } from "./render/landmark-rings.js";
+import { ringCapacity } from "./render/landmark-rings-math.js";
+import { createLandmarkBanner, districtAccent } from "./ui/landmark-banner.js";
+import { createChimes } from "./audio/chimes.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -378,6 +384,28 @@ if (skateparkView) {
 // a spot names is an area of the loaded level only (#222).
 const landmarkData = geo ? await loadLandmarks(level.name) : null;
 const landmarkTracker = landmarkData ? createLandmarkTracker({ data: landmarkData, level, storage: settingsStorage }) : null;
+// The challenge rings (#219, src/render/landmark-rings.js): 1 draw call for
+// all rings, and none when no spot is Found. ?rings=0 leaves them out.
+const landmarkGround = env.sampleGroundNoFence ?? env.sampleGround;
+const landmarkRings = landmarkTracker && params.get("rings") !== "0"
+  ? createLandmarkRings({
+      capacity: ringCapacity(landmarkTracker.state.spots),
+      look,
+      tier: quality,
+      // The ground near the height y: a roof or a bridge deck high over it is left out.
+      groundAt: (x, z, y) => landmarkGround(x, z, y)?.height ?? null,
+      // The ground of a zone center: the deck when the zone is on a bridge,
+      // the trail under it otherwise (as fast travel lands).
+      centerAt: (x, z) => {
+        const terrain = terrainOf(level).height(x, z);
+        const spot = travelSpot(level, x, z);
+        const strip = spot && Math.hypot(spot.x - x, spot.z - z) < 4 ? spot : null;
+        return landmarkGround(x, z, strip ? landingProbe(level, strip, terrain) : terrain + 2)?.height ?? terrain;
+      },
+      reducedMotion: () => effects.reducedMotion,
+    })
+  : null;
+if (landmarkRings) scene.add(landmarkRings.group);
 const landmarkModels = landmarkGlbs ? createLandmarkModels(level.name, { after: firstFrame }) : null;
 if (landmarkModels) {
   scene.add(landmarkModels.root);
@@ -838,6 +866,18 @@ beat.muted = params.get("mute") === "1";
 beat.preload();
 // Game-feel sounds (#105): bonk, landing and wall scrape on the beat clock's context.
 const sfx = createSfx(beat);
+// The landmark banner and chimes (#219). The banner is its own element: it is
+// not the HUD notice line. A timed run has a goal list; a free run finds
+// spots and claims none.
+const landmarkTimed = Boolean(goalDef);
+const landmarkBanner = landmarkTracker ? createLandmarkBanner(document.body, { reducedMotion: () => effects.reducedMotion }) : null;
+const landmarkAnchors = geo ? districtAnchors(level) : [];
+const chimes = createChimes(beat);
+// True for the first tick after "Travel here": a challenge ignores that tick.
+let landmarkTravel = false;
+// The landmark view of the last frame, and the state it was made from.
+let landmarkViewOf = null;
+let landmarkViewNow = null;
 const musicChoices = beat.tracks.length ? trackChoices(beat.tracks) : [];
 const onTrack = (id) => {
   writeChoice(settingsStorage, id);
@@ -940,6 +980,27 @@ function simulate(dt) {
   if (skater.justFell) events.push({ tick: skater.tick, type: "fall", position: [...skater.position] });
   if (skater.justLanded) events.push({ tick: skater.tick, type: "land", groundId: skater.groundId, speed: skater.speed });
   if (skater.justJumped) events.push({ tick: skater.tick, type: "jump" });
+  // Landmark discovery, after the goals and the fact cards of this tick. A
+  // banner waits while the fact pop-up shows. Play never pauses for it.
+  if (landmarkTracker) {
+    const step = landmarkStepArgs(run, { timed: landmarkTimed, goals, teleported: landmarkTravel });
+    landmarkTravel = false;
+    const changed = landmarkTracker.step(step.obs, dt, { active: step.active, hold: Boolean(factPopup?.state.visible) });
+    for (const id of changed.found) {
+      events.push({ tick: run.tick, type: "landmark-found", id });
+      chimes.play("found");
+    }
+    for (const c of changed.claimed) {
+      events.push({ tick: run.tick, type: "landmark-claimed", id: c.id, points: c.points, first: c.first });
+      chimes.play("claimed");
+      // A gap claim at the zone of a gap goal marks that goal in this run.
+      const marked = withGapGoal(goals, c.goal, goalDef);
+      if (marked !== goals) {
+        goals = marked;
+        events.push({ tick: run.tick, type: "gap", id: c.goal });
+      }
+    }
+  }
 }
 
 let follow = null;
@@ -959,6 +1020,7 @@ function fastTravel(x, z) {
   skaterView.respawn(skater);
   if (follow) follow.reset(skater);
   events.push({ type: "travel", x: spot.x, z: spot.z });
+  landmarkTravel = true;
   return { ...spot, y };
 }
 
@@ -974,6 +1036,10 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   if (traffic) traffic = makeTraffic();
   if (peds) peds = makePeds();
   if (npcSkaters) npcSkaters = createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] });
+  // A new run: the spot states stay, the run record and the attempts start again.
+  landmarkTracker?.startRun();
+  landmarkRings?.reset();
+  landmarkTravel = false;
   events.length = 0;
   // The model faces the new heading at once, also while the render is
   // paused (#231).
@@ -1063,6 +1129,13 @@ fullmap =
       })
     : null;
 
+// The results of the run. Claim points count toward the medal only: the
+// score and the score goal keep the banked score (GDD, Claim points).
+function runResults() {
+  const base = computeResults(goalsJson(goals, goalDef), goalDef);
+  return landmarkTracker ? withClaimMedal(base, goalDef.medals, medalScore(base.score, landmarkTracker.state) - base.score) : base;
+}
+
 let stepper = createStepper();
 let ticks = 0;
 let last = performance.now();
@@ -1143,8 +1216,24 @@ function frame(now) {
     const dt = Math.min(elapsed, 0.1);
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null);
   }
-  hud.update(run, now, beat.running ? beat.phase() : null, goals);
-  if (results && goals.ended && !results.shown) results.show(computeResults(goalsJson(goals, goalDef), goalDef));
+  // Landmark discovery (#219): the goal line, the banner, the rings and the
+  // chimes read the landmark state. While the game is paused nothing moves.
+  // The view is made again only when the landmark state changes.
+  if (landmarkTracker && landmarkTracker.state !== landmarkViewOf) {
+    landmarkViewOf = landmarkTracker.state;
+    landmarkViewNow = landmarkTracker.view();
+  }
+  const landmarkNow = landmarkViewNow;
+  hud.update(run, now, beat.running ? beat.phase() : null, goals, landmarkNow ? (goalLine(landmarkNow, skater.position, { timed: landmarkTimed })?.text ?? null) : null);
+  if (landmarkNow) {
+    // The banner hides while the fact pop-up shows, while the game is paused
+    // (its time stops too), and under the results screen.
+    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown), accent: () => districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
+    landmarkRings?.update(landmarkNow.spots, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed, night: weatherView?.state.night ?? 0 });
+  }
+  if (paused) chimes.clear();
+  else chimes.update();
+  if (results && goals.ended && !results.shown) results.show(runResults());
   if (minimap) minimap.update(skater);
   if (fullmap) fullmap.update(skater);
   if (factCardsView) factCardsView.update(run.cards.collected, now / 1000);
@@ -1365,8 +1454,9 @@ window.__atl = {
     return skater;
   },
   // The landmark test hook (#217): the spot states, and find / claim / reset.
-  // In the dev server only; a release build has no way to set a spot.
-  landmarks: landmarkTracker ? landmarkTestHook(landmarkTracker, { dev: import.meta.env.DEV }) : null,
+  // In the dev server or a debug build (`vite build --mode debug`) only; a
+  // release build has no way to set a spot.
+  landmarks: landmarkTracker ? landmarkTestHook(landmarkTracker, { dev: import.meta.env.DEV || import.meta.env.MODE === "debug" }) : null,
   // The minimap (#86), or null on the greybox and with ?minimap=0.
   minimap: minimap
     ? {
@@ -1635,7 +1725,7 @@ window.__atl = {
           return goalsJson(goals, goalDef);
         },
         get results() {
-          return computeResults(goalsJson(goals, goalDef), goalDef);
+          return runResults();
         },
         get shown() {
           return results.shown;
@@ -1650,6 +1740,43 @@ window.__atl = {
       }
     : null,
   beat,
+  // What #219 draws and plays, read only: the rings, the banner, the HUD
+  // goal line and the chimes. ringCost() draws 1 frame with no ring and 1
+  // with the rings and gives the draw calls of both (GDD P-1).
+  landmarkFx: landmarkTracker
+    ? {
+        get rings() {
+          return landmarkRings ? { ...landmarkRings.info, list: landmarkRings.rings } : null;
+        },
+        get banner() {
+          return landmarkBanner.state;
+        },
+        get goalLine() {
+          return hud.elements.goal.hidden ? null : hud.elements.goal.textContent;
+        },
+        get chimes() {
+          return chimes.info;
+        },
+        timed: landmarkTimed,
+        get saved() {
+          return landmarkTracker.saved;
+        },
+        // Draws 1 frame now, with the rings hidden or shown, and gives its
+        // draw calls. 2 calls in one task draw the same scene twice.
+        drawRings(hidden) {
+          if (!landmarkRings) return null;
+          landmarkRings.setHidden(hidden);
+          draw();
+          landmarkRings.setHidden(false);
+          return renderer.info.render.calls;
+        },
+        ringCost() {
+          if (!landmarkRings) return null;
+          const without = this.drawRings(true);
+          return { without, with: this.drawRings(false), rings: landmarkRings.info.rings };
+        },
+      }
+    : null,
   input: {
     get source() {
       return input.source;

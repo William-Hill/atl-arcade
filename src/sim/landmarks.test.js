@@ -525,6 +525,47 @@ describe("F-7: the banner queue", () => {
   });
 });
 
+describe("#219: a banner waits while the fact card pop-up shows (hold)", () => {
+  const found = (id) => ({ type: "found", id, title: id, text: "" });
+  const EMPTY = { current: null, queue: [], dropped: 0 };
+
+  it("starts no banner while the hold is on, and starts it with its full time after", () => {
+    let b = stepBanner(EMPTY, 0, [found("a")], LANDMARKS, { hold: true });
+    expect(b.current).toBeNull();
+    expect(b.queue.map((q) => q.id)).toEqual(["a"]);
+    for (let i = 0; i < 120; i += 1) b = stepBanner(b, DT, [], LANDMARKS, { hold: true });
+    expect(b.current).toBeNull();
+    b = stepBanner(b, DT);
+    expect(b.current).toMatchObject({ id: "a", time: 3, left: 3 });
+  });
+
+  it("puts a banner on show back to its full time, and it shows again after the hold", () => {
+    let b = stepBanner(EMPTY, 0, [found("a")]);
+    b = stepBanner(b, 1);
+    expect(b.current.left).toBeCloseTo(2, 9);
+    b = stepBanner(b, 1, [], LANDMARKS, { hold: true });
+    expect(b.current).toMatchObject({ id: "a", left: 3 });
+    const held = stepBanner(b, 1, [], LANDMARKS, { hold: true });
+    expect(held).toBe(b);
+    expect(stepBanner(b, 1).current.left).toBeCloseTo(2, 9);
+  });
+
+  it("keeps the cap of 2 Found banners that wait during the hold", () => {
+    const b = stepBanner(EMPTY, 0, [found("a"), found("b"), found("c")], LANDMARKS, { hold: true });
+    expect(b.queue.map((q) => q.id)).toEqual(["a", "b"]);
+    expect(b.dropped).toBe(1);
+  });
+
+  it("still finds the spot in the step: only the banner waits", () => {
+    let s = step(fresh(), obs(300, 0), DT, { hold: true });
+    expect(spotState(s, "bridge")).toBe("found");
+    expect(s.events.found).toEqual(["bridge"]);
+    expect(s.banner.current).toBeNull();
+    s = step(s, obs(300, 0));
+    expect(s.banner.current).toMatchObject({ type: "found", id: "bridge", time: 3 });
+  });
+});
+
 describe("the banner of a spot that is claimed while its Found banner waits", () => {
   it("takes the Found banner out of the queue", () => {
     let s = markSpot(fresh(), "warehouse", "found");

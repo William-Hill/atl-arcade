@@ -39,6 +39,8 @@ function boxes(page) {
       ["groove", ".touch-style1"],
       ["spin", ".touch-style2"],
       ["switch", ".touch-switch"],
+      // The landmark goal line (#219): the spawn is in the find zone of a spot.
+      ["goal", "#hud-goal"],
     ];
     const out = [];
     for (const [name, sel] of items) {

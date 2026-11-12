@@ -69,6 +69,11 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
   notice.setAttribute("role", "status");
   notice.hidden = true;
   let noticeTimer = null;
+  // The goal line of landmark discovery (#219): the challenge of the nearest
+  // Found spot. The text is plain text from the data file (textContent).
+  const goal = el("div", "hud-hint hud-goal", root);
+  goal.id = "hud-goal";
+  goal.hidden = true;
 
   const styleWrap = el("div", "hud-meter hud-style", root);
   const styleText = el("span", "hud-label", styleWrap);
@@ -90,7 +95,10 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
 
   return {
     // `goals` is the goal state (src/sim/skate/goals.js), or null for free skate.
-    update(run, nowMs = performance.now(), beatPhase = null, goals = null) {
+    // `goalLine` is the landmark goal line (src/landmarks/play.js), or null.
+    update(run, nowMs = performance.now(), beatPhase = null, goals = null, goalLine = null) {
+      if (goal.hidden !== !goalLine) goal.hidden = !goalLine;
+      if (goalLine && goal.textContent !== goalLine) goal.textContent = goalLine;
       const c = run.combo;
       timer.hidden = !goals;
       if (goals) {
@@ -155,6 +163,6 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
         notice.hidden = true;
       }, ms);
     },
-    elements: { score, timer, combo, pending, tag, pulse, edge, notice, styleWrap, styleText, styleFill, balanceWrap, balanceDot },
+    elements: { score, timer, combo, pending, tag, pulse, edge, notice, goal, styleWrap, styleText, styleFill, balanceWrap, balanceDot },
   };
 }

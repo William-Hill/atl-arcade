@@ -701,11 +701,94 @@ body.results-open #touch-controls { display: none; }
 #fullmap .fullmap-legend-row { display: flex; align-items: center; gap: 8px; }
 #fullmap .fullmap-key { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--atl-ink); }
 #fullmap .fullmap-key-you { background: var(--atl-paper); border-radius: 2px; transform: rotate(45deg) scale(0.8); outline: 2px solid var(--atl-pink); }
-#fullmap .fullmap-key-landmark { background: #ffd166; border-radius: 50%; }
 #fullmap .fullmap-key-park { background: #7ef0a0; clip-path: polygon(50% 0, 100% 100%, 0 100%); border: 0; }
 #fullmap .fullmap-key-trail { background: var(--atl-pink); height: 6px; border: 0; border-radius: 3px; }
+#fullmap .spot-icon { display: block; flex: none; }
+
+/* The landmark spots on the full map (#218, src/ui/landmark-guide.js): the
+   Map and Guide tabs, the Guide list, and the panel of one spot. */
+#fullmap .fullmap-tabs { display: flex; gap: 6px; }
+#fullmap .fullmap-tabs[hidden] { display: none; }
+#fullmap .fullmap-tab { padding: 0 16px; font-size: 14px; }
+#fullmap .fullmap-tab[aria-selected="true"] { background: var(--atl-paper); color: var(--atl-ink); border-color: var(--atl-paper); }
+#fullmap .fullmap-guide {
+  position: absolute;
+  top: calc(80px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  width: min(340px, calc(100vw - 24px));
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(11, 11, 18, 0.92);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#fullmap .fullmap-guide[hidden] { display: none; }
+#fullmap[data-tab="guide"] .fullmap-legend { display: none; }
+#fullmap .fullmap-guide-counts { display: flex; flex-wrap: wrap; gap: 4px 16px; padding-bottom: 8px; border-bottom: 2px solid rgba(255, 255, 255, 0.25); }
+#fullmap .fullmap-guide-counts p { margin: 0; font-weight: 800; font-size: 15px; }
+#fullmap .fullmap-guide-kind { margin: 12px 0 4px; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; }
+#fullmap .fullmap-guide ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+#fullmap .fullmap-guide-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  height: auto;
+  padding: 4px 10px 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  font: 14px/1.25 system-ui, sans-serif;
+  text-align: left;
+}
+#fullmap .fullmap-guide-text { display: grid; min-width: 0; }
+#fullmap .fullmap-guide-name { font-weight: 700; }
+#fullmap .fullmap-guide-status { font-size: 13px; opacity: 0.85; }
+#fullmap .fullmap-card {
+  position: absolute;
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(520px, calc(100vw - 24px));
+  max-height: min(62vh, 520px);
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 2px solid #ffd166;
+  border-radius: 12px;
+  background: #14141f;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+}
+#fullmap .fullmap-card[hidden] { display: none; }
+#fullmap .fullmap-card-head { display: flex; align-items: center; gap: 10px; }
+#fullmap .fullmap-card-names { flex: 1; min-width: 0; }
+#fullmap .fullmap-card-title { margin: 0; font-size: 18px; line-height: 1.2; }
+#fullmap .fullmap-card-kind { font-size: 13px; opacity: 0.85; }
+#fullmap .fullmap-card-kind[hidden] { display: none; }
+#fullmap .fullmap-card-body { overflow-y: auto; overscroll-behavior: contain; }
+#fullmap .fullmap-card-body p { margin: 0 0 6px; }
+#fullmap .fullmap-card-short { font-weight: 600; }
+#fullmap .fullmap-card-prompt { font-weight: 800; }
+#fullmap .fullmap-card-facts { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+#fullmap .fullmap-card-source { display: block; font-size: 13px; opacity: 0.9; }
+#fullmap .fullmap-card-source a { color: #ffd166; text-decoration: underline; }
+#fullmap .fullmap-card-source a:focus-visible { outline: 2px solid #ffd166; outline-offset: 2px; }
+#fullmap .fullmap-card-foot:empty { display: none; }
+/* A wide screen: the panel sits beside the open Guide list, not over it. */
+@media (min-width: 1100px) {
+  #fullmap[data-tab="guide"] .fullmap-card { left: calc(50% + 176px); }
+}
+
 /* A small screen: no hint line, and the legend stays clear of the info. */
 @media (max-width: 700px) {
+  #fullmap .fullmap-guide { top: calc(68px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); width: auto; }
+  #fullmap .fullmap-tab { padding: 0 12px; }
   #fullmap .fullmap-hint { display: none; }
   #fullmap .fullmap-title { min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #fullmap .fullmap-legend { display: none; }

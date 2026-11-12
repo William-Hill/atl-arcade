@@ -5,7 +5,7 @@
 // World axes: +x east, +z south (meters). Map axes: +x right, +y down
 // (pixels of the base image). North is up on the base image.
 
-import { LANDMARKS, interiorPoint } from "../level/geo/landmarks.js";
+import { interiorPoint } from "../level/geo/landmarks.js";
 
 export const MINIMAP = {
   // Base image pixels per world meter, before the size limit.
@@ -107,15 +107,11 @@ export function initials(name) {
     .slice(0, 3);
 }
 
-// The landmark icons: the landmark buildings (src/level/geo/landmarks.js)
-// and the named parks. [{ id, kind: "landmark" | "park", name, label, x, z }].
-export function mapLandmarks(level) {
+// The named parks, one icon each: [{ id, kind: "park", name, label, x, z }].
+// The landmark spots have their own icons (src/ui/landmark-icons.js, #218),
+// and a park that is a spot has no icon here (parkIcons() there).
+export function mapParks(level) {
   const out = [];
-  for (const lm of LANDMARKS) {
-    const b = (level.buildings ?? []).find((x) => x.name === lm.buildingName);
-    const p = b ? interiorPoint(b) : null;
-    if (p) out.push({ id: lm.id, kind: "landmark", name: lm.buildingName, label: initials(lm.buildingName), x: p[0], z: p[1] });
-  }
   const seen = new Set();
   for (const a of level.areas ?? []) {
     if (a.kind !== "park" || !a.name || seen.has(a.name)) continue;

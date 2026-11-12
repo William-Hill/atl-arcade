@@ -6,13 +6,30 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## #218 landmark icons on the maps and the Guide tab, 2026-11-12
+
+Branch `claude/218-landmark-map-icons` from `epic/city-look`; no PR yet (the owner asks for it). Details: `docs/decisions.md`, 2026-11-12.
+
+| Part | Where | Verified |
+|---|---|---|
+| Icon math (looks, sizes, 6 glyphs, icon list, Guide rows, panel text, https check, pulse) | `src/ui/landmark-icons.js` | Vitest `src/ui/landmark-icons.test.js`, 28 tests |
+| Canvas icon, Guide tab and panel DOM | `src/ui/spot-icon.js`, `src/ui/landmark-guide.js` | Playwright (below) |
+| Minimap and full map read the tracker | `src/ui/minimap.js`, `src/ui/fullmap.js`, `src/ui/minimap-math.js` (`mapParks` replaces `mapLandmarks`), `src/shell.css` | Playwright `e2e/landmark-map.spec.js` 11 of 11: the 4 states (Unknown, Found, Claimed, edge Found) on the minimap and the full map in the toon look and `?look=pbr`, at 1280 x 720 and 390 x 844, icons 22 px and 14 px on the minimap and 24 px on the full map; a click, a tap and the keyboard open the panel of each state; Escape, the close button and a tap outside close it; the Guide tab shows "2 of 13 claimed" and "5 of 15 found"; the free run text; the pulse and no pulse with reduced motion |
+| Tracker and test hook in the game | `src/main.js` (after the `skateparkView` block), `src/level/levels.js` `loadLandmarks()` | `window.__atl.landmarks` in the dev server; the spec sets the states with it |
+
+#218 tests, cloud container: `npm test` 1737 of 1739 pass (the 2 known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`). `npm run build` passes. Playwright `landmark-map`, `fullmap`, `minimap`: 22 of 23 pass; the 1 failure is `minimap.spec.js` "the choice stays after a reload", which passes the 30 s test limit with 2 page loads and fails the same way on `epic/city-look`. The full e2e suite did not run. `npm run perf:check -- --tiers phone` (both looks): budget PASS, 95 draw calls in toon and 111 in pbr lite, heap 61.7 MB and 50.3 MB (cap 100); the low and high tiers did not finish inside the 10 minute limit of the first run and were not run again.
+
+#218 NOT verified: M-3 (a person must judge the grayscale pictures `e2e/__screenshots__/landmark-map-grayscale*.png`); no person used the maps or read a panel; no real phone or GPU. This branch does not step the tracker: a spot changes only through the test hook until #219 merges. The panel is plain; the trading card, the results row and "Reset progress" are #220. `/ux-design` did not run for the Guide tab (the GDD UX flag).
+
+For the merge with #219: both branches add the tracker after the `skateparkView` block in `src/main.js` and `window.__atl.landmarks`; keep one copy of each. Here the hook is on with `import.meta.env.DEV` only.
+
 ## #219 Landmark rings, banners, HUD goal line and chimes, 2026-11-12
 
 Branch `claude/219-landmark-rings-banners` from `epic/city-look`; no PR yet (the owner asks for it). Design: `design/gdd/landmark-discovery.md` on `main`. Decisions: `docs/decisions.md`, 2026-11-12. #218 (map icons, the Guide tab) runs in another session at the same time: both branches create `landmarkTracker` in `src/main.js` after the `skateparkView` block and put `landmarkTestHook` at `window.__atl.landmarks`.
 
 | Part | Where | Verified |
 |---|---|---|
-| Tracker in the game loop | `src/main.js`, `src/level/landmark-data.js`, `src/landmarks/play.js` | Vitest `play.test.js`; Playwright: a ride finds and claims, the claim is in `atl.landmarks` after a reload |
+| Tracker in the game loop | `src/main.js` (data from `loadLandmarks()` of #218), `src/landmarks/play.js` | Vitest `play.test.js`; Playwright: a ride finds and claims, the claim is in `atl.landmarks` after a reload |
 | Banners (Found, Claimed) | `src/ui/landmark-banner.js`, `#landmark-banner` in `src/shell.css`, `hold` in `src/sim/landmarks.js` | Vitest; Playwright in both looks at 1280 x 720, 390 x 844, 360 x 640 and 1024 x 550 |
 | HUD goal line | `src/ui/hud.js` (`#hud-goal`), `goalLine()` in `src/landmarks/play.js` | Vitest; Playwright |
 | Challenge rings | `src/render/landmark-rings.js`, `landmark-rings-math.js` | Vitest (V-1, tiers, shapes); Playwright: 4 shapes in both looks, +1 draw call with 5 Found spots on the phone tier and +0 with none, no red pixel |

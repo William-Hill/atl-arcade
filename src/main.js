@@ -18,14 +18,15 @@ import { createFullMap } from "./ui/fullmap.js";
 import { isoTilesFor } from "./ui/iso-tiles.js";
 import { travelSpot, landingProbe } from "./level/geo/travel.js";
 import { ISO, isoBasis, isoCameraPose, levelIsoGrid, tileCenter } from "./level/geo/iso-map.js";
-import { mapLandmarks } from "./ui/minimap-math.js";
+import { createIconSource } from "./ui/landmark-icons.js";
 import { createScreenControls } from "./ui/screen-controls.js";
 import { createSkaterSelect, createSkaterSwitch, resolveSkater, skaterUrl } from "./ui/skater-select.js";
 import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
 import { beatClockOptions, trackChoices, writeChoice } from "./audio/music-tracks.js";
 import { createSfx } from "./audio/sfx.js";
-import { loadLevel, resolveLevelName } from "./level/levels.js";
+import { loadLandmarks, loadLevel, resolveLevelName } from "./level/levels.js";
+import { createLandmarkTracker, landmarkTestHook } from "./sim/landmarks.js";
 import { goalsFor } from "./level/goals.js";
 import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
 import { createResults } from "./ui/results.js";
@@ -94,8 +95,7 @@ import { createShadowPass } from "./render/shadow-pass.js";
 import { createViewCull } from "./render/view-cull.js";
 import { createEffects } from "./render/effects/effects-view.js";
 import { createLateLoads, lateLoadPlan, propTimeoutFor } from "./render/late-load.js";
-import { createLandmarkTracker, landmarkTestHook, medalScore } from "./sim/landmarks.js";
-import { landmarksFor } from "./level/landmark-data.js";
+import { medalScore } from "./sim/landmarks.js";
 import { goalLine, landmarkStepArgs, withClaimMedal, withGapGoal } from "./landmarks/play.js";
 import { createLandmarkRings } from "./render/landmark-rings.js";
 import { ringCapacity } from "./render/landmark-rings-math.js";
@@ -379,11 +379,10 @@ if (skateparkView) {
   scene.add(skateparkView.group);
   skateparkView.ready.catch((err) => console.error(err));
 }
-// Landmark discovery (#217, design/gdd/landmark-discovery.md): the Found and
-// Claimed state of each spot of levels/<level>/landmarks.json, with its save
-// under `atl.landmarks`. The level is the LOADED level: the skatepark pad is
-// an area of it, not of level.json. Null on a level with no landmark file.
-const landmarkData = geo ? landmarksFor(level.name) : null;
+// Landmark discovery (#217): the spot states of this level, with the save
+// under `atl.landmarks`. It takes the loaded level: the skatepark pad that
+// a spot names is an area of the loaded level only (#222).
+const landmarkData = geo ? await loadLandmarks(level.name) : null;
 const landmarkTracker = landmarkData ? createLandmarkTracker({ data: landmarkData, level, storage: settingsStorage }) : null;
 // The challenge rings (#219, src/render/landmark-rings.js): 1 draw call for
 // all rings, and none when no spot is Found. ?rings=0 leaves them out.
@@ -891,9 +890,17 @@ const minimapParam = params.get("minimap");
 // The full map (src/ui/fullmap.js) is made after photo mode, below; the
 // minimap expand button opens it.
 let fullmap = null;
+// The map icons (#218): the landmark spots with their states, read from the
+// tracker, and the parks that no spot stands for.
+const mapIconSource = geo ? createIconSource({ tracker: landmarkTracker, level, data: landmarkData }) : null;
 const minimap =
   geo && minimapParam !== "0"
-    ? createMinimap(document.body, level, { mode: ["north", "heading"].includes(minimapParam) ? minimapParam : undefined, onExpand: () => fullmap?.open() })
+    ? createMinimap(document.body, level, {
+        mode: ["north", "heading"].includes(minimapParam) ? minimapParam : undefined,
+        onExpand: () => fullmap?.open(),
+        source: mapIconSource,
+        reducedMotion: () => effects.reducedMotion,
+      })
     : null;
 // Simulation events for the tests and the playtest harness.
 const events = [];
@@ -1107,7 +1114,10 @@ const settingsMenu = createSettingsMenu({
 fullmap =
   geo && params.get("fullmap") !== "0"
     ? createFullMap(document.body, level, {
-        icons: minimap?.icons ?? mapLandmarks(level),
+        source: mapIconSource,
+        // A free run has no timer, so no spot can be claimed in it.
+        freeRun: !goalDef,
+        reducedMotion: () => effects.reducedMotion,
         canOpen: () => !photo.isOpen && !settingsMenu.isOpen,
         onChange: () => input.reset(),
         // The baked isometric map of the level (scripts/bake-iso-map.mjs).
@@ -1443,13 +1453,20 @@ window.__atl = {
   get skater() {
     return skater;
   },
+  // The landmark test hook (#217): the spot states, and find / claim / reset.
+  // In the dev server or a debug build (`vite build --mode debug`) only; a
+  // release build has no way to set a spot.
+  landmarks: landmarkTracker ? landmarkTestHook(landmarkTracker, { dev: import.meta.env.DEV || import.meta.env.MODE === "debug" }) : null,
   // The minimap (#86), or null on the greybox and with ?minimap=0.
   minimap: minimap
     ? {
         get state() {
           return { ...minimap.state };
         },
-        icons: minimap.icons,
+        get icons() {
+          return minimap.icons;
+        },
+        iconsOnScreen: () => minimap.iconsOnScreen(),
         setMode: minimap.setMode,
         setHidden: minimap.setHidden,
       }
@@ -1476,6 +1493,10 @@ window.__atl = {
         setLayer: (l) => fullmap.setLayer(l),
         select: (icon, target) => fullmap.select(icon, target),
         travel: () => fullmap.travel(),
+        setTab: (tab) => fullmap.setTab(tab),
+        openSpot: (id) => fullmap.openSpot(id),
+        closeCard: () => fullmap.closeCard(),
+        iconsOnScreen: () => fullmap.iconsOnScreen(),
       }
     : null,
   // The crowd (M1-09), or null on the greybox and with ?npcs=0.
@@ -1719,10 +1740,6 @@ window.__atl = {
       }
     : null,
   beat,
-  // Landmark discovery. The test hook (GDD Open Question 2) is in dev and
-  // debug builds only (`vite` or `vite build --mode debug`): a release build
-  // has no way to set a spot. Null on a level with no landmark file.
-  landmarks: landmarkTracker ? landmarkTestHook(landmarkTracker, { dev: import.meta.env.DEV || import.meta.env.MODE === "debug" }) : null,
   // What #219 draws and plays, read only: the rings, the banner, the HUD
   // goal line and the chimes. ringCost() draws 1 frame with no ring and 1
   // with the rings and gives the draw calls of both (GDD P-1).

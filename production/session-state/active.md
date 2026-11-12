@@ -6,6 +6,25 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## #219 Landmark rings, banners, HUD goal line and chimes, 2026-11-12
+
+Branch `claude/219-landmark-rings-banners` from `epic/city-look`; no PR yet (the owner asks for it). Design: `design/gdd/landmark-discovery.md` on `main`. Decisions: `docs/decisions.md`, 2026-11-12. #218 (map icons, the Guide tab) runs in another session at the same time: both branches create `landmarkTracker` in `src/main.js` after the `skateparkView` block and put `landmarkTestHook` at `window.__atl.landmarks`.
+
+| Part | Where | Verified |
+|---|---|---|
+| Tracker in the game loop | `src/main.js`, `src/level/landmark-data.js`, `src/landmarks/play.js` | Vitest `play.test.js`; Playwright: a ride finds and claims, the claim is in `atl.landmarks` after a reload |
+| Banners (Found, Claimed) | `src/ui/landmark-banner.js`, `#landmark-banner` in `src/shell.css`, `hold` in `src/sim/landmarks.js` | Vitest; Playwright in both looks at 1280 x 720, 390 x 844, 360 x 640 and 1024 x 550 |
+| HUD goal line | `src/ui/hud.js` (`#hud-goal`), `goalLine()` in `src/landmarks/play.js` | Vitest; Playwright |
+| Challenge rings | `src/render/landmark-rings.js`, `landmark-rings-math.js` | Vitest (V-1, tiers, shapes); Playwright: 4 shapes in both looks, +1 draw call with 5 Found spots on the phone tier and +0 with none, no red pixel |
+| Chimes | `src/audio/chimes.js`, `chime-math.js` | Vitest (notes, start time, duck, queue); Playwright: on the beat grid, under 1 beat, the music ducks |
+| Rides with the real controller | `e2e/landmark-rides.js`, `src/landmarks/rides.test.js`, `e2e/landmarks.spec.js` | All 13 challenges claim in the pure simulation; 4 run in the browser in both looks (Freedom Parkway gap, Ralph McGill grind, Telephone Factory line, skatepark combo) |
+
+#219 tests, cloud container: `npm test` 1771 of 1773 pass (the 2 known 5 s timeouts). Playwright `e2e/landmarks.spec.js` 19 of 19 pass (about 29 minutes, SwiftShader); pictures `e2e/__screenshots__/landmarks-*.jpg`. `fact-cards`, `goals` and `phone-layout` have 4 failures that fail the same way on `epic/city-look` in this container (see `docs/decisions.md`). The full e2e suite did not run. Release build: `window.__atl.landmarks` is `null`.
+
+#219 NOT verified: no person played a challenge, heard a chime or read a banner; no real GPU or phone (P-2 open); the high tier ran once by hand (pbr, night), not in the spec; real skaters did not review the challenges. The 13 rides are scripts with exact timing: they show each position can be ridden, not that a tier fits a person.
+
+#219 open points for the owner (in `docs/decisions.md`, "GDD points decided here"): the ring grows wider far from the camera; the banner at 30 vh ends just over the skater's head; the Claimed fill by the trail is an ochre near the landmark gold; the first run of a new save shows the Freedom Parkway banner at the spawn; a chime before the first key or tap is dropped. Not in #219: the results row and cards (#220), the claim burst and petals (#221), the map icons and the Guide tab (#218), "Reset progress" and the "Progress is not saved" notice in the settings menu (E-5, E-8).
+
 ## #246 pbr lite on the phone tier, 2026-11-10
 
 Branch `claude/246-pbr-lite-phone` from `epic/city-look`; no PR yet (the owner asks for it). Decision (the owner): the pbr look stays on phones as "pbr lite"; see `docs/decisions.md`, 2026-11-10, and `docs/perf/246/README.md`.

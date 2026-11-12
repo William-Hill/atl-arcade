@@ -598,6 +598,22 @@ body.photo-open #landmark-banner { visibility: hidden; }
    desktop window (the banner starts at 300 px or more from the left). */
 .hud-goal { color: #ffd166; font-weight: 600; max-width: 276px; }
 .hud-goal[hidden] { display: none; }
+/* A phone in landscape: the HUD column is full to the stick, so the goal
+   line leaves the column. It sits low on the screen, between the stick and the
+   buttons (the band of the fact pop-up). */
+@media (max-height: 500px) {
+  .hud-hint.hud-goal {
+    position: fixed;
+    left: 50%;
+    /* Over the FULL SCREEN button, which sits at the bottom of this band. */
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    max-width: min(380px, calc(100vw - 2 * (232px + env(safe-area-inset-right))));
+    margin: 0;
+    text-align: center;
+  }
+}
 
 /* The full map (src/ui/fullmap.js): the whole level over the game. It covers
    the screen, over the HUD and the minimap, and stops the game. */

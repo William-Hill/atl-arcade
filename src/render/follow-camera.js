@@ -19,6 +19,7 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
   const rayGroups = collisionGroups(ALL_GROUPS, GROUP.wall | GROUP.ground | GROUP.ledge);
   const origin = new THREE.Vector3();
   const dir = new THREE.Vector3();
+  const candidate = new THREE.Vector3();
   let look = createLook();
   let lastHit = null;
   let allowed = Infinity;
@@ -33,6 +34,16 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
     const hit = world.castRay(ray, len, true, undefined, rayGroups);
     if (!hit) return Infinity;
     return hit.timeOfImpact ?? hit.toi;
+  }
+
+  function applyOffset(right, up) {
+    const start = camera.position.toArray();
+    candidate.set(right, up, 0).applyQuaternion(camera.quaternion).add(camera.position);
+    const movement = { position: candidate.toArray() };
+    const length = Math.hypot(right, up);
+    const distance = wallDistance(movement, start);
+    const free = resolveClip(Infinity, length, distance, 0);
+    camera.position.lerp(candidate, free / length);
   }
 
   return {
@@ -54,8 +65,8 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
       fx = stepCameraFx(fx, current, events, dt, fxOpts);
       offsets = cameraFxOffsets(fx);
       const clipped = allowed < full - 1e-3;
-      if (!clipped && offsets.right !== 0) camera.translateX(offsets.right);
-      if (!clipped && offsets.up !== 0) camera.translateY(offsets.up);
+      if (!clipped && offsets.right !== 0) applyOffset(offsets.right, 0);
+      if (!clipped && offsets.up !== 0) applyOffset(0, offsets.up);
       if (offsets.roll !== 0) camera.rotateZ(offsets.roll);
       const base = camera.userData.baseFov ?? camera.fov;
       const fov = base + offsets.fov;

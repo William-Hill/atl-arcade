@@ -12,9 +12,10 @@
 export const RINGS = {
   width: 0.15, // m, the gold band (GDD)
   ink: 0.04, // m, the ink line on each side of the band
+  farWidth: 0.007, // m of band (with its ink) per meter of distance: past 33 m the band grows, to 4 times at most
   gold: "#ffd166", // the landmark gold
   inkColor: "#0b0b12",
-  lift: 0.06, // m over the ground
+  lift: 0.1, // m over the ground
   samples: 16, // ground heights around a ring
   reach: 1.2, // m: a ground sample this far over or under the center is off the zone's level (a roof, a road under a bridge)
   dash: 1.4, // m, the length of a dash; the space after it is 40% of the pair

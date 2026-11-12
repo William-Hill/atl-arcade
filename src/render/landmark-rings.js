@@ -111,6 +111,7 @@ const VERTEX_PARS = /* glsl */ `
   attribute vec4 iExtra;  // number, dashes, 0, 0
   attribute mat4 iGround; // 16 ground heights around the ring, relative to the center
   uniform vec4 uRing;     // band half width, inner ring share, number half size, number lift
+  uniform float uFar;     // band half width per meter of distance, far from the camera
   varying vec4 vRing;
   varying vec3 vRing2;
 `;
@@ -127,7 +128,11 @@ const VERTEX_BEGIN = /* glsl */ `
     int i0 = int(mod(floor(f), 16.0));
     int i1 = int(mod(floor(f) + 1.0, 16.0));
     float h = mix(iGround[i0 / 4][i0 - 4 * (i0 / 4)], iGround[i1 / 4][i1 - 4 * (i1 / 4)], fract(f));
-    float r = iRing.x * share + ringPart.y * uRing.x;
+    // The band is uRing.x wide near the camera. Far away it grows with the
+    // distance (to 4 times at most), so a far ring is not thinner than a pixel.
+    vec3 onRing = (instanceMatrix * vec4(position.x * iRing.x * share, h * share, position.z * iRing.x * share, 1.0)).xyz;
+    float halfWidth = clamp(uFar * distance(cameraPosition, onRing), uRing.x, uRing.x * 4.0);
+    float r = iRing.x * share + ringPart.y * halfWidth;
     transformed = vec3(position.x * r, h * share, position.z * r) * ringOn;
   } else if (abs(iRing.y - 2.0) > 0.5) ringOn = 0.0;
   vRing = vec4(iRing.y, iRing.z * ringOn, ringPart.x, iRing.w);
@@ -176,6 +181,7 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
   const atlas = drawAtlas(k);
   const uniforms = {
     uRing: { value: new THREE.Vector4(k.width / 2 + k.ink, k.inner, k.digit.size, k.digit.lift) },
+    uFar: { value: k.farWidth / 2 },
     uGold: { value: new THREE.Color(k.gold) },
     uGain: { value: new THREE.Vector2(1, 1) },
   };
@@ -236,7 +242,7 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
   let lastRings = [];
   let time = 0;
   let hidden = false;
-  const info = { rings: 0, fading: 0, shapes: [], ids: [], emissive: { rest: 1, core: 1 }, pulse: 1, cones: 0 };
+  const info = { rings: 0, fading: 0, fade: null, shapes: [], ids: [], emissive: { rest: 1, core: 1 }, pulse: 1, cones: 0 };
   const m = new THREE.Matrix4();
   const quat = new THREE.Quaternion();
   const v = new THREE.Vector3();
@@ -268,11 +274,6 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
   return {
     group,
     mesh,
-    // A spot was claimed: its rings turn gold and fade.
-    claim(id) {
-      const rings = lastRings.filter((r) => r.id === id);
-      if (rings.length) fades.set(id, { rings, age: 0 });
-    },
     // A new run: no fade is left.
     reset() {
       fades.clear();
@@ -289,6 +290,12 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
       time += dt;
       const reduced = reducedMotion();
       const rings = ringList(spots, { timed }, k);
+      // A spot that had rings and is Claimed now: its rings turn gold and fade.
+      for (const spot of spots) {
+        if (spot.state !== "claimed" || fades.has(spot.id)) continue;
+        const gone = lastRings.filter((r) => r.id === spot.id);
+        if (gone.length) fades.set(spot.id, { rings: gone, age: 0 });
+      }
       lastRings = rings;
       const pulse = ringPulse(tier, time, reduced, k);
       let n = 0;
@@ -298,6 +305,7 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
         n += 1;
       }
       const live = n;
+      info.fade = null;
       for (const [id, f] of fades) {
         f.age += dt;
         const look = claimFade(f.age, reduced, k);
@@ -305,6 +313,7 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
           fades.delete(id);
           continue;
         }
+        info.fade = { alpha: look.alpha, fill: look.fill, scale: look.scale };
         for (const ring of f.rings) {
           if (n >= max) break;
           write(n, { ...ring, alpha: 1 }, look);

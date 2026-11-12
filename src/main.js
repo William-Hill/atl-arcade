@@ -983,7 +983,6 @@ function simulate(dt) {
     for (const c of changed.claimed) {
       events.push({ tick: run.tick, type: "landmark-claimed", id: c.id, points: c.points, first: c.first });
       chimes.play("claimed");
-      landmarkRings?.claim(c.id);
       // A gap claim at the zone of a gap goal marks that goal in this run.
       const marked = withGapGoal(goals, c.goal, goalDef);
       if (marked !== goals) {
@@ -1209,7 +1208,9 @@ function frame(now) {
   const landmarkNow = landmarkTracker ? landmarkTracker.view() : null;
   hud.update(run, now, beat.running ? beat.phase() : null, goals, landmarkNow ? (goalLine(landmarkNow, skater.position, { timed: landmarkTimed })?.text ?? null) : null);
   if (landmarkNow) {
-    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible), accent: districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
+    // The banner hides while the fact pop-up shows, while the game is paused
+    // (its time stops too), and under the results screen.
+    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown), accent: districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
     landmarkRings?.update(landmarkNow.spots, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed, night: weatherView?.state.night ?? 0 });
   }
   if (!paused) chimes.update();

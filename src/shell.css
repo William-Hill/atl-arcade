@@ -563,7 +563,9 @@ body.results-open #touch-controls { display: none; }
   background: var(--hud-pill);
   color: var(--atl-paper);
   text-align: center;
-  z-index: 15;
+  /* Over the SETTINGS, PHOTO and FULL SCREEN buttons (20), which sit in its
+     band on a phone: the banner takes no pointer input, so they still work. */
+  z-index: 21;
   pointer-events: none;
 }
 #landmark-banner[hidden] { display: none; }
@@ -592,7 +594,9 @@ body.results-open #touch-controls { display: none; }
 body.photo-open #landmark-banner { visibility: hidden; }
 
 /* The HUD goal line (#219): the challenge of the nearest Found landmark. */
-.hud-goal { color: #ffd166; font-weight: 600; }
+/* At most 276 px wide, so the HUD column ends left of the banner on every
+   desktop window (the banner starts at 300 px or more from the left). */
+.hud-goal { color: #ffd166; font-weight: 600; max-width: 276px; }
 .hud-goal[hidden] { display: none; }
 
 /* The full map (src/ui/fullmap.js): the whole level over the game. It covers

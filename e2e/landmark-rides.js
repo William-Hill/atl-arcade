@@ -296,3 +296,26 @@ export function planRide(id) {
   const r = lastTry?.r;
   return { id, type: c.type, tier: c.tier, claimed: false, plans: plans.length, note: r ? `last plan: ${r.bails} bails, ${r.respawns} respawns, grind ${r.grindMeters.toFixed(1)} m, banks ${JSON.stringify(r.banks)}, found ${[...new Set(r.found)].join(",")}, end ${r.end.position.map((v) => v.toFixed(1)).join(",")}` : "no plan" };
 }
+
+// A ride from `start` (outside the find zone) to the gap zone of spot `id`:
+// roll in, hop at the zone center, land. { script, start }.
+export function rideIntoGap(id, start) {
+  const z = spotOf(id).challenge.zone;
+  let hopped = false;
+  return drive(
+    start,
+    (run, t) => {
+      const s = run.skater;
+      if (t > 420 || (hopped && s.state === "rolling" && t > 60 && !run.combo.active)) return null;
+      if (s.state === "air") return {};
+      const d = Math.hypot(s.position[0] - z.x, s.position[2] - z.z);
+      const steer = Math.max(-1, Math.min(1, wrap(yawFromHeading(z.x - s.position[0], z.z - s.position[2]) - s.yaw) * 3));
+      if (!hopped && d < 2.5) {
+        hopped = true;
+        return { push: true, jump: true };
+      }
+      return hopped ? {} : { push: true, steer };
+    },
+    { tail: 120 },
+  );
+}

@@ -264,16 +264,23 @@ export function pushBanner(banner, item) {
 // One tick: the banner on show loses `dt`, the new banners join the queue,
 // the next one starts when none shows, and the Found banners past the cap
 // are dropped (the newest first).
-export function stepBanner(banner, dt, items = [], k = LANDMARKS) {
+//
+// `hold` is true while the fact card pop-up shows (#219, GDD Edge Cases): a
+// banner and the pop-up never show at the same time. Then no banner starts,
+// and a banner that was on show goes back to its full time: the game hides
+// it, and it shows again, for its whole time, when the pop-up closes.
+export function stepBanner(banner, dt, items = [], k = LANDMARKS, { hold = false } = {}) {
   if (!banner.current && !banner.queue.length && !items.length) return banner;
   let b = banner;
-  if (b.current) {
+  if (b.current && hold) {
+    if (b.current.left !== b.current.time) b = { ...b, current: { ...b.current, left: b.current.time } };
+  } else if (b.current) {
     const left = b.current.left - dt;
     b = { ...b, current: left > 1e-9 ? { ...b.current, left } : null };
   }
   for (const item of items) b = pushBanner(b, item);
   let next = null;
-  if (!b.current && b.queue.length) {
+  if (!hold && !b.current && b.queue.length) {
     next = b.queue[0];
     b = { ...b, queue: b.queue.slice(1) };
   }
@@ -295,9 +302,9 @@ const claimedBanner = (spot, points) => ({ type: "claimed", id: spot.id, title: 
 // Applies the claims and the finds of one step, in that order. A spot that
 // is claimed before it is Found becomes Found and Claimed here, with the
 // Claimed banner only. `finds` is in banner order (the nearer spot first).
-function applyChanges(state, dt, claims, finds, k) {
+function applyChanges(state, dt, claims, finds, k, hold = false) {
   if (!claims.length && !finds.length) {
-    const banner = stepBanner(state.banner, dt, [], k);
+    const banner = stepBanner(state.banner, dt, [], k, { hold });
     return banner === state.banner && state.events === NO_EVENTS ? state : { ...state, banner, events: NO_EVENTS };
   }
   let { found, claimed, run, outfits } = state;
@@ -323,17 +330,18 @@ function applyChanges(state, dt, claims, finds, k) {
   // A Found banner that still waits for a spot that is now Claimed is stale.
   const stale = state.banner.queue.some((b) => b.type === "found" && claims.some((s) => s.id === b.id));
   const banner = stale ? { ...state.banner, queue: state.banner.queue.filter((b) => b.type !== "found" || !claims.some((s) => s.id === b.id)) } : state.banner;
-  return { ...state, found, claimed, outfits, run, banner: stepBanner(banner, dt, items, k), events };
+  return { ...state, found, claimed, outfits, run, banner: stepBanner(banner, dt, items, k, { hold }), events };
 }
 
 // One sim tick. `active` is false before the run timer starts and after the
 // run ends (the overtime is part of the run): then no spot changes and the
 // open attempts are dropped. The banners count down in both cases. The game
-// does not call this while the simulation is paused (photo mode).
-export function stepLandmarks(state, obs, dt, { active = true } = {}, k = LANDMARKS) {
+// does not call this while the simulation is paused (photo mode). `hold`
+// keeps the banners back while the fact card pop-up shows (stepBanner).
+export function stepLandmarks(state, obs, dt, { active = true, hold = false } = {}, k = LANDMARKS) {
   if (!active) {
     const idle = state.track === NO_TRACK ? state : { ...state, track: NO_TRACK };
-    return applyChanges(idle, dt, [], [], k);
+    return applyChanges(idle, dt, [], [], k, hold);
   }
   const [x, , z] = obs.position;
   const open = state.spots.filter((s) => s.challenge && !state.claimed.includes(s.id));
@@ -428,7 +436,7 @@ export function stepLandmarks(state, obs, dt, { active = true } = {}, k = LANDMA
   const idle = !air && !grind && !link && Object.keys(lines).length === 0;
   const track = idle ? NO_TRACK : { air, grind, lines, link };
   const claims = state.spots.filter((s) => done.includes(s)); // file order
-  return applyChanges(state.track === track ? state : { ...state, track }, dt, claims, finds, k);
+  return applyChanges(state.track === track ? state : { ...state, track }, dt, claims, finds, k, hold);
 }
 
 // Sets a spot to Found or Claimed with the normal effects (banner, points,

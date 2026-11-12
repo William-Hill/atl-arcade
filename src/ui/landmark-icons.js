@@ -98,9 +98,14 @@ export const GLYPH_KINDS = Object.keys(GLYPH_GRID);
 
 // The strokes of a kind glyph in unit coordinates: the 16 px grid maps to
 // -0.5 .. 0.5 around the icon center. An unknown kind gets the building.
+// Made once per kind: the maps draw the icons on every frame.
+const GLYPH_UNIT = Object.fromEntries(Object.entries(GLYPH_GRID).map(([kind, strokes]) => [kind, strokes.map((line) => line.map(([x, y]) => [(x - 8) / 16, (y - 8) / 16]))]));
 export function glyphStrokes(kind) {
-  const strokes = GLYPH_GRID[kind] ?? GLYPH_GRID.building;
-  return strokes.map((line) => line.map(([x, y]) => [(x - 8) / 16, (y - 8) / 16]));
+  return Object.hasOwn(GLYPH_UNIT, kind) ? GLYPH_UNIT[kind] : GLYPH_UNIT.building;
+}
+
+export function rectsOverlap(a, b) {
+  return a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 }
 
 // The share of the icon size that the glyph grid covers, and its stroke.
@@ -171,13 +176,12 @@ export function mapIcons(level, data, view) {
 // the rects of the names already drawn; `force` gives the first side that
 // is on the screen (the chosen icon always shows its name).
 export function namePlace(ix, iy, textWidth, screenWidth, taken = [], { gap = 17, force = false } = {}) {
-  const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
   const sides = [
     { x: ix + gap, align: "left", rect: { x0: ix + gap - 2, x1: ix + gap + textWidth + 2, y0: iy - 9, y1: iy + 9 } },
     { x: ix - gap, align: "right", rect: { x0: ix - gap - textWidth - 2, x1: ix - gap + 2, y0: iy - 9, y1: iy + 9 } },
   ];
   const onScreen = sides.filter((s) => s.rect.x0 >= 2 && s.rect.x1 <= screenWidth - 2);
-  const free = onScreen.find((s) => !taken.some((r) => overlaps(r, s.rect)));
+  const free = onScreen.find((s) => !taken.some((r) => rectsOverlap(r, s.rect)));
   return free ?? (force ? (onScreen[0] ?? sides[0]) : null);
 }
 

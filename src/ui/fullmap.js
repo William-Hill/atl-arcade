@@ -27,7 +27,7 @@
 // skater are projected into the map space of the layer.
 
 import { COLORS, drawArrow, drawIcon, drawMapBase } from "./minimap.js";
-import { ICON_SIZE, createIconSource, looksOf, mapSummary, namePlace, newlyClaimed, pulseAt, spotPanel } from "./landmark-icons.js";
+import { ICON_SIZE, createIconSource, looksOf, mapSummary, namePlace, newlyClaimed, pulseAt, rectsOverlap, spotPanel } from "./landmark-icons.js";
 import { createGuide, createSpotCard } from "./landmark-guide.js";
 import { drawSpotIcon, iconCanvas } from "./spot-icon.js";
 import { mapFrame } from "./minimap-math.js";
@@ -43,10 +43,6 @@ function el(tag, className, parent, text) {
   if (text !== undefined) e.textContent = text;
   if (parent) parent.appendChild(e);
   return e;
-}
-
-function rectsOverlap(a, b) {
-  return a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 }
 
 // `source` gives the icons and the landmark view (landmark-icons.js
@@ -213,7 +209,8 @@ export function createFullMap(parent, level, { source = createIconSource({ level
       const [x, z] = toMap(icon.x, groundAt(icon.x, icon.z), icon.z);
       setView({ ...state.view, x, z });
     }
-    // A keyboard press (detail 0) moves the focus into the panel.
+    // A press on a Guide row moves the focus into the panel; closeCard()
+    // gives it back to the row.
     if (from) card.closeBtn.focus({ preventScroll: true });
     return true;
   }
@@ -350,7 +347,9 @@ export function createFullMap(parent, level, { source = createIconSource({ level
   // (below): a tap on another spot opens that spot, and a drag keeps it.
   root.addEventListener("pointerdown", (e) => {
     if (!state.card || e.target === canvas || !(e.target instanceof Element)) return;
-    if (card.root.contains(e.target) || e.target.closest(".fullmap-guide-row")) return;
+    // The Guide list is not "outside": a drag there scrolls the list, and a
+    // row opens its own spot.
+    if (card.root.contains(e.target) || e.target.closest(".fullmap-guide")) return;
     closeCard();
   });
 
@@ -550,7 +549,8 @@ export function createFullMap(parent, level, { source = createIconSource({ level
     // where the name does not cover another name. An Unknown spot has none.
     const s = 1.3;
     const time = performance.now();
-    const names = [];
+    // A spot name does not cover a street name either.
+    const names = [...placed];
     ctx.font = "700 13px system-ui, sans-serif";
     for (const icon of source.icons) {
       const gy = groundAt(icon.x, icon.z);
@@ -592,6 +592,10 @@ export function createFullMap(parent, level, { source = createIconSource({ level
         ctx.stroke();
       }
     }
+
+    // A pulse of an icon that is off the screen ends by its time, so the map
+    // does not draw every frame for it.
+    for (const [id, t0] of pulses) if (time - t0 > 2000) pulses.delete(id);
 
     // The fast travel target, when it is a place and not an icon.
     if (state.target && !state.selected) {

@@ -252,12 +252,12 @@ test("a click opens the panel of each state; Escape, the close button and a clic
     await page.mouse.click(640, 150);
     await expect(card).toBeHidden();
     expect(await page.evaluate(() => window.__atl.fullmap.state.card)).toBeNull();
-    // A click outside: on the title.
+    // A click outside: on a button of the map (zoom in).
     await page.mouse.click(icon.x, icon.y);
     await expect(card).toBeVisible();
-    await page.locator("#fullmap .fullmap-title").click({ force: true, position: { x: 5, y: 5 } }).catch(() => {});
-    await page.mouse.click(1240, 300);
+    await page.locator("#fullmap .fullmap-zoom-in").click();
     await expect(card).toBeHidden();
+    await page.locator("#fullmap .fullmap-zoom-out").click();
   }
   // With no panel, Escape closes the map.
   await page.keyboard.press("Escape");

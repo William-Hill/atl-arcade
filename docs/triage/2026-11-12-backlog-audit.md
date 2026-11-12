@@ -206,3 +206,12 @@ Other action: change the base of PR 254 to `epic/city-look` after a rebase.
 | v0.9.0 City pitch demo | #257, #258, #22, #220, #76, #23, #20, #223 (epic), #253, #221, #245, #246, #74 |
 | v1.0.0 Version 1 | #116, #259, #19, #21, #24, #14, #18, #106, #107, #81, #114, #115 |
 | v1.1.0 After launch | #109, #93, #92, #112, #117, #118 |
+
+## Follow-up, 2026-11-12: pbr is the main look
+
+The owner chose pbr as the main look. Toon stays on the phone and low tiers as it is now, with no more polish.
+
+- Closed #112 (Jet Set Radio shader pass) as not planned, superseded by #157, #159, #160.
+- Closed #81 (NPC style) as done for pbr (PR 227). The toon walkers and the hull outline are not planned.
+- Rescoped #92: step 5 uses the pbr materials, not the toon materials.
+- Kept #118 as it is.

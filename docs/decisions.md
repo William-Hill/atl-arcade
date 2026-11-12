@@ -2264,3 +2264,29 @@ Finding MOB2-2 of the mobile audit: on the phone tier the pbr look took 6 to 9 t
 - The people are the largest gap between the 2 looks on a phone: 119,534 triangles in pbr lite and 45,730 in toon in this run. A coarser people model near the camera is the next cut to try if a real phone needs it. It costs parity, so it is not in this change.
 - One run, at a load average of up to 4.1 on 4 CPUs. Run `npm run perf:check` again on a quiet machine before a cap moves again.
 
+
+## 2026-11-12: Landmark icons on the maps and the Guide tab (#218)
+
+### Decisions
+
+- **Place.** The pure part is `src/ui/landmark-icons.js` (looks, sizes, glyph strokes, the icon list, the Guide rows, the panel text, the link check, the pulse), with `src/ui/landmark-icons.test.js`. The canvas part is `src/ui/spot-icon.js` (`drawSpotIcon`), and the DOM part is `src/ui/landmark-guide.js`. The minimap, the full map, the legend and the Guide rows all draw with `drawSpotIcon`. No state logic is here: the states and the counts come from `landmarkView()` of `src/sim/landmarks.js`.
+- **`mapLandmarks()` is gone.** `mapParks(level)` in `src/ui/minimap-math.js` keeps the park part. The spot list of the tracker replaces the landmark part. A park has no park icon when a spot has its name or names one of its areas (`parkIcons()`): Freedom Park and Historic Fourth Ward Park are spots now.
+- **Tracker in `src/main.js`.** `const landmarkTracker = createLandmarkTracker({ data: landmarkData, level, storage: settingsStorage })` stands right after the `skateparkView` block, with the loaded level (the skatepark pad). `loadLandmarks(level.name)` in `src/level/levels.js` loads the file. `window.__atl.landmarks` is `landmarkTestHook(landmarkTracker, { dev: import.meta.env.DEV })`: the dev server only, so a release build has no way to set a spot. This branch only reads the tracker; #219 steps it.
+- **Icons.** Unknown: a gray circle with a dashed light outline and "?". Found: a white circle with a thick ink outline and the kind glyph. Claimed: a gold circle with the glyph and a check mark in an ink disc at the lower right. Edge marker, Found: a white square with an arrow that points to the nearest side of the level. Size: 24 px on the full map; `max(14, 12% of the minimap width)` on the minimap (22 px on the 180 px desktop map, 14 px on a phone).
+- **Edge marker color: white, not gold.** The GDD has 2 answers: "States and Transitions" says the icon of an edge marker turns gold when Found, and the "Map icons" table says a white square. The issue says a white square, so the map follows the table. `landmarkView().gold` is still true for a Found edge marker; the maps do not read it.
+- **An Unknown edge marker** is a "?" circle like every other Unknown spot. The GDD table has no row for it.
+- **No name before a find.** For an Unknown spot the icon list, the Guide row, the panel and the `aria-label` of both canvases carry no name, no `short` line and no fact. The pure functions leave them out, so the DOM never gets them.
+- **No gold footprints.** `drawMapBase()` no longer colors the Ponce City Market and Krog Street Market footprints gold. Gold means Claimed now, and a gold footprint also marked a spot that is still Unknown.
+- **Names on the full map.** A Found or Claimed spot has its name beside the icon, on the right, or on the left when the right side is off the screen or taken (`namePlace()`). A name with no free side is not drawn; the chosen spot always shows its name.
+- **Guide tab.** The header has 2 tabs, "Map" and "Guide" (G key). The Guide lists the spots by kind (Buildings, Bridges, Parks, Skate spots, Art, Past the map edge; a kind with no spot has no group) with "n of N claimed" and "m of M found" from `landmarkView().counts`. A row opens the panel and centers the map on the spot.
+- **Panel.** Plain, not the trading card of #220. Unknown: "?" and "Not found yet". Found: the name, the `short` line, the challenge hint and "Claim it to unlock"; in a free run (`?run=free`) "Start a timed run to claim it" replaces the last 2 (GDD Edge Cases). Claimed, or an edge marker that is Found: the facts with their sources. "Travel here" moves into the panel. The file text goes in with `textContent`. A source is a link only when its URL is `https` (`safeSourceUrl()`), with `rel="noopener noreferrer"`.
+- **Closing.** Escape closes the open panel; with no panel it closes the map, as before. The close button and a tap outside the panel close it too. A tap on another spot opens that spot.
+- **Keyboard.** Enter and Space now press the focused button or link of the full map. Before, the map key handler cancelled every key but Tab, so the close button did not answer Enter. In the Guide list and the panel the arrow keys scroll and do not pan the map.
+- **Pulse (R-1).** A newly claimed icon swells once for 0.7 s with a gold ring, on the minimap at once and on the full map when it opens the next time (the game is paused while the map is open, so no claim comes then). A saved claim does not pulse on load. Reduced motion (the setting or the device) turns it off.
+
+### Evidence and limits
+
+- Vitest: `src/ui/landmark-icons.test.js`, 28 tests; `src/ui/minimap-math.test.js` for `mapParks`.
+- Playwright: `e2e/landmark-map.spec.js`, 11 tests; screenshots `e2e/__screenshots__/landmark-map-*` and `landmark-panel-*`. The spec sets the states with the test hook.
+- M-3 is a manual check: `landmark-map-grayscale*.png` are the pictures, and a person must judge them.
+- Not verified: no person used the maps or read a panel; no real phone; the pulse has no picture (the test reads a counter). The 2D maps are the same code in both looks, so the pbr pictures differ only in the 3D scene behind the minimap.

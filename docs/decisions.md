@@ -1128,6 +1128,6 @@ The landmark discovery feature (`design/gdd/landmark-discovery.md`) needs histor
 The follow camera gets short effects for the big moments of a run, as RenderATL Rush has (`src/fx/cameraEvents.js` there): a speed FOV, a landing dip, a shake on a hard landing or a fall, a grind lean, a zoom punch and a flash on a gap or a big bank. The pure module `src/sim/camera-fx.js` reads the skater and the sim events and gives offsets. `src/render/follow-camera.js` applies them after the wall clip.
 
 - The offsets are 0 at a standstill and under 1.5 m/s, so the base FOV from `fovFor` (#73) stays exact for the tests and the phone layout.
-- The shake is a sum of sines, not `Math.random`, so a replay gives the same frames. It is 0.08 m at most, under the 0.3 m clip margin, so an effect never puts the camera through a wall.
+- The shake is a sum of sines, not `Math.random`, so a replay gives the same frames. While the wall clip holds the camera in front of a wall, the dip and the shake stop, because they move the camera off the clip ray. A photo uses the base FOV.
 - The flash is a DOM layer, not a post pass, so it works on every quality tier and never goes into a photo mode save.
 - `prefers-reduced-motion: reduce` or `?camfx=0` keeps only the speed FOV, at half size. The game has no settings toggle for it yet.

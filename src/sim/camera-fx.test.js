@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CAMERA_FX, cameraFxOffsets, createCameraFx, kickFor, landingImpact, shakeNoise, stepCameraFx, stepSpring } from "./camera-fx.js";
-import { SKATE } from "./skate/constants.js";
+import { CAMERA, SKATE } from "./skate/constants.js";
 
 const DT = 1 / 60;
 const rest = { state: "rolling", speed: 0, velocity: [0, 0, 0] };
@@ -127,6 +127,34 @@ describe("shake", () => {
     const b = cameraFxOffsets(run(createCameraFx(), rest, 7, [{ type: "fall" }]));
     expect(a).toEqual(b);
     expect(Math.abs(shakeNoise(3.3, 1))).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("landing fall speed", () => {
+  it("uses the fall speed once: a second landing with no air frame gives no dip", () => {
+    let fx = land(-12);
+    fx = run(fx, rest, 120);
+    fx = stepCameraFx(fx, rest, [{ type: "land" }], DT);
+    expect(fx.dip.v).toBe(0);
+    expect(fx.trauma).toBe(0);
+  });
+});
+
+describe("shake frequency", () => {
+  it("has its main wave at shakeFreq Hz", () => {
+    expect(shakeNoise(0.25, 0)).toBeCloseTo(0.5 + 0.3 * Math.sin(2 * Math.PI * 0.25 * 2.31) + 0.2 * Math.sin(2 * Math.PI * 0.25 * 4.17), 9);
+    const fx = { ...createCameraFx(), trauma: 1 };
+    const a = cameraFxOffsets({ ...fx, time: 0 });
+    const b = cameraFxOffsets({ ...fx, time: 100 / CAMERA_FX.shakeFreq });
+    // After whole cycles of all three waves (100 cycles of 1, 231 of 2.31,
+    // 417 of 4.17), the shake is back where it started.
+    expect(b.right).toBeCloseTo(a.right, 6);
+  });
+});
+
+describe("wall margin", () => {
+  it("keeps the shake inside the wall clip margin", () => {
+    expect(CAMERA_FX.shakeOffset).toBeLessThan(CAMERA.clipMargin);
   });
 });
 

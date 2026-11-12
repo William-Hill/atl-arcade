@@ -613,7 +613,7 @@ if (view === "follow") {
 const reducedMotionQuery = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 const camFxOff = params.get("camfx") === "0";
 const camFxReduced = () => camFxOff || Boolean(reducedMotionQuery?.matches);
-const screenFlash = follow ? createScreenFlash() : null;
+const screenFlash = follow ? createScreenFlash(renderer.domElement) : null;
 
 // Photo mode (#90, src/ui/photo-panel.js): P or the PHOTO button. The
 // simulation stops and a free camera moves while it is open.

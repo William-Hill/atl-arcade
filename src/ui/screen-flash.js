@@ -5,7 +5,9 @@
 
 export const FLASH_COLOR = "rgb(255, 214, 140)";
 
-export function createScreenFlash(parent = document.body) {
+// `after` is the game canvas: the flash goes just after it in the page, so
+// the HUD and the panels (added later, no z-index) paint over the flash.
+export function createScreenFlash(after) {
   const el = document.createElement("div");
   el.dataset.atl = "screen-flash";
   Object.assign(el.style, {
@@ -15,9 +17,8 @@ export function createScreenFlash(parent = document.body) {
     mixBlendMode: "screen",
     opacity: "0",
     pointerEvents: "none",
-    zIndex: "5",
   });
-  parent.appendChild(el);
+  after.after(el);
   let last = 0;
   return {
     // `amount` is 0..1 (the flash offset of the camera effects).

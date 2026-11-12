@@ -37,7 +37,7 @@ export const CAMERA_FX = {
   traumaDecay: 1.6, // trauma lost per s. min 0.8 / typical 1.6 / max 3.
   shakeOffset: 0.08, // m of shake at full trauma. Keep it under CAMERA.clipMargin. min 0.02 / typical 0.08 / max 0.15.
   shakeRoll: 0.021, // rad (1.2 deg) of shake roll at full trauma. min 0 / typical 0.021 / max 0.05.
-  shakeFreq: 14, // Hz of the shake. min 8 / typical 14 / max 25.
+  shakeFreq: 9, // Hz of the main shake wave (the other two are 2.31 and 4.17 times faster). min 4 / typical 9 / max 16.
   grindRoll: 0.052, // rad (3 deg) of roll at the full grind balance. min 0 / typical 0.052 / max 0.1.
   rollRate: 6, // 1/s rate the grind roll chases its target. min 3 / typical 6 / max 12.
   punchFov: -4, // deg of the zoom punch peak. min -8 / typical -4 / max 0.
@@ -90,11 +90,14 @@ export function landingImpact(fallSpeed, k = CAMERA_FX) {
 // (src/main.js). `opts.reduced` turns off all but the speed FOV.
 export function stepCameraFx(fx, skater, events = [], dt = 0, opts = {}, k = CAMERA_FX) {
   const reduced = Boolean(opts.reduced);
-  let { dip, punch, trauma, flash } = fx;
+  let { dip, punch, trauma, flash, airVy } = fx;
 
   for (const ev of events) {
     if (ev.type === "land") {
-      const hit = landingImpact(Math.max(-fx.airVy, 0), k);
+      const hit = landingImpact(Math.max(-airVy, 0), k);
+      // One landing uses the fall speed once. A landing with no air frame
+      // seen (a short drop inside one frame) gives no dip.
+      airVy = 0;
       if (hit.dip > 0) dip = { x: dip.x, v: dip.v - kickFor(hit.dip, k.dipOmega) };
       trauma = Math.max(trauma, hit.trauma);
     } else if (ev.type === "fall") {
@@ -121,15 +124,16 @@ export function stepCameraFx(fx, skater, events = [], dt = 0, opts = {}, k = CAM
     roll: reduced ? 0 : chase(fx.roll, balance * k.grindRoll, k.rollRate, dt),
     flash: reduced ? 0 : Math.max(flash - k.flashDecay * dt, 0),
     // The last vertical velocity in the air: the fall speed of the next landing.
-    airVy: skater.state === "air" ? (skater.velocity?.[1] ?? 0) : fx.airVy,
+    airVy: skater.state === "air" ? (skater.velocity?.[1] ?? 0) : airVy,
     reduced,
   };
 }
 
 // A smooth value in -1..1 with no repeat in a run: three sines at
-// frequencies with no common factor.
+// frequencies with no common factor. `t` is in cycles of the main wave.
+const TAU = 2 * Math.PI;
 export function shakeNoise(t, seed) {
-  return (Math.sin(t * 1.0 + seed) * 0.5 + Math.sin(t * 2.31 + seed * 1.7) * 0.3 + Math.sin(t * 4.17 + seed * 2.9) * 0.2);
+  return Math.sin(TAU * t + seed) * 0.5 + Math.sin(TAU * t * 2.31 + seed * 1.7) * 0.3 + Math.sin(TAU * t * 4.17 + seed * 2.9) * 0.2;
 }
 
 export function cameraFxOffsets(fx, k = CAMERA_FX) {

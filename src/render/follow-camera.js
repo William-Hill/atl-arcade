@@ -9,9 +9,9 @@ import { ALL_GROUPS, GROUP, collisionGroups } from "../physics/world.js";
 // The camera effects (#253, src/sim/camera-fx.js) go on top of the placed
 // pose: the FOV offset on the base FOV (`camera.userData.baseFov`, from
 // fitToWindow), a shake and a dip in the camera's own right and up axes, and
-// a roll. They go on after the wall clip. The shake (0.08 m at most) stays
-// inside the clip margin (0.3 m), so an effect never puts the camera through
-// a wall.
+// a roll. They go on after the wall clip. While the clip holds the camera
+// in front of a wall, the dip and the shake stop: they move the camera off
+// the clip ray, where the clip margin does not protect it.
 export function createFollowCamera(camera, { RAPIER, world, skater }) {
   let state = createCameraState(skater);
   let fx = createCameraFx();
@@ -53,8 +53,9 @@ export function createFollowCamera(camera, { RAPIER, world, skater }) {
 
       fx = stepCameraFx(fx, current, events, dt, fxOpts);
       offsets = cameraFxOffsets(fx);
-      if (offsets.right !== 0) camera.translateX(offsets.right);
-      if (offsets.up !== 0) camera.translateY(offsets.up);
+      const clipped = allowed < full - 1e-3;
+      if (!clipped && offsets.right !== 0) camera.translateX(offsets.right);
+      if (!clipped && offsets.up !== 0) camera.translateY(offsets.up);
       if (offsets.roll !== 0) camera.rotateZ(offsets.roll);
       const base = camera.userData.baseFov ?? camera.fov;
       const fov = base + offsets.fov;

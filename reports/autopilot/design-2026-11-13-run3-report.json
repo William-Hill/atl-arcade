@@ -1,0 +1,217 @@
+{
+ "outcome": "explored",
+ "summary": "The agent played 5 continuous 60 s episodes (game time about 120\u2013420 s). Jev made 85\u201392 decisions in each, choosing among 7\u20138 park lines. That covers one full 150 s round, the \"Time!\" screen, a new round started with \"Skate again\", and about 70 s of the second round. In all, about 4.5 minutes were spent in the park.\n\n**Finding the park:** in episode 2 (started fresh, after the agent reset the saved landmark states) the minimap skate icon showed 73 m away, on the left. Jev chose \"follow the minimap skate icon\" (p=0.99). The spot turned \"found\" 6.9 s into the round, and the skater was on the pad at 7.7 s.\n\n**Grind snaps:** 21 of 25 passes over a rail or ledge with grind held snapped (84%).\n- The 4 misses were 3 on the 3 m round rail heading west (episode 2) and 1 on the 9 m flat bar heading east (episode 4).\n- Grinds seen: flat bar, round rail, both faces of the concrete ledge, the planter front, and once the bench block.\n\n**Bails:** 5, all \"fell off the grind (balance)\", all on the 6 m concrete ledge (4 in episode 2, 1 in episode 5). Each came about 0.3\u20131.8 s after a slow snap at 2.5 m/s, which followed a head-on bonk into the ledge's solid body. Only one bail lost points (225 points, 1 link). There were no respawns.\n\n**Longest combo:** 8 links in episode 2, banking 4,858 (694 \u00d7 7).\n**Highest combo score:** 8,351 (7 links \u00d7 7) in episode 3: Rail Grind + Ledge Grind! + Hop + Rail Grind + Hop + Snap Lean + Sit Spin.\n**Round 1 score:** about 33,000 (25,236 on the HUD with 29 s left, then banks of 7,338 and 450 before the round ended).\n\n**On screen:** the combo counter grows link by link, with \"!\" on on-beat links and the pending points as \"N x M\". The tag flashes \"GOOD Hop\". The score changes only when a combo banks, which then shows \"+N\".\n\n**Camera:** it never came closer than 6.9 m in the park. Frames show no camera inside a wall and the skater was never hidden, but the skater's body clips into the planter's end and into the back face of the quarter pipe.\n\n**Variety:** only the rail lane scores well. The ramps, kicker and bank gave no links in play.",
+ "evidence": [
+  "Finding the park: trace2.jsonl. Events at round_t 0.0: spot state 'unknown', skater at pad (70.3, 19.0); first decision facts: minimap_skate_icon 73 m 'left', Jev picked follow_minimap_skate_icon p=0.99. At round_t 6.9 (game_t 186.8) the spot state became 'found' at pad (15.6, 8.2); at 7.7 s the skater was in the park. Second round: after 'Skate again' (trace4, game_t 332.3) the skater was back at spawn and the same option led it back.",
+  "Snap rate per episode (harness passes over a feature span with F held), snaps/misses: ep1 6/0, ep2 5/3 (end-rail 1/3), ep3 4/0, ep4 4/1 (long-rail 1/1), ep5 2/0. Total 21/25 = 84%. Grind ids seen: rail:...long-rail:top, ledge:...line-ledge:front/back, rail:...end-rail:top, ledge:...planter:front (ep5 game_t 376.1), and a snap near the block (ep5 game_t 399.5).",
+  "Bails (combo.bails / stats.falls): ep2 game_t 198.07, 215.58, 216.98, 227.47 and ep5 366.17, all 'fell off the grind (balance)' on line-ledge front/back. lost_pending was 0 except at 227.47 (225 points, 1 link). Ep1 game_t 128.93: bonk at pad (6.4, -3.0) into the ledge, then a snap at speed ~2.5 m/s. The situation log shows grinds at 2.5\u20133.0 m/s (ep2 t=16.5, 49.5). No respawns in any episode.",
+  "Combos (combo.score increases): ep2 game_t 231.42 banked 4,858 with 8 links. HUD sequence 227.97\u2013231.42: 'Ledge Grind' 120x1 -> 'Ledge Grind + Hop!' 195x2 (tag 'GOOD Hop') -> ... -> 8 links 694x7 -> hud-score '9,933', hud-combo '+4,858'. Ep3 game_t 256.32 banked 8,351: hud-pending '1,193 x 7' -> hud-score '19,034', hud-combo '+8,351'. Ep1 game_t 157.73 banked 5,780 (Rail Grind, Ledge Grind, Hop, Walk It Out, Sit Spin, x5). Ep4 game_t 328.65 banked 7,338 (6 links) 1.3 s before the round ended.",
+  "HUD response (game.screen, DOM, not in filmed frames): hud-score changes only on a bank. hud-combo lists link names joined by ' + ', with '!' on on-beat links. hud-pending shows 'N x M' and clears on the bank. hud-combo shows '+N' after a bank until the next combo. hud-tag shows the last link ('GOOD Hop', 'Rail Grind') and clears about 0.9 s later. At 8 links the combo line is about 90 characters long.",
+  "Camera distance to the skater's feet while in the park: minimum 6.91 m (ep1), 7.06 (ep2), 6.93 (ep3), 7.00 (ep4), 7.03 (ep5); no sample under 2 m in ~860 samples.",
+  "describe_frames ep2 195\u2013200 s: the skater is centred, seen from behind and above, with nothing between camera and skater. The camera is never inside a wall, ramp or tree; the skater rides the ledge balanced, then hops off its end.",
+  "describe_frames ep1 162\u2013177 s: the skater stays stuck for 15 s against the end of the planter at the pad's north edge (pad u -0.4, v -7.1; 10 bonk events), with its legs pressed into the planter. The camera swings between three directions but the skater stays visible. Getting wedged there is mostly the harness's staging route.",
+  "describe_frames ep3 270\u2013284 s (F9 at about 282.3): the skater's legs overlap the brown quarter-pipe box face at the east edge of the pad. Bonk events there at pad (15.2, 1.4\u20131.6) in ep3 game_t 282.55 and ep4 339.9/341.1. Ramp-lane rides (ep3, ep4, ep5) produced 0 links; ep5 t\u224829.5 the ramp lane ended outside the pad (in_skatepark false).",
+  "Line use by Jev (times started): rail_lane_westbound 7, rail_lane_eastbound 7, ramp_lane_eastbound 5, kicker_launch 3, bank_ride 2, extend_combo_dance 19, south_ledges_westbound 0, planter_ledge 0. Every big bank came from the rail lane plus dances.",
+  "The game's error log: no errors logged in any of the 5 episodes."
+ ],
+ "findings": [
+  "Bails come only from the 6 m concrete ledge, and they follow a head-on bonk. The ledge has a solid body that stops the skater (bonk, speed 0). Holding F then snaps it at the minimum grind speed of 2.5 m/s, and the slow, long grind tips over: 4 of the 5 falls in ep2 came 0.3\u20131.8 s after such snaps. The other rails have no solid body and are ridden through, so the same miss has no cost on them.",
+  "The score rewards slow grinds over fast lines. The biggest single links were 'Long Ledge Grind' after slow (2.5 m/s) snaps, while a fast flat-bar grind at 11 m/s is a short 'Rail Grind'. The background code reading agrees: 100 + 300 \u00d7 seconds on the rail.",
+  "Repeated link names decay. In the 8-link combo (ep2 231.42) the multiplier shown was x7, not x8, and pending rose only 669 -> 694 over the last links. The repeated 'Hop' and 'Rail Grind' added little, so long combos plateau unless the dance names vary.",
+  "The ramps add nothing to the combo in play. Five ramp-lane rides and three kicker launches gave 0 links. The background code reading says the quarter pipe can never trigger the 'Vert Air' ramp launch (its steepest face normal.y is about 0.36, the threshold 0.15), and the kicker and bank give a Hop only if Space is pressed. The park's lines for score are in effect only the rail lane: 3 rails/ledges in a row, plus the planter and the bench block nearby.",
+  "The skater clips into solid park features: legs inside the planter's end (ep1 frames 164\u2013175 s) and inside the quarter pipe's back face at the pad's east edge (ep3 frame about 282.3 s, bonks at pad (15.2, 1.5)).",
+  "The ramp lane can carry the skater off the pad: ep5 t\u224829.5 it ended outside the park, rolling off the deck past the quarter pipe at the pad's east edge.",
+  "The HUD combo line grows without limit: at 8 links it reads 'Ledge Grind + Hop! + Rail Grind + Hop + Rail Grind + Hop! + Rail Grind + Hop!' (about 90 characters). After a bank, '+N' stays until the next combo instead of fading. The HUD is DOM, so neither shows in the filmed frames; this comes from screen-text reads.",
+  "Effect: the yellow beat lines on the ground are drawn straight over the ramps and ledges, not around them (ep2 frames 195\u2013200 s)."
+ ],
+ "visual": true,
+ "run": "20261113-095904",
+ "project": "atl-arcade",
+ "prompt": "Playtest the Historic Fourth Ward Skatepark on the BeltLine Eastside level as a skater who wants a high score. Find the skatepark, then chain combos on its ramps, rails and ledges for at least 2 minutes. Report: how the player found the skatepark; the grind snap success rate (snaps and misses near a rail or ledge); bails and their causes; the longest combo and its score; how the score and the combo counter respond on the screen; any camera problem in the park (inside a wall, too close, the skater hidden); whether the park has enough lines to keep play varied. Start a new round when the round ends. This is a design evaluation of the skate feel and the score loop, with times and frames.",
+ "seconds": 1067.8,
+ "episodes": 5,
+ "tool_seconds": 658.3,
+ "stopped": null,
+ "level_modified": [],
+ "research_modified": [
+  {
+   "t": 5.28,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      232.972,
+      25.5,
+      10.258
+     ],
+     0.327
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 17.87,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      239.601,
+      25.5,
+      8.011
+     ],
+     0.327
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 77.85,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "position": [
+     246.23,
+     24.4,
+     5.763
+    ],
+    "yaw": 0.327
+   },
+   "probe": true
+  },
+  {
+   "t": 78.2,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      246.23,
+      24.4,
+      5.763
+     ],
+     0.327
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 78.7,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      246.23,
+      24.4,
+      5.763
+     ],
+     2.0
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 79.42,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      242.442,
+      24.4,
+      7.048
+     ],
+     0.327
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 91.18,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      287.899,
+      24.4,
+      -8.361
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 106.9,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      281.269,
+      24.4,
+      -6.114
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 179.85,
+   "object": "atl.landmarks",
+   "name": "atl.landmarks",
+   "call": "reset",
+   "parameters": {},
+   "probe": true
+  }
+ ],
+ "agent": "claude",
+ "model": "claude-opus-5-5",
+ "fast": false,
+ "cost_usd": 2.0998814,
+ "turns": 47,
+ "background_findings": 15,
+ "reading_usage": {
+  "claude-sonnet-5-5": {
+   "calls": 83,
+   "input": 178,
+   "output": 57274,
+   "cache_read": 4452012,
+   "cache_write": 483557
+  }
+ },
+ "episode_stats": [
+  {
+   "decisions": 87,
+   "play_seconds": 60.2
+  },
+  {
+   "decisions": 92,
+   "play_seconds": 60.1
+  },
+  {
+   "decisions": 87,
+   "play_seconds": 60.1
+  },
+  {
+   "decisions": 85,
+   "play_seconds": 60.2
+  },
+  {
+   "decisions": 86,
+   "play_seconds": 60.1
+  }
+ ]
+}

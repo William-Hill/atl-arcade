@@ -1,0 +1,88 @@
+{
+ "outcome": "explored",
+ "summary": "The agent played three full 150 s rounds and the start of a fourth, in 8 continuous episodes (game time 4.9 to about 486 s). Jev made 57 to 91 decisions per episode, picking among 5\u20136 options each time: head to one of the 3 nearest unknown '?' icons, do the nearest challenge ring (as the HUD goal line words it), open the full map's Guide tab, skate on, or \"Skate again\" at the end of a round.\n\n**Totals:** 6 of 13 claimable spots were claimed and 8 of 15 spots found:\n- **Round 1:** Freedom Parkway Bridge, the skatepark and Freedom Park claimed.\n- **Round 2:** Jimmy Carter Library, Ralph McGill bridge and Telephone Factory found, nothing claimed.\n- **Round 3:** Telephone Factory and New Realm claimed.\n\n**Per landmark (round time = 150 s minus the timer):**\n- **Freedom Parkway Bridge:** learned from the find banner at spawn and the HUD line \"Claim it: hop under the Freedom Parkway bridge\". Claimed at 4.8 s by a hop in its ring (+200).\n- **Freedom Park:** found by chance at 6.8 s, about 300 m from its icon, while heading for the skatepark. Claimed with its rings at 72.7 s (+200).\n- **Skatepark:** learned from the minimap skate icon (73 m away). Found at 11.8 s, claimed at 24.6 s with a 2,000-point combo (+500).\n- **Jimmy Carter Library:** an edge spot (find only, no claim). Found at 33.3 s in round 2 from the minimap icon, 2.5 s after it came into minimap range (42 m).\n- **Ralph McGill bridge:** headed for from 277 m away, beyond minimap range, so only the full map shows it. Found at 68.5 s. Never claimed: the hint \"grind the curb below the bridge for 15 m\" names no curb, and the harness never snapped onto it.\n- **Telephone Factory:** found at 90.8 s in round 2 from the minimap icon. Claimed at 75.4 s in round 3 by the ring line (+300).\n- **New Realm Brewing:** found at about 92 s in round 3, claimed at 138.3 s with a 600-point combo (+200).\n- **Missed:** Krog Street Market, Studioplex, Inman Park, North Avenue bridge, the Ponce bridge, Ponce City Market, Ford Factory and Historic Fourth Ward Park. All are 500\u20131000 m from spawn, beyond a straight-line route in what was left of a round.\n\n**Time between claims:** 19.8 s (bridge to skatepark), 48.1 s (skatepark to Freedom Park), then no claim for the rest of round 1 or in round 2, then 62.9 s (Telephone to New Realm) in round 3. The opening is dense: two claims and three finds in the first 25 s. After that the loop thins to one find or claim every 20\u201360 s.\n\n**Clarity of each claim:** every claim fired a SPOT CLAIMED banner with the spot name and points (+200, +500, +300). The banners showed 2.6\u20132.7 s, and found banners 2.5\u20133.2 s. Every claim also triggered the claimed chime (0.84 s long, starting 0.06\u20130.30 s later, on the beat, music ducked). The frames show the claim only as the ring going solid yellow and dissolving within about 1 s, with no burst. The HUD and banner are page markup, so they are not in the filmed frames.\n\n**Fact cards:**\n- **Story cards:** never shown at a find or claim. The banner carries one short line; the story cards live only in the full map and Guide.\n- **Guide:** Jev was offered the Guide tab at almost every decision and never chose it, so no card was read in play.\n- **Trail fact pop-ups:** none appeared in about 480 s of play.\n\n**The 150 s timer:**\n- **Round 1:** it cut the route to Krog Street. That route started at round time 73 with 89 s left, 590 m away, and stalled against a wall 117 m short (-103, 736) at 137\u2013150 s.\n- **Round 2:** time ran out while the agent was stuck at the Ralph McGill grind ring, as it left for New Realm (206 m, 14 s left).\n- **Round 3:** New Realm was claimed 11.7 s before 0:00.\n- **No warning:** nothing on screen warns that a target can't be reached in the time left. The goal line shows a countdown only during a ring line (\"Ring 2 of 3: 14 s left\").\n\n**Carry-over:** spot states carry across rounds (the save). Round 2 therefore started with 3 found and claimed and had only far spots left, which makes later rounds much sparser.",
+ "evidence": [
+  "trace1.jsonl (round 1): claimed freedom-parkway-bridge round_t 4.8 / game 9.68, banner 'SPOT CLAIMED' 'Freedom Parkway Bridge' '+200', shown 2.64 s, claimed chime delay 0.082 s, length 0.84 s. Freedom Park found 6.8 s (option was heading to the skatepark icon: chance); its banner waited until 7.4 behind the claim banner, shown 3.15 s. Skatepark found 11.8 s (banner 3.08 s), claimed 24.6 s '+500' (banner 2.6 s), 19.8 s after the first claim.",
+  "trace2.jsonl: Freedom Park claimed by riding its rings at round_t 72.7 / game 77.62, '+200', banner 2.66 s, chime delay 0.297. Goal line went 'Claim it: ride the 3 rings in order in 24 s' -> 'Ring 2 of 3: 24 s left' -> 'Ring 3 of 3: 17 s left'.",
+  "trace3.jsonl: route to the 'building' icon (Krog Street Market, 590 m) begun at round_t ~73; stuck events at (-97,736) round_t 137.0 and (-103,736) at 141.7 and 146.4; round ended at 150 with the find not made; 'Skate again' clicked at game 155.3.",
+  "trace4.jsonl (round 2): Jimmy Carter found round_t 33.3 (approach began at 30.8, 42 m, minimap range), found banner 2.95 s; Ralph McGill found 68.5 (approach began at 33.6, 277 m, full-map range), banner 3.12 s; Telephone Factory found 90.8 (approach 77 m), banner 2.48 s. Each found chime 0.38 s long, delay 0.055-0.133 s.",
+  "trace5/6.jsonl: the Ralph McGill 'grind the curb below the bridge for 15 m' attempts failed 3 times (31 s, 12 s, 52 s); the skater stalled at (215,-294) and (245,-240). The round ended with New Realm 206 m away and 14 s left.",
+  "trace7.jsonl (round 3): Telephone Factory claimed by its ring line at round_t 75.4 / game 381.77, '+300'. The goal line read 'Ring 2 of 3: 14 s left', then 'Ring 3 of 3: 10 s left'. New Realm found about round_t 92 (banner 'A favorite on the Eastside Trail since 2018...'); its 600 combo attempt (22.7 s, 18 links) did not claim.",
+  "trace8.jsonl: New Realm claimed round_t 138.3 / game 444.65, '+200', 62.9 s after the Telephone claim; round 3 ended and 'Skate again' started round 4 (timer 147 at harness t 31.8).",
+  "describe_frames episode 1, game 4.88-11.98: the challenge ring is a thin yellow-and-black dashed circle on the ground; at the claim it shows as a thick solid yellow stroke (7.03-7.87); no burst, glow or particles; no HUD, banner or minimap in the frames (DOM overlay).",
+  "describe_frames episode 7, game 379.6-383.9: a floating yellow '3' over a dashed ring; at 381.52 the ring turns solid and thick, at 381.98 the '3' and the ring dissolve to pale; gone by 382.47. No effect on the skater.",
+  "Research probe before play: full map (M) title 'BeltLine Eastside Trail: Ponce City Market to Krog Street Market', legend 'Spot: not found yet / found / claimed', hint 'click, then T: travel' (fast travel present in this build); Guide (G) shows '0 of 13 claimed', '1 of 15 found', unknown rows '?' 'Not found yet'. atl.minimap.icons lists all 15 spot positions; the minimap draws only those within ~110 m (code).",
+  "Game error log: no errors logged in any of the 8 episodes."
+ ],
+ "findings": [
+  "Pacing: the opening is very dense. Two claims and three finds come within 25 s of spawn (bridge 4.8 s, Freedom Park found 6.8 s, skatepark found 11.8 s and claimed 24.6 s). After that the gaps run 20\u201360 s, and a round can end with no claim. Every remaining spot was over 200 m (often 500\u20131000 m) away, where only the full map shows it.",
+  "Spot states carry over between rounds and restarts (the save). 'Skate again' keeps found and claimed, so round 2 started with the 3 near spots done and none in minimap range. Round 2 made 3 finds and 0 claims. For a 150 s loop, later rounds get steadily emptier, and nothing on screen says the nearby spots are done.",
+  "The 150 s timer cut a route twice with no warning. Round 1: a 590 m route to Krog Street started with 89 s left and was still 117 m short at 0:00. Round 2: the timer ran out with New Realm 206 m away and 14 s left. Neither the goal line nor the map says whether a spot can be reached in the time left.",
+  "The grind claims give no usable location. 'Grind the curb below the bridge for 15 m' (Ralph McGill) names a ring of radius 15 m, but not which curb or which way it runs. Only one exact curb id counts. Three attempts (about 95 s in all) failed. This is a harness limit too, but a player has no more to go on.",
+  "A find banner can be delayed behind a claim banner. Freedom Park was found at 6.8 s, but its banner showed only at 7.4 s, after the bridge's claim banner. By the code, a third Found banner is dropped (foundQueueMax 2) if spots are passed quickly. Freedom Park itself was found 'by chance' about 300 m from its own icon: its park footprint reaches near the spawn, so the banner names a place the player can't see.",
+  "The claim feedback is mostly the DOM banner and the chime. In the 3D view, the claim is a ring that goes solid yellow and dissolves within about 1 s (episode 7, game 381.5\u2013382.5), with no burst or effect on the skater. A player looking at the skater may miss it. The banner (2.6 s) and chime (0.84 s, on the beat) were logged for every claim.",
+  "Fact cards: no landmark story card is ever shown at a find or claim; the banner gives one 'short' line. The cards with facts and sources show only in the full map and Guide panel after a claim. Jev was offered the Guide at nearly every decision and never opened it in about 480 s, so no card was read. No trail 'ATL FACT' pop-up appeared either. As built, the facts depend on the player choosing to open a menu.",
+  "The HUD goal line follows the nearest found, unclaimed spot. After Ralph McGill was found, it showed 'grind the curb below the bridge for 15 m' for minutes, even while the player rode the Telephone Factory rings or headed elsewhere. It does not follow the challenge the player is doing (episode 7 start).",
+  "The full map has 'click, then T: travel' in this build (the hint text). A player could fast-travel to any spot, which would remove the travel time this loop's pacing depends on. It was not used in play.",
+  "Harness limits, not game bugs: straight-line steering stalled on walls at (-103,736), (245,-240) and (215,-294), which cost the Krog Street find and much of round 2. The curb grind and the first New Realm combo (no bank inside the 10 m zone) were not achieved by the harness. Time-to-reach numbers include these stalls."
+ ],
+ "visual": false,
+ "run": "20261113-094125",
+ "project": "atl-arcade",
+ "prompt": "Playtest the landmark discovery loop on the BeltLine Eastside level. Find and claim as many landmarks as possible, with the minimap, the full map, the Guide tab, the banners and the challenge rings as a player would. Report: for each landmark, how the player learned where it was (map icon, banner, ring, or chance), the game time to reach it, and whether the claim was clear on the screen (sound, effect, card); the time between claims; landmarks that were hard to find or that the player missed; whether the fact cards were read or shown long enough; how the 150 s round timer interacts with the loop (does it cut a route before a claim?). Start a new round when the round ends. This is a design evaluation: report the pacing and clarity of the loop, with times and frames.",
+ "seconds": 1044.3,
+ "episodes": 8,
+ "tool_seconds": 731.9,
+ "stopped": null,
+ "level_modified": [],
+ "research_modified": [],
+ "agent": "claude",
+ "model": "claude-opus-5-5",
+ "fast": false,
+ "cost_usd": 2.1934788000000003,
+ "turns": 48,
+ "background_findings": 28,
+ "reading_usage": {
+  "claude-sonnet-5-5": {
+   "calls": 154,
+   "input": 336,
+   "output": 80735,
+   "cache_read": 6181738,
+   "cache_write": 789838
+  }
+ },
+ "episode_stats": [
+  {
+   "decisions": 89,
+   "play_seconds": 60.2
+  },
+  {
+   "decisions": 91,
+   "play_seconds": 60.2
+  },
+  {
+   "decisions": 86,
+   "play_seconds": 60.1
+  },
+  {
+   "decisions": 84,
+   "play_seconds": 60.0
+  },
+  {
+   "decisions": 87,
+   "play_seconds": 60.1
+  },
+  {
+   "decisions": 86,
+   "play_seconds": 60.1
+  },
+  {
+   "decisions": 85,
+   "play_seconds": 60.1
+  },
+  {
+   "decisions": 57,
+   "play_seconds": 40.1
+  }
+ ]
+}

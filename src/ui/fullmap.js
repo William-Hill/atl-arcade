@@ -191,7 +191,11 @@ export function createFullMap(parent, level, { source = createIconSource({ level
     state.card = spot ? spot.id : null;
     if (spot) {
       card.show(spotPanel(spot, source.card(spot.id), { freeRun }));
-      if (travelBtn) card.foot.appendChild(travelBtn);
+      // The foot stays empty (and hidden by CSS) when the spot is no target.
+      if (travelBtn) {
+        if (state.target) card.foot.appendChild(travelBtn);
+        else travelBtn.remove();
+      }
     } else {
       card.hide();
       cardFrom = null;
@@ -253,7 +257,9 @@ export function createFullMap(parent, level, { source = createIconSource({ level
     if (state.card) {
       const icon = icons.find((i) => i.id === state.card);
       const from = cardFrom;
-      select(icon ?? null, icon ? state.target : null);
+      // A spot can become a target here (for example Unknown to Found in
+      // the "found" travel mode), so the target is the icon again.
+      select(icon ?? null, icon ? { x: icon.x, z: icon.z } : null);
       cardFrom = from;
     }
     dirty = true;

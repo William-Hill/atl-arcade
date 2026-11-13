@@ -10,7 +10,7 @@
 // - "any": any place, park, or spot, also an Unknown spot. This is the dev
 //   server default and `?travel=1`.
 // - "found": only a landmark spot that is Found or Claimed. A place, a park,
-//   or an Unknown spot is not a target. This is `?travel=found` (opt-in).
+//   an Unknown spot, or an edge marker (past the map edge) is not a target. This is `?travel=found` (opt-in).
 
 export const TRAVEL_MODES = ["off", "any", "found"];
 
@@ -29,7 +29,7 @@ export function travelMode(param, { dev = false } = {}) {
 // a place or a park.
 export function canTravelTo(mode, spot) {
   if (mode === "any") return true;
-  if (mode === "found") return Boolean(spot) && (spot.state === "found" || spot.state === "claimed");
+  if (mode === "found") return Boolean(spot) && spot.kind !== "edge" && (spot.state === "found" || spot.state === "claimed");
   return false;
 }
 

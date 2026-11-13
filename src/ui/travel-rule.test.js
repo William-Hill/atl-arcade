@@ -38,6 +38,11 @@ describe("canTravelTo", () => {
     expect(canTravelTo("found", claimed)).toBe(true);
   });
 
+  it("does not allow an edge marker in the found mode", () => {
+    expect(canTravelTo("found", { kind: "edge", state: "found" })).toBe(false);
+    expect(canTravelTo("any", { kind: "edge", state: "found" })).toBe(true);
+  });
+
   it("allows nothing when travel is off", () => {
     for (const spot of [null, unknown, found, claimed]) expect(canTravelTo("off", spot)).toBe(false);
   });

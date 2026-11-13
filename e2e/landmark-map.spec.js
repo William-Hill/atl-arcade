@@ -413,9 +413,12 @@ test("?travel=found: travel goes only to a Found or Claimed spot (#271)", async 
   const at = FILE.spots.find((s) => s.id === EAST.found).at;
   await page.keyboard.press("KeyT");
   await expect(page.locator("#fullmap")).toBeHidden();
-  await page.waitForTimeout(500);
-  const p = await page.evaluate(() => window.__atl.skater.position);
-  expect(Math.hypot(p[0] - at[0], p[2] - at[1])).toBeLessThan(60);
+  await expect
+    .poll(async () => {
+      const p = await page.evaluate(() => window.__atl.skater.position);
+      return Math.hypot(p[0] - at[0], p[2] - at[1]);
+    })
+    .toBeLessThan(60);
 });
 
 test("a newly claimed icon pulses once on the minimap and the full map", async ({ page }) => {

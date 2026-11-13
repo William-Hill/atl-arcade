@@ -2358,3 +2358,5 @@ Decision:
 Verification:
 - Vitest: `comboLine` (8 links, repeated names, phone, long names, 1 to 40 links), `bankedLine`, the restart rule in `src/sim/landmarks.test.js`, and the goal line text in `src/landmarks/play.test.js`.
 - Playwright, headless Chromium: `e2e/hud-text.spec.js` with screenshots `e2e/__screenshots__/hud-text-*.png`: a long combo on desktop (1280 x 720) and phone landscape (844 x 390), the "+N" that shows, fades and goes, and a real-controller ride (planned by `rideLineRestart()` in `e2e/landmark-rides.js`) that rides back into ring 1 of the Telephone Factory line.
+- Results in the cloud container: `npm test` 1809 of 1811 pass (the 2 failures are the known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`; they pass with a 60 s timeout). `npm run build` passes. Playwright: `hud-text`, `combo` and `landmarks` pass (27 tests); `phone-layout` landscape "balance x stick" fails, and it fails the same way on `epic/city-look` in this container.
+- Not verified: no person read the new text on a real phone. The restart message was seen in the default look only.

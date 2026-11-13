@@ -67,6 +67,22 @@ describe("validateLandmarks", () => {
     expect(errorsOf(building({ kind: "edge" }))).toContain("old-warehouse: an edge marker has no challenge");
   });
 
+  it("needs find.reach on a large spot, so it is found near its icon (#270)", () => {
+    // A long park: the zone reaches 169 m from the icon.
+    const level = { ...LEVEL, bounds: { minX: -300, maxX: 300, minZ: -100, maxZ: 100 }, areas: [{ id: "a2", kind: "park", outer: [[-10, 5], [160, 5], [160, 40], [-10, 40]] }], strips: [{ id: "t1", kind: "trail", width: 4, points: [[-290, 0], [290, 0]] }] };
+    const park = (find) => building({ id: "long-park", kind: "park", at: [0, 20], footprint: { areas: ["a2"] }, find, challenge: { type: "combo", tier: "typical", hint: "Land a 1,000 point combo here", zone: { x: 0, z: 0, r: 10 }, points: 1000 } });
+    const errs = (find) => validateLandmarks(file(park(find)), { ...CTX, level });
+    expect(errs({ edge: 8 })[0]).toMatch(/reaches 169 m from the icon \(max 150\): add find.reach/);
+    expect(errs({ edge: 8, reach: 40 })).toEqual([]);
+    expect(errs({ edge: 8, reach: 70 })[0]).toMatch(/find.reach is 70/);
+    // The trail is 20 m from the icon and 5 m from the park: a reach of
+    // 20 m with an edge of 6 m still meets it. The zone needs a paved way in reach.
+    expect(errs({ edge: 6, reach: 20 })).toEqual([]);
+    const noPath = { ...level, strips: [{ id: "t1", kind: "trail", width: 4, points: [[100, 0], [290, 0]] }] };
+    expect(validateLandmarks(file(park({ edge: 8, reach: 40 })), { ...CTX, level: noPath })[0]).toMatch(/within find.reach \(40 m\) of the icon/);
+    expect(errorsOf(building({ footprint: undefined, find: { r: 20, reach: 40 } }))[0]).toMatch(/find.reach goes with find.edge only/);
+  });
+
   it("keeps the find value in the GDD range and near a paved way", () => {
     expect(errorsOf(building({ find: { edge: 13 } }))[0]).toMatch(/find.edge is 13/);
     expect(errorsOf(building({ find: { edge: 4 } }))[0]).toMatch(/no trail, path, or sidewalk comes within find.edge/);

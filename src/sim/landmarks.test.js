@@ -162,6 +162,36 @@ describe("F-2: the find check", () => {
     expect(findDistance(by("park"), 91.99, 20)).toBeNull();
   });
 
+  it("finds a park with find.reach only near its icon (#270)", () => {
+    const data = { ...SPOTS, spots: [{ ...SPOTS.spots[2], at: [105, 5], find: { edge: 8, reach: 20 } }] };
+    const [spot] = prepareLandmarks(data, LEVEL);
+    expect(findDistance(spot, 105, 5)).toBe(0); // the icon
+    expect(findDistance(spot, 97, 5)).toBe(3); // 8 m from the icon, 3 m from the outline
+    expect(findDistance(spot, 125, 5)).toBe(0); // 20 m from the icon, edge included
+    expect(findDistance(spot, 125.01, 5)).toBeNull();
+    expect(findDistance(spot, 140, 40)).toBeNull(); // inside the park, far from the icon
+  });
+
+  it("finds Freedom Park near its icon, not 300 m away near the spawn (#270, run 20261113-094125)", () => {
+    const spots = prepareLandmarks(BELTLINE_SPOTS, BELTLINE);
+    const park = spots.find((s) => s.id === "freedom-park");
+    const icon = park.at;
+    // A point on the line from the spawn to the icon, inside the old find
+    // zone (8 m from the park land) and about 340 m from the icon.
+    const far = [236.1, 63.5];
+    expect(Math.hypot(far[0] - icon[0], far[1] - icon[1])).toBeGreaterThan(300);
+    expect(findDistance({ ...park, find: { ...park.find, reach: undefined } }, ...far)).not.toBeNull();
+    expect(findDistance(park, ...far)).toBeNull();
+    // At the icon (on the Stone Mountain Trail) the park is found.
+    expect(findDistance(park, ...icon)).not.toBeNull();
+    let s = createLandmarks(spots);
+    s = step(s, obs(...far));
+    expect(spotState(s, "freedom-park")).toBe("unknown");
+    s = step(s, obs(icon[0] + 30, icon[1]));
+    expect(spotState(s, "freedom-park")).toBe("found");
+    expect(s.banner.current).toMatchObject({ type: "found", id: "freedom-park" });
+  });
+
   it("finds a bridge at 20 m and an art spot at 14 m, edge included", () => {
     expect(findDistance(by("bridge"), 320, 0)).toBe(20);
     expect(findDistance(by("bridge"), 320.01, 0)).toBeNull();
@@ -485,7 +515,7 @@ describe("F-1: claim points", () => {
 describe("F-7: the banner queue", () => {
   const found = (id) => ({ type: "found", id, title: id, text: "" });
   const claimed = (id) => ({ type: "claimed", id, title: CLAIMED_TITLE, text: id, points: 0 });
-  const EMPTY = { current: null, queue: [], dropped: 0 };
+  const EMPTY = { current: null, queue: [], merged: 0 };
 
   it("shows a Found banner for 3.0, 2.1 and 1.5 s with 0, 1 and 2 banners that wait", () => {
     expect([0, 1, 2].map((q) => bannerTime("found", q))).toEqual([3, 2.1, 1.5]);
@@ -513,11 +543,18 @@ describe("F-7: the banner queue", () => {
     expect(b.queue.map((q) => q.id)).toEqual(["x", "y", "b", "c"]);
   });
 
-  it("holds 2 Found banners; a third has no banner", () => {
+  it("holds 2 Found banners; a third merges into the last one (#270)", () => {
     let b = stepBanner(EMPTY, 0, [found("a")]);
     b = stepBanner(b, 0, [found("b"), found("c"), found("d")]);
-    expect(b.queue.map((q) => q.id)).toEqual(["b", "c"]);
-    expect(b.dropped).toBe(1);
+    expect(b.queue.map((q) => q.id)).toEqual(["b", "c+d"]);
+    expect(b.queue[1]).toMatchObject({ type: "found", title: "2 SPOTS FOUND", text: "c · d" });
+    expect(b.queue[1].spots.map((p) => p.id)).toEqual(["c", "d"]);
+    expect(b.merged).toBe(1);
+    // One more find joins the merged banner.
+    b = stepBanner(b, 0, [found("e")]);
+    expect(b.queue.map((q) => q.id)).toEqual(["b", "c+d+e"]);
+    expect(b.queue[1].title).toBe("3 SPOTS FOUND");
+    expect(b.merged).toBe(2);
   });
 
   it("never drops a Claimed banner, and each one shows for 1.5 s or more", () => {
@@ -531,24 +568,52 @@ describe("F-7: the banner queue", () => {
       shown.push([b.current.id, b.current.time]);
       b = stepBanner(b, b.current.time);
     }
-    expect(shown.map((x) => x[0])).toEqual(["c0", "c1", "c2", "c3", "c4", "c5", "f1", "f2"]);
+    expect(shown.map((x) => x[0])).toEqual(["c0", "c1", "c2", "c3", "c4", "c5", "f1", "f2+f3"]);
     expect(Math.min(...shown.map((x) => x[1]))).toBe(1.5);
   });
 
-  it("changes the state and the icon of a spot whose Found banner is dropped", () => {
-    // 4 point spots at one place: 1 banner shows, 2 wait, 1 is dropped.
+  it("changes the state and the icon of every spot, and names each spot in a banner", () => {
+    // 4 point spots at one place: 1 banner shows, 1 waits, 2 share one banner.
     const at = (i) => ({ ...SPOTS.spots[4], id: `edge-${i}`, at: [0, i] });
     const s = step(createLandmarks(prepareLandmarks({ ...SPOTS, spots: [0, 1, 2, 3].map(at) }, LEVEL)), obs(0, 0));
     expect(s.found).toHaveLength(4);
-    expect(s.banner.dropped).toBe(1);
+    expect(s.banner.merged).toBe(1);
     expect(s.banner.queue).toHaveLength(2);
     expect(landmarkView(s).spots.every((v) => v.state === "found" && v.gold)).toBe(true);
+    const named = [s.banner.current, ...s.banner.queue].flatMap((b) => (b.spots ?? [b]).map((p) => p.id));
+    expect(named.sort()).toEqual(["edge-0", "edge-1", "edge-2", "edge-3"]);
+  });
+
+  it("shows every find of 3 quick finds in a banner (#270)", () => {
+    // 3 point spots 30 m apart: the skater finds one each 0.25 s, faster
+    // than a banner ends. Every find must reach the screen.
+    const at = (i) => ({ ...SPOTS.spots[4], id: `quick-${i}`, name: `Quick ${i}`, at: [i * 30, 0] });
+    let s = createLandmarks(prepareLandmarks({ ...SPOTS, spots: [0, 1, 2].map(at) }, LEVEL));
+    const seen = new Set();
+    const note = () => {
+      for (const b of [s.banner.current, ...s.banner.queue]) if (b && b.type === "found") for (const p of b.spots ?? [b]) seen.add(p.id);
+    };
+    for (const x of [0, 30, 60]) {
+      for (let i = 0; i < 15; i += 1) {
+        s = step(s, obs(x, 0));
+        note();
+      }
+    }
+    expect(s.found).toEqual(["quick-0", "quick-1", "quick-2"]);
+    expect([...seen].sort()).toEqual(["quick-0", "quick-1", "quick-2"]);
+    // Play the banners out: each find shows on screen.
+    const shown = new Set();
+    for (let i = 0; i < 1200 && (s.banner.current || s.banner.queue.length); i += 1) {
+      s = step(s, obs(1000, 1000));
+      for (const p of s.banner.current ? (s.banner.current.spots ?? [s.banner.current]) : []) shown.add(p.id);
+    }
+    expect([...shown].sort()).toEqual(["quick-0", "quick-1", "quick-2"]);
   });
 });
 
 describe("#219: a banner waits while the fact card pop-up shows (hold)", () => {
   const found = (id) => ({ type: "found", id, title: id, text: "" });
-  const EMPTY = { current: null, queue: [], dropped: 0 };
+  const EMPTY = { current: null, queue: [], merged: 0 };
 
   it("starts no banner while the hold is on, and starts it with its full time after", () => {
     let b = stepBanner(EMPTY, 0, [found("a")], LANDMARKS, { hold: true });
@@ -571,10 +636,10 @@ describe("#219: a banner waits while the fact card pop-up shows (hold)", () => {
     expect(stepBanner(b, 1).current.left).toBeCloseTo(2, 9);
   });
 
-  it("keeps the cap of 2 Found banners that wait during the hold", () => {
+  it("keeps the cap of 2 Found banners that wait during the hold, and merges the rest", () => {
     const b = stepBanner(EMPTY, 0, [found("a"), found("b"), found("c")], LANDMARKS, { hold: true });
-    expect(b.queue.map((q) => q.id)).toEqual(["a", "b"]);
-    expect(b.dropped).toBe(1);
+    expect(b.queue.map((q) => q.id)).toEqual(["a", "b+c"]);
+    expect(b.merged).toBe(1);
   });
 
   it("still finds the spot in the step: only the banner waits", () => {
@@ -595,6 +660,18 @@ describe("the banner of a spot that is claimed while its Found banner waits", ()
     s = markSpot(s, "bridge", "claimed");
     expect(s.banner.current.id).toBe("warehouse");
     expect(s.banner.queue.map((q) => [q.type, q.id])).toEqual([["claimed", "bridge"]]);
+  });
+
+  it("takes the spot out of a merged Found banner (#270)", () => {
+    let s = fresh();
+    for (const id of ["warehouse", "bridge", "park", "art"]) s = markSpot(s, id, "found");
+    expect(s.banner.queue.map((q) => q.id)).toEqual(["bridge", "park+art"]);
+    s = markSpot(s, "art", "claimed");
+    expect(s.banner.queue.map((q) => [q.type, q.id, q.title])).toEqual([
+      ["claimed", "art", "SPOT CLAIMED"],
+      ["found", "bridge", "Trail Bridge"],
+      ["found", "park", "Pond Park"],
+    ]);
   });
 });
 
@@ -839,7 +916,7 @@ describe("the dev test hook", () => {
     expect(hook.find("warehouse")).toBe("found");
     expect(hook.claim("bridge")).toBe("claimed");
     expect(hook.claim("no-such-spot")).toBe("unknown");
-    expect(hook.banner()).toMatchObject({ current: { id: "warehouse", time: 3 }, waiting: 1, dropped: 0 });
+    expect(hook.banner()).toMatchObject({ current: { id: "warehouse", time: 3 }, waiting: 1, merged: 0 });
     expect(hook.run().claimSum).toBe(300);
     expect(hook.saved()).toBe(true);
     hook.reset();

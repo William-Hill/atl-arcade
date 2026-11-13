@@ -2379,3 +2379,24 @@ The 2026-11-13 design audit (finding A2) found that a player sees the round goal
 - Place: on a desktop the chips are in the score line, after the timer. On a phone the HUD column must keep its height: in portrait it must end above the fact pop-up and the landmark banner (206 px), and in landscape above the stick. So in portrait the chips sit in a band just above the touch controls, and the confirmation sits over them. In landscape the chips stand in a column at the left of the minimap. The fact pop-up and the landmark banner in landscape now keep 262 px on each side (was 232 px), so they stay clear of that column.
 - The landmark goal line ("Claim it: ...", #219) is a different element and does not change.
 - Combo and score count when a combo banks, because the goals count the banked score (src/sim/skate/goals.js). The chip does not show an open combo as progress.
+
+## 2026-11-13: No find is lost, and a large spot is found near its icon (#270)
+
+The 2026-11-13 design audit (finding B6, Autopilot run `20261113-094125`) found 2 problems with the find banners.
+
+**Banners merge, and no banner drops.** Before, at most 2 Found banners could wait, and the module dropped a third (`foundQueueMax`). A player could find a spot and never see its banner. Now, when a third Found banner comes, the waiting Found banners past the first merge into one banner. Its title is "N SPOTS FOUND" and its text lists the spot names. A later find joins the merged banner. A Claimed banner never merges, and it still goes before the Found banners. When a spot in a merged banner is claimed, its name leaves the merged banner; with one name left, the banner is a normal Found banner again. The cap stays at 2, so the banner times (F-7) do not change. The chimes keep their cap of 2 waiting Found chimes: a merged banner has no chime of its own. The test hook reports `merged` (the count of banners that merged into another) in place of `dropped`.
+
+**A large spot is found near its icon.** Before, a `find.edge` spot was found within `find.edge` m of its whole footprint. Freedom Park has a footprint that is about 1.3 km long, and the audit run found it about 300 m from its map icon, near the spawn. The banner named a place the player could not see. New rule:
+
+- A `find.edge` spot can have `find.reach` (20 to 60 m). Then the find zone is the old zone cut to `find.reach` m of the icon (`at`).
+- A large spot needs `find.reach`. A spot is large when its `find.edge` zone reaches more than 150 m from its icon (the farthest footprint corner plus `find.edge`). The validator (`src/landmarks/validate.js`) fails the file otherwise.
+- A trail, path, or sidewalk must come into the cut zone, so a player can reach it.
+
+The 2 parks of the Beltline Eastside file are large: Freedom Park (1339 m) and Historic Fourth Ward Park (350 m). Both now have `find.reach: 40`. The Freedom Park icon is on the Stone Mountain Trail. The buildings stay as they were (the largest, Studioplex, reaches 124 m, and a building is easy to see).
+
+We chose the icon over a list of entrances because the icon is what the map shows, and the data has no entrance points yet. A later file can add an entrance as a second point if a park needs one.
+
+This changes 2 rules of `design/gdd/landmark-discovery.md`. That GDD is on `main` and not on `epic/city-look`. When the branches meet, update these GDD lines:
+
+- The find formula ("Buildings and parks: the skater is Found when the distance to the footprint outline is `d_edge` or less"): add the `find.reach` cut for a large spot.
+- The banner rules ("A Found banner that does not fit is dropped") and acceptance criterion F-7 ("a third Found has no banner"): a third Found banner merges into the last one that waits.

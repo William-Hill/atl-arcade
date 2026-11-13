@@ -100,5 +100,7 @@ export function comboLine(links, { maxLinks = 4, maxChars = 48 } = {}) {
   let shown = Math.max(1, Math.min(maxLinks, names.length));
   const text = (n) => `… ${names.slice(-n).join(" + ")}`;
   while (shown > 1 && text(shown).length > maxChars) shown -= 1;
+  // One link that is too long hides no link: it shows in full, with no count.
+  if (shown === names.length) return names.join(" + ");
   return `${text(shown)} (${names.length})`;
 }

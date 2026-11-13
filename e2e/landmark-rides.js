@@ -351,7 +351,7 @@ export function rideLineRestart(id, { outFor = 120 } = {}) {
       }
       if (d1 < 1.5) return null;
       return { push: true, steer: steerTo(s, ax, az) };
-    }, { tail: 30 });
+    }, { max: 60 * 30, tail: 30 });
     // Check the ride with the landmark module, as the page steps it.
     const { env, skaterEnv } = park();
     let run = newRun(start);

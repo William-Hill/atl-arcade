@@ -137,7 +137,7 @@ describe("the HUD combo line (#269)", () => {
     const long = [link("Bankhead Bounce"), link("Bankhead Bounce"), link("Bankhead Bounce")];
     expect(comboLine(long, COMBO_LINE.phone)).toBe("\u2026 Bankhead Bounce (3)");
     const huge = [link("A very long move name that does not fit at all")];
-    expect(comboLine(huge, { maxLinks: 3, maxChars: 10 })).toBe("\u2026 A very long move name that does not fit at all (1)");
+    expect(comboLine(huge, { maxLinks: 3, maxChars: 10 })).toBe("A very long move name that does not fit at all");
   });
 
   it("stays in limits for every combo length", () => {

@@ -125,7 +125,8 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
       score.textContent = c.score.toLocaleString("en-US");
       if (c.active) {
         const phone = isCompact(window.innerWidth, window.innerHeight);
-        combo.textContent = comboLine(c.links, phone ? COMBO_LINE.phone : COMBO_LINE.desktop);
+        const text = comboLine(c.links, phone ? COMBO_LINE.phone : COMBO_LINE.desktop);
+        if (combo.textContent !== text) combo.textContent = text;
         pending.textContent = `${c.pending.toLocaleString("en-US")} x ${c.multiplier}`;
         combo.dataset.active = "1";
         combo.dataset.fade = "0";
@@ -134,6 +135,7 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
         if (wasActive) bankedAt = nowMs;
         const line = bankedLine(c.lastBanked, bankedAt, nowMs);
         if (combo.textContent !== line.text) combo.textContent = line.text;
+        combo.dataset.rm = reducedMotion() ? "1" : "0";
         combo.dataset.fade = line.fade ? "1" : "0";
         pending.textContent = "";
         combo.dataset.active = "0";

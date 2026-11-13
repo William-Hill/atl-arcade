@@ -72,10 +72,12 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
 /* A lighter pink than the brand pink: 4.5:1 or more on the pill. */
 .hud-combo { font-size: 18px; font-weight: 600; min-height: 22px; color: #ff80c4; }
 .hud-combo[data-active="0"] { color: #ffd166; }
-/* The "+N" of a bank fades out after a fixed time (#269, hud.js). */
-.hud-combo { transition: opacity 0.4s; }
-.hud-combo[data-fade="1"] { opacity: 0; }
-@media (prefers-reduced-motion: reduce) { .hud-combo { transition: none; } }
+/* The "+N" of a bank fades out after a fixed time (#269, hud.js). Only the
+   fade-out has a transition, so a new combo shows at once. With reduced motion
+   (the settings menu, or else the media query; hud.js sets data-rm) the "+N"
+   goes with no transition. */
+.hud-combo[data-fade="1"] { opacity: 0; transition: opacity 0.4s; }
+.hud-combo[data-fade="1"][data-rm="1"] { transition: none; }
 .hud-pending { font-size: 16px; min-height: 20px; }
 .hud-tag { font-size: 22px; font-weight: 700; color: #7ef0c2; min-height: 26px; transition: opacity 0.3s; }
 .hud-tag[data-beat="GOOD"] { color: #ffd166; }

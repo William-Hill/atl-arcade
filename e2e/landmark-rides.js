@@ -319,3 +319,56 @@ export function rideIntoGap(id, start) {
     { tail: 120 },
   );
 }
+
+// A line restart (#269): from 10 m before ring 1 of spot `id`, ride through
+// ring 1, roll on toward ring 2 for `outFor` ticks, then turn and ride back
+// into ring 1. { script, start, restartTick }, or null when no ride works.
+export function rideLineRestart(id, { outFor = 120 } = {}) {
+  const spot = spotOf(id);
+  const cps = spot.challenge.checkpoints;
+  const [ax, az] = cps[0];
+  const [bx, bz] = cps[1];
+  for (const back of [10, 6, 14]) {
+    const dx = ax - bx;
+    const dz = az - bz;
+    const n = Math.hypot(dx, dz);
+    const start = startAt(ax + (dx / n) * back, az + (dz / n) * back, yawFromHeading(-dx, -dz));
+    let phase = 0; // 0: to ring 1, 1: on toward ring 2, 2: back to ring 1
+    let out = 0;
+    const steerTo = (s, x, z) => Math.max(-1, Math.min(1, wrap(yawFromHeading(x - s.position[0], z - s.position[2]) - s.yaw) * 4));
+    const ride = drive(start, (run, t) => {
+      const s = run.skater;
+      if (t > 60 * 30) return null;
+      const d1 = Math.hypot(s.position[0] - ax, s.position[2] - az);
+      if (phase === 0) {
+        if (d1 < 1.5) phase = 1;
+        return { push: true, steer: steerTo(s, ax, az) };
+      }
+      if (phase === 1) {
+        out += 1;
+        if (out >= outFor) phase = 2;
+        return { push: true, steer: steerTo(s, bx, bz) };
+      }
+      if (d1 < 1.5) return null;
+      return { push: true, steer: steerTo(s, ax, az) };
+    }, { tail: 30 });
+    // Check the ride with the landmark module, as the page steps it.
+    const { env, skaterEnv } = park();
+    let run = newRun(start);
+    let marks = createLandmarks(spots(), { level: "beltline-eastside", progress: { found: [id], claimed: [], outfits: [] } });
+    let tick = 0;
+    let restartTick = null;
+    let bails = 0;
+    for (const entry of ride.script) {
+      for (let i = 0; i < entry.frames; i += 1) {
+        run = stepRun(run, entry.input ?? {}, DT, env, skaterEnv);
+        marks = stepLandmarks(marks, landmarkObs(run), DT);
+        tick += 1;
+        if (run.skater.justFell || run.skater.respawned) bails += 1;
+        if (restartTick === null && marks.track.lines[id]?.restarted) restartTick = tick;
+      }
+    }
+    if (restartTick !== null && bails === 0) return { ...ride, restartTick, ticks: tick };
+  }
+  return null;
+}

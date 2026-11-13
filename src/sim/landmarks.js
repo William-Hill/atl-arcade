@@ -26,6 +26,11 @@ export const LANDMARKS = {
   claimPoints: { easy: 200, typical: 300, hard: 500 }, // P[tier]. min 100 / max 600 per tier.
   runCap: 1000, // claim points per run. min 600 / typical 1000 / max 1500.
   checkpointR: 4, // m, r_cp of a line checkpoint. Fixed.
+  // A return to ring 1 restarts the line (#269). It counts as a restart when
+  // the attempt passed ring 2, or ran this long outside ring 1. The HUD then
+  // shows "Ring line restarted" until the attempt is this old or reaches ring 2.
+  lineRestartAfter: 1.0, // s
+  lineRestartShow: 2.0, // s
   minAirTime: COMBO.minAirTime, // s in the air for a gap, the same as the gap goals.
   banner: {
     found: 3.0, // s, t_base of a Found banner. min 2 / typical 3 / max 4.
@@ -234,7 +239,7 @@ export function landmarkView(state, k = LANDMARKS) {
       ring: st === "found" && !edge, // the challenge ring and the HUD hint show
       hint: st === "found" && !edge ? s.challenge.hint : null,
       challenge: s.challenge,
-      attempt: state.track.lines[s.id] ?? null, // a line in progress: { next, t }
+      attempt: state.track.lines[s.id] ?? null, // a line in progress: { next, t, restarted }
     };
   });
   return {
@@ -395,13 +400,17 @@ export function stepLandmarks(state, obs, dt, { active = true, hold = false } = 
         const c = s.challenge;
         if (c.type !== "line") continue;
         const near = (i) => dist2(c.checkpoints[i][0], c.checkpoints[i][1], x, z) <= c.r;
-        let a = lines[s.id] ?? null;
+        const prev = lines[s.id] ?? null;
+        let a = prev;
         if (a) {
           a = { ...a, t: a.t + dt };
           if (a.t > c.seconds + 1e-9) a = null;
         }
-        if (near(0)) a = { next: 1, t: 0 };
-        else if (a && near(a.next)) a = { ...a, next: a.next + 1 };
+        if (near(0)) {
+          // A restart keeps its flag while the skater stays in ring 1.
+          const restart = Boolean(prev) && (prev.next > 1 || prev.t >= k.lineRestartAfter || Boolean(prev.restarted));
+          a = restart ? { next: 1, t: 0, restarted: true } : { next: 1, t: 0 };
+        } else if (a && near(a.next)) a = { next: a.next + 1, t: a.t };
         if (a && a.next >= c.checkpoints.length) {
           claim(s);
           a = null;

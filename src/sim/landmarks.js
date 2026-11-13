@@ -258,7 +258,7 @@ export function landmarkView(state, k = LANDMARKS) {
 
 // One banner shows at a time. A Claimed banner goes before a Found banner.
 // At most `foundQueueMax` Found banners wait. When one more comes, the
-// waiting Found banners past the first `foundQueueMax - 1` merge into one
+// Found banners that wait past the first `foundQueueMax - 1` merge into one
 // banner ("3 SPOTS FOUND", with the names), so no find is lost (#270). A
 // Claimed banner never merges. The time of a banner is set when it starts
 // to show, from the count of banners that still wait.
@@ -277,6 +277,7 @@ export function foundBannerOf(parts) {
 // Merges the Found banners of a queue past the cap. Returns { queue, merged }:
 // `merged` is the count of Found banners that went into another one.
 function capFound(queue, max) {
+  if (queue.length <= max) return { queue, merged: 0 };
   const found = queue.filter((q) => q.type === "found");
   if (found.length <= max) return { queue, merged: 0 };
   const keep = Math.max(0, max - 1);

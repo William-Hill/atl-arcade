@@ -257,7 +257,7 @@ function checkSpot(spot, ctx, err) {
     if (!isNum(f.edge) || f.edge < R.findEdge.min || f.edge > R.findEdge.max) err(`find.edge is ${f.edge} (range ${R.findEdge.min} to ${R.findEdge.max})`);
     if (!rings) err("find.edge needs a footprint");
     if (f.at != null) err("find.at goes with find.r only");
-    const reach = f.reach == null ? null : f.reach;
+    const reach = f.reach ?? null;
     if (reach != null && (!isNum(reach) || reach < R.findReach.min || reach > R.findReach.max)) err(`find.reach is ${reach} (range ${R.findReach.min} to ${R.findReach.max})`);
     // A large spot (a park) is found near its icon, not at the far edge of
     // its footprint (#270, docs/decisions.md 2026-11-13).

@@ -1,7 +1,7 @@
 {
   "v": 1,
   "level": "beltline-eastside",
-  "note": "Landmark spots (#216). Design: design/gdd/landmark-discovery.md. `at` and every zone are [x, z] in level meters. `find.edge` is the distance to the footprint; `find.r` is a circle at `find.at` (or `at`). Each fact has a primary source; the quote behind each fact is in docs/research/2026-11-10-landmark-facts.md. Check a change with `npm run validate:landmarks`.",
+  "note": "Landmark spots (#216). Design: design/gdd/landmark-discovery.md. `at` and every zone are [x, z] in level meters. `find.edge` is the distance to the footprint, and `find.reach` (a large spot, a park) keeps that zone within that many meters of `at`; `find.r` is a circle at `find.at` (or `at`). Each fact has a primary source; the quote behind each fact is in docs/research/2026-11-10-landmark-facts.md. Check a change with `npm run validate:landmarks`.",
   "spots": [
     {
       "id": "ponce-city-market",
@@ -379,7 +379,7 @@
       "name": "Historic Fourth Ward Park",
       "at": [-164.2, -379.9],
       "footprint": {"areas": ["w182470312"]},
-      "find": {"edge": 8},
+      "find": {"edge": 8, "reach": 40},
       "short": "The park's lake doubles as a stormwater basin; the park opened in 2011.",
       "card": [
         {"text": "Historic Fourth Ward Park opened in 2011.", "source": {"name": "Atlanta BeltLine, Inc.", "url": "https://beltline.org/about-us/history/"}},
@@ -408,7 +408,7 @@
       "name": "Freedom Park",
       "at": [-66.9, 257.9],
       "footprint": {"areas": ["r12045420-4", "r12045420-2"]},
-      "find": {"edge": 8},
+      "find": {"edge": 8, "reach": 40},
       "short": "Freedom Park links 7 neighborhoods with 8 miles of paths on 130+ acres.",
       "card": [
         {

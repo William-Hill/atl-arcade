@@ -32,7 +32,7 @@ export const LANDMARKS = {
     claimed: 2.5, // s, t_base of a Claimed banner. min 1.5 / typical 2.5 / max 3.5.
     min: 1.5, // s, t_min.
     queueStep: 0.3, // each banner that waits takes this share off t_base.
-    foundQueueMax: 2, // Found banners that can wait. Claimed banners have no cap.
+    foundQueueMax: 2, // Found banners that can wait. More Found banners merge into the last one (#270). Claimed banners have no cap.
   },
   unlockFractions: [0.35, 0.7, 1.0], // f_i, of the claim spots of the level. Tune 0.25 to 1.0.
   saveKey: "atl.landmarks",
@@ -40,6 +40,9 @@ export const LANDMARKS = {
 };
 
 export const CLAIMED_TITLE = "SPOT CLAIMED";
+
+// The title of a Found banner that holds `n` spots (#270): "2 SPOTS FOUND".
+export const mergedTitle = (n) => `${n} SPOTS FOUND`;
 
 const dist2 = (ax, az, bx, bz) => Math.hypot(ax - bx, az - bz);
 const inCircle = (zone, x, z) => dist2(zone.x, zone.z, x, z) <= zone.r;
@@ -138,6 +141,8 @@ export function prepareLandmarks(data, level = {}, k = LANDMARKS, R = LANDMARK_R
     if (s.find.edge != null) {
       const shapes = shapesOf(s, level);
       find = { edge: s.find.edge, shapes, box: boxOf(shapes, s.find.edge) };
+      // A large spot (a park) counts as found only near its icon (#270).
+      if (s.find.reach != null) find.reach = { at: [s.at[0], s.at[1]], r: s.find.reach };
     } else {
       const at = s.find.at ?? s.at;
       find = { r: s.find.r, at: [at[0], at[1]] };
@@ -149,10 +154,13 @@ export function prepareLandmarks(data, level = {}, k = LANDMARKS, R = LANDMARK_R
 
 // The find distance of a spot from (x, z): the distance to the footprint (0
 // inside it) or to the find point. Null when the skater is outside the zone.
-// The edge of the zone is inside it (8.0 m of 8 m is Found).
+// The edge of the zone is inside it (8.0 m of 8 m is Found). With
+// `find.reach`, the footprint zone stops `reach` m from the icon (`at`):
+// a park is found near its icon, not at the far edge of its land (#270).
 export function findDistance(spot, x, z) {
   const f = spot.find;
   if (f.edge != null) {
+    if (f.reach && dist2(f.reach.at[0], f.reach.at[1], x, z) > f.reach.r) return null;
     if (x < f.box.minX || x > f.box.maxX || z < f.box.minZ || z > f.box.maxZ) return null;
     let best = Infinity;
     for (const rings of f.shapes) best = Math.min(best, outlineDistance([x, z], rings));
@@ -175,7 +183,7 @@ export function gapGoalOf(spot, goalDef) {
 // ------------------------------------------------------------------- state
 
 const NO_TRACK = { air: null, grind: null, lines: {}, link: null };
-const NO_BANNER = { current: null, queue: [], dropped: 0 };
+const NO_BANNER = { current: null, queue: [], merged: 0 };
 const NO_EVENTS = { found: [], claimed: [] };
 const newRunPart = () => ({ found: [], claimed: [], claimSum: 0 });
 
@@ -249,9 +257,64 @@ export function landmarkView(state, k = LANDMARKS) {
 // ------------------------------------------------------------------ banner
 
 // One banner shows at a time. A Claimed banner goes before a Found banner.
-// At most `foundQueueMax` Found banners wait; one more is dropped. A Claimed
-// banner is never dropped. The time of a banner is set when it starts to
-// show, from the count of banners that still wait.
+// At most `foundQueueMax` Found banners wait. When one more comes, the
+// waiting Found banners past the first `foundQueueMax - 1` merge into one
+// banner ("3 SPOTS FOUND", with the names), so no find is lost (#270). A
+// Claimed banner never merges. The time of a banner is set when it starts
+// to show, from the count of banners that still wait.
+
+// The spots of a Found banner: [{ id, title, text }].
+const partsOf = (b) => b.spots ?? [{ id: b.id, title: b.title, text: b.text }];
+
+// One Found banner for a list of parts: a single banner, or a merged one.
+// `id` of a merged banner is the ids joined with "+", so the HUD sees a new
+// banner when the list changes.
+export function foundBannerOf(parts) {
+  if (parts.length === 1) return { type: "found", id: parts[0].id, title: parts[0].title, text: parts[0].text };
+  return { type: "found", id: parts.map((p) => p.id).join("+"), title: mergedTitle(parts.length), text: parts.map((p) => p.title).join(" · "), spots: parts };
+}
+
+// Merges the Found banners of a queue past the cap. Returns { queue, merged }:
+// `merged` is the count of Found banners that went into another one.
+function capFound(queue, max) {
+  const found = queue.filter((q) => q.type === "found");
+  if (found.length <= max) return { queue, merged: 0 };
+  const keep = Math.max(0, max - 1);
+  const tail = found.slice(keep);
+  const one = foundBannerOf(tail.flatMap(partsOf));
+  const out = [];
+  let put = false;
+  for (const q of queue) {
+    if (!tail.includes(q)) out.push(q);
+    else if (!put) {
+      out.push(one);
+      put = true;
+    }
+  }
+  return { queue: out, merged: tail.length - 1 };
+}
+
+// Takes the spots in `ids` out of the waiting Found banners (they are now
+// Claimed: their Found banner is stale). A merged banner with one spot left
+// becomes a single banner; a banner with none goes.
+export function dropFound(banner, ids) {
+  let changed = false;
+  const queue = [];
+  for (const q of banner.queue) {
+    if (q.type !== "found") {
+      queue.push(q);
+      continue;
+    }
+    const parts = partsOf(q);
+    const left = parts.filter((p) => !ids.includes(p.id));
+    if (left.length === parts.length) queue.push(q);
+    else {
+      changed = true;
+      if (left.length) queue.push(foundBannerOf(left));
+    }
+  }
+  return changed ? { ...banner, queue } : banner;
+}
 
 // Adds a banner to the queue, in show order. No cap here (stepBanner).
 export function pushBanner(banner, item) {
@@ -263,7 +326,7 @@ export function pushBanner(banner, item) {
 
 // One tick: the banner on show loses `dt`, the new banners join the queue,
 // the next one starts when none shows, and the Found banners past the cap
-// are dropped (the newest first).
+// merge into one.
 //
 // `hold` is true while the fact card pop-up shows (#219, GDD Edge Cases): a
 // banner and the pop-up never show at the same time. Then no banner starts,
@@ -284,9 +347,8 @@ export function stepBanner(banner, dt, items = [], k = LANDMARKS, { hold = false
     next = b.queue[0];
     b = { ...b, queue: b.queue.slice(1) };
   }
-  let room = k.banner.foundQueueMax;
-  const queue = b.queue.filter((q) => q.type === "claimed" || (room -= 1) >= 0);
-  if (queue.length !== b.queue.length) b = { ...b, queue, dropped: b.dropped + b.queue.length - queue.length };
+  const capped = capFound(b.queue, k.banner.foundQueueMax);
+  if (capped.merged) b = { ...b, queue: capped.queue, merged: (b.merged ?? 0) + capped.merged };
   if (next) {
     const time = bannerTime(next.type, b.queue.length, k);
     b = { ...b, current: { ...next, time, left: time } };
@@ -294,7 +356,7 @@ export function stepBanner(banner, dt, items = [], k = LANDMARKS, { hold = false
   return b;
 }
 
-const foundBanner = (spot) => ({ type: "found", id: spot.id, title: spot.name, text: spot.short });
+const foundBanner = (spot) => foundBannerOf([{ id: spot.id, title: spot.name, text: spot.short }]);
 const claimedBanner = (spot, points) => ({ type: "claimed", id: spot.id, title: CLAIMED_TITLE, text: spot.name, points });
 
 // -------------------------------------------------------------------- step
@@ -328,8 +390,7 @@ function applyChanges(state, dt, claims, finds, k, hold = false) {
   }
   outfits = Math.max(outfits, outfitsFor(claimed.length, state.claimSpots, k));
   // A Found banner that still waits for a spot that is now Claimed is stale.
-  const stale = state.banner.queue.some((b) => b.type === "found" && claims.some((s) => s.id === b.id));
-  const banner = stale ? { ...state.banner, queue: state.banner.queue.filter((b) => b.type !== "found" || !claims.some((s) => s.id === b.id)) } : state.banner;
+  const banner = claims.length ? dropFound(state.banner, claims.map((s) => s.id)) : state.banner;
   return { ...state, found, claimed, outfits, run, banner: stepBanner(banner, dt, items, k, { hold }), events };
 }
 
@@ -600,7 +661,7 @@ export function landmarkTestHook(tracker, { dev = false } = {}) {
   return {
     states: () => Object.fromEntries(tracker.state.spots.map((s) => [s.id, spotState(tracker.state, s.id)])),
     view: () => tracker.view(),
-    banner: () => ({ current: tracker.state.banner.current, waiting: tracker.state.banner.queue.length, dropped: tracker.state.banner.dropped }),
+    banner: () => ({ current: tracker.state.banner.current, waiting: tracker.state.banner.queue.length, merged: tracker.state.banner.merged }),
     run: () => tracker.state.run,
     saved: () => tracker.saved,
     find: (id) => tracker.mark(id, "found"),

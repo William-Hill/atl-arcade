@@ -74,8 +74,8 @@ export function duckPoints(at, length, base, now = at, k = CHIMES) {
 
 // The chimes that wait, in play order: Claimed before Found, then the
 // order they came in. At most `foundMax` Found chimes wait, as the Found
-// banners (a third Found banner is dropped, so its chime is too). Returns a
-// new list.
+// banners (a third Found banner merges into the last one that waits, #270,
+// so it has no chime of its own). Returns a new list.
 export function queueChime(queue, type, foundMax = CHIMES.foundMax) {
   if (type !== "claimed") return queue.filter((t) => t !== "claimed").length >= foundMax ? queue : [...queue, type];
   const at = queue.findIndex((t) => t !== "claimed");

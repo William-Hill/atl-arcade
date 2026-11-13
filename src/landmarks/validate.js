@@ -26,6 +26,9 @@ export const LANDMARK_RULES = {
   cardMax: 5,
   findEdge: { min: 4, max: 12 }, // m, d_edge
   findR: { min: 10, max: 28 }, // m, r_find
+  // A large spot: its find.edge zone reaches more than `large` m from its
+  // icon. It needs find.reach, so it is found near its icon (#270).
+  findReach: { min: 20, max: 60, large: 150 }, // m
   gapR: { easy: 12, typical: 8, hard: 5 }, // m, k_tier * L_air
   gapLanding: 3, // m, the landing zone of a hard gap
   gapLandingReach: 12, // m, the most from the gap zone to its landing zone
@@ -254,9 +257,19 @@ function checkSpot(spot, ctx, err) {
     if (!isNum(f.edge) || f.edge < R.findEdge.min || f.edge > R.findEdge.max) err(`find.edge is ${f.edge} (range ${R.findEdge.min} to ${R.findEdge.max})`);
     if (!rings) err("find.edge needs a footprint");
     if (f.at != null) err("find.at goes with find.r only");
+    const reach = f.reach == null ? null : f.reach;
+    if (reach != null && (!isNum(reach) || reach < R.findReach.min || reach > R.findReach.max)) err(`find.reach is ${reach} (range ${R.findReach.min} to ${R.findReach.max})`);
+    // A large spot (a park) is found near its icon, not at the far edge of
+    // its footprint (#270, docs/decisions.md 2026-11-13).
+    if (rings && isNum(f.edge) && reach == null) {
+      const far = zoneReach(spot.at, rings, f.edge);
+      if (far > R.findReach.large) err(`the find zone reaches ${Math.round(far)} m from the icon (max ${R.findReach.large}): add find.reach (${R.findReach.min} to ${R.findReach.max} m)`);
+    }
     // A player must be able to reach the zone on a paved way.
-    if (rings && isNum(f.edge) && !pavedNear(rings, f.edge, level)) err(`no trail, path, or sidewalk comes within find.edge (${f.edge} m) of the footprint`);
+    const near = isNum(reach) ? { at: spot.at, r: reach } : null;
+    if (rings && isNum(f.edge) && !pavedNear(rings, f.edge, level, near)) err(`no trail, path, or sidewalk comes within find.edge (${f.edge} m) of the footprint${near ? ` and within find.reach (${reach} m) of the icon` : ""}`);
   } else {
+    if (f.reach != null) err("find.reach goes with find.edge only");
     if (!isNum(f.r) || f.r < R.findR.min || f.r > R.findR.max) err(`find.r is ${f.r} (range ${R.findR.min} to ${R.findR.max})`);
     if (f.at != null && !isPoint(f.at)) err("find.at needs [x, z]");
     const center = isPoint(f.at) ? f.at : spot.at;
@@ -300,8 +313,17 @@ function pavedWithin(p, d, level) {
   return false;
 }
 
-// True when a point of a paved strip is within `d` of one of the outlines.
-function pavedNear(rings, d, level) {
+// The farthest a find.edge zone reaches from the icon: the farthest corner
+// of the outer rings, plus the edge distance.
+export function zoneReach(at, rings, edge) {
+  let far = 0;
+  for (const shape of rings) for (const p of shape[0]) far = Math.max(far, dist(at, p));
+  return far + edge;
+}
+
+// True when a point of a paved strip is within `d` of one of the outlines
+// (and, with `near` { at, r }, within `r` of `at`).
+function pavedNear(rings, d, level, near = null) {
   for (const s of level.strips ?? []) {
     if (s.kind === "street") continue;
     for (let i = 0; i < s.points.length - 1; i += 1) {
@@ -310,6 +332,7 @@ function pavedNear(rings, d, level) {
       const n = Math.max(1, Math.ceil(dist(a, b) / 2));
       for (let k = 0; k <= n; k += 1) {
         const p = [a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n];
+        if (near && dist(p, near.at) > near.r) continue;
         if (rings.some((r) => outlineDistance(p, r) <= d)) return true;
       }
     }

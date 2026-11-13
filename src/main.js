@@ -830,7 +830,9 @@ const input = createInput({ target: window, touch });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 runReady = true;
-const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion });
+// The goals of the run (M1-05), or null with ?run=free. The HUD shows them (#268).
+const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef });
 // After the step from pbr lite to toon (#246): one line, one time. The flag
 // leaves the address, so a refresh does not show the line again.
 const lookNotice = lookDownNotice(window.location.href);
@@ -846,7 +848,6 @@ const frameReadout = params.get("fps") === "1" ? createFrameReadout() : null;
 const frameReadoutEl = frameReadout ? document.body.appendChild(Object.assign(document.createElement("div"), { id: "fps-readout" })) : null;
 // Goals, the run timer, and the results screen (M1-05). The goal list is
 // data per level (src/level/goals.js). ?run=free turns the timer off.
-const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
 let goals = goalDef ? createGoals(goalDef) : null;
 // The fact cards for the goal list. The run collects the cards on the trail
 // (run.cards, #17). collectFactCard(id) also adds a card, for the tests. A

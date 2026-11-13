@@ -46,6 +46,7 @@ function boxes(page) {
       credit: "#attribution .attr-short", nia: '#skater-select button[data-skater="nia"]', marcus: '#skater-select button[data-skater="marcus"]',
       minimap: "#minimap", stick: ".touch-stick-base", jump: ".touch-jump", grind: ".touch-grind", groove: ".touch-style1", spin: ".touch-style2",
       settings: "#settings-toggle", fullscreen: "#fullscreen-toggle", turn: "#turn-hint",
+      goals: "#hud-goals", met: "#hud-met",
     };
     const out = {};
     for (const [name, sel] of Object.entries(sels)) {

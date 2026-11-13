@@ -390,6 +390,34 @@ test("a free run: a Found spot reads 'Start a timed run to claim it', and an edg
   await expectPanel(page, "edge", EDGE);
 });
 
+test("?travel=found: travel goes only to a Found or Claimed spot (#271)", async ({ page }) => {
+  test.setTimeout(180000);
+  await ready(page, "&travel=found");
+  await setStates(page);
+  await page.evaluate(() => window.__atl.fullmap.open());
+  await expect(page.locator("#fullmap .fullmap-hint")).toContainText("click a found spot, then T: travel");
+  const card = page.locator("#fullmap .fullmap-card");
+  // An Unknown spot: the panel has no "Travel here", and T does nothing.
+  await page.evaluate((id) => window.__atl.fullmap.openSpot(id), EAST.unknown);
+  await expect(card).toBeVisible();
+  await expect(card.locator(".fullmap-travel")).toBeHidden();
+  await page.keyboard.press("KeyT");
+  await expect(page.locator("#fullmap")).toBeVisible();
+  // A place on the map: no target.
+  await page.evaluate(() => window.__atl.fullmap.select(null, { x: 300, z: -100 }));
+  expect(await page.evaluate(() => window.__atl.fullmap.state.target)).toBe(null);
+  // A Found spot: "Travel here" shows, and T moves the skater there.
+  await page.evaluate((id) => window.__atl.fullmap.openSpot(id), EAST.found);
+  await expect(card.locator(".fullmap-travel")).toBeVisible();
+  await page.screenshot({ path: `${SHOTS}/fullmap-travel-found.png` });
+  const at = FILE.spots.find((s) => s.id === EAST.found).at;
+  await page.keyboard.press("KeyT");
+  await expect(page.locator("#fullmap")).toBeHidden();
+  await page.waitForTimeout(500);
+  const p = await page.evaluate(() => window.__atl.skater.position);
+  expect(Math.hypot(p[0] - at[0], p[2] - at[1])).toBeLessThan(60);
+});
+
 test("a newly claimed icon pulses once on the minimap and the full map", async ({ page }) => {
   await ready(page);
   await setStates(page);

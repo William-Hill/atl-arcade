@@ -2345,3 +2345,10 @@ Design: `design/gdd/landmark-discovery.md` (on `main`): Core Rules 2 to 5 and 7,
 - Other specs on this branch: `fact-cards`, `goals` and `phone-layout` have 4 failures that fail the same way on `epic/city-look` (1034dfc) in this container: `fact-cards.spec.js:91` (the pop-up is gone after the test's waits), the 2 phone tests of `goals.spec.js:179` (30 s timeout), and `phone-layout` landscape ("balance x stick"). The full e2e suite did not run.
 - Not verified: no person played a challenge, heard a chime, or read a banner on a phone. No real GPU and no real phone (P-2 is open). The chimes were not heard: the test reads the scheduled times. The night bloom of the core was seen in 1 software-rendered picture only. The ring in the pbr look by day was not measured against the bloom threshold in the frame; the value is the material value (0.8). Real skaters did not review the challenges.
 - **After the merge of #218.** One tracker (the `loadLandmarks()` data loader of #218) and one test hook, with the debug build mode. `e2e/landmark-map.spec.js` (#218) set the states through the hook and assumed the game did not step the tracker; now the spawn finds the Freedom Parkway spot on the first tick, so its `ready()` moves the skater to [150, 600] (no find zone near) and resets every spot first. Its 11 tests pass on the merged branch, and `e2e/landmarks.spec.js` 19 of 19.
+
+## 2026-11-13: Fast travel in the City pitch demo (#271), PROPOSED, not decided
+
+- **Status: PROPOSED, not decided.** The repository owner decides. This entry is a draft. Replace it with the decision.
+- Proposal: `docs/proposals/271-fast-travel.md`. Options: A keep as is (off in the demo build), B found and claimed spots only, C Tour mode only (#260), D any point in all modes.
+- Recommendation in the proposal: B.
+- No default changed. `?travel=found` (opt-in) tries option B. No parameter still means "any" in the dev server and "off" in a production build (2026-11-04).

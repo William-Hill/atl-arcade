@@ -35,7 +35,8 @@ export function goalRows(status) {
       const value = list.filter((g) => g.done).length;
       rows.push({ key, short, value, target: list.length, done: value >= list.length });
     } else {
-      const g = list[0];
+      // With two goals of one type, the row shows the first open goal.
+      const g = list.find((x) => !x.done) ?? list[list.length - 1];
       rows.push({ key, short, value: Math.min(g.value, g.target), target: g.target, done: g.done });
     }
   }

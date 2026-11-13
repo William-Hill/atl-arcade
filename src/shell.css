@@ -622,8 +622,9 @@ body.results-open #touch-controls { display: none; }
   #fact-popup {
     top: calc(84px + env(safe-area-inset-top));
     /* 262 px on each side: clear of the round goal chips (#268), which
-       stand at the left of the minimap. */
-    width: min(380px, calc(100vw - 2 * (262px + env(safe-area-inset-right))));
+       stand at the left of the minimap. A short phone (667 px) keeps at
+       least 200 px, so the text stays readable and clear of the chips. */
+    width: max(200px, min(380px, calc(100vw - 2 * (262px + env(safe-area-inset-right)))));
   }
 }
 

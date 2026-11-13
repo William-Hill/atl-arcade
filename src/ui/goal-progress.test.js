@@ -29,6 +29,16 @@ describe("the goal rows", () => {
     expect(rows.map((r) => rowText(r, true))).toEqual(["Score 2.3K/6K", "Combo 640/1K", "Cards 1/3", "Gaps 1/2"]);
   });
 
+  it("shows the first open goal when a level has two goals of one type", () => {
+    const status = [
+      { id: "s1", type: "score", label: "Score 5,000", value: 6000, target: 5000, done: true },
+      { id: "s2", type: "score", label: "Score 10,000", value: 6000, target: 10000, done: false },
+    ];
+    expect(goalRows(status).map((r) => rowText(r))).toEqual(["Score 6,000/10,000"]);
+    const all = status.map((g) => ({ ...g, value: 12000, done: true }));
+    expect(goalRows(all).map((r) => rowText(r))).toEqual([`${DONE_MARK} Score 10,000/10,000`]);
+  });
+
   it("marks a done row with a check mark and keeps the value at the target", () => {
     const rows = goalRows(goalStatus(BELTLINE, state({ score: 7400, best: 1200, cards: 3, gaps: ["gap-freedom-parkway", "gap-stone-mountain"] })));
     expect(rows.every((r) => r.done)).toBe(true);

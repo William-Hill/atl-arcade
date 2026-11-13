@@ -28,6 +28,8 @@ export function createHudGoals(top, root, { compact = () => isCompact(innerWidth
 
   let before = null;
   let ofState = null;
+  let ofSmall = null;
+  let lastTime = null;
   let queue = [];
   let until = 0;
 
@@ -38,17 +40,25 @@ export function createHudGoals(top, root, { compact = () => isCompact(innerWidth
         list.hidden = true;
         met.hidden = true;
         before = null;
+        lastTime = null;
         return;
       }
       list.hidden = false;
-      if (state !== ofState) {
+      const small = compact();
+      if (state !== ofState || small !== ofSmall) {
         ofState = state;
+        ofSmall = small;
         const status = goalStatus(def, state);
-        // A replay starts a new run: the old confirmations go.
-        if (state.time === 0 || (before && status.some((g, i) => before[i].done && !g.done))) queue = [];
+        // A replay starts a new run: the run time goes back, or a met goal
+        // is open again. The old confirmations go, also the one on screen.
+        const restart = (lastTime !== null && state.time < lastTime) || (before && status.some((g, i) => before[i].done && !g.done));
+        lastTime = state.time;
+        if (restart) {
+          queue = [];
+          until = 0;
+        }
         queue.push(...newlyMet(before, status).map(metText));
         before = status;
-        const small = compact();
         for (const row of goalRows(status)) {
           let chip = chips.get(row.key);
           if (!chip) {

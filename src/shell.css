@@ -72,6 +72,12 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
 /* A lighter pink than the brand pink: 4.5:1 or more on the pill. */
 .hud-combo { font-size: 18px; font-weight: 600; min-height: 22px; color: #ff80c4; }
 .hud-combo[data-active="0"] { color: #ffd166; }
+/* The "+N" of a bank fades out after a fixed time (#269, hud.js). Only the
+   fade-out has a transition, so a new combo shows at once. With reduced motion
+   (the settings menu, or else the media query; hud.js sets data-rm) the "+N"
+   goes with no transition. */
+.hud-combo[data-fade="1"] { opacity: 0; transition: opacity 0.4s; }
+.hud-combo[data-fade="1"][data-rm="1"] { transition: none; }
 .hud-pending { font-size: 16px; min-height: 20px; }
 .hud-tag { font-size: 22px; font-weight: 700; color: #7ef0c2; min-height: 26px; transition: opacity 0.3s; }
 .hud-tag[data-beat="GOOD"] { color: #ffd166; }
@@ -595,7 +601,7 @@ body.results-open #touch-controls { display: none; }
 /* The HUD goal line (#219): the challenge of the nearest Found landmark. */
 /* At most 276 px wide, so the HUD column ends left of the banner on every
    desktop window (the banner starts at 300 px or more from the left). */
-.hud-goal { color: #ffd166; font-weight: 600; max-width: 276px; }
+.hud-goal { color: #ffd166; font-weight: 600; max-width: 276px; white-space: pre-line; }
 .hud-goal[hidden] { display: none; }
 /* A phone in landscape: the HUD column is full to the stick, so the goal
    line leaves the column. It sits low on the screen, between the stick and the

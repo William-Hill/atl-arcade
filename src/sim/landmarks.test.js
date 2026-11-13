@@ -329,6 +329,27 @@ describe("AC-4 and F-5: the line challenge", () => {
     expect(s.track.lines.art).toMatchObject({ next: 2 });
   });
 
+  it("marks a return to ring 1 as a restart (#269), but not a stay in ring 1", () => {
+    const attempt = (s) => s.track.lines.art;
+    // A stay in ring 1 is no restart.
+    expect(attempt(ride(fresh(), [[600, 100], [600, 100], [600, 100]]))).toEqual({ next: 1, t: 0 });
+    // Back to ring 1 after ring 2: a restart.
+    let s = ride(fresh(), [[600, 100], [630, 100], [600, 100]]);
+    expect(attempt(s)).toEqual({ next: 1, t: 0, restarted: true });
+    // The flag stays while the skater stays in ring 1, and goes at ring 2.
+    s = ride(s, [[600, 100], [615, 100]]);
+    expect(attempt(s)).toEqual({ next: 1, t: 1, restarted: true });
+    s = ride(s, [[630, 100]]);
+    expect(attempt(s)).toEqual({ next: 2, t: 2 });
+    // Back to ring 1 after 1 s or more outside it: a restart.
+    expect(attempt(ride(fresh(), [[600, 100], [615, 100], [600, 100]]))).toEqual({ next: 1, t: 0, restarted: true });
+    // A short step out of ring 1 (less than 1 s) is no restart.
+    const short = [[600, 100], [604.5, 100], [600, 100]].reduce((st, [x, z]) => step(st, obs(x, z), 0.5), fresh());
+    expect(attempt(short)).toEqual({ next: 1, t: 0 });
+    // A restarted line still claims.
+    expect(spotState(ride(fresh(), [[600, 100], [630, 100], [600, 100], [630, 100], [660, 100]]), "art")).toBe("claimed");
+  });
+
   it("needs checkpoint 1 first", () => {
     expect(spotState(ride(fresh(), [[630, 100], [660, 100]]), "art")).toBe("unknown");
   });

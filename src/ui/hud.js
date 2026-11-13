@@ -2,9 +2,9 @@
 // meter, balance meter while grinding. Plain DOM, updated once per frame
 // from the run state. The simulation never sees this.
 
-import { comboString, comboValue } from "../sim/skate/combo.js";
+import { COMBO_LINE, comboLine } from "../sim/skate/combo.js";
 import { formatClock } from "../sim/skate/goals.js";
-import { startHint } from "./layout.js";
+import { isCompact, startHint } from "./layout.js";
 import { nearEdge } from "../level/edge-fence.js";
 
 // The hint near the level edge fence (#229).
@@ -27,6 +27,20 @@ export function styleLabel(ready) {
 export function pulseLook(beatPhase, reducedMotion = false) {
   const fade = 1 - beatPhase;
   return { opacity: 0.25 + 0.75 * fade * fade, scale: reducedMotion ? 1 : 1 + 0.6 * fade * fade };
+}
+
+// The "+N" of a banked combo shows for BANKED_SHOW_MS, then fades out in
+// BANKED_FADE_MS (the opacity transition in shell.css), then goes (#269).
+export const BANKED_SHOW_MS = 2500;
+export const BANKED_FADE_MS = 400;
+
+// Pure: the "+N" line after a bank. `bankedAt` is the time of the bank, or
+// null before the first bank. Returns { text, fade }.
+export function bankedLine(lastBanked, bankedAt, nowMs, showMs = BANKED_SHOW_MS, fadeMs = BANKED_FADE_MS) {
+  if (!(lastBanked > 0) || bankedAt === null) return { text: "", fade: false };
+  const age = nowMs - bankedAt;
+  if (age >= showMs + fadeMs) return { text: "", fade: false };
+  return { text: `+${lastBanked.toLocaleString("en-US")}`, fade: age >= showMs };
 }
 
 function el(tag, className, parent) {
@@ -92,6 +106,9 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
 
   let tagUntil = 0;
   let seenSeq = 0;
+  // The time of the last bank: the combo was active, and now it is not.
+  let wasActive = false;
+  let bankedAt = null;
 
   return {
     // `goals` is the goal state (src/sim/skate/goals.js), or null for free skate.
@@ -107,14 +124,23 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
       }
       score.textContent = c.score.toLocaleString("en-US");
       if (c.active) {
-        combo.textContent = comboString(c);
+        const phone = isCompact(window.innerWidth, window.innerHeight);
+        const text = comboLine(c.links, phone ? COMBO_LINE.phone : COMBO_LINE.desktop);
+        if (combo.textContent !== text) combo.textContent = text;
         pending.textContent = `${c.pending.toLocaleString("en-US")} x ${c.multiplier}`;
         combo.dataset.active = "1";
+        combo.dataset.fade = "0";
+        bankedAt = null;
       } else {
-        combo.textContent = c.lastBanked ? `+${comboValue({ pending: c.lastBanked, multiplier: 1 }).toLocaleString("en-US")}` : "";
+        if (wasActive) bankedAt = nowMs;
+        const line = bankedLine(c.lastBanked, bankedAt, nowMs);
+        if (combo.textContent !== line.text) combo.textContent = line.text;
+        combo.dataset.rm = reducedMotion() ? "1" : "0";
+        combo.dataset.fade = line.fade ? "1" : "0";
         pending.textContent = "";
         combo.dataset.active = "0";
       }
+      wasActive = c.active;
       styleFill.style.width = `${Math.round(c.style * 100)}%`;
       styleWrap.dataset.ready = c.signatureReady ? "1" : "0";
       const label = styleLabel(c.signatureReady);

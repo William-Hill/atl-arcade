@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CLAIM_PREFIX, FREE_RUN_HINT, goalLine, landmarkStepArgs, withClaimMedal, withGapGoal } from "./play.js";
+import { CLAIM_PREFIX, FREE_RUN_HINT, LINE_RESTART, goalLine, landmarkStepArgs, withClaimMedal, withGapGoal } from "./play.js";
 import { createLandmarks, landmarkView, markSpot, prepareLandmarks, spotState, stepLandmarks } from "../sim/landmarks.js";
 import { createGoals } from "../sim/skate/goals.js";
 
@@ -127,6 +127,21 @@ describe("AC-3: the HUD goal line", () => {
     const after = goalLine(landmarkView(s), [612, 0, 0]);
     expect(after.text).toBe("Claim it: ride the 3 rings in order in 14 s");
     for (const t of [line.text, after.text, FREE_RUN_HINT]) expect(t.toLowerCase()).not.toContain("bail");
+  });
+
+  it("says the line restarted when the skater rides back into ring 1 (#269), for 2 s", () => {
+    let s = markSpot(fresh(), "art", "found");
+    const at = (x) => ({ position: [x, 0, 0], airborne: false, landed: false, bailed: false, teleported: false, grind: null, linked: false, banked: 0 });
+    s = stepLandmarks(s, at(600), DT);
+    for (let i = 0; i < 90; i += 1) s = stepLandmarks(s, at(610), DT);
+    expect(goalLine(landmarkView(s), [610, 0, 0]).text).toBe("Ring 2 of 3: 13 s left");
+    s = stepLandmarks(s, at(600), DT);
+    expect(goalLine(landmarkView(s), [600, 0, 0]).text).toBe(`${LINE_RESTART}\nRing 2 of 3: 14 s left`);
+    for (let i = 0; i < 60; i += 1) s = stepLandmarks(s, at(610), DT);
+    expect(goalLine(landmarkView(s), [610, 0, 0]).text).toBe(`${LINE_RESTART}\nRing 2 of 3: 13 s left`);
+    for (let i = 0; i < 61; i += 1) s = stepLandmarks(s, at(610), DT);
+    expect(goalLine(landmarkView(s), [610, 0, 0]).text).toBe("Ring 2 of 3: 12 s left");
+    expect(LINE_RESTART.length).toBeLessThanOrEqual(20);
   });
 
   it("asks for a timed run in a free run", () => {

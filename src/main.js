@@ -15,6 +15,7 @@ import { createRun, stepRun, teleportRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
 import { createMinimap } from "./ui/minimap.js";
 import { createFullMap } from "./ui/fullmap.js";
+import { travelMode } from "./ui/travel-rule.js";
 import { isoTilesFor } from "./ui/iso-tiles.js";
 import { travelSpot, landingProbe } from "./level/geo/travel.js";
 import { ISO, isoBasis, isoCameraPose, levelIsoGrid, tileCenter } from "./level/geo/iso-map.js";
@@ -830,7 +831,9 @@ const input = createInput({ target: window, touch });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 runReady = true;
-const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion });
+// The goals of the run (M1-05), or null with ?run=free. The HUD shows them (#268).
+const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef });
 // After the step from pbr lite to toon (#246): one line, one time. The flag
 // leaves the address, so a refresh does not show the line again.
 const lookNotice = lookDownNotice(window.location.href);
@@ -846,7 +849,6 @@ const frameReadout = params.get("fps") === "1" ? createFrameReadout() : null;
 const frameReadoutEl = frameReadout ? document.body.appendChild(Object.assign(document.createElement("div"), { id: "fps-readout" })) : null;
 // Goals, the run timer, and the results screen (M1-05). The goal list is
 // data per level (src/level/goals.js). ?run=free turns the timer off.
-const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
 let goals = goalDef ? createGoals(goalDef) : null;
 // The fact cards for the goal list. The run collects the cards on the trail
 // (run.cards, #17). collectFactCard(id) also adds a card, for the tests. A
@@ -890,6 +892,7 @@ const minimapParam = params.get("minimap");
 // The full map (src/ui/fullmap.js) is made after photo mode, below; the
 // minimap expand button opens it.
 let fullmap = null;
+const fastTravelMode = travelMode(params.get("travel"), { dev: import.meta.env.DEV });
 // The map icons (#218): the landmark spots with their states, read from the
 // tracker, and the parks that no spot stands for.
 const mapIconSource = geo ? createIconSource({ tracker: landmarkTracker, level, data: landmarkData }) : null;
@@ -1124,8 +1127,10 @@ fullmap =
         iso: params.get("isomap") === "0" ? null : isoTilesFor(level.name),
         groundAt: (x, z) => terrainOf(level).height(x, z),
         // Fast travel: on in the dev server, off in a production build.
-        // ?travel=1 or ?travel=0 sets it either way.
-        onTravel: (params.get("travel") ?? (import.meta.env.DEV ? "1" : "0")) === "1" ? (x, z) => fastTravel(x, z) : null,
+        // ?travel=1 or ?travel=0 sets it either way. ?travel=found allows
+        // only Found and Claimed spots (opt-in, #271; src/ui/travel-rule.js).
+        onTravel: fastTravelMode !== "off" ? (x, z) => fastTravel(x, z) : null,
+        travelMode: fastTravelMode,
       })
     : null;
 

@@ -41,6 +41,9 @@ function boxes(page) {
       ["switch", ".touch-switch"],
       // The landmark goal line (#219): the spawn is in the find zone of a spot.
       ["goal", "#hud-goal"],
+      // The round goals (#268) and the confirmation of a met goal.
+      ["goals", "#hud-goals"],
+      ["met", "#hud-met"],
     ];
     const out = [];
     for (const [name, sel] of items) {
@@ -58,8 +61,8 @@ function boxes(page) {
 }
 
 // The longest HUD a player sees: a combo, the pending score, a move tag,
-// and the balance meter. The render loop pauses first, so the HUD update
-// does not clear the text.
+// the balance meter, and the confirmation of a met goal (#268). The render
+// loop pauses first, so the HUD update does not clear the text.
 async function fillHud(page) {
   await page.evaluate(() => {
     window.__atl.renderPaused = true;
@@ -71,6 +74,10 @@ async function fillHud(page) {
     tag.textContent = "PERFECT Bankhead Bounce";
     tag.style.opacity = "1";
     document.getElementById("hud-balance").style.display = "";
+    // A met round goal (#268): the confirmation line shows.
+    const met = document.getElementById("hud-met");
+    met.textContent = "\u2713 Goal met: Stone Mountain Trail Bridge Hop";
+    met.hidden = false;
   });
 }
 

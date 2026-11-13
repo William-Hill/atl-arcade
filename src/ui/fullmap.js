@@ -30,6 +30,7 @@ import { COLORS, drawArrow, drawIcon, drawMapBase } from "./minimap.js";
 import { ICON_SIZE, createIconSource, looksOf, mapSummary, namePlace, newlyClaimed, pulseAt, rectsOverlap, spotPanel } from "./landmark-icons.js";
 import { createGuide, createSpotCard } from "./landmark-guide.js";
 import { drawSpotIcon, iconCanvas } from "./spot-icon.js";
+import { canTravelTo, travelHint } from "./travel-rule.js";
 import { mapFrame } from "./minimap-math.js";
 import { FULLMAP, baseTransform, clampView, fitView, isoBounds, isoLevelFor, labelFits, nearestIcon, panBy, screenToWorld, streetLabelSpots, visibleTiles, worldToScreen, zoomAt } from "./fullmap-math.js";
 import { isoBasis, isoProject, isoUnproject } from "../level/geo/iso-map.js";
@@ -55,8 +56,10 @@ function el(tag, className, parent, text) {
 // ground height, to place the icons on the isometric map.
 // `onTravel(x, z)` turns on fast travel (a debug and play-test aid): a click
 // picks a place or an icon, and "Travel here" or T moves the skater there.
+// `travelMode` limits the picks (src/ui/travel-rule.js, #271): "any" (the
+// default) or "found" (only Found or Claimed spots).
 // Null turns it off.
-export function createFullMap(parent, level, { source = createIconSource({ level }), onChange = () => {}, canOpen = () => true, iso = null, groundAt = () => 0, onTravel = null, freeRun = false, reducedMotion = () => false } = {}) {
+export function createFullMap(parent, level, { source = createIconSource({ level }), onChange = () => {}, canOpen = () => true, iso = null, groundAt = () => 0, onTravel = null, travelMode = "any", freeRun = false, reducedMotion = () => false } = {}) {
   const bounds = level.bounds;
   const spots = streetLabelSpots(level.strips);
   // `card` is the id of the spot whose panel is open. `tab` is "map" or
@@ -113,7 +116,7 @@ export function createFullMap(parent, level, { source = createIconSource({ level
   canvas.setAttribute("role", "img");
   const head = el("div", "fullmap-head", root);
   el("div", "fullmap-title", head, level.title ?? level.name);
-  el("div", "fullmap-hint", head, `Drag to move · wheel or pinch to zoom · C: center${iso ? " · V: 2D or 3D" : ""}${onTravel ? " · click, then T: travel" : ""} · M: close`);
+  el("div", "fullmap-hint", head, `Drag to move · wheel or pinch to zoom · C: center${iso ? " · V: 2D or 3D" : ""}${onTravel ? travelHint(travelMode) : ""} · M: close`);
   // The tabs: the map alone, or the map with the Guide list.
   const tabs = el("div", "fullmap-tabs", head);
   tabs.setAttribute("role", "tablist");
@@ -183,11 +186,16 @@ export function createFullMap(parent, level, { source = createIconSource({ level
   function select(icon, target = icon ? { x: icon.x, z: icon.z } : null) {
     const spot = icon ? (source.view?.spots.find((sp) => sp.id === icon.id) ?? null) : null;
     state.selected = icon;
-    state.target = onTravel ? target : null;
+    state.target = onTravel && canTravelTo(travelMode, spot) ? target : null;
+    if (travelBtn) travelBtn.hidden = !state.target;
     state.card = spot ? spot.id : null;
     if (spot) {
       card.show(spotPanel(spot, source.card(spot.id), { freeRun }));
-      if (travelBtn) card.foot.appendChild(travelBtn);
+      // The foot stays empty (and hidden by CSS) when the spot is no target.
+      if (travelBtn) {
+        if (state.target) card.foot.appendChild(travelBtn);
+        else travelBtn.remove();
+      }
     } else {
       card.hide();
       cardFrom = null;
@@ -249,7 +257,9 @@ export function createFullMap(parent, level, { source = createIconSource({ level
     if (state.card) {
       const icon = icons.find((i) => i.id === state.card);
       const from = cardFrom;
-      select(icon ?? null, icon ? state.target : null);
+      // A spot can become a target here (for example Unknown to Found in
+      // the "found" travel mode), so the target is the icon again.
+      select(icon ?? null, icon ? { x: icon.x, z: icon.z } : null);
       cardFrom = from;
     }
     dirty = true;

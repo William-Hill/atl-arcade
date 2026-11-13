@@ -80,3 +80,27 @@ export function comboValue(c) {
 export function comboString(c) {
   return c.links.map((l) => (l.onBeat ? `${l.name}!` : l.name)).join(" + ");
 }
+
+// The HUD combo line (#269). A long combo shows its last links and the link
+// count, so the line does not grow with no limit. `maxLinks` is the most
+// links that show; `maxChars` is the most characters before the count. The
+// line drops older links until it fits, but it always keeps the last link.
+// Example, 8 links: "… Rail Grind + Hop! + Rail Grind + Hop! (8)".
+export const COMBO_LINE = {
+  desktop: { maxLinks: 4, maxChars: 48 },
+  phone: { maxLinks: 3, maxChars: 30 },
+};
+
+export function comboLine(links, { maxLinks = 4, maxChars = 48 } = {}) {
+  const names = links.map((l) => (l.onBeat ? `${l.name}!` : l.name));
+  if (names.length <= maxLinks) {
+    const all = names.join(" + ");
+    if (all.length <= maxChars) return all;
+  }
+  let shown = Math.max(1, Math.min(maxLinks, names.length));
+  const text = (n) => `… ${names.slice(-n).join(" + ")}`;
+  while (shown > 1 && text(shown).length > maxChars) shown -= 1;
+  // One link that is too long hides no link: it shows in full, with no count.
+  if (shown === names.length) return names.join(" + ");
+  return `${text(shown)} (${names.length})`;
+}

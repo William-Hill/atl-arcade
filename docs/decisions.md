@@ -2346,6 +2346,28 @@ Design: `design/gdd/landmark-discovery.md` (on `main`): Core Rules 2 to 5 and 7,
 - Not verified: no person played a challenge, heard a chime, or read a banner on a phone. No real GPU and no real phone (P-2 is open). The chimes were not heard: the test reads the scheduled times. The night bloom of the core was seen in 1 software-rendered picture only. The ring in the pbr look by day was not measured against the bloom threshold in the frame; the value is the material value (0.8). Real skaters did not review the challenges.
 - **After the merge of #218.** One tracker (the `loadLandmarks()` data loader of #218) and one test hook, with the debug build mode. `e2e/landmark-map.spec.js` (#218) set the states through the hook and assumed the game did not step the tracker; now the spawn finds the Freedom Parkway spot on the first tick, so its `ready()` moves the skater to [150, 600] (no find zone near) and resets every spot first. Its 11 tests pass on the merged branch, and `e2e/landmarks.spec.js` 19 of 19.
 
+## 2026-11-13: Fast travel in the City pitch demo (#271), PROPOSED, not decided
+
+- **Status: PROPOSED, not decided.** The repository owner decides. This entry is a draft. Replace it with the decision.
+- Proposal: `docs/proposals/271-fast-travel.md`. Options: A keep as is (off in the demo build), B found and claimed spots only, C Tour mode only (#260), D any point in all modes.
+- Recommendation in the proposal: B.
+- No default changed. `?travel=found` (opt-in) tries option B. No parameter still means "any" in the dev server and "off" in a production build (2026-11-04).
+
+## 2026-11-13: HUD text: a short combo line, a "+N" that fades, a ring line restart message (#269)
+
+Context: the design audit of 2026-11-13 (findings C7 and E2) found 3 HUD text problems in Autopilot runs. The combo line grew with no limit (about 90 characters at 8 links). The "+N" of a bank stayed until the next combo. A return to ring 1 set the line timer back to its full time with no message.
+
+Decision:
+- `comboLine()` in `src/sim/skate/combo.js` builds the combo line. It is pure. A long combo shows "… " and its last links, then the link count in brackets, for example "… Rail Grind + Hop! + Rail Grind + Hop! (8)". Desktop shows 4 links and 48 characters at most; a compact screen (`isCompact()`, as on a phone) shows 3 links and 30 characters at most (`COMBO_LINE`). The line drops older links until it fits, and always keeps the last link. `comboString()` stays for the full list.
+- The "+N" shows for 2.5 s after the bank, fades in 0.4 s, then goes (`bankedLine()` in `src/ui/hud.js`, the opacity transition in `src/shell.css`). With reduced motion there is no transition.
+- The landmark module marks a line attempt `restarted` when the skater rides into ring 1 after ring 2, or after 1 s or more outside ring 1 (`lineRestartAfter`). A stay in ring 1 is no restart. The HUD goal line then reads "Ring line restarted" on its own line above "Ring 2 of 3: 14 s left", for 2 s of the attempt (`lineRestartShow`), or until ring 2. The rules of the claim do not change.
+
+Verification:
+- Vitest: `comboLine` (8 links, repeated names, phone, long names, 1 to 40 links), `bankedLine`, the restart rule in `src/sim/landmarks.test.js`, and the goal line text in `src/landmarks/play.test.js`.
+- Playwright, headless Chromium: `e2e/hud-text.spec.js` with screenshots `e2e/__screenshots__/hud-text-*.png`: a long combo on desktop (1280 x 720) and phone landscape (844 x 390), the "+N" that shows, fades and goes, and a real-controller ride (planned by `rideLineRestart()` in `e2e/landmark-rides.js`) that rides back into ring 1 of the Telephone Factory line.
+- Results in the cloud container: `npm test` 1809 of 1811 pass (the 2 failures are the known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`; they pass with a 60 s timeout). `npm run build` passes. Playwright: `hud-text`, `combo` and `landmarks` pass (27 tests); `phone-layout` landscape "balance x stick" fails, and it fails the same way on `epic/city-look` in this container.
+- Not verified: no person read the new text on a real phone. The restart message was seen in the default look only.
+
 ## 2026-11-13: The round goals and their progress on the HUD (#268)
 
 The 2026-11-13 design audit (finding A2) found that a player sees the round goals only on the "Time!" screen. The HUD now shows them during play.

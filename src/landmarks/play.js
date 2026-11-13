@@ -5,12 +5,14 @@
 // Cases). The rules of the challenges are in the landmark module; this file
 // only says when a step runs, and what the HUD goal line reads.
 
-import { landmarkObs } from "../sim/landmarks.js";
+import { LANDMARKS, landmarkObs } from "../sim/landmarks.js";
 
 export const CLAIM_PREFIX = "Claim it: ";
 // A free run (?run=free) has no results screen and no medals, so it has no
 // claims: the hint asks for a timed run.
 export const FREE_RUN_HINT = "Start a timed run to claim it";
+// The goal line after a return to ring 1 restarts a line (#269).
+export const LINE_RESTART = "Ring line restarted";
 
 // The arguments of one landmark step, from the run after stepRun.
 // - `timed` is true when the level runs with a run timer (a goal list).
@@ -77,7 +79,9 @@ export function goalLine(view, position, { timed = true } = {}) {
   const c = s.challenge;
   if (c.type === "line" && s.attempt) {
     const left = Math.max(0, Math.ceil(c.seconds - s.attempt.t - 1e-9));
-    return { id: s.id, text: `Ring ${s.attempt.next + 1} of ${c.checkpoints.length}: ${left} s left` };
+    const ring = `Ring ${s.attempt.next + 1} of ${c.checkpoints.length}: ${left} s left`;
+    const restarted = s.attempt.restarted && s.attempt.t < LANDMARKS.lineRestartShow;
+    return { id: s.id, text: restarted ? `${LINE_RESTART}\n${ring}` : ring };
   }
   return { id: s.id, text: `${CLAIM_PREFIX}${lowerFirst(s.hint)}` };
 }

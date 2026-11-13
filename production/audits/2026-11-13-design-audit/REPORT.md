@@ -104,3 +104,12 @@ The run reports in `reports/autopilot/` are the raw Autopilot output and stay un
 1. Run 2 headline: "6 of 13 claimable spots were claimed and 8 of 15 spots found". Its own round and landmark breakdown has 5 claims (3 in round 1, 2 in round 3) and 7 found spots. The correct totals are 5 of 13 claimed and 7 of 15 found. This report uses the breakdown.
 2. Run 1 finding: "a player who completes one sees no reward". Run 2 shows a SPOT CLAIMED banner with the points and a chime for each claim. The valid point is narrower: the claim points do not show in the HUD score (see D2 and #263).
 
+
+## Issues for findings without a recommendation row
+
+| Finding | Issue |
+|---|---|
+| A2 Round goals on the HUD | #268 |
+| C7 and E2 HUD text (combo line, +N, ring line restart) | #269 |
+| B6 Find banners | #270 |
+| B8 Fast travel | #271 |

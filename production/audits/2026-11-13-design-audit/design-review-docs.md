@@ -35,7 +35,7 @@ Where the loop breaks:
 2. The level is about 1.9 km long (PCM at z -895, Studioplex at z +901). At 12 m/s that is about 160 s one way. A 150 s run cannot reach both ends. Landmark claims and the 150 s timer pull against each other.
 3. Free run (`?run=free`) has no timer, but by the GDD it gives no claims and no rings. The mode where a player can explore is the mode where the landmark game is off.
 4. Autopilot landed 0 grinds in 15 blind tries across 3 reports. The harness cannot see ledge positions, so this is not proof of a bug. It does show that rails are not signposted: the game has 22 benches and 195 curbs as grindables, and the agent never found one.
-5. Autopilot never reported a combo, a dance move or a beat hit. The 30 s loop at its center is unobserved in all three reports.
+5. The earlier Autopilot reports (2026-11-07, 11-08, 11-09) never reported a combo, a dance move or a beat hit. (The 2026-11-13 design runs did: a 3-move combo in run 1 and combos of 7 to 8 links in run 3. See `REPORT.md`.)
 
 ## 2. Pillar and anti-pillar check
 
@@ -58,7 +58,7 @@ Conflict 2, moving cars. `AGENTS.md`: "No crime, police, or traffic danger as co
 Hypothesis: "a new player chains a 3-move combo within 3 minutes; accidental rail falls under 1 per minute."
 
 - Evidence: the scripted `combo` session made a 3-link combo at 3.47 s. The scripted `rails` session fell 2.48 times per minute, on purpose. The report says "Not tried" and "Too few grinds to judge" (`REPORT.md`). William waived the human session on 2026-10-31.
-- Verdict: **untested**. No cold-start human has played. Two Autopilot runs plus one more never landed a grind.
+- Verdict: **untested**. No cold-start human has played. The earlier Autopilot reports (2026-11-07 to 11-09) never landed a grind. (The 2026-11-13 run 3 snapped 21 of 25 grinds in the skatepark.)
 - Onboarding in the build: one text line, "Press any key or click to start the beat" / "Tap to start the beat" (`layout.js`). It teaches no control, no grind, no dance. #76 is open.
 - The beat start is itself a hurdle. The hint hides only after the beat runs.
 - Scaffolding is missing: no isolated grind lesson, no rail highlight, no "why did I bail" feedback.
@@ -72,7 +72,7 @@ Hypothesis: "a new player chains a 3-move combo within 3 minutes; accidental rai
   - The GDD unlocks outfits at 7, 14 and 20 claims. The data has only 13 claim spots (6 buildings, 4 bridges, 2 parks, 1 skatepark) plus 2 edge markers. The GDD says 20 plus 2. Unlock counts must become 5, 9 and 13, or more spots must ship.
   - The outfit content does not exist (GDD open question 7).
   - Claim points are small: all 13 sum to 4,000 and `runCap` is 1,000, against a 12,000 gold medal. Claims do not move the medal.
-  - The only visible reward for a claim is a gold map icon. The story card (#220) and the claim effect (#221) are not built.
+  - A claim shows a SPOT CLAIMED banner with the points and plays a chime (run 2 of `REPORT.md`), and the map icon turns gold. The story card (#220) and the 3D claim effect (#221) are not built.
 
 ## 5. Educational and civic value
 
@@ -90,7 +90,7 @@ Hypothesis: "a new player chains a 3-move combo within 3 minutes; accidental rai
 | 1 | Build the story cards and a results row "Spots claimed this run" with NEW stamps. This is the visible civic payoff. | M | #220 |
 | 2 | Build the first 60 seconds: replace the start hint with a guided first hop, grind and 3-link combo. Highlight real rails. Then run 5 cold-start playtests and record the hypothesis numbers. | M | #76 (the playtest: new) |
 | 3 | Fix the timer and exploration conflict. Allow claims and rings in a free "Tour" run, or lengthen the demo run. Show the end of the run softly, not as a silent input cut. | M | new |
-| 4 | Build the claim moment: "SPOT CLAIMED" burst, ring fade, chime. It is the anchor moment of the GDD. | S | #221 |
+| 4 | Build the 3D claim effect: a burst at the ring. The SPOT CLAIMED banner and the chime already exist. It is the anchor moment of the GDD. | S | #221 |
 | 5 | Settle the traffic policy before showing the City. Either default `?cars` off near the trail and give cars no collision, or write the exception in `docs/decisions.md` and `AGENTS.md`. Remove the stale "no traffic" line. | S | new |
 | 6 | Give claims a reward. Set outfit unlocks to the number of shipped spots (5, 9, 13), make at least one outfit, and raise claim points or the cap so claims matter to medals. | M | new |
 | 7 | Add a leaderboard and a share card. This gives the second-session hook and a social loop. | M | #21 |

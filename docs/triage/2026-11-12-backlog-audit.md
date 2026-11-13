@@ -31,7 +31,7 @@ Status: done, partial, open, superseded. Type uses the labels that exist in the 
 | 24 | Touch controls (phone) | partial | enhancement | P1 | v1.0.0 | rescope: iOS Safari run, real-phone FPS |
 | 74 | First load on a phone | partial | infra | P1 | v0.9.0 | keep: first frame 6.6 to 7.6 s, target 4 s |
 | 76 | Teach the moves in 30 seconds | open | design | P0 | v0.9.0 | keep |
-| 81 | NPC style to match the skaters | partial | art-pipeline | P2 | v1.0.0 | keep |
+| 81 | NPC style to match the skaters | partial | art-pipeline | P2 | v1.0.0 | keep (closed later: see the follow-up) |
 | 91 | Ground textures for toon | superseded | enhancement | — | — | superseded-by #158 |
 | 92 | Landmark prompt template | open | enhancement | P2 | v1.1.0 | keep |
 | 93 | Neighborhood select screen | open | enhancement | P2 | v1.1.0 | keep (blocked by #109) |
@@ -40,7 +40,7 @@ Status: done, partial, open, superseded. Type uses the labels that exist in the 
 | 109 | Next neighborhood | open | data | P2 | v1.1.0 | keep |
 | 110 | ACE-Step tracks drive the beat clock | done | design | — | — | close (PR 163) |
 | 111 | Art direction: Jet Set Radio target | superseded | documentation | — | — | superseded-by `docs/art-direction-pbr.md` (#159) |
-| 112 | Jet Set Radio shader pass | open | gameplay | P2 | v1.1.0 | keep (toon is still the phone and low default) |
+| 112 | Jet Set Radio shader pass | open | gameplay | P2 | v1.1.0 | keep (closed later: see the follow-up) |
 | 114 | Style frames | partial | art-pipeline | P2 | v1.0.0 | keep: owner picks the frames |
 | 115 | Generated assets batch | partial | art-pipeline | P2 | v1.0.0 | rescope: sign and mural concepts only |
 | 116 | Motion capture of Atlanta skaters | open | review | P0 | v1.0.0 | keep: AGENTS.md requires a skater review |
@@ -100,7 +100,7 @@ Orphans: none.
 5. #109 before #93. The select screen needs a second neighborhood.
 6. #116 before the v1.0.0 release (AGENTS.md: real skaters review the move set).
 
-Next up (v0.9.0, highest priority first): #220, #76, #22, #23, #253, #221, #245, #246, #74.
+Next up (v0.9.0, highest priority first): #257, #258, #20, #220, #76, #22, #23, #253, #221, #245, #246, #74. (#257 and #258 are the new issues created on 2026-11-12.)
 
 ## City pitch: release readiness
 
@@ -204,8 +204,8 @@ Other action: change the base of PR 254 to `epic/city-look` after a rebase.
 | Release | Items |
 |---|---|
 | v0.9.0 City pitch demo | #257, #258, #22, #220, #76, #23, #20, #223 (epic), #253, #221, #245, #246, #74 |
-| v1.0.0 Version 1 | #116, #259, #19, #21, #24, #14, #18, #106, #107, #81, #114, #115 |
-| v1.1.0 After launch | #109, #93, #92, #112, #117, #118 |
+| v1.0.0 Version 1 | #116, #259, #19, #21, #24, #14, #18, #106, #107, #114, #115 |
+| v1.1.0 After launch | #109, #93, #92, #117, #118 |
 
 ## Follow-up, 2026-11-12: pbr is the main look
 

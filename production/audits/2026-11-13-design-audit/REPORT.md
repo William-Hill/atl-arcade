@@ -53,7 +53,7 @@ Hypothesis check (agent, not human): a 3-move combo came well within 3 minutes. 
 4. The grind claim "Grind the curb below the bridge for 15 m" (Ralph McGill) does not say which curb. Three attempts (about 95 s) failed.
 5. Claim feedback: the SPOT CLAIMED banner (2.6 s) and the chime fire on each claim. In the 3D view, the ring only turns yellow and fades in about 1 s, with no burst (#221).
 6. A third find banner is dropped when spots come fast (`foundQueueMax` 2). Freedom Park was "found" about 300 m from its icon, because its footprint reaches near the spawn.
-7. Facts: no story card shows at a find or claim (#220). The agent was offered the Guide tab at almost every decision and never opened it. No trail fact pop-up appeared in about 480 s. As built, a player sees the facts only if they open a menu.
+7. Facts: no story card shows at a find or claim (#220). The agent was offered the Guide tab at almost every decision and never opened it. No trail fact pop-up appeared in about 480 s: the route did not pass one of the 3 fact cards. As built, the find banner shows one short line, and a trail fact card shows a pop-up when the player collects it. The full story facts and their sources show only in the full map and the Guide tab.
 8. Fast travel ("click, then T") on the full map can remove the travel time that the loop depends on.
 
 ### C. The skatepark and the score loop (run 3)
@@ -96,3 +96,11 @@ Hypothesis check (agent, not human): a 3-move combo came well within 3 minutes. 
 | 10 | Run 5 cold-start human playtests and record the concept hypothesis numbers. | S | #266 |
 
 Not ranked: a second neighborhood. One neighborhood with a clear start, claims, and cards is a stronger pitch than two thin ones.
+
+## Errata in the raw run reports
+
+The run reports in `reports/autopilot/` are the raw Autopilot output and stay unchanged. Two statements in them are wrong:
+
+1. Run 2 headline: "6 of 13 claimable spots were claimed and 8 of 15 spots found". Its own round and landmark breakdown has 5 claims (3 in round 1, 2 in round 3) and 7 found spots. The correct totals are 5 of 13 claimed and 7 of 15 found. This report uses the breakdown.
+2. Run 1 finding: "a player who completes one sees no reward". Run 2 shows a SPOT CLAIMED banner with the points and a chime for each claim. The valid point is narrower: the claim points do not show in the HUD score (see D2 and #263).
+

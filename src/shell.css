@@ -439,6 +439,86 @@ body.touch #minimap {
 .hud-timer[hidden] { display: none; }
 .hud-timer[data-low="1"] { color: #ffd166; }
 
+/* The round goals (#268): one chip per goal in the score line, next to the
+   timer. A met goal gets a check mark (hud-goals.js), so the cue does not
+   need color. On a phone the chips leave the score line (see below): the
+   HUD column must keep its height, so it ends above the fact pop-up. */
+.hud-top { flex-wrap: wrap; }
+.hud-goals { display: flex; flex-wrap: wrap; align-items: center; align-self: center; gap: 4px; }
+.hud-goals[hidden] { display: none; }
+.hud-goal-chip {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--hud-pill);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hud-goal-chip[data-done="1"] { color: #7ef0c2; font-weight: 700; }
+/* A phone in portrait: the chips sit in a band just above the touch
+   controls (their top is about 175 px from the bottom), under the skater.
+   The band keeps its bottom edge, so a second row grows up. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .hud-goals {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(184px + env(safe-area-inset-bottom));
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right));
+    margin: 0 auto;
+  }
+}
+/* A phone in landscape: the HUD column is full to the stick, so the chips
+   leave the score line. They stand in a column at the left of the minimap
+   (the same size rule as #minimap), under the skater select and above the
+   touch buttons. */
+@media (max-height: 500px) {
+  .hud-goals {
+    position: fixed;
+    top: calc(76px + env(safe-area-inset-top));
+    right: calc(18px + env(safe-area-inset-right) + clamp(72px, calc(100vh - 268px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 120px));
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
+/* The confirmation of a met goal: one short line at the bottom middle, over
+   the scene and clear of the HUD column, the minimap and the help text. */
+.hud-met {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(120px + env(safe-area-inset-bottom));
+  width: fit-content;
+  margin: 0 auto;
+  box-sizing: border-box;
+  max-width: min(480px, calc(100vw - 24px));
+  padding: 6px 14px;
+  border: 2px solid #7ef0c2;
+  border-radius: 10px;
+  background: var(--hud-pill);
+  color: #fff;
+  font: 700 17px/1.3 system-ui, sans-serif;
+  text-align: center;
+  z-index: 21;
+}
+.hud-met[hidden] { display: none; }
+/* A phone in portrait: over the goal chips, which sit over the touch
+   controls (2 rows of chips end about 230 px from the bottom). */
+@media (max-width: 600px) and (orientation: portrait) {
+  .hud-met { bottom: calc(240px + env(safe-area-inset-bottom)); font-size: 15px; }
+}
+/* A phone in landscape: between the stick and the buttons, over the
+   landmark goal line (64 px from the bottom). */
+@media (max-height: 500px) {
+  .hud-met {
+    bottom: calc(112px + env(safe-area-inset-bottom));
+    max-width: min(380px, calc(100vw - 2 * (232px + env(safe-area-inset-right))));
+    font-size: 15px;
+  }
+}
+
 /* The results screen (M1-05, src/ui/results.js). The panel stays inside the
    safe areas and keeps clear of the minimap: the backdrop sits under the
    minimap (z-index 5), and the panel leaves the minimap column free. */
@@ -547,7 +627,10 @@ body.results-open #touch-controls { display: none; }
 @media (max-height: 500px) {
   #fact-popup {
     top: calc(84px + env(safe-area-inset-top));
-    width: min(380px, calc(100vw - 2 * (232px + env(safe-area-inset-right))));
+    /* 262 px on each side: clear of the round goal chips (#268), which
+       stand at the left of the minimap. A short phone (667 px) keeps at
+       least 200 px, so the text stays readable and clear of the chips. */
+    width: max(200px, min(380px, calc(100vw - 2 * (262px + env(safe-area-inset-right)))));
   }
 }
 
@@ -595,7 +678,8 @@ body.results-open #touch-controls { display: none; }
 }
 @media (max-height: 500px) {
   /* A phone in landscape: between the HUD column and the minimap. */
-  #landmark-banner { top: max(30vh, calc(84px + env(safe-area-inset-top))); width: max(280px, min(380px, calc(100vw - 2 * (232px + env(safe-area-inset-right))))); }
+  /* 262 px on each side, as the fact pop-up: clear of the round goal chips (#268). */
+  #landmark-banner { top: max(30vh, calc(84px + env(safe-area-inset-top))); width: max(280px, min(380px, calc(100vw - 2 * (262px + env(safe-area-inset-right))))); }
 }
 
 /* The HUD goal line (#219): the challenge of the nearest Found landmark. */

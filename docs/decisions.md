@@ -2367,3 +2367,15 @@ Verification:
 - Playwright, headless Chromium: `e2e/hud-text.spec.js` with screenshots `e2e/__screenshots__/hud-text-*.png`: a long combo on desktop (1280 x 720) and phone landscape (844 x 390), the "+N" that shows, fades and goes, and a real-controller ride (planned by `rideLineRestart()` in `e2e/landmark-rides.js`) that rides back into ring 1 of the Telephone Factory line.
 - Results in the cloud container: `npm test` 1809 of 1811 pass (the 2 failures are the known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`; they pass with a 60 s timeout). `npm run build` passes. Playwright: `hud-text`, `combo` and `landmarks` pass (27 tests); `phone-layout` landscape "balance x stick" fails, and it fails the same way on `epic/city-look` in this container.
 - Not verified: no person read the new text on a real phone. The restart message was seen in the default look only.
+
+## 2026-11-13: The round goals and their progress on the HUD (#268)
+
+The 2026-11-13 design audit (finding A2) found that a player sees the round goals only on the "Time!" screen. The HUD now shows them during play.
+
+- The HUD shows one chip per goal type: Score, Combo, Cards and Gaps. Each chip shows the progress, for example "Score 2,340/6,000". The named gaps share one chip ("Gaps 1/2"), so the list stays short. The results screen still lists each gap by name.
+- On the phone tier the numbers are short: "Score 2.3K/6K".
+- A met goal gets a check mark and a green color on its chip, so the cue does not need color vision. A line "✓ Goal met: <goal label>" shows for 2.6 s at the bottom middle, at the moment the goal is met. Two goals met at the same time show one after the other. The line has `role="status"`.
+- The status of each goal comes from `computeResults`, the same function as the results screen, so the HUD and the results always agree. The pure helper is `src/ui/goal-progress.js` (Vitest). The DOM part is `src/ui/hud-goals.js`, so the change to `src/ui/hud.js` is a few lines.
+- Place: on a desktop the chips are in the score line, after the timer. On a phone the HUD column must keep its height: in portrait it must end above the fact pop-up and the landmark banner (206 px), and in landscape above the stick. So in portrait the chips sit in a band just above the touch controls, and the confirmation sits over them. In landscape the chips stand in a column at the left of the minimap. The fact pop-up and the landmark banner in landscape now keep 262 px on each side (was 232 px), so they stay clear of that column.
+- The landmark goal line ("Claim it: ...", #219) is a different element and does not change.
+- Combo and score count when a combo banks, because the goals count the banked score (src/sim/skate/goals.js). The chip does not show an open combo as progress.

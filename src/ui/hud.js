@@ -6,6 +6,7 @@ import { COMBO_LINE, comboLine } from "../sim/skate/combo.js";
 import { formatClock } from "../sim/skate/goals.js";
 import { isCompact, startHint } from "./layout.js";
 import { nearEdge } from "../level/edge-fence.js";
+import { createHudGoals } from "./hud-goals.js";
 
 // The hint near the level edge fence (#229).
 export const EDGE_HINT = "Edge of the map. Turn around and keep skating.";
@@ -53,7 +54,8 @@ function el(tag, className, parent) {
 // `touch` is true when the touch controls show: the hints name a tap.
 // `fence` is the level edge fence (src/level/edge-fence.js), or null.
 // `reducedMotion()` is true when the beat pulse must not move (#97).
-export function createHud(root, { touch = false, fence = null, reducedMotion = () => false } = {}) {
+// `goalDef` is the goal definition of the level, or null for free skate.
+export function createHud(root, { touch = false, fence = null, reducedMotion = () => false, goalDef = null } = {}) {
   root.innerHTML = "";
   // The score and the run timer (M1-05) share the top line.
   const top = el("div", "hud-top", root);
@@ -62,6 +64,8 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
   const timer = el("div", "hud-timer", top);
   timer.id = "hud-timer";
   timer.hidden = true;
+  // The round goals and the confirmation of a met goal (#268).
+  const roundGoals = createHudGoals(top, root);
   const combo = el("div", "hud-combo", root);
   combo.id = "hud-combo";
   const pending = el("div", "hud-pending", root);
@@ -118,6 +122,7 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
       if (goalLine && goal.textContent !== goalLine) goal.textContent = goalLine;
       const c = run.combo;
       timer.hidden = !goals;
+      roundGoals.update(goals ? goalDef : null, goals, nowMs);
       if (goals) {
         timer.textContent = formatClock(goals.timeLeft);
         timer.dataset.low = goals.timeLeft <= 10 ? "1" : "0";
@@ -189,6 +194,6 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
         notice.hidden = true;
       }, ms);
     },
-    elements: { score, timer, combo, pending, tag, pulse, edge, notice, goal, styleWrap, styleText, styleFill, balanceWrap, balanceDot },
+    elements: { score, timer, roundGoals: roundGoals.elements.list, goalMet: roundGoals.elements.met, combo, pending, tag, pulse, edge, notice, goal, styleWrap, styleText, styleFill, balanceWrap, balanceDot },
   };
 }

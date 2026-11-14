@@ -290,7 +290,11 @@ const npcBytes = (model) => {
   }
   return npcByteCache.get(model);
 };
-const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model) => cloneSkaterModel(model, npcBytes(model)), toon: params.get("toon") !== "0", draw: NPC_DRAW[quality] ?? NPC_DRAW.low }) : null;
+// Far NPC skaters use the LOD1 model (#280); ?npclod=0 keeps the full model.
+// ?npcmax=, ?npcdist=, ?npclod1=, and ?npcfull= change the draw limits of the tier.
+const npcDraw = { ...(NPC_DRAW[quality] ?? NPC_DRAW.low) };
+for (const [param, key] of [["npcmax", "max"], ["npcdist", "distance"], ["npclod1", "lod1From"], ["npcfull", "full"]]) if (numParam(param) !== undefined) npcDraw[key] = numParam(param);
+const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model, opts) => cloneSkaterModel(model, npcBytes(model), opts), toon: params.get("toon") !== "0", draw: npcDraw, lod: params.get("npclod") !== "0" }) : null;
 if (npcSkatersView) scene.add(npcSkatersView.group);
 
 // A blob shadow under the skater for a level with no shadow map.
@@ -989,8 +993,16 @@ window.__atl = {
         get drawCalls() {
           return npcSkatersView.drawCalls;
         },
+        // #280: the drawn NPCs on the LOD1 model, and the skinned vertices of the drawn NPCs.
+        get lod1Drawn() {
+          return npcSkatersView.lod1Drawn;
+        },
+        get skinnedVertices() {
+          return npcSkatersView.skinnedVertices;
+        },
+        draw: npcDraw,
         get list() {
-          return npcSkaters.npcs.map((n) => ({ id: n.id, model: n.spec.model, outfit: n.spec.outfit, position: [...n.skater.position], state: n.skater.state, speed: n.skater.speed, style: n.skater.style ? n.skater.style.name : null, groundId: n.skater.groundId, clip: npcSkatersView.clipOf(n.id), visible: npcSkatersView.visible(n.id), stats: { ...n.stats } }));
+          return npcSkaters.npcs.map((n) => ({ id: n.id, model: n.spec.model, outfit: n.spec.outfit, position: [...n.skater.position], state: n.skater.state, speed: n.skater.speed, style: n.skater.style ? n.skater.style.name : null, groundId: n.skater.groundId, clip: npcSkatersView.clipOf(n.id), visible: npcSkatersView.visible(n.id), lod: npcSkatersView.lodOf(n.id), stats: { ...n.stats } }));
         },
       }
     : null,

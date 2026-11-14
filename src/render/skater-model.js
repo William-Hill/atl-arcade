@@ -19,6 +19,16 @@ export const SKATER_MODELS_SMALL = {
   marcus: new URL("../../assets/skaters/marcus/skater-1024.glb", import.meta.url).href,
 };
 
+// The LOD1 models for far NPC skaters (#280): about 3,000 triangles in place
+// of about 18,000, made by scripts/skater-lod.mjs. A LOD1 file holds only
+// the simplified skinned mesh and the skin (the same 65 joints, in the same
+// order) with vertex colors. It has no textures and no clips: the game binds
+// the LOD1 mesh to the skeleton of the LOD0 clone, so the LOD0 clips move it.
+export const SKATER_MODELS_LOD1 = {
+  nia: new URL("../../assets/skaters/nia/skater-lod1.glb", import.meta.url).href,
+  marcus: new URL("../../assets/skaters/marcus/skater-lod1.glb", import.meta.url).href,
+};
+
 // Pure: the model URL for a skater. `small` picks the 1024 px variant.
 export function skaterModelUrl(name, { small = false } = {}) {
   return (small ? SKATER_MODELS_SMALL[name] : null) ?? SKATER_MODELS[name] ?? null;
@@ -102,10 +112,73 @@ export function parseSkaterGltf(name = "nia", bytes = null) {
   return promise;
 }
 
+// One parse for each LOD1 GLB. Returns a promise of { geometry, joints }:
+// the LOD1 geometry and the joint names of its skin, in skin order.
+const parsedLod1 = new Map();
+export function parseSkaterLod1(name = "nia") {
+  if (parsedLod1.has(name)) return parsedLod1.get(name);
+  const url = SKATER_MODELS_LOD1[name];
+  if (!url) return Promise.reject(new Error(`No LOD1 skater model: ${name}`));
+  const loader = new GLTFLoader();
+  loader.setDRACOLoader(getDracoLoader());
+  const promise = loader.loadAsync(url).then((gltf) => {
+    let mesh = null;
+    gltf.scene.traverse((o) => {
+      if (o.isSkinnedMesh && !mesh) mesh = o;
+    });
+    if (!mesh) throw new Error(`LOD1 skater model ${name} has no skinned mesh`);
+    return { geometry: mesh.geometry, joints: mesh.skeleton.bones.map((b) => b.name) };
+  });
+  parsedLod1.set(name, promise);
+  promise.catch(() => parsedLod1.delete(name));
+  return promise;
+}
+
+// Pure: true when the LOD1 skin has the same joints, in the same order, as
+// the LOD0 skin. Only then can the LOD1 mesh use the LOD0 skeleton.
+export function sameJoints(a, b) {
+  return a.length === b.length && a.every((name, i) => name === b[i]);
+}
+
+// The LOD1 material: the LOD0 material with the vertex colors of the LOD1
+// mesh in place of the textures (scripts/skater-lod.mjs bakes the base
+// color texture into the vertex colors). A LOD1 mesh with UVs keeps the
+// LOD0 material.
+export function lod1Material(source, geometry) {
+  if (!geometry.attributes.color) return source;
+  const mat = source.clone();
+  mat.name = `${source.name || "skater"}-lod1`;
+  for (const key of ["map", "normalMap", "roughnessMap", "metalnessMap", "aoMap", "emissiveMap"]) if (key in mat) mat[key] = null;
+  mat.vertexColors = true;
+  return mat;
+}
+
+// Adds the LOD1 mesh to a cloned skater: a skinned mesh with the LOD1
+// geometry, the LOD1 material, and the LOD0 skeleton. Thus the same mixer
+// moves both meshes. The LOD1 mesh starts hidden. Returns the LOD1 mesh.
+export function addLod1Mesh(skinnedMesh, lod1) {
+  const joints = skinnedMesh.skeleton.bones.map((b) => b.name);
+  if (!sameJoints(lod1.joints, joints)) throw new Error("The LOD1 skin has other joints than the LOD0 skin");
+  const mesh = new THREE.SkinnedMesh(lod1.geometry, lod1Material(skinnedMesh.material, lod1.geometry));
+  mesh.name = `${skinnedMesh.name || "skater"}-lod1`;
+  mesh.position.copy(skinnedMesh.position);
+  mesh.quaternion.copy(skinnedMesh.quaternion);
+  mesh.scale.copy(skinnedMesh.scale);
+  mesh.castShadow = skinnedMesh.castShadow;
+  mesh.frustumCulled = skinnedMesh.frustumCulled;
+  mesh.bind(skinnedMesh.skeleton, skinnedMesh.bindMatrix);
+  mesh.visible = false;
+  skinnedMesh.parent.add(mesh);
+  return mesh;
+}
+
 // A new copy of a skater for an NPC: its own skeleton, and the shared
 // geometry, materials, and clips. Returns the same shape as
-// loadSkaterModel(), with no face decals.
-export async function cloneSkaterModel(name = "nia", bytes = null) {
+// loadSkaterModel(), with no face decals. With `lod1: true`, `lod1Mesh` is
+// the LOD1 mesh (addLod1Mesh()), or null when the LOD1 model fails to load:
+// then the NPC uses the full model at all distances.
+export async function cloneSkaterModel(name = "nia", bytes = null, { lod1 = false } = {}) {
+  const lod1Promise = lod1 ? parseSkaterLod1(name).catch((err) => (console.warn(`Skater ${name}: no LOD1 (${err?.message ?? err})`), null)) : null;
   const { gltf, pristine } = await parseSkaterGltf(name, bytes);
   const scene = cloneSkinned(pristine);
   let skinnedMesh = null;
@@ -114,7 +187,16 @@ export async function cloneSkaterModel(name = "nia", bytes = null) {
     if (o.isMesh) o.castShadow = true;
   });
   if (!skinnedMesh) throw new Error(`Skater model ${name} has no skinned mesh`);
-  return { root: wrapModel(scene), skinnedMesh, animations: gltf.animations, face: null };
+  const lod1Data = lod1Promise ? await lod1Promise : null;
+  let lod1Mesh = null;
+  if (lod1Data) {
+    try {
+      lod1Mesh = addLod1Mesh(skinnedMesh, lod1Data);
+    } catch (err) {
+      console.warn(`Skater ${name}: no LOD1 (${err?.message ?? err})`);
+    }
+  }
+  return { root: wrapModel(scene), skinnedMesh, lod1Mesh, animations: gltf.animations, face: null };
 }
 
 // Loads a skater GLB. Returns the wrapper, the skinned mesh, the clips, and

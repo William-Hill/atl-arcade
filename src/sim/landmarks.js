@@ -38,6 +38,7 @@ export const LANDMARKS = {
     min: 1.5, // s, t_min.
     queueStep: 0.3, // each banner that waits takes this share off t_base.
     foundQueueMax: 2, // Found banners that can wait. More Found banners merge into the last one (#270). Claimed banners have no cap.
+    mergedNamesMax: 2, // names a merged Found banner shows; a count stands for the rest (#277).
   },
   unlockFractions: [0.35, 0.7, 1.0], // f_i, of the claim spots of the level. Tune 0.25 to 1.0.
   saveKey: "atl.landmarks",
@@ -48,6 +49,16 @@ export const CLAIMED_TITLE = "SPOT CLAIMED";
 
 // The title of a Found banner that holds `n` spots (#270): "2 SPOTS FOUND".
 export const mergedTitle = (n) => `${n} SPOTS FOUND`;
+
+// The text of a merged Found banner (#277): at most `max` names, then a
+// count for the rest, for example "Freedom Park, Skatepark +2". The limit
+// keeps the banner to a short line on a phone.
+export function mergedText(names, max = LANDMARKS.banner.mergedNamesMax) {
+  const keep = Math.max(1, Math.floor(max));
+  const shown = names.slice(0, keep).join(", ");
+  const rest = names.length - keep;
+  return rest > 0 ? `${shown} +${rest}` : shown;
+}
 
 const dist2 = (ax, az, bx, bz) => Math.hypot(ax - bx, az - bz);
 const inCircle = (zone, x, z) => dist2(zone.x, zone.z, x, z) <= zone.r;
@@ -276,7 +287,7 @@ const partsOf = (b) => b.spots ?? [{ id: b.id, title: b.title, text: b.text }];
 // banner when the list changes.
 export function foundBannerOf(parts) {
   if (parts.length === 1) return { type: "found", id: parts[0].id, title: parts[0].title, text: parts[0].text };
-  return { type: "found", id: parts.map((p) => p.id).join("+"), title: mergedTitle(parts.length), text: parts.map((p) => p.title).join(" · "), spots: parts };
+  return { type: "found", id: parts.map((p) => p.id).join("+"), title: mergedTitle(parts.length), text: mergedText(parts.map((p) => p.title)), spots: parts };
 }
 
 // Merges the Found banners of a queue past the cap. Returns { queue, merged }:

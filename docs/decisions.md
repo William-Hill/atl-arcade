@@ -1142,3 +1142,11 @@ The props hide past `PROP_DRAW_DISTANCE` (200 m), so the city edge had no trees 
 - The layer ends at the far plane of the tier: 450 m on high, 320 m on phone. On phone the fog is full at 320 m, so there is no fade-out band (the dither showed as grain in the fog). The iso map bake does not show the layer. `?farTrees=0` turns it off.
 - The low tier has no layer. `scripts/prop-perf.mjs` on low (SwiftShader, `reports/prop-perf/281-far-trees-low.json`) gave +1 draw call and a median FPS drop of 0.7 to 1.1 from about 7 FPS (about 10%), and the cards there are in thick fog. `?farTrees=1` turns the layer on there for a test.
 - The high tier FPS check needs a real GPU (`--gpu`). SwiftShader draws about 1 frame in 4 s on high, so the cloud session could only check the draw calls there (+1 on each camera).
+
+## 2026-11-14: prop-perf waits for the NPC skater models (#281 follow-up)
+
+`window.__atl.ready` is `true` at module load, so `scripts/prop-perf.mjs` could start a sample before the NPC skater models loaded. In `reports/prop-perf/281-far-trees-low.json`, one spawn run had 52 calls and 179,472 triangles, and the other runs had 50 or 51 calls and about 144k triangles. The prop count was the same.
+
+- `__atl.skaters.settled` is `true` when each NPC skater model has loaded or failed (`loaded + failed === count`). The NPC skater view does not change.
+- `scripts/prop-perf.mjs` waits for `settled` before a sample. With `?skaters=0` or on the greybox, `__atl.skaters` is `null` and the script does not wait. (`?npcs=0` removes only the crowd, which loads no models.)
+- Check: `node scripts/prop-perf.mjs --quality low --repeat 3 --cams spawn` on one build gave 50 calls and 143,680 triangles in each of the 3 runs (`reports/prop-perf/skaters-settled-spawn-low.json`).

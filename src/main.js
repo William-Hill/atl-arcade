@@ -988,6 +988,11 @@ window.__atl = {
         get failed() {
           return npcSkatersView.failed;
         },
+        // True when each NPC skater model has loaded or failed. The perf
+        // scripts wait for this, so the NPCs do not change a sample.
+        get settled() {
+          return npcSkatersView.loaded + npcSkatersView.failed === npcSkaters.npcs.length;
+        },
         get drawn() {
           return npcSkatersView.drawn;
         },

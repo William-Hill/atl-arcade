@@ -112,7 +112,7 @@ for (let r = 0; r < repeat; r += 1) {
     const frameMs = await page.evaluate(() => window.__atl.fps.stop());
     if (shotDir && r === 0) {
       mkdirSync(shotDir, { recursive: true });
-      await page.screenshot({ path: resolve(shotDir, `npc-${c.label}.png`) });
+      await page.screenshot({ path: resolve(shotDir, `npc-${c.label}.png`), timeout: 180000 });
     }
     const mean = (k) => Math.round((samples.reduce((s, x) => s + (x[k] ?? 0), 0) / samples.length) * 10) / 10;
     const row = {

@@ -1131,3 +1131,12 @@ The follow camera gets short effects for the big moments of a run, as RenderATL 
 - The shake is a sum of sines, not `Math.random`, so a replay gives the same frames. While the wall clip holds the camera in front of a wall, the dip and the shake stop, because they move the camera off the clip ray. A photo uses the base FOV.
 - The flash is a DOM layer, not a post pass, so it works on every quality tier and never goes into a photo mode save.
 - `prefers-reduced-motion: reduce` or `?camfx=0` keeps only the speed FOV, at half size. The game has no settings toggle for it yet.
+
+## 2026-11-14: LOD1 skater model for far NPC skaters, with vertex colors (#280)
+
+A far NPC skater (25 m or more from the camera) uses a LOD1 model of about 3,000 triangles in place of the full model (17,896 triangles for Nia, 17,006 for Marcus). `scripts/skater-lod.mjs` makes `assets/skaters/<name>/skater-lod1.glb` with meshoptimizer 1.3.0 (`simplifyWithAttributes`) and gltf-transform 4.5.1.
+
+- Vertex colors, not the texture. The Tripo UV map has many small islands. When the simplifier keeps the UV seams, it stops at about 7,100 triangles. When it collapses the seams, the texture smears into patches. Thus the script bakes the base color into `COLOR_0` (the mean of 9 x 9 texels), removes the UVs, welds the vertices at one position, and then simplifies. Result: 2,997 and 3,000 triangles, about 1,500 vertices, 60 KB. All the welded vertices had the same skin.
+- Same skeleton, same clips. The simplifier only removes vertices, so each LOD1 vertex keeps its skin weights. The LOD1 GLB has the 65 `mixamorig:` joints in the order of `skater.glb`, and it has no clips and no textures. `cloneSkaterModel(..., { lod1: true })` binds the LOD1 mesh to the skeleton of the NPC clone, so one mixer moves both meshes. The ink hull of LOD1 comes from the LOD1 mesh (`toonSkater()`). The outfit hue shift now runs after `color_fragment`, so it also changes the vertex colors.
+- The LOD choice is pure: `pickLods()` in `src/render/npc-skaters-view.js`. It has a 2 m hysteresis and a cap (`full`) on the NPCs that use the full model. The player skater always uses the full model.
+- Evidence: `e2e/skater-lod.spec.js` plays all 24 clips at 5 times. Each skinned LOD1 vertex stays within 0.09 mm of its LOD0 copy. The screenshots are `e2e/__screenshots__/skater-lod-<name>-<pose>.png`.

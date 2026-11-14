@@ -15,6 +15,7 @@ import {
   levelProgress,
   lineSeconds,
   markSpot,
+  mergedText,
   medalScore,
   outfitsFor,
   prepareLandmarks,
@@ -547,13 +548,14 @@ describe("F-7: the banner queue", () => {
     let b = stepBanner(EMPTY, 0, [found("a")]);
     b = stepBanner(b, 0, [found("b"), found("c"), found("d")]);
     expect(b.queue.map((q) => q.id)).toEqual(["b", "c+d"]);
-    expect(b.queue[1]).toMatchObject({ type: "found", title: "2 SPOTS FOUND", text: "c · d" });
+    expect(b.queue[1]).toMatchObject({ type: "found", title: "2 SPOTS FOUND", text: "c, d" });
     expect(b.queue[1].spots.map((p) => p.id)).toEqual(["c", "d"]);
     expect(b.merged).toBe(1);
     // One more find joins the merged banner.
     b = stepBanner(b, 0, [found("e")]);
     expect(b.queue.map((q) => q.id)).toEqual(["b", "c+d+e"]);
     expect(b.queue[1].title).toBe("3 SPOTS FOUND");
+    expect(b.queue[1].text).toBe("c, d +1");
     expect(b.merged).toBe(2);
   });
 
@@ -608,6 +610,44 @@ describe("F-7: the banner queue", () => {
       for (const p of s.banner.current ? (s.banner.current.spots ?? [s.banner.current]) : []) shown.add(p.id);
     }
     expect([...shown].sort()).toEqual(["quick-0", "quick-1", "quick-2"]);
+  });
+});
+
+describe("#277: the names of a merged Found banner", () => {
+  it("shows every name when the count is at the limit or under it", () => {
+    expect(LANDMARKS.banner.mergedNamesMax).toBe(2);
+    expect(mergedText(["Freedom Park"])).toBe("Freedom Park");
+    expect(mergedText(["Freedom Park", "Skatepark"])).toBe("Freedom Park, Skatepark");
+  });
+
+  it("shows the first names and a count for the rest", () => {
+    expect(mergedText(["Freedom Park", "Skatepark", "Krog Street Tunnel"])).toBe("Freedom Park, Skatepark +1");
+    expect(mergedText(["Freedom Park", "Skatepark", "Krog Street Tunnel", "Ponce City Market"])).toBe("Freedom Park, Skatepark +2");
+  });
+
+  it("keeps the text short for any count of names", () => {
+    const names = Array.from({ length: 40 }, (_, i) => `Spot Name ${i}`);
+    for (let n = 2; n <= names.length; n += 1) {
+      const text = mergedText(names.slice(0, n));
+      expect(text.split(", ")).toHaveLength(2);
+      expect(text.length).toBeLessThanOrEqual("Spot Name 0, Spot Name 1 +38".length);
+      if (n > 2) expect(text.endsWith(` +${n - 2}`)).toBe(true);
+    }
+  });
+
+  it("takes a different limit, and shows 1 name or more", () => {
+    expect(mergedText(["a", "b", "c", "d"], 3)).toBe("a, b, c +1");
+    expect(mergedText(["a", "b", "c"], 0)).toBe("a +2");
+  });
+
+  it("limits the names of a merged banner in the queue", () => {
+    const found = (id) => ({ type: "found", id, title: `Spot ${id}`, text: `short ${id}` });
+    let b = stepBanner({ current: null, queue: [], merged: 0 }, 0, [found("a")]);
+    b = stepBanner(b, 0, ["b", "c", "d", "e", "f"].map(found));
+    // "a" shows, "b" waits, and "c" to "f" merge into one banner.
+    expect(b.queue[1]).toMatchObject({ title: "4 SPOTS FOUND", text: "Spot c, Spot d +2" });
+    // Every spot is still in the banner, so no find is lost (#270).
+    expect(b.queue[1].spots.map((p) => p.id)).toEqual(["c", "d", "e", "f"]);
   });
 });
 

@@ -228,7 +228,8 @@ function loadImpostorMap(url = IMPOSTOR_URL) {
 // The far tree layer for the placements of a level (after
 // withProceduralTrees) and the tree templates. `near` is the prop draw
 // distance. Returns { mesh, info, update(cameraPosition) }.
-export function createTreeImpostors(placements, templates, { near, far = FAR_TREE_DISTANCE, look = "toon", map = null } = {}) {
+// `farBand` is the width of the fade at the far edge (m).
+export function createTreeImpostors(placements, templates, { near, far = FAR_TREE_DISTANCE, farBand = FAR_TREES.farBand, look = "toon", map = null } = {}) {
   const cards = farTreeCards(placements, templates);
   const n = cards.length;
   const geom = new THREE.PlaneGeometry(1, 1);
@@ -241,7 +242,7 @@ export function createTreeImpostors(placements, templates, { near, far = FAR_TRE
   geom.setAttribute("aCell", cell);
   geom.setAttribute("aLeaf", leaf);
   geom.setAttribute("aBark", bark);
-  const range = { near, far, nearBand: FAR_TREES.nearBand, farBand: FAR_TREES.farBand };
+  const range = { near, far, nearBand: FAR_TREES.nearBand, farBand };
   const material = new THREE.ShaderMaterial({
     uniforms: THREE.UniformsUtils.merge([
       THREE.UniformsLib.fog,

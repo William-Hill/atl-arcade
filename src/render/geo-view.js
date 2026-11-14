@@ -898,7 +898,10 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     byId.set("props", propBatch.mesh);
     // The far trees (#281): one card for each tree past the draw distance.
     if (trees && farTrees && farTreeDistance > drawDistance) {
-      farTreeLayer = createTreeImpostors(placed, all, { near: drawDistance, far: farTreeDistance, look });
+      // Under FAR_TREE_DISTANCE, the layer ends at the far plane of the tier,
+      // where the fog is full: the fog hides the edge, and a dither band in
+      // the fog only shows as grain.
+      farTreeLayer = createTreeImpostors(placed, all, { near: drawDistance, far: farTreeDistance, farBand: farTreeDistance < FAR_TREE_DISTANCE ? 1 : undefined, look });
       root.add(farTreeLayer.mesh);
       byId.set("far-trees", farTreeLayer.mesh);
       props.farTrees = farTreeLayer.info;

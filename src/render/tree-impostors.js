@@ -332,6 +332,8 @@ export function createTreeImpostors(placements, templates, { near, far = FAR_TRE
       mesh.visible = mesh.count > 0;
     },
     dispose() {
+      // The mesh dispose event releases the instanceMatrix buffer.
+      mesh.dispose();
       geom.dispose();
       material.dispose();
       if (!map) texture.dispose();

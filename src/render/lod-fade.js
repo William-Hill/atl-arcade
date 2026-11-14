@@ -61,12 +61,17 @@ export function cameraJumped(last, now, limit = LOD_FADE_JUMP) {
 //   fades out the old shape.
 // - A show (from -1): the main instance fades in. No copy.
 // - A hide (to -1): the main instance keeps the old shape and fades out.
-export function fadeDraw(from, to, p) {
+// `flip` is true after a switch back in the middle of a fade: then the new
+// shape keeps the pixels that it drew before the switch back (the high
+// thresholds), so no pixel changes its shape at the switch back.
+export function fadeDraw(from, to, p, flip = false) {
   const hidden = { lod: -1, dither: DITHER_FULL };
   if (from === to || p >= 1) return { main: to >= 0 ? { lod: to, dither: DITHER_FULL } : hidden, copy: null };
-  if (to < 0) return { main: from >= 0 ? { lod: from, dither: ditherOut(p) } : hidden, copy: null };
-  if (from < 0) return { main: { lod: to, dither: ditherIn(p) }, copy: null };
-  return { main: { lod: to, dither: ditherIn(p) }, copy: { lod: from, dither: ditherOut(p) } };
+  const dIn = flip ? ditherOut(1 - p) : ditherIn(p);
+  const dOut = flip ? ditherIn(1 - p) : ditherOut(p);
+  if (to < 0) return { main: from >= 0 ? { lod: from, dither: dOut } : hidden, copy: null };
+  if (from < 0) return { main: { lod: to, dither: dIn }, copy: null };
+  return { main: { lod: to, dither: dIn }, copy: { lod: from, dither: dOut } };
 }
 
 export const FADE_NONE = 0;
@@ -79,6 +84,8 @@ export function createLodFade(count, { duration = LOD_FADE_SECONDS, enabled = tr
   const lod = new Int8Array(count).fill(-2); // the LOD now (the fade target)
   const from = new Int8Array(count).fill(-2); // the old LOD; equal to lod when no fade
   const start = new Float64Array(count); // the fade start time (s)
+  // 1 after a switch back: the dither polarity of the fade is flipped.
+  const flip = new Uint8Array(count);
   let active = [];
 
   function progress(i, now) {
@@ -89,6 +96,7 @@ export function createLodFade(count, { duration = LOD_FADE_SECONDS, enabled = tr
   return {
     lod,
     from,
+    flip,
     duration,
     enabled,
     get active() {
@@ -117,11 +125,13 @@ export function createLodFade(count, { duration = LOD_FADE_SECONDS, enabled = tr
       }
       if (wasFading && next === from[i]) {
         // A switch back in the middle of a fade: the fade turns around and
-        // continues from the same mix of the two shapes.
+        // continues from the same mix of the two shapes. The flipped
+        // polarity keeps each pixel on the same shape.
         const p = progress(i, now);
         from[i] = cur;
         lod[i] = next;
         start[i] = now - (1 - p) * duration;
+        flip[i] ^= 1;
         return FADE_REVERSE;
       }
       // A new fade from the LOD now. (During a fade to a third LOD, the old
@@ -129,6 +139,7 @@ export function createLodFade(count, { duration = LOD_FADE_SECONDS, enabled = tr
       from[i] = cur;
       lod[i] = next;
       start[i] = now;
+      flip[i] = 0;
       if (!wasFading) active.push(i);
       return FADE_START;
     },

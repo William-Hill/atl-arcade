@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 // Issue #279: a timed dither fade at the LOD switch of the props and the
 // cars. The fixed camera moves across the switch distances in small steps.
+// The traffic is off (traffic=0), so only the camera moves a car across a
+// switch distance.
 // Some instances fade, and the fade count goes back to 0 after the fade time.
 
 function collectErrors(page) {
@@ -16,7 +18,7 @@ function collectErrors(page) {
 const CAM = "-125,9.5,-706,20,16.5,-700";
 
 async function open(page, extra = "") {
-  await page.goto(`/?level=beltline-eastside&mute=1&view=fixed&cam=${CAM}${extra}`);
+  await page.goto(`/?level=beltline-eastside&mute=1&view=fixed&cam=${CAM}&traffic=0${extra}`);
   await page.waitForFunction(() => window.__atl?.ready && window.__atl.level.props?.loaded && window.__atl.frames > 5, null, { timeout: 120000 });
 }
 

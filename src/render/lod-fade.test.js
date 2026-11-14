@@ -85,6 +85,34 @@ describe("createLodFade", () => {
     expect(f.lod[0]).toBe(0);
   });
 
+  it("keeps each pixel on the same shape at a switch back", () => {
+    // The shader rule: in, a pixel draws when t < d; out, when t >= d - 2.
+    const draws = (d, t) => (d < 1 ? t < d : d > 1.5 ? t >= d - 2 : true);
+    const pixels = (draw) => {
+      const out = [];
+      for (let k = 0; k < 16; k += 1) {
+        const t = (k + 0.5) / 16;
+        out.push(draw.copy && draws(draw.copy.dither, t) ? draw.copy.lod : draws(draw.main.dither, t) ? draw.main.lod : -1);
+      }
+      return out;
+    };
+    for (const [a, b] of [[0, 1], [1, -1], [-1, 1]]) {
+      const f = settled(a);
+      f.set(0, b, 0);
+      const before = pixels(fadeDraw(f.from[0], f.lod[0], f.progress(0, D * 0.4), f.flip[0] === 1));
+      f.set(0, a, D * 0.4);
+      expect(f.flip[0]).toBe(1);
+      const after = pixels(fadeDraw(f.from[0], f.lod[0], f.progress(0, D * 0.4), f.flip[0] === 1));
+      expect(after).toEqual(before);
+      // A second switch back keeps the pixels too.
+      const before2 = pixels(fadeDraw(f.from[0], f.lod[0], f.progress(0, D * 0.5), f.flip[0] === 1));
+      f.set(0, b, D * 0.5);
+      expect(f.flip[0]).toBe(0);
+      const after2 = pixels(fadeDraw(f.from[0], f.lod[0], f.progress(0, D * 0.5), f.flip[0] === 1));
+      expect(after2).toEqual(before2);
+    }
+  });
+
   it("restarts from the LOD now at a switch to a third LOD", () => {
     const f = settled(0);
     f.set(0, 1, 0);

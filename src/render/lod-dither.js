@@ -125,7 +125,7 @@ export function createBatchFade(mesh, count, copies, { geometryOf, enabled = tru
 
   // Draws instance i (and its copy) for its fade state at `now`.
   function apply(i, now) {
-    const { main, copy } = fadeDraw(fade.from[i], fade.lod[i], fade.progress(i, now));
+    const { main, copy } = fadeDraw(fade.from[i], fade.lod[i], fade.progress(i, now), fade.flip[i] === 1);
     if (copy && copyOf[i] < 0) {
       const id = free.pop();
       if (id === undefined) {

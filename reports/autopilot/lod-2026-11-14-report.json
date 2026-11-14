@@ -1,0 +1,64 @@
+{
+ "outcome": "explored",
+ "summary": "The agent played 4 episodes on beltline-eastside: about 225 s of game time, two 150 s rounds, game time about 37\u2013263 s. Jev made 75, 76, 75 and 55 decisions, choosing among 5\u20137 options: trail north or south, toward the parked cars, the parked-car street, toward traffic, chase an NPC skater, and brake and watch. The page ran on the \"low\" quality tier at about 12\u201313 frames per game second. That tier has a 320 m far plane and fog from 150 m. It also has the far tree cards turned off (atl.level.props has no farTrees layer), so #281 could not be seen at all.\n\nVerdicts:\n1. LOD fade (#279):\n   - Props: CONFIRMED. About 7,700 prop fades started and 0 were dropped to a hard switch. Mid-fade screen-door dither shows in frames as stippled tree crowns, and no flicker or one-frame pop was seen in the consecutive frames checked.\n   - Cars: INCONCLUSIVE. About 410 car fades started and 0 were dropped, but no car came close enough to the camera to be judged in a frame.\n2. Far tree cards (#281): INCONCLUSIVE. The layer is not built on this tier, and nothing can show past 320 m.\n3. Far NPC skaters (#280): CONFIRMED, with notes. Model switches happened at the coded distances, the hysteresis worked, and no broken skater and no visible pop at a switch were seen in frames.\n\nNo errors were logged by the game in any episode.",
+ "evidence": [
+  "Render tier: atl.quality = 'low' (probe before ep1). On this tier tier.far = 320 m and fogNear = 150 m. farTrees defaults to off on low (main.js:185-190), and atl.level.props has no 'farTrees' key, so the far tree layer was not created. The headless renderer therefore could not show #281 (cards from 200 to 450 m), anything past 320 m, the high-tier NPC draw distance (150 m), shadows, sky or post effects.",
+  "#279 props: prop fades started went 1991 (end of ep1) -> 3016 (ep2) -> 5792 (ep3) -> 7763 (ep4, t=263) while skating at about 11-12 m/s. level.propFade.dropped stayed 0 every tick (no fade copy ran out, so no forced hard switch). The fade clock is wall time and the page drew about 9 frames per wall second, so one 0.3 s fade spans about 3 drawn frames. That is too few to judge smoothness frame by frame.",
+  "#279 props in frames: stippled, screen-door crowns (a fade in progress) were seen at ep1 t=53.68 (tree at upper left), ep3 t=160.53, 162.70, 170.70, 171.95, 211.52 and 215.85. A dense run of consecutive frames (ep3 t=190.02-191.18, 12 of 15 frames) showed no object vanishing and coming back, and no one-frame shape swap. No benches were identified in any frame, and lamps and trees showed no pop.",
+  "#279 cars: cars.fade.started went from 19 to 409 over the 4 episodes, and dropped stayed 0. The skater got within 18-45 m of the parked cluster at (226,216) (ep2 end, ep4 start), but the frames of ep2 t=130-136 and ep4 t=218-228 showed no car bigger than a few pixels (the camera faced building walls or alleys). Car pops could not be judged visually: INCONCLUSIVE.",
+  "#280 counts: up to 5 NPC skaters were drawn at once (skaters.drawn and visible, ep1 t=36.8 and ep3 t~159). In frames at most 2-3 were on screen at once (ep3 t=167.37-169.03).",
+  "#280 switches (logged only while the NPC was drawn): ep3 tasha LOD1->full at 21.8 m (t=167.78), kiana LOD1->full at 21.5 m (169.37), tasha full->LOD1 at 28.8 m (171.45), kiana full->LOD1 at 32.5 m (174.02), tasha LOD1->full at 19.7 m (175.60). Ep1 jalen LOD1->full at 21.5 m (45.85) and full->LOD1 at 29.0 m (53.22). All match the coded edges (full under 23 m, LOD1 from 25 m), given the log's ~0.3 s sampling.",
+  "#280 frames: ep3 t=167.37-171.95 (12 frames across the switches at 167.78, 169.37 and 171.45). A close NPC at 169.03 is smooth, with face, hair bun and skates. The far ones are small, with simple faces. The description saw no sudden change of colour, outline or detail, and no stretched vertices, missing parts or wrong colours. Ep1 t=44.8-47.0 likewise showed no broken figure. Per the code, the swap is an instant mesh swap (no fade), but it was not noticeable at the filmed size.",
+  "#281: the long-trail frames (ep3 t=160-166) show the tree line along the trail fading into haze, with no hard edge. Distant trees sometimes look pale whitish-grey (ep1 t=53.68, ep3 t=169.87-170.70), which is likely the fog. No cards exist on this tier, so the claims about completeness, the 200 m fade-in and the card looks cannot be checked. Not tried: the highest place, since the cards are off on this tier.",
+  "Direct changes: none in episodes. Probes only read state; no research changes were made.",
+  "Game error log: the run_harness summaries say no errors were logged in episodes 1-4."
+ ],
+ "findings": [
+  "Not a render bug, but seen in frames: the player's skater visibly overlaps tree trunks and lamp posts (ep1 t=45.13, 47.83; ep3 t=164.37, 190.02-191.18, standing inside a V of two trunks), and presses against a building window, apparently climbing it (ep2 t=134.95). This came from the harness's straight-line steering getting stuck, but the overlap itself is a clipping issue.",
+  "Possible: distant tree crowns sometimes render pale whitish-grey instead of their green or pink colour (ep1 t=53.68-55.98; ep3 t=169.87-170.70). Fog on the low tier is the likely cause. Worth a look on the high tier.",
+  "No #279 pop, #280 broken skater or switch pop was observed. #279 for cars and all of #281 remain unverified on this low tier, which has no far tree cards and a 320 m far plane: they need a high-tier or ?farTrees=1 run."
+ ],
+ "visual": true,
+ "run": "20261114-132314",
+ "project": "atl-arcade",
+ "prompt": "Playtest the BeltLine Eastside level to check three new render changes, for about 3 minutes of play.\n1. LOD fade (#279): props (trees, benches, lamps) change to a simpler shape at 60 m and hide at 200 m; cars change at 70 m and hide at 240 m. The change must be a short fade of about 0.3 s, not a hard pop. Skate fast along the trail and on a street with parked cars, and watch the props and cars ahead of you. Report each pop or flicker you see, with the game time and a frame.\n2. Far tree cards (#281): past 200 m, trees show as flat cards out to about 450 m. Look down the long trail and from the highest place you can reach. Report if the tree line looks complete, if the cards fade in or pop at 200 m, and any card that looks wrong (wrong color, faces the wrong way, floats, flickers).\n3. Far NPC skaters (#280): NPC skaters 25 m or more from the camera use a simpler model. Find the NPC skaters, count how many you see at once, and look at them near and far. Report any skater that looks broken (stretched vertices, a missing part, a wrong color, a pop when it changes model).\nReport the facts you saw, with game times and frames. Mark each claim CONFIRMED, DENIED, or INCONCLUSIVE. Say which checks the headless renderer could not show.",
+ "seconds": 703.9,
+ "episodes": 4,
+ "tool_seconds": 462.7,
+ "stopped": null,
+ "level_modified": [],
+ "research_modified": [],
+ "agent": "claude",
+ "model": "claude-opus-5-5",
+ "fast": false,
+ "cost_usd": 1.5329145999999996,
+ "turns": 43,
+ "background_findings": 19,
+ "reading_usage": {
+  "claude-sonnet-5-5": {
+   "calls": 62,
+   "input": 140,
+   "output": 34769,
+   "cache_read": 1900790,
+   "cache_write": 408038
+  }
+ },
+ "episode_stats": [
+  {
+   "decisions": 75,
+   "play_seconds": 60.1
+  },
+  {
+   "decisions": 76,
+   "play_seconds": 60.1
+  },
+  {
+   "decisions": 75,
+   "play_seconds": 60.2
+  },
+  {
+   "decisions": 55,
+   "play_seconds": 45.2
+  }
+ ]
+}

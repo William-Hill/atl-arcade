@@ -509,6 +509,20 @@ body.touch #minimap {
 @media (max-width: 600px) and (orientation: portrait) {
   .hud-met { bottom: calc(240px + env(safe-area-inset-bottom)); font-size: 15px; }
 }
+/* A short portrait phone (360 x 640, #277): over the goal chips, the line
+   reached the FULL SCREEN button (it ends 352 px from the top). The line
+   moves to the left of the button column (137 px wide with its margin). */
+@media (max-width: 600px) and (orientation: portrait) and (max-height: 700px) {
+  .hud-met {
+    /* 6 px over the band of the goal chips: the turn hint uses that band
+       for its first 8 s (see #turn-hint). */
+    bottom: calc(246px + env(safe-area-inset-bottom));
+    left: calc(12px + env(safe-area-inset-left));
+    right: auto;
+    margin: 0;
+    max-width: calc(100vw - 12px - 145px - env(safe-area-inset-left) - env(safe-area-inset-right));
+  }
+}
 /* A phone in landscape: between the stick and the buttons, over the
    landmark goal line (64 px from the bottom). */
 @media (max-height: 500px) {
@@ -517,6 +531,12 @@ body.touch #minimap {
     max-width: min(380px, calc(100vw - 2 * (232px + env(safe-area-inset-right))));
     font-size: 15px;
   }
+}
+/* A short landscape phone (667 x 375, #277): the line is as wide as the
+   gap to SWITCH allows (SWITCH starts 206 px from the right edge), so a long
+   goal takes 2 lines and ends under the landmark banner. */
+@media (max-height: 500px) and (max-width: 740px) {
+  .hud-met { max-width: min(380px, calc(100vw - 2 * (214px + env(safe-area-inset-right)))); }
 }
 
 /* The results screen (M1-05, src/ui/results.js). The panel stays inside the
@@ -678,8 +698,47 @@ body.results-open #touch-controls { display: none; }
 }
 @media (max-height: 500px) {
   /* A phone in landscape: between the HUD column and the minimap. */
-  /* 262 px on each side, as the fact pop-up: clear of the round goal chips (#268). */
-  #landmark-banner { top: max(30vh, calc(84px + env(safe-area-inset-top))); width: max(280px, min(380px, calc(100vw - 2 * (262px + env(safe-area-inset-right))))); }
+  /* 272 px on each side: clear of the round goal chips (#268). A met chip
+     ("✓ Combo 1K/1K", 126 px) starts 264 px from the right edge (#277). */
+  /* At 84 px from the top, as the fact pop-up: a lower banner reached the
+     goal confirmation (#277). */
+  #landmark-banner { top: calc(84px + env(safe-area-inset-top)); width: max(200px, min(380px, calc(100vw - 2 * (272px + env(safe-area-inset-right))))); }
+}
+/* A short landscape phone (667 x 375, #277). The 280 px banner covered the
+   round goal chips, the goal confirmation and SWITCH. There is no room for
+   a centered banner here: the full HUD column ends at 245 px, and the widest
+   chips ("✓ Combo 1K/1K") start 251 px from the right edge. So, while a
+   banner shows (3 s at most), the chips step aside, and the banner takes the
+   band from 253 px to the left edge of the chips column (8 px from the
+   minimap). It sits under the combo line (84 px from the top) and uses
+   smaller text, so it ends above the goal confirmation. The script centers
+   the banner on `left` (translate -50%), so `left` is the middle of the
+   band. The short
+   line of a single Found banner shows 2 lines at most (screen readers still
+   get the full line). A merged banner keeps its whole list (2 names and a
+   count), and a Claimed banner keeps the name. */
+@media (max-height: 500px) and (max-width: 740px) {
+  #landmark-banner {
+    --lb-from: calc(253px + env(safe-area-inset-left));
+    /* The minimap size rule of a compact screen (see #minimap). */
+    --lb-to: calc(100vw - 18px - env(safe-area-inset-right) - clamp(72px, calc(100vh - 268px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 120px));
+    top: calc(84px + env(safe-area-inset-top));
+    left: calc((var(--lb-from) + var(--lb-to)) / 2);
+    width: min(380px, calc(var(--lb-to) - var(--lb-from)));
+    padding: 6px 10px;
+  }
+  body:has(#landmark-banner:not([hidden])) .hud-goals { visibility: hidden; }
+  #landmark-banner .lb-title { font-size: 18px; }
+  #landmark-banner .lb-text { font-size: 14px; }
+  #landmark-banner[data-type="found"]:not([data-merged="1"]) .lb-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+  #landmark-banner .lb-points { font-size: 15px; }
+  #landmark-banner[data-type="claimed"] .lb-title { font-size: 18px; letter-spacing: 0.05em; }
 }
 
 /* The HUD goal line (#219): the challenge of the nearest Found landmark. */
@@ -952,6 +1011,26 @@ body.results-open #touch-controls { display: none; }
 }
 #turn-hint[hidden] { display: none; }
 body.photo-open #fullscreen-toggle, body.photo-open #turn-hint { visibility: hidden; }
+/* A short landscape phone (667 x 375, #277): PHOTO at the top center and
+   SETTINGS to its right reached the skater select. The key hints (O, P) are
+   for a keyboard, so they go, and the 2 buttons stand as a pair, with 8 px
+   between them. The pair sits 24 px right of the center, between the map
+   credit and the skater select, and 8 px from the top, so it ends above
+   the combo line (58 px from the top; the longest line is about 290 px
+   wide). */
+/* A short portrait phone (360 x 640, #277): under the button column, the
+   hint covered the goal chips and the goal confirmation. It moves into the
+   band of the goal chips, just above the touch controls, and the chips step
+   aside while it shows (8 s at the start, or until OK). */
+@media (max-width: 600px) and (orientation: portrait) and (max-height: 700px) {
+  #turn-hint { top: auto; bottom: calc(184px + env(safe-area-inset-bottom)); }
+  body:has(#turn-hint:not([hidden])) .hud-goals { visibility: hidden; }
+}
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 740px) {
+  html body.touch #settings-toggle kbd, html body.touch #photo-toggle kbd { display: none; }
+  html body.touch #photo-toggle { top: calc(8px + env(safe-area-inset-top)); left: calc(50% + 20px); right: auto; transform: translateX(-100%); min-height: 44px; }
+  html body.touch #settings-toggle { top: calc(8px + env(safe-area-inset-top)); left: calc(50% + 28px); right: auto; }
+}
 /* A portrait tablet (wider than 600 px) keeps the 160 px touch minimap at
    96 px from the top, so it ends at 256 px. The column and the hint go 64 px
    lower, under it. */

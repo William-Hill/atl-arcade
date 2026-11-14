@@ -2400,3 +2400,30 @@ This changes 2 rules of `design/gdd/landmark-discovery.md`. That GDD is on `main
 
 - The find formula ("Buildings and parks: the skater is Found when the distance to the footprint outline is `d_edge` or less"): add the `find.reach` cut for a large spot.
 - The banner rules ("A Found banner that does not fit is dropped") and acceptance criterion F-7 ("a third Found has no banner"): a third Found banner merges into the last one that waits.
+
+## 2026-11-14: A short phone: the landmark banner, the goal chips and the buttons do not overlap (#277)
+
+The gate review of PR 276 (#268) found that the landmark banner covered the round goal chips (`#hud-goals`) by about 28 px on a 667 x 375 landscape phone. No test checked that size. A measure at 667 x 375 found more overlaps: the banner also covered the goal confirmation (`#hud-met`) and SWITCH, and SETTINGS covered the Nia button. At 360 x 640 portrait, the goal confirmation covered FULL SCREEN, and the "turn your phone" hint covered the goal chips and the goal confirmation.
+
+Decision, for a short landscape phone (height 500 px or less, width 740 px or less):
+- There is no room for a centered banner. The full HUD column (the longest combo line, the move tag) ends at 245 px from the left. The widest chips ("✓ Combo 1K/1K") start 251 px from the right edge. So, while a banner shows (3 s at most), the chips step aside (`visibility: hidden`). The banner takes the band from 253 px to the left edge of the chip column, 84 px from the top, under the combo line. The chips come back when the banner goes. The goal confirmation does not step aside.
+- The banner text is smaller (title 18 px, text 14 px). The short line of a single Found banner shows 2 lines at most. Screen readers still get the full line. A merged banner and a Claimed banner show all their text.
+- The goal confirmation is as wide as the gap to SWITCH allows, so a long goal takes 2 lines and ends under the banner.
+- PHOTO and SETTINGS hide the key hints (O, P), and stand as a pair 8 px from the top, between the map credit and the skater select.
+
+Other changes:
+- Every landscape phone: the banner keeps 272 px on each side (was 262 px), because a met chip is 126 px wide. Its minimum width is 200 px (was 280 px). It sits 84 px from the top (was 30 vh), as the fact pop-up, so it ends above the goal confirmation.
+- A short portrait phone (height 700 px or less): the goal confirmation moves to the left of the button column. The turn hint moves into the band of the goal chips, and the chips step aside while it shows (8 s at the start, or until OK).
+- A merged Found banner (#270) shows at most 2 names and a count for the rest: "Freedom Park, Skatepark +2" (`mergedText()` in `src/sim/landmarks.js`, `mergedNamesMax`). The names are joined with ", " (was " · "). The banner keeps every spot, so no find is lost.
+- The overlap check of `e2e/phone-layout.spec.js` now measures 2 real states. Before the beat, the start hint shows. During play, the HUD hides the start hint (any touch or key starts the beat), and the combo, the move tag and the balance meter show. Before, the check showed the start hint and the balance meter together, which cannot happen. That state gave the known "balance x stick" failure at 844 x 390.
+
+Verification:
+- Vitest: `mergedText` and the merged queue text in `src/sim/landmarks.test.js`.
+- Playwright, headless Chromium: `e2e/phone-layout.spec.js` runs at 390 x 844, 844 x 390, 667 x 375 and 360 x 640. A new test checks the banner, the goal chips, the goal confirmation, PHOTO, SETTINGS and the turn hint against each other and against the touch controls, the skater select, the minimap, FULL SCREEN and the landmark goal line, with the widest chips and the longest phone combo line. In landscape it also checks the HUD column. It checks again with no banner. Screenshots: `e2e/__screenshots__/phone-banner-*.png`.
+- Results in the cloud container: `npm test` 1837 of 1839 pass (the 2 failures are the known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`). `npm run build` passes. Playwright: the phone-layout, phone-polish, phone-tier, hud-goals, hud-text, landmarks, landmark-map, landmark-signs, touch, photo-mode and settings specs: 89 of 90 pass. "photo mode on the high tier" times out while it waits for `#photo-strength`. It times out the same way on `epic/city-look` in this container.
+
+Not decided here, and not changed:
+- In portrait, the banner draws over SETTINGS, PHOTO and FULL SCREEN, as before (#219). It takes no tap, and the buttons still work.
+- In portrait, a full HUD column (a combo, the "+N", a move tag and the landmark goal line) can reach the banner band at 390 x 844 and 360 x 640. That is the column height limit of #268. The new test allows it in portrait.
+- The fact pop-up in landscape still uses 262 px on each side. At 667 x 375 it can touch a met chip ("✓ Combo 1K/1K"). It was not measured.
+- No person checked the layout on a real phone.

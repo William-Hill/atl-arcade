@@ -113,6 +113,9 @@ export function createLandmarkBanner(parent, { reducedMotion = () => false } = {
         points.hidden = !lines.points;
         root.dataset.type = current.type;
         root.dataset.spot = current.id;
+        // A merged Found banner (#270) keeps its whole list on a short phone (#277).
+        if (current.spots) root.dataset.merged = "1";
+        else delete root.dataset.merged;
         if (current.type === "claimed") root.style.setProperty("--lb-fill", claimedFill(typeof accent === "function" ? accent() : accent));
         else root.style.removeProperty("--lb-fill");
         state.shown += 1;

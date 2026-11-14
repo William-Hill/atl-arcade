@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { cloneSkaterModel } from "../render/skater-model.js";
 import { createSkaterView } from "../render/skater-view.js";
+import { findFxBones } from "../render/anim-fx-rig.js";
 import { toonSkater } from "../render/toon.js";
 import { BEAT } from "../sim/skate/constants.js";
 
@@ -65,6 +66,8 @@ async function makeView(fxScale) {
 function playTo(view, clip, beats) {
   const end = (beats * 60) / BPM;
   view.sync({ ...danceState(clip, 0), speed: 0, style: null }, DT, { time: 0, bpm: BPM });
+  // Each cell starts the layers from rest, so a cell does not depend on the cell before.
+  view.resetFx();
   for (let t = 0; t <= end + 1e-9; t += DT) view.sync(danceState(clip, t), DT, { time: t, bpm: BPM });
 }
 
@@ -80,15 +83,9 @@ const probes = [];
 // The world hip height and the world head, arm, and chest orientations.
 function probe(view) {
   view.group.updateMatrixWorld(true);
-  const find = (n) => {
-    let hit = null;
-    view.model.root.traverse((o) => {
-      if (!hit && o.isBone && o.name.replace(/^mixamorig[:_]?/, "") === n) hit = o;
-    });
-    return hit;
-  };
-  const q = (n) => find(n).getWorldQuaternion(new THREE.Quaternion());
-  return { hipY: find("Hips").getWorldPosition(new THREE.Vector3()).y, head: q("Head"), arm: q("LeftArm"), chest: q("Spine2") };
+  const b = findFxBones(view.model.root);
+  const q = (n) => b[n].getWorldQuaternion(new THREE.Quaternion());
+  return { hipY: b.Hips.getWorldPosition(new THREE.Vector3()).y, head: q("Head"), arm: q("LeftArm"), chest: q("Spine2") };
 }
 
 // Draws the sheet: one cell for each (row, column).
@@ -161,6 +158,8 @@ out.bench = async ({ count = 6, frames = 600, runs = 7 } = {}) => {
       result[scale].push((performance.now() - t0) / frames);
     }
   }
+  // The bench views leave the scene, so a second call does not add to the first.
+  for (const scale of [1, 0]) for (const v of sets[scale]) scene.remove(v.group);
   const median = (a) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
   return { count, frames, runs, fxMs: median(result[1]), offMs: median(result[0]), deltaMs: median(result[1]) - median(result[0]), raw: result };
 };
@@ -171,6 +170,7 @@ out.trace = (clip, beats) => {
   const end = (beats * 60) / BPM;
   const rows = [];
   c.view.sync({ ...danceState(clip, 0), style: null }, DT, { time: 0, bpm: BPM });
+  c.view.resetFx();
   let f = 0;
   for (let t = 0; t <= end; t += DT, f += 1) {
     c.view.sync(danceState(clip, t), DT, { time: t, bpm: BPM });

@@ -44,20 +44,27 @@ function rotateAbout(bone, parent, axis, angle) {
   bone.quaternion.premultiply(_q);
 }
 
+// rad. The largest chest turn in one frame that counts as a body turn.
+const MAX_STEP = 0.5;
+
 // Returns null when the model has no Mixamo hips, spine, and neck.
 export function createFxRig(root) {
   const b = findFxBones(root);
   if (!b.Hips || !b.Spine || !b.Spine1 || !b.Spine2 || !b.Neck || !b.Head) return null;
   const armature = b.Hips.parent;
+  // The up axis and 1 m down, in the armature frame, from the transform of
+  // the armature relative to the model root. The root is upright (only the
+  // skater group above it turns or leans), so a lean of the group at attach
+  // time does not go into the axes.
   root.updateMatrixWorld(true);
-  // The up axis and 1 m down, in the armature frame. The skater group turns
-  // only about the up axis, so they stay correct after this.
-  const armQ = armature.getWorldQuaternion(new THREE.Quaternion());
-  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(armQ.clone().invert()).normalize();
-  const inv = new THREE.Matrix3().setFromMatrix4(armature.matrixWorld.clone().invert());
+  const rel = root.matrixWorld.clone().invert().multiply(armature.matrixWorld);
+  const inv = new THREE.Matrix3().setFromMatrix4(rel.clone().invert());
   const down = new THREE.Vector3(0, -1, 0).applyMatrix3(inv);
+  const up = down.clone().negate().normalize();
 
-  const bones = NAMES.filter((n) => b[n]).map((n) => b[n]);
+  // The bones that apply() changes (not the shoulders, which only give the
+  // parent frame of the arms).
+  const bones = NAMES.filter((n) => b[n] && !n.endsWith("Shoulder")).map((n) => b[n]);
   const saved = bones.map((bone) => bone.quaternion.clone());
   const savedHips = b.Hips.position.clone();
   let applied = false;
@@ -79,6 +86,11 @@ export function createFxRig(root) {
       b.Hips.position.copy(savedHips);
       applied = false;
     },
+    // Forgets the pose of the frame before (for a view that did not sync
+    // for a time).
+    reset() {
+      havePrev = false;
+    },
     // The chest turn rate (rad/s, the armature frame) of the clip pose.
     // Call it after the mixer update and before apply().
     measure(dt) {
@@ -88,7 +100,9 @@ export function createFxRig(root) {
         if (_q.w < 0) _q.set(-_q.x, -_q.y, -_q.z, -_q.w);
         const angle = 2 * Math.acos(Math.min(1, _q.w));
         const s = Math.sqrt(Math.max(0, 1 - _q.w * _q.w));
-        const k = s > 1e-6 ? angle / s / dt : 0;
+        // A step larger than MAX_STEP in one frame is a break in the pose (a
+        // loop seam or a stale pose), not a body turn. It gives no lag.
+        const k = s > 1e-6 && angle <= MAX_STEP ? angle / s / dt : 0;
         omega[0] = _q.x * k;
         omega[1] = _q.y * k;
         omega[2] = _q.z * k;

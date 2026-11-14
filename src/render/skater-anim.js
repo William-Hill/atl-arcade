@@ -94,7 +94,7 @@ export function createAnimState() {
   };
 }
 
-function wrapAngle(a) {
+export function wrapAngle(a) {
   let y = a;
   while (y > Math.PI) y -= 2 * Math.PI;
   while (y < -Math.PI) y += 2 * Math.PI;

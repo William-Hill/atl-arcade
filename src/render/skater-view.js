@@ -2,11 +2,23 @@ import * as THREE from "three";
 import { SKATER_BODY } from "../sim/skate/constants.js";
 import { cheer, createFaceState, stepFace } from "./face-anim.js";
 import { CLIPS, beatPhase, createAnimState, grooveRate, stepAnim, stepFacing } from "./skater-anim.js";
+import { createFxState, fxScale, stepFx } from "./anim-fx.js";
+import { createFxRig } from "./anim-fx-rig.js";
+
+// The scale of the procedural layers (#291) from the page: `?animfx=0` turns
+// them off, and `prefers-reduced-motion` makes them smaller.
+export function pageFxScale() {
+  const g = globalThis;
+  const param = g.location ? new URLSearchParams(g.location.search).get("animfx") : null;
+  const reduced = Boolean(g.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  return fxScale({ param, reduced });
+}
 
 // The skater bound to the controller output. It starts as a capsule (the
 // nose cone shows the facing). attachModel() swaps in a GLB skater and plays
 // its clips from the state -> clip table in skater-anim.js.
-export function createSkaterView() {
+// opts.fxScale: the scale of the procedural layers. The default reads the page.
+export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
   const group = new THREE.Group();
   group.name = "skater";
   const bodyLength = SKATER_BODY.height - 2 * SKATER_BODY.radius;
@@ -41,6 +53,12 @@ export function createSkaterView() {
   let current = null;
   let faceState = createFaceState();
   let heldFace = null;
+  // The procedural layers (#291): the bone rig, the layer state, and the body
+  // turn (the dance spin plus the facing) of the frame before.
+  let rig = null;
+  let fx = createFxState();
+  let frozen = false;
+  let prevTurn = null;
 
   function play(name, fade) {
     const next = actions.get(name);
@@ -79,12 +97,18 @@ export function createSkaterView() {
       heldFace = state ? { eyes: state.eyes, mouth: state.mouth } : null;
     },
     // Stops the clips (true) or plays them again (false), for the tests.
-    freezePose(frozen) {
+    freezePose(on) {
+      frozen = Boolean(on);
       if (mixer) mixer.timeScale = frozen ? 0 : 1;
     },
     // A banked combo: Nia cheers.
     cheer() {
       faceState = cheer(faceState);
+    },
+    // The procedural layers of the last frame, for the tests: the hip drop
+    // (m), the lag rotation vector (rad), and the spine twist (rad).
+    get fx() {
+      return rig ? { drop: fx.drop, lag: [...fx.out], twist: fx.twistOut } : null;
     },
     // The effective weight of each running clip, for the tests.
     get weights() {
@@ -107,6 +131,9 @@ export function createSkaterView() {
         }
         actions.set(clip.name, action);
       }
+      rig = fxLevel > 0 ? createFxRig(loaded.root) : null;
+      fx = createFxState();
+      prevTurn = null;
       anim = createAnimState();
       faceState = createFaceState();
       current = null;
@@ -138,7 +165,18 @@ export function createSkaterView() {
         if (r.change) play(r.change.to, r.change.fade);
         facing = stepFacing(facing, anim.facing, dt);
         pivot.rotation.y = facing;
+        if (rig) rig.restore();
         mixer.update(dt);
+        if (rig) {
+          // Frozen (for the tests): the layers hold their last values.
+          const fdt = frozen ? 0 : dt;
+          const turn = spin + facing;
+          const spinRate = prevTurn !== null && fdt > 0 ? wrapAngle(turn - prevTurn) / fdt : 0;
+          if (fdt > 0) prevTurn = turn;
+          const omega = rig.measure(fdt);
+          if (!frozen) fx = stepFx(fx, { clip: anim.clip, clock, bpm, yawRate: anim.yawRate, spin: spinRate, omega, up: rig.up, scale: fxLevel }, fdt);
+          rig.apply(fx);
+        }
         if (model.face) {
           faceState = stepFace(faceState, anim.clip, dt);
           const f = heldFace ?? faceState;
@@ -147,6 +185,10 @@ export function createSkaterView() {
       }
     },
   };
+}
+
+function wrapAngle(a) {
+  return a - 2 * Math.PI * Math.round(a / (2 * Math.PI));
 }
 
 // On a rail the capsule leans with the balance meter, toward the side the

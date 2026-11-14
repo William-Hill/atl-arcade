@@ -1132,6 +1132,28 @@ The follow camera gets short effects for the big moments of a run, as RenderATL 
 - The flash is a DOM layer, not a post pass, so it works on every quality tier and never goes into a photo mode save.
 - `prefers-reduced-motion: reduce` or `?camfx=0` keeps only the speed FOV, at half size. The game has no settings toggle for it yet.
 
+## 2026-11-14: Far tree impostors from the prop draw distance to 450 m (#281)
+
+The props hide past `PROP_DRAW_DISTANCE` (200 m), so the city edge had no trees from a height. A far layer in `src/render/tree-impostors.js` now shows each tree past that distance as a camera-facing card: one `InstancedMesh`, one draw call, 2 triangles for each tree.
+
+- The art is one atlas, `assets/trees/impostors.png`, with a cell for `tree_round` (the oak) and a cell for `tree_tall` (the pine). `scripts/bake-tree-impostors.mjs` renders our own procedural trees with Three.js; no generative model draws it (see `provenance.json`). The texture holds the toon shade, a bark mask, and the coverage, not a color. Each card gets the leaf and the bark colors of its LOD1 tree, so the cards follow `?season=`. The pine has its own cell; every other species uses the round cell.
+- A card fades in with a screen-door dither from 180 m to 200 m, while the LOD1 tree still shows, so the cards are full when the LOD1 tree hides. A card fades out from 390 m to 450 m, so the tree line has no hard edge. The CPU picks the trees in the ring again when the camera moves 10 m.
+- The cards stay out of the GTAO normal pass, so the layer is 1 draw call on each tier. The AO and the ink are faint at that distance.
+- The layer ends at the far plane of the tier: 450 m on high, 320 m on phone. On phone the fog is full at 320 m, so there is no fade-out band (the dither showed as grain in the fog). The iso map bake does not show the layer. `?farTrees=0` turns it off.
+- The low tier has no layer. `scripts/prop-perf.mjs` on low (SwiftShader, `reports/prop-perf/281-far-trees-low.json`) gave +1 draw call and a median FPS drop of 0.7 to 1.1 from about 7 FPS (about 10%), and the cards there are in thick fog. `?farTrees=1` turns the layer on there for a test.
+- The high tier FPS check needs a real GPU (`--gpu`). SwiftShader draws about 1 frame in 4 s on high, so the cloud session could only check the draw calls there (+1 on each camera).
+
+## 2026-11-14: Timed dither fade at the LOD switch of props and cars (#279)
+
+A prop or a car that changes its LOD (60 m and 70 m) or that hides or shows at the draw distance (200 m and 240 m) does not pop. For 0.3 s (`LOD_FADE_SECONDS`) the old shape and the new shape both draw, with complementary 4x4 screen-door dither. The fade starts when the instance crosses the switch distance. It does not use a distance band, so only the few instances that crossed in the last 0.3 s draw twice (the memoryfloater LOD study: a band fade drew about 60 trees twice, a timed fade 0 to 2).
+
+- The fade state is the pure module `src/render/lod-fade.js` (Vitest). `src/render/lod-dither.js` keeps one dither value per instance in a float texture and patches the color material and the shadow depth material. A depth material that is set later (the leaf cut of the pbr trees) also gets the dither, so a shadow does not pop.
+- Each batch keeps spare instances for the fade copies (at most 256). With no free copy, the switch is hard. The draw calls stay the same (1 for the props, 1 for the cars).
+- A hide keeps the old shape and fades it out. A show fades in. Both need no copy.
+- No fade on the first frame of a level, and no fade when the camera moves more than 20 m in one update (a teleport or a fast travel).
+- `propLodFor` and the switch distances do not change. `?lodfade=0` turns the fade off for an A/B test.
+- The GTAO normal pass of the high tier does not use the dither. For 0.3 s the AO and the ink outline can see both shapes. This is small, and we accept it.
+
 ## 2026-11-14: LOD1 skater model for far NPC skaters, with vertex colors (#280)
 
 A far NPC skater (25 m or more from the camera) uses a LOD1 model of about 3,000 triangles in place of the full model (17,896 triangles for Nia, 17,006 for Marcus). `scripts/skater-lod.mjs` makes `assets/skaters/<name>/skater-lod1.glb` with meshoptimizer 1.3.0 (`simplifyWithAttributes`) and gltf-transform 4.5.1.

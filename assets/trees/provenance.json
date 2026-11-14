@@ -1,0 +1,53 @@
+{
+  "asset": "Far tree impostor atlas (impostors.png) for src/render/tree-impostors.js",
+  "issue": "#281",
+  "date": "2026-11-14",
+  "tool": "scripts/bake-tree-impostors.mjs and scripts/art/tree-impostor-bake.js (Three.js render in headless Chromium, SwiftShader). No generative AI.",
+  "prompt": null,
+  "generativeModel": null,
+  "renderer": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "settings": {
+    "size": [
+      512,
+      256
+    ],
+    "cells": [
+      {
+        "kind": "tree_round",
+        "species": "oak",
+        "variant": 0,
+        "halfWidth": 5.193504376270553,
+        "height": 9.916054725646973
+      },
+      {
+        "kind": "tree_tall",
+        "species": "pine",
+        "variant": 0,
+        "halfWidth": 3.384622246777354,
+        "height": 14.097541809082031
+      }
+    ],
+    "camera": "orthographic, side view from +z, the frame is the card rect: x from -halfWidth to +halfWidth, y from 0 to height (m)",
+    "supersampling": "4 x 4 samples for each pixel",
+    "sun": [
+      0.45,
+      0.8,
+      0.4
+    ],
+    "ramp": "the soft toon ramp of the props (110, 180, 255)",
+    "shadeScale": 1.25,
+    "season": "summer (the shape only; the game gives the season colors)",
+    "layerDistance": "prop draw distance to 450 m"
+  },
+  "channels": {
+    "R": "toon shade / shadeScale",
+    "G": "bark mask",
+    "B": "0",
+    "A": "coverage"
+  },
+  "sources": [
+    "src/level/geo/trees.js (the procedural trees of the game, issue #137)"
+  ],
+  "credits": "Our own render of our own procedural trees. No third-party art.",
+  "credits_spent": 0
+}

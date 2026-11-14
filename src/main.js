@@ -31,6 +31,7 @@ import { createLevelEnv } from "./level/ground.js";
 import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
 import { terrainOf } from "./level/geo/terrain.js";
 import { createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
+import { FAR_TREE_DISTANCE } from "./render/tree-impostors.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
 import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
 import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
@@ -181,8 +182,12 @@ if (attribution && level.attribution) {
 if (params.get("dev") === "1" || params.get("debug") === "1") document.body.classList.add("dev");
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
+// ?farTrees=0 leaves out the far tree cards (#281). The cards end at the
+// far plane of the tier, and the iso map bake does not show them. The low
+// tier has no cards (they cost about 10% of the SwiftShader frame, in thick
+// fog); ?farTrees=1 turns them on there.
 const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", look, season: params.get("season") ?? "summer" }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", look, season: params.get("season") ?? "summer", farTrees: (params.get("farTrees") ?? (quality === "low" ? "0" : "1")) !== "0" && params.get("view") !== "iso", farTreeDistance: Math.min(FAR_TREE_DISTANCE, GEO_FAR) }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
@@ -828,6 +833,11 @@ window.__atl = {
     get props() {
       return geo ? { ...levelView.props } : null;
     },
+    // The timed LOD fade of the props (#279): { fading, copiesUsed, ... }.
+    get propFade() {
+      const info = geo ? levelView.byId.get("props")?.userData.lodFade : null;
+      return info ? { ...info } : null;
+    },
     signs: streetSigns ? { count: streetSigns.count, names: streetSigns.names } : null,
     kit: geo ? levelView.kit : null,
     get terrainLod() {
@@ -954,6 +964,10 @@ window.__atl = {
         },
         get triangles() {
           return carView.info.triangles;
+        },
+        // The timed LOD fade of the cars (#279).
+        get fade() {
+          return { ...carView.fade };
         },
         // The smallest distance from a car body to the skater in the last
         // step (m), and the count of yields to the skater.

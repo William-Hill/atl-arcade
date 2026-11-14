@@ -49,7 +49,10 @@ describe("createPropBatch", () => {
     const batch = createPropBatch(placements, templates, material, { lod0Distance: 60, drawDistance: 200 });
     expect(batch.mesh.isBatchedMesh).toBe(true);
     expect(batch.info).toMatchObject({ instances: 3, kinds: 2 });
-    expect(batch.mesh.instanceCount).toBe(3);
+    // 3 props and 3 spare instances for the fade copies (#279).
+    expect(batch.mesh.instanceCount).toBe(6);
+    expect(batch.fade.copies).toBe(3);
+    expect(createPropBatch(placements, templates, material, { lod0Distance: 60, drawDistance: 200, fade: false }).mesh.instanceCount).toBe(3);
   });
 
   it("picks the LOD of each prop by its own distance", () => {
@@ -75,6 +78,45 @@ describe("createPropBatch", () => {
     const near = batch.mesh.getGeometryIdAt(0);
     batch.update({ x: 100, z: 0 });
     expect(batch.mesh.getGeometryIdAt(0)).toBe(near);
+    expect(batch.mesh.getVisibleAt(0)).toBe(true);
+  });
+
+  it("fades a LOD switch with a copy for the fade time, then ends the fade (#279)", () => {
+    const one = [{ kind: "bench", x: 61, y: 0, z: 0 }];
+    const batch = createPropBatch(one, templates, material, { lod0Distance: 60, drawDistance: 200, fade: true });
+    const copy = 1;
+    batch.update({ x: 0, z: 0 }, 10);
+    // No fade on the first frame.
+    expect(batch.fade.fading).toBe(0);
+    const lod1 = batch.mesh.getGeometryIdAt(0);
+    // The camera crosses the switch distance: LOD1 to LOD0.
+    batch.update({ x: 2, z: 0 }, 10.1);
+    expect(batch.fade.fading).toBe(1);
+    expect(batch.mesh.getVisibleAt(copy)).toBe(true);
+    expect(batch.mesh.getGeometryIdAt(copy)).toBe(lod1);
+    expect(batch.mesh.getGeometryIdAt(0)).not.toBe(lod1);
+    batch.update({ x: 2, z: 0 }, 10.25);
+    expect(batch.fade.fading).toBe(1);
+    batch.update({ x: 2, z: 0 }, 10.41);
+    expect(batch.fade.fading).toBe(0);
+    expect(batch.mesh.getVisibleAt(copy)).toBe(false);
+    expect(batch.mesh.getVisibleAt(0)).toBe(true);
+  });
+
+  it("fades out at the draw distance and makes a hard switch after a teleport", () => {
+    const one = [{ kind: "bench", x: 199, y: 0, z: 0 }];
+    const batch = createPropBatch(one, templates, material, { lod0Distance: 60, drawDistance: 200, fade: true });
+    batch.update({ x: 0, z: 0 }, 0);
+    batch.update({ x: -2, z: 0 }, 0.1);
+    // The prop keeps its shape during the fade out, with no copy.
+    expect(batch.fade.fading).toBe(1);
+    expect(batch.fade.copiesUsed).toBe(0);
+    expect(batch.mesh.getVisibleAt(0)).toBe(true);
+    batch.update({ x: -2, z: 0 }, 0.5);
+    expect(batch.mesh.getVisibleAt(0)).toBe(false);
+    // A teleport back: a hard switch.
+    batch.update({ x: 150, z: 0 }, 0.6);
+    expect(batch.fade.fading).toBe(0);
     expect(batch.mesh.getVisibleAt(0)).toBe(true);
   });
 });

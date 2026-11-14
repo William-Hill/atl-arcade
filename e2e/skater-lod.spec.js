@@ -57,3 +57,31 @@ for (const name of ["nia", "marcus"]) {
     expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
   });
 }
+
+test("in the game, a near NPC skater uses the full model and a far one uses LOD1", async ({ page }) => {
+  test.setTimeout(240000);
+  const errors = collectErrors(page);
+  await page.goto("/?level=beltline-eastside&mute=1&view=fixed&quality=phone");
+  await page.waitForFunction(() => window.__atl?.ready && window.__atl.skaters && window.__atl.skaters.loaded + window.__atl.skaters.failed === window.__atl.skaters.count && window.__atl.frames > 5, null, { timeout: 120000 });
+  // The camera 6 m from one NPC skater: that NPC is near, and the others are farther.
+  const result = await page.evaluate(async () => {
+    const n = window.__atl.skaters.list[0];
+    const [x, y, z] = n.position;
+    window.__atl.setFixedCamera(x + 5, y + 2.4, z + 3, x, y + 0.9, z);
+    for (let i = 0; i < 4; i += 1) await new Promise((r) => requestAnimationFrame(r));
+    const eye = [x + 5, y + 2.4, z + 3];
+    return {
+      draw: window.__atl.skaters.draw,
+      skinnedVertices: window.__atl.skaters.skinnedVertices,
+      list: window.__atl.skaters.list.map((m) => ({ id: m.id, visible: m.visible, lod: m.lod, d: Math.hypot(m.position[0] - eye[0], m.position[1] - eye[1], m.position[2] - eye[2]) })),
+    };
+  });
+  const near = result.list.find((m) => m.d < 20);
+  expect(near?.visible).toBe(true);
+  expect(near?.lod).toBe(0);
+  for (const m of result.list.filter((q) => q.visible && q.d > result.draw.lod1From + 1)) expect(m.lod, `${m.id} at ${m.d.toFixed(1)} m`).toBe(1);
+  expect(result.list.filter((m) => m.visible && m.lod === 0).length).toBeLessThanOrEqual(result.draw.full);
+  expect(result.skinnedVertices).toBeGreaterThan(0);
+  await page.screenshot({ path: "e2e/__screenshots__/skater-lod-beltline-phone.png" });
+  expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+});

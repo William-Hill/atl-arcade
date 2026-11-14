@@ -152,7 +152,6 @@ const VERTEX = /* glsl */ `
   attribute vec3 aBark;
   uniform vec4 uFade;
   varying vec2 vUv;
-  varying vec2 vCard;
   varying vec3 vLeaf;
   varying vec3 vBark;
   varying float vFade;
@@ -176,7 +175,6 @@ const VERTEX = /* glsl */ `
     float flip = step(1.5, aCell);
     float u = mix(position.x, -position.x, flip);
     vUv = vec2((u + 0.5 + aCell - 2.0 * flip) * 0.5, position.y);
-    vCard = vec2(position.x * 2.0, position.y * 2.0 - 1.0);
     vLeaf = aLeaf;
     vBark = aBark;
     vec4 mvPosition = viewMatrix * vec4(world, 1.0);
@@ -188,9 +186,7 @@ const FRAGMENT = /* glsl */ `
   uniform sampler2D uMap;
   uniform float uLight;
   uniform float uShadeScale;
-  uniform float uNormalPass;
   varying vec2 vUv;
-  varying vec2 vCard;
   varying vec3 vLeaf;
   varying vec3 vBark;
   varying float vFade;
@@ -208,12 +204,6 @@ const FRAGMENT = /* glsl */ `
     vec4 t = texture2D(uMap, vUv);
     if (t.a < 0.5) discard;
     if (vFade <= bayer4(gl_FragCoord.xy)) discard;
-    if (uNormalPass > 0.5) {
-      // The normal pass of the post chain (GTAO and the ink): a round view
-      // normal, as for a crown that faces the camera.
-      gl_FragColor = vec4(normalize(vec3(vCard.x * 0.6, vCard.y * 0.4, 1.0)) * 0.5 + 0.5, 1.0);
-      return;
-    }
     vec3 color = mix(vLeaf, vBark, step(0.5, t.g)) * t.r * uShadeScale * uLight;
     gl_FragColor = vec4(color, 1.0);
     #include <tonemapping_fragment>
@@ -260,7 +250,6 @@ export function createTreeImpostors(placements, templates, { near, far = FAR_TRE
         uLight: { value: CARD_LIGHT[look] ?? 1 },
         uShadeScale: { value: SHADE_SCALE },
         uFade: { value: new THREE.Vector4(near - range.nearBand, near, far - range.farBand, far) },
-        uNormalPass: { value: 0 },
       },
     ]),
     vertexShader: VERTEX,
@@ -270,7 +259,7 @@ export function createTreeImpostors(placements, templates, { near, far = FAR_TRE
   });
   // The normal pass of the post chain (GTAOPass) sets an override material
   // on the scene. That material cannot turn a card to the camera, so the
-  // cards keep their own material and write a normal in that pass.
+  // cards stay out of that pass (see onBeforeRender below).
   material.allowOverride = false;
   const texture = map ?? loadImpostorMap();
   material.uniforms.uMap.value = texture;
@@ -284,8 +273,17 @@ export function createTreeImpostors(placements, templates, { near, far = FAR_TRE
   mesh.frustumCulled = false;
   mesh.castShadow = false;
   mesh.receiveShadow = false;
+  // In a pass with an override material (the GTAO normal and depth pass),
+  // the count is 0 for that draw, so three.js skips it. The layer thus
+  // costs 1 draw call on each tier. The AO is near the camera and the ink
+  // is faint past the draw distance, so the cards do not need that pass.
+  let shown = 0;
   mesh.onBeforeRender = (renderer, scene) => {
-    material.uniforms.uNormalPass.value = scene && scene.overrideMaterial ? 1 : 0;
+    shown = mesh.count;
+    if (scene && scene.overrideMaterial) mesh.count = 0;
+  };
+  mesh.onAfterRender = () => {
+    mesh.count = shown;
   };
 
   const xz = new Float32Array(n * 2);

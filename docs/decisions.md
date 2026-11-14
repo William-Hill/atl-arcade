@@ -1131,3 +1131,12 @@ The follow camera gets short effects for the big moments of a run, as RenderATL 
 - The shake is a sum of sines, not `Math.random`, so a replay gives the same frames. While the wall clip holds the camera in front of a wall, the dip and the shake stop, because they move the camera off the clip ray. A photo uses the base FOV.
 - The flash is a DOM layer, not a post pass, so it works on every quality tier and never goes into a photo mode save.
 - `prefers-reduced-motion: reduce` or `?camfx=0` keeps only the speed FOV, at half size. The game has no settings toggle for it yet.
+
+## 2026-11-14: Far tree impostors from the prop draw distance to 450 m (#281)
+
+The props hide past `PROP_DRAW_DISTANCE` (200 m), so the city edge had no trees from a height. A far layer in `src/render/tree-impostors.js` now shows each tree past that distance as a camera-facing card: one `InstancedMesh`, one draw call, 2 triangles for each tree.
+
+- The art is one atlas, `assets/trees/impostors.png`, with a cell for `tree_round` (the oak) and a cell for `tree_tall` (the pine). `scripts/bake-tree-impostors.mjs` renders our own procedural trees with Three.js; no generative model draws it (see `provenance.json`). The texture holds the toon shade, a bark mask, and the coverage, not a color. Each card gets the leaf and the bark colors of its LOD1 tree, so the cards follow `?season=`. The pine has its own cell; every other species uses the round cell.
+- A card fades in with a screen-door dither from 180 m to 200 m, while the LOD1 tree still shows, so the cards are full when the LOD1 tree hides. A card fades out from 390 m to 450 m, so the tree line has no hard edge. The CPU picks the trees in the ring again when the camera moves 10 m.
+- The cards stay out of the GTAO normal pass, so the layer is 1 draw call on each tier. The AO and the ink are faint at that distance.
+- The layer ends at the far plane of the tier: 450 m on high, 320 m on low and phone (in the fog). The iso map bake does not show it. `?farTrees=0` turns it off.

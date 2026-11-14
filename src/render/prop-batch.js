@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { createBatchFade, ditherBatch } from "./lod-dither.js";
+import { fadeCopies, lodFadeOn } from "./lod-fade.js";
 
 // All the props of a level in one BatchedMesh (#89): one draw call for every
 // prop with WEBGL_multi_draw. Each prop is one instance. Each instance shows
@@ -44,8 +46,9 @@ export function templateGeometry(t) {
 }
 
 // placements: [{ kind, x, y, z, yaw, scale }]. templates: { kind, `${kind}_lod1` }.
-// A placement with no template is left out.
-export function createPropBatch(placements, templates, material, { lod0Distance, drawDistance }) {
+// A placement with no template is left out. `fade: false` makes each switch
+// hard (the default reads ?lodfade=0). `clock` gives the time in seconds.
+export function createPropBatch(placements, templates, material, { lod0Distance, drawDistance, fade = lodFadeOn(), clock } = {}) {
   const kinds = [...new Set(placements.map((p) => p.kind))].filter((k) => templates[k]).sort();
   const geoms = new Map();
   let vertices = 0;
@@ -60,7 +63,8 @@ export function createPropBatch(placements, templates, material, { lod0Distance,
     geoms.set(kind, pair);
   }
   const used = placements.filter((p) => templates[p.kind]);
-  const mesh = new THREE.BatchedMesh(used.length, vertices, indices, material);
+  const copies = fadeCopies(used.length, fade);
+  const mesh = new THREE.BatchedMesh(Math.max(1, used.length + copies), vertices, indices, material);
   mesh.name = "props";
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -71,7 +75,6 @@ export function createPropBatch(placements, templates, material, { lod0Distance,
   }
   const lodIds = new Int32Array(used.length * 2);
   const xz = new Float32Array(used.length * 2);
-  const state = new Int8Array(used.length).fill(-2);
   const m = new THREE.Matrix4();
   used.forEach((p, i) => {
     const [g0, g1] = ids.get(p.kind);
@@ -84,6 +87,10 @@ export function createPropBatch(placements, templates, material, { lod0Distance,
     mesh.setMatrixAt(id, m);
     mesh.setVisibleAt(id, false);
   });
+  const fader = createBatchFade(mesh, used.length, copies, { geometryOf: (i, lod) => lodIds[i * 2 + lod], enabled: fade, clock });
+  if (fade) ditherBatch(mesh, fader.uniform);
+  // For the tests and the console: the fade count now.
+  mesh.userData.lodFade = fader.info;
   // The bounds of the whole batch, for the culling of the batch itself.
   mesh.computeBoundingBox();
   mesh.computeBoundingSphere();
@@ -93,25 +100,22 @@ export function createPropBatch(placements, templates, material, { lod0Distance,
   return {
     mesh,
     info,
+    fade: fader.info,
     // Sets the LOD and the visibility of each prop for a camera position.
-    // Only a changed instance is written.
-    update(cameraPosition) {
+    // Only a changed instance is written. `time` (s) is for the tests.
+    update(cameraPosition, time) {
       let drawn = 0;
       let lod0 = 0;
       const cx = cameraPosition.x;
       const cz = cameraPosition.z;
+      fader.begin(cameraPosition, time);
       for (let i = 0; i < used.length; i += 1) {
         const lod = propLodFor(Math.hypot(xz[i * 2] - cx, xz[i * 2 + 1] - cz), lod0Distance, drawDistance);
         if (lod >= 0) drawn += 1;
         if (lod === 0) lod0 += 1;
-        if (lod === state[i]) continue;
-        if (lod < 0) mesh.setVisibleAt(i, false);
-        else {
-          mesh.setGeometryIdAt(i, lodIds[i * 2 + lod]);
-          mesh.setVisibleAt(i, true);
-        }
-        state[i] = lod;
+        fader.set(i, lod);
       }
+      fader.end();
       info.drawn = drawn;
       info.lod0 = lod0;
     },

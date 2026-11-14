@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { carTemplates } from "./car-kit.js";
 import { propLodFor } from "./prop-batch.js";
+import { createBatchFade, ditherBatch } from "./lod-dither.js";
+import { fadeCopies, lodFadeOn } from "./lod-fade.js";
 import { CAR_COLORS } from "../sim/traffic/traffic.js";
 
 // Three.js view of the cars (issue #132): the parked cars and the traffic
@@ -8,6 +10,8 @@ import { CAR_COLORS } from "../sim/traffic/traffic.js";
 // src/render/prop-batch.js, #89). Each car shows its detailed (LOD0) or its
 // simple (LOD1) shape by its distance from the camera, and hides past the
 // draw distance. The paint attribute picks the instance body color.
+// A LOD switch, a hide, and a show fade with a short timed dither (#279,
+// lod-fade.js), as the props do.
 
 export const CAR_LOD0_DISTANCE = 70; // m
 export const CAR_DRAW_DISTANCE = 240; // m
@@ -52,7 +56,8 @@ vColor.rgb = mix(vColor.rgb, vColor.rgb * getBatchingColor(getIndirectIndex(gl_D
 // parked: [{ kind, color, x, y, z, yaw, pitch? }]. moving: the traffic
 // cars (src/sim/traffic/traffic.js). A new traffic state from the same seed
 // has the same cars in the same order, so update() takes the cars now.
-export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DISTANCE, drawDistance = CAR_DRAW_DISTANCE, pitchAt = null } = {}) {
+// `fade: false` makes each LOD switch hard (the default reads ?lodfade=0).
+export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DISTANCE, drawDistance = CAR_DRAW_DISTANCE, pitchAt = null, fade = lodFadeOn(), clock } = {}) {
   const templates = carTemplates();
   const all = [...parked, ...moving];
   const kinds = [...new Set(all.map((c) => c.kind))].sort();
@@ -66,7 +71,8 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
     }
   }
   const material = carMaterial();
-  const mesh = new THREE.BatchedMesh(Math.max(1, all.length), Math.max(1, vertices), Math.max(1, indices), material);
+  const copies = fadeCopies(all.length, fade);
+  const mesh = new THREE.BatchedMesh(Math.max(1, all.length + copies), Math.max(1, vertices), Math.max(1, indices), material);
   mesh.name = "cars";
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -94,46 +100,52 @@ export function createCarView(parked, moving = [], { lod0Distance = CAR_LOD0_DIS
     m.compose(p, q, one);
     mesh.setMatrixAt(id, m);
   }
-  const state = new Int8Array(all.length).fill(-2);
   all.forEach((c, i) => {
     const id = mesh.addInstance(ids.get(c.kind)[1]);
     mesh.setColorAt(id, c.kind === "bus" ? white : palette[c.color % palette.length]);
     pose(id, c, c.pitch ?? 0);
     mesh.setVisibleAt(id, false);
   });
+  // A traffic car keeps its kind, so the geometry ids come from the first
+  // list of cars.
+  const fader = createBatchFade(mesh, all.length, copies, { geometryOf: (i, lod) => ids.get(all[i]?.kind ?? kinds[0])[lod], enabled: fade, colors: true, clock });
+  if (fade) ditherBatch(mesh, fader.uniform);
+  mesh.userData.lodFade = fader.info;
   const info = { parked: parked.length, moving: moving.length, drawn: 0, lod0: 0, triangles: 0 };
   return {
     mesh,
     info,
+    fade: fader.info,
     get drawCalls() {
       return 1;
     },
     // Sets the LOD, the visibility, and (for the traffic) the pose of each
-    // car for a camera position. Call it once per frame.
-    update(cameraPosition, movingNow = moving) {
+    // car for a camera position. Call it once per frame. `time` (s) is for
+    // the tests.
+    update(cameraPosition, movingNow = moving, time) {
       let drawn = 0;
       let lod0 = 0;
       let tris = 0;
       const cx = cameraPosition.x;
       const cz = cameraPosition.z;
       const np = parked.length;
+      fader.begin(cameraPosition, time);
       for (let i = 0; i < all.length; i += 1) {
         const c = i < np ? parked[i] : (movingNow[i - np] ?? all[i]);
         const lod = propLodFor(Math.hypot(c.x - cx, c.z - cz), lod0Distance, drawDistance);
         if (lod >= 0) {
           drawn += 1;
           tris += triangles.get(c.kind)[lod];
-          if (i >= parked.length) pose(i, c, pitchAt ? pitchAt(c) : 0);
         }
         if (lod === 0) lod0 += 1;
-        if (lod === state[i]) continue;
-        if (lod < 0) mesh.setVisibleAt(i, false);
-        else {
-          mesh.setGeometryIdAt(i, ids.get(c.kind)[lod]);
-          mesh.setVisibleAt(i, true);
+        fader.set(i, lod);
+        // A car that fades out still moves, and its fade copy moves with it.
+        if (i >= np && (lod >= 0 || fader.fading(i))) {
+          pose(i, c, pitchAt ? pitchAt(c) : 0);
+          fader.follow(i);
         }
-        state[i] = lod;
       }
+      fader.end();
       info.drawn = drawn;
       info.lod0 = lod0;
       info.triangles = tris;

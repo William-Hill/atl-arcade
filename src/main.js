@@ -824,6 +824,11 @@ window.__atl = {
     get props() {
       return geo ? { ...levelView.props } : null;
     },
+    // The timed LOD fade of the props (#279): { fading, copiesUsed, ... }.
+    get propFade() {
+      const info = geo ? levelView.byId.get("props")?.userData.lodFade : null;
+      return info ? { ...info } : null;
+    },
     signs: streetSigns ? { count: streetSigns.count, names: streetSigns.names } : null,
     kit: geo ? levelView.kit : null,
     get terrainLod() {
@@ -950,6 +955,10 @@ window.__atl = {
         },
         get triangles() {
           return carView.info.triangles;
+        },
+        // The timed LOD fade of the cars (#279).
+        get fade() {
+          return { ...carView.fade };
         },
         // The smallest distance from a car body to the skater in the last
         // step (m), and the count of yields to the skater.

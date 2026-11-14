@@ -1131,3 +1131,14 @@ The follow camera gets short effects for the big moments of a run, as RenderATL 
 - The shake is a sum of sines, not `Math.random`, so a replay gives the same frames. While the wall clip holds the camera in front of a wall, the dip and the shake stop, because they move the camera off the clip ray. A photo uses the base FOV.
 - The flash is a DOM layer, not a post pass, so it works on every quality tier and never goes into a photo mode save.
 - `prefers-reduced-motion: reduce` or `?camfx=0` keeps only the speed FOV, at half size. The game has no settings toggle for it yet.
+
+## 2026-11-14: Timed dither fade at the LOD switch of props and cars (#279)
+
+A prop or a car that changes its LOD (60 m and 70 m) or that hides or shows at the draw distance (200 m and 240 m) does not pop. For 0.3 s (`LOD_FADE_SECONDS`) the old shape and the new shape both draw, with complementary 4x4 screen-door dither. The fade starts when the instance crosses the switch distance. It does not use a distance band, so only the few instances that crossed in the last 0.3 s draw twice (the memoryfloater LOD study: a band fade drew about 60 trees twice, a timed fade 0 to 2).
+
+- The fade state is the pure module `src/render/lod-fade.js` (Vitest). `src/render/lod-dither.js` keeps one dither value per instance in a float texture and patches the color material and the shadow depth material. A depth material that is set later (the leaf cut of the pbr trees) also gets the dither, so a shadow does not pop.
+- Each batch keeps spare instances for the fade copies (at most 256). With no free copy, the switch is hard. The draw calls stay the same (1 for the props, 1 for the cars).
+- A hide keeps the old shape and fades it out. A show fades in. Both need no copy.
+- No fade on the first frame of a level, and no fade when the camera moves more than 20 m in one update (a teleport or a fast travel).
+- `propLodFor` and the switch distances do not change. `?lodfade=0` turns the fade off for an A/B test.
+- The GTAO normal pass of the high tier does not use the dither. For 0.3 s the AO and the ink outline can see both shapes. This is small, and we accept it.

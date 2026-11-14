@@ -283,8 +283,11 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
       for (const npc of next.npcs) {
         const entry = views.get(npc.id);
         if (!entry) continue;
+        const wasVisible = entry.view.group.visible;
         entry.view.group.visible = pick.has(npc.id);
         if (!entry.view.group.visible) continue;
+        // An NPC that comes back into view starts its animation layers from rest.
+        if (!wasVisible) entry.view.resetFx();
         setLevel(entry, levels.get(npc.id) ?? 0);
         drawn += 1;
         if (entry.level === 1) lod1Drawn += 1;

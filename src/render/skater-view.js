@@ -1,12 +1,27 @@
 import * as THREE from "three";
 import { SKATER_BODY } from "../sim/skate/constants.js";
 import { cheer, createFaceState, stepFace } from "./face-anim.js";
-import { CLIPS, beatPhase, createAnimState, grooveRate, stepAnim, stepFacing } from "./skater-anim.js";
+import { CLIPS, beatPhase, createAnimState, grooveRate, stepAnim, stepFacing, wrapAngle } from "./skater-anim.js";
+import { createFxState, fxScale, stepFx } from "./anim-fx.js";
+import { createFxRig } from "./anim-fx-rig.js";
+
+// The scale of the procedural layers (#291) from the page: `?animfx=0` turns
+// them off, and `prefers-reduced-motion` makes them smaller.
+export function pageFxScale() {
+  const g = globalThis;
+  const param = g.location ? new URLSearchParams(g.location.search).get("animfx") : null;
+  const reduced = Boolean(g.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  return fxScale({ param, reduced });
+}
 
 // The skater bound to the controller output. It starts as a capsule (the
 // nose cone shows the facing). attachModel() swaps in a GLB skater and plays
 // its clips from the state -> clip table in skater-anim.js.
-export function createSkaterView() {
+// rad. The largest body turn in one frame that counts as a turn (#291).
+const MAX_TURN_STEP = 0.5;
+
+// opts.fxScale: the scale of the procedural layers. The default reads the page.
+export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
   const group = new THREE.Group();
   group.name = "skater";
   const bodyLength = SKATER_BODY.height - 2 * SKATER_BODY.radius;
@@ -41,6 +56,12 @@ export function createSkaterView() {
   let current = null;
   let faceState = createFaceState();
   let heldFace = null;
+  // The procedural layers (#291): the bone rig, the layer state, and the body
+  // turn (the dance spin plus the facing) of the frame before.
+  let rig = null;
+  let fx = createFxState();
+  let frozen = false;
+  let prevTurn = null;
 
   function play(name, fade) {
     const next = actions.get(name);
@@ -79,12 +100,25 @@ export function createSkaterView() {
       heldFace = state ? { eyes: state.eyes, mouth: state.mouth } : null;
     },
     // Stops the clips (true) or plays them again (false), for the tests.
-    freezePose(frozen) {
+    freezePose(on) {
+      frozen = Boolean(on);
       if (mixer) mixer.timeScale = frozen ? 0 : 1;
     },
     // A banked combo: Nia cheers.
     cheer() {
       faceState = cheer(faceState);
+    },
+    // Starts the procedural layers again from rest: for a view that did not
+    // sync for a time (a culled NPC), and for the test page.
+    resetFx() {
+      fx = createFxState();
+      prevTurn = null;
+      if (rig) rig.reset();
+    },
+    // The procedural layers of the last frame, for the tests: the hip drop
+    // (m), the lag rotation vector (rad), and the spine twist (rad).
+    get fx() {
+      return rig ? { drop: fx.drop, lag: [...fx.out], twist: fx.twistOut } : null;
     },
     // The effective weight of each running clip, for the tests.
     get weights() {
@@ -107,6 +141,9 @@ export function createSkaterView() {
         }
         actions.set(clip.name, action);
       }
+      rig = fxLevel > 0 ? createFxRig(loaded.root) : null;
+      fx = createFxState();
+      prevTurn = null;
       anim = createAnimState();
       faceState = createFaceState();
       current = null;
@@ -133,12 +170,28 @@ export function createSkaterView() {
           clock = beat.time;
           bpm = beat.bpm;
         } else clock += dt;
+        // The clip values go back before play(): a new action saves the bone
+        // values as its original state, and these must not hold the layers.
+        if (rig) rig.restore();
         const r = stepAnim(anim, state, dt);
         anim = r.anim;
         if (r.change) play(r.change.to, r.change.fade);
         facing = stepFacing(facing, anim.facing, dt);
         pivot.rotation.y = facing;
         mixer.update(dt);
+        if (rig) {
+          // Frozen (for the tests): the layers hold their last values.
+          const fdt = frozen ? 0 : dt;
+          const turn = spin + facing;
+          // A turn step larger than MAX_TURN_STEP in one frame is a cut (a spin
+          // dance that stops), not a body turn. It gives no lag.
+          const step = prevTurn !== null ? wrapAngle(turn - prevTurn) : 0;
+          const spinRate = fdt > 0 && Math.abs(step) <= MAX_TURN_STEP ? step / fdt : 0;
+          if (fdt > 0) prevTurn = turn;
+          const omega = rig.measure(fdt);
+          if (!frozen) fx = stepFx(fx, { clip: anim.clip, clock, bpm, yawRate: anim.yawRate, spin: spinRate, omega, up: rig.up, scale: fxLevel }, fdt);
+          rig.apply(fx);
+        }
         if (model.face) {
           faceState = stepFace(faceState, anim.clip, dt);
           const f = heldFace ?? faceState;

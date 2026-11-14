@@ -129,8 +129,8 @@ async function toColorMesh(prim) {
 
   // One new vertex for each position. Its normal and its color are the mean
   // of the old vertices at that position. Its skin is the skin of the first
-  // old vertex at that position; `skinMismatch` counts the old vertices with
-  // another skin (it must be 0).
+  // old vertex at that position. The script stops when an old vertex has
+  // another skin (`skinMismatch`).
   const remap = MeshoptSimplifier.generatePositionRemap(positions, 3);
   const newIndex = new Int32Array(n).fill(-1);
   const pick = [];
@@ -166,6 +166,9 @@ async function toColorMesh(prim) {
       if (ja.some((j, q) => j !== jb[q] || Math.abs(wa[q] - wb[q]) > 1e-3)) skinMismatch += 1;
     }
   }
+  // A weld of two vertices with other skins would lose one deformation, so
+  // the script stops before it changes the mesh.
+  if (skinMismatch > 0) throw new Error(`${skinMismatch} vertices have another skin than the first vertex at the same position; the weld would change the skin`);
   const nrm = new Float32Array(m * 3);
   const col = new Float32Array(m * 3);
   for (let k = 0; k < m; k += 1) {

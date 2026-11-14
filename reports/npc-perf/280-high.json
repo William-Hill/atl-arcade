@@ -137,11 +137,11 @@
       "drawn": 3,
       "lod1": 0,
       "skinnedVertices": null,
-      "triangles": 969912,
+      "triangles": 969911.5,
       "calls": 232,
       "medianFps": 0.7,
       "runsFps": "0.7 0.7",
-      "p90Ms": 1583.2
+      "p90Ms": 1574.9
     },
     {
       "case": "full-5-150",
@@ -150,11 +150,11 @@
       "drawn": 4,
       "lod1": 0,
       "skinnedVertices": 288832,
-      "triangles": 1071941,
+      "triangles": 1071938.5,
       "calls": 238,
-      "medianFps": 1,
+      "medianFps": 0.85,
       "runsFps": "1 0.7",
-      "p90Ms": 1633.3
+      "p90Ms": 1583.3
     },
     {
       "case": "new",
@@ -163,12 +163,13 @@
       "drawn": 4,
       "lod1": 3,
       "skinnedVertices": 83004,
-      "triangles": 814480,
+      "triangles": 814475.5,
       "calls": 238,
-      "medianFps": 0.8,
+      "medianFps": 0.75,
       "runsFps": "0.7 0.8",
-      "p90Ms": 2049.8
+      "p90Ms": 1799.85
     }
   ],
-  "errors": []
+  "errors": [],
+  "note": "table recomputed with the even-count median (mean of the two middle values)"
 }

@@ -140,7 +140,13 @@ for (let r = 0; r < repeat; r += 1) {
 await browser.close();
 for (const s of servers) await new Promise((done) => s.httpServer.close(done));
 
-const mid = (list) => [...list].sort((a, b) => a - b)[Math.floor(list.length / 2)];
+// The median. For an even count, the mean of the two middle values.
+export function median(list) {
+  const s = [...list].sort((a, b) => a - b);
+  const h = Math.floor(s.length / 2);
+  return s.length % 2 ? s[h] : Math.round(((s[h - 1] + s[h]) / 2) * 100) / 100;
+}
+const mid = median;
 const table = configs.map((c) => {
   const rs = rows.filter((x) => x.case === c.label);
   return {

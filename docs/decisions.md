@@ -1140,7 +1140,7 @@ A far NPC skater (25 m or more from the camera) uses a LOD1 model of about 3,000
 - Same skeleton, same clips. The simplifier only removes vertices, so each LOD1 vertex keeps its skin weights. The LOD1 GLB has the 65 `mixamorig:` joints in the order of `skater.glb`, and it has no clips and no textures. `cloneSkaterModel(..., { lod1: true })` binds the LOD1 mesh to the skeleton of the NPC clone, so one mixer moves both meshes. The ink hull of LOD1 comes from the LOD1 mesh (`toonSkater()`). The outfit hue shift now runs after `color_fragment`, so it also changes the vertex colors.
 - The LOD choice is pure: `pickLods()` in `src/render/npc-skaters-view.js`. It has a 2 m hysteresis and a cap (`full`) on the NPCs that use the full model. The player skater always uses the full model.
 - Evidence: `e2e/skater-lod.spec.js` plays all 24 clips at 5 times. Each skinned LOD1 vertex stays within 0.09 mm of its LOD0 copy. The screenshots are `e2e/__screenshots__/skater-lod-<name>-<pose>.png`.
-- Perf (`scripts/npc-perf.mjs`, SwiftShader, the "line" camera along the NPC skaters, median of 3 runs on the phone tier and 2 on the high tier; reports in `reports/npc-perf/280-*.json`):
+- Perf (`scripts/npc-perf.mjs`, SwiftShader, the "line" camera along the NPC skaters, median of 3 runs on the phone tier and 2 on the high tier (the mean of the two middle values); reports in `reports/npc-perf/280-*.json`):
 
   | Case | NPCs drawn | On LOD1 | NPC skinned vertices | Triangles | Median FPS |
   |---|---|---|---|---|---|
@@ -1148,9 +1148,9 @@ A far NPC skater (25 m or more from the camera) uses a LOD1 model of about 3,000
   | phone, full model only, max 5 to 300 m | 5 | 0 | 204,296 | 326,037 | 6.0 |
   | phone, LOD1, max 5 to 300 m | 5 | 3.9 | 56,106 | 207,899 | 7.5 |
   | phone, new values (max 5, 90 m, full 2) | 2 | 0.9 | 47,110 | 191,854 | 7.5 |
-  | high 640x360, `main` (max 5, 90 m) | 3 | 0 | about 222 K | 969,912 | 0.7 |
-  | high 640x360, full model only, 150 m | 4 | 0 | 288,832 | 1,071,941 | 1.0 |
-  | high 640x360, new values (150 m, full 3) | 4 | 3 | 83,004 | 814,480 | 0.8 |
+  | high 640x360, `main` (max 5, 90 m) | 3 | 0 | about 222 K | 969,912 | 0.70 |
+  | high 640x360, full model only, 150 m | 4 | 0 | 288,832 | 1,071,939 | 0.85 |
+  | high 640x360, new values (150 m, full 3) | 4 | 3 | 83,004 | 814,476 | 0.75 |
 
 - New `NPC_DRAW`: the low and phone tiers draw 5 NPC skaters (was 2) within 90 m (was 45 m), at most 2 on the full model. The high tier draws them within 150 m (was 90 m), at most 3 on the full model. Each value keeps the FPS of `main` or better and has fewer triangles. The BeltLine has 5 NPC skaters, so `max` stays at 5; more NPC skaters need new specs in `src/sim/npc/skaters.js` (not in this change).
 - Limits: the high tier runs at about 1 FPS on SwiftShader, so its FPS figures are noise; its triangles and skinned vertices are exact. Measure the high tier on a real GPU (`--gpu` is not in `npc-perf.mjs` yet). The LOD1 model has no face detail and no texture detail; at 25 m the skater is about 50 px tall.

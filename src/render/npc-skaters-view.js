@@ -25,12 +25,15 @@ export const OUTFITS = {
 // The NPC models are hidden beyond `distance` from the camera (m), and
 // only the `max` nearest ones draw. A drawn NPC at `lod1From` m or more
 // uses the LOD1 model (#280), and at most `full` NPCs use the full model.
-// The full model and its hull cost about 74 K skinned vertices; the LOD1
-// model and its hull cost about 3 K.
+// The full model and its hull cost about 74 K skinned vertices (41 K with
+// the welded phone model); the LOD1 model and its hull cost about 3 K.
+// The values come from scripts/npc-perf.mjs (#280, docs/decisions.md
+// 2026-11-14): with LOD1, the phone tier draws 5 NPCs at the FPS of 2 full
+// models before.
 export const NPC_DRAW = {
-  high: { distance: 90, max: 5, lod1From: 25, full: 5 },
-  low: { distance: 45, max: 2, lod1From: 25, full: 2 },
-  phone: { distance: 45, max: 2, lod1From: 25, full: 2 },
+  high: { distance: 150, max: 5, lod1From: 25, full: 3 },
+  low: { distance: 90, max: 5, lod1From: 25, full: 2 },
+  phone: { distance: 90, max: 5, lod1From: 25, full: 2 },
 };
 
 // An NPC on LOD1 goes back to the full model only when it comes this much

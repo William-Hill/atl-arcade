@@ -47,8 +47,9 @@ describe("NPC skater outfits", () => {
       { id: "c", d: 44 },
       { id: "d", d: 60 },
     ];
-    expect([...pickDrawn(items, NPC_DRAW.low)].sort()).toEqual(["a", "b"]);
+    expect([...pickDrawn(items, { distance: 45, max: 2 })].sort()).toEqual(["a", "b"]);
     expect([...pickDrawn(items, NPC_DRAW.high)].sort()).toEqual(["a", "b", "c", "d"]);
+    expect([...pickDrawn(items, NPC_DRAW.phone)].sort()).toEqual(["a", "b", "c", "d"]);
     expect(pickDrawn(items, { distance: 5, max: 5 }).size).toBe(0);
   });
 });

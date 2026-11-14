@@ -12,6 +12,7 @@ import { mergeMeshes } from "../level/geo/extrude.js";
 import { treeTemplates, withProceduralTrees } from "../level/geo/trees.js";
 import { createMuralAtlas } from "./murals.js";
 import { createPropBatch } from "./prop-batch.js";
+import { FAR_TREE_DISTANCE, createTreeImpostors } from "./tree-impostors.js";
 import { BRICK_TONE, DETAIL_GLSL, DETAIL_NORMAL, ENV_LIGHT, FRAME_ROUGHNESS, GROUND_ALBEDO, LOOKS, ROUGHNESS, WALL_AO, litMaterial } from "./look.js";
 import { createLeafDepthMaterial, patchLeafFragment, patchLeafVertex } from "./leaf-cut.js";
 import brickInfo from "../../assets/landmarks/textures/brick/set.json";
@@ -798,7 +799,9 @@ function createPropMaterial({ wind = true, look = "toon", leaves = false } = {})
 // `trees: false` keeps the two street kit trees (for an A/B check).
 // `season` sets the tree colors: "spring", "summer" (the default), or "fall".
 // `aprons: false` leaves out the concrete aprons of the shops (aprons.js).
-export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, look = "toon", season = "summer" } = {}) {
+// `farTrees: false` leaves out the far tree cards (tree-impostors.js), which
+// show the trees from the prop draw distance to `farTreeDistance`.
+export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Distance = PROP_LOD0_DISTANCE, drawDistance = PROP_DRAW_DISTANCE, groundDetail = true, markings = true, aprons = true, kit = true, depth = true, depthDistance = DEPTH_DISTANCE, interiors = false, farTerrain = false, trees = true, wind = true, look = "toon", season = "summer", farTrees = true, farTreeDistance = FAR_TREE_DISTANCE } = {}) {
   const root = new THREE.Group();
   root.name = level.name;
   const gradientMap = toonRamp();
@@ -883,6 +886,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
   // Kit props load after the level shows. All props are one batch (one
   // draw call); update() picks the LOD of each prop.
   let propBatch = null;
+  let farTreeLayer = null;
   const props = { count: 0, instances: 0, kinds: 0, drawn: 0, lod0: 0, loaded: false, error: null };
   function addProps(placements, templates) {
     // The procedural trees take the place of the two kit trees.
@@ -892,6 +896,16 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
     if (leaves) propBatch.mesh.customDepthMaterial = createLeafDepthMaterial();
     root.add(propBatch.mesh);
     byId.set("props", propBatch.mesh);
+    // The far trees (#281): one card for each tree past the draw distance.
+    if (trees && farTrees && farTreeDistance > drawDistance) {
+      // Under FAR_TREE_DISTANCE, the layer ends at the far plane of the tier,
+      // where the fog is full: the fog hides the edge, and a dither band in
+      // the fog only shows as grain.
+      farTreeLayer = createTreeImpostors(placed, all, { near: drawDistance, far: farTreeDistance, farBand: farTreeDistance < FAR_TREE_DISTANCE ? 1 : undefined, look });
+      root.add(farTreeLayer.mesh);
+      byId.set("far-trees", farTreeLayer.mesh);
+      props.farTrees = farTreeLayer.info;
+    }
     props.count = placements.length;
     props.instances = propBatch.info.instances;
     props.kinds = propBatch.info.kinds;
@@ -948,6 +962,7 @@ export function createGeoView(level, meshes = buildGeoMeshes(level), { lod0Dista
         props.drawn = propBatch.info.drawn;
         props.lod0 = propBatch.info.lod0;
       }
+      if (farTreeLayer) farTreeLayer.update(cameraPosition);
     },
   };
 }

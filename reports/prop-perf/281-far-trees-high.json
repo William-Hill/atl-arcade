@@ -1,0 +1,390 @@
+{
+  "date": "2026-11-14T15:17:24.691Z",
+  "gpu": "swiftshader",
+  "quality": "high",
+  "seconds": 6,
+  "repeat": 3,
+  "rows": [
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.9,
+      "calls": 242,
+      "triangles": 1139268,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.9,
+      "calls": 274,
+      "triangles": 812210,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 1,
+      "build": "before",
+      "cam": "park",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 4.1,
+      "calls": 260,
+      "triangles": 852010,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.6,
+      "calls": 243,
+      "triangles": 1141364,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.9,
+      "calls": 275,
+      "triangles": 815216,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 1,
+      "build": "after",
+      "cam": "park",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.8,
+      "calls": 261,
+      "triangles": 853838,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.8,
+      "calls": 242,
+      "triangles": 1139268,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 4,
+      "calls": 274,
+      "triangles": 812210,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 2,
+      "build": "before",
+      "cam": "park",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.9,
+      "calls": 260,
+      "triangles": 852010,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.4,
+      "calls": 243,
+      "triangles": 1141360,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.5,
+      "calls": 275,
+      "triangles": 815216,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 2,
+      "build": "after",
+      "cam": "park",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3,
+      "calls": 261,
+      "triangles": 853838,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.1,
+      "calls": 242,
+      "triangles": 1139268,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.3,
+      "calls": 274,
+      "triangles": 812210,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 3,
+      "build": "before",
+      "cam": "park",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 4,
+      "calls": 260,
+      "triangles": 852010,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "spawn",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.8,
+      "calls": 243,
+      "triangles": 1141366,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "overview",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.9,
+      "calls": 275,
+      "triangles": 815216,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    },
+    {
+      "run": 3,
+      "build": "after",
+      "cam": "park",
+      "quality": "high",
+      "gpu": "swiftshader",
+      "load": 3.8,
+      "calls": 261,
+      "triangles": 853838,
+      "propCount": 8131,
+      "frames": 0,
+      "medianFps": null,
+      "p90Ms": 0,
+      "p99Ms": 0
+    }
+  ],
+  "table": [
+    {
+      "build": "before",
+      "cam": "spawn",
+      "calls": "242",
+      "triangles": "1139268",
+      "medianFps": null,
+      "p90Ms": 0,
+      "runsP90Ms": [
+        0,
+        0,
+        0
+      ],
+      "load": [
+        3.9,
+        3.8,
+        3.1
+      ]
+    },
+    {
+      "build": "before",
+      "cam": "overview",
+      "calls": "274",
+      "triangles": "812210",
+      "medianFps": null,
+      "p90Ms": 0,
+      "runsP90Ms": [
+        0,
+        0,
+        0
+      ],
+      "load": [
+        3.9,
+        4,
+        3.3
+      ]
+    },
+    {
+      "build": "before",
+      "cam": "park",
+      "calls": "260",
+      "triangles": "852010",
+      "medianFps": null,
+      "p90Ms": 0,
+      "runsP90Ms": [
+        0,
+        0,
+        0
+      ],
+      "load": [
+        4.1,
+        3.9,
+        4
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "spawn",
+      "calls": "243",
+      "triangles": "1141364/1141360/1141366",
+      "medianFps": null,
+      "p90Ms": 0,
+      "runsP90Ms": [
+        0,
+        0,
+        0
+      ],
+      "load": [
+        3.6,
+        3.4,
+        3.8
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "overview",
+      "calls": "275",
+      "triangles": "815216",
+      "medianFps": null,
+      "p90Ms": 0,
+      "runsP90Ms": [
+        0,
+        0,
+        0
+      ],
+      "load": [
+        3.9,
+        3.5,
+        3.9
+      ]
+    },
+    {
+      "build": "after",
+      "cam": "park",
+      "calls": "261",
+      "triangles": "853838",
+      "medianFps": null,
+      "p90Ms": 0,
+      "runsP90Ms": [
+        0,
+        0,
+        0
+      ],
+      "load": [
+        3.8,
+        3,
+        3.8
+      ]
+    }
+  ],
+  "errors": []
+}

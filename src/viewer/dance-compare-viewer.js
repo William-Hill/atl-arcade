@@ -66,7 +66,7 @@ async function loadTestClip(spec) {
   return clip;
 }
 
-const SET_LABEL = { hand: "hand keys", "meshy-293": "Meshy prime", "meshy-293-r2": "Meshy swift r2", "meshy-293-lib": "Meshy library" };
+const SET_LABEL = { hand: "hand keys", "meshy-293": "Meshy round 1 (prime)", "meshy-293-r2": "Meshy round 2 (swift)", "meshy-293-lib": "Meshy library" };
 
 async function makeCol(spec) {
   const model = await cloneSkaterModel(spec.skater);
@@ -79,8 +79,12 @@ async function makeCol(spec) {
   model.root.visible = false;
   scene.add(model.root);
   const source = spec.set === "hand" ? "hand" : "meshy";
-  const many = new Set(SPECS.map((x) => x.dance)).size > 1;
-  const label = many ? `${spec.dance} ${SET_LABEL[spec.set] ?? spec.set}` : `${spec.skater} ${source === "hand" ? "hand keys" : "Meshy"}`;
+  // One dance and one Meshy set: "nia Meshy". More dances: "<dance> <set>".
+  // One dance and more Meshy sets: "<skater> <set>".
+  const manyDances = new Set(SPECS.map((x) => x.dance)).size > 1;
+  const manySets = new Set(SPECS.filter((x) => x.set !== "hand").map((x) => x.set)).size > 1;
+  const setLabel = SET_LABEL[spec.set] ?? spec.set;
+  const label = manyDances ? `${spec.dance} ${setLabel}` : manySets ? `${spec.skater} ${setLabel}` : `${spec.skater} ${source === "hand" ? "hand keys" : "Meshy"}`;
   return { ...spec, source, model, mixer, action, clip, label };
 }
 

@@ -9,21 +9,20 @@ import { BEAT } from "../sim/skate/constants.js";
 // dance-compare.html?dance=bankhead (or prep).
 // Each column is one skater and one clip source: the hand-keyed clip of the
 // game (dance_<dance>) or the Meshy clip (assets/dances/meshy-293/<dance>/).
+// ?cols=<skater>:<set>:<dance>,... picks other columns. <set> "hand" is the
+// hand-keyed clip in the skater GLB; another <set> is a folder under
+// assets/dances/ (for example meshy-293-r2 or meshy-293-lib).
 // The page shows the raw clips with no procedural layers (#291), so the two
 // sources are compared on the same terms. The clips play at the game tempo.
 // __cmp.sheet(cell) draws a contact sheet (rows = times in beats).
 // __cmp.frame(beats, cell) draws one strip at one time, for the videos.
 
-const MESHY = {
-  bankhead: {
-    nia: new URL("../../assets/dances/meshy-293/bankhead/nia.glb", import.meta.url).href,
-    marcus: new URL("../../assets/dances/meshy-293/bankhead/marcus.glb", import.meta.url).href,
-  },
-  prep: {
-    nia: new URL("../../assets/dances/meshy-293/prep/nia.glb", import.meta.url).href,
-    marcus: new URL("../../assets/dances/meshy-293/prep/marcus.glb", import.meta.url).href,
-  },
-};
+// Every test clip GLB under assets/dances/<set>/<dance>/<skater>.glb.
+const CLIP_URLS = import.meta.glob("../../assets/dances/*/*/*.glb", { query: "?url", import: "default", eager: true });
+
+function clipUrl(set, dance, skater) {
+  return CLIP_URLS[`../../assets/dances/${set}/${dance}/${skater}.glb`] ?? null;
+}
 
 const params = new URLSearchParams(window.location.search);
 const dance = params.get("dance") ?? "bankhead";
@@ -47,32 +46,47 @@ ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 50);
 
-const out = { ready: false, error: null, dance, rows: ROWS, bpm: BPM, cols: [] };
+const SPECS = (params.get("cols") ?? ["nia", "marcus"].flatMap((k) => [`${k}:hand:${dance}`, `${k}:meshy-293:${dance}`]).join(","))
+  .split(",")
+  .map((c) => {
+    const [skater, set, d] = c.split(":");
+    return { skater, set, dance: d };
+  });
+const title = params.get("title") ?? dance;
+
+const out = { ready: false, error: null, dance: title, rows: ROWS, bpm: BPM, cols: [] };
 window.__cmp = out;
 
-async function loadMeshyClip(skater) {
-  const gltf = await new GLTFLoader().loadAsync(MESHY[dance][skater]);
-  const clip = gltf.animations.find((c) => c.name === `dance_${dance}_meshy`);
-  if (!clip) throw new Error(`no dance_${dance}_meshy clip in ${MESHY[dance][skater]}`);
+async function loadTestClip(spec) {
+  const url = clipUrl(spec.set, spec.dance, spec.skater);
+  if (!url) throw new Error(`no clip file for ${spec.skater}:${spec.set}:${spec.dance}`);
+  const gltf = await new GLTFLoader().loadAsync(url);
+  const clip = gltf.animations.find((c) => c.name === `dance_${spec.dance}_meshy`);
+  if (!clip) throw new Error(`no dance_${spec.dance}_meshy clip in ${url}`);
   return clip;
 }
 
-async function makeCol(skater, source) {
-  const model = await cloneSkaterModel(skater);
+const SET_LABEL = { hand: "hand keys", "meshy-293": "Meshy prime", "meshy-293-r2": "Meshy swift r2", "meshy-293-lib": "Meshy library" };
+
+async function makeCol(spec) {
+  const model = await cloneSkaterModel(spec.skater);
   toonSkater(model);
-  const clip = source === "hand" ? model.animations.find((c) => c.name === `dance_${dance}`) : await loadMeshyClip(skater);
-  if (!clip) throw new Error(`${skater}: no clip for ${source}`);
+  const clip = spec.set === "hand" ? model.animations.find((c) => c.name === `dance_${spec.dance}`) : await loadTestClip(spec);
+  if (!clip) throw new Error(`${spec.skater}: no clip for ${spec.set}:${spec.dance}`);
   const mixer = new THREE.AnimationMixer(model.root);
   const action = mixer.clipAction(clip);
   action.play();
   model.root.visible = false;
   scene.add(model.root);
-  return { skater, source, model, mixer, action, clip, label: `${skater} ${source === "hand" ? "hand keys" : "Meshy"}` };
+  const source = spec.set === "hand" ? "hand" : "meshy";
+  const many = new Set(SPECS.map((x) => x.dance)).size > 1;
+  const label = many ? `${spec.dance} ${SET_LABEL[spec.set] ?? spec.set}` : `${spec.skater} ${source === "hand" ? "hand keys" : "Meshy"}`;
+  return { ...spec, source, model, mixer, action, clip, label };
 }
 
 let cols = [];
 try {
-  for (const skater of ["nia", "marcus"]) for (const source of ["hand", "meshy"]) cols.push(await makeCol(skater, source));
+  for (const spec of SPECS) cols.push(await makeCol(spec));
   out.cols = cols.map((c) => ({ label: c.label, duration: c.clip.duration, tracks: c.clip.tracks.length }));
   out.ready = true;
 } catch (err) {
@@ -185,7 +199,7 @@ out.frame = (beats, cell = 240) => {
     label(c.label, i * cell + 6, 5, "head");
   });
   const b = Math.floor(beats) + 1;
-  label(`${dance}  beat ${((b - 1) % 2) + 1}  ${BPM} BPM`, 6, HEAD + cell - 20);
+  label(`${title}  beat ${((b - 1) % 2) + 1}  ${BPM} BPM`, 6, HEAD + cell - 20);
   return { width: w, height: h };
 };
 

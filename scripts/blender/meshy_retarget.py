@@ -21,7 +21,8 @@
 #     --motion /path/to/bankhead.fbx --clip dance_bankhead_meshy \
 #     --out assets/dances/meshy-293/bankhead/nia.glb --report /tmp/nia-bankhead.json
 #
-# --motion takes the Meshy FBX or the source GLB that this script writes with
+# --motion takes the Meshy FBX (prime), the Meshy BVH (swift), a Meshy
+# animation-library GLB (rigged character), or the source GLB that this script writes with
 # --save-source (the Meshy skeleton and motion with no mesh).
 import argparse
 import json
@@ -36,6 +37,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FPS = 30
 CLIP_FRAMES = 48  # 2 clip beats of 24 frames (ANIM.clipBeat = 0.8 s).
 BEATS = 2
+REACH = 0.99  # the IK reaches the ankle target at 99 % of the leg length or less.
 
 # SMPL-H joint -> Mixamo bone (without the "mixamorig:" prefix).
 CORE = {
@@ -49,6 +51,34 @@ SIDE = {
     "Collar": "Shoulder", "Shoulder": "Arm", "Elbow": "ForeArm", "Wrist": "Hand",
 }
 FINGERS = ("Thumb", "Index", "Middle", "Ring", "Pinky")
+
+
+# Meshy swift gives a BVH skeleton, and the Meshy rigging and animation API
+# gives a third skeleton. Each maps onto the SMPL-H names above. The same name
+# can mean another bone: "LeftLeg" is the thigh in the BVH skeleton and the
+# shin in the rigged skeleton. Thus the script picks the map by the bone names.
+ALIAS_BVH = {"Hips": "Pelvis", "Spine1": "Spine1", "Spine2": "Spine2", "Chest": "Spine3", "Neck1": "Neck", "Head": "Head"}
+ALIAS_RIG = {"Hips": "Pelvis", "Spine02": "Spine1", "Spine01": "Spine2", "Spine": "Spine3", "neck": "Neck", "Head": "Head"}
+for _s, _full in (("L", "Left"), ("R", "Right")):
+    ALIAS_BVH.update({f"{_full}Shoulder": f"{_s}_Collar", f"{_full}Arm": f"{_s}_Shoulder", f"{_full}ForeArm": f"{_s}_Elbow",
+                      f"{_full}Hand": f"{_s}_Wrist", f"{_full}Leg": f"{_s}_Hip", f"{_full}Shin": f"{_s}_Knee",
+                      f"{_full}Foot": f"{_s}_Ankle", f"{_full}ToeBase": f"{_s}_Foot"})
+    ALIAS_RIG.update({f"{_full}Shoulder": f"{_s}_Collar", f"{_full}Arm": f"{_s}_Shoulder", f"{_full}ForeArm": f"{_s}_Elbow",
+                      f"{_full}Hand": f"{_s}_Wrist", f"{_full}UpLeg": f"{_s}_Hip", f"{_full}Leg": f"{_s}_Knee",
+                      f"{_full}Foot": f"{_s}_Ankle", f"{_full}ToeBase": f"{_s}_Foot"})
+    for _f in ("Thumb", "Index", "Middle", "Ring", "Pinky"):
+        for _i in (1, 2, 3):
+            ALIAS_BVH[f"{_full}Hand{_f}{_i}"] = f"{_s}_{_f}{_i}"
+
+
+def alias_for(names):
+    if "Pelvis" in names:
+        return {}
+    if "Spine02" in names:
+        return ALIAS_RIG
+    if "LeftShin" in names:
+        return ALIAS_BVH
+    raise SystemExit(f"unknown source skeleton: {sorted(names)[:12]}")
 
 
 def bone_map():
@@ -86,12 +116,17 @@ def decompose(m):
 
 def import_motion(path):
     before = set(bpy.data.objects)
-    if path.lower().endswith(".fbx"):
+    low = path.lower()
+    if low.endswith(".fbx"):
         bpy.ops.import_scene.fbx(filepath=path, automatic_bone_orientation=False)
+    elif low.endswith(".bvh"):
+        # Meshy swift gives a BVH file in centimetres.
+        bpy.ops.import_anim.bvh(filepath=path, global_scale=0.01, use_fps_scale=False, update_scene_fps=False,
+                                update_scene_duration=False, rotate_mode="NATIVE")
     else:
         bpy.ops.import_scene.gltf(filepath=path)
     new = [o for o in bpy.data.objects if o not in before]
-    arm = next(o for o in new if o.type == "ARMATURE" and "Pelvis" in o.data.bones)
+    arm = next(o for o in new if o.type == "ARMATURE" and ("Pelvis" in o.data.bones or "Hips" in o.data.bones))
     keep = {arm}
     p = arm.parent
     while p:
@@ -108,12 +143,23 @@ def import_motion(path):
 def sample_source(arm, lo, hi):
     # World-space (metres) location and rotation of each source joint per frame.
     scene = bpy.context.scene
+    alias = alias_for({b.name for b in arm.data.bones})
     frames = []
     for f in range(lo, hi + 1):
         scene.frame_set(f)
         mw = arm.matrix_world
-        frames.append({pb.name: decompose(mw @ pb.matrix) for pb in arm.pose.bones})
-    rest = {b.name: decompose(arm.matrix_world @ b.matrix_local) for b in arm.data.bones}
+        frames.append({alias.get(pb.name, pb.name): decompose(mw @ pb.matrix) for pb in arm.pose.bones})
+    rest = {alias.get(b.name, b.name): decompose(arm.matrix_world @ b.matrix_local) for b in arm.data.bones}
+    # Turn the source so that its rest pose faces -Y, the same as the skater.
+    # The rest facing is at a right angle to the line from the right hip joint
+    # to the left hip joint (the toe joints of a rig can be off). Turn only
+    # above 2 degrees.
+    fwd = (rest["L_Hip"][0] - rest["R_Hip"][0]).cross(Vector((0, 0, 1)))
+    face = Quaternion(Vector((0, 0, 1)), -math.atan2(fwd.x, -fwd.y))
+    if abs(face.angle) > math.radians(2):
+        print(f"[meshy] source rest faces {math.degrees(face.angle):.1f} deg off -Y; turned")
+        rest = {k: (face @ l, (face @ q).normalized()) for k, (l, q) in rest.items()}
+        frames = [{k: (face @ l, (face @ q).normalized()) for k, (l, q) in fr.items()} for fr in frames]
     return frames, rest
 
 
@@ -186,8 +232,8 @@ def main():
     src, src_act, lo, hi = import_motion(os.path.abspath(a.motion))
     print(f"[meshy] source {src.name}: frames {lo}..{hi}")
     if a.save_source:
-        for o in bpy.context.view_layer.objects:
-            o.select_set(o == src or o == src.parent)
+        for o in bpy.context.scene.objects:
+            o.select_set(o == src or (src.parent is not None and o == src.parent))
         bpy.ops.export_scene.gltf(filepath=os.path.abspath(a.save_source), export_format="GLB", use_selection=True,
                                   export_animations=True, export_animation_mode="ACTIVE_ACTIONS",
                                   export_force_sampling=True, export_yup=True, export_extras=False)
@@ -306,6 +352,7 @@ def main():
                 c.mute = not on
 
     lift = {"L": [], "R": []}
+    drops = []
     for f, (q, hw) in enumerate(out):
         ik_on(False)
         for pb in tgt.pose.bones:
@@ -313,6 +360,25 @@ def main():
             pb.location = Vector()
         hips_pb.location = hips_rest_rot.inverted() @ (hw - hips_rest_loc)
         bpy.context.view_layer.update()
+        # If an ankle target on the ground is out of reach of the leg, lower
+        # the hips by the needed amount, so the IK can plant the wheels.
+        drop = 0.0
+        for full in ("Left", "Right"):
+            up = tgt.pose.bones[f"mixamorig:{full}UpLeg"]
+            foot = tgt.pose.bones[f"mixamorig:{full}Foot"]
+            hip = (tgt.matrix_world @ up.matrix).to_translation()
+            ank = (tgt.matrix_world @ foot.matrix).to_translation()
+            ank.z = trest[foot.name][0].z
+            reach = REACH * (up.bone.length + tgt.pose.bones[f"mixamorig:{full}Leg"].bone.length)
+            dxy = math.hypot(hip.x - ank.x, hip.y - ank.y)
+            if dxy < reach:
+                need = (hip.z - ank.z) - math.sqrt(reach * reach - dxy * dxy)
+                drop = max(drop, need)
+        if drop > 0:
+            hw = hw - Vector((0, 0, drop))
+            hips_pb.location = hips_rest_rot.inverted() @ (hw - hips_rest_loc)
+            bpy.context.view_layer.update()
+        drops.append(drop)
         for pb in tgt.pose.bones:
             pb.keyframe_insert("rotation_quaternion", frame=f)
         hips_pb.keyframe_insert("location", frame=f)
@@ -397,6 +463,7 @@ def main():
         "facing_turn_deg": round(math.degrees(-mean_yaw), 1), "leg_ratio": round(ratio, 4),
         "clip_frames": CLIP_FRAMES, "fps": FPS, "static_curves_removed": removed,
         "fk_ankle_lift_m": {s: [round(min(v), 3), round(max(v), 3)] for s, v in lift.items()},
+        "hips_drop_for_reach_m": round(max(drops), 4),
         "baked_ankle_lift_m": [round(min(wheel), 4), round(max(wheel), 4)],
         "bytes": os.path.getsize(outp),
     }

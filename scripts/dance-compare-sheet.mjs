@@ -1,6 +1,6 @@
 // Contact sheets and short videos of the Meshy text-to-motion test (#293).
 // It opens dance-compare.html in headless Chromium. Each column is one skater
-// (Nia, Marcus) and one clip source (the hand keys of the game, Meshy). The
+// and one clip source (the hand keys of the game, or a Meshy clip). The
 // sheets have one row per time in beats. The videos play 3 loops (6 beats)
 // at the game tempo, at 30 frames per second. The page also measures the
 // lowest point of the skinned mesh (the wheels) over the loop.
@@ -18,7 +18,17 @@ import { chromium } from "@playwright/test";
 
 const base = process.argv[2] ?? "http://localhost:5193";
 const OUT = "docs/characters/reviews/293-meshy-dances";
-const DANCES = ["bankhead", "prep"];
+// Each sheet: a name, the page query, and the views. The first 2 sheets are
+// the first test (prime, Nia and Marcus). "r2" is the second round of prompts
+// (swift, Nia). "lib" is 6 dances of the Meshy animation library (Nia).
+const r2 = (d, hand = true) => [...(hand ? [`nia:hand:${d}`] : []), `nia:meshy-293-r2:${d}`].join(",");
+const SHEETS = [
+  { name: "bankhead", query: "dance=bankhead", views: ["front", "side"] },
+  { name: "prep", query: "dance=prep", views: ["front", "side"] },
+  { name: "r2-bankhead-prep", query: `title=r2&cols=nia:hand:bankhead,nia:meshy-293:bankhead,nia:meshy-293-r2:bankhead,nia:hand:prep,nia:meshy-293:prep,nia:meshy-293-r2:prep`, views: ["front"] },
+  { name: "r2-more", query: `title=r2&cols=${[r2("swagsurf"), r2("snaplean"), r2("walkitout"), r2("naenae", false)].join(",")}`, views: ["front"] },
+  { name: "lib", query: `title=library&cols=${["hiphop", "hiphop2", "bassbeats", "boom", "joyful", "cheer"].map((d) => `nia:meshy-293-lib:${d}`).join(",")}`, views: ["front"] },
+];
 const FPS = 30;
 const LOOP_BEATS = 6;
 mkdirSync(OUT, { recursive: true });
@@ -37,10 +47,10 @@ async function open(query) {
 }
 
 const probe = {};
-for (const dance of DANCES) {
+for (const { name: dance, query, views } of SHEETS) {
   probe[dance] = {};
-  for (const view of ["front", "side"]) {
-    await open(`dance=${dance}&view=${view}`);
+  for (const view of views) {
+    await open(`${query}&view=${view}`);
     const info = await page.evaluate(() => window.__cmp.sheet(240));
     await page.locator("#wrap").screenshot({ path: `${OUT}/contact-${dance}-${view}.png` });
     probe[dance][view] = info;
@@ -53,7 +63,7 @@ for (const dance of DANCES) {
   }
 
   // The video: one screenshot per frame, then ffmpeg.
-  await open(`dance=${dance}&view=front`);
+  await open(`${query}&view=front`);
   const dir = mkdtempSync(join(tmpdir(), `dance-${dance}-`));
   const bpm = await page.evaluate(() => window.__cmp.bpm);
   const frames = Math.round((LOOP_BEATS * 60 * FPS) / bpm);

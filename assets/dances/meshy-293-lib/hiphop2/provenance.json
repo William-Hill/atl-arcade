@@ -1,0 +1,52 @@
+{
+  "asset": "Meshy animation library clip 'Hip Hop Dance 2' (action_id 593) as test clip dance_hiphop2_meshy for Nia (#293)",
+  "status": "test only. Not used by the game. Not reviewed by skaters or dancers.",
+  "date": "2026-11-15",
+  "credits": "Preset animation from the Meshy animation library, applied with the Meshy API to a Meshy rig of the Nia mesh. Check the Meshy terms for the license of library animations before any release use.",
+  "steps": [
+    {
+      "tool": "Meshy API, POST https://api.meshy.ai/openapi/v1/rigging",
+      "task_id": "01a1e071-bcc2-750d-874a-05b1a9ee5df5",
+      "input": "The Nia mesh from assets/skaters/nia/skater-1024.glb, rest T-pose, no rig, no Draco, height_meters 1.7",
+      "credits_spent": 5,
+      "note": "One rig task is shared by the 6 library clips."
+    },
+    {
+      "tool": "Meshy API, POST https://api.meshy.ai/openapi/v1/animations",
+      "task_id": "01a1e072-27b1-708c-90c1-530082d091be",
+      "action_id": 593,
+      "library_name": "Hip Hop Dance 2",
+      "library_category": "Dancing",
+      "result": "GLB with the rigged Nia mesh and the animation (Meshy rig: Hips, Spine02, Spine01, Spine, LeftUpLeg, LeftLeg = shin)",
+      "source_glb_sha256": "bc478e4153bd09436842219b2f4f03d5614a00a669d83963b5e0dcfa0b20e874",
+      "credits_spent": 3
+    },
+    {
+      "tool": "Blender 5.2.4 LTS, headless, scripts/blender/meshy_retarget.py",
+      "actions": [
+        "Picked the source window that loops best between 24 and 64 frames: start frame 124, 36 frames (100.0 BPM for 2 beats), seam cost 0.4334 m.",
+        "Mapped the source joints onto the Mixamo bones of the shipped assets/skaters/nia/skater.glb by the change of world rotation from the rest pose. The toe bone stays at rest (rigid skate boot).",
+        "Closed the loop seam and retimed the window to 48 frames at 30 fps (2 clip beats).",
+        "Leg IK holds the wheels on the ground. The hips go down by up to 0.0817 m where the leg cannot reach the ground. Baked to plain bone keys."
+      ],
+      "outputs": {
+        "nia": {
+          "file": "assets/dances/meshy-293-lib/hiphop2/nia.glb",
+          "bytes": 39472,
+          "sha256": "040b9d91812ad5a9eeaa44f9d70b4e2a244d1f1f6102a6533247e27906456172",
+          "leg_ratio": 1.0167,
+          "baked_ankle_lift_m": [
+            -0.0,
+            0.0
+          ]
+        }
+      },
+      "source_copy": {
+        "file": "assets/dances/meshy-293-lib/hiphop2/source-rig.glb",
+        "sha256": "d2588ad49650da4d7b971f5ff55a2ab9a4c3ba797885b82ac09001cd2cd996bc"
+      }
+    }
+  ],
+  "credits_spent_total": 3,
+  "evidence": "docs/characters/reviews/293-meshy-dances/"
+}

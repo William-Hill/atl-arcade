@@ -1200,3 +1200,13 @@ The base stance in `ride()` and `glide()` (`scripts/blender/nia_clips.py`) puts 
 - Result (`scripts/blender/clip_metrics.py`): in the ride clips and the 8 dances, the smallest gap between the knee meshes is now 6.6 cm or more for Nia (was 0.1 cm in The Prep) and 9.7 cm or more for Marcus. The lowest skate point is the same as before in each ground clip, so the IK still holds the wheels on the ground. The before and after sheets and the tables are in `docs/characters/reviews/290-stance/`.
 - The source `.blend` files are not in git. `scripts/blender/skater_reclip.py` keys the clips on the shipped `skater.glb`, and `scripts/skater-clips-splice.mjs` copies only the clips into `skater.glb` and `skater-1024.glb`. The meshes, the textures, and the skin do not change, and the phone variant does not need a new resize. A run with the old script gave the shipped clips within 0.0006, so the import does not change the clips.
 - The grinds, the airs, the manual, and the bail also get the calibrated knee angle, but their poses do not use `ride()` feet. `grind_unity` crosses the legs on purpose.
+
+## 2026-11-15: Five dances rekeyed with clear poses; the dances stay 2 beats (#292)
+
+`scripts/blender/nia_clips.py` keys the Bankhead Bounce, The Prep, Crisscross, Toe Spin, and Sit Spin again, for Nia and Marcus. Swag Surf was the model: a large, clear pose on each beat, plus an anticipation key before the beat and a follow-through key after it.
+
+- Bankhead Bounce: an X of the forearms on beat 1 and a "goalpost" on beat 2, a 24 degree shrug on each "&", and a weight shift. The Prep: the left toe stop touches behind the right heel, then a clap at the chest. Crisscross: the left skate crosses in front on beat 1, the right skate on beat 2, and the skates open wide between the beats.
+- The spins: the renderer turns the body at a constant rate over 1 beat. The clips add a wind-up at f0, a tight pose in the middle of the turn, and an open finish at f24.
+- Beats: the groove dances stay at 2 beats and the spins at 1 beat. Each dance now changes pose on each beat, so 4 beats do not read better. Thus `STYLE.moves[].beats`, the combo points per second, and the 2026-11 balance values do not change.
+- Evidence: `docs/characters/reviews/292-dances/` (before and after sheets, a pixel-change table, and in-game videos of Nia).
+- The keys are greybox quality. Real skaters and dancers review them before release.

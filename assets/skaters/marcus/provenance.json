@@ -90,6 +90,18 @@
       ],
       "result": "24 clips; no mesh or texture change; contact sheets in assets/skaters/marcus/clips/; review in docs/characters/reviews/290-stance/",
       "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_reclip.py and scripts/blender/nia_clips.py; then scripts/skater-clips-splice.mjs",
+      "date": "2026-11-15",
+      "issue": "#292",
+      "command": "blender -b --factory-startup -P scripts/blender/skater_reclip.py -- --in assets/skaters/marcus/skater.glb --name marcus --out /tmp/marcus-clips.glb && node scripts/skater-clips-splice.mjs --clips /tmp/marcus-clips.glb --into assets/skaters/marcus/skater.glb --into assets/skaters/marcus/skater-1024.glb",
+      "actions": [
+        "Keyed again by hand in Python: dance_bankhead, dance_prep, dance_crisscross, dance_spin, dance_sitspin. Each has a key pose on each beat, an anticipation key, and a follow-through key. The spins have a wind-up and a finish.",
+        "Copied only the clips into skater.glb and skater-1024.glb. The meshes, the images, and the skin do not change."
+      ],
+      "result": "24 clips; contact sheets in assets/skaters/marcus/clips/; review in docs/characters/reviews/292-dances/",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 115,

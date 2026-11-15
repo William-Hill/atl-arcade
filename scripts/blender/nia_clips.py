@@ -611,43 +611,65 @@ def _fist(side, curl=85):
 FISTS = merge(_fist("Left"), _fist("Right"))
 
 
-def fists_up(cross):
-    # Bankhead Bounce arms: the forearms point up, the fists are at shoulder
-    # height. cross = 1: the forearms cross in front of the face. cross = 0:
-    # the forearms open to the sides.
-    fwd = -30 - 42 * cross
-    down = -64 + 14 * cross
+def fists_up(cross, lift=0.0):
+    # Bankhead Bounce arms, with closed fists. cross = 1: the forearms cross
+    # in an X in front of the face, the elbows low and in. cross = 0: a
+    # "goalpost": the upper arms go out to the sides at shoulder height and the
+    # forearms point up. Values between blend the two. lift raises the elbows
+    # more (for the follow-through after the arms open).
+    # The upper arm turns 90 degrees about its length, so the elbow bends up.
+    down = -12 - 46 * cross + 10 * lift
+    fwd = -8 - 70 * cross
+    bend = -92 - 40 * cross
     return merge(FISTS, {
         "LeftArm": [rot(LEFT, -90), rot(FWD, down), rot(UP, fwd)],
         "RightArm": [rot(LEFT, -90), rot(FWD, -down), rot(UP, -fwd)],
-        "LeftForeArm": [rot(UP, -124 - 6 * cross)],
-        "RightForeArm": [rot(UP, 124 + 6 * cross)],
+        "LeftForeArm": [rot(UP, bend)],
+        "RightForeArm": [rot(UP, -bend)],
         "LeftHand": [rot(FWD, -10)],
         "RightHand": [rot(FWD, 10)],
     })
 
 
 def shrug(up):
-    # Both shoulders go up (up = 1) or down (up = 0).
-    return {"LeftShoulder": [rot(FWD, 14 * up)], "RightShoulder": [rot(FWD, -14 * up)]}
+    # Both shoulders go up (up = 1) or down (up = 0). up < 0 pushes them down.
+    return {"LeftShoulder": [rot(FWD, 24 * up)], "RightShoulder": [rot(FWD, -24 * up)]}
+
+
+def _bankhead(cross, up, down, side, lift=0.0, nod=0.0):
+    # One key of the Bankhead Bounce. up: the shrug. down: the knee bounce in
+    # metres. side: the weight shift (+1 on the left skate). nod: the head
+    # nods down (1) or up (-1). The chest pops forward on the down bounce.
+    return merge(glide(down, side, lean=8 + 60 * down), fists_up(cross, lift), shrug(up), {
+        "Spine1": [rot(LEFT, 10 * nod - 4 * up), rot(UP, -10 * side)],
+        "Neck": [rot(LEFT, -4)],
+        "Head": [rot(LEFT, 14 * nod), rot(UP, 6 * side)],
+    })
 
 
 def dance_bankhead():
-    # Bankhead Bounce (Bankhead, west Atlanta, 1995). Two shoulder shrugs per
-    # beat, a knee bounce on each beat. Beat 1: the forearms cross in front of
-    # the face. Beat 2: the forearms open to the sides.
-    keys = []
-    for i in range(8):
-        f = i * 6
-        beat = f // BEAT
-        on = f % BEAT == 0
-        up = 1 if i % 2 == 1 else 0
-        cross = 1 if beat == 0 else 0
-        down = 0.06 if on else (0.02 if up else 0.04)
-        pose = merge(glide(down, 0, lean=6), fists_up(cross), shrug(up),
-                     {"Head": [rot(LEFT, 6 + 6 * (1 - up))], "Spine1": [rot(LEFT, 3 * (1 - up))]})
-        keys.append((f, pose))
-    return True, keys + [(48, keys[0][1])]
+    # Bankhead Bounce (Bankhead, west Atlanta, 1995). The shoulders shrug up
+    # on each "&" and drop on each beat, two shrugs per beat. The knees bounce
+    # down on each beat. Beat 1: the forearms cross in front of the face and
+    # the weight goes onto the left skate. Beat 2: the arms open to a goalpost
+    # and the weight goes onto the right skate.
+    # Anticipation: the arms start to move 6 frames before the beat (f18,
+    # f42). Follow-through: the elbows overshoot up 3 frames after the arms
+    # open (f27), and the fists close in more after the cross (f3).
+    B = _bankhead
+    return True, [
+        (0, B(1.0, -0.4, 0.09, 0.5, nod=1)),
+        (3, B(1.1, -0.2, 0.07, 0.5, nod=0.6)),
+        (6, B(1.0, 1.0, 0.0, 0.4, nod=-0.6)),
+        (12, B(1.0, -0.3, 0.06, 0.5, nod=0.8)),
+        (18, B(0.75, 1.0, 0.0, 0.1, nod=-0.6)),
+        (24, B(0.0, -0.4, 0.09, -0.5, nod=1)),
+        (27, B(-0.05, -0.2, 0.07, -0.5, lift=1.0, nod=0.6)),
+        (30, B(0.0, 1.0, 0.0, -0.4, lift=0.5, nod=-0.6)),
+        (36, B(0.0, -0.3, 0.06, -0.5, nod=0.8)),
+        (42, B(0.3, 1.0, 0.0, -0.1, nod=-0.6)),
+        (48, B(1.0, -0.4, 0.09, 0.5, nod=1)),
+    ]
 
 
 def _walk_it_out_right(down, push):
@@ -687,17 +709,84 @@ def dance_walkitout():
     ]
 
 
+# The arms open wide to the sides at chest height, before a clap.
+CLAP_WIDE = {
+    "LeftArm": [rot(LEFT, 30), rot(FWD, -30), rot(UP, 10)],
+    "RightArm": [rot(LEFT, 30), rot(FWD, 30), rot(UP, -10)],
+    "LeftForeArm": [rot(UP, -40)],
+    "RightForeArm": [rot(UP, 40)],
+    "LeftHand": [rot(LEFT, -30)],
+    "RightHand": [rot(LEFT, -30)],
+}
+
+# A high clap: the hands meet in front of the chest, the elbows out.
+CLAP_HIGH = {
+    "LeftArm": [rot(FWD, -32), rot(UP, -62)],
+    "RightArm": [rot(FWD, 32), rot(UP, 62)],
+    "LeftForeArm": [rot(UP, -98)],
+    "RightForeArm": [rot(UP, 98)],
+    "LeftHand": [rot(LEFT, -80)],
+    "RightHand": [rot(LEFT, -80)],
+}
+
+
+def _prep(phase):
+    # One key of The Prep. The left skate always crosses behind.
+    #   step (beat 1): the right skate steps short and forward, the knees bend,
+    #     the arms are low and open.
+    #   lift: the left skate lifts to go behind.
+    #   behind (&): the left toe stop touches behind and to the right of the
+    #     right heel. The hips turn a small amount to the right. The arms open
+    #     wide: the anticipation for the clap.
+    #   clap (beat 2): the hands clap in front of the chest, the hips dip 3 cm,
+    #     and the head nods.
+    #   bounce: the follow-through after the clap. The hands bounce up and
+    #     apart, and the knees come up.
+    #   out (&): the left skate uncrosses and steps forward.
+    step = {"L": at(STANCE_X, 0.08, 0, "L", [rot(UP, 8)]), "R": at(-0.13, -0.14, 0, "R", [rot(UP, -4)])}
+    behind = {"knees": 0.0, "L": at(-0.24, 0.16, 0.05, "L", [rot(UP, -14), rot(LEFT, 26)]), "R": at(-0.12, -0.10, 0, "R", [rot(UP, -6)])}
+    if phase == "step":
+        return merge(ride(-0.6, 0.07, lean=10), step, {"Head": [rot(LEFT, 4)]})
+    if phase == "lift":
+        return merge(ride(-0.8, 0.04, lean=8), step, {
+            "L": at(0.02, 0.18, 0.09, "L", [rot(UP, -6), rot(LEFT, 18)]), "knees": 0.04,
+        })
+    if phase == "behind":
+        return merge(ride(-0.7, 0.05, lean=6), CLAP_WIDE, behind, {
+            "hipsRot": [rot(UP, -12), rot(FWD, 4)],
+            "Spine1": [rot(UP, 10), rot(LEFT, -4)],
+            "Head": [rot(LEFT, -6), rot(UP, 6)],
+        })
+    if phase == "clap":
+        return merge(ride(-0.6, 0.10, lean=12), CLAP_HIGH, behind, {
+            "hipsRot": [rot(UP, -8)],
+            "Spine1": [rot(UP, 6), rot(LEFT, 6)],
+            "Head": [rot(LEFT, 16)],
+        })
+    if phase == "bounce":
+        return merge(ride(-0.5, 0.05, lean=8), CLAP_HIGH, behind, {
+            "LeftForeArm": [rot(UP, -80)], "RightForeArm": [rot(UP, 80)],
+            "LeftArm": [rot(FWD, -22), rot(UP, -48)],
+            "RightArm": [rot(FWD, 22), rot(UP, 48)],
+            "hipsRot": [rot(UP, -6)],
+            "Head": [rot(LEFT, 2)],
+        })
+    # out
+    return merge(ride(0.6, 0.03, lean=8), {
+        "L": at(0.15, -0.12, 0.03, "L", [rot(UP, 6)]), "R": at(-0.15, 0.04, 0, "R", [rot(UP, -6)]),
+    })
+
+
 def dance_prep():
     # The Prep (USA Roller Sports): a stutter step forward. The left skate
     # crosses behind the right skate, and a clap on each beat keeps it going.
-    keys = []
-    for beat in range(2):
-        f = beat * BEAT
-        base = merge(glide(0.02, 0), CLAP_UP)
-        behind = merge(ride(-0.6, 0.08), {"L": at(-0.10, 0.18, 0.02, "L", [rot(UP, -10)]), "R": at(-0.08, 0.0, side="R")}, CLAP_UP)
-        clap = merge(ride(-0.3, 0.1), {"L": at(-0.06, 0.14), "R": at(-0.08, 0.0, side="R")}, CLAP, {"Head": [rot(LEFT, 10)]})
-        keys += [(f, clap), (f + 8, behind), (f + 16, base)]
-    return True, keys + [(48, keys[0][1])]
+    # Spec: docs/characters/atl-dance-references.md, "The Prep". The clip is
+    # beats 1 and 2 of the spec; the game repeats it for beats 3 and 4.
+    P = _prep
+    return True, [
+        (0, P("step")), (6, P("lift")), (12, P("behind")), (20, P("behind")),
+        (24, P("clap")), (29, P("bounce")), (36, P("out")), (44, P("step")), (48, P("step")),
+    ]
 
 
 def _swag(phase):
@@ -789,39 +878,172 @@ def dance_snaplean():
     return True, [(0, L(False)), (8, L(True)), (18, rock), (24, R(False)), (32, R(True)), (42, rock), (48, L(False))]
 
 
+# The arms out to the sides at about 45 degrees, hands open, for balance.
+ARMS_WIDE = {
+    "LeftArm": [rot(FWD, -38), rot(UP, -12)],
+    "RightArm": [rot(FWD, 38), rot(UP, 12)],
+    "LeftForeArm": [rot(UP, -14)],
+    "RightForeArm": [rot(UP, 14)],
+    "LeftHand": [rot(FWD, 10)],
+    "RightHand": [rot(FWD, -10)],
+}
+
+
+def _criss(phase):
+    # One key of the Crisscross, with the left skate in front. The other
+    # side is the mirror. Spec: "Cross Step" in
+    # docs/characters/atl-dance-references.md.
+    #   cross (on the beat): the skates cross, the left skate in front and to
+    #     the right, the right skate behind and to the left. The knees bend,
+    #     the hips turn toward the front skate, and the hands clap.
+    #   rebound: the follow-through. The hands bounce apart and the knees
+    #     come up.
+    #   open: the skates slide out wide, the arms open to the sides, the chest
+    #     comes up.
+    #   load: the anticipation for the next cross. The knees dip and the arms
+    #     start to come in.
+    if phase in ("cross", "rebound"):
+        feet = {
+            "knees": 0.0,
+            "L": at(-0.08, -0.14, 0, "L", [rot(UP, -6)]),
+            "R": at(0.06, 0.13, 0, "R", [rot(UP, 10)]),
+        }
+        if phase == "cross":
+            return merge(ride(0.2, 0.10, lean=12), CLAP_HIGH, feet, {
+                "hipsRot": [rot(UP, -14)],
+                "Spine1": [rot(UP, 8), rot(LEFT, 6)],
+                "Head": [rot(LEFT, 12), rot(UP, -4)],
+            })
+        return merge(ride(0.2, 0.05, lean=8), CLAP_HIGH, feet, {
+            "LeftForeArm": [rot(UP, -70)], "RightForeArm": [rot(UP, 70)],
+            "LeftArm": [rot(FWD, -28), rot(UP, -40)],
+            "RightArm": [rot(FWD, 28), rot(UP, 40)],
+            "hipsRot": [rot(UP, -8)],
+            "Head": [rot(LEFT, 2)],
+        })
+    if phase == "open":
+        return merge(ride(0, 0.0, lean=2), ARMS_WIDE, {
+            "L": at(0.27, -0.02, 0, "L", [rot(UP, 14)]),
+            "R": at(-0.27, 0.02, 0, "R", [rot(UP, -14)]),
+            "Head": [rot(LEFT, -6)],
+        })
+    # load
+    return merge(ride(-0.1, 0.06, lean=8), CLAP_WIDE, {
+        "L": at(0.20, -0.06, 0, "L", [rot(UP, 4)]),
+        "R": at(-0.20, 0.06, 0, "R", [rot(UP, -4)]),
+        "Head": [rot(LEFT, 4)],
+    })
+
+
 def dance_crisscross():
-    # Crisscross: the skates cross on each beat, the left skate in front, then
-    # open again. The hands clap at the cross.
-    open_ = merge(ride(0, 0.02), {"L": at(0.2, 0.0), "R": at(-0.2, 0.0, side="R")}, CLAP_UP)
-    cross = merge(ride(0, 0.09), {"L": at(-0.07, -0.07, 0, "L", [rot(UP, -8)]), "R": at(0.07, 0.08, 0, "R", [rot(UP, 8)])}, CLAP)
-    return True, [(0, cross), (12, open_), (24, cross), (36, open_), (48, cross)]
+    # Crisscross: the skates cross on each beat and open between the beats.
+    # Beat 1: the left skate crosses in front. Beat 2: the right skate. The
+    # hands clap at each cross.
+    C = _criss
+    M = lambda p: mirror_pose(_criss(p))
+    return True, [
+        (0, C("cross")), (5, C("rebound")), (12, C("open")), (19, C("load")),
+        (24, M("cross")), (29, M("rebound")), (36, M("open")), (43, M("load")),
+        (48, C("cross")),
+    ]
 
 
-def dance_spin():
-    # Toe-stop spin (1 beat): the skates come together on the toe stops, the
-    # left arm goes up, the right arm wraps the chest. The renderer turns the body.
-    a = merge(ride(0, -0.02, lean=-2), {
+# The spins are 1 beat (24 frames). The renderer turns the body one full turn
+# to the left over the beat, at a constant rate (src/render/skater-view.js).
+# The clip gives the turn its body: the wind-up at the start, a tight middle,
+# and an open finish at the end.
+
+def _wind_up(down):
+    # The wind-up before a spin to the left: the knees bend, the shoulders
+    # turn to the right against the turn, the left arm crosses the chest, and
+    # the right arm reaches back. The head looks into the turn.
+    return merge(glide(down, -0.4, lean=10), {
+        "hipsRot": [rot(UP, -14)],
+        "Spine": [rot(LEFT, 10), rot(UP, -14)],
+        "Spine1": [rot(UP, -22)],
+        "Neck": [rot(UP, 16)],
+        "Head": [rot(UP, 20), rot(LEFT, 4)],
+        "LeftArm": [rot(FWD, -30), rot(UP, -78)],
+        "LeftForeArm": [rot(UP, -60)],
+        "RightArm": [rot(FWD, 30), rot(UP, -40)],
+        "RightForeArm": [rot(UP, 10)],
+    })
+
+
+def _finish(down):
+    # The finish after a spin: the skates are flat and apart, the knees take
+    # the stop, the arms open out and up, the chest lifts.
+    return merge(glide(down, 0.0, lean=0), {
+        "LeftArm": [rot(FWD, 34), rot(UP, -30)],
+        "RightArm": [rot(FWD, -34), rot(UP, 30)],
+        "LeftForeArm": [rot(UP, -10)],
+        "RightForeArm": [rot(UP, 10)],
+        "LeftHand": [rot(FWD, 14)],
+        "RightHand": [rot(FWD, -14)],
+        "Neck": [rot(LEFT, -6)],
+        "Head": [rot(LEFT, -8)],
+    })
+
+
+def _toe_spin(arm_up):
+    # The tight part of the toe-stop spin: the skates together on the toe
+    # stops, the left arm up, the right arm wraps the chest. arm_up = 1: the
+    # left arm is straight up; 0: it is still coming up.
+    return merge(ride(0, -0.03, lean=-2), {
+        "knees": 0.0,
         "L": at(0.07, 0.0, 0.05, "L", [rot(LEFT, 25)]), "R": at(-0.07, 0.0, 0.05, "R", [rot(LEFT, 25)]),
-        "LeftArm": [rot(FWD, 75), rot(UP, -10)], "LeftForeArm": [rot(UP, -20)],
+        "Spine1": [rot(UP, 8)],
+        "LeftArm": [rot(FWD, 40 + 45 * arm_up), rot(UP, -10)], "LeftForeArm": [rot(UP, -50 + 30 * arm_up)],
         "RightArm": [rot(FWD, 65), rot(UP, 80)], "RightForeArm": [rot(UP, 100)],
         "Head": [rot(LEFT, -12)],
     })
-    b = merge(a, {"LeftArm": [rot(FWD, 85), rot(UP, -5)], "hips": (0, 0.02, -0.06)})
-    return True, [(0, a), (12, b), (24, a)]
+
+
+def dance_spin():
+    # Toe-stop spin (1 beat). f0: the wind-up. f4: the skater rises onto the
+    # toe stops and pulls the arms in, so the turn speeds up. f8 to f15: the
+    # tight spin, the left arm straight up. f19: the skates come down and the
+    # arms open (the turn slows). f24: the finish, the knees take the stop.
+    return True, [
+        (0, _wind_up(0.08)),
+        (4, _toe_spin(0.0)),
+        (8, _toe_spin(1.0)),
+        (15, merge(_toe_spin(1.0), {"hips": (0, 0.02, RIDE_Z + 0.07)})),
+        (19, merge(_finish(0.03), {"LeftArm": [rot(FWD, 40), rot(UP, -10)], "RightArm": [rot(FWD, -20), rot(UP, 30)]})),
+        (24, _finish(0.07)),
+    ]
+
+
+def _sit(depth, reach):
+    # The sit part of the sit spin: low on the right skate, the left leg out
+    # in front. depth: 0 to 1 for the drop. reach: the arms reach forward
+    # (1) or are still swinging through (0).
+    return merge(ride(0, 0.36 * depth, lean=10 + 18 * depth), {
+        "knees": 0.0,
+        "hips": (0, 0.06 * depth, RIDE_Z - 0.33 * depth),
+        "R": at(-0.08, 0.06, 0, "R"),
+        "L": at(0.08, -0.12 - 0.36 * depth, 0.03 + 0.09 * depth, "L", [rot(LEFT, -15 * depth)]),
+        "LeftArm": [rot(FWD, -40 + 30 * reach), rot(UP, -30 - 40 * reach)],
+        "RightArm": [rot(FWD, 40 - 30 * reach), rot(UP, 10 + 60 * reach)],
+        "LeftForeArm": [rot(UP, -30 + 20 * reach)],
+        "RightForeArm": [rot(UP, 30 - 20 * reach)],
+        "Head": [rot(LEFT, -14 * depth)],
+    })
 
 
 def dance_sitspin():
-    # Sit spin (1 beat): the skater drops low on the right skate, the left leg
-    # goes out in front, the arms reach forward. The renderer turns the body.
-    a = merge(ride(0, 0.36, lean=26), {
-        "hips": (0, 0.06, -0.43),
-        "R": at(-0.08, 0.06, 0, "R"),
-        "L": at(0.08, -0.48, 0.12, "L", [rot(LEFT, -15)]),
-        "LeftArm": [rot(FWD, -10), rot(UP, -70)], "RightArm": [rot(FWD, 10), rot(UP, 70)],
-        "Head": [rot(LEFT, -14)],
-    })
-    b = merge(a, {"hips": (0, 0.06, -0.47)})
-    return True, [(0, a), (12, b), (24, a)]
+    # Sit spin (1 beat). f0: the wind-up. f5: the drop, the left leg starts
+    # to go out in front. f9 to f15: the sit, low on the right skate, the
+    # arms reach forward. f20: the rise, the left leg comes back. f24: the
+    # finish, standing with the arms open.
+    return True, [
+        (0, _wind_up(0.05)),
+        (5, _sit(0.55, 0.3)),
+        (9, _sit(1.0, 1.0)),
+        (15, merge(_sit(1.0, 1.0), {"hips": (0, 0.06, RIDE_Z - 0.37)})),
+        (20, merge(_sit(0.45, 0.4), {"LeftArm": [rot(FWD, -10), rot(UP, -40)], "RightArm": [rot(FWD, 10), rot(UP, 40)]})),
+        (24, _finish(0.04)),
+    ]
 
 
 CLIPS = {

@@ -1210,3 +1210,14 @@ The base stance in `ride()` and `glide()` (`scripts/blender/nia_clips.py`) puts 
 - Beats: the groove dances stay at 2 beats and the spins at 1 beat. Each dance now changes pose on each beat, so 4 beats do not read better. Thus `STYLE.moves[].beats`, the combo points per second, and the 2026-11 balance values do not change.
 - Evidence: `docs/characters/reviews/292-dances/` (before and after sheets, a pixel-change table, and in-game videos of Nia).
 - The keys are greybox quality. Real skaters and dancers review them before release.
+
+## 2026-11-15: Meshy text-to-motion for the dances: keep the hand keys, wait for #116 (#293)
+
+We tested Meshy text-to-motion (mode `prime`, 10 credits for each clip, 20 credits in total) for the Bankhead Bounce and The Prep. The prompts came from `docs/characters/atl-dance-references.md`. `scripts/blender/meshy_retarget.py` retargeted each motion to the Mixamo rig of Nia and Marcus. The evidence is in `docs/characters/reviews/293-meshy-dances/`.
+
+- Decision: **keep the hand keys** (after #292) for the 8 dances. **Do not use Meshy** for the Atlanta dances now. **Wait for the motion capture with real dancers (#116)** for the final dances.
+- Reason: Meshy did not make the moves. The Bankhead Bounce clip is a static "fists up" pose: the arms move 3 degrees or less (the hand keys move them 84 to 126 degrees), and there is no shoulder bounce and no cross of the forearms. The Prep clip is a forward walk: the right foot crosses in front (the source says the left foot crosses behind), and the hands meet at the waist, not in a clap at the chest. Possible causes (not verified): the model does not know these regional dances, and a 400-character prompt cannot describe them in enough detail.
+- Meshy gives a more natural weight shift than the hand keys. But it stands upright, with no skate crouch.
+- Keep the pipeline: the retarget from SMPL-H, the loop cut, the retime to 2 clip beats, and the leg IK work (the lowest skate point is -0.2 cm to 0 cm on all 4 clips). It can retarget a motion-capture clip from #116 if that clip uses an SMPL or SMPL-H skeleton.
+- The Meshy clips are in `assets/dances/meshy-293/`, with a `provenance.json` for each dance. The game does not load them. `dance-compare.html` is a dev page and is not in the build.
+- A second round of prompts (shorter moves, for example only the forearm cross, then a layer) can give a better result. It needs a new credit approval.

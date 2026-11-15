@@ -1,0 +1,678 @@
+{
+  "bankhead": {
+    "front": {
+      "width": 960,
+      "height": 986,
+      "cols": [
+        "nia hand keys",
+        "nia Meshy",
+        "marcus hand keys",
+        "marcus Meshy"
+      ],
+      "rows": [
+        0,
+        0.5,
+        1,
+        1.5
+      ],
+      "ground": [
+        {
+          "beats": 0,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 0,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 0.5,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 0.5,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0.5,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0.5,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 1,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1.5,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 1.5,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1.5,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1.5,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        }
+      ]
+    },
+    "cols": [
+      {
+        "label": "nia hand keys",
+        "duration": 1.600000023841858,
+        "tracks": 52
+      },
+      {
+        "label": "nia Meshy",
+        "duration": 1.600000023841858,
+        "tracks": 54
+      },
+      {
+        "label": "marcus hand keys",
+        "duration": 1.600000023841858,
+        "tracks": 52
+      },
+      {
+        "label": "marcus Meshy",
+        "duration": 1.600000023841858,
+        "tracks": 55
+      }
+    ],
+    "contact": {
+      "nia hand keys": {
+        "min": -0.2,
+        "max": -0.2
+      },
+      "nia Meshy": {
+        "min": -0.1,
+        "max": -0.1
+      },
+      "marcus hand keys": {
+        "min": -0.1,
+        "max": -0.1
+      },
+      "marcus Meshy": {
+        "min": 0,
+        "max": 0
+      }
+    },
+    "motion": {
+      "nia hand keys": {
+        "maxDeg": {
+          "Hips": 9.8,
+          "Spine2": 28.9,
+          "Head": 50.5,
+          "LeftShoulder": 51.4,
+          "RightShoulder": 41.6,
+          "LeftArm": 125.7,
+          "RightArm": 110.1,
+          "LeftForeArm": 96.8,
+          "RightForeArm": 83.6,
+          "LeftUpLeg": 14.2,
+          "RightUpLeg": 11.1
+        },
+        "hipCm": [
+          74.3,
+          83.3
+        ],
+        "wristGapCm": [
+          24,
+          83.8
+        ]
+      },
+      "nia Meshy": {
+        "maxDeg": {
+          "Hips": 1.4,
+          "Spine2": 1.5,
+          "Head": 1.8,
+          "LeftShoulder": 1.7,
+          "RightShoulder": 1.5,
+          "LeftArm": 3.1,
+          "RightArm": 2.4,
+          "LeftForeArm": 2.4,
+          "RightForeArm": 1.5,
+          "LeftUpLeg": 2.5,
+          "RightUpLeg": 2.1
+        },
+        "hipCm": [
+          93,
+          94.7
+        ],
+        "wristGapCm": [
+          36.9,
+          37.8
+        ]
+      },
+      "marcus hand keys": {
+        "maxDeg": {
+          "Hips": 9.8,
+          "Spine2": 28.9,
+          "Head": 50.5,
+          "LeftShoulder": 51.4,
+          "RightShoulder": 41.6,
+          "LeftArm": 125.7,
+          "RightArm": 110.1,
+          "LeftForeArm": 96.8,
+          "RightForeArm": 83.6,
+          "LeftUpLeg": 12.4,
+          "RightUpLeg": 9.9
+        },
+        "hipCm": [
+          77.5,
+          86.5
+        ],
+        "wristGapCm": [
+          27.9,
+          93.5
+        ]
+      },
+      "marcus Meshy": {
+        "maxDeg": {
+          "Hips": 1.4,
+          "Spine2": 1.5,
+          "Head": 1.8,
+          "LeftShoulder": 1.7,
+          "RightShoulder": 1.5,
+          "LeftArm": 3.1,
+          "RightArm": 2.4,
+          "LeftForeArm": 2.4,
+          "RightForeArm": 1.5,
+          "LeftUpLeg": 2.6,
+          "RightUpLeg": 2.1
+        },
+        "hipCm": [
+          95.7,
+          97.6
+        ],
+        "wristGapCm": [
+          41.5,
+          42.4
+        ]
+      }
+    },
+    "side": {
+      "width": 960,
+      "height": 986,
+      "cols": [
+        "nia hand keys",
+        "nia Meshy",
+        "marcus hand keys",
+        "marcus Meshy"
+      ],
+      "rows": [
+        0,
+        0.5,
+        1,
+        1.5
+      ],
+      "ground": [
+        {
+          "beats": 0,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 0,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 0.5,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 0.5,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0.5,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0.5,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 1,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1.5,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 1.5,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1.5,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1.5,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        }
+      ]
+    },
+    "video": {
+      "frames": 108,
+      "fps": 30,
+      "beats": 6,
+      "bpm": 100
+    }
+  },
+  "prep": {
+    "front": {
+      "width": 960,
+      "height": 986,
+      "cols": [
+        "nia hand keys",
+        "nia Meshy",
+        "marcus hand keys",
+        "marcus Meshy"
+      ],
+      "rows": [
+        0,
+        0.5,
+        1,
+        1.5
+      ],
+      "ground": [
+        {
+          "beats": 0,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 0,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 0.5,
+          "col": "nia hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0.5,
+          "col": "nia Meshy",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 0.5,
+          "col": "marcus hand keys",
+          "lowestCm": 0
+        },
+        {
+          "beats": 0.5,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1,
+          "col": "nia hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1,
+          "col": "marcus hand keys",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1.5,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 1.5,
+          "col": "nia Meshy",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 1.5,
+          "col": "marcus hand keys",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1.5,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        }
+      ]
+    },
+    "cols": [
+      {
+        "label": "nia hand keys",
+        "duration": 1.600000023841858,
+        "tracks": 22
+      },
+      {
+        "label": "nia Meshy",
+        "duration": 1.600000023841858,
+        "tracks": 54
+      },
+      {
+        "label": "marcus hand keys",
+        "duration": 1.600000023841858,
+        "tracks": 22
+      },
+      {
+        "label": "marcus Meshy",
+        "duration": 1.600000023841858,
+        "tracks": 55
+      }
+    ],
+    "contact": {
+      "nia hand keys": {
+        "min": -0.2,
+        "max": -0.1
+      },
+      "nia Meshy": {
+        "min": -0.2,
+        "max": -0.1
+      },
+      "marcus hand keys": {
+        "min": -0.1,
+        "max": 0
+      },
+      "marcus Meshy": {
+        "min": 0,
+        "max": 0
+      }
+    },
+    "motion": {
+      "nia hand keys": {
+        "maxDeg": {
+          "Hips": 11.8,
+          "Spine2": 14.5,
+          "Head": 20.6,
+          "LeftShoulder": 14.5,
+          "RightShoulder": 14.5,
+          "LeftArm": 76.5,
+          "RightArm": 81.3,
+          "LeftForeArm": 100.4,
+          "RightForeArm": 118.6,
+          "LeftUpLeg": 49.3,
+          "RightUpLeg": 29.5
+        },
+        "hipCm": [
+          73.3,
+          80.3
+        ],
+        "wristGapCm": [
+          7.3,
+          91.4
+        ]
+      },
+      "nia Meshy": {
+        "maxDeg": {
+          "Hips": 23.9,
+          "Spine2": 19.5,
+          "Head": 9,
+          "LeftShoulder": 23.8,
+          "RightShoulder": 25.3,
+          "LeftArm": 51.1,
+          "RightArm": 39.5,
+          "LeftForeArm": 54.6,
+          "RightForeArm": 47,
+          "LeftUpLeg": 42.2,
+          "RightUpLeg": 26.3
+        },
+        "hipCm": [
+          88.9,
+          94
+        ],
+        "wristGapCm": [
+          14.2,
+          38.1
+        ]
+      },
+      "marcus hand keys": {
+        "maxDeg": {
+          "Hips": 11.8,
+          "Spine2": 14.5,
+          "Head": 20.6,
+          "LeftShoulder": 14.5,
+          "RightShoulder": 14.5,
+          "LeftArm": 76.5,
+          "RightArm": 80.5,
+          "LeftForeArm": 100.4,
+          "RightForeArm": 117.9,
+          "LeftUpLeg": 42.9,
+          "RightUpLeg": 25.6
+        },
+        "hipCm": [
+          76.5,
+          83.5
+        ],
+        "wristGapCm": [
+          15.7,
+          99.8
+        ]
+      },
+      "marcus Meshy": {
+        "maxDeg": {
+          "Hips": 23.9,
+          "Spine2": 19.5,
+          "Head": 9,
+          "LeftShoulder": 23.8,
+          "RightShoulder": 25.3,
+          "LeftArm": 51.1,
+          "RightArm": 39.5,
+          "LeftForeArm": 54.6,
+          "RightForeArm": 47,
+          "LeftUpLeg": 40,
+          "RightUpLeg": 29.2
+        },
+        "hipCm": [
+          91.1,
+          96.8
+        ],
+        "wristGapCm": [
+          18.3,
+          42.9
+        ]
+      }
+    },
+    "side": {
+      "width": 960,
+      "height": 986,
+      "cols": [
+        "nia hand keys",
+        "nia Meshy",
+        "marcus hand keys",
+        "marcus Meshy"
+      ],
+      "rows": [
+        0,
+        0.5,
+        1,
+        1.5
+      ],
+      "ground": [
+        {
+          "beats": 0,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 0,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0,
+          "col": "marcus hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 0.5,
+          "col": "nia hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 0.5,
+          "col": "nia Meshy",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 0.5,
+          "col": "marcus hand keys",
+          "lowestCm": 0
+        },
+        {
+          "beats": 0.5,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1,
+          "col": "nia hand keys",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1,
+          "col": "nia Meshy",
+          "lowestCm": -0.1
+        },
+        {
+          "beats": 1,
+          "col": "marcus hand keys",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1.5,
+          "col": "nia hand keys",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 1.5,
+          "col": "nia Meshy",
+          "lowestCm": -0.2
+        },
+        {
+          "beats": 1.5,
+          "col": "marcus hand keys",
+          "lowestCm": 0
+        },
+        {
+          "beats": 1.5,
+          "col": "marcus Meshy",
+          "lowestCm": 0
+        }
+      ]
+    },
+    "video": {
+      "frames": 108,
+      "fps": 30,
+      "beats": 6,
+      "bpm": 100
+    }
+  }
+}

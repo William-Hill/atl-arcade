@@ -43,6 +43,8 @@ def rot(axis, deg):
 #   "hips": (dx, dy, dz) offset in metres, armature space
 #   "hipsRot": [(axis, deg), ...] armature-space rotations of the hips
 #   "L" / "R": {"pos": (dx, dy, dz), "rot": [(axis, deg), ...]} foot target offset
+#   "pole": the turn of both knee directions about the hips (degrees)
+#   "knees": the knee pole targets move out to the sides by this much (metres)
 #   any other key: a bone name -> [(axis, deg), ...] armature-space rotations
 def mirror_pose(pose):
     out = {}
@@ -57,6 +59,8 @@ def mirror_pose(pose):
             }
         elif key == "pole":
             out[key] = -value
+        elif key == "knees":
+            out[key] = value
         elif key == "hipsRot":
             out[key] = [mirror_rot(r) for r in value]
         else:
@@ -110,20 +114,32 @@ def merge(*poses):
     return out
 
 
+# The base stance (#290). The skates are about shoulder width apart (0.33 m
+# between the ankles), so that the knees point over the toes and do not touch.
+# Before #290 the skates were 0.18 m apart, and the leg IK turned the knees in.
+STANCE_X = 0.165
+# The hips go down by this much in the base stance, for soft, bouncy knees.
+RIDE_Z = -0.14
+# The knee pole targets move out by this much, so the knees point over the
+# toes (the skates turn out a small amount).
+KNEES_OUT = 0.10
+
+
 def ride(side=0.0, down=0.0, lean=4.0):
-    # The ATL ride stance: upright chest, soft knees, skates under the hips.
+    # The ATL ride stance: upright chest, soft knees, skates at shoulder width.
     # side: +1 puts the weight on the left skate, -1 on the right skate.
     # down: the bounce depth in metres. The head nods with the bounce.
     # The arms swing against the legs, and the shoulders turn against the hips.
     return {
-        "hips": (0.05 * side, 0.02, -0.11 - down),
+        "hips": (0.05 * side, 0.02, RIDE_Z - down),
+        "knees": KNEES_OUT,
         "hipsRot": [rot(UP, 9 * side), rot(FWD, -4 * side)],
         "Spine": [rot(LEFT, lean), rot(FWD, -6 * side)],
         "Spine1": [rot(UP, -16 * side), rot(FWD, 3 * side)],
         "Neck": [rot(LEFT, -4)],
         "Head": [rot(LEFT, 140 * down), rot(UP, 8 * side), rot(FWD, 5 * side)],
-        "L": at(0.09 + 0.02 * side, -0.02, 0, "L", [rot(UP, 8)]),
-        "R": at(-0.09 + 0.02 * side, 0.06, 0, "R", [rot(UP, -8)]),
+        "L": at(STANCE_X + 0.02 * side, -0.02, 0, "L", [rot(UP, 8)]),
+        "R": at(-STANCE_X + 0.02 * side, 0.06, 0, "R", [rot(UP, -8)]),
         # A hanging arm swings about LEFT: a negative angle swings it forward.
         "LeftArm": [rot(FWD, -78), rot(LEFT, 32 * side)],
         "RightArm": [rot(FWD, 78), rot(LEFT, -32 * side)],
@@ -217,6 +233,7 @@ def _ryde(phase):
     if phase == "out":
         return merge(_relaxed_hands(), {
             "hips": (0.02, 0.0, -0.19),
+            "knees": KNEES_OUT,
             "hipsRot": [rot(UP, 6)],
             "Spine": [rot(LEFT, 26), rot(FWD, -3)],
             "Spine1": [rot(LEFT, 6), rot(UP, -10)],
@@ -233,6 +250,7 @@ def _ryde(phase):
         })
     return merge(FISTS, {
         "hips": (-0.01, 0.0, -0.12),
+        "knees": KNEES_OUT,
         "hipsRot": [rot(UP, -4)],
         "Spine": [rot(LEFT, 22), rot(FWD, 2)],
         "Spine1": [rot(LEFT, 8), rot(UP, 8)],
@@ -569,10 +587,10 @@ def bail():
 # The skates stay in a glide under the hips unless the spec moves them.
 
 def glide(down=0.0, side=0.0, lean=4.0):
-    # The base for a dance: the ride stance with the feet under the hips.
+    # The base for a dance: the ride stance with the skates side by side.
     return merge(ride(side, down, lean), {
-        "L": at(0.12, -0.01, 0, "L", [rot(UP, 6)]),
-        "R": at(-0.12, 0.03, 0, "R", [rot(UP, -6)]),
+        "L": at(STANCE_X, -0.01, 0, "L", [rot(UP, 6)]),
+        "R": at(-STANCE_X, 0.03, 0, "R", [rot(UP, -6)]),
     })
 
 
@@ -833,6 +851,51 @@ def local_quat(pb, rotations):
     return q
 
 
+def knee_off_plane(arm, side, pole):
+    # The signed distance of the knee from the plane through the hip joint,
+    # the ankle, and the pole target (metres, positive to the skater's left).
+    full = "Left" if side == "L" else "Right"
+    bpy.context.view_layer.update()
+    m = arm.matrix_world
+    hip = m @ arm.pose.bones[bone(full + "UpLeg")].head
+    knee = m @ arm.pose.bones[bone(full + "Leg")].head
+    ankle = m @ arm.pose.bones[bone(full + "Foot")].head
+    normal = (ankle - hip).cross(pole.location - hip).normalized()
+    if normal.x < 0:
+        normal = -normal
+    return (knee - hip).dot(normal)
+
+
+def calibrate_pole(arm, side, ik, tgt, pole):
+    # Finds the IK pole angle that puts the knee in the plane through the hip,
+    # the ankle, and the pole target, so the knee points at the pole (#290).
+    # Each rig has its own bone roll, so a fixed angle does not work for all
+    # rigs: with the old angle 0, the knees of Nia turned in and the knees of
+    # Marcus turned out. The test pose lifts the ankle 0.15 m to bend the knee.
+    rest = tgt.matrix_world.copy()
+    tgt.location = tgt.location + Vector((0, 0, 0.15))
+
+    def err(angle):
+        ik.pole_angle = angle
+        return knee_off_plane(arm, side, pole)
+
+    a, b = math.radians(-60), math.radians(60)
+    fa, fb = err(a), err(b)
+    if fa * fb > 0:
+        raise RuntimeError(f"pole calibration: no sign change for {side} ({fa:.3f}, {fb:.3f})")
+    for _ in range(40):
+        mid = (a + b) / 2
+        fm = err(mid)
+        if fa * fm <= 0:
+            b, fb = mid, fm
+        else:
+            a, fa = mid, fm
+    ik.pole_angle = (a + b) / 2
+    tgt.matrix_world = rest
+    bpy.context.view_layer.update()
+    return ik.pole_angle
+
+
 def setup_ik(arm):
     objs = {}
     for side in ("L", "R"):
@@ -854,10 +917,11 @@ def setup_ik(arm):
         ik = leg.constraints.new("IK")
         ik.target = tgt
         ik.pole_target = pole
-        ik.pole_angle = 0.0  # measured: 0 points both knees forward (-Y)
         ik.chain_count = 2
         cr = foot.constraints.new("COPY_ROTATION")
         cr.target = tgt
+        angle = calibrate_pole(arm, side, ik, tgt, pole)
+        print(f"[clips] {side} pole angle {math.degrees(angle):.1f} deg")
         objs[side] = (tgt, pole, tgt.matrix_world.copy(), pole.location.copy())
     return objs
 
@@ -873,7 +937,7 @@ def apply_pose(arm, ik, pose, frame):
     if "hipsRot" in pose:
         hips.rotation_quaternion = local_quat(hips, pose["hipsRot"])
     for key, value in pose.items():
-        if key in ("hips", "hipsRot", "L", "R", "pole"):
+        if key in ("hips", "hipsRot", "L", "R", "pole", "knees"):
             continue
         pb = arm.pose.bones[bone(key)]
         pb.rotation_quaternion = local_quat(pb, value)
@@ -882,7 +946,8 @@ def apply_pose(arm, ik, pose, frame):
         # "pole" turns the knee direction about the hips with the body (degrees).
         pivot = hips.bone.head_local.copy()
         turn = Matrix.Rotation(math.radians(pose.get("pole", 0)), 3, "Z")
-        pole.location = pivot + turn @ (pole_rest - pivot) + Vector(pose.get("hips", (0, 0, 0)))
+        out = Vector((pose.get("knees", 0.0) * (1 if side == "L" else -1), 0, 0))
+        pole.location = pivot + turn @ (pole_rest + out - pivot) + Vector(pose.get("hips", (0, 0, 0)))
         pole.keyframe_insert("location", frame=frame)
         spec = pose.get(side, {"pos": (0, 0, 0)})
         rq = Quaternion()

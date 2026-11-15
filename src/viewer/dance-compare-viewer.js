@@ -1,6 +1,11 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { cloneSkaterModel } from "../render/skater-model.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
+import dracoWrapperUrl from "three/examples/jsm/libs/draco/gltf/draco_wasm_wrapper.js?url";
+import dracoWasmUrl from "three/examples/jsm/libs/draco/gltf/draco_decoder.wasm?url";
+import { cloneSkaterModel, wrapModel } from "../render/skater-model.js";
 import { toonSkater } from "../render/toon.js";
 import { ANIM, grooveRate } from "../render/skater-anim.js";
 import { BEAT } from "../sim/skate/constants.js";
@@ -12,6 +17,13 @@ import { BEAT } from "../sim/skate/constants.js";
 // ?cols=<skater>:<set>:<dance>,... picks other columns. <set> "hand" is the
 // hand-keyed clip in the skater GLB; another <set> is a folder under
 // assets/dances/ (for example meshy-293-r2 or meshy-293-lib).
+// ?model=pbr shows the PBR Nia of commit cd8310e (2026-11-07), which has its
+// own rig (other joint positions and bone axes). scripts/dance-pbr-videos.mjs
+// puts that model and the clips retargeted to its rig in
+// node_modules/.cache/pbr-nia/ (not in git). There, <set> "hand" is the
+// current hand keys rekeyed on the PBR rig, "own" is the older dance clip in
+// the PBR GLB, and a Meshy <set> is the Meshy clip retargeted to the PBR rig.
+// The PBR model keeps its PBR materials (no toon shader).
 // The page shows the raw clips with no procedural layers (#291), so the two
 // sources are compared on the same terms. The clips play at the game tempo.
 // __cmp.sheet(cell) draws a contact sheet (rows = times in beats).
@@ -29,6 +41,8 @@ const dance = params.get("dance") ?? "bankhead";
 const ROWS = (params.get("beats") ?? "0,0.5,1,1.5").split(",").map(Number);
 const VIEW = params.get("view") ?? "front";
 const BPM = BEAT.bpm;
+const PBR = params.get("model") === "pbr";
+const PBR_DIR = "/node_modules/.cache/pbr-nia";
 
 const canvas = document.getElementById("stage");
 const labels = document.getElementById("labels");
@@ -36,6 +50,11 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDraw
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.autoClear = false;
 const scene = new THREE.Scene();
+if (PBR) {
+  renderer.toneMapping = THREE.NeutralToneMapping;
+  scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.6;
+}
 scene.add(new THREE.HemisphereLight(0xffffff, 0x404050, 1.6));
 const sun = new THREE.DirectionalLight(0xffffff, 2.2);
 sun.position.set(3, 5, 2);
@@ -57,7 +76,40 @@ const title = params.get("title") ?? dance;
 const out = { ready: false, error: null, dance: title, rows: ROWS, bpm: BPM, cols: [] };
 window.__cmp = out;
 
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath({ js: dracoWrapperUrl, wasm: dracoWasmUrl });
+const gltfCache = new Map();
+function loadGltf(url) {
+  if (!gltfCache.has(url)) {
+    const loader = new GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
+    gltfCache.set(url, loader.loadAsync(url));
+  }
+  return gltfCache.get(url);
+}
+
+// The PBR Nia: a new copy of the scene for each column, with its own clips.
+async function clonePbrModel() {
+  const gltf = await loadGltf(`${PBR_DIR}/skater.glb`);
+  const scene3d = cloneSkinned(gltf.scene);
+  let skinnedMesh = null;
+  scene3d.traverse((o) => {
+    if (o.isSkinnedMesh && !skinnedMesh) skinnedMesh = o;
+    // The PBR GLB has a helper sphere with no skin; hide it.
+    if (o.isMesh && !o.isSkinnedMesh) o.visible = false;
+  });
+  return { root: wrapModel(scene3d), skinnedMesh, animations: gltf.animations };
+}
+
 async function loadTestClip(spec) {
+  if (PBR) {
+    const url = spec.set === "hand" ? `${PBR_DIR}/hand-clips.glb` : `${PBR_DIR}/meshy/${spec.set}/${spec.dance}.glb`;
+    const gltf = await loadGltf(url);
+    const name = spec.set === "hand" ? `dance_${spec.dance}` : `dance_${spec.dance}_meshy`;
+    const clip = gltf.animations.find((c) => c.name === name);
+    if (!clip) throw new Error(`no ${name} clip in ${url}`);
+    return clip;
+  }
   const url = clipUrl(spec.set, spec.dance, spec.skater);
   if (!url) throw new Error(`no clip file for ${spec.skater}:${spec.set}:${spec.dance}`);
   const gltf = await new GLTFLoader().loadAsync(url);
@@ -66,25 +118,28 @@ async function loadTestClip(spec) {
   return clip;
 }
 
-const SET_LABEL = { hand: "hand keys", "meshy-293": "Meshy round 1 (prime)", "meshy-293-r2": "Meshy round 2 (swift)", "meshy-293-lib": "Meshy library" };
+const SET_LABEL = { own: "hand keys, old (11-07)", hand: "hand keys", "meshy-293": "Meshy round 1 (prime)", "meshy-293-r2": "Meshy round 2 (swift)", "meshy-293-lib": "Meshy library" };
 
 async function makeCol(spec) {
-  const model = await cloneSkaterModel(spec.skater);
-  toonSkater(model);
-  const clip = spec.set === "hand" ? model.animations.find((c) => c.name === `dance_${spec.dance}`) : await loadTestClip(spec);
+  const model = PBR ? await clonePbrModel() : await cloneSkaterModel(spec.skater);
+  if (!PBR) toonSkater(model);
+  let clip;
+  if (spec.set === "own" || (spec.set === "hand" && !PBR)) clip = model.animations.find((c) => c.name === `dance_${spec.dance}`);
+  else clip = await loadTestClip(spec);
   if (!clip) throw new Error(`${spec.skater}: no clip for ${spec.set}:${spec.dance}`);
   const mixer = new THREE.AnimationMixer(model.root);
   const action = mixer.clipAction(clip);
   action.play();
   model.root.visible = false;
   scene.add(model.root);
-  const source = spec.set === "hand" ? "hand" : "meshy";
+  const source = spec.set === "hand" || spec.set === "own" ? "hand" : "meshy";
   // One dance and one Meshy set: "nia Meshy". More dances: "<dance> <set>".
   // One dance and more Meshy sets: "<skater> <set>".
   const manyDances = new Set(SPECS.map((x) => x.dance)).size > 1;
-  const manySets = new Set(SPECS.filter((x) => x.set !== "hand").map((x) => x.set)).size > 1;
-  const setLabel = SET_LABEL[spec.set] ?? spec.set;
-  const label = manyDances ? `${spec.dance} ${setLabel}` : manySets ? `${spec.skater} ${setLabel}` : `${spec.skater} ${source === "hand" ? "hand keys" : "Meshy"}`;
+  const manySets = PBR || new Set(SPECS.filter((x) => x.set !== "hand").map((x) => x.set)).size > 1;
+  const setLabel = PBR && spec.set === "hand" ? "hand keys, now (#292)" : (SET_LABEL[spec.set] ?? spec.set);
+  const who = PBR ? "PBR Nia" : spec.skater;
+  const label = manyDances ? `${spec.dance} ${setLabel}` : manySets ? `${who} ${setLabel}` : `${spec.skater} ${source === "hand" ? "hand keys" : "Meshy"}`;
   return { ...spec, source, model, mixer, action, clip, label };
 }
 

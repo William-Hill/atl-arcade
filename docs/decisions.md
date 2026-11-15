@@ -1191,6 +1191,7 @@ A review found the dances stiff: the hips did not bob on the beat, the head and 
 - Evidence: `scripts/anim-fx-sheet.mjs` renders `anim-fx.html` (a dev page, not in the build). The contact sheets `reports/anim-fx/contact-nia.png` and `contact-marcus.png` show Bankhead Bounce, Toe Spin, and Swag Surf with and without the layers at beats 2, 2.25, 2.5, and 2.75. `contact-nia-carve.png` shows the carves. `reports/anim-fx/probe.json` gives the measured hip drop (3 cm on the beat, 0 at the half beat), the head lag (to 17° in Swag Surf), and the chest twist (11° in a 1.2 rad/s carve).
 - Perf: `scripts/anim-fx-perf.mjs` times `view.sync()` for 6 skater views (the player and the 5 NPC skaters of the phone tier) with and without the layers, with the CDP CPU throttle at 4x. At 4x, the layers add 0.104 ms to the frame (0.192 ms without them, 0.296 ms with them). At 6x, they add 0.166 ms (0.282 ms to 0.448 ms). The budget is 0.3 ms. The layers add no draw call and no vertex. Reports: `reports/anim-fx/perf-throttle4.json` and `perf-throttle6.json`.
 - Browser check: the e2e specs `skater-anim`, `skater-face`, `npc-skaters`, and `phone-tier` pass with the layers on (14 tests). The T-pose gate and the frozen-face test still pass.
+
 ## 2026-11-15: A wider base stance, and a knee pole angle for each rig (#290)
 
 The base stance in `ride()` and `glide()` (`scripts/blender/nia_clips.py`) puts the skates 0.33 m apart (`STANCE_X`), not 0.18 m, and the hips are 0.03 m lower (`RIDE_Z = -0.14`). All clips of Nia and Marcus were keyed again.

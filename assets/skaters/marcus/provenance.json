@@ -77,6 +77,19 @@
       ],
       "result": "assets/skaters/marcus/skater-lod1.glb, 60,560 bytes, 3,000 triangles, 1,494 vertices, 65 joints, no animations, no textures",
       "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_reclip.py and scripts/blender/nia_clips.py; then scripts/skater-clips-splice.mjs",
+      "date": "2026-11-15",
+      "issue": "#290",
+      "command": "blender -b --factory-startup -P scripts/blender/skater_reclip.py -- --in assets/skaters/marcus/skater.glb --name marcus --out /tmp/marcus-clips.glb && node scripts/skater-clips-splice.mjs --clips /tmp/marcus-clips.glb --into assets/skaters/marcus/skater.glb --into assets/skaters/marcus/skater-1024.glb",
+      "actions": [
+        "Imported the shipped skater.glb (the .blend in raw/ is not in git) and keyed the 24 clips again with nia_clips.py. A check run with the old script gave the shipped clips within 0.0006.",
+        "The base stance is wider (skates 0.33 m apart), the hips are 0.03 m lower, the IK pole angle is calibrated for the rig, and the knee pole targets move out 0.10 m in the ride stance and the ATL Ryde.",
+        "Copied only the clips into skater.glb and skater-1024.glb. The Draco meshes, the images, the skin, the nodes, and the materials are byte for byte the same."
+      ],
+      "result": "24 clips; no mesh or texture change; contact sheets in assets/skaters/marcus/clips/; review in docs/characters/reviews/290-stance/",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 115,

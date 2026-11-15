@@ -27,6 +27,8 @@ const COMMIT = "cd8310e";
 const HAND = ["bankhead", "prep", "swagsurf", "snaplean", "walkitout", "crisscross", "spin", "sitspin"];
 const FPS = 30;
 const BEATS = 8;
+// SHEETS_ONLY=1 draws the contact sheets and the ground contact again, with no videos.
+const SHEETS_ONLY = process.env.SHEETS_ONLY === "1";
 mkdirSync(join(CACHE, "meshy"), { recursive: true });
 mkdirSync(OUT, { recursive: true });
 
@@ -75,6 +77,10 @@ for (const v of VIDEOS) {
   await page.evaluate((c) => window.__cmp.sheet(c), cell);
   await page.locator("#wrap").screenshot({ path: join(OUT, `contact-${v.name}.png`) });
   contact[v.name] = await page.evaluate(() => window.__cmp.contact());
+  if (SHEETS_ONLY) {
+    console.log(v.name, JSON.stringify(contact[v.name]));
+    continue;
+  }
   const dir = mkdtempSync(join(CACHE, `frames-${v.name}-`));
   const frames = Math.round((BEATS * 60 * FPS) / 100);
   for (let f = 0; f < frames; f += 1) {

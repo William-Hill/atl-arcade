@@ -161,19 +161,22 @@ function poseAt(c, beats) {
   c.model.root.updateMatrixWorld(true);
 }
 
-// The lowest wheel point of the skinned mesh above the ground (cm), from the
-// skinned vertex positions near the feet. 0 means the wheels touch the ground.
+// The lowest point of the skinned meshes above the ground (cm), from the
+// skinned vertex positions. 0 means the wheels touch the ground. The PBR
+// Nia has one skinned mesh for each material part, so all of them count.
 const tmp = new THREE.Vector3();
 function lowestPointCm(c) {
-  const mesh = c.model.skinnedMesh;
-  const pos = mesh.geometry.attributes.position;
   let low = Infinity;
-  const step = Math.max(1, Math.floor(pos.count / 4000));
-  for (let i = 0; i < pos.count; i += step) {
-    mesh.getVertexPosition(i, tmp);
-    tmp.applyMatrix4(mesh.matrixWorld);
-    if (tmp.y < low) low = tmp.y;
-  }
+  c.model.root.traverse((mesh) => {
+    if (!mesh.isSkinnedMesh || !mesh.visible) return;
+    const pos = mesh.geometry.attributes.position;
+    const step = Math.max(1, Math.floor(pos.count / 4000));
+    for (let i = 0; i < pos.count; i += step) {
+      mesh.getVertexPosition(i, tmp);
+      tmp.applyMatrix4(mesh.matrixWorld);
+      if (tmp.y < low) low = tmp.y;
+    }
+  });
   return +(low * 100).toFixed(1);
 }
 

@@ -1,0 +1,148 @@
+{
+  "bankhead": {
+    "PBR Nia hand keys, old (11-07)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia hand keys, now (#292)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia Meshy round 1 (prime)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia Meshy round 2 (swift)": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "prep": {
+    "PBR Nia hand keys, old (11-07)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia hand keys, now (#292)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia Meshy round 1 (prime)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia Meshy round 2 (swift)": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "swagsurf": {
+    "PBR Nia hand keys, old (11-07)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia hand keys, now (#292)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia Meshy round 2 (swift)": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "snaplean": {
+    "PBR Nia hand keys, old (11-07)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia hand keys, now (#292)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia Meshy round 2 (swift)": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "walkitout": {
+    "PBR Nia hand keys, old (11-07)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia hand keys, now (#292)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia Meshy round 2 (swift)": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "crisscross": {
+    "PBR Nia hand keys, old (11-07)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia hand keys, now (#292)": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "spin": {
+    "PBR Nia hand keys, old (11-07)": {
+      "min": 1.2,
+      "max": 1.2
+    },
+    "PBR Nia hand keys, now (#292)": {
+      "min": 0,
+      "max": 1.2
+    }
+  },
+  "sitspin": {
+    "PBR Nia hand keys, old (11-07)": {
+      "min": 0,
+      "max": 0
+    },
+    "PBR Nia hand keys, now (#292)": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "smoothquad": {
+    "PBR Nia hand keys, old (11-07)": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "naenae": {
+    "PBR Nia Meshy round 2 (swift)": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "library": {
+    "hiphop Meshy library": {
+      "min": 0,
+      "max": 0
+    },
+    "hiphop2 Meshy library": {
+      "min": 0,
+      "max": 0
+    },
+    "bassbeats Meshy library": {
+      "min": 0,
+      "max": 0
+    },
+    "boom Meshy library": {
+      "min": 0,
+      "max": 0
+    },
+    "joyful Meshy library": {
+      "min": 0,
+      "max": 0
+    },
+    "cheer Meshy library": {
+      "min": 0,
+      "max": 0
+    }
+  }
+}

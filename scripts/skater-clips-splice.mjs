@@ -231,6 +231,7 @@ export function restDifference(target, source) {
     const pairs = [
       [s.translation || [0, 0, 0], t.translation || [0, 0, 0]],
       [s.rotation || [0, 0, 0, 1], t.rotation || [0, 0, 0, 1]],
+      [s.scale || [1, 1, 1], t.scale || [1, 1, 1]],
     ];
     for (const [a, b] of pairs) for (let k = 0; k < a.length; k += 1) worst = Math.max(worst, Math.abs(a[k] - b[k]));
   }
@@ -263,6 +264,9 @@ export function compare(target, source) {
     }
     const key = (glb, c) => `${glb.json.nodes[c.target.node].name}/${c.target.path}`;
     const bCh = new Map(b.channels.map((c) => [key(target, c), b.samplers[c.sampler]]));
+    const aKeys = new Set(a.channels.map((c) => key(source, c)));
+    // A channel in only one file counts as missing (the other file has the rest pose there).
+    const extra = [...bCh.keys()].filter((k) => !aKeys.has(k)).length;
     let worst = 0;
     let missing = 0;
     for (const c of a.channels) {
@@ -272,7 +276,8 @@ export function compare(target, source) {
         continue;
       }
       const sa = a.samplers[c.sampler];
-      const times = accessorFloats(source, sa.input);
+      // Sample at the key times of both files, so a key in only one file counts.
+      const times = new Set([...accessorFloats(source, sa.input), ...accessorFloats(target, sb.input)]);
       for (const t of times) {
         const va = sample(source, sa, t);
         const vb = sample(target, sb, t);
@@ -281,7 +286,7 @@ export function compare(target, source) {
         for (let i = 0; i < va.length; i += 1) worst = Math.max(worst, Math.abs(va[i] - sign * vb[i]));
       }
     }
-    out.push({ clip: a.name, diff: worst, channels: a.channels.length, missing });
+    out.push({ clip: a.name, diff: worst, channels: a.channels.length, missing, extra });
   }
   return out;
 }
@@ -296,7 +301,7 @@ function main() {
     const target = readGlb(path);
     console.log(`${path}: rest difference ${restDifference(target, source).toExponential(2)}`);
     for (const r of compare(target, source)) {
-      console.log(`  ${r.clip.padEnd(18)} max diff ${r.diff.toFixed(4)}  channels ${r.channels}  missing ${r.missing}${r.note ? " " + r.note : ""}`);
+      console.log(`  ${r.clip.padEnd(18)} max diff ${r.diff.toFixed(4)}  channels ${r.channels}  missing ${r.missing}  only in target ${r.extra ?? 0}${r.note ? " " + r.note : ""}`);
     }
   }
   for (const path of get("--into")) {

@@ -2504,3 +2504,14 @@ The base stance in `ride()` and `glide()` (`scripts/blender/nia_clips.py`) puts 
 - NPC skaters: the LOD levels take all the skinned meshes of a multi-primitive body. The view keeps the epic view cull and the `look` option.
 - **Perf cap: high/pbr triangles 1,200,000 → 1,300,000 (owner decision).** `npm run perf:check` on the merge failed on this cap only. A rerun (`--tiers high --looks pbr --repeat 2 --max-wall 900`) counted 1,274,608 and 1,272,708 triangles on the merge, and 1,271,510 and 1,273,305 on the `epic/city-look` tip (60647caa). The merge adds no triangles; the epic tip was already over the cap. Load average in the runs: 9.9 to 23.2 on 14 CPUs. The new cap is about 2% over the measured count.
 - **perf:check wall limit 240 s → 900 s (owner decision).** With `--max-wall 240`, the high/pbr ride stopped early on this machine (about 1.5 s for each frame on SwiftShader), so the script read the triangles at another place on the trail: 1,396,024 and 1,415,991, against 1.27 M for a full ride. `npm run perf:check` now sets `--max-wall 900`. No CI workflow runs perf.
+
+## 2026-11-20: Game UI tools spike and logo options (#299, #300)
+
+Full note: `docs/research/2026-11-20-game-ui-tools.md`.
+
+- Tested at these commits (7 days old or older): `gongnyang/awesome-ai-motion` `1e3c249`, `op7418/logo-generator-skill` `bf4e9ac`, `majidmanzarpour/threejs-game-skills` `8286774`, `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c4`. The full SHAs are in the note.
+- Keep as references: the motion skill (timings from its cards and recipes), `threejs-game-ui-designer` with `references/ui-patterns.md`, and `game-ui-ux` (checklist). Use the logo generator's design rules only: it makes abstract marks, not wordmarks.
+- Skip: the threejs-game-skills scaffold (TypeScript; our code is plain JavaScript), its director and its 3 generator skills, and the paid HiAPI and Scenario tools (no keys).
+- The skills are not in `.claude/skills/` yet. A committed skill loads into every cloud session, so the owner decides. The note gives the install commands.
+- Title screen and in-game text graphics: build them in code (DOM and CSS). Mock: `prototypes/title-screen-mock/`.
+- Logo: 3 options in `assets/brand/logo-options/`, made from OFL font outlines and code shapes, no generative model. The owner's choice comes next, and goes here.

@@ -26,7 +26,7 @@
 
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS, KHRDracoMeshCompression } from "@gltf-transform/extensions";
-import { compactPrimitive, prune, weld } from "@gltf-transform/functions";
+import { compactPrimitive, joinPrimitives, prune, weld } from "@gltf-transform/functions";
 import { MeshoptSimplifier } from "meshoptimizer";
 import { getPixels } from "ndarray-pixels";
 import draco3d from "draco3dgltf";
@@ -124,8 +124,12 @@ async function toColorMesh(prim) {
   const n = pos.getCount();
   const positions = readAll(pos);
   const normals = readAll(prim.getAttribute("NORMAL"));
-  const uvs = readAll(prim.getAttribute("TEXCOORD_0"));
-  const sample = await textureSampler(prim.getMaterial().getBaseColorTexture(), SETTINGS.colorRadius);
+  // A joined primitive (bakeColors()) already has COLOR_0 and no UVs.
+  const baked = prim.getAttribute("COLOR_0");
+  const uvs = baked ? null : readAll(prim.getAttribute("TEXCOORD_0"));
+  const sample = baked ? null : await textureSampler(prim.getMaterial().getBaseColorTexture(), SETTINGS.colorRadius);
+  const bakedRgb = [0, 0, 0];
+  const colorAt = baked ? (i) => baked.getElement(i, bakedRgb) : (i) => sample(uvs[i * 2], uvs[i * 2 + 1]);
 
   // One new vertex for each position. Its normal and its color are the mean
   // of the old vertices at that position. Its skin is the skin of the first
@@ -152,7 +156,7 @@ async function toColorMesh(prim) {
   const wb = [0, 0, 0, 0];
   for (let i = 0; i < n; i += 1) {
     const k = newIndex[remap[i]];
-    const rgb = sample(uvs[i * 2], uvs[i * 2 + 1]);
+    const rgb = colorAt(i);
     for (let c = 0; c < 3; c += 1) {
       sum[k * 6 + c] += normals[i * 3 + c];
       sum[k * 6 + 3 + c] += rgb[c];
@@ -181,7 +185,7 @@ async function toColorMesh(prim) {
 
   // The new primitive: the POSITION, JOINTS_0, and WEIGHTS_0 rows of the
   // first vertex at each position, the mean NORMAL, and COLOR_0. No UV.
-  const old = [pos, prim.getAttribute("NORMAL"), prim.getAttribute("TEXCOORD_0"), joints, weights];
+  const old = [pos, prim.getAttribute("NORMAL"), prim.getAttribute("TEXCOORD_0"), baked, joints, weights].filter(Boolean);
   const buffer = pos.getBuffer();
   prim.setAttribute("POSITION", pickRows(pos, pick));
   prim.setAttribute("JOINTS_0", pickRows(joints, pick));
@@ -218,6 +222,54 @@ function toUvMesh(prim) {
   for (let i = 0; i < n; i += 1) attrs.set([normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2], uvs[i * 2], uvs[i * 2 + 1]], i * 5);
   const { normal, uv } = SETTINGS.weights;
   return { positions, attrs, stride: 5, attrWeights: [normal, normal, normal, uv, uv], note: "UV seams kept" };
+}
+
+// A skater with one primitive for each material (#167) bakes the base color
+// of each primitive into COLOR_0, then joins the primitives into one. Then
+// the weld and the simplifier see the whole body, and the game gets one
+// skinned mesh (parseSkaterLod1() reads the first one).
+async function bakeColors(prim) {
+  const n = prim.getAttribute("POSITION").getCount();
+  const uvs = readAll(prim.getAttribute("TEXCOORD_0"));
+  const texture = prim.getMaterial()?.getBaseColorTexture();
+  const factor = prim.getMaterial()?.getBaseColorFactor() ?? [1, 1, 1, 1];
+  const sample = texture ? await textureSampler(texture, SETTINGS.colorRadius) : () => [1, 1, 1];
+  const col = new Float32Array(n * 3);
+  for (let i = 0; i < n; i += 1) {
+    const rgb = sample(uvs[i * 2], uvs[i * 2 + 1]);
+    for (let c = 0; c < 3; c += 1) col[i * 3 + c] = rgb[c] * factor[c];
+  }
+  const buffer = prim.getAttribute("POSITION").getBuffer();
+  prim.setAttribute("COLOR_0", doc.createAccessor().setType("VEC3").setArray(col).setBuffer(buffer));
+  prim.setAttribute("TEXCOORD_0", null);
+  for (const name of prim.listSemantics()) if (/^TEXCOORD_/.test(name)) prim.setAttribute(name, null);
+}
+
+// The JOINTS_0 of all primitives as one component type, for the join.
+function sameJointType(prims) {
+  const widest = prims.map((p) => p.getAttribute("JOINTS_0").getArray()).reduce((a, b) => (b.BYTES_PER_ELEMENT > a.BYTES_PER_ELEMENT ? b : a)).constructor;
+  for (const p of prims) {
+    const j = p.getAttribute("JOINTS_0");
+    if (j.getArray().constructor !== widest) p.setAttribute("JOINTS_0", j.clone().setArray(widest.from(j.getArray())));
+  }
+}
+
+if (SETTINGS.mode === "color") {
+  for (const mesh of root.listMeshes()) {
+    const prims = mesh.listPrimitives();
+    if (prims.length < 2) continue;
+    for (const prim of prims) await bakeColors(prim);
+    sameJointType(prims);
+    // One material for all: the vertex colors carry the color now.
+    for (const prim of prims) prim.setMaterial(prims[0].getMaterial());
+    const joined = joinPrimitives(prims);
+    joined.setMaterial(prims[0].getMaterial());
+    for (const prim of prims) {
+      mesh.removePrimitive(prim);
+      prim.dispose();
+    }
+    mesh.addPrimitive(joined);
+  }
 }
 
 const before = { triangles: 0, vertices: 0 };
@@ -270,6 +322,9 @@ for (const mat of root.listMaterials()) {
   mat.setEmissiveTexture(null);
 }
 await doc.transform(prune({ keepLeaves: true, keepAttributes: true }));
+// With no textures left, the texture format extensions (the WebP textures of
+// the v2 bodies) are not used.
+if (root.listTextures().length === 0) for (const ext of root.listExtensionsUsed()) if (/^(EXT_texture_webp|EXT_texture_avif|KHR_texture_basisu)$/.test(ext.extensionName)) ext.dispose();
 
 const d = SETTINGS.draco;
 doc

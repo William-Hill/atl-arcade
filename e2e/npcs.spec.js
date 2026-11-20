@@ -2,6 +2,9 @@ import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { createLevelEnv } from "../src/level/ground.js";
 import { chainStrips, followLineScript } from "../src/playtest/trail-script.js";
+import { bodyFor, skateFor } from "../src/sim/skate/body.js";
+// The page rides Nia (the default skater): the pure side uses her body constants.
+const NIA = skateFor(bodyFor("nia"));
 import { CROWD } from "../src/sim/npc/crowd.js";
 
 // M1-09: NPCs on the BeltLine. Skaters, joggers, cyclists, dog walkers, and
@@ -35,7 +38,7 @@ test("NPCs ride the trail in view of Nia, apart, and a bump never knocks one dow
   // Nia rides 10 s north on the trail, through the crowd.
   const env = createLevelEnv(LEVEL);
   const [trail] = chainStrips(LEVEL.strips, "trail");
-  const planned = followLineScript(trail, LEVEL.spawn, env, { frames: 600 });
+  const planned = followLineScript(trail, LEVEL.spawn, env, { frames: 600, k: NIA });
   const actual = await page.evaluate((script) => window.__atl.runScript(script), planned.script);
   // The crowd does not change her ride: it still matches the pure controller.
   for (let i = 0; i < 3; i += 1) expect(Math.abs(actual.position[i] - planned.state.position[i])).toBeLessThan(0.01);

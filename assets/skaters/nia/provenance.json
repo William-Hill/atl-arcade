@@ -1,7 +1,7 @@
 {
   "asset": "Nia \"Sway\" Ellis, the first skater (M1-01, #11)",
-  "date": "2026-10-31",
-  "status": "shipped, animated (greybox clips in ATL and X Games style, not reviewed by skaters)",
+  "date": "2026-11-07",
+  "status": "shipped review candidate: corrected PBR body and forward motion, pending PR review",
   "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
   "source_image": "docs/characters/concept/nia/nia-tpose-front.png (see docs/characters/concept/nia/provenance.json)",
   "steps": [
@@ -108,66 +108,193 @@
       "result": "assets/skaters/nia/skater-1024.glb, 1,598,396 bytes (skater.glb is 2,735,736 bytes), the same triangles, joints, and clips"
     },
     {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_runtime.py (nia_clips.py with the forward IK), skater_motion_retarget.py, skater_texture_variant.py",
+      "date": "2026-11-05",
+      "issue": "#170",
+      "prompt": "Rebuild all clips on the v2 body. Drop the legacy clip transfer. Use the knee-pole and twist fixes of skater_forward_motion.py for every clip.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_runtime.py -- --name nia; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_motion_retarget.py -- --name nia --fbx assets/skaters/nia/raw/tripo-motion-v1/tripo_convert_8a663486-9228-4e65-abc7-9c14db3df2dd.fbx --out assets/skaters/nia/raw/runtime-v2 --base assets/skaters/nia/raw/runtime-v2/nia-runtime.blend --preserve-actions --clip dance_smoothquad --glb assets/skaters/nia/skater.glb --blend assets/skaters/nia/raw/runtime-v2/nia-runtime.blend; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_texture_variant.py -- --in assets/skaters/nia/raw/runtime-v2/nia-runtime.blend --out assets/skaters/nia/skater-1024.glb",
+      "actions": [
+        "Started from raw/forward-v2/nia-forward.blend: the corrected v2 body with the reviewed push and coast clips.",
+        "Removed the 22 legacy clips that runtime v1 appended from the old review rig.",
+        "Keyed 22 clips of nia_clips.py on the v2 rig: calibrated knee pole angles {'L': 24, 'R': -10}, knee poles that turn with the foot yaw, quaternion foot targets, and at() foot x scaled by hip width (stance 1.000).",
+        "At each of 240 leg keys, turned the knee pole about the hip-ankle axis until the knee bend points over the skate (largest residual 0.01 degrees).",
+        "Fists curl each finger about its own axis (finger direction crossed with the palm normal).",
+        "Retargeted dance_smoothquad from the approved Tripo smooth quad dance (no new credits). Same source as runtime v1."
+      ],
+      "result": "assets/skaters/nia/skater.glb, 6,306,628 bytes; skater-1024.glb, 5,420,932 bytes; 65 joints, 25 clips",
+      "local_files_not_in_git": [
+        "assets/skaters/nia/raw/runtime-v2/nia-runtime.blend",
+        "assets/skaters/nia/raw/runtime-v2/build.json",
+        "assets/skaters/nia/raw/runtime-v2/motion-audit.json",
+        "assets/skaters/nia/raw/runtime-v2/rig-audit.json"
+      ],
+      "credits_spent": 0
+    },
+    {
+      "tool": "Tripo Studio 3D Workspace, Animate, text to motion (studio.tripo3d.ai, driven through Claude in Chrome); Blender 5.2.2 LTS, scripts/blender/skater_motion_retarget.py",
+      "date": "2026-11-05",
+      "issue": "#169",
+      "project": "Nia carrier task 72bfc452-df28-4e58-83bb-e89a35341a9a",
+      "settings": "Duration 5 s. Export FBX, Blender preset, 4k, Export Skeleton on, one animation per file.",
+      "motions": [
+        {
+          "clip": "dance_laffytaffy",
+          "tripo_name": "Dancing in Place",
+          "prompt": "A quad roller skater dances the Atlanta Laffy Taffy groove in place: a relaxed knee bounce on each beat, smooth shoulder rolls, and loose arm swings, upbeat and friendly.",
+          "source_fbx": "assets/skaters/nia/raw/tripo-motion-v2/laffy-taffy/tripo_convert_75c21621-6a1b-4741-9de3-6eb7bf639922.fbx",
+          "review_glb": "assets/skaters/nia/raw/tripo-motion-v2/laffy-taffy/nia-dance_laffytaffy.glb"
+        },
+        {
+          "clip": "skate_crossover",
+          "tripo_name": "Skating Turn",
+          "prompt": "A quad roller skater glides forward with bent knees, then does smooth crossover steps to turn left, the right skate crossing over the left, arms out for balance, then glides out of the turn.",
+          "source_fbx": "assets/skaters/nia/raw/tripo-motion-v2/skating-turn/tripo_convert_44bafd1e-08fc-42b5-891d-8ac490e55891.fbx",
+          "review_glb": "assets/skaters/nia/raw/tripo-motion-v2/skating-turn/nia-skate_crossover.glb"
+        }
+      ],
+      "result": "Two review clips on the v2 body. Not in the runtime GLB. Owner and real-skater review open.",
+      "credits_spent": 40,
+      "credits_note": "40 Tripo credits for both motions (20 each), approved by the owner. Balance 2755 before, 2715 after. Retarget and export cost 0."
+    },
+    {
+      "tool": "scripts/assets/compress-skaters.mjs on Node 24 with @gltf-transform/core, extensions, and functions 4.5.1, draco3dgltf 1.5.9, sharp 0.35.5 (installed with npm i --no-save, not in package.json)",
+      "date": "2026-11-06",
+      "issue": "#187",
+      "prompt": "Cut the skater download: the two skater GLBs were 75% of the low/toon download and 69% of the phone/toon download.",
+      "command": "node scripts/assets/compress-skaters.mjs assets/skaters/nia/skater.glb assets/skaters/nia/skater.glb --quality 85 --normal-quality 90 && node scripts/assets/compress-skaters.mjs assets/skaters/nia/skater-1024.glb assets/skaters/nia/skater-1024.glb --quality 80 --normal-quality 85",
+      "actions": [
+        "Textures: JPEG to WebP (EXT_texture_webp, required), the same pixel sizes. skater.glb: quality 85, normal maps 90. skater-1024.glb: quality 80, normal maps 85.",
+        "Clips: resampled with tolerance 1e-4 (keys on a straight line removed), rotation keys stored as normalized int16. The largest change from the old clips, sampled at the old key times: 0.18 degrees of rotation and 0.45 mm of translation. The 25 clip names and all channels are the same.",
+        "Meshes: Draco again (edgebreaker; quantization position 14, normal 10, texcoord 12, generic 12). The same triangles; Draco merged a few duplicate vertices.",
+        "No new generation and no credits. The mesh, the rig, the joint names, and the clips are the same (src/render/skater-model.test.js). The before and after five views and face close-up match (PSNR 45 dB or more)."
+      ],
+      "result": "skater.glb 6,306,628 to 2,210,000 bytes; skater-1024.glb 5,420,932 to 1,755,420 bytes",
+      "credits_spent": 0
+    },
+    {
+      "tool": "scripts/assets/recolor-skater.mjs (recipe nia-navy) on Node 22 with sharp 0.35.5 (installed with npm i --no-save, not in package.json)",
+      "date": "2026-11-07",
+      "issue": "#203",
+      "prompt": "Nia's dark green pants merge with the BeltLine lawn (art direction #159, docs/art-direction-pbr.md section 6). The owner chose navy for the pants. Keep the orange jacket, the cream boots and the warm wheels.",
+      "command": "node scripts/assets/recolor-skater.mjs assets/skaters/nia/skater.glb assets/skaters/nia/skater.glb --recipe nia-navy --quality 84 && node scripts/assets/recolor-skater.mjs assets/skaters/nia/skater-1024.glb assets/skaters/nia/skater-1024.glb --recipe nia-navy --quality 80",
+      "actions": [
+        "Joggers: forest green (texture mean sRGB 51,74,44) to navy #2E3D6B (HSV 225 deg, 0.57, 0.42). A texel changes when its hue is 80 to 125 deg, its saturation 0.22 or more and its value 36 to 95, with soft ramps at the edges. The new color keeps the linear luminance pattern of the old texel, so the folds, seams and stitches stay.",
+        "Six base color images change: tripo_part_1, 2, 15, 16 (the joggers) and tripo_part_8, 9 (the pant cuffs on the boot texture). An image changes only when the joggers color covers 5% or more of it, so the hair, the face and the green wristband (hue 135 to 145 deg, brighter) stay byte for byte.",
+        "WebP quality 84 for skater.glb (85 made the file 3 KB bigger) and 80 for skater-1024.glb, as in #187.",
+        "The other 60 images, the Draco mesh, the rig, the 25 clips and the glTF JSON (but the buffer view offsets) are byte for byte the same.",
+        "Kept: the orange jacket, the cream top, knee pads and boots, the gold wheels, the peach toe stops, the green wristband.",
+        "No new generation and no credits."
+      ],
+      "result": "skater.glb 2,210,000 to 2,203,728 bytes; skater-1024.glb 1,755,420 to 1,753,764 bytes",
+      "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3)",
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_anim_v3.py with nia_clips.py and the leg IK of skater_runtime.py; scripts/assets/graft-clips.mjs on Node 24 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9 (npm i --no-save)",
+      "prompt": "Nia's upper body is too stiff in the skate cycle: add arm swing, torso counter-rotation, and weight shift on each push. Add a brake clip.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_anim_v3.py -- --name nia --source assets/skaters/nia/raw/forward-v2/nia-forward.blend --out assets/skaters/nia/raw/anim-v3; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater.glb assets/skaters/nia/raw/anim-v3/nia-clips-v3.glb assets/skaters/nia/skater.glb; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater-1024.glb assets/skaters/nia/raw/anim-v3/nia-clips-v3.glb assets/skaters/nia/skater-1024.glb",
+      "actions": [
+        "Keyed push (60 frames, two strokes) and coast (96 frames, 4 beats) again on the forward-v2 body. The legs keep the reviewed forward-v2 stroke (outward 0.16 m, back 0.15 m, lift 0.065 m).",
+        "Upper body: arm swing 44 degrees each way (was 26), the forward arm crosses 16 degrees toward the midline, elbow flex 34 +- 18 degrees, shoulders turn 15 degrees against a 7 degree hip turn, the chest rolls 6 degrees over the support skate, and the body drops 22 mm on each drive. The head turns against the shoulders, so the gaze stays on the line of travel.",
+        "Added brake: a T-stop, one beat. The weight is on the left skate; the right skate turns 80 degrees out and drags behind; the arms go out for balance.",
+        "Grafted push, coast, and brake into skater.glb and skater-1024.glb. The mesh, the textures (with the #203 navy joggers), the rig, and the other 23 clips are the same. The new clips use the #187 encoding (resample 1e-4, int16 rotation keys).",
+        "The script checked that the rest pose of all 67 nodes matches the shipped GLB within 1e-3. Knee pole angles L 24, R -10 degrees (the same as #170); largest knee residual 0.00 degrees over 232 keys."
+      ],
+      "result": "skater.glb 2,203,728 to 2,242,308 bytes; skater-1024.glb 1,753,764 to 1,792,352 bytes; 26 clips",
+      "local_files_not_in_git": [
+        "assets/skaters/nia/raw/anim-v3/nia-anim-v3.blend",
+        "assets/skaters/nia/raw/anim-v3/nia-clips-v3.glb",
+        "assets/skaters/nia/raw/anim-v3/build.json"
+      ],
+      "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3, second pass)",
+      "tool": "Blender 5.2.2 LTS, scripts/blender/skater_anim_v3.py; scripts/assets/graft-clips.mjs",
+      "prompt": "The skating is not natural: no knee bend in the push off and in the turns. Marcus' idle stance is too wide.",
+      "actions": [
+        "Owner playtest feedback: no knee bend in the push and in the turns. Lowered the hips: the hip-to-ankle distance is now 80% of the leg length in the push and 87% in the coast (was 90% and 95%), and the chest leans 24 degrees (was 12).",
+        "The carves drop the hips 9 cm more and lean the chest 8 degrees more (the ATL Ryde corner step of nia_clips.py, lower).",
+        "Rebuilt and grafted: push, coast, carve_left, carve_right. The rest pose check passed."
+      ],
+      "result": "skater.glb 2,242,308 to 2,256,876 bytes; skater-1024.glb 1,792,352 to 1,806,916 bytes",
+      "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3, third pass)",
+      "tool": "Blender 5.2.2 LTS, scripts/blender/skater_anim_v3.py --clips push,coast; scripts/assets/graft-clips.mjs",
+      "prompt": "There is still no step, no knee drive, and no ankle push-off when the skater moves forward.",
+      "actions": [
+        "Fault: the v3 push and coast poses had no foot targets (L, R), so the feet stayed at their rest targets and only the hips and the upper body moved. The v3 push turned the thigh 13.6 degrees; the v2 push turned it 38.4 degrees. The foot targets are now in the poses.",
+        "New push stroke for each leg: push out and back (0 to 0.36 of the cycle) with an ankle push-off from 0.24 (the heel comes up 30 degrees), a step (0.36 to 0.58: the skate lifts 15 cm and the knee drives forward), and a glide (0.58 to 1). The hips shift over the gliding skate.",
+        "Cycle: 52 frames for two strokes (was 60).",
+        "Rebuilt and grafted push and coast. The rest pose check passed."
+      ],
+      "result": "skater.glb 2,256,508 bytes; skater-1024.glb 1,806,548 bytes",
+      "evidence": "docs/characters/anim-v3/push-side-front.jpg (12 frames of each push, side and front)",
+      "credits_spent": 0
+    },
+    {
       "tool": "scripts/skater-lod.mjs (meshoptimizer 1.3.0 simplifyWithAttributes, @gltf-transform/core, functions, and extensions 4.5.1, draco3dgltf 1.5.9)",
-      "date": "2026-11-14",
-      "issue": "#280",
+      "date": "2026-11-20",
+      "issue": "#280, rebuilt in the merge of #257",
       "command": "node scripts/skater-lod.mjs --model nia",
       "source": "assets/skaters/nia/skater.glb",
       "settings": "mode color; target 3000 triangles; target error 0.05; attribute weights normal 0.25, color 1; flags Prune; vertex color = mean of the 9 x 9 texels around the UV, in linear color; Draco sequential, quantization position 14, normal 10, color 8, generic 12",
       "actions": [
+        "The source is the v2 body of epic/city-look (one primitive for each material, #167). scripts/skater-lod.mjs now bakes the base color of each primitive into COLOR_0 and joins the primitives into one before the weld.",
         "Welded the identical vertices. Baked the base color texture into vertex colors (COLOR_0) and removed the UVs.",
         "Welded the vertices at one position into one vertex (mean normal, mean color, the skin of the first vertex). All vertices at one position had the same skin.",
         "Simplified the mesh with meshoptimizer. The simplifier only removes vertices, so each vertex keeps its position and its JOINTS_0 and WEIGHTS_0 from the source.",
         "Kept the skin: the 65 mixamorig: joints, in the same order, with the same inverse bind matrices. Removed the clips and the textures (the game uses the clips of skater.glb)."
       ],
-      "result": "assets/skaters/nia/skater-lod1.glb, 60,356 bytes, 2,997 triangles, 1,502 vertices, 65 joints, no animations, no textures",
-      "credits_spent": 0
-    },
-    {
-      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_reclip.py and scripts/blender/nia_clips.py; then scripts/skater-clips-splice.mjs",
-      "date": "2026-11-15",
-      "issue": "#290",
-      "command": "blender -b --factory-startup -P scripts/blender/skater_reclip.py -- --in assets/skaters/nia/skater.glb --name nia --out /tmp/nia-clips.glb && node scripts/skater-clips-splice.mjs --clips /tmp/nia-clips.glb --into assets/skaters/nia/skater.glb --into assets/skaters/nia/skater-1024.glb",
-      "actions": [
-        "Imported the shipped skater.glb (the .blend in raw/ is not in git) and keyed the 24 clips again with nia_clips.py. A check run with the old script gave the shipped clips within 0.0006.",
-        "The base stance is wider (skates 0.33 m apart), the hips are 0.03 m lower, the IK pole angle is calibrated for the rig, and the knee pole targets move out 0.10 m in the ride stance and the ATL Ryde.",
-        "Copied only the clips into skater.glb and skater-1024.glb. The Draco meshes, the images, the skin, the nodes, and the materials are byte for byte the same."
-      ],
-      "result": "24 clips; no mesh or texture change; contact sheets in assets/skaters/nia/clips/; review in docs/characters/reviews/290-stance/",
-      "credits_spent": 0
-    },
-    {
-      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_reclip.py and scripts/blender/nia_clips.py; then scripts/skater-clips-splice.mjs",
-      "date": "2026-11-15",
-      "issue": "#292",
-      "command": "blender -b --factory-startup -P scripts/blender/skater_reclip.py -- --in assets/skaters/nia/skater.glb --name nia --out /tmp/nia-clips.glb && node scripts/skater-clips-splice.mjs --clips /tmp/nia-clips.glb --into assets/skaters/nia/skater.glb --into assets/skaters/nia/skater-1024.glb",
-      "actions": [
-        "Keyed again by hand in Python: dance_bankhead, dance_prep, dance_crisscross, dance_spin, dance_sitspin. Each has a key pose on each beat, an anticipation key, and a follow-through key. The spins have a wind-up and a finish.",
-        "Copied only the clips into skater.glb and skater-1024.glb. The meshes, the images, and the skin do not change."
-      ],
-      "result": "24 clips; contact sheets in assets/skaters/nia/clips/; review in docs/characters/reviews/292-dances/",
+      "result": "assets/skaters/nia/skater-lod1.glb, 59,376 bytes, 3,000 triangles, 1,642 vertices, 65 joints, no animations, no textures (source: 23,472 triangles, 31,785 vertices)",
       "credits_spent": 0
     }
   ],
-  "credits_spent_total": 115,
-  "tripo_credits_before": 3000,
-  "tripo_credits_after": 2885,
+  "credits_spent_total": 155,
+  "tripo_credits_before": 2755,
+  "tripo_credits_after": 2715,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2639720,
+  "file_size_bytes": 2203728,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
-  "animations": 24,
+  "animations": 25,
   "phone_variant": {
     "file": "assets/skaters/nia/skater-1024.glb",
-    "file_size_bytes": 1598396,
-    "base_color": "1024x1024 JPEG",
+    "file_size_bytes": 1753764,
+    "base_color": "1024x1024 WebP",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
+  },
+  "current_build": {
+    "date": "2026-11-05",
+    "triangles": 23472,
+    "joints": 65,
+    "clips": 25,
+    "source": "assets/skaters/nia/raw/forward-v2 + raw/runtime-v2 (ignored build sources)",
+    "method": "Keep the forward push and coast. Key the other 22 clips on the v2 rig with the forward IK. Retarget dance_smoothquad from the approved Tripo dance.",
+    "added_clips": [
+      "dance_smoothquad"
+    ],
+    "tripo_motion": "assets/skaters/nia/raw/tripo-motion-v1/tripo_convert_8a663486-9228-4e65-abc7-9c14db3df2dd.fbx"
+  },
+  "outfit": {
+    "jacket": "peach orange",
+    "top": "cream",
+    "joggers": "navy #2E3D6B (forest green until #203)",
+    "wristband": "forest green",
+    "boots": "cream",
+    "wheels": "gold",
+    "review": "Real skaters still review the look with the move set."
   },
   "lod1_variant": {
     "file": "assets/skaters/nia/skater-lod1.glb",
-    "file_size_bytes": 60356,
-    "triangles": 2997,
+    "file_size_bytes": 59376,
+    "triangles": 3000,
     "used_by": "the far NPC skaters (src/render/npc-skaters-view.js, NPC_DRAW lod1From), bound to the skeleton of skater.glb or skater-1024.glb",
     "screenshots": "e2e/__screenshots__/skater-lod-nia-*.png, made by e2e/skater-lod.spec.js"
   }

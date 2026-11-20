@@ -1,0 +1,255 @@
+{
+  "note": "vite preview of dist/ (as served, no CDN compression). SwiftShader, phone tier forced. CPU throttle via CDP.",
+  "runs": [
+    {
+      "profile": "Pixel7-port",
+      "device": "Pixel 7",
+      "look": "toon",
+      "tier": "phone",
+      "cpuThrottle": 4,
+      "network": "9 Mbps / 1.5 Mbps / 60 ms",
+      "firstContentfulPaintMs": 244,
+      "timeToFirstGameFrameMs": 12968,
+      "loaderHiddenMs": 14139,
+      "lastNetworkActivityMs": 22956,
+      "requests": 134,
+      "transferMB": 7.48,
+      "requestsBeforeFirstFrame": 16,
+      "transferBeforeFirstFrameMB": 5.41,
+      "top8": [
+        {
+          "url": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "type": "Fetch",
+          "kB": 3010,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/skater-1024-BCRCEH1M.glb",
+          "type": "Fetch",
+          "kB": 1764,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/main-DGFLu1LF.js",
+          "type": "Script",
+          "kB": 263,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/city_bike-D-sClH5p.glb",
+          "type": "Fetch",
+          "kB": 232,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/draco_decoder-Z1_iN-Ht.wasm",
+          "type": "Fetch",
+          "kB": 188,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/street-kit-CEVzTpPi.glb",
+          "type": "Fetch",
+          "kB": 172,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/level-P0Jlx-wE.js",
+          "type": "Script",
+          "kB": 150,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/drinking_fountain-fJffefrf.glb",
+          "type": "Fetch",
+          "kB": 142,
+          "beforeFirstFrame": false
+        }
+      ],
+      "lateLoads": {
+        "plan": {
+          "props": false,
+          "murals": false,
+          "ground": false
+        },
+        "firstFrameMs": 11794,
+        "started": {
+          "props": 8755
+        },
+        "done": {
+          "props": 13682
+        },
+        "failed": {}
+      },
+      "load": "0.95, 2.63, 3.14"
+    },
+    {
+      "profile": "Pixel7-port",
+      "device": "Pixel 7",
+      "look": "pbr",
+      "tier": "phone",
+      "cpuThrottle": 4,
+      "network": "9 Mbps / 1.5 Mbps / 60 ms",
+      "firstContentfulPaintMs": 220,
+      "timeToFirstGameFrameMs": 16218,
+      "loaderHiddenMs": 17423,
+      "lastNetworkActivityMs": 34148,
+      "requests": 213,
+      "transferMB": 15.77,
+      "requestsBeforeFirstFrame": 20,
+      "transferBeforeFirstFrameMB": 5.58,
+      "top8": [
+        {
+          "url": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "type": "Fetch",
+          "kB": 3010,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/skater-1024-BCRCEH1M.glb",
+          "type": "Fetch",
+          "kB": 1764,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "type": "Image",
+          "kB": 863,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/vehicles_lod-BE1gXgF8.glb",
+          "type": "Fetch",
+          "kB": 760,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/jogger-BpMCrg1O.glb",
+          "type": "Fetch",
+          "kB": 598,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/dog_walker-Bs0n0Vu_.glb",
+          "type": "Fetch",
+          "kB": 562,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/elder_polo-3WEPpA8L.glb",
+          "type": "Fetch",
+          "kB": 530,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/stroller_dad-D8bk383C.glb",
+          "type": "Fetch",
+          "kB": 516,
+          "beforeFirstFrame": false
+        }
+      ],
+      "lateLoads": {
+        "plan": {
+          "props": true,
+          "murals": true,
+          "ground": true
+        },
+        "firstFrameMs": 14330,
+        "started": {
+          "ground": 14330,
+          "murals": 14330,
+          "props": 14330
+        },
+        "done": {
+          "murals": 22992,
+          "ground": 29885,
+          "props": 37618
+        },
+        "failed": {}
+      },
+      "load": "1.86, 2.67, 3.14"
+    },
+    {
+      "profile": "small-360x640",
+      "device": "Galaxy S5",
+      "look": "toon",
+      "tier": "phone",
+      "cpuThrottle": 4,
+      "network": "9 Mbps / 1.5 Mbps / 60 ms",
+      "firstContentfulPaintMs": 232,
+      "timeToFirstGameFrameMs": 13328,
+      "loaderHiddenMs": 14222,
+      "lastNetworkActivityMs": 23486,
+      "requests": 134,
+      "transferMB": 7.48,
+      "requestsBeforeFirstFrame": 16,
+      "transferBeforeFirstFrameMB": 5.41,
+      "top8": [
+        {
+          "url": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "type": "Fetch",
+          "kB": 3010,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/skater-1024-BCRCEH1M.glb",
+          "type": "Fetch",
+          "kB": 1764,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/main-DGFLu1LF.js",
+          "type": "Script",
+          "kB": 263,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/city_bike-D-sClH5p.glb",
+          "type": "Fetch",
+          "kB": 232,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/draco_decoder-Z1_iN-Ht.wasm",
+          "type": "Fetch",
+          "kB": 188,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/street-kit-CEVzTpPi.glb",
+          "type": "Fetch",
+          "kB": 172,
+          "beforeFirstFrame": false
+        },
+        {
+          "url": "/assets/level-P0Jlx-wE.js",
+          "type": "Script",
+          "kB": 150,
+          "beforeFirstFrame": true
+        },
+        {
+          "url": "/assets/drinking_fountain-fJffefrf.glb",
+          "type": "Fetch",
+          "kB": 142,
+          "beforeFirstFrame": false
+        }
+      ],
+      "lateLoads": {
+        "plan": {
+          "props": false,
+          "murals": false,
+          "ground": false
+        },
+        "firstFrameMs": 12623,
+        "started": {
+          "props": 9085
+        },
+        "done": {
+          "props": 14264
+        },
+        "failed": {}
+      },
+      "load": "2.74, 2.78, 3.15"
+    }
+  ]
+}

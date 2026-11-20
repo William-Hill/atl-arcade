@@ -1,3 +1,4 @@
+import { bodyFor, modelScale } from "../sim/skate/body.js";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
@@ -41,7 +42,7 @@ export const MODEL_YAW = Math.PI / 2;
 let dracoLoader = null;
 
 // Vite serves the Draco decoder from node_modules. No CDN.
-function getDracoLoader() {
+export function getDracoLoader() {
   if (!dracoLoader) {
     dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath({ js: dracoWrapperUrl, wasm: dracoWasmUrl });
@@ -50,10 +51,12 @@ function getDracoLoader() {
 }
 
 // Wraps a glTF scene so that it faces +x with the feet at the wrapper origin.
-export function wrapModel(model) {
+export function wrapModel(model, name = null) {
   const root = new THREE.Group();
   root.name = "skater-model";
   model.rotation.y = MODEL_YAW;
+  // The skater stands at the dossier height on skates (src/sim/skate/body.js).
+  model.scale.setScalar(modelScale(bodyFor(name)));
   root.add(model);
   return root;
 }
@@ -172,6 +175,18 @@ export function addLod1Mesh(skinnedMesh, lod1) {
   return mesh;
 }
 
+// The skinned meshes of a skater scene, and every mesh casts a shadow. A
+// glTF mesh with many primitives (one per material) loads as one skinned
+// mesh per primitive, all on one rig (#167). skinnedMesh is the first one.
+function skinnedMeshesOf(scene) {
+  const out = [];
+  scene.traverse((o) => {
+    if (o.isSkinnedMesh) out.push(o);
+    if (o.isMesh) o.castShadow = true;
+  });
+  return out;
+}
+
 // A new copy of a skater for an NPC: its own skeleton, and the shared
 // geometry, materials, and clips. Returns the same shape as
 // loadSkaterModel(), with no face decals. With `lod1: true`, `lod1Mesh` is
@@ -181,11 +196,8 @@ export async function cloneSkaterModel(name = "nia", bytes = null, { lod1 = fals
   const lod1Promise = lod1 ? parseSkaterLod1(name).catch((err) => (console.warn(`Skater ${name}: no LOD1 (${err?.message ?? err})`), null)) : null;
   const { gltf, pristine } = await parseSkaterGltf(name, bytes);
   const scene = cloneSkinned(pristine);
-  let skinnedMesh = null;
-  scene.traverse((o) => {
-    if (o.isSkinnedMesh && !skinnedMesh) skinnedMesh = o;
-    if (o.isMesh) o.castShadow = true;
-  });
+  const skinnedMeshes = skinnedMeshesOf(scene);
+  const skinnedMesh = skinnedMeshes[0];
   if (!skinnedMesh) throw new Error(`Skater model ${name} has no skinned mesh`);
   const lod1Data = lod1Promise ? await lod1Promise : null;
   let lod1Mesh = null;
@@ -196,10 +208,10 @@ export async function cloneSkaterModel(name = "nia", bytes = null, { lod1 = fals
       console.warn(`Skater ${name}: no LOD1 (${err?.message ?? err})`);
     }
   }
-  return { root: wrapModel(scene), skinnedMesh, lod1Mesh, animations: gltf.animations, face: null };
+  return { root: wrapModel(scene, name), skinnedMesh, skinnedMeshes, lod1Mesh, animations: gltf.animations, face: null };
 }
 
-// Loads a skater GLB. Returns the wrapper, the skinned mesh, the clips, and
+// Loads a skater GLB. Returns the wrapper, the skinned meshes, the clips, and
 // the face (null when the skater has no face decals). `bytes` is an optional
 // promise from fetchSkaterModel().
 export async function loadSkaterModel(name = "nia", bytes = null) {
@@ -208,19 +220,16 @@ export async function loadSkaterModel(name = "nia", bytes = null) {
   // first load changed the scene.
   const scene = gltf.userData.taken ? cloneSkinned(pristine) : gltf.scene;
   gltf.userData.taken = true;
-  let skinnedMesh = null;
-  scene.traverse((o) => {
-    if (o.isSkinnedMesh && !skinnedMesh) skinnedMesh = o;
-    if (o.isMesh) o.castShadow = true;
-  });
+  const skinnedMeshes = skinnedMeshesOf(scene);
+  const skinnedMesh = skinnedMeshes[0];
   if (!skinnedMesh) throw new Error(`Skater model ${name} has no skinned mesh`);
   // The face decals are a bonus: if one fails to load, keep the model with
   // its painted face rather than drop to the capsule.
   let face = null;
   try {
-    face = await attachFace(skinnedMesh, name);
+    face = await attachFace(skinnedMeshes, name);
   } catch (err) {
     console.warn(`Skater ${name}: no face decals (${err?.message ?? err})`);
   }
-  return { root: wrapModel(scene), skinnedMesh, animations: gltf.animations, face };
+  return { root: wrapModel(scene, name), skinnedMesh, skinnedMeshes, animations: gltf.animations, face };
 }

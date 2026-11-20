@@ -1,7 +1,10 @@
 import * as THREE from "three";
 import { SKATER_BODY } from "../sim/skate/constants.js";
 import { cheer, createFaceState, stepFace } from "./face-anim.js";
-import { CLIPS, beatPhase, createAnimState, grooveRate, stepAnim, stepFacing, wrapAngle } from "./skater-anim.js";
+import { CLIPS, beatPhase, createAnimState, grooveRate, respawnAnim, stepAnim, stepFacing, wrapAngle } from "./skater-anim.js";
+import { createBlend, leanLayers, leanTarget, rollFor, startBlend, stepBlend, stepLean } from "./anim-blend.js";
+import { ikWanted, legBoneNames, planFeet, solveTwoBone, stepIkWeight } from "./foot-ik.js";
+import { leanClip, restFrom } from "./lean-clip.js";
 import { createFxState, fxScale, stepFx } from "./anim-fx.js";
 import { createFxRig } from "./anim-fx-rig.js";
 
@@ -14,14 +17,21 @@ export function pageFxScale() {
   return fxScale({ param, reduced });
 }
 
-// The skater bound to the controller output. It starts as a capsule (the
-// nose cone shows the facing). attachModel() swaps in a GLB skater and plays
-// its clips from the state -> clip table in skater-anim.js.
 // rad. The largest body turn in one frame that counts as a turn (#291).
 const MAX_TURN_STEP = 0.5;
 
-// opts.fxScale: the scale of the procedural layers. The default reads the page.
-export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
+// The skater bound to the controller output. It starts as a capsule (the
+// nose cone shows the facing). attachModel() swaps in a GLB skater and plays
+// its clips from the state -> clip table in skater-anim.js.
+//
+// Options (#107):
+// - lean: the body banks into a carve, and the carve clips add a lean pose
+//   on top of the coast and the push.
+// - footIk: the skates touch the ground (stairs, ramps). It needs
+//   `sampleGround(x, z, y)`, the level ground sampler.
+// - fxScale: the scale of the procedural layers (#291). The default reads
+//   the page.
+export function createSkaterView({ lean: leanOn = true, footIk = false, sampleGround = null, fxScale: fxLevel = pageFxScale() } = {}) {
   const group = new THREE.Group();
   group.name = "skater";
   const bodyLength = SKATER_BODY.height - 2 * SKATER_BODY.radius;
@@ -63,19 +73,130 @@ export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
   let frozen = false;
   let prevTurn = null;
 
-  function play(name, fade) {
+  // The clip weights (anim-blend.js). A clip that fades out keeps its time,
+  // so a change back to it in the middle of the fade does not pop.
+  let blend = null;
+  // The carve lean: the bank angle (rad) and the additive lean poses.
+  let lean = 0;
+  const leanActions = new Map();
+  // Foot IK: the leg bones, the IK weight, and the cost of the last frame.
+  let ikOn = footIk;
+  let ground = sampleGround;
+  let legs = null;
+  let ikWeight = 0;
+  let ikMs = 0;
+  let ikPlan = null;
+  // The bone values before the IK of the last frame. They go back before
+  // the next mixer update, so a bone with no clip track does not drift.
+  const saved = [];
+
+  function enter(name, fade) {
     const next = actions.get(name);
-    if (!next || next === current) return;
-    next.reset();
-    if (CLIPS[name]?.beat) {
-      next.timeScale = grooveRate(bpm);
-      next.time = beatPhase(clock, next.getClip().duration, bpm);
-    } else if (CLIPS[name]?.tempo) {
-      next.timeScale = grooveRate(bpm);
+    if (!next) return;
+    const w0 = blend?.weights[name] ?? 0;
+    // A clip with no weight starts again. A clip that still fades out
+    // keeps its time. A one-time clip (a jump, a landing) always starts
+    // again.
+    if (w0 <= 0 || CLIPS[name]?.once) {
+      next.reset();
+      if (CLIPS[name]?.beat) {
+        next.timeScale = grooveRate(bpm);
+        next.time = beatPhase(clock, next.getClip().duration, bpm);
+      } else if (CLIPS[name]?.tempo) {
+        next.timeScale = grooveRate(bpm);
+      }
     }
-    next.play();
-    if (current) current.crossFadeTo(next, fade, false);
+    if (!next.isScheduled()) next.play();
+    blend = blend ? startBlend(blend, name, fade) : createBlend(name);
     current = next;
+  }
+
+  function applyWeights() {
+    for (const [name, a] of actions) {
+      const w = blend.weights[name] ?? 0;
+      if (w > 0) {
+        if (!a.isScheduled()) a.play();
+        a.enabled = true;
+        a.setEffectiveWeight(w);
+      } else if (a.isScheduled()) a.stop();
+    }
+  }
+
+  function applyLean() {
+    const layers = leanLayers(leanOn ? lean : 0, anim.clip);
+    // A base clip fades in: the layers fade with its weight.
+    const baseWeight = blend.weights[anim.clip] ?? 0;
+    for (const [name, a] of leanActions) {
+      const w = (layers[name] ?? 0) * baseWeight;
+      if (w > 1e-3) {
+        if (!a.isScheduled()) a.play();
+        a.setEffectiveWeight(w);
+      } else if (a.isScheduled()) a.stop();
+    }
+  }
+
+  function restoreBones() {
+    for (const s of saved) {
+      s.bone.position.copy(s.position);
+      s.bone.quaternion.copy(s.quaternion);
+    }
+    saved.length = 0;
+  }
+
+  function saveBone(bone) {
+    saved.push({ bone, position: bone.position.clone(), quaternion: bone.quaternion.clone() });
+  }
+
+  // Turns a bone so that the direction `from` (world) goes to `to`.
+  function turnBone(bone, from, to) {
+    _q.setFromUnitVectors(from.normalize(), to.normalize());
+    bone.getWorldQuaternion(_qa);
+    _qa.premultiply(_q);
+    bone.parent.getWorldQuaternion(_qb).invert();
+    bone.quaternion.copy(_qb.multiply(_qa));
+    bone.updateMatrixWorld(true);
+  }
+
+  function applyFootIk(state) {
+    const t0 = performance.now();
+    group.updateMatrixWorld(true);
+    const pos = (bone) => bone.getWorldPosition(_v).toArray();
+    const feet = {};
+    for (const side of ["left", "right"]) {
+      const l = legs[side];
+      feet[side] = { ankle: pos(l.foot), toe: l.toe ? pos(l.toe) : null };
+    }
+    const plan = planFeet({ rootY: state.position[1], feet, sample: ground, weight: ikWeight });
+    for (const b of legs.all) saveBone(b);
+    if (plan.pelvis) {
+      legs.hips.getWorldPosition(_v);
+      _v.y += plan.pelvis;
+      legs.hips.parent.worldToLocal(_v);
+      legs.hips.position.copy(_v);
+      legs.hips.updateMatrixWorld(true);
+    }
+    for (const side of ["left", "right"]) {
+      const l = legs[side];
+      // The foot orientation of the clip, before the leg turns.
+      l.foot.getWorldQuaternion(_qf);
+      const hip = pos(l.upLeg);
+      const knee = pos(l.leg);
+      const ankle = pos(l.foot);
+      const sol = solveTwoBone(hip, knee, ankle, plan[side].target, knee);
+      turnBone(l.upLeg, _a.fromArray(knee).sub(_b.fromArray(hip)), _c.fromArray(sol.knee).sub(_b));
+      l.leg.getWorldPosition(_b);
+      l.foot.getWorldPosition(_a);
+      turnBone(l.leg, _a.sub(_b), _c.fromArray(sol.ankle).sub(_b));
+      // The skate tilts toward the ground normal.
+      const tilt = plan[side].tilt;
+      _q.setFromAxisAngle(_a.fromArray(tilt.axis), tilt.angle);
+      _qf.premultiply(_q);
+      l.foot.parent.getWorldQuaternion(_qb).invert();
+      l.foot.quaternion.copy(_qb.multiply(_qf));
+      l.foot.updateMatrixWorld(true);
+    }
+    ikPlan = plan;
+    ikMs = performance.now() - t0;
   }
 
   return {
@@ -120,19 +241,55 @@ export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
     get fx() {
       return rig ? { drop: fx.drop, lag: [...fx.out], twist: fx.twistOut } : null;
     },
-    // The effective weight of each running clip, for the tests.
+    // The effective weight of each clip in the mixer, for the tests. The
+    // lean poses have the keys "lean:carve_left" and "lean:carve_right".
     get weights() {
       const out = {};
-      for (const [name, a] of actions) if (a.isRunning()) out[name] = Number(a.getEffectiveWeight().toFixed(3));
+      for (const [name, a] of actions) if (a.isScheduled()) out[name] = Number(a.getEffectiveWeight().toFixed(3));
+      for (const [name, a] of leanActions) if (a.isScheduled()) out[`lean:${name}`] = Number(a.getEffectiveWeight().toFixed(3));
       return out;
     },
+    // The bank angle (rad) of the carve lean.
+    get lean() {
+      return lean;
+    },
+    // Foot IK: on or off, the IK weight (0 to 1), and the time (ms) of the
+    // last IK frame.
+    get footIk() {
+      return { on: ikOn && Boolean(legs) && Boolean(ground), weight: ikWeight, ms: ikMs, plan: ikPlan };
+    },
+    setFootIk(on) {
+      ikOn = Boolean(on);
+      if (!ikOn) {
+        restoreBones();
+        ikWeight = 0;
+      }
+    },
+    setGround(sample) {
+      ground = sample;
+    },
+    setLean(on) {
+      leanOn = Boolean(on);
+    },
     // loaded: the result of loadSkaterModel().
+    // A second call swaps the skater in place (#97, MOB-13): the old model
+    // and its mixer go, and the new model starts with no clip history.
+    // sync() or respawn() then gives it the pose of the run state.
     attachModel(loaded) {
+      if (model) {
+        restoreBones();
+        mixer?.stopAllAction();
+        mixer?.uncacheRoot(model.root);
+        pivot.remove(model.root);
+      }
       model = loaded;
       body.visible = false;
       nose.visible = false;
       pivot.add(loaded.root);
       mixer = new THREE.AnimationMixer(loaded.root);
+      actions.clear();
+      leanActions.clear();
+      saved.length = 0;
       for (const clip of loaded.animations) {
         const action = mixer.clipAction(clip);
         if (CLIPS[clip.name]?.once) {
@@ -144,12 +301,71 @@ export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
       rig = fxLevel > 0 ? createFxRig(loaded.root) : null;
       fx = createFxState();
       prevTurn = null;
+      // The lean poses: the carve clips less the coast, as additive layers.
+      // The bones are at rest here, so a carve track with no coast track
+      // takes its rest value as the reference (lean-clip.js).
+      const coast = loaded.animations.find((c) => c.name === "coast");
+      const rest = restFrom(loaded.root);
+      for (const side of ["carve_left", "carve_right"]) {
+        const carve = loaded.animations.find((c) => c.name === side);
+        if (!coast || !carve) continue;
+        const clip = leanClip(carve, coast, rest, `lean_${side}`);
+        const action = mixer.clipAction(clip);
+        leanActions.set(side, action);
+      }
+      // The leg bones for the foot IK, by name.
+      const bones = loaded.skinnedMesh.skeleton.bones;
+      const names = legBoneNames(bones.map((b) => b.name));
+      const byName = (n) => bones.find((b) => b.name === n) ?? null;
+      legs = null;
+      if (names) {
+        const side = (k) => ({ upLeg: byName(names[k].upLeg), leg: byName(names[k].leg), foot: byName(names[k].foot), toe: names[k].toe ? byName(names[k].toe) : null });
+        legs = { hips: byName(names.hips), left: side("left"), right: side("right") };
+        legs.all = [legs.hips, ...["left", "right"].flatMap((k) => [legs[k].upLeg, legs[k].leg, legs[k].foot])];
+      }
       anim = createAnimState();
       faceState = createFaceState();
       current = null;
+      blend = null;
+      lean = 0;
+      ikWeight = 0;
       facing = 0;
       pivot.rotation.y = 0;
-      play(anim.clip, 0);
+      enter(anim.clip, 0);
+      applyWeights();
+    },
+    // Moves the group to the state position and heading only, with no clip,
+    // lean or IK update. A view out of the camera uses it (#189), so its
+    // body and its shadow do not stay at an old place.
+    place(state) {
+      group.position.set(state.position[0], state.position[1], state.position[2]);
+      group.rotation.y = state.yaw;
+    },
+    // Puts the view on a new skater at once (#231): a respawn or a fast
+    // travel. The group gets the state position and heading, with no lean.
+    // The model gets the clip and the facing of the new state, with no fade
+    // and no turn from the old facing. The pose is applied at once, so it is
+    // correct also while the render is paused (the Autopilot).
+    // The face (a cheer, a blink) and the foot IK plan of the old run do
+    // not carry over.
+    respawn(state) {
+      group.position.set(state.position[0], state.position[1], state.position[2]);
+      group.rotation.set(0, state.yaw, 0, "YXZ");
+      lean = 0;
+      faceState = createFaceState();
+      ikPlan = null;
+      anim = respawnAnim(state);
+      facing = anim.facing;
+      pivot.rotation.y = facing;
+      if (!mixer) return;
+      restoreBones();
+      ikWeight = 0;
+      blend = null;
+      current = null;
+      enter(anim.clip, 0);
+      applyWeights();
+      applyLean();
+      mixer.update(0);
     },
     // beat: optional { time, bpm } from the game beat clock. Without it the
     // view counts its own time at the default BPM.
@@ -164,7 +380,6 @@ export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
         if (state.style.anim === "tilt" && !model) rock = Math.sin(p * Math.PI * 4) * 0.45;
         else if (state.style.anim === "spin") spin = p * Math.PI * 2;
       }
-      group.rotation.set(grindLean(state), state.yaw + spin, rock, "YXZ");
       if (mixer) {
         if (beat && Number.isFinite(beat.time)) {
           clock = beat.time;
@@ -175,9 +390,18 @@ export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
         if (rig) rig.restore();
         const r = stepAnim(anim, state, dt);
         anim = r.anim;
-        if (r.change) play(r.change.to, r.change.fade);
+        if (r.change) enter(r.change.to, r.change.fade);
+      } else anim = stepAnim(anim, state, dt).anim; // The capsule leans too.
+      const timeScale = mixer ? mixer.timeScale : 1;
+      lean = stepLean(lean, leanOn ? leanTarget(state, anim.yawRate) : 0, dt * timeScale);
+      group.rotation.set(grindLean(state) + rollFor(lean), state.yaw + spin, rock, "YXZ");
+      if (mixer) {
+        blend = stepBlend(blend, dt * mixer.timeScale);
+        applyWeights();
+        applyLean();
         facing = stepFacing(facing, anim.facing, dt);
         pivot.rotation.y = facing;
+        restoreBones();
         mixer.update(dt);
         if (rig) {
           // Frozen (for the tests): the layers hold their last values.
@@ -192,6 +416,9 @@ export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
           if (!frozen) fx = stepFx(fx, { clip: anim.clip, clock, bpm, yawRate: anim.yawRate, spin: spinRate, omega, up: rig.up, scale: fxLevel }, fdt);
           rig.apply(fx);
         }
+        const ikReady = ikOn && legs && ground;
+        ikWeight = ikReady ? stepIkWeight(ikWeight, ikWanted(state, anim.clip), dt) : 0;
+        if (ikReady && ikWeight > 0) applyFootIk(state);
         if (model.face) {
           faceState = stepFace(faceState, anim.clip, dt);
           const f = heldFace ?? faceState;
@@ -201,6 +428,15 @@ export function createSkaterView({ fxScale: fxLevel = pageFxScale() } = {}) {
     },
   };
 }
+
+const _v = new THREE.Vector3();
+const _a = new THREE.Vector3();
+const _b = new THREE.Vector3();
+const _c = new THREE.Vector3();
+const _q = new THREE.Quaternion();
+const _qa = new THREE.Quaternion();
+const _qb = new THREE.Quaternion();
+const _qf = new THREE.Quaternion();
 
 // On a rail the capsule leans with the balance meter, toward the side the
 // skater falls off: a positive balance falls to the right (+z at yaw 0), and

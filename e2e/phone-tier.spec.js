@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test, devices } from "@playwright/test";
 
 // The phone render tier and the frame-time governor (#72). Headless
@@ -5,6 +6,11 @@ import { expect, test, devices } from "@playwright/test";
 // these tests ask for the phone tier with ?quality=phone.
 
 const { defaultBrowserType, ...iphone } = devices["iPhone 15"]; // eslint-disable-line no-unused-vars
+
+// The phone draw call cap of the perf budget (#185). The old limit of 80 is
+// from #72, before the BeltLine level, the people, the props, and the NPC
+// skaters; the level alone with those off draws about 76 calls now.
+const BUDGET = JSON.parse(readFileSync(new URL("../docs/perf/budget.json", import.meta.url), "utf8"));
 
 function collectErrors(page) {
   const errors = [];
@@ -28,8 +34,18 @@ test.describe("phone tier", () => {
     await ready(page, "quality=phone&governor=0");
     const r = await page.evaluate(() => window.__atl.render);
     expect(r).toMatchObject({ quality: "phone", post: "lite", pixelRatio: 1.5, rung: null });
+    // Read the calls when the late loads are done (as scripts/perf.mjs
+    // does): before that, the count depends on the load speed.
+    await page.waitForFunction(
+      () => {
+        const a = window.__atl;
+        return (a.level.props?.loaded || a.level.props?.error) && (a.skaterModel?.loaded || a.skaterModel?.error) && a.frames > 30;
+      },
+      null,
+      { timeout: 120000 },
+    );
     const info = await page.evaluate(() => window.__atl.rendererInfo);
-    expect(info.calls).toBeLessThan(80);
+    expect(info.calls).toBeLessThanOrEqual(BUDGET.tiers.phone.calls);
     await page.screenshot({ path: "e2e/__screenshots__/phone-tier.png" });
     expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
   });

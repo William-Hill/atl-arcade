@@ -1,0 +1,266 @@
+{
+  "date": "2026-11-05",
+  "pipeline": "scripts/music/ace_render.py -> scripts/music/loop_take.py -> scripts/music/build_tracks.py",
+  "tracks": [
+    {
+      "id": "day-trail",
+      "title": "Day Trail Bounce",
+      "files": [
+        "day-trail.ogg",
+        "day-trail.m4a"
+      ],
+      "tool": "ACE-Step 1.5 (https://github.com/ace-step/ACE-Step-1.5)",
+      "toolCommit": "ca1e85fe9430179831e6bc6be790c332190a3866",
+      "model": "ACE-Step/Ace-Step1.5 acestep-v15-turbo (DiT), vae, Qwen3-Embedding-0.6B text encoder; no 5 Hz LM (thinking off)",
+      "prompt": {
+        "caption": "instrumental funk bounce, bright and sunny, slap bass, clean wah guitar, warm Rhodes, brass stabs, tight live drums with a steady kick and handclaps on two and four, upbeat summer skating music, no vocals",
+        "lyrics": "[Instrumental]",
+        "instrumental": true,
+        "bpm": 100,
+        "keyscale": "E minor",
+        "timesignature": "4/4"
+      },
+      "seed": 11,
+      "settings": {
+        "duration": 80,
+        "inferenceSteps": 8,
+        "thinking": false,
+        "device": "cpu",
+        "threads": 8
+      },
+      "renderSeconds": 288.5,
+      "measured": {
+        "promptedBpm": 100,
+        "gridBpm": 100,
+        "bestFitBpm": 100.0025,
+        "takeFirstDownbeat": 0.721,
+        "loopStartInTake": 5.52279,
+        "loopStartBar": 2,
+        "driftMsPerBar": -0.045,
+        "jitterMs": 0.581,
+        "maxAbsOffsetMs": 3.0,
+        "seamSimilarity": 0.9999
+      },
+      "loop": {
+        "bars": 24,
+        "samples": 2764800,
+        "seconds": 57.6,
+        "crossfadeSamples": 28800
+      },
+      "loudness": {
+        "sourceLufs": -15.6,
+        "sourcePeakDbfs": -0.9,
+        "gainDb": -0.4
+      },
+      "encode": {
+        "day-trail.ogg": {
+          "bytes": 776353,
+          "decodedSamples": 2764800,
+          "lagSamples": 0
+        },
+        "day-trail.m4a": {
+          "bytes": 708071,
+          "decodedSamples": 2764800,
+          "lagSamples": 0
+        }
+      },
+      "credits": "No paid credits: rendered on this VM's CPU (8 threads, no GPU).",
+      "license": "ACE-Step 1.5 code and model weights: MIT. The model card says the output may be used commercially. Output: original work for this repository. See LICENSE.md."
+    },
+    {
+      "id": "peachtree-house",
+      "title": "Peachtree House",
+      "files": [
+        "peachtree-house.ogg",
+        "peachtree-house.m4a"
+      ],
+      "tool": "ACE-Step 1.5 (https://github.com/ace-step/ACE-Step-1.5)",
+      "toolCommit": "ca1e85fe9430179831e6bc6be790c332190a3866",
+      "model": "ACE-Step/Ace-Step1.5 acestep-v15-turbo (DiT), vae, Qwen3-Embedding-0.6B text encoder; no 5 Hz LM (thinking off)",
+      "prompt": {
+        "caption": "instrumental soulful deep house, four-on-the-floor kick, open hi-hats, gospel organ chords, warm piano stabs, round sub bass, shakers, uplifting late-afternoon groove, no vocals",
+        "lyrics": "[Instrumental]",
+        "instrumental": true,
+        "bpm": 125,
+        "keyscale": "A minor",
+        "timesignature": "4/4"
+      },
+      "seed": 11,
+      "settings": {
+        "duration": 80,
+        "inferenceSteps": 8,
+        "thinking": false,
+        "device": "cpu",
+        "threads": 8
+      },
+      "renderSeconds": 345.9,
+      "measured": {
+        "promptedBpm": 125,
+        "gridBpm": 124,
+        "bestFitBpm": 123.9985,
+        "takeFirstDownbeat": 0.4959,
+        "loopStartInTake": 2.43456,
+        "loopStartBar": 1,
+        "driftMsPerBar": 0.129,
+        "jitterMs": 3.695,
+        "maxAbsOffsetMs": 15.0,
+        "seamSimilarity": 0.9949
+      },
+      "loop": {
+        "bars": 31,
+        "samples": 2880000,
+        "seconds": 60.0,
+        "crossfadeSamples": 23226
+      },
+      "loudness": {
+        "sourceLufs": -15.4,
+        "sourcePeakDbfs": -0.8,
+        "gainDb": -0.6
+      },
+      "encode": {
+        "peachtree-house.ogg": {
+          "bytes": 864736,
+          "decodedSamples": 2880000,
+          "lagSamples": 0
+        },
+        "peachtree-house.m4a": {
+          "bytes": 739299,
+          "decodedSamples": 2880512,
+          "lagSamples": 0
+        }
+      },
+      "credits": "No paid credits: rendered on this VM's CPU (8 threads, no GPU).",
+      "license": "ACE-Step 1.5 code and model weights: MIT. The model card says the output may be used commercially. Output: original work for this repository. See LICENSE.md."
+    },
+    {
+      "id": "porch-light",
+      "title": "Porch Light",
+      "files": [
+        "porch-light.ogg",
+        "porch-light.m4a"
+      ],
+      "tool": "ACE-Step 1.5 (https://github.com/ace-step/ACE-Step-1.5)",
+      "toolCommit": "ca1e85fe9430179831e6bc6be790c332190a3866",
+      "model": "ACE-Step/Ace-Step1.5 acestep-v15-turbo (DiT), vae, Qwen3-Embedding-0.6B text encoder; no 5 Hz LM (thinking off)",
+      "prompt": {
+        "caption": "instrumental laid-back trap soul, mellow electric piano, soft 808 bass, crisp trap hi-hat rolls, snappy snare on three, lush pads, warm evening chill, smooth and positive, no vocals",
+        "lyrics": "[Instrumental]",
+        "instrumental": true,
+        "bpm": 80,
+        "keyscale": "D minor",
+        "timesignature": "4/4"
+      },
+      "seed": 11,
+      "settings": {
+        "duration": 80,
+        "inferenceSteps": 8,
+        "thinking": false,
+        "device": "cpu",
+        "threads": 8
+      },
+      "renderSeconds": 215.7,
+      "measured": {
+        "promptedBpm": 80,
+        "gridBpm": 80,
+        "bestFitBpm": 80.018,
+        "takeFirstDownbeat": 1.387,
+        "loopStartInTake": 4.38798,
+        "loopStartBar": 1,
+        "driftMsPerBar": -0.653,
+        "jitterMs": 0.953,
+        "maxAbsOffsetMs": 6.0,
+        "seamSimilarity": 0.9999
+      },
+      "loop": {
+        "bars": 20,
+        "samples": 2880000,
+        "seconds": 60.0,
+        "crossfadeSamples": 36000
+      },
+      "loudness": {
+        "sourceLufs": -15.3,
+        "sourcePeakDbfs": -1.0,
+        "gainDb": -0.7
+      },
+      "encode": {
+        "porch-light.ogg": {
+          "bytes": 881958,
+          "decodedSamples": 2880000,
+          "lagSamples": 0
+        },
+        "porch-light.m4a": {
+          "bytes": 738159,
+          "decodedSamples": 2880512,
+          "lagSamples": 0
+        }
+      },
+      "credits": "No paid credits: rendered on this VM's CPU (8 threads, no GPU).",
+      "license": "ACE-Step 1.5 code and model weights: MIT. The model card says the output may be used commercially. Output: original work for this repository. See LICENSE.md."
+    },
+    {
+      "id": "rink-night",
+      "title": "Rink Night",
+      "files": [
+        "rink-night.ogg",
+        "rink-night.m4a"
+      ],
+      "tool": "ACE-Step 1.5 (https://github.com/ace-step/ACE-Step-1.5)",
+      "toolCommit": "ca1e85fe9430179831e6bc6be790c332190a3866",
+      "model": "ACE-Step/Ace-Step1.5 acestep-v15-turbo (DiT), vae, Qwen3-Embedding-0.6B text encoder; no 5 Hz LM (thinking off)",
+      "prompt": {
+        "caption": "instrumental roller rink disco boogie, four-on-the-floor kick, octave disco bass, string section swells, funky rhythm guitar, synth brass, claps, joyful roller skate jam, no vocals",
+        "lyrics": "[Instrumental]",
+        "instrumental": true,
+        "bpm": 120,
+        "keyscale": "G major",
+        "timesignature": "4/4"
+      },
+      "seed": 11,
+      "settings": {
+        "duration": 80,
+        "inferenceSteps": 8,
+        "thinking": false,
+        "device": "cpu",
+        "threads": 8
+      },
+      "renderSeconds": 236.3,
+      "measured": {
+        "promptedBpm": 120,
+        "gridBpm": 120,
+        "bestFitBpm": 119.969,
+        "takeFirstDownbeat": 1.941,
+        "loopStartInTake": 9.94327,
+        "loopStartBar": 4,
+        "driftMsPerBar": 0.461,
+        "jitterMs": 1.626,
+        "maxAbsOffsetMs": 10.5,
+        "seamSimilarity": 0.985
+      },
+      "loop": {
+        "bars": 28,
+        "samples": 2688000,
+        "seconds": 56.0,
+        "crossfadeSamples": 24000
+      },
+      "loudness": {
+        "sourceLufs": -15.6,
+        "sourcePeakDbfs": -1.0,
+        "gainDb": -0.4
+      },
+      "encode": {
+        "rink-night.ogg": {
+          "bytes": 814478,
+          "decodedSamples": 2688000,
+          "lagSamples": 0
+        },
+        "rink-night.m4a": {
+          "bytes": 689314,
+          "decodedSamples": 2688000,
+          "lagSamples": 0
+        }
+      },
+      "credits": "No paid credits: rendered on this VM's CPU (8 threads, no GPU).",
+      "license": "ACE-Step 1.5 code and model weights: MIT. The model card says the output may be used commercially. Output: original work for this repository. See LICENSE.md."
+    }
+  ]
+}

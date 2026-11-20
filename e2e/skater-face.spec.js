@@ -43,7 +43,7 @@ test("the face decals change the eyes and the mouth", async ({ page }) => {
 });
 
 test("in the game Nia smiles while she stands and blinks", async ({ page }) => {
-  await page.goto("/?mute=1");
+  await page.goto("/?level=greybox&mute=1");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
   const seen = await page.evaluate(async () => {
     const out = [];
@@ -66,7 +66,7 @@ test("in the game Nia smiles while she stands and blinks", async ({ page }) => {
 test("in the game the toon skater keeps the face decal", async ({ page }) => {
   const errors = [];
   page.on("pageerror", (err) => errors.push(String(err)));
-  await page.goto("/?skater=nia&mute=1&view=fixed");
+  await page.goto("/?level=greybox&skater=nia&mute=1&view=fixed");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
   const key = await page.evaluate(() => window.__atl.skaterModel.materialKey);
   expect(key).toContain("skater-face");

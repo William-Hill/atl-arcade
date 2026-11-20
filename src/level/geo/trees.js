@@ -185,8 +185,10 @@ function vertex(m, p, n, c, sway) {
 // Leaf cards for one puff. Each card is a square of side `size`, at a random
 // point on the puff surface, turned about its normal by a random angle.
 export const LEAF_CARDS = { perPuff: 18, size: 0.95, out: 0.85, core: 0.78 };
-function cards(m, center, radius, flatten, rand, ctx) {
-  for (let i = 0; i < LEAF_CARDS.perPuff; i += 1) {
+// `perPuff` under LEAF_CARDS.perPuff gives a thinner shell of cards (pbr
+// lite, #246): the first cards of the same random stream.
+function cards(m, center, radius, flatten, rand, ctx, perPuff = LEAF_CARDS.perPuff) {
+  for (let i = 0; i < perPuff; i += 1) {
     // A uniform point on the sphere, a little more on the top and the sides.
     const y = rand() * 1.7 - 0.7;
     const a = rand() * Math.PI * 2;
@@ -306,7 +308,11 @@ const SPHERES = [icosphere(0), icosphere(1)];
 
 // One crown puff. `crown` is the crown center: the normals point away from
 // it, mixed with the puff's own normal, so the crown shades as one shape.
-function puff(m, center, radius, flatten, sphere, rand, ctx) {
+// With `core` (a tree with leaf cards) a puff vertex gets the crown core
+// leaf code and a uv in meters (src/render/leaf-cut.js CORE_CODE and
+// markCrownCores()), so the pbr shader gives it a leafy, darker shade.
+export const PUFF_CORE_CODE = -5;
+function puff(m, center, radius, flatten, sphere, rand, ctx, core = false) {
   const base = m.positions.length / 3;
   for (const s of sphere.verts) {
     const k = 1 + (rand() - 0.5) * 0.18;
@@ -319,12 +325,16 @@ function puff(m, center, radius, flatten, sphere, rand, ctx) {
     const ao = 0.78 + 0.18 * lift + 0.1 * edge;
     const color = ctx.colorAt(rand);
     vertex(m, p, n, shade(color, Math.min(1.08, ao)), ctx.swayOf(p));
+    if (core) m.leaf.splice(m.leaf.length - 3, 3, p[0] * 0.8 + p[2] * 0.6, p[1] * 0.85 + (p[2] * 0.8 - p[0] * 0.6) * 0.5, PUFF_CORE_CODE);
   }
   for (const [a, b, c] of sphere.faces) m.indices.push(base + a, base + b, base + c);
 }
 
-// One tree template. `lod` 0 is detailed, 1 is the far card set. With
-// `cards`, a detailed tree also gets the leaf cards (the pbr look).
+// One tree template. `lod` 0 is detailed, 1 is the far card set. `season`
+// picks the leaf colors; with `cards`, a detailed tree also gets the leaf
+// cards (the pbr look). `cards` is true (LEAF_CARDS.perPuff cards on each
+// puff) or a count per puff. With fewer cards the puff core grows back
+// toward the full puff, so the crown keeps its size (leafCore()).
 export function treeTemplate(species, variant, lod = 0, season = "summer", { cards: withCards = false } = {}) {
   const sp = TREE_SPECIES[species];
   if (!sp) throw new Error(`trees: no species ${species}`);
@@ -408,15 +418,32 @@ export function treeTemplate(species, variant, lod = 0, season = "summer", { car
     swayOf,
     colorAt,
   };
-  const leafy = withCards && lod === 0;
-  for (const c of centers) puff(m, [c[0], c[1], c[2]], leafy ? c[3] * LEAF_CARDS.core : c[3], sp.flatten ?? 1, SPHERES[1], rand, ctx);
+  const perPuff = cardsPerPuff(withCards);
+  const leafy = perPuff > 0 && lod === 0;
+  for (const c of centers) puff(m, [c[0], c[1], c[2]], leafy ? c[3] * leafCore(perPuff) : c[3], sp.flatten ?? 1, SPHERES[1], rand, ctx, leafy);
   // The cards use their own random stream, so the trunk and the puffs keep
   // the same shape with and without cards.
   if (leafy) {
     const cardRand = seededRandom(hash32(`${species}:${variant}:cards`));
-    for (const c of centers) cards(m, [c[0], c[1], c[2]], c[3], sp.flatten ?? 1, cardRand, ctx);
+    for (const c of centers) cards(m, [c[0], c[1], c[2]], c[3], sp.flatten ?? 1, cardRand, ctx, perPuff);
   }
   return packed(m, leafy);
+}
+
+// Pure: the cards on each puff for a `cards` option: true is the full count,
+// a number is that count (0 to LEAF_CARDS.perPuff), anything else is 0.
+export function cardsPerPuff(cards) {
+  if (cards === true) return LEAF_CARDS.perPuff;
+  if (typeof cards !== "number" || !Number.isFinite(cards)) return 0;
+  return Math.max(0, Math.min(LEAF_CARDS.perPuff, Math.round(cards)));
+}
+
+// Pure: the puff core radius (a part of the puff) under `perPuff` cards.
+// The full count hides a small core (LEAF_CARDS.core); fewer cards leave
+// gaps, so the core grows toward the whole puff and the crown stays full.
+export function leafCore(perPuff) {
+  const t = Math.max(0, Math.min(1, perPuff / LEAF_CARDS.perPuff));
+  return 1 - (1 - LEAF_CARDS.core) * t;
 }
 
 // With `leafy`, the mesh keeps its leaf attribute (the leaf cards).
@@ -431,10 +458,10 @@ function packed(m, leafy = false) {
   };
 }
 
-const CARDS = 3;
+const LOD1_CARDS = 3;
 const CARD_RIM = 8;
 
-// LOD1: CARDS vertical cards through the crown center, at equal angles.
+// LOD1: LOD1_CARDS vertical cards through the crown center, at equal angles.
 // Each card is a trunk quad and a crown silhouette (a fan of CARD_RIM rim
 // points on the crown ellipse, with a seeded bump), with a front and a back
 // copy. The crown is the same size as the LOD0 crown.
@@ -447,8 +474,8 @@ function cardTree(species, sp, rand, grow, crown, halfW, halfH, top, swayOf, col
   const trunkTop = crown[1] - reachH * 0.5;
   const trunkR = sp.trunk.radius * Math.max(1, sp.trunk.count * 0.7);
   const bumps = Array.from({ length: CARD_RIM }, () => 0.86 + rand() * 0.2);
-  for (let c = 0; c < CARDS; c += 1) {
-    const a = (c / CARDS) * Math.PI + rand() * 0.2;
+  for (let c = 0; c < LOD1_CARDS; c += 1) {
+    const a = (c / LOD1_CARDS) * Math.PI + rand() * 0.2;
     const u = [Math.cos(a), 0, Math.sin(a)];
     const facing = [-u[2], 0, u[0]];
     for (const side of [1, -1]) {

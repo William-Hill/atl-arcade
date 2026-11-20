@@ -31,6 +31,7 @@ export function createSkateState({ position = [0, 0, 0], yaw = 0 } = {}) {
     groundNormal: [0, 1, 0],
     pushCooldown: 0,
     pushing: false, // true while the push button is held on the ground
+    braking: false, // true while the brake button is held on the ground
     airTime: 0,
     jumpHeld: false,
     jumpBuffer: 0, // s left on a buffered jump press
@@ -106,13 +107,16 @@ export function stepSkate(prev, input = {}, dt, env = FLAT_GROUND, k = SKATE) {
   // The renderer reads this flag. pushCooldown counts down after a release,
   // so it does not tell if the player still pushes.
   s.pushing = s.state === "rolling" && Boolean(input.push);
+  s.braking = s.state === "rolling" && Boolean(input.brake);
   if (s.justJumped) s.jumpBuffer = 0;
   if (env.bounds && env.spawn && isLost(s, env.bounds, k)) respawn(s, env.spawn);
   return s;
 }
 
 // A skater below the level or past its bounds can never get back, so it
-// goes back to the spawn point. The level barriers make this a backstop.
+// goes back to the spawn point. This is a backstop: the level barriers stop
+// the skater first (the greybox barriers, and the edge fence of a geodata
+// level, src/level/edge-fence.js).
 export function isLost(s, bounds, k = SKATE) {
   const [x, y, z] = s.position;
   const m = k.boundsMargin;
@@ -139,6 +143,12 @@ function stepRolling(s, input, dt, env, k) {
     // At a standstill the skater can still turn in place, slowly.
     s.yaw = wrapYaw(s.yaw + input.steer * k.carveRate * k.carveMinFactor * dt);
   }
+
+  // At rest with the push held, the start of a stroke has little thrust
+  // (the half sine starts at 0), and the stopSpeed snap sets the first
+  // small speeds to 0. Without a hold, any uphill rolls her back and turns
+  // her around before the stroke moves her.
+  const pushFromRest = input.push && s.speed === 0;
 
   // Push: a held button gives strokes of pushCooldown s. The thrust of a
   // stroke rises and falls (a half sine wave), and its mean is pushAccel.
@@ -168,7 +178,13 @@ function stepRolling(s, input, dt, env, k) {
   const n = s.groundNormal;
   let t = surfaceTangent(s.yaw, n);
   s.speed -= k.gravity * t[1] * dt;
-  if (s.speed < 0) {
+  if (s.speed < 0 && pushFromRest && k.gravity * t[1] < k.pushAccel) {
+    // A push from rest up a grade that the mean push can climb: she stands
+    // on this tick, and the stroke moves her forward on the next ticks. On
+    // a grade steeper than that, or after she moved (a real stall), she
+    // rolls back below.
+    s.speed = 0;
+  } else if (s.speed < 0) {
     // Rolled back: face the other way and keep rolling.
     s.speed = -s.speed;
     s.yaw = wrapYaw(s.yaw + Math.PI);

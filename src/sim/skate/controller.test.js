@@ -43,6 +43,13 @@ describe("push", () => {
     expect(createSkateState().pushing).toBe(false);
   });
 
+  it("sets braking while the brake button is held on the ground", () => {
+    const s = runScript(createSkateState(), [{ frames: 30, input: { push: true } }, { frames: 5, input: { brake: true } }]).state;
+    expect(s.braking).toBe(true);
+    expect(stepSkate(s, {}, DT).braking).toBe(false);
+    expect(createSkateState().braking).toBe(false);
+  });
+
   it("stops the thrust when the button is released", () => {
     const s = runScript(createSkateState(), [{ frames: 60, input: { push: true } }]).state;
     const after = stepSkate(s, {}, DT);
@@ -225,6 +232,31 @@ describe("flat env", () => {
     const s = stepSkate(roll(1), {}, DT);
     expect(s.groundId).toBe("flat");
     expect(FLAT_GROUND.sampleGround(5, 5).height).toBe(0);
+  });
+});
+
+// A plane that rises toward +x at `grade` (rise over run).
+function incline(grade) {
+  const l = Math.hypot(grade, 1);
+  return { sampleGround: (x) => ({ height: grade * x, normal: [-grade / l, 1 / l, 0], id: "incline" }) };
+}
+
+describe("push from rest on a slope", () => {
+  it("rides forward up a 1.1% grade with no flip", () => {
+    const env = incline(0.011);
+    const { states } = runScript(createSkateState({ position: [0, 0, 0], yaw: 0 }), [{ frames: 120, input: { push: true } }], { env, trace: true });
+    expect(states.every((s) => Math.cos(s.yaw) > 0.99)).toBe(true);
+    const last = states[states.length - 1];
+    expect(last.position[0]).toBeGreaterThan(3);
+    expect(last.speed).toBeGreaterThan(2);
+  });
+
+  it("still rolls back on a grade steeper than the push can climb", () => {
+    const env = incline(0.8);
+    const { states } = runScript(createSkateState({ position: [0, 0, 0], yaw: 0 }), [{ frames: 60, input: { push: true } }], { env, trace: true });
+    const last = states[states.length - 1];
+    expect(Math.cos(last.yaw)).toBeLessThan(0);
+    expect(last.position[0]).toBeLessThan(0);
   });
 });
 

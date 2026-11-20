@@ -1,5 +1,5 @@
 {
-  "tool": "scripts/ground-textures.py (Poly Haven API download, AO multiply, resize; color, normal, and roughness maps)",
+  "tool": "scripts/ground-textures.py (Poly Haven API download, AO multiply, resize; toon color maps)",
   "prompt": null,
   "license": "CC0 1.0",
   "credits": [

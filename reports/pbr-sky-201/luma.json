@@ -1,0 +1,77 @@
+{
+ "note": "Luma (Rec. 709, 0-255) of the pbr frames for #201. Before: origin/epic/city-look 88e6eec. After: branch claude/pbr-sky-201. scripts/art/pbr-frames.mjs, SwiftShader, 1280x720. Extra shots: the 159 cameras at time 19.3 and 20.9.",
+ "frames": {
+  "159-pcm": {
+   "before": {
+    "p2": 23,
+    "p50": 91,
+    "p98": 190
+   },
+   "after": {
+    "p2": 26,
+    "p50": 98,
+    "p98": 236
+   }
+  },
+  "159-mural-wall": {
+   "before": {
+    "p2": 4,
+    "p50": 85,
+    "p98": 184
+   },
+   "after": {
+    "p2": 6,
+    "p50": 93,
+    "p98": 249
+   }
+  },
+  "159-krog": {
+   "before": {
+    "p2": 4,
+    "p50": 126,
+    "p98": 227
+   },
+   "after": {
+    "p2": 5,
+    "p50": 135,
+    "p98": 241
+   }
+  },
+  "159-night-street": {
+   "before": {
+    "p2": 7,
+    "p50": 27,
+    "p98": 185
+   },
+   "after": {
+    "p2": 7,
+    "p50": 27,
+    "p98": 185
+   }
+  },
+  "krog-golden-19.3": {
+   "before": {
+    "p2": 16,
+    "p50": 111,
+    "p98": 221
+   },
+   "after": {
+    "p2": 19,
+    "p50": 116,
+    "p98": 232
+   }
+  },
+  "pcm-dusk-20.9": {
+   "before": {
+    "p2": 22,
+    "p50": 55,
+    "p98": 143
+   },
+   "after": {
+    "p2": 22,
+    "p50": 55,
+    "p98": 143
+   }
+  }
+ }
+}

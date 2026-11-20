@@ -1,0 +1,52 @@
+{
+  "tool": "scripts/ground-pbr.py (Poly Haven API download; candidate scoring; de-light; palette scale; ORM pack; Pillow wrap-around resize; edge fix; ktx create 4.3 KTX2)",
+  "prompt": null,
+  "date": "2026-11-05",
+  "license": "CC0 1.0",
+  "credits": [
+    {
+      "asset": "brushed_concrete_03",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "url": "https://polyhaven.com/a/brushed_concrete_03",
+      "files": {
+        "diffuse": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brushed_concrete_03/brushed_concrete_03_diff_2k.jpg",
+        "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brushed_concrete_03/brushed_concrete_03_ao_2k.jpg",
+        "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brushed_concrete_03/brushed_concrete_03_nor_gl_2k.jpg",
+        "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/brushed_concrete_03/brushed_concrete_03_rough_2k.jpg"
+      },
+      "resolution": "2k"
+    }
+  ],
+  "candidates": [
+    "brushed_concrete_03",
+    "concrete_pavement",
+    "concrete_pavement_03",
+    "concrete_floor_worn_02"
+  ],
+  "settings": {
+    "work": 1024,
+    "tiers": {
+      "high": 1024,
+      "phone": 512
+    },
+    "jpgQuality": 90,
+    "jpgSubsampling": "4:4:4",
+    "ktx2": {
+      "albedo": "UASTC q2 rdo 1.0 zstd 19 sRGB",
+      "normal/orm": "UASTC q2 rdo 0.5 zstd 19 linear"
+    },
+    "palette": [
+      0.74,
+      0.74,
+      0.7546
+    ],
+    "flatten": [
+      0.5,
+      2.5
+    ]
+  },
+  "paidCredits": 0,
+  "note": "Scanned photo textures (CC0), processed; not generated art."
+}

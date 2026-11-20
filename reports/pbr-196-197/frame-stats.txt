@@ -1,0 +1,16 @@
+Frame stats (scratch script: lawn = green pixels in the lower half; luma Rec.709 on sRGB 0-255).
+BEFORE (88e6eec, epic/city-look)
+159-krog.png luma p2/p50/p98 [4, 126, 227] lawn mean #76b347 S 0.603 V 0.701 (152097 px) top200 luma 246 at x~1094 y~436
+159-night-street.png luma p2/p50/p98 [7, 27, 184] lawn mean #082103 S 0.894 V 0.130 (382096 px) top200 luma 209 at x~403 y~332
+159-pcm.png luma p2/p50/p98 [24, 91, 190] lawn mean #6fb343 S 0.622 V 0.700 (263863 px) top200 luma 239 at x~438 y~534
+159-trail.png luma p2/p50/p98 [1, 153, 237] lawn mean #79af4d S 0.556 V 0.685 (283908 px) top200 luma 242 at x~1117 y~548
+AFTER (e2e10ac)
+159-krog.png luma p2/p50/p98 [4, 120, 227] lawn mean #709f54 S 0.471 V 0.624 (134130 px) top200 luma 246 at x~1084 y~439
+159-night-street.png luma p2/p50/p98 [9, 26, 188] lawn mean #091b05 S 0.823 V 0.105 (340951 px) top200 luma 212 at x~399 y~332
+159-pcm.png luma p2/p50/p98 [24, 91, 190] lawn mean #6a9e51 S 0.488 V 0.618 (263615 px) top200 luma 239 at x~477 y~528
+159-trail.png luma p2/p50/p98 [1, 135, 237] lawn mean #719954 S 0.451 V 0.598 (277454 px) top200 luma 242 at x~1117 y~548
+Target for the sunlit lawn (#197): below #60a040, that is S < 0.600 and V < 0.627 (pcm, krog).
+Night peak luma (before -> after): shop sign 63 -> 242, second sign 69 -> 239, lamp globe 68 -> 240, lamp pool on the path 39 -> 206, lit window 207 -> 207, fact card 181 -> 191 (the card turns, so it differs a little).
+Draw calls / triangles at the cameras, before -> after: pcm 188/388583 -> 188/388583, krog 230/512638 -> 230/512638, night 295/1046022 -> 295/1045646, trail 303/832853 -> 304/834053.
+The walkers move between runs: the trail camera run at the same time on both trees gave 303/847277 on both.
+Toon look (toon-trail.jpg, toon-night.jpg: before left, after right): draw calls and triangles the same (346/802617, 276/817535). Pixel differences only on wind-moved tree edges, walkers and the turning fact card.

@@ -1,0 +1,8 @@
+{
+  "note": "Reference screenshots for docs/style-sheet-pbr.md (#157). Pinned to time=14 and weather=clear (date 06-21 from the pbr-frames.mjs base), so a new capture shows the same light. Cameras as in shots-today.json.",
+  "shots": [
+    { "name": "street", "cam": [-80, 2.5, 640, -120, 5, 615], "params": { "time": "14", "weather": "clear" } },
+    { "name": "pcm", "cam": [-98, 2.5, -812, -190, 22, -858], "params": { "time": "14", "weather": "clear" } },
+    { "name": "skater", "cam": [338.9, 1.4, -2.9, 337.07, 0.95, -1.3], "params": { "time": "14", "weather": "clear" } }
+  ]
+}

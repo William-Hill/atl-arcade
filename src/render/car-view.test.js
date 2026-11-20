@@ -13,16 +13,16 @@ describe("createCarView fade", () => {
 
   it("fades at the LOD switch, with the car color on the copy, and ends the fade", () => {
     const view = createCarView(parked, [], { fade: true });
-    view.update({ x: 0, z: 0 }, [], 1);
+    view.update({ x: 0, z: 0 }, [], {}, 1);
     expect(view.fade.fading).toBe(0);
-    view.update({ x: 2, z: 0 }, [], 1.05);
+    view.update({ x: 2, z: 0 }, [], {}, 1.05);
     expect(view.fade.fading).toBe(1);
     expect(view.mesh.getVisibleAt(1)).toBe(true);
     const a = view.mesh.getColorAt(0, new THREE.Color());
     const b = view.mesh.getColorAt(1, new THREE.Color());
     expect(b.equals(a)).toBe(true);
     expect(a.equals(new THREE.Color(1, 1, 1))).toBe(false);
-    view.update({ x: 2, z: 0 }, [], 1.4);
+    view.update({ x: 2, z: 0 }, [], {}, 1.4);
     expect(view.fade.fading).toBe(0);
     expect(view.mesh.getVisibleAt(1)).toBe(false);
     expect(view.drawCalls).toBe(1);

@@ -19,6 +19,7 @@ import { chainStrips, projectOnLine } from "../../playtest/trail-script.js";
 import { createSkater, stepSkater } from "../skate/skater.js";
 import { FLAT_GROUND, yawFromHeading } from "../skate/controller.js";
 import { GRIND } from "../skate/constants.js";
+import { farStride, stepsOnTick, viewerDistance } from "../far-step.js";
 
 export const PILOT = {
   lookAhead: 6, // m ahead on the route for the steer target.
@@ -40,6 +41,10 @@ export const PILOT = {
   endClear: 12, // m from a window end needed to start a trick.
   trickSpeed: 3, // m/s needed to start a jump or a dance.
   grindHold: 0.3, // s the grind button stays down after the grind window.
+  // Far-step (#189): an NPC skater this far (m) from the camera and the
+  // player steps every `stride` ticks (src/sim/far-step.js). Past the draw
+  // distance of the high tier (NPC_DRAW in src/render/npc-skaters-view.js).
+  far: [[90, 2]],
 };
 
 // The NPC skaters on the BeltLine (geodata levels). `from`, `to`, and
@@ -47,7 +52,7 @@ export const PILOT = {
 // player spawn. `outfit` names an entry in src/render/npc-skaters-view.js.
 // A trick list plays in a loop: `every` s after the previous trick.
 export const BELTLINE_SKATERS = [
-  { id: "kiana", model: "nia", outfit: "cobalt", from: -150, to: 130, start: 30, dir: 1, cruise: 5.5, tricks: [{ kind: "groove", every: 6 }, { kind: "jump", every: 5 }] },
+  { id: "kiana", model: "nia", outfit: "wine", from: -150, to: 130, start: 30, dir: 1, cruise: 5.5, tricks: [{ kind: "groove", every: 6 }, { kind: "jump", every: 5 }] },
   { id: "dre", model: "marcus", outfit: "sunset", from: -150, to: 130, start: -40, dir: -1, cruise: 6.5, tricks: [{ kind: "jump", every: 4 }, { kind: "spin", every: 5 }] },
   { id: "tasha", model: "nia", outfit: "plum", from: -150, to: 130, start: 90, dir: -1, cruise: 4.5, tricks: [{ kind: "spin", every: 7 }, { kind: "groove", every: 6 }] },
   { id: "jalen", model: "marcus", outfit: "lime", from: -150, to: 130, start: -110, dir: 1, cruise: 6, tricks: [{ kind: "groove", every: 5 }, { kind: "jump", every: 6 }] },
@@ -78,7 +83,7 @@ export const GREYBOX_SKATERS = [
   {
     id: "kiana",
     model: "nia",
-    outfit: "cobalt",
+    outfit: "wine",
     line: [
       [-12, 4],
       [20, 4],
@@ -397,23 +402,45 @@ export function skaterObstacles(state) {
 
 // Steps every NPC skater by one fixed tick. `player` is the player position
 // [x, y, z] or null. `crowd` is a list of { x, z, radius } (the crowd NPCs).
-// `beat` is { time, bpm } of the beat clock, or null.
-export function stepNpcSkaters(state, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, { player = null, crowd = [], beat = null } = {}) {
+// `beat` is { time, bpm } of the beat clock, or null. `focus` is the camera
+// [x, z]: with it, an NPC far from the camera and the player steps less
+// often (PILOT.far); without it, every NPC steps on every tick.
+// The skate env of one NPC: the player's grindables and the dances of the
+// NPC's own model. The NPC skates with SKATE, not the player's body: the NPC
+// pilots are tuned for SKATE. Made once per model.
+const npcEnvs = new WeakMap();
+function npcEnv(skaterEnv, model) {
+  let byModel = npcEnvs.get(skaterEnv);
+  if (!byModel) npcEnvs.set(skaterEnv, (byModel = new Map()));
+  let e = byModel.get(model);
+  if (!e) {
+    e = { ...skaterEnv, skater: model, skate: null };
+    byModel.set(model, e);
+  }
+  return e;
+}
+
+export function stepNpcSkaters(state, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, { player = null, crowd = [], beat = null, focus = null } = {}) {
+  const viewers = focus ? [focus] : [];
+  if (focus && player) viewers.push([player[0], player[2]]);
   const base = [];
   if (player) base.push({ x: player[0], z: player[2], r: 0.45, player: true });
   // A skater held still by the crowd turns around after PILOT.giveUp s, so
   // the crowd and the skaters cannot block each other for good.
   for (const c of crowd) base.push({ x: c.x, z: c.z, r: c.radius ?? 0.4 });
   const npcs = state.npcs.map((npc, i) => {
+    const stride = viewers.length ? farStride(viewerDistance(npc.skater.position[0], npc.skater.position[2], viewers), PILOT.far) : 1;
+    if (!stepsOnTick(state.tick, i, stride)) return npc;
+    const h = dt * stride;
     const obstacles = base.slice();
     state.npcs.forEach((o, j) => {
       // Two NPC skaters that meet head-on must not both stop: an NPC
       // stops only for an NPC before it in the list. It steps around the rest.
       if (j !== i) obstacles.push({ x: o.skater.position[0], z: o.skater.position[2], r: 0.4, yields: j > i });
     });
-    const { input, npc: n } = pilotInput(npc, dt, { obstacles, beat });
+    const { input, npc: n } = pilotInput(npc, h, { obstacles, beat });
     const prev = npc.skater;
-    const skater = stepSkater(prev, input, dt, env, skaterEnv);
+    const skater = stepSkater(prev, input, h, env, npcEnv(skaterEnv, npc.spec.model));
     if (skater.bonked) n.stats.bonks += 1;
     if (skater.wallSlide) n.stats.slides += 1;
     if (skater.justFell) n.stats.falls += 1;

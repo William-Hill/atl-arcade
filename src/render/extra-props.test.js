@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { addExtraTemplates, EXTRA_PROP_FALLBACK, withTimeout } from "./geo-view.js";
+import { addExtraTemplates, EXTRA_PROP_FALLBACK, glbTreeTemplates, withTimeout } from "./geo-view.js";
 import { PROP_SOLID } from "../level/geo/props.js";
 
 const t = (n) => ({ positions: new Float32Array(n * 3) });
@@ -45,5 +45,14 @@ describe("extra prop templates", () => {
       expect(PROP_SOLID[kind], kind).toBeDefined();
       expect(PROP_SOLID[kitKind], kitKind).toBeDefined();
     }
+  });
+});
+
+describe("glb tree templates", () => {
+  it("names the loaded GLB trees as treeKindFor() does, and skips the LOD1 copies and the kit trees", () => {
+    const a = t(1);
+    const b = t(2);
+    const out = glbTreeTemplates({ tree_oak_0: a, treepine1: b, treepine1_lod1: t(6), tree_round: t(3), tree_tall_lod1: t(4), bench: t(5) });
+    expect(out).toEqual({ "tree:oak:0": a, "tree:pine:1": b });
   });
 });

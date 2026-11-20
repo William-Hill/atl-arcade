@@ -1,0 +1,259 @@
+{
+ "date": "2026-11-10T07:50:38.596Z",
+ "renderer": "swiftshader (software, CPU)",
+ "cam": "krog",
+ "look": "pbr",
+ "extra": "",
+ "rows": [
+  {
+   "kind": "surface",
+   "objects": 130,
+   "ms": 357,
+   "saved": 247
+  },
+  {
+   "kind": "building",
+   "objects": 119,
+   "ms": 450,
+   "saved": 154
+  },
+  {
+   "kind": "props",
+   "objects": 1,
+   "ms": 495,
+   "saved": 109
+  },
+  {
+   "kind": "car-models",
+   "objects": 1,
+   "ms": 560,
+   "saved": 44
+  },
+  {
+   "kind": "landmark-glb-studioplex",
+   "objects": 1,
+   "ms": 569,
+   "saved": 35
+  },
+  {
+   "kind": "Group",
+   "objects": 1,
+   "ms": 572,
+   "saved": 32
+  },
+  {
+   "kind": "landmark-glb-new-realm-brewing",
+   "objects": 1,
+   "ms": 572,
+   "saved": 32
+  },
+  {
+   "kind": "meshy-prop-patio_umbrella_lod",
+   "objects": 1,
+   "ms": 572,
+   "saved": 32
+  },
+  {
+   "kind": "meshy-prop-city_bike_lod",
+   "objects": 1,
+   "ms": 573,
+   "saved": 31
+  },
+  {
+   "kind": "edge-fence",
+   "objects": 1,
+   "ms": 574,
+   "saved": 30
+  },
+  {
+   "kind": "meshy-prop-food_cart_lod",
+   "objects": 1,
+   "ms": 578,
+   "saved": 26
+  },
+  {
+   "kind": "meshy-prop-picnic_table_lod",
+   "objects": 1,
+   "ms": 581,
+   "saved": 23
+  },
+  {
+   "kind": "landmark-shadow-ponce-city-market",
+   "objects": 1,
+   "ms": 584,
+   "saved": 20
+  },
+  {
+   "kind": "meshy-prop-bike_dock_lod",
+   "objects": 1,
+   "ms": 587,
+   "saved": 17
+  },
+  {
+   "kind": "meshy-prop-e_scooter_lod",
+   "objects": 1,
+   "ms": 588,
+   "saved": 16
+  },
+  {
+   "kind": "meshy-prop-sculpture_ribbon_lod",
+   "objects": 1,
+   "ms": 588,
+   "saved": 16
+  },
+  {
+   "kind": "street-signs",
+   "objects": 6,
+   "ms": 589,
+   "saved": 15
+  },
+  {
+   "kind": "ped-models",
+   "objects": 1,
+   "ms": 589,
+   "saved": 15
+  },
+  {
+   "kind": "meshy-prop-drinking_fountain_lod",
+   "objects": 1,
+   "ms": 592,
+   "saved": 12
+  },
+  {
+   "kind": "landmark-shadow-telephone-factory-lofts",
+   "objects": 1,
+   "ms": 594,
+   "saved": 10
+  },
+  {
+   "kind": "skater-blob",
+   "objects": 1,
+   "ms": 597,
+   "saved": 7
+  },
+  {
+   "kind": "landmark-glb-telephone-factory-lofts",
+   "objects": 1,
+   "ms": 599,
+   "saved": 5
+  },
+  {
+   "kind": "peds",
+   "objects": 1,
+   "ms": 600,
+   "saved": 4
+  },
+  {
+   "kind": "landmark-glb-ponce-city-market_s",
+   "objects": 4,
+   "ms": 602,
+   "saved": 2
+  },
+  {
+   "kind": "landmark-shadow-studioplex",
+   "objects": 1,
+   "ms": 603,
+   "saved": 1
+  },
+  {
+   "kind": "(all)",
+   "ms": 604,
+   "saved": 0
+  },
+  {
+   "kind": "(all, again)",
+   "ms": 585,
+   "saved": 0
+  },
+  {
+   "kind": "landmark-glb-bridge-north-ave",
+   "objects": 1,
+   "ms": 607,
+   "saved": -3
+  },
+  {
+   "kind": "landmark-shadow-bridge-ralph-mcgill",
+   "objects": 1,
+   "ms": 607,
+   "saved": -3
+  },
+  {
+   "kind": "skater",
+   "objects": 1,
+   "ms": 608,
+   "saved": -4
+  },
+  {
+   "kind": "landmark-glb-bridge-ponce",
+   "objects": 1,
+   "ms": 610,
+   "saved": -6
+  },
+  {
+   "kind": "landmark-shadow-new-realm-brewing",
+   "objects": 1,
+   "ms": 613,
+   "saved": -9
+  },
+  {
+   "kind": "mural",
+   "objects": 17,
+   "ms": 618,
+   "saved": -14
+  },
+  {
+   "kind": "fact-cards",
+   "objects": 1,
+   "ms": 618,
+   "saved": -14
+  },
+  {
+   "kind": "landmark-shadow-bridge-ponce",
+   "objects": 1,
+   "ms": 623,
+   "saved": -19
+  },
+  {
+   "kind": "landmark-glb-bridge-freedom-parkway",
+   "objects": 1,
+   "ms": 626,
+   "saved": -22
+  },
+  {
+   "kind": "cars",
+   "objects": 1,
+   "ms": 630,
+   "saved": -26
+  },
+  {
+   "kind": "landmark-glb-bridge-ralph-mcgill",
+   "objects": 1,
+   "ms": 634,
+   "saved": -30
+  },
+  {
+   "kind": "npcs",
+   "objects": 1,
+   "ms": 635,
+   "saved": -31
+  },
+  {
+   "kind": "landmark-shadow-bridge-north-ave",
+   "objects": 1,
+   "ms": 641,
+   "saved": -37
+  },
+  {
+   "kind": "landmark-shadow-bridge-freedom-parkway",
+   "objects": 1,
+   "ms": 641,
+   "saved": -37
+  },
+  {
+   "kind": "landmarks",
+   "objects": 1,
+   "ms": 645,
+   "saved": -41
+  }
+ ]
+}

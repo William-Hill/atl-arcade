@@ -126,6 +126,21 @@ describe("crowd", () => {
     expect(c.npcs[0].speed).toBeGreaterThan(0);
   });
 
+  it("never steps into a skater who waits in its way", () => {
+    const crowd = createCrowd(LEVEL, { seed: 1 });
+    const n = crowd.npcs[0];
+    // A skater (radius 0.4) at rest 1.5 m ahead, a little to the right.
+    const skater = { x: n.x + n.fx * 1.5 - n.fz * 0.3, z: n.z + n.fz * 1.5 + n.fx * 0.3, radius: 0.4, vx: 0, vz: 0 };
+    let c = crowd;
+    let closest = Infinity;
+    for (let t = 0; t < 240; t += 1) {
+      c = stepCrowd(c, DT, null, [skater]);
+      const m = c.npcs[0];
+      closest = Math.min(closest, Math.hypot(m.x - skater.x, m.z - skater.z) - m.radius - skater.radius);
+    }
+    expect(closest).toBeGreaterThanOrEqual(0);
+  });
+
   it("gives way: an NPC steps to the side away from Nia", () => {
     const crowd = createCrowd(LEVEL, { seed: 1 });
     const n = crowd.npcs[0];
@@ -149,5 +164,55 @@ describe("crowd", () => {
     const v = r();
     expect(v).toBeGreaterThanOrEqual(0);
     expect(v).toBeLessThan(1);
+  });
+});
+
+describe("crowd far-step (#189)", () => {
+  it("keeps the NPCs apart and on their lines with the camera far off", () => {
+    let c = createCrowd(LEVEL, { seed: 1 });
+    const start = c.npcs.map((n) => [n.x, n.z]);
+    let worst = Infinity;
+    for (let t = 0; t < 60 * 30; t += 1) {
+      c = stepCrowd(c, DT, null, [], { focus: [1e5, 1e5] });
+      worst = Math.min(worst, minGap(c.npcs));
+      for (const n of c.npcs) expect(onLine(c, n)).toBe(true);
+    }
+    expect(worst).toBeGreaterThanOrEqual(0);
+    // They still move: most of them by more than 20 m in 30 s.
+    const moved = c.npcs.filter((n, i) => Math.hypot(n.x - start[i][0], n.z - start[i][1]) > 20);
+    expect(moved.length).toBeGreaterThan(c.npcs.length / 2);
+  });
+
+  it("moves a far NPC only on its own ticks, and a near NPC on every tick", () => {
+    let c = createCrowd(LEVEL, { seed: 1 });
+    const near = c.npcs[0];
+    const focus = [near.x, near.z];
+    const far = c.npcs.find((n) => Math.hypot(n.x - focus[0], n.z - focus[1]) > CROWD.far[1][0] + 50);
+    expect(far).toBeTruthy();
+    let nearMoves = 0;
+    for (let t = 0; t < 40; t += 1) {
+      const before = c;
+      c = stepCrowd(c, DT, null, [], { focus });
+      const a = before.npcs[far.id];
+      const b = c.npcs[far.id];
+      if (a.x !== b.x || a.z !== b.z) expect((before.tick + far.id) % CROWD.far[1][1]).toBe(0);
+      if (c.npcs[0].x !== before.npcs[0].x || c.npcs[0].z !== before.npcs[0].z) nearMoves += 1;
+    }
+    expect(nearMoves).toBeGreaterThan(35);
+  });
+
+  it("never steps into a skater who waits, with the far-step on", () => {
+    const crowd = createCrowd(LEVEL, { seed: 1 });
+    const n = crowd.npcs[0];
+    const skater = { x: n.x + n.fx * 1.5 - n.fz * 0.3, z: n.z + n.fz * 1.5 + n.fx * 0.3, radius: 0.4, vx: 0, vz: 0 };
+    let c = crowd;
+    let closest = Infinity;
+    for (let t = 0; t < 240; t += 1) {
+      // The camera 100 m off: the NPC steps on the long step.
+      c = stepCrowd(c, DT, null, [skater], { focus: [n.x + 100, n.z] });
+      const m = c.npcs[0];
+      closest = Math.min(closest, Math.hypot(m.x - skater.x, m.z - skater.z) - m.radius - skater.radius);
+    }
+    expect(closest).toBeGreaterThanOrEqual(0);
   });
 });

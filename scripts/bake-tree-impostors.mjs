@@ -9,13 +9,13 @@
 // with Three.js; no generative model draws the art. See the page for the
 // channels of the texture.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { crc32, deflateSync } from "node:zlib";
 import { chromium } from "@playwright/test";
 import { createServer } from "vite";
-import { FAR_TREE_DISTANCE, SHADE_SCALE } from "../src/render/tree-impostors.js";
+import { FAR_TREE_DISTANCE, SHADE_SCALE } from "../src/render/far-trees.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.BAKE_PORT ?? 5191);
@@ -67,32 +67,39 @@ for (let i = 2; i < pixels.length; i += 4) pixels[i] = 0;
 mkdirSync(OUT, { recursive: true });
 writeFileSync(resolve(OUT, "impostors.png"), png(bake.width, bake.height, pixels));
 const date = new Date().toISOString().slice(0, 10);
+// assets/trees/provenance.json also holds the PBR tree GLBs: this bake
+// writes only its own key, far_tree_impostors.
+const provenancePath = resolve(OUT, "provenance.json");
+const provenance = existsSync(provenancePath) ? JSON.parse(readFileSync(provenancePath, "utf8")) : {};
 writeFileSync(
-  resolve(OUT, "provenance.json"),
+  provenancePath,
   `${JSON.stringify(
     {
-      asset: "Far tree impostor atlas (impostors.png) for src/render/tree-impostors.js",
-      issue: "#281",
-      date,
-      tool: "scripts/bake-tree-impostors.mjs and scripts/art/tree-impostor-bake.js (Three.js render in headless Chromium, SwiftShader). No generative AI.",
-      prompt: null,
-      generativeModel: null,
-      renderer: bake.renderer,
-      settings: {
-        size: [bake.width, bake.height],
-        cells: bake.cells,
-        camera: "orthographic, side view from +z, the frame is the card rect: x from -halfWidth to +halfWidth, y from 0 to height (m)",
-        supersampling: "4 x 4 samples for each pixel",
-        sun: [0.45, 0.8, 0.4],
-        ramp: "the soft toon ramp of the props (110, 180, 255)",
-        shadeScale: SHADE_SCALE,
-        season: "summer (the shape only; the game gives the season colors)",
-        layerDistance: `prop draw distance to ${FAR_TREE_DISTANCE} m`,
+      ...provenance,
+      far_tree_impostors: {
+        asset: "Far tree impostor atlas (impostors.png) for src/render/far-trees.js",
+        issue: "#281",
+        date,
+        tool: "scripts/bake-tree-impostors.mjs and scripts/art/tree-impostor-bake.js (Three.js render in headless Chromium, SwiftShader). No generative AI.",
+        prompt: null,
+        generativeModel: null,
+        renderer: bake.renderer,
+        settings: {
+          size: [bake.width, bake.height],
+          cells: bake.cells,
+          camera: "orthographic, side view from +z, the frame is the card rect: x from -halfWidth to +halfWidth, y from 0 to height (m)",
+          supersampling: "4 x 4 samples for each pixel",
+          sun: [0.45, 0.8, 0.4],
+          ramp: "the soft toon ramp of the props (110, 180, 255)",
+          shadeScale: SHADE_SCALE,
+          season: "summer (the shape only; the game gives the season colors)",
+          layerDistance: `prop draw distance to ${FAR_TREE_DISTANCE} m`,
       },
       channels: { R: "toon shade / shadeScale", G: "bark mask", B: "0", A: "coverage" },
       sources: ["src/level/geo/trees.js (the procedural trees of the game, issue #137)"],
       credits: "Our own render of our own procedural trees. No third-party art.",
       credits_spent: 0,
+      },
     },
     null,
     2,

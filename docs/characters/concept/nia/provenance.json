@@ -18,6 +18,56 @@
       "credits_spent": 3,
       "use": "The style target for the toon shading (M1-06) and the menu art",
       "prompt": "Dynamic full-body action pose of an original cel-shaded game character, Jet Set Radio inspired style with bold ink outlines and flat color. A 24-year-old Black woman roller skater skating backward with one arm raised, confident smile. Deep brown skin, box braids in a high bun, gold hoop earrings. Cropped peach-orange bomber jacket, cream tank top, forest-green joggers cuffed at the calf, cream knee pads. High-top white quad roller skates with gold wheels and peach toe stops. No logos, no text."
+    },
+    {
+      "file": "nia-pbr-front.png",
+      "date": "2026-11-05",
+      "tool": "Codex CLI 0.166.0-alpha.5.1 exec, built-in image_gen tool (model gpt-6-astra), session 01a1a97f-908d-7c31-a791-fc4fb71b10a8",
+      "credits_spent": 0,
+      "use": "The front view for Tripo multiview image-to-3D (PBR regeneration)",
+      "prompt": "Stylized-realistic PBR game character concept art, full-body front view, strict T-pose, arms straight out to the sides, palms down, legs apart. A 24-year-old Black woman roller skater with deep brown skin, box braids in a high bun close to the head, small gold hoop earrings. Cropped peach-orange nylon bomber jacket over a cream cotton tank top, forest-green cotton joggers cuffed at the calf, cream knee pads, green wristband. High-top white leather quad roller skates with four gold urethane wheels each, metal trucks and peach toe stops. Flat, even, shadowless studio lighting from all sides, no rim light, no cast shadows, no ambient occlusion, true material colors. Visible fabric texture, stitching and seams. Solid white background. No logos, no text."
+    },
+    {
+      "file": "nia-pbr-left.png",
+      "date": "2026-11-05",
+      "tool": "Codex CLI exec, built-in image_gen tool, session 01a1a984-5e05-7410-ba8f-19f301202290, nia-pbr-front.png attached as the reference",
+      "credits_spent": 0,
+      "use": "The left view for Tripo multiview image-to-3D",
+      "prompt": "Full-body left side view (profile, facing left) of the same character in the reference image, strict T-pose, same outfit, flat even shadowless studio lighting, solid white background, no logos, no text."
+    },
+    {
+      "file": "nia-pbr-back.png",
+      "date": "2026-11-05",
+      "tool": "Codex CLI exec, built-in image_gen tool, session 01a1a984-9c20-7ad2-a65e-d3244314f25a, nia-pbr-front.png attached as the reference",
+      "credits_spent": 0,
+      "use": "The back view for Tripo multiview image-to-3D",
+      "prompt": "Full-body back view of the same character in the reference image, strict T-pose, same outfit, flat even shadowless studio lighting, solid white background, no logos, no text."
+    },
+    {
+      "file": "nia-autosprite-front.png",
+      "date": "2026-11-05",
+      "tool": "Autosprite create_character, quality pro, prompt template on (white background)",
+      "autosprite_character_id": "cmw2wr1o500c012lypg669sim",
+      "credits_spent": 3,
+      "use": "Alternative front view, kept for the Codex comparison. Not used for Tripo.",
+      "prompt": "Stylized-realistic PBR game character, full-body front view, strict T-pose, arms straight out, palms down, legs apart. A 24-year-old Black woman roller skater, deep brown skin, box braids in a high bun, gold hoop earrings. Cropped peach-orange nylon bomber jacket over a cream tank top, forest-green joggers cuffed at the calf, cream knee pads, green wristband. High-top white leather quad skates with four gold urethane wheels, metal trucks, peach toe stops. Flat even shadowless lighting, no rim light, no cast shadows, true material colors, visible fabric texture and stitching. No logos, no text."
+    },
+    {
+      "file": "nia-autosprite-left.png",
+      "date": "2026-11-05",
+      "tool": "Autosprite generate_pose on cmw2wr1o500c012lypg669sim, job cf_df0f7bb2-4fab-46e8-bcb0-4a4c1106547f",
+      "credits_spent": 3,
+      "use": "Rejected: the pose is a walking profile, not a strict T-pose. Not used for Tripo.",
+      "prompt": "Full-body left side view (profile, facing left), strict T-pose, same outfit, flat even shadowless studio lighting, white background."
+    },
+    {
+      "file": "nia-autosprite-back.png",
+      "date": "2026-11-05",
+      "tool": "Autosprite generate_pose on cmw2wr1o500c012lypg669sim, job cf_e9a9d324-7841-442a-8840-653cbded2aeb",
+      "credits_spent": 3,
+      "use": "Alternative back view, kept for the Codex comparison. Not used for Tripo.",
+      "prompt": "Full-body back view, strict T-pose, same outfit, flat even shadowless studio lighting, white background."
     }
-  ]
+  ],
+  "pbr_regen_note": "2026-11-05: six views generated with Codex imagegen (chosen for Tripo) and six with Autosprite (kept for comparison, 18 credits). The Autosprite left view is not a strict T-pose."
 }

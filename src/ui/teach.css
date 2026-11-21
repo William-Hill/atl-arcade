@@ -1,0 +1,169 @@
+/* Teach prompts (#76, src/ui/teach-prompt.js). One card at the bottom
+   middle, clear of the HUD column (top left), the minimap (bottom right on a
+   desktop) and the touch controls (bottom corners). No pointer input, so
+   play goes on under it. The text keeps 4.5:1 or more on the dark card. */
+#teach {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translate(-50%, 0);
+  z-index: 6;
+  pointer-events: none;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+#teach[hidden] { display: none; }
+
+.teach-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 3px solid #7ef0c2;
+  border-radius: 14px;
+  background: rgba(11, 11, 18, 0.88);
+  color: #f3f3f7;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  animation: teach-in 0.25s ease-out;
+}
+#teach[data-done="1"] .teach-card { border-color: #ffd166; }
+#teach[data-rm="1"] .teach-card { animation: none; }
+@keyframes teach-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+.teach-icons { display: flex; gap: 6px; flex: none; }
+.teach-icons[hidden] { display: none; }
+.teach-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 7em; }
+.teach-title { font: 800 20px/1.2 system-ui, sans-serif; }
+.teach-hint { font: 600 14px/1.3 system-ui, sans-serif; color: #ffd166; }
+.teach-hint[hidden] { display: none; }
+.teach-count { flex: none; font: 700 12px/1 system-ui, sans-serif; color: #c9c9d6; letter-spacing: 0.04em; align-self: flex-start; }
+
+/* The icons have a shape per input, so the type does not need color:
+   a key is a square cap, a gamepad button is a circle, the stick is a ring,
+   and a touch button is a round pill like the on-screen buttons. */
+.teach-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  font: 800 16px/1 system-ui, sans-serif;
+  color: #0b0b12;
+  background: #f3f3f7;
+}
+.teach-icon-key { border-radius: 6px; border-bottom: 4px solid #9a9aae; }
+.teach-icon-pad { width: 36px; padding: 0; border-radius: 50%; background: #7ef0c2; }
+.teach-icon-stick { border-radius: 18px; background: transparent; color: #f3f3f7; border: 3px solid #f3f3f7; }
+/* Dark text on the pink pill: about 5.8:1 (white was about 3.3:1). */
+.teach-icon-touch { border-radius: 18px; background: rgba(255, 95, 178, 0.9); color: #0b0b12; font-size: 13px; letter-spacing: 0.04em; }
+.teach-icon-check { width: 36px; padding: 0; border-radius: 50%; background: #ffd166; font-size: 22px; }
+
+/* The grind pin: a label over the rail or ledge, or on the screen edge with
+   an arrow to it. */
+.teach-pin {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+.teach-pin[hidden] { display: none; }
+.teach-pin-label {
+  position: absolute;
+  left: 0;
+  bottom: 18px;
+  transform: translate(-50%, 0);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border: 2px solid #7ef0c2;
+  border-radius: 12px;
+  background: rgba(11, 11, 18, 0.88);
+  color: #f3f3f7;
+  font: 800 15px/1.2 system-ui, sans-serif;
+}
+.teach-pin-arrow {
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  width: 28px;
+  height: 28px;
+}
+/* On the point: a down-pointing marker under the label. */
+.teach-pin-arrow::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 0;
+  border-bottom: 0;
+}
+.teach-pin[data-edge="0"] .teach-pin-arrow { transform: none !important; }
+.teach-pin[data-edge="0"] .teach-pin-arrow::before {
+  top: 0;
+  border-top: 16px solid #7ef0c2;
+}
+/* On the edge: an arrow that points to the feature (rotated by the script;
+   0 rad points right). */
+.teach-pin[data-edge="1"] .teach-pin-arrow::before {
+  left: 6px;
+  top: 4px;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 18px solid #7ef0c2;
+  border-right: 0;
+}
+.teach-pin[data-edge="1"] .teach-pin-label { bottom: 22px; }
+
+/* Touch: the button of the step glows. */
+.touch-btn[data-teach="1"] {
+  border-color: #7ef0c2;
+  box-shadow: 0 0 0 4px rgba(126, 240, 194, 0.6), 0 0 16px rgba(126, 240, 194, 0.8);
+}
+
+/* Touch screens: above the stick and the buttons. */
+body.touch #teach { bottom: calc(230px + env(safe-area-inset-bottom)); }
+/* A phone in portrait: the stick zone is the bottom 55 % of the screen, and
+   a thumb can be anywhere in it. The card sits just above it, at the left,
+   clear of the buttons in the right column (settings, photo, full screen). */
+@media (max-width: 600px) and (orientation: portrait) {
+  body.touch #teach {
+    left: calc(16px + env(safe-area-inset-left));
+    transform: none;
+    bottom: calc(55% + 12px);
+    max-width: calc(100vw - 32px - 120px);
+  }
+}
+@media (max-height: 500px) {
+  body.touch #teach { bottom: auto; top: calc(12px + env(safe-area-inset-top)); }
+}
+@media (max-width: 600px), (max-height: 500px) {
+  .teach-title { font-size: 17px; }
+  .teach-icon { min-width: 32px; height: 32px; font-size: 14px; }
+  .teach-icon-pad, .teach-icon-check { width: 32px; }
+  .teach-card { gap: 10px; padding: 8px 12px; }
+}
+/* A narrow screen: the icons and the step count share the first row, and the
+   text gets the full width of the card below them, so 2 icons (dance) do not
+   push the title into the count. */
+@media (max-width: 600px) {
+  .teach-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "icons count" "text text";
+    align-items: center;
+    row-gap: 6px;
+  }
+  .teach-icons { grid-area: icons; flex-wrap: wrap; }
+  .teach-count { grid-area: count; justify-self: end; align-self: start; }
+  .teach-text { grid-area: text; min-width: 0; }
+  .teach-icons[hidden] + .teach-text { grid-row: 1; }
+}

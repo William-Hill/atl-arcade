@@ -6,6 +6,20 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## #76 Teach the moves in the world, 2026-11-21
+
+Branch `feat/76-teach-moves` from `epic/city-look`; draft PR, base `epic/city-look` (change the base to `main` after PR #304 merges). Design: `docs/decisions.md`, 2026-11-21.
+
+| Part | Where | Verified |
+|---|---|---|
+| Steps, prompts, grind target, pin place (pure) | `src/ui/teach-steps.js` | Vitest `teach-steps.test.js`, 25 tests |
+| Pin ride from the spawn to the skatepark rail | `e2e/teach-ride.js` | Vitest `teach-ride.test.js`, 2 tests: snap at 9.3 s, combo Rail Grind, Hop, Toe Spin |
+| Prompt card, pin, touch glow | `src/ui/teach-prompt.js`, `src/ui/teach.css`, 6 lines in `src/main.js` | Playwright `e2e/teach.spec.js` 3 of 3: keyboard on the high tier 1280 x 720 (15.0 min), gamepad (simulated pad), touch on Pixel 7 portrait; pictures `e2e/__screenshots__/teach-*.png` |
+
+#76 tests, cloud container: `npm test` 1860 of 1861 pass (the known 5 s timeout in `facade-kit.test.js`). `npm run build` passes. `npm run perf:check -- --no-build --tiers phone,high`: budget PASS; phone 97 draw calls in toon and 113 in pbr lite; the high tier rides stopped at the 240 s wall limit. The low tier did not run.
+
+#76 NOT verified: no person played the prompts; no real phone, GPU, or gamepad; touch in landscape has no test; the browser grind ride starts 25 m before the rail (the full ride from the spawn runs in the pure simulation only); real skaters did not review the prompt words.
+
 ## #218 landmark icons on the maps and the Guide tab, 2026-11-12
 
 Branch `claude/218-landmark-map-icons` from `epic/city-look`; no PR yet (the owner asks for it). Details: `docs/decisions.md`, 2026-11-12.

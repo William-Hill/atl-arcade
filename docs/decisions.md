@@ -2526,3 +2526,19 @@ The owner chose option B on 2026-11-21 (PR #306). Reasons: it is the only option
 - Key art: `assets/brand/key-art/skate-atl-key-art-1920x1080.png`. It is a capture of the real game renderer (pbr look, quality high, 9:30 on 21 June, clear): Nia mid-push on the Eastside Trail, with people on the trail under the bridge. A soft navy grade and the logo (34 % of the width, top left) are on top. No paintover, no image model. The raw frame is next to it, for later title and store images.
 - Method (`scripts/brand/key-art.mjs`, shots in `scripts/brand/key-art-shots.json`): load the level, hold the push key for 12 frames, open the settings menu to stop the simulation (the frame still draws; the menu DOM is hidden), then place the camera from the skater's real position and heading with `__atl.setFixedCamera`. Heading is `(cos yaw, -sin yaw)`. On SwiftShader the level load takes about 17 minutes and each 1920 x 1080 view about 5 more.
 - We chose a game capture over a generated image: it shows the game as it is, it costs 0 credits, and the same script can make it again after the look changes.
+
+## 2026-11-21 — Teach the moves in the world (#76)
+
+Branch `feat/76-teach-moves` from `epic/city-look`. A new player gets no guide, so the game teaches the moves in the first 30 seconds.
+
+Design:
+
+- One prompt at a time, at the bottom middle of the screen: push, steer, jump, dance, grind, then one combo tip ("Chain 3 moves for a combo"). The tip goes after a 3-link combo or after 12 s. It supports the concept hypothesis (a new player chains a 3-move combo within 3 minutes).
+- Dance comes before grind. The issue lists grind before dance, but the grind needs a ride to a feature and a player can fail it many times. Push, steer, jump and dance work on the spawn trail, so 4 of 5 moves show in about 10 s.
+- A step is done when the player does the move: push held 0.6 s while rolling; steer held 0.5 s at 1 m/s or more; a jump (also a jump off a rail); the start of a dance; a grind snap. A move done before its turn counts, so its prompt does not show. After each move a check mark and "Good" show for 700 ms.
+- The icon follows `input.source`: key caps from the live bindings (a rebind changes the prompt), gamepad buttons by the standard mapping (X push, A jump, Y and B dance, RT grind, left stick), and touch (the stick, and the JUMP, GROOVE, SPIN, GRIND buttons). Each input type has its own icon shape, so the type does not need color. Before the first input, a touch screen shows touch and a connected gamepad shows the gamepad. On touch, the button of the step glows.
+- The grind step shows a pin over a real feature: on BeltLine Eastside, the end rail and the line ledge of the Historic Fourth Ward skatepark, 58 to 67 m west of the spawn (`TEACH_SPOTS`); the pin shows the nearer one. Other levels use the nearest rail or ledge. Off the screen, the pin sits on the screen edge with an arrow. A straight ride from the spawn to the pin snaps onto the rail in 9.3 s (pure simulation).
+- The prompts and the pin are DOM, not WebGL: they add no draw call.
+- The prompts show once per browser (`localStorage` key `atl.teach.v1` = `done` after the combo tip). `?teach=1` shows them again, `?teach=0` turns them off. They show on geodata levels only, so the greybox screenshot test does not change.
+
+Code: `src/ui/teach-steps.js` (pure: steps, prompts, target, pin place), `src/ui/teach-prompt.js` (DOM), `src/ui/teach.css` (its own file, so it does not touch `src/shell.css`, which #305 also changes). `src/main.js` has 6 new lines: the import, the create call, one `observe` per tick, one `update` per frame, and `window.__atl.teach`. No change to the HUD files.

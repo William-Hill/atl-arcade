@@ -11,6 +11,7 @@ import {
   createCallouts,
   endCallout,
   nextBeat,
+  offBeat,
   pushCallout,
   snapBeat,
   startCallout,
@@ -160,6 +161,25 @@ describe("queue", () => {
     // The next music beat is 1.0, callout time 0.60: the card waits for it.
     expect(s.current.start).toBeCloseTo(0.6);
     expect(activeCard(s)).toBeNull();
+  });
+
+  it("keeps the start of a waiting card when the clocks agree, with steps that pass it (#310 review)", () => {
+    // 120 bpm. Music time = callout time + 0.10: the card waits for 0.40 (music 0.50).
+    let s = stepCallouts(pushCallout(createCallouts(), claimCallout(200)), 0, music(0.1));
+    expect(s.current.start).toBeCloseTo(0.4);
+    // 0.25 s steps: the phase goes 0.70, 0.20, ...
+    s = stepCallouts(s, 0.25, music(0.35));
+    s = stepCallouts(s, 0.25, music(0.6));
+    expect(s.current.start).toBeCloseTo(0.4);
+    expect(activeCard(s)).toMatchObject({ card: { text: "SPOT CLAIMED" } });
+    expect(activeCard(s).age).toBeCloseTo(0.1);
+  });
+
+  it("tells a start off the music beat", () => {
+    // 120 bpm, music time = callout time + 0.10.
+    expect(offBeat(0.4, 0.5, music(0.6))).toBe(false);
+    expect(offBeat(0.4, 0.5, music(0.75))).toBe(true);
+    expect(offBeat(0.4, 0.5, { phase: null, bpm: 120 })).toBe(false);
   });
 
   it("keeps each card on the beat after slow frames (#310 review)", () => {

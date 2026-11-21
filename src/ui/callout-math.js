@@ -40,6 +40,9 @@ export const CALLOUT = {
   // A card that comes up to `lateSnap` s after a beat starts on that beat
   // (its age starts a little past 0); a later card waits for the next beat.
   lateSnap: 0.06, // s
+  // A waiting card that is this far or less off the music beat keeps its
+  // start: the clocks agree (a float or a frame jitter, not a pause).
+  beatSlack: 0.02, // s
   // The most callouts that wait. A new combo replaces a combo that waits.
   maxQueue: 3,
   // The shortest combo that gets a callout, and the names by banked points.
@@ -161,6 +164,16 @@ export function snapBeat(now, phase, bpm, k = CALLOUT) {
   return nextBeat(now, phase, bpm);
 }
 
+// True when the callout time `at` is more than `k.beatSlack` s off a beat of
+// the music. `beat` is the music at callout time `now`. False with no beat.
+export function offBeat(at, now, beat, k = CALLOUT) {
+  if (beat.phase === null || beat.phase === undefined || !(beat.bpm > 0)) return false;
+  const len = 60 / beat.bpm;
+  const p = beat.phase - (now - at) / len;
+  const off = Math.abs(p - Math.round(p)) * len;
+  return off > k.beatSlack;
+}
+
 // The current callout with card `index` on show from `start`.
 function cardAt(c, index, start, beatLen) {
   return { kind: c.kind, cards: c.cards, index, start, beat: beatLen, end: start + c.cards[index].beats * beatLen };
@@ -175,13 +188,12 @@ export function stepCallouts(state, dt, beat = { phase: null, bpm: 0 }, k = CALL
   const time = state.time + Math.max(0, dt);
   let { current, queue, shown } = state;
   const len = beat.bpm > 0 ? beatSeconds(beat.bpm, k) : null;
-  // A card that waited for its beat before this step follows the beat of the
-  // music now, also when this step passes its old start: a pause in the wait
-  // does not leave it on the old beat. With no pause the start stays the
-  // same (the two clocks agree). The phase was read at `time`.
-  if (current && dt > 0 && state.time < current.start && beat.phase !== null && beat.phase !== undefined) {
-    const start = snapBeat(time, beat.phase, beat.bpm, k);
-    if (Math.abs(start - current.start) > 1e-6) current = cardAt(current, current.index, start, current.beat);
+  // A card that waited for its beat before this step: when the clocks no
+  // longer agree (a pause in the wait), its old start is off the music beat,
+  // and it finds the beat again. When the clocks agree its start stays,
+  // also when this step passes it. The phase was read at `time`.
+  if (current && dt > 0 && state.time < current.start && offBeat(current.start, time, beat, k)) {
+    current = cardAt(current, current.index, snapBeat(time, beat.phase, beat.bpm, k), current.beat);
   }
   if (current && time >= current.end) {
     const next = current.index + 1;

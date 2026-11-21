@@ -2505,6 +2505,107 @@ The base stance in `ride()` and `glide()` (`scripts/blender/nia_clips.py`) puts 
 - **Perf cap: high/pbr triangles 1,200,000 → 1,300,000 (owner decision).** `npm run perf:check` on the merge failed on this cap only. A rerun (`--tiers high --looks pbr --repeat 2 --max-wall 900`) counted 1,274,608 and 1,272,708 triangles on the merge, and 1,271,510 and 1,273,305 on the `epic/city-look` tip (60647caa). The merge adds no triangles; the epic tip was already over the cap. Load average in the runs: 9.9 to 23.2 on 14 CPUs. The new cap is about 2% over the measured count.
 - **perf:check wall limit 240 s → 900 s (owner decision).** With `--max-wall 240`, the high/pbr ride stopped early on this machine (about 1.5 s for each frame on SwiftShader), so the script read the triangles at another place on the trail: 1,396,024 and 1,415,991, against 1.27 M for a full ride. `npm run perf:check` now sets `--max-wall 900`. No CI workflow runs perf.
 
+## 2026-11-20: Game UI tools spike and logo options (#299, #300)
+
+Full note: `docs/research/2026-11-20-game-ui-tools.md`.
+
+- Tested at these commits (7 days old or older): `gongnyang/awesome-ai-motion` `1e3c249`, `op7418/logo-generator-skill` `bf4e9ac`, `majidmanzarpour/threejs-game-skills` `8286774`, `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c4`. The full SHAs are in the note.
+- Keep as references: the motion skill (timings from its cards and recipes), `threejs-game-ui-designer` with `references/ui-patterns.md`, and `game-ui-ux` (checklist). Use the logo generator's design rules only: it makes abstract marks, not wordmarks.
+- Skip: the threejs-game-skills scaffold (TypeScript; our code is plain JavaScript), its director and its 3 generator skills, and the paid HiAPI and Scenario tools (no keys).
+- The skills are not in `.claude/skills/` yet. A committed skill loads into every cloud session, so the owner decides. The note gives the install commands. Decision: deferred (see 2026-11-21, "The UI skills stay out").
+- Title screen and in-game text graphics: build them in code (DOM and CSS). Mock: `prototypes/title-screen-mock/`.
+- Logo: 3 options in `assets/brand/logo-options/`, made from OFL font outlines and code shapes, no generative model.
+
+## 2026-11-21: The logo is option B, "Trail Speed" (#300)
+
+The owner chose option B on 2026-11-21 (PR #306). Reasons: it is the only option where both words read at 32 px, and its one-line shape fits a title bar and a HUD corner.
+
+- Files: `assets/brand/logo/skate-atl-logo.svg` (master), `skate-atl-logo-1024.png` (1024 x 299, transparent), `skate-atl-logo-32.png` (110 x 32 check). Script: `scripts/brand/logo-final.mjs`.
+- The final file crops the view box to the ink with a 3 % margin. The option B file cut about 19 units (2 %) off the right end of the swoosh (its view box was too narrow); the final file has the full art.
+- Font: Anton (SIL OFL 1.1), as outlines. Colors: cream `#fff6e8`, peach `#f6905a`, gold `#ffc533`, teal `#17a398`, ink `#1b1f3b`.
+- Key art: `assets/brand/key-art/skate-atl-key-art-1920x1080.png`. It is a capture of the real game renderer (pbr look, quality high, 9:30 on 21 June, clear): Nia mid-push on the Eastside Trail, with people on the trail under the bridge. A soft navy grade and the logo (34 % of the width, top left) are on top. No paintover, no image model. The raw frame is next to it, for later title and store images.
+- Method (`scripts/brand/key-art.mjs`, shots in `scripts/brand/key-art-shots.json`): load the level, hold the push key for 12 frames, open the settings menu to stop the simulation (the frame still draws; the menu DOM is hidden), then place the camera from the skater's real position and heading with `__atl.setFixedCamera`. Heading is `(cos yaw, -sin yaw)`. On SwiftShader the level load takes about 17 minutes and each 1920 x 1080 view about 5 more.
+- We chose a game capture over a generated image: it shows the game as it is, it costs 0 credits, and the same script can make it again after the look changes.
+
+## 2026-11-21 — Teach the moves in the world (#76)
+
+Branch `feat/76-teach-moves` from `epic/city-look`. A new player gets no guide, so the game teaches the moves in the first 30 seconds.
+
+Design:
+
+- One prompt at a time, at the bottom middle of the screen: push, steer, jump, dance, grind, then one combo tip ("Chain 3 moves for a combo"). The tip goes after a 3-link combo or after 12 s. It supports the concept hypothesis (a new player chains a 3-move combo within 3 minutes).
+- Dance comes before grind. The issue lists grind before dance, but the grind needs a ride to a feature and a player can fail it many times. Push, steer, jump and dance work on the spawn trail, so 4 of 5 moves show in about 10 s.
+- A step is done when the player does the move: push held 0.6 s while rolling; steer held 0.5 s at 1 m/s or more; a jump (also a jump off a rail); the start of a dance; a grind snap. A move done before its turn counts, so its prompt does not show. After each move a check mark and "Good" show for 700 ms.
+- The icon follows `input.source`: key caps from the live bindings (a rebind changes the prompt), gamepad buttons by the standard mapping (X push, A jump, Y and B dance, RT grind, left stick), and touch (the stick, and the JUMP, GROOVE, SPIN, GRIND buttons). Each input type has its own icon shape, so the type does not need color. Before the first input, a touch screen shows touch and a connected gamepad shows the gamepad. On touch, the button of the step glows.
+- The grind step shows a pin over a real feature: on BeltLine Eastside, the end rail and the line ledge of the Historic Fourth Ward skatepark, 58 to 67 m west of the spawn (`TEACH_SPOTS`); the pin shows the nearer one. Other levels use the nearest rail or ledge. Off the screen, the pin sits on the screen edge with an arrow. A straight ride from the spawn to the pin snaps onto the rail in 9.3 s (pure simulation).
+- The prompts and the pin are DOM, not WebGL: they add no draw call.
+- The prompts show once per browser (`localStorage` key `atl.teach.v1` = `done` after the combo tip). `?teach=1` shows them again, `?teach=0` turns them off. They show on geodata levels only, so the greybox screenshot test does not change.
+
+Code: `src/ui/teach-steps.js` (pure: steps, prompts, target, pin place), `src/ui/teach-prompt.js` (DOM), `src/ui/teach.css` (its own file, so it does not touch `src/shell.css`, which #305 also changes). `src/main.js` has 6 new lines: the import, the create call, one `observe` per tick, one `update` per frame, and `window.__atl.teach`. No change to the HUD files.
+
+## 2026-11-21: The UI skills stay out of `.claude/skills/` for now (#299)
+
+The owner decided on 2026-11-21: defer the install of `threejs-game-ui-designer` and `game-ui-ux`.
+
+- A skill in `.claude/skills/` loads into every cloud session on this repository, and its instructions apply there. Several sessions work on the repository at the same time.
+- The useful parts are 3 short files. Agents read them at the tested commits: `majidmanzarpour/threejs-game-skills` `8286774b22a2566bf894dbc825825c16921866af` and `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c41c839b68319ffc08430b99ab768debc32`. The install commands are in `docs/research/2026-11-20-game-ui-tools.md`, section "Install".
+- This replaces the open point in the 2026-11-20 entry ("the owner decides").
+- Look at this again when the title, pause, and settings screens start. An install then must use the tested commits or newer commits that are at least 7 days old.
+## 2026-11-21: The short map credit on every screen
+
+On a desktop screen, the full map credit (about 330 characters) wrapped across the top of the screen and covered the timer and the score chips.
+
+- Every screen now shows the short credit "© OpenStreetMap contributors" as a pill at the top right (top left on a compact screen). A click or a tap shows the full text.
+- This replaces the 2026-11 rule from #73 that a desktop shows the full credit. The ODbL credit to OpenStreetMap stays visible at all times.
+- Owner decision, 2026-11-21.
+## 2026-11-21: Skatepark fixes: the ledge catch, the quarter pipe lip, the grind score, the body in walls (#262)
+
+Branch `fix/262-skatepark` from `epic/city-look`. Source: the 2026-11-13 design audit, run 3 (`production/audits/2026-11-13-design-audit/REPORT.md`, C2, C3, C5, C6). Tests: `src/sim/skate/skatepark-262.test.js` (11 tests on the real H4W park; 10 fail on `epic/city-look`, the head-on bonk test passes on both), `src/sim/skate/balance.test.js`, and the Playwright test "the skatepark fixes of #262" in `e2e/skatepark.spec.js`.
+
+**1. The ledge catch (skater.js).** Cause: the 6 m ledge is 0.4 m high, over the 0.25 m step, so its side is a wall. A grind snap needs the heading within 60 degrees of the edge (`minAlongDot` 0.5). A steeper approach bonks to 0 m/s, and a grind after it starts at the 2.5 m/s floor. With no balance input a grind falls in 0.9 s at any speed, so a slow grind tips over before the end. Decision: a bonk keeps the speed from before the hit for `GRIND.catchWindow` (0.25 s). In that window a grind (held, or pressed late) snaps at up to about 78 degrees (`GRIND.catchAlongDot` 0.2) with that speed. Result: a 70 degree approach at 6 m/s snaps at 4.67 m/s (the speed at the hit) and rides to the ledge end. A head-on hit (over 78 degrees) with no grind press still bonks, as a real ledge does. The ledge keeps its solid body.
+
+**2. The quarter pipe lip and the kicker pop (controller.js).** Cause: the H4W quarter pipe tops out at normal y 0.357 (computed from its profile in `assets/skate-features/features.json`; the audit's 0.36 is correct). The vert launch needs normal y under 0.15, so the skater rolled onto the 0.9 m deck and off its back, and the ramp lane carried the skater off the pad. A roll off any edge also cut the vertical speed to 0, so the kicker gave no pop. Decisions:
+- `SKATE.lipNormalY` 0.5: on a face steeper than that, the skater launches straight up at its lip. The lip is where the next column is a flat deck no more than a step down, or a drop with the heading within 45 degrees of straight up the face. The air is "Vert Air" (200 points). `launchNormalY` 0.15 stays for a near-vertical face.
+- Up a ramp (normal y under `rampNormalY` 0.97) and off its end, the skater keeps the upward speed. `airFrom` is "launch", and the combo scores "Ramp Air" (`COMBO.rampAirPoints` 100). A skater who leaves the side of the quarter pipe also gets "Ramp Air", not "Vert Air".
+- Not changed: the bank and the pyramid end in a flat deck, so riding them gives no link alone. A jump off them scores a Hop.
+The lip is 1.2 m high: the skater needs about 7 m/s at the foot to reach it (v^2 / 2g at g = 20). Under that the skater rolls back down, as before.
+
+**3. The grind score (run.js, grind.js).** Cause: a grind scored `grindBase + grindPerSecond * seconds` (100 + 300/s), so a slow grind of the same rail scored more. The "Long" name (1.5 s) also favored a slow grind. Formula now:
+
+`points = grindBase + grindPerMeter * meters on the rail` = 100 + 35 * m. "Long Rail Grind" / "Long Ledge Grind": 10 m or more on one rail (`COMBO.longGrindMeters`).
+
+A fast grind of a rail scores the same as a slow grind of the same length, and a faster grind covers more rail in the same time. 35 points per m equals the old 300 points per s at 8.6 m/s, so the score scale stays near the old one. The scripted combo line banks 3356 points (2740 before, +22 %): it grinds at 11 to 12 m/s, faster than 8.6 m/s, so the faster line now earns more, as intended. The goal targets and the challenge points need no change.
+Trade-off (for the owner to confirm): the #75 rule "a grind earns more per second than any dance" now holds at 8 m/s or faster (35 * 8 = 280/s against the spin's 267/s), not at every speed. A slow grind earns less per second than a dance. The other choice is 120 points per m: #75 then holds at the 2.5 m/s floor, but the combo line banks 8600 points (3.1 times), and the 600, 1000 and 2000 point challenges and the 1000 point combo goal become easy. To change it, set `COMBO.grindPerMeter`; the balance test checks the rule at 8 m/s.
+The run reads the grind as it ended (`endedGrind` on the exit state), so the last tick on the rail counts.
+
+**4. The body in walls (controller.js).** Measured in the pure simulation: rides at the planter, the quarter pipe, the kicker and the bank from 24 directions, at 3, 6 and 9 m/s, rolling and with a jump (96 rides each). The check: a feature column more than a step above the feet inside the 0.3 m body radius. Before: up to 0.26 m into the planter caps, 0.28 m into the quarter pipe and the kicker, 0.22 m into the bank. Causes and decisions:
+- An air bonk kept the column. A skater who came down beside a box (a planter cap, the ledge, a bench) was above it on the last tick, so the body was already over its edge. The air wall test now uses the lower of the two heights of the tick, and an air bonk pushes the body out: the shortest move, in one of the 16 ring directions, that clears the body ring.
+- The wall ring saw only flat tops (normal y over 0.9), so the sides of the ramps were not walls. A ramp sample is now a wall when its surface plane, taken to the skater's column, is still more than a step above the feet. From the foot of a ramp the plane goes down to the feet (ground to ride); from the side or the back it stays high (a wall).
+- Leaving the ground (off an edge or off the side of a ramp) pushes the body out of a wall too, because the ring is off on a ramp face.
+After: 0.00 m for the planter and the quarter pipe, 0.02 m for the bank. The kicker: in the worst ride, 1 tick (16.7 ms) at 0.26 m: its back is tall only in its last few cm, between the ring probes, and a skater who jumps onto it from behind is in it for 1 tick, then lands on its face. A second ring at half the radius made it 0.14 m and cost 50 % more ground samples per wall check, so it is not in.
+Not changed: on a ramp face the ring stays off (#58). The renderer keeps the body upright, so just under the quarter pipe lip the deck is up to 0.18 m into the legs for about 4 ticks before the launch. A body that tilts with the ramp is a render change, not in #262.
+
+**Not in this branch:** the beat lines that cross the park features (a render change), and an Autopilot run in the park (the acceptance asks for one; the Playwright rides replace it here: vert air off the quarter pipe and ramp air off the kicker score links).
+## 2026-11-21: A stopped car never holds the skater (#285)
+
+Autopilot run `20261114-135744` found a van-size car on Freedom Parkway near (454, -262) that held the skater for more than 60 s. Cause: a deadlock between two yield rules.
+
+- A car stopped for the skater while she was anywhere beside its body: `skaterAhead` counted her as "in the lane ahead" from `along >= -length`, so a skater beside the car held it at rest.
+- The skater treats a car as a wall. Scripted steering pushed her into the car side, so she did not move away.
+
+Each waited for the other. A Vitest test (`src/sim/traffic/traffic.test.js`, "a stopped car never pins the skater") put her between a stopped sedan and a parked car, pushing into the sedan. Before the fix she did not move in 60 s.
+
+**Rule.** When the skater is inside `TRAFFIC.safeRadius` (2 m) of a car body, she came to the car, so the car leaves her:
+
+- It crawls away: back when she is at its front half, on when she is at its rear half. If that way is blocked, it tries the other way. If both are blocked, it waits.
+- The crawl is at most `creepSpeed` 3 m/s (7 mph), with `creepAccel` 2.5 m/s² (the top of the calm accel range).
+- No crawl step brings the body nearer to her. A crawl never goes past the next stop line or the lane end, never backs onto the previous lane, and keeps 0.5 m to the other cars.
+- When she is out of the 2 m circle again, the normal rules apply. A car that backed off her front stops and waits with a gap of 2 m to 2.5 m. A car that drove on past her side goes on.
+
+We chose "the car leaves" over "the car is not solid while she touches it". A skater who goes through a car body looks broken, and a car that moves slowly away from a skater is calm traffic, not traffic danger (AGENTS.md political rules). The car never pushes, chases, or holds her.
+
+**Measured** (Vitest, flat street, skater 0.32 m from the side and pressed in by a parked car, push held): she moves free (0.3 m) in 0.98 s when she is at a quarter of the car length from an end. At the middle of the side, the worst spot: hatchback 1.57 s, sedan 1.60 s, taxi 1.67 s, van 1.75 s, pickup 1.83 s, box truck 2.10 s, bus 2.83 s. The box truck and the bus are longer than 2 s at the middle of the side because they are 7.5 m and 12 m long. The test sets their limits to 2.5 s and 3 s.
+
 ## 2026-11-21: Physics pass on push, coast, and carve in Blender, not Cascadeur
 
 Goal: make the skate clips more physically plausible, as a quality test. The first choice was Cascadeur (AutoPhysics, balance, and inertia), in the cloud only, never on the owner's Mac.

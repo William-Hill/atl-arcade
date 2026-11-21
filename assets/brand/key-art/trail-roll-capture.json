@@ -1,0 +1,155 @@
+{
+  "shot": {
+    "name": "trail-roll",
+    "cam": [
+      337.5,
+      0.9,
+      5.4,
+      337.07,
+      1.2,
+      -1.3
+    ],
+    "params": {
+      "rings": "0"
+    },
+    "hold": {
+      "key": "w",
+      "frames": 12,
+      "freeze": true
+    },
+    "views": [
+      {
+        "name": "r30",
+        "dist": 4,
+        "angle": 30,
+        "height": 0.6,
+        "lookHeight": 1,
+        "shift": 1.3
+      },
+      {
+        "name": "r45-low",
+        "dist": 3.6,
+        "angle": 45,
+        "height": 0.35,
+        "lookHeight": 1.1,
+        "shift": 1.2
+      },
+      {
+        "name": "r15-high",
+        "dist": 5,
+        "angle": 15,
+        "height": 1.6,
+        "lookHeight": 0.9,
+        "shift": 1.5
+      }
+    ]
+  },
+  "views": [
+    {
+      "name": "r30",
+      "dist": 4,
+      "angle": 30,
+      "height": 0.6,
+      "lookHeight": 1,
+      "shift": 1.3,
+      "skater": {
+        "p": [
+          337.6406361128497,
+          24.18741374476876,
+          -6.605926099167747
+        ],
+        "yaw": 1.464,
+        "speed": 7.78793851256431
+      },
+      "eye": [
+        339.99849197505677,
+        24.787413744768763,
+        -9.837104790149652
+      ],
+      "look": [
+        338.6907691874188,
+        25.18741374476876,
+        -5.839622943950435
+      ],
+      "raw": "trail-roll-r30-raw.png"
+    },
+    {
+      "name": "r45-low",
+      "dist": 3.6,
+      "angle": 45,
+      "height": 0.35,
+      "lookHeight": 1.1,
+      "shift": 1.2,
+      "skater": {
+        "p": [
+          337.6406361128497,
+          24.18741374476876,
+          -6.605926099167747
+        ],
+        "yaw": 1.464,
+        "speed": 7.78793851256431
+      },
+      "eye": [
+        340.4430601226453,
+        24.537413744768763,
+        -8.865664948973397
+      ],
+      "look": [
+        338.3938823961182,
+        25.287413744768763,
+        -5.671784762569202
+      ],
+      "raw": "trail-roll-r45-low-raw.png"
+    },
+    {
+      "name": "r15-high",
+      "dist": 5,
+      "angle": 15,
+      "height": 1.6,
+      "lookHeight": 0.9,
+      "shift": 1.5,
+      "skater": {
+        "p": [
+          337.6406361128497,
+          24.18741374476876,
+          -6.605926099167747
+        ],
+        "yaw": 1.464,
+        "speed": 7.78793851256431
+      },
+      "eye": [
+        339.44216522362143,
+        25.787413744768763,
+        -11.270097286317938
+      ],
+      "look": [
+        339.0398874689947,
+        25.08741374476876,
+        -6.065467365936229
+      ],
+      "raw": "trail-roll-r15-high-raw.png"
+    }
+  ],
+  "render": {
+    "quality": "high",
+    "look": "pbr",
+    "lite": false,
+    "pixelRatio": 1,
+    "post": "full",
+    "rung": null,
+    "ladder": null,
+    "lastMedianMs": null,
+    "lookDown": null
+  },
+  "weather": {
+    "kind": "clear",
+    "day": 172,
+    "hour": 9.5,
+    "elevation": 35.50418061040474,
+    "lit": 0,
+    "wet": 0,
+    "rain": 0
+  },
+  "url": "/?level=beltline-eastside&quality=high&look=pbr&date=06-21&time=9.5&weather=clear&governor=0&view=fixed&mute=1&npcs=0&cars=0&rings=0&cam=337.5%2C0.9%2C5.4%2C337.07%2C1.2%2C-1.3",
+  "seconds": 1703
+}

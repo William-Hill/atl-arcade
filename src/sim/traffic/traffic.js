@@ -4,8 +4,11 @@
 // Political rules (AGENTS.md): a car never hits, chases, or threatens the
 // skater. A car slows and stops when the skater is in its lane ahead, waits,
 // and then goes on. A move that would bring a car body nearer than
-// TRAFFIC.safeRadius to the skater does not happen. There are no police cars
-// and no emergency vehicles.
+// TRAFFIC.safeRadius to the skater does not happen. A car never holds the
+// skater (#285): when the skater is already inside safeRadius (she came to
+// the car), the car crawls away from her, back off her front or on past her
+// side, and then waits with a gap. There are no police cars and no
+// emergency vehicles.
 //
 // Lanes: each main street is a chain of street strips. A chain with an
 // opposite carriageway parallel to it (a divided road, such as Freedom
@@ -65,6 +68,11 @@ export const TRAFFIC = {
   gap: 3, // m kept bumper to bumper.
   stopWait: 1.2, // s at a stop line.
   yieldWait: 1.5, // s a car waits after the skater leaves its lane.
+  // A car with the skater inside safeRadius crawls away from her, up to
+  // creepSpeed (m/s, 7 mph) with creepAccel (m/s^2, the top of the calm
+  // accel range), so a skater against a sedan is free in under 2 s (#285).
+  creepSpeed: 3,
+  creepAccel: 2.5,
   // The car looks this far ahead for the skater (m).
   lookAhead: 30,
   // The car stops this far (m) past safeRadius from the skater.
@@ -528,6 +536,8 @@ export function createTraffic(
         accel: 0,
         brake: 0,
         signal: 0,
+        // +1 or -1 while the car crawls away from the skater (#285), else 0.
+        creep: 0,
       });
     }
   }
@@ -722,7 +732,6 @@ function stepCar(state, car, dt, skater, stride) {
   const size = CAR_SIZE[car.kind];
   const half = size.length / 2;
   const front = car.s + half;
-  const v = car.speed;
   const v0 = lane.speed;
   // hold: the car is at a stop point and stays at rest.
   let hold = false;
@@ -734,6 +743,18 @@ function stepCar(state, car, dt, skater, stride) {
 
   // The car ahead (the IDM leader).
   const lead = leader(state, car);
+  // The skater is inside safeRadius (she came to the car): the car leaves
+  // her and does nothing else on this step (#285).
+  const near = skaterGap(car, skater);
+  if (near < T.safeRadius) {
+    creepAway(state, car, dt, skater, lead, near, stride);
+    afterMove(state, car);
+    return;
+  }
+  // The end of a back-off: the speed was backward, so the car is at rest.
+  if (car.creep < 0) car.speed = 0;
+  car.creep = 0;
+  const v = car.speed;
   let acc = idmAccel(v, v0, lead.gap, v - lead.speed);
   if (lead.speed < 0.1 && lead.gap - T.gap < 0.6 && v < 0.2) hold = true;
 
@@ -851,6 +872,109 @@ function stepCar(state, car, dt, skater, stride) {
     if (wrapped) car.next = nextStop(state.lanes[laneId], s + half);
   }
 
+  afterMove(state, car);
+}
+
+// The free room (m) behind a car on its lane: to the nearest car behind it
+// on the same lane, and to the lane start. A car never backs onto the
+// previous lane.
+function roomBehind(state, car) {
+  const half = CAR_SIZE[car.kind].length / 2;
+  let room = car.s - half;
+  for (const o of state.cars) {
+    if (o === car || o.lane !== car.lane || o.s >= car.s) continue;
+    room = Math.min(room, car.s - half - (o.s + CAR_SIZE[o.kind].length / 2));
+  }
+  return room;
+}
+
+// The room (m) a car can back up before its rear enters an intersection box
+// it does not hold. A car that cleared a box gave up its reservation, so it
+// must not back into the box past crossing traffic (#285 review).
+function roomBeforeBox(lane, car, half) {
+  const rear = car.s - half;
+  let room = Infinity;
+  for (const st of lane.stops) {
+    if (st.box === car.box) continue;
+    if (st.sExit <= rear) room = Math.min(room, rear - st.sExit);
+    else if (st.sStop < rear) room = 0;
+  }
+  return room;
+}
+
+// The car with the skater inside safeRadius (#285). It crawls away from
+// her, at most creepSpeed: back when she is at its front half, on when she
+// is at its rear half, else the other way. A move never brings the body
+// nearer to her, never goes past the next stop line or the lane end, and
+// keeps 0.5 m to the other cars. With no such move the car waits. When she
+// is out of safeRadius again the normal rules take over: a car that waits
+// for a skater in its lane goes on only yieldWait after she leaves it.
+function creepAway(state, car, dt, skater, lead, before, stride) {
+  const T = TRAFFIC;
+  const lane = state.lanes[car.lane];
+  const half = CAR_SIZE[car.kind].length / 2;
+  const v = car.speed;
+  const along =
+    (skater[0] - car.x) * Math.cos(car.yaw) -
+    (skater[2] - car.z) * Math.sin(car.yaw);
+  const pref = along > 0 ? -1 : 1;
+  const st = lane.stops[car.next];
+  const room = {
+    1: Math.min(
+      lead.gap - 0.5,
+      lane.length - car.s,
+      st && car.box !== st.box ? st.sStop - (car.s + half) : Infinity,
+    ),
+    [-1]: Math.min(roomBehind(state, car) - 0.5, roomBeforeBox(lane, car, half)),
+  };
+  let moved = 0;
+  // The speed (m/s) along `dir` now: a car that drives on (not in a
+  // back-off) goes forward.
+  const going = (dir) =>
+    car.creep === dir || (dir > 0 && car.creep >= 0) ? v : 0;
+  for (const dir of [pref, -pref]) {
+    // A car that goes the other way stops first (hardBrake), and then
+    // starts again from rest. A car faster than creepSpeed slows to it.
+    const now = going(dir);
+    if (now === 0 && going(-dir) > 0.3) continue;
+    const speed =
+      now > T.creepSpeed
+        ? Math.max(T.creepSpeed, now - T.hardBrake * dt)
+        : Math.min(T.creepSpeed, now + T.creepAccel * dt);
+    let ds = Math.min(speed * dt, room[dir]);
+    for (let k = 0; k < 4 && ds > 1e-6; k += 1) {
+      const after = skaterGap(poseAfter(state, car, dir * ds), skater);
+      if (after >= before - 1e-9) {
+        moved = dir * ds;
+        car.speed = speed;
+        car.creep = dir;
+        break;
+      }
+      ds /= 2;
+    }
+    if (moved) break;
+  }
+  if (!moved) {
+    // No safe move: the car stops at once (as the hard rule of stepCar
+    // does) and waits.
+    car.speed = 0;
+    car.creep = 0;
+  }
+  car.yielding = true;
+  car.yieldTime = T.yieldWait;
+  car.accel = (car.speed - v) / dt;
+  car.brake = brakeLevel(car.accel, car.speed);
+  if (moved) {
+    place(state, car, car.lane, car.s + moved, false, stride);
+    // A car that backed past a stop line stops at it again.
+    car.next = nextStop(lane, car.s + half);
+  }
+}
+
+// The intersection and the turn signal, after each step of a car.
+function afterMove(state, car) {
+  const T = TRAFFIC;
+  const half = CAR_SIZE[car.kind].length / 2;
   // Out of the intersection: free it.
   if (car.box >= 0 && car.s - half > car.boxExit) {
     state.occupant[car.box] = -1;

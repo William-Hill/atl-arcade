@@ -257,7 +257,7 @@
     {
       "tool": "Blender 5.2.3 LTS (background mode, in the cloud container), scripts/blender/skater_physics_pass.py and skater_joint_limits.py; scripts/assets/graft-clips.mjs on Node 22 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
       "date": "2026-11-21",
-      "prompt": "Make push, coast, and carve_left more physically plausible as a quality test. Keep the wheels on the ground, the clip length, the beat timing, and no root travel. Mirror carve_left to carve_right. (Cascadeur was the first choice; it did not run in the cloud container: see docs/decisions.md, 2026-11-21.) Then add the Crossroads joint-limit gate and the attacker recoil rule (owner request). Then make the push drive faster with the Crossroads recipe (owner request). Then give the coast and the push an athletic stance (owner feedback: the coast looked upright). Then fix Marcus's bent right arm and the clipping (owner feedback).",
+      "prompt": "Make push, coast, and carve_left more physically plausible as a quality test. Keep the wheels on the ground, the clip length, the beat timing, and no root travel. Mirror carve_left to carve_right. (Cascadeur was the first choice; it did not run in the cloud container: see docs/decisions.md, 2026-11-21.) Then add the Crossroads joint-limit gate and the attacker recoil rule (owner request). Then make the push drive faster with the Crossroads recipe (owner request). Then give the coast and the push an athletic stance (owner feedback: the coast looked upright). Then fix Marcus's bent right arm and the clipping (owner feedback). Then fix Nia's carve step on beat 2 (owner request).",
       "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in assets/skaters/nia/skater.glb --out assets/skaters/nia/raw/physics; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater.glb assets/skaters/nia/raw/physics/nia-physics.glb assets/skaters/nia/skater.glb; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater-1024.glb assets/skaters/nia/raw/physics/nia-physics.glb assets/skaters/nia/skater-1024.glb",
       "settings": {
         "still": {
@@ -328,7 +328,7 @@
             "head": 2.5,
             "fwd": 0.3,
             "side": 0.6,
-            "drop": 1.0
+            "drop": 0.25
           },
           "coast": {
             "event": "beat",
@@ -339,6 +339,13 @@
             "fwd": 0.0,
             "side": 1.0,
             "drop": 0.5
+          }
+        },
+        "recoil_skater": {
+          "nia": {
+            "carve_left": {
+              "pelvis": 0.0
+            }
           }
         },
         "stance": {
@@ -359,6 +366,15 @@
           "marcus": {
             "push": "Left",
             "coast": "Left"
+          }
+        },
+        "support": {
+          "nia": {
+            "carve_left": {
+              "core": 0.3,
+              "dilate_frames": 4,
+              "sigma_frames": 2.5
+            }
           }
         },
         "clip_clear_m": 0.005,
@@ -413,6 +429,7 @@
       },
       "actions": [
         "Imported the shipped GLB (Draco decoded by the Blender importer) at 30 fps. Put every bone at rest before each clip sample.",
+        "Support (carve_left beat 2): the skate on the ground is levelled onto its wheels and rolls along its heading under the CoM (up to 21 cm) while the other skate is in the air; the knee IK points the knee over the moved skate.",
         "Athletic stance (coast, push): hinge forward at the hips until the shoulders are over the knees, coast hips to 0.78 of the leg length, 80% of the hinge back in the neck and head, coast arms 12 degrees forward; the leg IK keeps the skates.",
         "Centre of mass from Winter segment masses (60 kg body, 1.2 kg for each skate). Zero moment point (cart-table model) checked against the support polygon of the skates on the ground.",
         "Inertia on rollers: removed part of the fore-aft CoM oscillation (push 50%, coast 80%, carve 70%). Balance: solved (I - K D2) C = ZMP* so that the ZMP goes into the support polygon. Vertical: a symmetric Gaussian filter, widened until the CoM vertical acceleration is in -0.45 g to +0.6 g. All by a periodic shift of the hips (largest 6 cm horizontal, 3 cm vertical).",
@@ -423,13 +440,14 @@
         "Joint limits (Crossroads gate #465, ported to the Mixamo rig in skater_joint_limits.py): every new clip PASS; the gate self-test catches a knee bent to the side, a hyperextended knee and elbow, and a spine bent 130 degrees.",
         "carve_right: the mirror of the new carve_left across X = 0 (D' = S D S on the rest-relative matrices), with the same IK solve for the feet.",
         "Clipping fix: limb capsules, knee spheres, and skate boxes (skater_clip_probe.py); a leg in the other leg moves its skate in the ground plane; a hand or forearm more than 2 cm in a thigh or knee swings the upper arm away; then the hips rebalance to the old CoM path. The mirrored carve gets the same fix.",
-        "Exported the 4 clips and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change."
+        "Exported the 4 clips and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change.",
+        "Landing recoil starts at the touch-down; carve landing drop weight 0.25; Nia's carve has no pelvis bounce at the landing."
       ],
       "result": {
         "push": {
           "zmp_outside_mean_m": [
             0.088,
-            0.0001
+            0.001
           ],
           "com_jerk_rms_ms3": [
             44.25,
@@ -539,7 +557,7 @@
         "carve_left": {
           "zmp_outside_mean_m": [
             0.1537,
-            0.0599
+            0.0399
           ],
           "com_jerk_rms_ms3": [
             57.72,
@@ -564,12 +582,26 @@
           ],
           "clipping_overlap_max_m": {
             "r_forearm>r_thigh": 0.0236
+          },
+          "support": {
+            "single_support_frames": {
+              "Left": 13,
+              "Right": 0
+            },
+            "roll_max_m": {
+              "Left": 0.213,
+              "Right": 0.0
+            },
+            "level_weight_max": {
+              "Left": 1.0,
+              "Right": 0.0
+            }
           }
         },
         "carve_right": {
           "zmp_outside_mean_m": [
             0.1484,
-            0.0626
+            0.0522
           ],
           "com_jerk_rms_ms3": [
             57.75,
@@ -596,8 +628,8 @@
         }
       },
       "files": {
-        "skater.glb": 2464104,
-        "skater-1024.glb": 2014144
+        "skater.glb": 2464176,
+        "skater-1024.glb": 2014216
       },
       "evidence": "docs/characters/physics-pass/ (videos/nia-before-after*.mp4, compare/nia-<clip>.jpg, compare/closeup-*.jpg, nia-metrics.json, nia-joint-limits.json, nia-clip-probe-*.json, before.json, after.json)",
       "local_files_not_in_git": [
@@ -612,7 +644,7 @@
   "tripo_credits_after": 2715,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2464104,
+  "file_size_bytes": 2464176,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
   "animations": 25,

@@ -16,6 +16,24 @@ The pass has five parts:
 - Marcus `carve_left` is jam crossovers (2 beats, `skater_anim_v3.py`): the right skate lifts and crosses over in front of the left skate, then the left skate comes out from under and steps wide to the left. His chest turns into the curve more than Nia's.
 - `carve_right` is the mirror of `carve_left` for both skaters. The game plays the carve clip when the skater turns, and the renderer adds the bank lean of the turn.
 
+## Nia's carve, beat 2 (owner feedback)
+
+On beat 2 of the ATL Ryde corner step, the right skate is in the air for 13 frames (21 to 33). On `main`, Nia stood on the left skate only while it dragged on its toe stop, pitched 28 degrees up, 10 to 27 cm behind her centre of mass. Nobody can stand on a dragging toe stop with the body ahead of it.
+
+The support layer (SUPPORT in `skater_physics_pass.py`, Nia's carve only) fixes the step. When one skate is in the air, the skate on the ground is levelled onto its wheels (its yaw stays) and rolls along its own heading until the centre of mass is over the middle of its wheelbase. A skate can roll along its heading without a skid, so this is a legal move on wheels. The roll is up to 21 cm. It starts while both skates are still down and ends after the right skate lands. The left skate still drags on its toe on beat 1 and beat 1&. The knee IK points the knee over the moved skate.
+
+The landing bounce of a carve step now starts at the touch-down, not 3 frames before it. Nia's carve keeps the chest, arm, and head follow-through of the landing, but has no pelvis bounce there: the pelvis bounce came right after her one-skate step and moved her out of balance.
+
+| Nia carve_left | Before (main) | After |
+|---|---|---|
+| ZMP excess, mean of beat 2 (frames 21-33) | 0.163 m | 0.039 m |
+| ZMP excess, mean of the whole clip | 0.154 m | 0.040 m |
+| Support skate during beat 2 | on its toe stop, behind her | flat on its wheels, under her |
+
+What is left: beat 1& (frames 10 to 13, both skates down) is still out by up to 0.19 m, and the frame of the touch-down by 0.21 m. A real skater must review the corner step.
+
+Close-up: `compare/closeup-nia-carve-beat2.jpg` (frames 21, 27, 32, before and after).
+
 ## Marcus's right arm and the clipping (owner feedback)
 
 - Marcus's right arm: `skater_anim_v3.py` keyed his right elbow at 84 degrees with half the swing of the left arm ("like a drum stick"). In the game it read as a stiff arm. In the push and the coast, the right arm is now the mirror of the left arm half a clip later (the arms swing in opposition). Right elbow range: push 70..89 -> 12..39 degrees, coast 76..83 -> 21..30 degrees (left: 9..35 and 17..27). The brake and the carves keep their deliberate asymmetric arm shapes.
@@ -50,23 +68,23 @@ ZMP excess: the mean distance (m) of the zero moment point outside the support p
 
 | Clip | ZMP excess mean (m) | CoM vertical accel (m/s^2) | CoM jerk RMS | Lowest wheel, browser (m) | Joint limits |
 |---|---|---|---|---|---|
-| Nia push | 0.088 -> 0.000 | -8.7..2.5 -> -2.3..2.3 | 44 -> 38 | -0.000 -> 0.000 | PASS -> PASS |
+| Nia push | 0.088 -> 0.001 | -8.7..2.5 -> -2.3..2.3 | 44 -> 38 | -0.000 -> 0.000 | PASS -> PASS |
 | Nia coast | 0.000 -> 0.000 | -0.2..0.3 -> -0.9..1.5 | 4 -> 23 | -0.000 -> -0.000 | PASS -> PASS |
-| Nia carve_left | 0.154 -> 0.060 | -9.8..7.7 -> -3.9..5.5 | 58 -> 51 | -0.039 -> -0.000 | PASS -> PASS |
-| Nia carve_right | 0.148 -> 0.063 | -9.8..7.7 -> -3.9..5.5 | 58 -> 51 | -0.040 -> -0.001 | PASS -> PASS |
+| Nia carve_left | 0.154 -> 0.040 | -9.8..7.7 -> -3.9..5.5 | 58 -> 51 | -0.039 -> -0.000 | PASS -> PASS |
+| Nia carve_right | 0.148 -> 0.052 | -9.8..7.7 -> -3.9..5.5 | 58 -> 51 | -0.040 -> -0.001 | PASS -> PASS |
 | Marcus push | 0.129 -> 0.000 | -12.0..3.6 -> -3.3..2.8 | 69 -> 40 | -0.000 -> 0.000 | PASS -> PASS |
 | Marcus coast | 0.000 -> 0.000 | -0.4..0.6 -> -0.7..1.8 | 16 -> 25 | -0.000 -> 0.000 | PASS -> PASS |
-| Marcus carve_left | 0.133 -> 0.023 | -6.3..7.1 -> -6.0..9.1 | 85 -> 86 | -0.000 -> 0.000 | PASS -> PASS |
-| Marcus carve_right | 0.125 -> 0.026 | -6.2..7.0 -> -6.0..8.9 | 85 -> 87 | -0.000 -> -0.000 | PASS -> PASS |
+| Marcus carve_left | 0.133 -> 0.001 | -6.3..7.1 -> -6.0..9.1 | 85 -> 86 | -0.000 -> 0.000 | PASS -> PASS |
+| Marcus carve_right | 0.125 -> 0.011 | -6.2..7.0 -> -6.0..8.9 | 85 -> 87 | -0.000 -> -0.000 | PASS -> PASS |
 
 Athletic stance (trunk lean: the Hips-to-Neck line from the vertical; hip-ankle: the hip joint to ankle distance over the leg length; shoulders ahead of knees: + = the shoulders are in front of the knees):
 
 | Clip | Trunk lean (deg) | Hip-ankle / leg | Shoulders ahead of knees (m) | Hip hinge added (deg) |
 |---|---|---|---|---|
-| Nia push | 17.2 -> 33.2 | 0.734 -> 0.737 | -0.104 -> -0.002 | 16 |
-| Nia coast | 7.5 -> 34.5 | 0.863 -> 0.791 | -0.179 -> 0.001 | 27 |
-| Marcus push | 21.3 -> 24.3 | 0.685 -> 0.686 | -0.026 -> -0.002 | 3 |
-| Marcus coast | 12.1 -> 24.1 | 0.831 -> 0.785 | -0.101 -> 0.001 | 12 |
+| Nia push | 17.2 -> 0.001 | 0.734 -> 0.737 | -0.104 -> -0.002 | 16 |
+| Nia coast | 7.5 -> 0.000 | 0.863 -> 0.791 | -0.179 -> 0.001 | 27 |
+| Marcus push | 21.3 -> 0.000 | 0.685 -> 0.686 | -0.026 -> -0.002 | 3 |
+| Marcus coast | 12.1 -> 0.000 | 0.831 -> 0.785 | -0.101 -> 0.001 | 12 |
 
 Push drive (one stroke; both strokes are the same):
 

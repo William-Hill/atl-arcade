@@ -2685,3 +2685,13 @@ Result (deepest clip, before = `main`): Marcus carve skates 5.6 cm to none over 
 
 Tests: `npx vitest run src/render` 642 of 642. `e2e/skater-model.spec.js` and the contact-sheet tests pass. "the scripted sessions show no marcus T-pose frame" times out at 120 s; it also times out with the `main` GLBs on this machine, so the cause is the scripted sessions merged from `main` on a 4-core SwiftShader container, not the clips. The Nia T-pose session test passes.
 
+## 2026-11-21: Nia's carve step on beat 2
+
+Owner request: fix Nia's carve step on beat 2. On `main`, the right skate is in the air for 13 frames, and Nia stands on the left skate while it drags on its toe stop (pitched 28 degrees up) 10 to 27 cm behind her centre of mass. The ZMP excess of beat 2 was 0.163 m (mean).
+
+Fix (SUPPORT in `skater_physics_pass.py`, Nia's carve only): when one skate is in the air, the skate on the ground is levelled onto its wheels and rolls along its own heading until the CoM is over the middle 30% of its wheelbase (up to 21 cm). A roll along the heading needs no skid. The roll blends in while both skates are down and out after the landing. A drag skate never counts as lifted. When a foot target moves, the leg IK now turns the knee bend toward the heading of the foot (as the knee pole of `skater_runtime.py`); without this, the knee went 34 to 36 degrees off its hinge (a joint-limit WARN). Marcus's crossover carve was already in balance and does not get the layer (it made his ZMP excess 0.024 to 0.054 m).
+
+Recoil changes: a landing bounce now starts at the touch-down (before, it started 3 frames before it, when the body was still on one skate). The carve landing bounce is mostly horizontal (drop weight 0.25, was 1.0): at a touch-down the ground pushes up, so a sharp drop is the wrong sign. Nia's carve has no pelvis bounce at the landing (ZMP excess 0.040 m without it, 0.048 to 0.051 m with it); the chest, arms, and head still follow through.
+
+Result: Nia carve beat 2 ZMP excess 0.163 to 0.039 m (mean); whole clip 0.154 to 0.040 m; Marcus carve 0.133 to 0.001 m. Every clip passes the joint-limit gate, no clip is deeper than 2.4 cm (cloth contact), and no wheel leaves the ground. Open: beat 1& (both skates down) is still out by up to 0.19 m. The T-pose session tests time out at 120 s for both skaters with the `main` GLBs too (the scripted sessions from `main` on this machine).
+

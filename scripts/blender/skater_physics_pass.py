@@ -110,7 +110,7 @@ DRAG_LIFT = 0.04
 # skate or along the CoM velocity, down).
 RECOIL = {
     "push": {"event": "lift", "pelvis": 0.025, "chest": 5.0, "arms": 6.0, "head": 3.0, "fwd": 1.0, "side": 0.5, "drop": 0.4},
-    "carve_left": {"event": "land", "pelvis": 0.02, "chest": 4.0, "arms": 4.0, "head": 2.5, "fwd": 0.3, "side": 0.6, "drop": 1.0},
+    "carve_left": {"event": "land", "pelvis": 0.02, "chest": 4.0, "arms": 4.0, "head": 2.5, "fwd": 0.3, "side": 0.6, "drop": 0.25},
     "coast": {"event": "beat", "pelvis": 0.012, "chest": 2.5, "arms": 3.0, "head": 1.5, "fwd": 0.0, "side": 1.0, "drop": 0.5},
 }
 # The bounce at 30 fps: it starts LEAD frames before the stop frame, peaks at
@@ -120,6 +120,12 @@ RECOIL = {
 # pelvis bounce goes into the target CoM path before the balance solve, so
 # the solve cuts the part of a bounce that the skates cannot hold. Each segment is 1 frame later
 # than the one before: pelvis, chest, arms, head.
+# Per skater: Nia's carve landing ends an unstable one-skate step (beat 2),
+# and any pelvis bounce there spread out of balance (ZMP excess 0.034 m
+# without it, 0.048 to 0.051 m with it). Her chest, arms, and head still
+# follow through.
+RECOIL_SKATER = {"nia": {"carve_left": {"pelvis": 0.0}}}
+SKATER = {"who": ""}
 RECOIL_LEAD, RECOIL_BACK = 3, 4
 RECOIL_DELAY = {"pelvis": 0, "chest": 1, "arms": 2, "head": 3}
 # A faster drive (the Crossroads recipe: the swing length times 10/18, and a
@@ -164,6 +170,17 @@ LEG_PAIRS = {"l_knee>r_knee", "l_knee>r_shin", "r_knee>l_shin", "l_knee>r_thigh"
              "l_skate>r_skate", "l_skate>r_shin", "r_skate>l_shin"}
 ARM_PAIRS = {"l_hand>l_thigh": "Left", "r_hand>r_thigh": "Right", "l_hand>l_knee": "Left", "r_hand>r_knee": "Right",
              "l_forearm>l_thigh": "Left", "r_forearm>r_thigh": "Right"}
+# Support (owner request 2026-11-21: fix Nia's carve step on beat 2). When
+# one skate is in the air, the skate on the ground must be under the centre
+# of mass. A skate can roll along its own heading without a skid, so the
+# support skate rolls along its heading until the CoM is over the middle
+# "core" share of its wheelbase. The roll starts while both skates are still
+# down and ends after the other skate lands (dilate and smooth).
+# The skate in the ATL Ryde drag is on its toe stop (pitched up); a skater
+# cannot stand on a dragging toe stop, so the support skate is also levelled
+# onto its wheels (its yaw stays). Only Nia: Marcus's crossover carve was
+# already in balance (ZMP excess 0.024 m), and the roll made it worse.
+SUPPORT = {"nia": {"carve_left": {"core": 0.3, "dilate_frames": 4, "sigma_frames": 2.5}}}
 # The heading of the skater in Blender: the model faces -Y, X is the side.
 FORWARD = 1  # axis index of fore-aft (Y)
 SIDE = 0
@@ -404,6 +421,16 @@ def leg_ik(sk, mats, side, hips_new, target_mats):
     # The old bend direction, square to the new hip-ankle line.
     mid0 = H0 + (A0 - H0).normalized() * ((K0 - H0).dot((A0 - H0).normalized()))
     bend = K0 - mid0
+    # When the foot target moved (the support roll), the knee points over the
+    # skate again: blend the bend toward the heading of the target foot, as
+    # the knee pole of skater_runtime.py does.
+    moved = (A - A0).length
+    if moved > 0.01 and P + side + "ToeBase" in target_mats:
+        h = target_mats[P + side + "ToeBase"].to_translation() - M_ft.to_translation()
+        h.z = 0
+        if h.length > 1e-6 and bend.length > 1e-6:
+            w = min(1.0, moved / 0.05)
+            bend = bend.normalized() * (1 - w) + h.normalized() * w
     bend = (bend - u * bend.dot(u))
     if bend.length < 1e-6:
         bend = Vector((0, -1, 0)) - u * u.y
@@ -648,7 +675,9 @@ def recoil_events(name, s, C):
                 v = vel[f].copy()
                 v[2] = 0
                 lat = v / max(np.linalg.norm(v), 1e-9)
-                out.append({"frame": f, "skate": side, "lat": lat})
+                # A landing bounce starts at the touch-down, not before it:
+                # before the touch-down the body is still on one skate.
+                out.append({"frame": (f + RECOIL_LEAD) % n, "skate": side, "lat": lat})
     if cfg["event"] == "beat":
         for f in range(0, n, BEAT):
             v = vel[f].copy()
@@ -676,6 +705,7 @@ def recoil_offsets(name, events, n):
     cfg = RECOIL.get(name)
     if not cfg:
         return out
+    cfg = {**cfg, **RECOIL_SKATER.get(SKATER["who"], {}).get(name, {})}
     for f in range(n):
         w, e = _active(events, f, RECOIL_DELAY["pelvis"], n)
         if e:
@@ -1071,6 +1101,77 @@ def resolve_clips(sk, s, shift, rots, targets, radii, boxes):
             "arm_swing_out_max_deg": {sd: round(float(arm_deg[sd].max()), 1) for sd in arm_deg}}
 
 
+def support_pass(sk, who, name, s):
+    """A new action with the support skate flat and rolled under the CoM."""
+    cfg = SUPPORT.get(who, {}).get(name)
+    if not cfg:
+        return None, None
+    n = s["n"]
+    C = np.array([sk.com(s["mat"][f]) for f in range(n)])
+    z = {sd: np.array([float(s["skate"][f][sd][:, 2].min()) for f in range(n)]) for sd in ("Left", "Right")}
+    rest = {sd: sk.arm.data.bones[P + sd + "Foot"].matrix_local.copy() for sd in ("Left", "Right")}
+
+    def heading(M_foot, M_toe):
+        v = M_toe.to_translation() - M_foot.to_translation()
+        v.z = 0
+        return v.normalized()
+
+    single = {sd: np.zeros(n) for sd in ("Left", "Right")}
+    for f in range(n):
+        for sd, other in (("Left", "Right"), ("Right", "Left")):
+            # A drag skate (never higher than DRAG_LIFT) stays on the ground.
+            if z[sd][f] < CONTACT <= z[other][f] and z[other].max() >= DRAG_LIFT:
+                single[sd][f] = 1.0
+    info = {"single_support_frames": {sd: int(single[sd].sum()) for sd in single}}
+    if not any(single[sd].any() for sd in single):
+        return None, info
+    k = cfg["dilate_frames"]
+    weight, roll = {}, {}
+    for sd in single:
+        dil = np.array([max(single[sd][(f + i) % n] for i in range(-k, k + 1)) for f in range(n)])
+        weight[sd] = np.clip(circ_gauss(dil, cfg["sigma_frames"]) * 1.25, 0, 1)
+        weight[sd] = np.maximum(weight[sd], single[sd])
+        r = np.zeros(n)
+        for f in range(n):
+            if single[sd][f]:
+                Mf, Mt = s["mat"][f][P + sd + "Foot"], s["mat"][f][P + sd + "ToeBase"]
+                h = heading(Mf, Mt)
+                # The middle of the wheelbase: the ankle and the toe, on the ground.
+                c = (Mf.to_translation() + Mt.to_translation()) / 2
+                half = (Mt.to_translation() - Mf.to_translation()).length
+                d = (Vector((C[f, 0], C[f, 1], 0)) - Vector((c.x, c.y, 0))).dot(h)
+                lim = cfg["core"] * half
+                r[f] = d - min(max(d, -lim), lim)
+        dil = np.array([max((r[(f + i) % n] for i in range(-k, k + 1)), key=abs) for f in range(n)])
+        sm = circ_gauss(dil, cfg["sigma_frames"])
+        roll[sd] = np.where(np.abs(r) > np.abs(sm), r, sm)
+    sk.arm.animation_data.action = None
+    for f in range(n + 1):
+        g = f % n
+        tm = dict(s["mat"][g])
+        for sd in ("Left", "Right"):
+            w = float(weight[sd][g])
+            if w <= 0 and abs(roll[sd][g]) < 1e-4:
+                continue
+            Mf, Mt = s["mat"][g][P + sd + "Foot"], s["mat"][g][P + sd + "ToeBase"]
+            h = heading(Mf, Mt)
+            h0 = Vector((0, -1, 0))  # the rest foot points forward
+            yaw = math.atan2(h0.x * h.y - h0.y * h.x, h0.dot(h))
+            flat = (Matrix.Rotation(yaw, 3, "Z") @ rest[sd].to_3x3()).to_quaternion()
+            q = Mf.to_quaternion().slerp(flat, w)
+            pos = Mf.to_translation() + Vector((h.x, h.y, 0)) * float(roll[sd][g])
+            M_new = Matrix.Translation(pos) @ q.to_matrix().to_4x4()
+            tm[P + sd + "Foot"] = M_new
+            tm[P + sd + "ToeBase"] = M_new @ Mf.inverted() @ Mt
+        write_pose(sk, g, s, s["mat"][g][P + "Hips"], {}, tm)
+        key_frame(sk, f)
+    act = sk.arm.animation_data.action
+    act.name = name + "_support"
+    info["roll_max_m"] = {sd: round(float(np.abs(roll[sd]).max()), 3) for sd in roll}
+    info["level_weight_max"] = {sd: round(float(weight[sd].max()), 2) for sd in weight}
+    return act, info
+
+
 def build_action(sk, name, s, shift, rots, targets):
     # keyframe_insert makes a new action (with its slot) when none is bound.
     sk.arm.animation_data.action = None
@@ -1166,10 +1267,11 @@ def main():
     sk = Skater(a.src)
     base = os.path.splitext(os.path.basename(a.src))[0]
     who = sk.arm.name.replace("Rig", "").lower()
+    SKATER["who"] = who
     report = {"source": a.src, "skater": who, "settings": {
         "still": STILL, "sigma_frames": SIGMA, "follow": FOLLOW, "max_shift_m": {**MAX_SHIFT, "default": MAX_SHIFT_DEFAULT},
         "contact_m": CONTACT, "support_margin_m": SUPPORT_MARGIN, "body_kg": BODY_KG, "skate_kg": SKATE_KG,
-        "recoil": RECOIL, "stance": STANCE, "arm_mirror": ARM_MIRROR, "clip_clear_m": CLEAR, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
+        "recoil": RECOIL, "recoil_skater": RECOIL_SKATER, "stance": STANCE, "arm_mirror": ARM_MIRROR, "support": SUPPORT, "clip_clear_m": CLEAR, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
     rest = {b: (bn.head_local.x, bn.head_local.y, bn.head_local.z) for b, bn in ((b, sk.arm.data.bones[b]) for b in (P + "LeftFoot", P + "RightFoot"))}
     report["rest_feet"] = rest
     originals = {}
@@ -1183,6 +1285,9 @@ def main():
         arm_act, arm_info = arm_mirror_pass(sk, who, name, s)
         if arm_act:
             s = sk.sample(arm_act)
+        sup_act, support_info = support_pass(sk, who, name, s)
+        if sup_act:
+            s = sk.sample(sup_act)
         stance_info = None
         st_act, stance_info = stance_pass(sk, name, s)
         if st_act:
@@ -1192,7 +1297,7 @@ def main():
         if plan:
             # The physics pass works on the retimed clip; "before" stays the
             # shipped clip.
-            src_act = retime(sk, st_act or arm_act or act, plan, name + "_drive")
+            src_act = retime(sk, st_act or sup_act or arm_act or act, plan, name + "_drive")
             s0 = s
             s = sk.sample(src_act)
             s["drive"] = plan
@@ -1203,7 +1308,7 @@ def main():
                           "warp": [round(w, 2) for w in plan["warp"]]}
             m_pass = mw
         else:
-            m_pass = metrics(sk, s) if (st_act or arm_act) else m0
+            m_pass = metrics(sk, s) if (st_act or arm_act or sup_act) else m0
         shift, rots, targets, info = physics_pass(sk, name, s, m_pass)
         if drive_info:
             info["drive"] = drive_info
@@ -1211,6 +1316,8 @@ def main():
             info["stance"] = stance_info
         if arm_info:
             info["arm_mirror"] = arm_info
+        if support_info:
+            info["support"] = support_info
         C_ref = com_path(sk, s, shift, rots, targets)
         setup = clip_setup(sk)
         info["clipping"] = resolve_clips(sk, s, shift, rots, targets, *setup)

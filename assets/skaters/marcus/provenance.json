@@ -349,7 +349,7 @@
             "head": 2.5,
             "fwd": 0.3,
             "side": 0.6,
-            "drop": 1.0
+            "drop": 0.25
           },
           "coast": {
             "event": "beat",
@@ -360,6 +360,13 @@
             "fwd": 0.0,
             "side": 1.0,
             "drop": 0.5
+          }
+        },
+        "recoil_skater": {
+          "nia": {
+            "carve_left": {
+              "pelvis": 0.0
+            }
           }
         },
         "stance": {
@@ -380,6 +387,15 @@
           "marcus": {
             "push": "Left",
             "coast": "Left"
+          }
+        },
+        "support": {
+          "nia": {
+            "carve_left": {
+              "core": 0.3,
+              "dilate_frames": 4,
+              "sigma_frames": 2.5
+            }
           }
         },
         "clip_clear_m": 0.005,
@@ -445,13 +461,14 @@
         "Joint limits (Crossroads gate #465, ported to the Mixamo rig in skater_joint_limits.py): every new clip PASS; the gate self-test catches a knee bent to the side, a hyperextended knee and elbow, and a spine bent 130 degrees.",
         "carve_right: the mirror of the new carve_left across X = 0 (D' = S D S on the rest-relative matrices), with the same IK solve for the feet.",
         "Clipping fix: limb capsules, knee spheres, and skate boxes (skater_clip_probe.py); a leg in the other leg moves its skate in the ground plane; a hand or forearm more than 2 cm in a thigh or knee swings the upper arm away; then the hips rebalance to the old CoM path. The mirrored carve gets the same fix.",
-        "Exported the 4 clips and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change."
+        "Exported the 4 clips and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change.",
+        "Landing recoil starts at the touch-down; carve landing drop weight 0.25; Nia's carve has no pelvis bounce at the landing."
       ],
       "result": {
         "push": {
           "zmp_outside_mean_m": [
             0.1293,
-            0.0002
+            0.0004
           ],
           "com_jerk_rms_ms3": [
             68.79,
@@ -554,7 +571,7 @@
         "carve_left": {
           "zmp_outside_mean_m": [
             0.1326,
-            0.0227
+            0.0009
           ],
           "com_jerk_rms_ms3": [
             85.1,
@@ -585,7 +602,7 @@
         "carve_right": {
           "zmp_outside_mean_m": [
             0.125,
-            0.0263
+            0.011
           ],
           "com_jerk_rms_ms3": [
             85.36,
@@ -610,8 +627,8 @@
         }
       },
       "files": {
-        "skater.glb": 3663048,
-        "skater-1024.glb": 2790436
+        "skater.glb": 3663120,
+        "skater-1024.glb": 2790508
       },
       "evidence": "docs/characters/physics-pass/ (videos/marcus-before-after*.mp4, compare/marcus-<clip>.jpg, compare/closeup-*.jpg, marcus-metrics.json, marcus-joint-limits.json, marcus-clip-probe-*.json, before.json, after.json)",
       "local_files_not_in_git": [
@@ -626,7 +643,7 @@
   "tripo_credits_after": 2970,
   "file": "assets/skaters/marcus/skater.glb",
   "triangles": 39074,
-  "file_size_bytes": 3663048,
+  "file_size_bytes": 3663120,
   "five_views": "assets/skaters/marcus/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "contact_sheets": "assets/skaters/marcus/clips/<clip>.png, made by e2e/skater-anim.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/marcus/provenance.json)",

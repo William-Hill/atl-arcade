@@ -1,0 +1,77 @@
+/* The text callouts (#305, src/ui/callouts.js). Big heavy italic type with a
+   dark ink outline and a hard offset shadow, so it reads on a bright sky or a
+   white wall. The place keeps clear of the HUD column and the minimap at the
+   top, the landmark banner (30 vh), and the touch controls at the bottom
+   (#245, #277). JS sets only the opacity and the transform of .co-card. */
+#callout {
+  position: fixed;
+  left: 50%;
+  top: 58vh;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  width: min(900px, calc(100vw - 2 * 232px));
+  min-width: 280px;
+  text-align: center;
+  /* Over the results screen (4), the touch controls (10) and the banner (21). */
+  z-index: 22;
+  pointer-events: none;
+  user-select: none;
+}
+#callout[hidden] { display: none; }
+#callout .co-card { transform-origin: 50% 60%; will-change: transform, opacity; }
+#callout .co-text {
+  font: italic 900 clamp(48px, 9vw, 112px) / 1 system-ui, "Arial Black", sans-serif;
+  letter-spacing: 0.02em;
+  color: var(--co-fill, #f3f3f7);
+  -webkit-text-stroke: 0.1em #0b0b12;
+  paint-order: stroke fill;
+  text-shadow: 0.06em 0.07em 0 #0b0b12, 0.1em 0.12em 0 var(--co-glow, #ff5fb2);
+  overflow-wrap: anywhere;
+}
+#callout .co-sub {
+  margin-top: 6px;
+  font: italic 900 clamp(24px, 3.6vw, 44px) / 1.1 system-ui, "Arial Black", sans-serif;
+  letter-spacing: 0.04em;
+  color: #f3f3f7;
+  -webkit-text-stroke: 0.12em #0b0b12;
+  paint-order: stroke fill;
+  text-shadow: 0.06em 0.07em 0 #0b0b12;
+}
+#callout .co-sub[hidden] { display: none; }
+
+/* The tones. Each fill keeps a 4.5:1 or more contrast with the ink outline. */
+#callout[data-tone="count"] { --co-fill: #f3f3f7; --co-glow: #5fd4ff; }
+#callout[data-tone="count"] .co-text { font-size: clamp(72px, 14vw, 160px); }
+#callout[data-tone="go"] { --co-fill: #ffd166; --co-glow: #ff5fb2; }
+#callout[data-tone="claim"] { --co-fill: #7cf2c8; --co-glow: #c9962e; }
+#callout[data-tone="combo"] { --co-fill: #ff80c4; --co-glow: #5fd4ff; }
+#callout[data-tone="end"] { --co-fill: #f3f3f7; --co-glow: #ff5fb2; }
+#callout[data-tone="gold"] { --co-fill: #ffd166; --co-glow: #c9962e; }
+#callout[data-tone="silver"] { --co-fill: #dfe3f0; --co-glow: #7d86a8; }
+#callout[data-tone="bronze"] { --co-fill: #f0a868; --co-glow: #8a4f24; }
+#callout[data-tone="gold"] .co-text,
+#callout[data-tone="silver"] .co-text,
+#callout[data-tone="bronze"] .co-text { font-size: clamp(64px, 12vw, 144px); }
+
+/* The results card waits while "ROUND OVER" and the medal play, then fades in. */
+#results .results-card { transition: opacity 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+body.callout-end #results .results-card { opacity: 0; transition: none; }
+
+/* A phone in portrait: under the banner (it ends near 360 px on a 844 px
+   screen) and over the touch controls (the top button is 162 px from the
+   bottom). */
+@media (max-width: 600px) and (orientation: portrait) {
+  #callout { top: 56vh; width: calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)); }
+  #callout .co-text { font-size: clamp(40px, 12vw, 64px); }
+  #callout[data-tone="count"] .co-text { font-size: 96px; }
+  #callout .co-sub { font-size: 26px; }
+}
+
+/* A phone in landscape: between the HUD column and the buttons, as the
+   banner (262 px on each side). */
+@media (max-height: 500px) {
+  #callout { top: 56vh; width: max(260px, calc(100vw - 2 * (262px + env(safe-area-inset-right)))); min-width: 0; }
+  #callout .co-text { font-size: 40px; }
+  #callout[data-tone="count"] .co-text { font-size: 72px; }
+  #callout .co-sub { font-size: 22px; margin-top: 2px; }
+}

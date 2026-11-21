@@ -105,6 +105,7 @@ import { ringCapacity } from "./render/landmark-rings-math.js";
 import { createLandmarkBanner, districtAccent } from "./ui/landmark-banner.js";
 import { createChimes } from "./audio/chimes.js";
 import { createTeachPrompts } from "./ui/teach-prompt.js";
+import { createCallouts } from "./ui/callouts.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -898,7 +899,17 @@ const onTrack = (id) => {
   writeChoice(settingsStorage, id);
   beat.setTrack(id).catch(() => {});
 };
-const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: () => resetSkater(), tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack }) : null;
+// The text callouts (#305): 3, 2, 1, SKATE!, SPOT CLAIMED, the combo name,
+// ROUND OVER and the medal, on the music beat. ?callouts=0 turns them off.
+const callouts = params.get("callouts") === "0" ? null : createCallouts(document.body, { reducedMotion: () => effects.reducedMotion, beat: () => ({ phase: beat.running && beat.musicState !== "loading" && beat.now() >= 0 ? beat.phase() : null, bpm: beat.bpm }) });
+// The count-in plays at the first key or tap of a timed run, and after a replay. It waits
+// while the track loads (no phase), so the first card does not slow the music start.
+let calloutStart = Boolean(goalDef);
+const replayRun = () => {
+  resetSkater();
+  callouts?.start();
+};
+const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: replayRun, tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack }) : null;
 // The minimap (#86) on a geodata level. ?minimap=0 leaves it out, and
 // ?minimap=north or ?minimap=heading sets the mode.
 const minimapParam = params.get("minimap");
@@ -930,6 +941,10 @@ let camFxEvent = 0;
 // until a gesture resumes it.
 function startBeat() {
   if (!beat.running) beat.start().catch(() => {});
+  if (calloutStart && goals && !goals.ended) {
+    calloutStart = false;
+    callouts?.start();
+  }
 }
 window.addEventListener("keydown", startBeat, { once: false });
 window.addEventListener("pointerdown", startBeat);
@@ -952,6 +967,7 @@ function simulate(dt) {
   // After the run ends the skater gets no input and rolls to a stop.
   const sampled = sampleInput();
   const before = run.skater;
+  const comboBefore = run.combo;
   perf.begin("skater");
   const applied = goals && goals.ended ? {} : sampled;
   run = stepRun(run, applied, dt, env, skaterEnv, beat.running ? beat : null);
@@ -982,6 +998,7 @@ function simulate(dt) {
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
   if (run.banked) {
     events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+    callouts?.combo(run.banked, comboBefore);
     skaterView.cheer();
   }
   if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
@@ -1013,6 +1030,7 @@ function simulate(dt) {
     for (const c of changed.claimed) {
       events.push({ tick: run.tick, type: "landmark-claimed", id: c.id, points: c.points, first: c.first });
       chimes.play("claimed");
+      callouts?.claim(c.points);
       // A gap claim at the zone of a gap goal marks that goal in this run.
       const marked = withGapGoal(goals, c.goal, goalDef);
       if (marked !== goals) {
@@ -1060,6 +1078,7 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   landmarkTracker?.startRun();
   landmarkRings?.reset();
   landmarkTravel = false;
+  callouts?.clear();
   events.length = 0;
   camFxEvent = 0;
   // The model faces the new heading at once, also while the render is
@@ -1267,7 +1286,12 @@ function frame(now) {
   }
   if (paused) chimes.clear();
   else chimes.update();
-  if (results && goals.ended && !results.shown) results.show(runResults());
+  if (results && goals.ended && !results.shown) {
+    const end = runResults();
+    results.show(end);
+    callouts?.end(end);
+  }
+  callouts?.update(paused ? 0 : Math.min(elapsed, 0.1), { held: paused });
   if (minimap) minimap.update(skater);
   if (fullmap) fullmap.update(skater);
   if (factCardsView) factCardsView.update(run.cards.collected, now / 1000);
@@ -1333,6 +1357,20 @@ requestAnimationFrame(frame);
 
 // Read by the Playwright tests.
 window.__atl = {
+  // The text callouts (#305), or null with ?callouts=0. state: what shows now.
+  callouts: callouts
+    ? {
+        get state() {
+          return callouts.state;
+        },
+        start: () => callouts.start(),
+        claim: (points) => callouts.claim(points),
+        combo: (points, links, multiplier) => callouts.combo(points, { links: { length: links }, multiplier }),
+        end: (results) => callouts.end(results),
+        // Stops the callout clock when the card `text` holds still (null: run again).
+        stopOn: (text) => callouts.stopOn(text),
+      }
+    : null,
   // The late downloads (#190): the plan, and when each group started and
   // finished, in ms from the navigation.
   get lateLoads() {
@@ -1787,7 +1825,7 @@ window.__atl = {
         setTimeLeft(seconds) {
           goals = { ...goals, time: Math.max(0, goalDef.time - seconds) };
         },
-        replay: () => resetSkater(),
+        replay: replayRun,
       }
     : null,
   beat,

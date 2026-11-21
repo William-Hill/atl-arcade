@@ -1,0 +1,39 @@
+{
+ "clip": "mocap_test_push",
+ "motion": "test_motion.npz",
+ "frames": 42,
+ "fps": 24.0,
+ "seconds": 1.75,
+ "loop_motion_frames": [
+  79,
+  121
+ ],
+ "loop_cost": 0.00378,
+ "blend_frames": 6,
+ "source_travel_m": 6.035,
+ "source_speed_m_s": 3.449,
+ "heading_drift_removed_deg_s": 6.45,
+ "sway_range_m": [
+  0.205,
+  0.042
+ ],
+ "body_ground_shift_m": [
+  0.027,
+  0.036
+ ],
+ "raw_lowest_skate_m": [
+  -0.057,
+  -0.023
+ ],
+ "ik": {
+  "lifted": 18,
+  "lowered": 51,
+  "clamped": 0,
+  "max_adjust_m": 0.0215
+ },
+ "final_lowest_skate_m": [
+  -0.0,
+  0.0
+ ],
+ "glb_bytes": 2154616
+}

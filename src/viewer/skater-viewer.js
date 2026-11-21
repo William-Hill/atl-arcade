@@ -134,6 +134,37 @@ function sheet(name, cols = 6, view = "three-quarter") {
   return { name, duration: clip.duration, tracks: clip.tracks.length };
 }
 
+// The lowest point of the skinned mesh (m, the ground is y = 0) at each time
+// (s) of one clip. On the ground clips, this is the lowest wheel: a value
+// below 0 goes through the ground, a value above 0 floats.
+let modelRoot = null;
+function lowest(name, times) {
+  const clip = clips.find((c) => c.name === name);
+  if (!clip) throw new Error(`Unknown clip: ${name}`);
+  mixer.stopAllAction();
+  const action = mixer.clipAction(clip);
+  action.reset().play();
+  const meshes = [];
+  modelRoot.traverse((o) => o.isSkinnedMesh && meshes.push(o));
+  const v = new THREE.Vector3();
+  return times.map((t) => {
+    action.time = t;
+    mixer.update(0);
+    modelRoot.updateMatrixWorld(true);
+    let min = Infinity;
+    for (const mesh of meshes) {
+      mesh.skeleton.update();
+      const pos = mesh.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i += 1) {
+        mesh.getVertexPosition(i, v);
+        v.applyMatrix4(mesh.matrixWorld);
+        if (v.y < min) min = v.y;
+      }
+    }
+    return min;
+  });
+}
+
 const state = {
   ready: false,
   error: null,
@@ -141,6 +172,7 @@ const state = {
   setView,
   setFace,
   sheet,
+  lowest,
   get clips() {
     return clips.map((c) => c.name);
   },
@@ -162,6 +194,7 @@ try {
   // The model stands at the dossier height: the face moves with the scale.
   FACE_TARGET.y = FACE_Y * modelScale(bodyFor(name));
   clips = model.animations;
+  modelRoot = model.root;
   face = model.face;
   if (face && params.get("face")) {
     const [eyes, mouth] = params.get("face").split(",");

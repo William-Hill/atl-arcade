@@ -253,6 +253,156 @@
       ],
       "result": "assets/skaters/nia/skater-lod1.glb, 59,376 bytes, 3,000 triangles, 1,642 vertices, 65 joints, no animations, no textures (source: 23,472 triangles, 31,785 vertices)",
       "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.3 LTS (background mode, in the cloud container), scripts/blender/skater_physics_pass.py; scripts/assets/graft-clips.mjs on Node 22 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
+      "date": "2026-11-21",
+      "prompt": "Make push, coast, and carve_left more physically plausible as a quality test. Keep the wheels on the ground, the clip length, the beat timing, and no root travel. Mirror carve_left to carve_right. (Cascadeur was the first choice; it did not run in the cloud container: see docs/decisions.md, 2026-11-21.)",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in assets/skaters/nia/skater.glb --out assets/skaters/nia/raw/physics; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater.glb assets/skaters/nia/raw/physics/nia-physics.glb assets/skaters/nia/skater.glb; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater-1024.glb assets/skaters/nia/raw/physics/nia-physics.glb assets/skaters/nia/skater-1024.glb",
+      "settings": {
+        "still": {
+          "push": 0.5,
+          "coast": 0.8,
+          "carve_left": 0.7
+        },
+        "sigma_frames": 1.2,
+        "follow": [
+          [
+            "LeftForeArm",
+            2,
+            0.45
+          ],
+          [
+            "RightForeArm",
+            2,
+            0.45
+          ],
+          [
+            "LeftHand",
+            3,
+            0.55
+          ],
+          [
+            "RightHand",
+            3,
+            0.55
+          ],
+          [
+            "Head",
+            2,
+            0.35
+          ]
+        ],
+        "max_shift_m": [
+          0.06,
+          0.03
+        ],
+        "contact_m": 0.015,
+        "support_margin_m": 0.02,
+        "body_kg": 60.0,
+        "skate_kg": 1.2
+      },
+      "actions": [
+        "Imported the shipped GLB (Draco decoded by the Blender importer) at 30 fps. Put every bone at rest before each clip sample.",
+        "Centre of mass from Winter segment masses (60 kg body, 1.2 kg for each skate). Zero moment point (cart-table model) checked against the support polygon of the skates on the ground.",
+        "Inertia on rollers: removed part of the fore-aft CoM oscillation (push 50%, coast 80%, carve 70%). Balance: solved (I - K D2) C = ZMP* so that the ZMP goes into the support polygon. Vertical: a symmetric Gaussian filter, widened until the CoM vertical acceleration is in -0.45 g to +0.6 g. All by a periodic shift of the hips (largest 6 cm horizontal, 3 cm vertical).",
+        "Upper body: symmetric Gaussian (sigma 1.2 frames, no time shift) on the spine, neck, head, shoulder, and arm rotations; follow-through lag on the forearms (2 frames), hands (3 frames), and head (2 frames).",
+        "Wheels: a skate that never lifts more than 4 cm stays on the ground all clip long; a step skate gets only the penetration fix. A two-bone IK solve puts each ankle at its target with the old foot rotation and knee bend direction. The foot and toe keep their old armature-space matrices.",
+        "carve_right: the mirror of the new carve_left across X = 0 (D' = S D S on the rest-relative matrices), with the same IK solve for the feet.",
+        "Exported the 4 clips and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change."
+      ],
+      "result": {
+        "push": {
+          "zmp_outside_mean_m": [
+            0.088,
+            0.0011
+          ],
+          "com_jerk_rms_ms3": [
+            44.25,
+            20.53
+          ],
+          "wheel_z_min_m": [
+            {
+              "Left": -0.0001,
+              "Right": -0.0001
+            },
+            {
+              "Left": -0.0,
+              "Right": -0.0
+            }
+          ]
+        },
+        "coast": {
+          "zmp_outside_mean_m": [
+            0.0,
+            0.0
+          ],
+          "com_jerk_rms_ms3": [
+            4.32,
+            0.74
+          ],
+          "wheel_z_min_m": [
+            {
+              "Left": -0.0001,
+              "Right": -0.0001
+            },
+            {
+              "Left": -0.0,
+              "Right": -0.0
+            }
+          ]
+        },
+        "carve_left": {
+          "zmp_outside_mean_m": [
+            0.1537,
+            0.0709
+          ],
+          "com_jerk_rms_ms3": [
+            57.72,
+            31.87
+          ],
+          "wheel_z_min_m": [
+            {
+              "Left": -0.0371,
+              "Right": -0.0047
+            },
+            {
+              "Left": -0.0,
+              "Right": -0.0
+            }
+          ]
+        },
+        "carve_right": {
+          "zmp_outside_mean_m": [
+            0.1484,
+            0.0737
+          ],
+          "com_jerk_rms_ms3": [
+            57.75,
+            31.87
+          ],
+          "wheel_z_min_m": [
+            {
+              "Left": -0.003,
+              "Right": -0.0383
+            },
+            {
+              "Left": 0.0017,
+              "Right": -0.0012
+            }
+          ]
+        }
+      },
+      "files": {
+        "skater.glb": 2461308,
+        "skater-1024.glb": 2011348
+      },
+      "evidence": "docs/characters/physics-pass/ (compare/nia-<clip>.jpg, nia-metrics.json, before.json, after.json)",
+      "local_files_not_in_git": [
+        "assets/skaters/nia/raw/physics/nia-physics.glb",
+        "assets/skaters/nia/raw/physics/nia-physics.json"
+      ],
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 155,
@@ -260,7 +410,7 @@
   "tripo_credits_after": 2715,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2203728,
+  "file_size_bytes": 2461308,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
   "animations": 25,

@@ -2504,3 +2504,31 @@ The base stance in `ride()` and `glide()` (`scripts/blender/nia_clips.py`) puts 
 - NPC skaters: the LOD levels take all the skinned meshes of a multi-primitive body. The view keeps the epic view cull and the `look` option.
 - **Perf cap: high/pbr triangles 1,200,000 → 1,300,000 (owner decision).** `npm run perf:check` on the merge failed on this cap only. A rerun (`--tiers high --looks pbr --repeat 2 --max-wall 900`) counted 1,274,608 and 1,272,708 triangles on the merge, and 1,271,510 and 1,273,305 on the `epic/city-look` tip (60647caa). The merge adds no triangles; the epic tip was already over the cap. Load average in the runs: 9.9 to 23.2 on 14 CPUs. The new cap is about 2% over the measured count.
 - **perf:check wall limit 240 s → 900 s (owner decision).** With `--max-wall 240`, the high/pbr ride stopped early on this machine (about 1.5 s for each frame on SwiftShader), so the script read the triangles at another place on the trail: 1,396,024 and 1,415,991, against 1.27 M for a full ride. `npm run perf:check` now sets `--max-wall 900`. No CI workflow runs perf.
+
+## 2026-11-21: Physics pass on push, coast, and carve in Blender, not Cascadeur
+
+Goal: make the skate clips more physically plausible, as a quality test. The first choice was Cascadeur (AutoPhysics, balance, and inertia), in the cloud only, never on the owner's Mac.
+
+Cascadeur result: it did not run.
+- This cloud session had no Cascadeur MCP and no Blender MCP (tool search: `No matching deferred tools found`). The earlier MCP check ran on the owner's Mac.
+- The network policy refused `cascadeur.com` (`CONNECT tunnel failed, response 403`). The owner allowed `cascadeur.com` and `www.cascadeur.com` on the `atl-arcade` environment.
+- The download needs an accepted Nekki end-user licence (version 2025.1) and a registered account, and the app needs a sign-in. The Linux requirements ask for an NVIDIA GPU (GTX 950 or better). The container has 4 CPU cores, 15 GB memory, and no GPU. The download was not started.
+- Owner decision: use Blender for now.
+
+What was done:
+- Blender 5.2.3 LTS installs in the container from `download.blender.org` in 20 s and runs with no screen. No Blender MCP is necessary: the scripts use the Blender Python API with `blender -b -P`.
+- `scripts/blender/skater_physics_pass.py` does a Cascadeur-like pass on the shipped clips: centre of mass from segment masses, a zero moment point (ZMP) balance solve, less fore-aft CoM motion on free rollers (inertia), a symmetric filter on the hips path and the upper body (no time shift), and a follow-through lag on the forearms, hands, and head. A two-bone IK solve keeps each skate where it was. `carve_right` is the mirror of the new `carve_left`.
+- `scripts/assets/graft-clips.mjs` put the 4 clips into `skater.glb` and `skater-1024.glb` of Nia and Marcus. The mesh, the textures, the rig, and the other clips do not change. Sizes: Nia 2,461,308 and 2,011,348 bytes; Marcus 3,662,144 and 2,789,532 bytes (all under 10 MB; the phone GLBs under 3 MB).
+- New wheel rule: a skate that never lifts more than 4 cm in a clip drags or glides, so it stays on the ground all clip long.
+
+Found and fixed: the Nia carves put a skate up to 3.9 cm into the ground on 20 of 48 frames (browser check), and the dragging skate also floated up to 3.4 cm. After the pass, no frame of the 8 clips is more than 5 mm below or above the ground. In the Nia carve and Marcus push, the CoM dropped at almost free fall (-9.8 and -12.0 m/s^2). It is now -4.4 m/s^2 or less.
+
+Not fixed (stated plainly):
+- Nia carve, beat 2: she stands on the dragging left skate only, 10 to 27 cm behind her centre of mass, for 13 frames. The ZMP excess is half of what it was (0.154 to 0.071 m), but the balance is still not possible. The step or the drag must change.
+- Marcus push: the ZMP is still outside the support on 25 of 44 frames (mean 4.8 cm, was 12.9 cm).
+- The coast is smoother, but the arms move less. It can look less lively. No person looked at it in the game.
+- The pass does not know the game speed or the turn rate. The renderer adds the carve bank lean and the procedural layers (#291) on top.
+
+Evidence: `docs/characters/physics-pass/` (before and after sheets at 3 frames, the metrics, the browser checks with 0 console errors). `npx vitest run`: 1937 of 1938 pass; the failure is a 5 s timeout in `src/level/geo/facade-kit.test.js`, which also fails on `main`. `e2e/skater-anim.spec.js` and `e2e/skater-model.spec.js`: 7 of 7 pass. Real skaters must review the move set before release.
+
+Next clips that the pass can improve (not in this change): `brake` and `ride_back` (ground clips; the same wheel and balance checks), `idle`, `manual` (balance over the back wheels), `land` (the vertical acceleration at the impact), and the `dance_*` clips that stay on the ground (smoothness and wheel contact). Not `jump`, `air_*`, `grind_*`, or `bail`: the pass has no flight phase and no rail contact. Owner idea for the next pass: take the joint limits and the recoil lessons of the Crossroads animation work.

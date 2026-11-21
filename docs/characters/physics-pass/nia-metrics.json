@@ -1,0 +1,348 @@
+{
+ "source": "assets/skaters/nia/skater.glb (main, 05afb52)",
+ "skater": "nia",
+ "settings": {
+  "still": {
+   "push": 0.5,
+   "coast": 0.8,
+   "carve_left": 0.7
+  },
+  "sigma_frames": 1.2,
+  "follow": [
+   [
+    "LeftForeArm",
+    2,
+    0.45
+   ],
+   [
+    "RightForeArm",
+    2,
+    0.45
+   ],
+   [
+    "LeftHand",
+    3,
+    0.55
+   ],
+   [
+    "RightHand",
+    3,
+    0.55
+   ],
+   [
+    "Head",
+    2,
+    0.35
+   ]
+  ],
+  "max_shift_m": [
+   0.06,
+   0.03
+  ],
+  "contact_m": 0.015,
+  "support_margin_m": 0.02,
+  "body_kg": 60.0,
+  "skate_kg": 1.2
+ },
+ "clips": {
+  "push": {
+   "before": {
+    "frames": 52,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0364,
+    "com_fore_aft_accel_peak_ms2": 3.722,
+    "com_side_accel_peak_ms2": 1.21,
+    "com_up_accel_min_ms2": -8.706,
+    "com_up_accel_max_ms2": 2.519,
+    "com_jerk_rms_ms3": 44.25,
+    "zmp_outside_frames": 21,
+    "zmp_outside_max_m": 1.0084,
+    "zmp_outside_mean_m": 0.088,
+    "angular_jerk_rms": {
+     "Spine2": 9.7,
+     "Head": 5.4,
+     "LeftHand": 54.9,
+     "RightHand": 55.0
+    },
+    "wheel_z_min_m": {
+     "Left": -0.0001,
+     "Right": -0.0001
+    },
+    "wheel_z_max_m": {
+     "Left": 0.1483,
+     "Right": 0.1483
+    },
+    "contact": "L L L L LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR R R R R R R R R R R LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR L L L L L L"
+   },
+   "after": {
+    "frames": 52,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0159,
+    "com_fore_aft_accel_peak_ms2": 0.8,
+    "com_side_accel_peak_ms2": 1.422,
+    "com_up_accel_min_ms2": -3.311,
+    "com_up_accel_max_ms2": 1.07,
+    "com_jerk_rms_ms3": 20.53,
+    "zmp_outside_frames": 9,
+    "zmp_outside_max_m": 0.0118,
+    "zmp_outside_mean_m": 0.0011,
+    "angular_jerk_rms": {
+     "Spine2": 9.0,
+     "Head": 4.3,
+     "LeftHand": 42.6,
+     "RightHand": 42.7
+    },
+    "wheel_z_min_m": {
+     "Left": -0.0,
+     "Right": -0.0
+    },
+    "wheel_z_max_m": {
+     "Left": 0.1483,
+     "Right": 0.1483
+    },
+    "contact": "L L L L LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR R R R R R R R R R R LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR L L L L L L"
+   },
+   "hips_shift_max_m": [
+    0.0561,
+    0.019,
+    0.0072
+   ],
+   "leg_reach_max": 0.8693,
+   "skate_vertex_move_max_m": 0.00559,
+   "sigma_z_frames": 1.2,
+   "com_target_error_max_m": 0.0005,
+   "wheel_lift_max_m": {
+    "Left": 0.0001,
+    "Right": 0.0001
+   },
+   "wheel_drop_max_m": {
+    "Left": 0.0032,
+    "Right": 0.0032
+   }
+  },
+  "coast": {
+   "before": {
+    "frames": 96,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0019,
+    "com_fore_aft_accel_peak_ms2": 0.061,
+    "com_side_accel_peak_ms2": 0.911,
+    "com_up_accel_min_ms2": -0.205,
+    "com_up_accel_max_ms2": 0.256,
+    "com_jerk_rms_ms3": 4.32,
+    "zmp_outside_frames": 0,
+    "zmp_outside_max_m": 0.0,
+    "zmp_outside_mean_m": 0.0,
+    "angular_jerk_rms": {
+     "Spine2": 9.0,
+     "Head": 5.2,
+     "LeftHand": 34.5,
+     "RightHand": 36.2
+    },
+    "wheel_z_min_m": {
+     "Left": -0.0001,
+     "Right": -0.0001
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0,
+     "Right": 0.0001
+    },
+    "contact": "LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR"
+   },
+   "after": {
+    "frames": 96,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0004,
+    "com_fore_aft_accel_peak_ms2": 0.005,
+    "com_side_accel_peak_ms2": 0.126,
+    "com_up_accel_min_ms2": -0.094,
+    "com_up_accel_max_ms2": 0.103,
+    "com_jerk_rms_ms3": 0.74,
+    "zmp_outside_frames": 0,
+    "zmp_outside_max_m": 0.0,
+    "zmp_outside_mean_m": 0.0,
+    "angular_jerk_rms": {
+     "Spine2": 3.7,
+     "Head": 3.9,
+     "LeftHand": 7.4,
+     "RightHand": 7.6
+    },
+    "wheel_z_min_m": {
+     "Left": -0.0,
+     "Right": -0.0
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "contact": "LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR"
+   },
+   "hips_shift_max_m": [
+    0.0005,
+    0.001,
+    0.0002
+   ],
+   "leg_reach_max": 0.8776,
+   "skate_vertex_move_max_m": 0.00015,
+   "sigma_z_frames": 1.2,
+   "com_target_error_max_m": 0.0,
+   "wheel_lift_max_m": {
+    "Left": 0.0001,
+    "Right": 0.0001
+   },
+   "wheel_drop_max_m": {
+    "Left": 0.0,
+    "Right": 0.0001
+   }
+  },
+  "carve_left": {
+   "before": {
+    "frames": 48,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0332,
+    "com_fore_aft_accel_peak_ms2": 2.708,
+    "com_side_accel_peak_ms2": 2.234,
+    "com_up_accel_min_ms2": -9.803,
+    "com_up_accel_max_ms2": 7.673,
+    "com_jerk_rms_ms3": 57.72,
+    "zmp_outside_frames": 43,
+    "zmp_outside_max_m": 0.7595,
+    "zmp_outside_mean_m": 0.1537,
+    "angular_jerk_rms": {
+     "Spine2": 0.0,
+     "Head": 0.0,
+     "LeftHand": 0.0,
+     "RightHand": 0.0
+    },
+    "wheel_z_min_m": {
+     "Left": -0.0371,
+     "Right": -0.0047
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0338,
+     "Right": 0.0899
+    },
+    "contact": "LR LR LR LR LR LR LR LR LR LR R R R R R LR LR LR LR LR LR L L L L L L L L L L L L L LR LR LR LR LR LR LR LR LR LR LR LR LR LR"
+   },
+   "after": {
+    "frames": 48,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0281,
+    "com_fore_aft_accel_peak_ms2": 2.524,
+    "com_side_accel_peak_ms2": 2.084,
+    "com_up_accel_min_ms2": -4.372,
+    "com_up_accel_max_ms2": 3.62,
+    "com_jerk_rms_ms3": 31.87,
+    "zmp_outside_frames": 41,
+    "zmp_outside_max_m": 0.3271,
+    "zmp_outside_mean_m": 0.0709,
+    "angular_jerk_rms": {
+     "Spine2": 0.0,
+     "Head": 0.0,
+     "LeftHand": 0.0,
+     "RightHand": 0.0
+    },
+    "wheel_z_min_m": {
+     "Left": -0.0,
+     "Right": -0.0
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0,
+     "Right": 0.0899
+    },
+    "contact": "LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR L L L L L L L L L L L L L LR LR LR LR LR LR LR LR LR LR LR LR LR LR"
+   },
+   "hips_shift_max_m": [
+    0.0386,
+    0.06,
+    0.0233
+   ],
+   "leg_reach_max": 0.7338,
+   "skate_vertex_move_max_m": 0.03709,
+   "sigma_z_frames": 2.2,
+   "com_target_error_max_m": 0.078,
+   "wheel_lift_max_m": {
+    "Left": 0.0371,
+    "Right": 0.0047
+   },
+   "wheel_drop_max_m": {
+    "Left": 0.0338,
+    "Right": 0.005
+   }
+  },
+  "carve_right": {
+   "method": "mirror of the new carve_left across X = 0, the feet put back by the IK solve",
+   "before": {
+    "frames": 48,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0331,
+    "com_fore_aft_accel_peak_ms2": 2.7,
+    "com_side_accel_peak_ms2": 2.248,
+    "com_up_accel_min_ms2": -9.809,
+    "com_up_accel_max_ms2": 7.682,
+    "com_jerk_rms_ms3": 57.75,
+    "zmp_outside_frames": 44,
+    "zmp_outside_max_m": 0.7463,
+    "zmp_outside_mean_m": 0.1484,
+    "angular_jerk_rms": {
+     "Spine2": 0.0,
+     "Head": 0.0,
+     "LeftHand": 0.0,
+     "RightHand": 0.0
+    },
+    "wheel_z_min_m": {
+     "Left": -0.003,
+     "Right": -0.0383
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0921,
+     "Right": 0.0336
+    },
+    "contact": "LR LR LR LR LR LR LR LR LR LR LR L L L LR LR LR LR LR LR LR R R R R R R R R R R R R R R LR LR LR LR LR LR LR LR LR LR LR LR LR"
+   },
+   "after": {
+    "frames": 48,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0281,
+    "com_fore_aft_accel_peak_ms2": 2.525,
+    "com_side_accel_peak_ms2": 2.084,
+    "com_up_accel_min_ms2": -4.372,
+    "com_up_accel_max_ms2": 3.62,
+    "com_jerk_rms_ms3": 31.87,
+    "zmp_outside_frames": 40,
+    "zmp_outside_max_m": 0.3297,
+    "zmp_outside_mean_m": 0.0737,
+    "angular_jerk_rms": {
+     "Spine2": 0.0,
+     "Head": 0.0,
+     "LeftHand": 0.0,
+     "RightHand": 0.0
+    },
+    "wheel_z_min_m": {
+     "Left": 0.0017,
+     "Right": -0.0012
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0921,
+     "Right": 0.0004
+    },
+    "contact": "LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR R R R R R R R R R R R R R R LR LR LR LR LR LR LR LR LR LR LR LR LR"
+   },
+   "leg_reach_max": 0.7338
+  }
+ },
+ "rest_feet": {
+  "mixamorig:LeftFoot": [
+   0.1826164573431015,
+   -0.016601329669356346,
+   0.1958988904953003
+  ],
+  "mixamorig:RightFoot": [
+   -0.18261785805225372,
+   -0.016601119190454483,
+   0.1958988904953003
+  ]
+ },
+ "glb": "assets/skaters/nia/raw/physics/nia-physics.glb (not in git)",
+ "glb_bytes": 4294144
+}

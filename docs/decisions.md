@@ -2514,4 +2514,15 @@ Full note: `docs/research/2026-11-20-game-ui-tools.md`.
 - Skip: the threejs-game-skills scaffold (TypeScript; our code is plain JavaScript), its director and its 3 generator skills, and the paid HiAPI and Scenario tools (no keys).
 - The skills are not in `.claude/skills/` yet. A committed skill loads into every cloud session, so the owner decides. The note gives the install commands.
 - Title screen and in-game text graphics: build them in code (DOM and CSS). Mock: `prototypes/title-screen-mock/`.
-- Logo: 3 options in `assets/brand/logo-options/`, made from OFL font outlines and code shapes, no generative model. The owner's choice comes next, and goes here.
+- Logo: 3 options in `assets/brand/logo-options/`, made from OFL font outlines and code shapes, no generative model.
+
+## 2026-11-21: The logo is option B, "Trail Speed" (#300)
+
+The owner chose option B on 2026-11-21 (PR #306). Reasons: it is the only option where both words read at 32 px, and its one-line shape fits a title bar and a HUD corner.
+
+- Files: `assets/brand/logo/skate-atl-logo.svg` (master), `skate-atl-logo-1024.png` (1024 x 299, transparent), `skate-atl-logo-32.png` (110 x 32 check). Script: `scripts/brand/logo-final.mjs`.
+- The final file crops the view box to the ink with a 3 % margin. The option B file cut about 19 units (2 %) off the right end of the swoosh (its view box was too narrow); the final file has the full art.
+- Font: Anton (SIL OFL 1.1), as outlines. Colors: cream `#fff6e8`, peach `#f6905a`, gold `#ffc533`, teal `#17a398`, ink `#1b1f3b`.
+- Key art: `assets/brand/key-art/skate-atl-key-art-1920x1080.png`. It is a capture of the real game renderer (pbr look, quality high, 9:30 on 21 June, clear): Nia mid-push on the Eastside Trail, with people on the trail under the bridge. A soft navy grade and the logo (34 % of the width, top left) are on top. No paintover, no image model. The raw frame is next to it, for later title and store images.
+- Method (`scripts/brand/key-art.mjs`, shots in `scripts/brand/key-art-shots.json`): load the level, hold the push key for 12 frames, open the settings menu to stop the simulation (the frame still draws; the menu DOM is hidden), then place the camera from the skater's real position and heading with `__atl.setFixedCamera`. Heading is `(cos yaw, -sin yaw)`. On SwiftShader the level load takes about 17 minutes and each 1920 x 1080 view about 5 more.
+- We chose a game capture over a generated image: it shows the game as it is, it costs 0 credits, and the same script can make it again after the look changes.

@@ -109,7 +109,7 @@ Files: `assets/brand/logo-options/`. Script: `scripts/brand/logo-options.mjs`. E
 - The options do not copy any game logo, team logo, or the city seal. There is no graffiti tag lettering.
 - I changed 2 drawings after the first render, for the political rules: the first phoenix (5 fanned feathers) looked like a cannabis leaf, and a peach with a cleft can read as the peach emoji joke. Both are now redrawn.
 - Preview: `assets/brand/logo-options/preview-sheet.png` (light and dark, with real 64 px and 32 px renders).
-- Next (after the owner's choice): the final SVG, a 1024 px transparent PNG, the key art (1920 x 1080), and the choice in `docs/decisions.md`. If A or C wins, make a 1-word "ATL" small mark for sizes under 48 px.
+- 2026-11-21: the owner chose option B. Final logo: `assets/brand/logo/`. Key art: `assets/brand/key-art/`. See `docs/decisions.md` (2026-11-21).
 
 ## Keys needed (summary)
 

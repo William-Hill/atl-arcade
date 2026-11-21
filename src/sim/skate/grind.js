@@ -62,7 +62,7 @@ export function startGrind(skater, snap, lean = 1, k = GRIND) {
     yaw: yawFromHeading(dirT[0], dirT[2]),
     groundId: snap.grindable.id,
     groundNormal: [0, 1, 0],
-    grind: { id: snap.grindable.id, s: snap.s, direction: snap.direction, balance: 0, lean: lean >= 0 ? 1 : -1, time: 0 },
+    grind: { id: snap.grindable.id, s: snap.s, direction: snap.direction, balance: 0, lean: lean >= 0 ? 1 : -1, time: 0, distance: 0 },
     justSnapped: true,
     justFell: false,
     justExited: false,
@@ -79,6 +79,8 @@ function exitWith(skater, velocity, reason) {
     airFrom: reason === "fall" ? "fall" : "grind",
     groundId: null,
     grind: null,
+    // The grind as it ended, with the meters of the last tick, for the score (#262).
+    endedGrind: skater.grind,
     grindCooldown: GRIND.resnapCooldown,
     justExited: reason !== "fall",
     justFell: reason === "fall",
@@ -105,6 +107,8 @@ export function stepGrind(prev, input, dt, grindables, k = GRIND, skate = SKATE)
   // Speed and position along the spline.
   s.speed = Math.max(s.speed - k.friction * dt, k.minSpeed);
   s.grind.s += s.grind.direction * s.speed * dt;
+  // The meters ridden on the rail, for the score (#262). Capped at the rail end.
+  s.grind.distance = (s.grind.distance ?? 0) + Math.min(s.speed * dt, s.grind.direction > 0 ? Math.max(0, g.total - prev.grind.s) : Math.max(0, prev.grind.s));
   const at = pointAtDistance(g.points, s.grind.s);
   const dirT = at.tangent.map((c) => c * s.grind.direction);
   s.position = [...at.point];

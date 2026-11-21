@@ -18,9 +18,14 @@ export function createRun(level, opts = {}) {
   return { skater: createSkater(level, opts), combo: createCombo(), tick: 0, time: 0, moves: [], lastMove: null, moveSeq: 0, banked: 0, cards: createCardState(opts.cards ?? []), factsCollected: [] };
 }
 
-function grindName(id, seconds) {
+function grindName(id, meters) {
   const what = id.startsWith("ledge") ? "Ledge Grind" : "Rail Grind";
-  return seconds >= 1.5 ? `Long ${what}` : what;
+  return meters >= COMBO.longGrindMeters ? `Long ${what}` : what;
+}
+
+// The points of a grind (#262): a base plus the meters on the rail.
+export function grindPoints(grind, k = COMBO) {
+  return k.grindBase + k.grindPerMeter * (grind.distance ?? 0);
 }
 
 // Fast travel (src/level/geo/travel.js): the same run with the skater at a
@@ -48,10 +53,12 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
   };
 
   if (skater.justExited && prev.grind) {
-    judge(COMBO.grindBase + COMBO.grindPerSecond * prev.grind.time, "grind", grindName(prev.grind.id, prev.grind.time));
+    const g = skater.endedGrind ?? prev.grind;
+    judge(grindPoints(g), "grind", grindName(g.id, g.distance ?? 0));
   }
   if (skater.justLanded && prev.airTime >= COMBO.minAirTime) {
     if (prev.airFrom === "ramp") judge(COMBO.vertAirPoints, "air", "Vert Air");
+    else if (prev.airFrom === "launch") judge(COMBO.rampAirPoints, "air", "Ramp Air");
     else if (prev.airFrom === "jump" || prev.airFrom === "grind") judge(COMBO.hopPoints, "air", "Hop");
   }
   if (skater.justStyled) judge(skater.justStyled.points, "style", skater.justStyled.name);

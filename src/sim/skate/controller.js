@@ -39,7 +39,7 @@ export function createSkateState({ position = [0, 0, 0], yaw = 0 } = {}) {
     justJumped: false,
     bonked: false,
     wallSlide: false, // true on a tick where the skater slid along a wall
-    airFrom: null, // "jump" | "ramp" | "edge" | "grind" | "fall"
+    airFrom: null, // "jump" | "ramp" (vert) | "launch" (kicker) | "edge" | "grind" | "fall"
     tick: 0,
   };
 }
@@ -206,15 +206,7 @@ function stepRolling(s, input, dt, env, k) {
   // Launch off a near-vertical lip (quarter pipe): straight up, so the
   // skater comes back down onto the transition. Drift along the lip stays.
   if (n[1] < k.launchNormalY && s.speed > 0 && t[1] > 0) {
-    const hl = Math.hypot(n[0], n[2]);
-    const nh = hl > 1e-6 ? [n[0] / hl, 0, n[2] / hl] : [0, 0, 0];
-    const v = [t[0] * s.speed, t[1] * s.speed, t[2] * s.speed];
-    const along = v[0] * nh[0] + v[2] * nh[2];
-    s.velocity = [v[0] - along * nh[0], v[1], v[2] - along * nh[2]];
-    s.state = "air";
-    s.airTime = 0;
-    s.airFrom = "ramp";
-    s.groundId = null;
+    launchVert(s, t, n);
     return;
   }
 
@@ -226,14 +218,29 @@ function stepRolling(s, input, dt, env, k) {
   const nz = s.position[2] + t[2] * s.speed * dt;
   const g = env.sampleGround(nx, nz, ny);
 
+  // The top of a steep face (#262): a quarter pipe whose transition does not
+  // reach vertical (the H4W one tops out at normal y 0.357) launches at its
+  // lip, where the next column is a flat deck, or a drop while the skater
+  // heads up the face. Without this the skater rolls over the deck and off
+  // its back. Off the side of the face the skater pops out as off a kicker.
+  if (n[1] < k.lipNormalY && s.speed > 0 && t[1] > 0 && atLip(g, ny, t, n, k)) {
+    launchVert(s, t, n);
+    return;
+  }
+
+  // Up a ramp and off its end (a kicker): the skater keeps the upward speed
+  // and the air scores (#262). Off a flat edge or down a slope, the skater
+  // rolls off with no upward speed.
+  const popUp = n[1] < k.rampNormalY && t[1] > 0;
+
   if (!g) {
     // Nothing under the feet: fall with the current velocity.
-    s.velocity = [t[0] * s.speed, Math.min(t[1] * s.speed, 0), t[2] * s.speed];
+    s.velocity = [t[0] * s.speed, popUp ? t[1] * s.speed : Math.min(t[1] * s.speed, 0), t[2] * s.speed];
     s.state = "air";
     s.airTime = 0;
-    s.airFrom = "edge";
+    s.airFrom = popUp ? "launch" : "edge";
     s.groundId = null;
-    s.position = [nx, ny, nz];
+    s.position = leaveAt(env, nx, ny, nz, k);
     return;
   }
 
@@ -254,12 +261,12 @@ function stepRolling(s, input, dt, env, k) {
 
   if (rise < -k.dropThreshold) {
     // The ground fell away: roll off the edge into the air.
-    s.velocity = [t[0] * s.speed, Math.min(t[1] * s.speed, 0), t[2] * s.speed];
+    s.velocity = [t[0] * s.speed, popUp ? t[1] * s.speed : Math.min(t[1] * s.speed, 0), t[2] * s.speed];
     s.state = "air";
     s.airTime = 0;
-    s.airFrom = "edge";
+    s.airFrom = popUp ? "launch" : "edge";
     s.groundId = null;
-    s.position = [nx, ny, nz];
+    s.position = leaveAt(env, nx, ny, nz, k);
     return;
   }
 
@@ -267,6 +274,40 @@ function stepRolling(s, input, dt, env, k) {
   s.groundNormal = [...g.normal];
   s.groundId = g.id;
   s.velocity = [t[0] * s.speed, t[1] * s.speed, t[2] * s.speed];
+}
+
+// The position where the skater leaves the ground at (x, y, z): pushed out of
+// a wall the body is in (#262). On a ramp face the ring is off, so the body
+// can be over the edge of a deck when the skater leaves the side of a ramp.
+function leaveAt(env, x, y, z, k) {
+  const out = pushOut(env, x, z, airWall(y, y, k), y, k);
+  return out ? [out[0], y, out[1]] : [x, y, z];
+}
+
+// The next column (g) past a steep face is its lip: a flat deck no more than
+// a step down, or a drop with the heading mostly up the face.
+const LIP_UPHILL = 0.7; // cos of the largest angle between the heading and straight up the face.
+function atLip(g, ny, t, n, k) {
+  if (g && g.normal[1] >= k.rampNormalY && g.height >= ny - k.maxStep) return true;
+  if (g && g.height >= ny - k.dropThreshold) return false;
+  const th = Math.hypot(t[0], t[2]);
+  const nh = Math.hypot(n[0], n[2]);
+  if (th < 1e-6 || nh < 1e-6) return true;
+  return -(t[0] * n[0] + t[2] * n[2]) / (th * nh) >= LIP_UPHILL;
+}
+
+// Leave a ramp straight up: the velocity loses its part along the ramp's
+// horizontal normal, so the skater comes back down onto the same face.
+function launchVert(s, t, n) {
+  const hl = Math.hypot(n[0], n[2]);
+  const nh = hl > 1e-6 ? [n[0] / hl, 0, n[2] / hl] : [0, 0, 0];
+  const v = [t[0] * s.speed, t[1] * s.speed, t[2] * s.speed];
+  const along = v[0] * nh[0] + v[2] * nh[2];
+  s.velocity = [v[0] - along * nh[0], v[1], v[2] - along * nh[2]];
+  s.state = "air";
+  s.airTime = 0;
+  s.airFrom = "ramp";
+  s.groundId = null;
 }
 
 // The skater is a point for the ground, but the body has a radius. A ring
@@ -290,21 +331,36 @@ const EDGE_STEPS = 10; // bisection steps that find the wall edge along a ray.
 const WALL_REACH = 1.3;
 
 // `y` is the skater height, for a level with bridges (geo-ground.js).
+// isWall(p, ox, oz) gets the sample and its offset from the skater.
 function ringHits(env, x, z, radius, isWall, y = Infinity) {
   if (!(radius > 0)) return false;
   for (const [cx, cz] of RING) {
     const p = env.sampleGround(x + cx * radius, z + cz * radius, y);
-    if (p && isWall(p)) return true;
+    if (p && isWall(p, cx * radius, cz * radius)) return true;
   }
   return false;
 }
 
-function rollWall(ref, k) {
-  return (p) => p.height - ref > k.maxStep && p.normal[1] > 0.9;
+// The height of the plane of sample p (a ramp face) at the skater's column,
+// with p at offset (ox, oz) from the skater (#262). From the foot of a ramp
+// the plane goes down to the feet: the face is ground to ride. From the side
+// or the back of a ramp the plane stays high: the face is a wall.
+function faceHeight(p, ox, oz) {
+  const n = p.normal;
+  if (n[1] > 0.9) return p.height;
+  if (n[1] < 0.05) return Infinity;
+  return p.height + (n[0] * ox + n[2] * oz) / n[1];
 }
 
+function rollWall(ref, k) {
+  return (p, ox = 0, oz = 0) => p.height - ref > k.maxStep && faceHeight(p, ox, oz) - ref > k.maxStep;
+}
+
+// In the air the body is at the lower of the two heights of the tick, so a
+// skater who comes down beside a box meets its side (#262).
 function airWall(prevY, ny, k) {
-  return (p) => p.height > prevY + k.maxStep && ny < p.height && p.normal[1] > 0.9;
+  const low = Math.min(prevY, ny) + k.maxStep;
+  return (p, ox = 0, oz = 0) => p.height > low && ny < p.height && faceHeight(p, ox, oz) > low;
 }
 
 function wallNear(s, env, nx, ny, nz, k) {
@@ -321,13 +377,13 @@ function wallNearInAir(env, nx, ny, nz, prevY, k) {
 // distance, so the true edge is at or past the result.
 function edgeDistance(env, x, z, dx, dz, reach, isWall, y) {
   const p = env.sampleGround(x + dx * reach, z + dz * reach, y);
-  if (!p || !isWall(p)) return null;
+  if (!p || !isWall(p, dx * reach, dz * reach)) return null;
   let lo = 0;
   let hi = reach;
   for (let i = 0; i < EDGE_STEPS; i += 1) {
     const mid = (lo + hi) / 2;
     const q = env.sampleGround(x + dx * mid, z + dz * mid, y);
-    if (q && isWall(q)) hi = mid;
+    if (q && isWall(q, dx * mid, dz * mid)) hi = mid;
     else lo = mid;
   }
   return lo;
@@ -463,6 +519,25 @@ function slideAir(s, env, ny, prevY, dt, k) {
   return { nx: px, nz: pz, g };
 }
 
+// (x, z) moved out of the walls near it: the shortest move, in one of the
+// RING directions, that clears the body ring. Null when no wall is near or
+// no move of up to one body radius clears it. Only an air bonk calls it.
+const PUSH_STEP = 0.02; // m between the push lengths tried.
+function pushOut(env, x, z, isWall, y, k) {
+  const radius = k.bodyRadius * RING_SCALE;
+  if (!ringHits(env, x, z, radius, isWall, y)) return null;
+  for (let d = PUSH_STEP; d <= k.bodyRadius + 1e-9; d += PUSH_STEP) {
+    for (const [cx, cz] of RING) {
+      const px = x + cx * d;
+      const pz = z + cz * d;
+      const g = env.sampleGround(px, pz, y);
+      if (g && isWall(g)) continue;
+      if (!ringHits(env, px, pz, radius, isWall, y)) return [px, pz];
+    }
+  }
+  return null;
+}
+
 function stepAir(s, input, dt, env, k) {
   if (steerActive(input.steer)) s.yaw = wrapYaw(s.yaw + input.steer * k.airTurnRate * dt);
 
@@ -499,6 +574,11 @@ function stepAir(s, input, dt, env, k) {
       s.velocity[0] = 0;
       s.velocity[2] = 0;
       s.bonked = true;
+      // A skater that came down beside a box (a planter cap, a ledge) was
+      // above it on the last tick, so the body may already be over its edge.
+      // Push the body out of the wall (#262).
+      const out = pushOut(env, nx, nz, airWall(prevY, ny, k), prevY, k);
+      if (out) [nx, nz] = out;
       g = env.sampleGround(nx, nz, prevY);
     }
   }

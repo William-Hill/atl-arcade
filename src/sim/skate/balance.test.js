@@ -96,12 +96,17 @@ describe("multiplier cap", () => {
 });
 
 describe("move balance", () => {
-  it("a grind earns more per second than any dance, for any grind length", () => {
+  it("a grind at 8 m/s or faster earns more per second than any dance, for any grind length", () => {
+    // #262: a grind scores grindBase + grindPerMeter * meters, so its rate per
+    // second grows with the speed. Before #262 it was 300 points per second
+    // at any speed, and a slow grind of the same rail scored more.
     const best = Math.max(...STYLE.moves.map((m) => m.points / styleDuration(m)));
-    for (const t of [0.5, 1, 2, 3, 5, 10]) {
-      const grind = (COMBO.grindBase + COMBO.grindPerSecond * t) / t;
-      expect(grind).toBeGreaterThan(best);
+    for (const v of [8, 10, 12]) {
+      for (const t of [0.5, 1, 2, 3, 5, 10]) {
+        const grind = (COMBO.grindBase + COMBO.grindPerMeter * v * t) / t;
+        expect(grind).toBeGreaterThan(best);
+      }
     }
-    expect(COMBO.grindPerSecond).toBeGreaterThan(best);
+    expect(COMBO.grindPerMeter * 8).toBeGreaterThan(best);
   });
 });

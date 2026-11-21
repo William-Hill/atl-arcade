@@ -1,0 +1,114 @@
+<!doctype html>
+<!--
+  Mock title screen for the #299 spike. It is a prototype: it imports nothing from src/ and
+  the game does not load it. It tests two skills:
+  - threejs-game-ui-designer (majidmanzarpour/threejs-game-skills @ 8286774): hierarchy,
+    primary action first, focus/hover/pressed states, safe areas, clamp() sizes, no pill
+    buttons, no monospace labels, no cream panels.
+  - awesome-ai-motion (gongnyang/awesome-ai-motion @ 1e3c249): recipe R10 "Title Opener"
+    timings, done in CSS: mask-reveal (yPercent 110 -> 0, 1.05 s, line gap 0.35 s,
+    power3.out), char-stagger (y 64 px -> 0, 0.62 s, stagger 0.035 s), underline-draw.
+  Query: ?logo=a|b|c picks a logo option from assets/brand/logo-options/ (default b).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Skate ATL title mock</title>
+<style>
+  :root {
+    --ink: #1b1f3b; --cream: #fff6e8; --peach: #f6905a; --gold: #ffc533; --teal: #17a398;
+    --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1); /* power3.out */
+    --safe-l: max(16px, env(safe-area-inset-left)); --safe-r: max(16px, env(safe-area-inset-right));
+    --safe-b: max(16px, env(safe-area-inset-bottom));
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--ink); color: var(--cream);
+    font-family: system-ui, sans-serif; }
+  .plate { position: fixed; inset: 0; background: center / cover no-repeat
+    url("../../docs/style-frames/beltline-street/c-golden.jpg"); transform: scale(1.06);
+    animation: drift 14s linear both; }
+  .plate::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(27,31,59,0) 30%, rgba(27,31,59,0.78) 100%); }
+  @keyframes drift { to { transform: scale(1); } }
+
+  main { position: relative; height: 100%; display: grid; grid-template-rows: 1fr auto auto;
+    justify-items: center; padding: 0 var(--safe-r) var(--safe-b) var(--safe-l); }
+  .logo-mask { align-self: end; overflow: hidden; padding: 12px 8px; }
+  .logo { display: block; width: min(78vw, 680px); max-height: 38vh; object-fit: contain;
+    transform: translateY(110%); animation: rise 1.05s var(--ease-out) 0.3s forwards;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35)); }
+  @keyframes rise { to { transform: translateY(0); } }
+
+  .tag { margin: 6px 0 clamp(20px, 5vh, 44px); font-size: clamp(16px, 2.4vh, 22px); font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase; text-shadow: 0 2px 6px rgba(0,0,0,0.5); }
+  .tag span:not(.key) { display: inline-block; opacity: 0; transform: translateY(64px);
+    animation: char 0.62s var(--ease-out) forwards; }
+  @keyframes char { to { opacity: 1; transform: translateY(0); } }
+  .tag .key { position: relative; display: inline-block; }
+  .tag svg { position: absolute; left: 0; right: 0; bottom: -10px; width: 100%; height: 12px; overflow: visible; }
+  .tag path { stroke: var(--gold); stroke-width: 5; fill: none; stroke-linecap: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.35s linear 2.0s forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  nav { display: grid; gap: 12px; width: min(92vw, 380px); margin-bottom: clamp(16px, 5vh, 48px);
+    opacity: 0; animation: fade 0.5s ease-out 2.2s forwards; }
+  @keyframes fade { to { opacity: 1; } }
+  button { min-height: 52px; border: 4px solid var(--ink); border-radius: 10px; font: inherit;
+    font-weight: 800; font-size: 20px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+    color: var(--ink); background: var(--cream); box-shadow: 5px 5px 0 var(--ink);
+    transform: skewX(-8deg); transition: transform 0.12s var(--ease-out), box-shadow 0.12s var(--ease-out); }
+  button.primary { background: var(--gold); font-size: 24px; min-height: 64px; }
+  button:hover { transform: skewX(-8deg) translate(-2px, -2px); box-shadow: 7px 7px 0 var(--ink); }
+  button:active { transform: skewX(-8deg) translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+  button:focus-visible { outline: 4px solid var(--teal); outline-offset: 4px; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plate, .logo, .tag span:not(.key), .tag path, nav { animation-duration: 0.01s !important; animation-delay: 0s !important; }
+  }
+</style>
+</head>
+<body>
+<div class="plate" aria-hidden="true"></div>
+<main>
+  <div class="logo-mask"><img class="logo" id="logo" alt="Skate ATL"></div>
+  <p class="tag" id="tag" aria-label="Roll the real Atlanta">Roll the <span class="key">real</span> Atlanta</p>
+  <nav aria-label="Main menu">
+    <button class="primary" id="play" autofocus>Play</button>
+    <div class="row"><button>Skaters</button><button>Settings</button></div>
+  </nav>
+</main>
+<script>
+  const pick = (new URLSearchParams(location.search).get('logo') || 'b').toLowerCase();
+  const files = { a: 'option-a-peach-sticker.svg', b: 'option-b-trail-speed.svg', c: 'option-c-phoenix-wheel.svg' };
+  document.getElementById('logo').src = '../../assets/brand/logo-options/' + (files[pick] || files.b);
+
+  // char-stagger: split the tagline into letters (0.035 s apart, starts at 1.40 s); keep the
+  // key word in one span so the underline-draw stroke sits under it.
+  const tag = document.getElementById('tag');
+  let i = 0;
+  const split = (node) => {
+    for (const n of [...node.childNodes]) {
+      if (n.nodeType === 3) {
+        const frag = document.createDocumentFragment();
+        for (const ch of n.textContent) {
+          const s = document.createElement('span');
+          s.textContent = ch === ' ' ? ' ' : ch;
+          s.setAttribute('aria-hidden', 'true');
+          s.style.animationDelay = (1.4 + 0.035 * i++).toFixed(3) + 's';
+          frag.appendChild(s);
+        }
+        n.replaceWith(frag);
+      } else if (n.classList.contains('key')) {
+        split(n);
+        n.insertAdjacentHTML('beforeend', '<svg viewBox="0 0 100 12" preserveAspectRatio="none"><path pathLength="1" d="M2 8 Q 50 2 98 6"/></svg>');
+      }
+    }
+  };
+  split(tag);
+  document.getElementById('play').focus();
+</script>
+</body>
+</html>

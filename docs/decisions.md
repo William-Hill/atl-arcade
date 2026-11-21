@@ -2505,6 +2505,28 @@ The base stance in `ride()` and `glide()` (`scripts/blender/nia_clips.py`) puts 
 - **Perf cap: high/pbr triangles 1,200,000 → 1,300,000 (owner decision).** `npm run perf:check` on the merge failed on this cap only. A rerun (`--tiers high --looks pbr --repeat 2 --max-wall 900`) counted 1,274,608 and 1,272,708 triangles on the merge, and 1,271,510 and 1,273,305 on the `epic/city-look` tip (60647caa). The merge adds no triangles; the epic tip was already over the cap. Load average in the runs: 9.9 to 23.2 on 14 CPUs. The new cap is about 2% over the measured count.
 - **perf:check wall limit 240 s → 900 s (owner decision).** With `--max-wall 240`, the high/pbr ride stopped early on this machine (about 1.5 s for each frame on SwiftShader), so the script read the triangles at another place on the trail: 1,396,024 and 1,415,991, against 1.27 M for a full ride. `npm run perf:check` now sets `--max-wall 900`. No CI workflow runs perf.
 
+## 2026-11-20: Game UI tools spike and logo options (#299, #300)
+
+Full note: `docs/research/2026-11-20-game-ui-tools.md`.
+
+- Tested at these commits (7 days old or older): `gongnyang/awesome-ai-motion` `1e3c249`, `op7418/logo-generator-skill` `bf4e9ac`, `majidmanzarpour/threejs-game-skills` `8286774`, `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c4`. The full SHAs are in the note.
+- Keep as references: the motion skill (timings from its cards and recipes), `threejs-game-ui-designer` with `references/ui-patterns.md`, and `game-ui-ux` (checklist). Use the logo generator's design rules only: it makes abstract marks, not wordmarks.
+- Skip: the threejs-game-skills scaffold (TypeScript; our code is plain JavaScript), its director and its 3 generator skills, and the paid HiAPI and Scenario tools (no keys).
+- The skills are not in `.claude/skills/` yet. A committed skill loads into every cloud session, so the owner decides. The note gives the install commands.
+- Title screen and in-game text graphics: build them in code (DOM and CSS). Mock: `prototypes/title-screen-mock/`.
+- Logo: 3 options in `assets/brand/logo-options/`, made from OFL font outlines and code shapes, no generative model.
+
+## 2026-11-21: The logo is option B, "Trail Speed" (#300)
+
+The owner chose option B on 2026-11-21 (PR #306). Reasons: it is the only option where both words read at 32 px, and its one-line shape fits a title bar and a HUD corner.
+
+- Files: `assets/brand/logo/skate-atl-logo.svg` (master), `skate-atl-logo-1024.png` (1024 x 299, transparent), `skate-atl-logo-32.png` (110 x 32 check). Script: `scripts/brand/logo-final.mjs`.
+- The final file crops the view box to the ink with a 3 % margin. The option B file cut about 19 units (2 %) off the right end of the swoosh (its view box was too narrow); the final file has the full art.
+- Font: Anton (SIL OFL 1.1), as outlines. Colors: cream `#fff6e8`, peach `#f6905a`, gold `#ffc533`, teal `#17a398`, ink `#1b1f3b`.
+- Key art: `assets/brand/key-art/skate-atl-key-art-1920x1080.png`. It is a capture of the real game renderer (pbr look, quality high, 9:30 on 21 June, clear): Nia mid-push on the Eastside Trail, with people on the trail under the bridge. A soft navy grade and the logo (34 % of the width, top left) are on top. No paintover, no image model. The raw frame is next to it, for later title and store images.
+- Method (`scripts/brand/key-art.mjs`, shots in `scripts/brand/key-art-shots.json`): load the level, hold the push key for 12 frames, open the settings menu to stop the simulation (the frame still draws; the menu DOM is hidden), then place the camera from the skater's real position and heading with `__atl.setFixedCamera`. Heading is `(cos yaw, -sin yaw)`. On SwiftShader the level load takes about 17 minutes and each 1920 x 1080 view about 5 more.
+- We chose a game capture over a generated image: it shows the game as it is, it costs 0 credits, and the same script can make it again after the look changes.
+
 ## 2026-11-21 — Teach the moves in the world (#76)
 
 Branch `feat/76-teach-moves` from `epic/city-look`. A new player gets no guide, so the game teaches the moves in the first 30 seconds.

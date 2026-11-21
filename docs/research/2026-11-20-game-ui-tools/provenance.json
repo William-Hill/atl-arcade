@@ -1,0 +1,15 @@
+{
+  "files": [
+    "title-mock-desktop-0.9s.jpg",
+    "title-mock-desktop.jpg",
+    "title-mock-phone.jpg"
+  ],
+  "generated": "2026-11-20",
+  "issue": "William-Hill/atl-arcade#299",
+  "tool": "Playwright 1.63.0 Chromium screenshots of prototypes/title-screen-mock/index.html (?logo=b), served by python3 -m http.server. Desktop 1280 x 720 at device pixel ratio 2 (the 0.9 s frame at ratio 1), phone = Playwright \"iPhone 13\". Converted to JPEG with ffmpeg -q:v 4.",
+  "background": "docs/style-frames/beltline-street/c-golden.jpg (see its own provenance file)",
+  "prompt": "none (no generative model)",
+  "credits": {
+    "total": 0
+  }
+}

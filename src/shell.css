@@ -35,6 +35,10 @@ html, body {
   /* Keep the text clear of the minimap in the bottom right corner. */
   max-width: calc(100vw - 232px);
 }
+/* With the minimap, the SETTINGS and PHOTO buttons move to the left of the
+   map (206 px from the right edge, up to about 130 px wide). Keep the text clear
+   of them too. */
+body:not(.touch):has(#minimap) #shell-info { max-width: calc(100vw - 370px); }
 
 #shell-info strong { color: var(--atl-pink); }
 

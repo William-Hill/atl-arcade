@@ -167,13 +167,18 @@ test("a desktop shows the short credit, clear of the HUD, and the 60 degree view
   await expect(page.locator("#attribution .attr-full")).toBeHidden();
   // The full credit covered the timer on a desktop screen.
   const a = await short.boundingBox();
+  const hits = (p, r) => p.x < r.x + r.width && r.x < p.x + p.width && p.y < r.y + r.height && r.y < p.y + p.height;
   for (const sel of ["#hud > *", "#skater-select button"]) {
     for (const b of await page.locator(sel).all()) {
       const r = await b.boundingBox();
-      if (!r) continue;
-      const hit = a.x < r.x + r.width && r.x < a.x + a.width && a.y < r.y + r.height && r.y < a.y + a.height;
-      expect(hit, sel).toBe(false);
+      if (r) expect(hits(a, r), sel).toBe(false);
     }
+  }
+  // The controls hint ran under the PHOTO button.
+  const hint = await page.locator("#shell-info").boundingBox();
+  for (const sel of ["#photo-toggle", "#settings-toggle", "#minimap"]) {
+    const r = await page.locator(sel).boundingBox();
+    if (r) expect(hits(hint, r), sel).toBe(false);
   }
   await short.click();
   await expect(page.locator("#attribution .attr-full")).toBeVisible();

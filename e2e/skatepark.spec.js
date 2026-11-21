@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { LANDMARKS, comboLine, park, rampRides, simulate, startAt, uv } from "./skatepark-ride.js";
+import { LANDMARKS, comboLine, park, rampRides, rides262, simulate, startAt, uv } from "./skatepark-ride.js";
 
 // #222: the Historic Fourth Ward Skatepark (Thomas Taylor Memorial
 // Skatepark) is a skate spot in the BeltLine level. The skater rides its
@@ -33,8 +33,9 @@ async function open(page, query) {
 // Starts a script in the page. While it runs, the page keeps the lowest gap
 // between the feet and the ground (sampled each animation frame). At the
 // first frame with the skater on each id of `stops` (a ground id or a grind
-// id), in order, the page freezes (`renderPaused`: no step, no render), so a
-// picture of that frame does not depend on the frame rate.
+// id, or "tick:N" for the first frame at script tick N or later), in order,
+// the page freezes (`renderPaused`: no step, no render), so a picture of that
+// frame does not depend on the frame rate.
 async function start(page, { script, start: from }, stops = []) {
   await page.evaluate(
     ({ script, from, stops }) => {
@@ -46,7 +47,9 @@ async function start(page, { script, start: from }, stops = []) {
           const g = atl.level.sample(s.position[0], s.position[2], s.position[1]);
           ride.minGap = Math.min(ride.minGap, g ? s.position[1] - g.height : -Infinity);
         }
-        if (!ride.stopped && ride.stops.length && (s.groundId === ride.stops[0] || s.grind?.id === ride.stops[0])) {
+        const want = ride.stops[0];
+        const atTick = typeof want === "string" && want.startsWith("tick:") && s.tick >= Number(want.slice(5));
+        if (!ride.stopped && ride.stops.length && (atTick || s.groundId === want || s.grind?.id === want)) {
           ride.stopped = ride.stops.shift();
           atl.renderPaused = true;
         }
@@ -155,6 +158,42 @@ for (const look of ["toon", "pbr"]) {
     expect(got.minGap).toBeGreaterThan(-0.01);
     await page.screenshot({ path: shot("combo-banked"), quality: JPEG });
 
+    expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+  });
+}
+
+// #262: vert air off the quarter pipe, the ledge catch, and no body in the
+// planter or in the back of the quarter pipe. Each ride is planned in the
+// pure simulation (rides262 in skatepark-ride.js) and the page replays it.
+// A picture is taken at the `stop` tick of each ride.
+for (const look of ["toon", "pbr"]) {
+  test(`the skatepark fixes of #262 in the ${look} look: vert air, the ledge catch, no clipping`, async ({ page }) => {
+    test.setTimeout(1800000);
+    await page.setViewportSize({ width: 960, height: 540 });
+    const errors = collectErrors(page);
+    await open(page, `quality=high&look=${look}`);
+    const rides = rides262();
+    const moves = (got) => got.events.filter((e) => e.type === "move").map((e) => e.name);
+    const results = {};
+    for (const [name, ride] of Object.entries(rides)) {
+      const want = ride.states[ride.states.length - 1].skater;
+      await start(page, ride, [`tick:${ride.stop}`]);
+      await shotOn(page, `tick:${ride.stop}`, `e2e/__screenshots__/skatepark-262-${look}-${name}.jpg`);
+      const got = await finish(page);
+      results[name] = got;
+      expect(near(got.end.position, want.position), `${name}: page ${got.end.position} vs sim ${want.position}`).toBe(true);
+      expect(got.minGap, `${name}: under the ground`).toBeGreaterThan(-0.01);
+      expect(got.events.filter((e) => e.type === "respawn" || e.type === "bail" || e.type === "fall"), name).toEqual([]);
+    }
+    // The quarter pipe gives vert air higher than its 1.2 m lip.
+    expect(moves(results.vert)).toContain("Vert Air");
+    expect(Math.max(...rides.vert.states.map((s) => s.skater.position[1])) - rides.vert.top).toBeGreaterThan(1.5);
+    // The 70 degree approach catches the ledge at speed and rides it to the end.
+    const snaps = results.ledgeCatch.events.filter((e) => e.type === "snap");
+    expect(snaps.map((e) => e.id)).toEqual(["ledge:skatepark:h4w-skatepark:line-ledge:front"]);
+    expect(rides.ledgeCatch.states.find((s) => s.skater.justSnapped).skater.speed).toBeGreaterThan(5);
+    expect(results.ledgeCatch.events.find((e) => e.type === "exit").reason).toBe("end");
+    expect(moves(results.ledgeCatch)).toContain("Ledge Grind");
     expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
   });
 }

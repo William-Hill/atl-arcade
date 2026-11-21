@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dance compare — Skate ATL</title>
+  <style>
+    html, body { margin: 0; background: #15151f; }
+    #wrap { position: relative; display: inline-block; }
+    #stage { display: block; }
+    #labels { position: absolute; left: 0; top: 0; pointer-events: none; }
+    .lbl { position: absolute; font: 12px/1.2 system-ui, sans-serif; color: #c9c9d6; white-space: nowrap; }
+    .lbl.head { font-weight: 600; font-size: 14px; color: #fff; }
+  </style>
+</head>
+<body>
+  <div id="wrap"><canvas id="stage"></canvas><div id="labels"></div></div>
+  <script type="module" src="/src/viewer/dance-compare-viewer.js"></script>
+</body>
+</html>

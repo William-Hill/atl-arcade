@@ -31,6 +31,18 @@ async function inside(page) {
   return r;
 }
 
+// The title fits on one line and does not cover the step count.
+async function readable(page) {
+  const r = await page.evaluate(() => {
+    const box = (sel) => document.querySelector(sel).getBoundingClientRect();
+    const t = box("#teach .teach-title");
+    const c = box("#teach .teach-count");
+    return { titleH: t.height, overlap: !(t.right <= c.left || c.right <= t.left || t.bottom <= c.top || c.bottom <= t.top) };
+  });
+  expect(r.titleH).toBeLessThan(30);
+  expect(r.overlap).toBe(false);
+}
+
 // Plays the pin ride in the page. Resolves with the end skater.
 async function ridePin(page, onTarget) {
   // The full ride from the spawn runs in Vitest (src/ui/teach-ride.test.js);
@@ -199,6 +211,7 @@ test.describe("teach prompts (#76)", () => {
     await finger.move(1, c.stick.x, c.stick.y - 50);
     await stepIs(page, "steer");
     await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Steer", null, { timeout: 30000 });
+    await readable(page);
     await page.screenshot({ path: `${SHOTS}/teach-phone-2-steer.png` });
     // Steer: the stick up and left.
     await finger.move(1, c.stick.x - 45, c.stick.y - 40);
@@ -209,6 +222,7 @@ test.describe("teach prompts (#76)", () => {
     await expect(page.locator(".touch-jump")).toHaveAttribute("data-teach", "1");
     t = await teach(page);
     expect(t.prompt.icons).toEqual([{ type: "touch", label: "JUMP" }]);
+    await readable(page);
     await page.screenshot({ path: `${SHOTS}/teach-phone-3-jump.png` });
     // Jump: a tap on JUMP.
     await finger.start(2, c.jump.x, c.jump.y);
@@ -217,6 +231,7 @@ test.describe("teach prompts (#76)", () => {
     await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Dance while you roll", null, { timeout: 30000 });
     await expect(page.locator(".touch-style1")).toHaveAttribute("data-teach", "1");
     await expect(page.locator(".touch-jump")).not.toHaveAttribute("data-teach", "1");
+    await readable(page);
     await page.screenshot({ path: `${SHOTS}/teach-phone-4-dance.png` });
     // Dance: a tap on SPIN while rolling.
     await page.waitForFunction(() => window.__atl.run.skater.state === "rolling" && window.__atl.run.skater.speed > 2, null, { timeout: 30000 });
@@ -228,6 +243,7 @@ test.describe("teach prompts (#76)", () => {
     await expect(page.locator(".touch-grind")).toHaveAttribute("data-teach", "1");
     t = await teach(page);
     expect(t.prompt.hint).toBe("Ride to the rail, hold GRIND");
+    await readable(page);
     await page.screenshot({ path: `${SHOTS}/teach-phone-5-grind.png` });
 
     await ridePin(page, async () => {

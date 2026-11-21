@@ -35,7 +35,7 @@
 
 .teach-icons { display: flex; gap: 6px; flex: none; }
 .teach-icons[hidden] { display: none; }
-.teach-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.teach-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 7em; }
 .teach-title { font: 800 20px/1.2 system-ui, sans-serif; }
 .teach-hint { font: 600 14px/1.3 system-ui, sans-serif; color: #ffd166; }
 .teach-hint[hidden] { display: none; }
@@ -149,4 +149,20 @@ body.touch #teach { bottom: calc(230px + env(safe-area-inset-bottom)); }
   .teach-icon { min-width: 32px; height: 32px; font-size: 14px; }
   .teach-icon-pad, .teach-icon-check { width: 32px; }
   .teach-card { gap: 10px; padding: 8px 12px; }
+}
+/* A narrow screen: the icons and the step count share the first row, and the
+   text gets the full width of the card below them, so 2 icons (dance) do not
+   push the title into the count. */
+@media (max-width: 600px) {
+  .teach-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "icons count" "text text";
+    align-items: center;
+    row-gap: 6px;
+  }
+  .teach-icons { grid-area: icons; }
+  .teach-count { grid-area: count; justify-self: end; align-self: start; }
+  .teach-text { grid-area: text; min-width: 0; }
+  .teach-icons[hidden] + .teach-text { grid-row: 1; }
 }

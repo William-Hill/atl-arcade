@@ -19,7 +19,7 @@ const opt = (name, fallback) => {
   return i >= 0 ? args[i + 1] : fallback;
 };
 const out = path.resolve(opt("--out", "assets/brand/key-art"));
-const shotName = opt("--shot", "trail-skater");
+const shotName = opt("--shot", "trail-roll");
 const W = Number(opt("--width", "1920"));
 const H = Number(opt("--height", "1080"));
 mkdirSync(out, { recursive: true });
@@ -134,7 +134,8 @@ for (const r of raws) {
 <img class="logo" src="data:image/svg+xml;base64,${logo.toString("base64")}"></body></html>`;
   await page.setContent(html);
   await page.waitForFunction(() => [...document.images].every((i) => i.complete));
-  const isFinal = r.name === shot.final || args.includes("--final");
+  // --final names the output of a --raw compose. A full capture uses shot.final only.
+  const isFinal = rawPath ? args.includes("--final") : r.name === shot.final;
   const file = path.join(out, isFinal ? `skate-atl-key-art-${W}x${H}.png` : `${shot.name}-${r.name}-keyart.png`);
   await page.screenshot({ path: file });
   results.push(file);

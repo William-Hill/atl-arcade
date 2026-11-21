@@ -48,6 +48,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import skater_joint_limits as joint_limits  # noqa: E402
+import skater_clip_probe as clip_probe  # noqa: E402
 from mathutils import Matrix, Quaternion, Vector
 
 FPS = 30
@@ -143,6 +144,26 @@ STANCE = {
     # blend between the coast and the push does not lift the chest.
     "push": {"hip_ankle": 0.78, "max_hinge_deg": 35.0, "head_keep": 0.8, "arms_fwd_deg": 0.0},
 }
+# Arm mirror (owner feedback 2026-11-21: Marcus's right arm stays bent for no
+# reason). skater_anim_v3.py keys his right elbow at 84 degrees with half the
+# swing of the left arm ("like a drum stick"); in the game it reads as a
+# stiff arm. In these clips the right arm becomes the mirror of the left arm
+# half a clip later (the arms swing in opposition), in the frame of the chest.
+ARM_MIRROR = {"marcus": {"push": "Left", "coast": "Left"}}
+ARM_CHAIN = ["Shoulder", "Arm", "ForeArm", "Hand"]
+# Clipping (owner feedback 2026-11-21): limb capsules and skate boxes
+# (skater_clip_probe.py). A leg that goes into the other leg moves its skate
+# away in the ground plane; a hand or forearm in a thigh swings the upper arm
+# out. CLEAR (m) is the gap that the fix leaves.
+CLEAR = 0.005
+# A hand or forearm against the cloth of a thigh is light contact up to this
+# depth (m); only a deeper clip swings the arm out.
+ARM_CLIP = 0.02
+CLIP_ITERS = 4
+LEG_PAIRS = {"l_knee>r_knee", "l_knee>r_shin", "r_knee>l_shin", "l_knee>r_thigh", "r_knee>l_thigh", "l_shin>r_shin", "l_thigh>r_shin", "r_thigh>l_shin",
+             "l_skate>r_skate", "l_skate>r_shin", "r_skate>l_shin"}
+ARM_PAIRS = {"l_hand>l_thigh": "Left", "r_hand>r_thigh": "Right", "l_hand>l_knee": "Left", "r_hand>r_knee": "Right",
+             "l_forearm>l_thigh": "Left", "r_forearm>r_thigh": "Right"}
 # The heading of the skater in Blender: the model faces -Y, X is the side.
 FORWARD = 1  # axis index of fore-aft (Y)
 SIDE = 0
@@ -880,6 +901,176 @@ def stance_pass(sk, name, s):
     return act, info
 
 
+def arm_mirror_pass(sk, who, name, s):
+    """A new action with one arm the mirror of the other, half a clip later."""
+    src = ARM_MIRROR.get(who, {}).get(name)
+    if not src:
+        return None, None
+    dst = "Right" if src == "Left" else "Left"
+    n = s["n"]
+    S = Matrix.Diagonal((-1, 1, 1, 1))
+    rest = {b.name: b.matrix_local.copy() for b in sk.arm.data.bones}
+    chest = P + "Spine2"
+    pb = sk.pb
+    sk.arm.animation_data.action = None
+    before = []
+    for f in range(n + 1):
+        g = f % n
+        h = (g + n // 2) % n
+        for b in sk.names:
+            loc, rot = s["basis"][g][b]
+            pb[b].location = loc
+            pb[b].rotation_quaternion = rot
+        bpy.context.view_layer.update()
+        C_g, C_h = s["mat"][g][chest], s["mat"][h][chest]
+        for part in ARM_CHAIN:
+            sb, db = P + src + part, P + dst + part
+            # The source bone with the chest at rest, mirrored, then put on the chest of frame g.
+            X = rest[chest] @ C_h.inverted() @ s["mat"][h][sb]
+            Xm = S @ (X @ rest[sb].inverted()) @ S @ rest[db]
+            loc = pb[db].location.copy()
+            pb[db].matrix = C_g @ rest[chest].inverted() @ Xm
+            pb[db].location = loc
+            bpy.context.view_layer.update()
+        if f < n:
+            before.append(pb[P + dst + "ForeArm"].matrix.copy())
+        key_frame(sk, f)
+    act = sk.arm.animation_data.action
+    act.name = name + "_arms"
+    return act, {"source_arm": src, "mirrored_arm": dst, "phase_frames": n // 2}
+
+
+def clip_setup(sk):
+    radii = clip_probe.capsule_radii(sk.arm, sk.mesh)
+    boxes = clip_probe.skate_boxes(sk.arm, sk.mesh)
+    return radii, boxes
+
+
+def com_path(sk, s, shift, rots, targets):
+    hips0 = [s["mat"][f][P + "Hips"] for f in range(s["n"])]
+    out = []
+    for f in range(s["n"]):
+        mats, _ = write_pose(sk, f, s, Matrix.Translation(Vector(shift[f])) @ hips0[f], rots, targets[f])
+        out.append(sk.com(mats))
+    return np.array(out)
+
+
+def rebalance(sk, name, s, shift, rots, targets, C_ref, iters=2):
+    """After the clip fix: shift the hips until the CoM path is C_ref again."""
+    caps = MAX_SHIFT.get(name, MAX_SHIFT_DEFAULT)
+    for _ in range(iters):
+        err = C_ref - com_path(sk, s, shift, rots, targets)
+        shift += err / 0.68
+        for axis, cap in enumerate(caps):
+            shift[:, axis] = np.clip(shift[:, axis], -cap, cap)
+    return float(np.abs(C_ref - com_path(sk, s, shift, rots, targets)).max())
+
+
+def resolve_clips(sk, s, shift, rots, targets, radii, boxes):
+    """Moves skates and upper arms until the limbs are clear. Returns info."""
+    n = s["n"]
+    foot_off = {sd: np.zeros((n, 3)) for sd in ("Left", "Right")}
+    arm_deg = {sd: np.zeros(n) for sd in ("Left", "Right")}
+    arm_axis = {sd: [Vector((0, 1, 0))] * n for sd in ("Left", "Right")}
+    hips0 = [s["mat"][f][P + "Hips"] for f in range(n)]
+    zs = {sd: np.array([float(s["skate"][f][sd][:, 2].min()) for f in range(n)]) for sd in ("Left", "Right")}
+    base_t = [dict(t) for t in targets]
+    base_r = {b: q.copy() for b, q in rots.items()}
+    first = None
+
+    def apply():
+        for f in range(n):
+            tm = dict(base_t[f])
+            for sd in ("Left", "Right"):
+                for b in ("Foot", "ToeBase"):
+                    tm[P + sd + b] = Matrix.Translation(Vector(foot_off[sd][f])) @ base_t[f][P + sd + b]
+            targets[f] = tm
+        for sd in ("Left", "Right"):
+            key = P + sd + "Arm"
+            if key not in base_r:
+                continue
+            for f in range(n):
+                q = Quaternion(base_r[key][f])
+                if arm_deg[sd][f]:
+                    W = Quaternion(arm_axis[sd][f], math.radians(arm_deg[sd][f]))
+                    q = q @ local_delta(s, f, key, W)
+                rots[key][f] = list(q)
+
+    def measure():
+        out = []
+        for f in range(n):
+            H = Matrix.Translation(Vector(shift[f])) @ hips0[f]
+            mats, _ = write_pose(sk, f, s, H, rots, targets[f])
+            out.append((mats, clip_probe.overlaps(sk.arm, radii, mats, boxes)))
+        return out
+
+    for it in range(CLIP_ITERS + 1):
+        res = measure()
+        worst = max(max(v - (ARM_CLIP if k in ARM_PAIRS else 0) for k, v in o.items()) for _, o in res)
+        if first is None:
+            first = {k: round(max(o[k] for _, o in res), 4) for k in res[0][1]}
+        if it == CLIP_ITERS or worst <= CLEAR:
+            break
+        add_f = {sd: np.zeros((n, 3)) for sd in ("Left", "Right")}
+        add_a = {sd: np.zeros(n) for sd in ("Left", "Right")}
+        for f, (mats, o) in enumerate(res):
+            seg = clip_probe.capsule_segments(sk.arm, mats)
+            for k, d in o.items():
+                if d <= CLEAR:
+                    continue
+                need = d + CLEAR - 0.0
+                if k in LEG_PAIRS:
+                    # The skate that is higher (in the air) or moves more is the one that goes.
+                    vl = np.linalg.norm(base_t[(f + 1) % n][P + "LeftFoot"].to_translation() - base_t[f - 1][P + "LeftFoot"].to_translation())
+                    vr = np.linalg.norm(base_t[(f + 1) % n][P + "RightFoot"].to_translation() - base_t[f - 1][P + "RightFoot"].to_translation())
+                    mover = "Left" if (zs["Left"][f] - zs["Right"][f] > 0.01 or (abs(zs["Left"][f] - zs["Right"][f]) <= 0.01 and vl >= vr)) else "Right"
+                    other = "Right" if mover == "Left" else "Left"
+                    a = (seg[mover[0].lower() + "_shin"][0] + seg[mover[0].lower() + "_shin"][1]) / 2
+                    b = (seg[other[0].lower() + "_shin"][0] + seg[other[0].lower() + "_shin"][1]) / 2
+                    dvec = np.array([a[0] - b[0], a[1] - b[1], 0.0])
+                    if np.linalg.norm(dvec) < 1e-6:
+                        dvec = np.array([1.0 if mover == "Left" else -1.0, 0, 0])
+                    dvec /= np.linalg.norm(dvec)
+                    if need > np.linalg.norm(add_f[mover][f]):
+                        add_f[mover][f] = dvec * need
+                elif k in ARM_PAIRS and d > ARM_CLIP:
+                    sd = ARM_PAIRS[k]
+                    shoulder = np.array(mats[P + sd + "Arm"].to_translation())
+                    hand = np.array(mats[P + sd + "Hand"].to_translation())
+                    thigh = seg[sd[0].lower() + "_thigh"]
+                    # Swing the hand away from the nearest point of the thigh,
+                    # with a bias out to the side, so the arm never swings into
+                    # the body.
+                    out = np.array([1.0 if sd == "Left" else -1.0, 0.0, 0.0])
+                    t0, t1 = thigh
+                    tt = np.clip((hand - t0) @ (t1 - t0) / max((t1 - t0) @ (t1 - t0), 1e-9), 0, 1)
+                    away = hand - (t0 + tt * (t1 - t0))
+                    away[2] = 0
+                    nrm = np.linalg.norm(away)
+                    away = (away / nrm if nrm > 1e-6 else out) + 0.5 * out
+                    arm_dir = hand - shoulder
+                    axis = Vector(np.cross(arm_dir, away))
+                    if axis.length < 1e-6:
+                        continue
+                    arm_axis[sd][f] = axis.normalized()
+                    add_a[sd][f] = max(add_a[sd][f], math.degrees((d - ARM_CLIP + CLEAR) / max(np.linalg.norm(arm_dir), 0.2)))
+        for sd in ("Left", "Right"):
+            f_new = foot_off[sd] + add_f[sd]
+            mag = np.linalg.norm(f_new, axis=1)
+            sm = circ_gauss(f_new, 1.5)
+            smag = np.linalg.norm(sm, axis=1)
+            scale = np.where(smag > 1e-9, np.maximum(mag, smag) / np.maximum(smag, 1e-9), 0)
+            foot_off[sd] = sm * np.minimum(scale, 3)[:, None]
+            a_new = arm_deg[sd] + add_a[sd]
+            arm_deg[sd] = np.maximum(a_new, circ_gauss(a_new, 1.5))
+        apply()
+    last = {k: round(max(o[k] for _, o in res), 4) for k in res[0][1]}
+    return {"overlap_max_m_before": {k: v for k, v in first.items() if v > 0},
+            "overlap_max_m_after": {k: v for k, v in last.items() if v > 0},
+            "skate_move_max_m": {sd: round(float(np.linalg.norm(foot_off[sd], axis=1).max()), 4) for sd in foot_off},
+            "arm_swing_out_max_deg": {sd: round(float(arm_deg[sd].max()), 1) for sd in arm_deg}}
+
+
 def build_action(sk, name, s, shift, rots, targets):
     # keyframe_insert makes a new action (with its slot) when none is bound.
     sk.arm.animation_data.action = None
@@ -978,7 +1169,7 @@ def main():
     report = {"source": a.src, "skater": who, "settings": {
         "still": STILL, "sigma_frames": SIGMA, "follow": FOLLOW, "max_shift_m": {**MAX_SHIFT, "default": MAX_SHIFT_DEFAULT},
         "contact_m": CONTACT, "support_margin_m": SUPPORT_MARGIN, "body_kg": BODY_KG, "skate_kg": SKATE_KG,
-        "recoil": RECOIL, "stance": STANCE, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
+        "recoil": RECOIL, "stance": STANCE, "arm_mirror": ARM_MIRROR, "clip_clear_m": CLEAR, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
     rest = {b: (bn.head_local.x, bn.head_local.y, bn.head_local.z) for b, bn in ((b, sk.arm.data.bones[b]) for b in (P + "LeftFoot", P + "RightFoot"))}
     report["rest_feet"] = rest
     originals = {}
@@ -989,6 +1180,9 @@ def main():
         gate0 = joint_limits.gate_action(sk.arm, act)
         s = sk.sample(act)
         m0 = metrics(sk, s)
+        arm_act, arm_info = arm_mirror_pass(sk, who, name, s)
+        if arm_act:
+            s = sk.sample(arm_act)
         stance_info = None
         st_act, stance_info = stance_pass(sk, name, s)
         if st_act:
@@ -998,7 +1192,7 @@ def main():
         if plan:
             # The physics pass works on the retimed clip; "before" stays the
             # shipped clip.
-            src_act = retime(sk, st_act or act, plan, name + "_drive")
+            src_act = retime(sk, st_act or arm_act or act, plan, name + "_drive")
             s0 = s
             s = sk.sample(src_act)
             s["drive"] = plan
@@ -1009,12 +1203,26 @@ def main():
                           "warp": [round(w, 2) for w in plan["warp"]]}
             m_pass = mw
         else:
-            m_pass = metrics(sk, s) if st_act else m0
+            m_pass = metrics(sk, s) if (st_act or arm_act) else m0
         shift, rots, targets, info = physics_pass(sk, name, s, m_pass)
         if drive_info:
             info["drive"] = drive_info
         if stance_info:
             info["stance"] = stance_info
+        if arm_info:
+            info["arm_mirror"] = arm_info
+        C_ref = com_path(sk, s, shift, rots, targets)
+        setup = clip_setup(sk)
+        info["clipping"] = resolve_clips(sk, s, shift, rots, targets, *setup)
+        info["clipping"]["com_error_after_rebalance_m"] = round(rebalance(sk, name, s, shift, rots, targets, C_ref), 4)
+        # The rebalance moves the hips: measure the clips once more.
+        hips0 = [s["mat"][f][P + "Hips"] for f in range(s["n"])]
+        final = {}
+        for f in range(s["n"]):
+            mats, _ = write_pose(sk, f, s, Matrix.Translation(Vector(shift[f])) @ hips0[f], rots, targets[f])
+            for k, d in clip_probe.overlaps(sk.arm, setup[0], mats, setup[1]).items():
+                final[k] = max(final.get(k, 0.0), round(d, 4))
+        info["clipping"]["overlap_max_m_final"] = {k: v for k, v in final.items() if v > 0}
         act.name = name + "_before"
         new_act, reach = build_action(sk, name, s, shift, rots, targets)
         new[name] = new_act
@@ -1044,6 +1252,16 @@ def main():
             old_right.name = "carve_right_before"
         gate0 = joint_limits.gate_action(sk.arm, old_right) if old_right else None
         act, reach = build_mirror(sk, new["carve_left"], "carve_right")
+        # The rig is not exactly symmetric: the mirror can move a skate into
+        # the other leg. Run the clip fix on the mirror too.
+        s_m = sk.sample(act)
+        nm = s_m["n"]
+        shift_m = np.zeros((nm, 3))
+        rots_m = {P + b: quat_series(s_m, P + b) for b in ("LeftArm", "RightArm")}
+        targets_m = [dict(s_m["mat"][f]) for f in range(nm)]
+        mirror_clip = resolve_clips(sk, s_m, shift_m, rots_m, targets_m, *clip_setup(sk))
+        act.name = "carve_right_mirror"
+        act, _ = build_action(sk, "carve_right", s_m, shift_m, rots_m, targets_m)
         new["carve_right"] = act
         gate1 = joint_limits.gate_action(sk.arm, act)
         s1 = sk.sample(act)
@@ -1054,6 +1272,7 @@ def main():
             "after": {k: v for k, v in m1.items() if not k.startswith("_")},
             "leg_reach_max": round(reach, 4),
             "joint_limits": {"before": gate0, "after": gate1},
+            "clipping": mirror_clip,
         }
         print(f"[physics] {who} carve_right (mirror): zmp out {m_old and m_old['zmp_outside_frames']} -> {m1['zmp_outside_frames']}, wheel z {m1['wheel_z_min_m']}")
     # Export: the rig, the mesh, and the new clips only, without Draco.

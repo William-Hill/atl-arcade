@@ -97,6 +97,13 @@
     "arms_fwd_deg": 0.0
    }
   },
+  "arm_mirror": {
+   "marcus": {
+    "push": "Left",
+    "coast": "Left"
+   }
+  },
+  "clip_clear_m": 0.005,
   "recoil_lead_back_frames": [
    3,
    4
@@ -141,20 +148,20 @@
    "after": {
     "frames": 52,
     "loop_error_m": 0.0,
-    "com_fore_aft_range_m": 0.0148,
-    "com_fore_aft_accel_peak_ms2": 2.728,
-    "com_side_accel_peak_ms2": 2.502,
+    "com_fore_aft_range_m": 0.0146,
+    "com_fore_aft_accel_peak_ms2": 2.73,
+    "com_side_accel_peak_ms2": 2.582,
     "com_up_accel_min_ms2": -2.307,
-    "com_up_accel_max_ms2": 2.303,
-    "com_jerk_rms_ms3": 37.58,
-    "zmp_outside_frames": 9,
-    "zmp_outside_max_m": 0.0017,
-    "zmp_outside_mean_m": 0.0001,
+    "com_up_accel_max_ms2": 2.305,
+    "com_jerk_rms_ms3": 37.28,
+    "zmp_outside_frames": 20,
+    "zmp_outside_max_m": 0.0184,
+    "zmp_outside_mean_m": 0.001,
     "angular_jerk_rms": {
      "Spine2": 132.1,
      "Head": 115.3,
-     "LeftHand": 280.2,
-     "RightHand": 280.4
+     "LeftHand": 1470.3,
+     "RightHand": 1526.3
     },
     "wheel_z_min_m": {
      "Left": -0.0,
@@ -167,12 +174,12 @@
     "contact": "L L L L L L L L L L L LR LR LR LR LR LR LR LR LR R R R R R R R R R R R R R R R R R LR LR LR LR LR LR LR LR LR L L L L L L"
    },
    "hips_shift_max_m": [
-    0.0785,
-    0.0238,
-    0.0136
+    0.0805,
+    0.0262,
+    0.0142
    ],
-   "leg_reach_max": 0.8691,
-   "skate_vertex_move_max_m": 0.00808,
+   "leg_reach_max": 0.8687,
+   "skate_vertex_move_max_m": 0.00832,
    "joint_limits": {
     "before": {
      "status": "PASS",
@@ -211,9 +218,9 @@
      "peaks": {
       "left_knee_flex:knee bend": 99.7,
       "right_knee_flex:knee bend": 101.2,
-      "left_knee_flex:knee hyperextension": -59.4,
+      "left_knee_flex:knee hyperextension": -59.5,
       "right_knee_flex:knee hyperextension": -62.1,
-      "left_knee_off_hinge:knee off hinge": 29.7,
+      "left_knee_off_hinge:knee off hinge": 29.8,
       "right_knee_off_hinge:knee off hinge": 29.4,
       "left_elbow_flex:elbow bend": 49.7,
       "right_elbow_flex:elbow bend": 47.2,
@@ -223,12 +230,12 @@
       "right_elbow_off_hinge:elbow off hinge": 4.0,
       "left_hip_flex:hip flexion": 87.2,
       "right_hip_flex:hip flexion": 87.7,
-      "left_hip_flex:hip extension": -39.3,
+      "left_hip_flex:hip extension": -39.4,
       "right_hip_flex:hip extension": -40.8,
       "left_hip_abduction:hip abduction": 32.5,
-      "right_hip_abduction:hip abduction": 31.8,
-      "left_hip_abduction:hip adduction": -0.9,
-      "right_hip_abduction:hip adduction": -0.1,
+      "right_hip_abduction:hip abduction": 31.9,
+      "left_hip_abduction:hip adduction": -0.8,
+      "right_hip_abduction:hip adduction": 0.0,
       "spine_bend:spine bend": 17.7,
       "spine_twist:spine twist": 20.3,
       "neck_bend:neck bend": 10.3
@@ -365,6 +372,38 @@
      -0.104,
      -0.002
     ]
+   },
+   "clipping": {
+    "overlap_max_m_before": {
+     "l_skate>r_skate": 0.0047,
+     "l_hand>l_thigh": 0.1084,
+     "r_hand>r_thigh": 0.1031,
+     "l_forearm>l_thigh": 0.1331,
+     "r_forearm>r_thigh": 0.1294
+    },
+    "overlap_max_m_after": {
+     "l_skate>r_skate": 0.0047,
+     "l_hand>l_thigh": 0.0174,
+     "r_hand>r_thigh": 0.0208,
+     "l_forearm>l_thigh": 0.0203,
+     "r_forearm>r_thigh": 0.0217
+    },
+    "skate_move_max_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "arm_swing_out_max_deg": {
+     "Left": 18.0,
+     "Right": 18.1
+    },
+    "com_error_after_rebalance_m": 0.0002,
+    "overlap_max_m_final": {
+     "l_skate>r_skate": 0.0047,
+     "l_hand>l_thigh": 0.0191,
+     "r_hand>r_thigh": 0.0224,
+     "l_forearm>l_thigh": 0.0215,
+     "r_forearm>r_thigh": 0.023
+    }
    }
   },
   "coast": {
@@ -402,17 +441,17 @@
     "com_fore_aft_range_m": 0.0156,
     "com_fore_aft_accel_peak_ms2": 2.632,
     "com_side_accel_peak_ms2": 2.745,
-    "com_up_accel_min_ms2": -0.928,
+    "com_up_accel_min_ms2": -0.926,
     "com_up_accel_max_ms2": 1.466,
     "com_jerk_rms_ms3": 22.58,
-    "zmp_outside_frames": 5,
+    "zmp_outside_frames": 2,
     "zmp_outside_max_m": 0.0022,
     "zmp_outside_mean_m": 0.0,
     "angular_jerk_rms": {
      "Spine2": 64.4,
      "Head": 56.8,
-     "LeftHand": 118.7,
-     "RightHand": 118.5
+     "LeftHand": 131.9,
+     "RightHand": 125.5
     },
     "wheel_z_min_m": {
      "Left": -0.0,
@@ -426,11 +465,11 @@
    },
    "hips_shift_max_m": [
     0.0091,
-    0.0219,
-    0.0056
+    0.0217,
+    0.0059
    ],
-   "leg_reach_max": 0.8024,
-   "skate_vertex_move_max_m": 0.00166,
+   "leg_reach_max": 0.8017,
+   "skate_vertex_move_max_m": 0.00159,
    "joint_limits": {
     "before": {
      "status": "PASS",
@@ -469,8 +508,8 @@
      "peaks": {
       "left_knee_flex:knee bend": 78.1,
       "right_knee_flex:knee bend": 78.5,
-      "left_knee_flex:knee hyperextension": -73.4,
-      "right_knee_flex:knee hyperextension": -74.0,
+      "left_knee_flex:knee hyperextension": -73.6,
+      "right_knee_flex:knee hyperextension": -74.1,
       "left_knee_off_hinge:knee off hinge": 23.9,
       "right_knee_off_hinge:knee off hinge": 24.1,
       "left_elbow_flex:elbow bend": 39.4,
@@ -483,10 +522,10 @@
       "right_hip_flex:hip flexion": 69.4,
       "left_hip_flex:hip extension": -75.3,
       "right_hip_flex:hip extension": -66.2,
-      "left_hip_abduction:hip abduction": 9.0,
+      "left_hip_abduction:hip abduction": 8.9,
       "right_hip_abduction:hip abduction": 9.3,
       "left_hip_abduction:hip adduction": -1.0,
-      "right_hip_abduction:hip adduction": -1.2,
+      "right_hip_abduction:hip adduction": -1.3,
       "spine_bend:spine bend": 8.6,
       "spine_twist:spine twist": 9.5,
       "neck_bend:neck bend": 8.7
@@ -557,6 +596,33 @@
      -0.179,
      0.001
     ]
+   },
+   "clipping": {
+    "overlap_max_m_before": {
+     "l_hand>l_thigh": 0.0207,
+     "r_hand>r_thigh": 0.0424,
+     "l_forearm>l_thigh": 0.0414,
+     "r_forearm>r_thigh": 0.0652
+    },
+    "overlap_max_m_after": {
+     "l_hand>l_thigh": 0.0028,
+     "l_forearm>l_thigh": 0.0218,
+     "r_forearm>r_thigh": 0.0187
+    },
+    "skate_move_max_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "arm_swing_out_max_deg": {
+     "Left": 3.3,
+     "Right": 6.2
+    },
+    "com_error_after_rebalance_m": 0.0001,
+    "overlap_max_m_final": {
+     "l_hand>l_thigh": 0.0028,
+     "l_forearm>l_thigh": 0.0218,
+     "r_forearm>r_thigh": 0.0189
+    }
    }
   },
   "carve_left": {
@@ -591,20 +657,20 @@
    "after": {
     "frames": 48,
     "loop_error_m": 0.0,
-    "com_fore_aft_range_m": 0.0301,
-    "com_fore_aft_accel_peak_ms2": 2.742,
-    "com_side_accel_peak_ms2": 8.211,
-    "com_up_accel_min_ms2": -3.94,
-    "com_up_accel_max_ms2": 5.5,
-    "com_jerk_rms_ms3": 51.35,
-    "zmp_outside_frames": 30,
-    "zmp_outside_max_m": 0.2595,
-    "zmp_outside_mean_m": 0.0599,
+    "com_fore_aft_range_m": 0.0306,
+    "com_fore_aft_accel_peak_ms2": 5.452,
+    "com_side_accel_peak_ms2": 8.48,
+    "com_up_accel_min_ms2": -3.941,
+    "com_up_accel_max_ms2": 5.415,
+    "com_jerk_rms_ms3": 55.0,
+    "zmp_outside_frames": 33,
+    "zmp_outside_max_m": 0.3066,
+    "zmp_outside_mean_m": 0.0684,
     "angular_jerk_rms": {
      "Spine2": 73.1,
      "Head": 64.5,
      "LeftHand": 122.4,
-     "RightHand": 122.4
+     "RightHand": 1990.8
     },
     "wheel_z_min_m": {
      "Left": -0.0,
@@ -621,7 +687,7 @@
     0.06,
     0.0227
    ],
-   "leg_reach_max": 0.7249,
+   "leg_reach_max": 0.7247,
    "skate_vertex_move_max_m": 0.03869,
    "joint_limits": {
     "before": {
@@ -659,12 +725,12 @@
      "warn": [],
      "fail": [],
      "peaks": {
-      "left_knee_flex:knee bend": 109.1,
+      "left_knee_flex:knee bend": 109.5,
       "right_knee_flex:knee bend": 109.1,
       "left_knee_flex:knee hyperextension": -102.5,
       "right_knee_flex:knee hyperextension": -87.3,
       "left_knee_off_hinge:knee off hinge": 28.7,
-      "right_knee_off_hinge:knee off hinge": 23.8,
+      "right_knee_off_hinge:knee off hinge": 24.3,
       "left_elbow_flex:elbow bend": 21.2,
       "right_elbow_flex:elbow bend": 42.6,
       "left_elbow_flex:elbow hyperextension": -21.2,
@@ -672,13 +738,13 @@
       "left_elbow_off_hinge:elbow off hinge": 0.0,
       "right_elbow_off_hinge:elbow off hinge": 3.8,
       "left_hip_flex:hip flexion": 69.8,
-      "right_hip_flex:hip flexion": 85.0,
+      "right_hip_flex:hip flexion": 85.6,
       "left_hip_flex:hip extension": -41.9,
       "right_hip_flex:hip extension": -61.3,
       "left_hip_abduction:hip abduction": 11.3,
       "right_hip_abduction:hip abduction": 16.5,
-      "left_hip_abduction:hip adduction": -2.6,
-      "right_hip_abduction:hip adduction": 1.0,
+      "left_hip_abduction:hip adduction": -2.3,
+      "right_hip_abduction:hip adduction": 0.9,
       "spine_bend:spine bend": 25.0,
       "spine_twist:spine twist": 12.3,
       "neck_bend:neck bend": 4.8
@@ -706,7 +772,37 @@
      ]
     }
    ],
-   "recoil_pelvis_target_max_m": 0.0108
+   "recoil_pelvis_target_max_m": 0.0108,
+   "clipping": {
+    "overlap_max_m_before": {
+     "l_thigh>r_shin": 0.0009,
+     "r_skate>l_shin": 0.0121,
+     "r_hand>r_thigh": 0.1172,
+     "r_forearm>r_thigh": 0.1359,
+     "l_knee>r_shin": 0.0025
+    },
+    "overlap_max_m_after": {
+     "r_skate>l_shin": 0.0014,
+     "r_hand>r_thigh": 0.0014,
+     "r_forearm>r_thigh": 0.0232,
+     "l_knee>r_shin": 0.0006
+    },
+    "skate_move_max_m": {
+     "Left": 0.0,
+     "Right": 0.0171
+    },
+    "arm_swing_out_max_deg": {
+     "Left": 0.0,
+     "Right": 22.1
+    },
+    "com_error_after_rebalance_m": 0.0034,
+    "overlap_max_m_final": {
+     "r_skate>l_shin": 0.0013,
+     "r_hand>r_thigh": 0.0028,
+     "r_forearm>r_thigh": 0.0236,
+     "r_hand>r_knee": 0.0014
+    }
+   }
   },
   "carve_right": {
    "method": "mirror of the new carve_left across X = 0, the feet put back by the IK solve",
@@ -741,19 +837,19 @@
    "after": {
     "frames": 48,
     "loop_error_m": 0.0,
-    "com_fore_aft_range_m": 0.0301,
-    "com_fore_aft_accel_peak_ms2": 2.742,
-    "com_side_accel_peak_ms2": 8.211,
-    "com_up_accel_min_ms2": -3.94,
-    "com_up_accel_max_ms2": 5.504,
-    "com_jerk_rms_ms3": 51.36,
-    "zmp_outside_frames": 31,
-    "zmp_outside_max_m": 0.262,
-    "zmp_outside_mean_m": 0.0626,
+    "com_fore_aft_range_m": 0.0339,
+    "com_fore_aft_accel_peak_ms2": 6.311,
+    "com_side_accel_peak_ms2": 8.499,
+    "com_up_accel_min_ms2": -3.896,
+    "com_up_accel_max_ms2": 5.443,
+    "com_jerk_rms_ms3": 56.9,
+    "zmp_outside_frames": 33,
+    "zmp_outside_max_m": 0.3311,
+    "zmp_outside_mean_m": 0.0706,
     "angular_jerk_rms": {
      "Spine2": 73.1,
      "Head": 64.5,
-     "LeftHand": 122.4,
+     "LeftHand": 2026.3,
      "RightHand": 122.4
     },
     "wheel_z_min_m": {
@@ -766,7 +862,7 @@
     },
     "contact": "LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR LR R R R R R R R R R R R R R R LR LR LR LR LR LR LR LR LR LR LR LR LR"
    },
-   "leg_reach_max": 0.7249,
+   "leg_reach_max": 0.7247,
    "joint_limits": {
     "before": {
      "status": "PASS",
@@ -803,11 +899,11 @@
      "warn": [],
      "fail": [],
      "peaks": {
-      "left_knee_flex:knee bend": 109.1,
-      "right_knee_flex:knee bend": 109.1,
+      "left_knee_flex:knee bend": 108.9,
+      "right_knee_flex:knee bend": 109.5,
       "left_knee_flex:knee hyperextension": -87.3,
       "right_knee_flex:knee hyperextension": -102.5,
-      "left_knee_off_hinge:knee off hinge": 23.8,
+      "left_knee_off_hinge:knee off hinge": 29.2,
       "right_knee_off_hinge:knee off hinge": 28.7,
       "left_elbow_flex:elbow bend": 45.2,
       "right_elbow_flex:elbow bend": 18.7,
@@ -815,18 +911,39 @@
       "right_elbow_flex:elbow hyperextension": -18.7,
       "left_elbow_off_hinge:elbow off hinge": 3.3,
       "right_elbow_off_hinge:elbow off hinge": 0.0,
-      "left_hip_flex:hip flexion": 85.0,
+      "left_hip_flex:hip flexion": 87.3,
       "right_hip_flex:hip flexion": 69.8,
       "left_hip_flex:hip extension": -61.3,
       "right_hip_flex:hip extension": -41.9,
       "left_hip_abduction:hip abduction": 16.5,
       "right_hip_abduction:hip abduction": 11.3,
-      "left_hip_abduction:hip adduction": 1.0,
-      "right_hip_abduction:hip adduction": -2.6,
+      "left_hip_abduction:hip adduction": -2.2,
+      "right_hip_abduction:hip adduction": -2.3,
       "spine_bend:spine bend": 25.0,
       "spine_twist:spine twist": 9.2,
       "neck_bend:neck bend": 4.8
      }
+    }
+   },
+   "clipping": {
+    "overlap_max_m_before": {
+     "l_skate>r_skate": 0.0658,
+     "l_hand>l_thigh": 0.0166,
+     "l_forearm>l_thigh": 0.0331,
+     "r_knee>l_shin": 0.001,
+     "l_hand>l_knee": 0.0046
+    },
+    "overlap_max_m_after": {
+     "l_skate>r_skate": 0.0003,
+     "l_forearm>l_thigh": 0.0185
+    },
+    "skate_move_max_m": {
+     "Left": 0.0879,
+     "Right": 0.0
+    },
+    "arm_swing_out_max_deg": {
+     "Left": 3.2,
+     "Right": 0.0
     }
    }
   }

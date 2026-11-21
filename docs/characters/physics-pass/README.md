@@ -1,4 +1,4 @@
-# Physics pass, athletic stance, joint limits, recoil, and a faster push drive (2026-11-21)
+# Physics pass, athletic stance, clipping fix, joint limits, recoil, and a faster push drive (2026-11-21)
 
 `scripts/blender/skater_physics_pass.py` changed these clips in headless Blender 5.2.3: `push`, `coast`, `carve_left`, and `carve_right` (the mirror of the new `carve_left`). It did this for Nia and for Marcus. Cascadeur did not run in the cloud container (see `docs/decisions.md`, 2026-11-21).
 
@@ -10,6 +10,30 @@ The pass has five parts:
 3. A faster push drive: the Crossroads recipe (the swing length times 10/18, a deeper load before it). Each push drive (both skates on the ground, from the touch-down of the other skate to the lift-off) plays in 10/18 of its frames. The lift-off frames and the clip length stay the same. The other skate lands later, so the glide on one skate gets the saved frames. The hips dip 1 cm more at the start of each drive. In the push, the hips can move up to 12 cm to the side over the glide skate (6 cm in the other clips).
 4. Joint limits: the Crossroads joint-limit gate (`pipeline/joint_limit_gate.py`, #465), ported to the Mixamo rig in `scripts/blender/skater_joint_limits.py`. A clip past LIMITS gets a WARN, and a clip past IMPOSSIBLE gets a FAIL.
 
+## The carve clips
+
+- Nia `carve_left` is the ATL Ryde corner step (2 beats, from the Dun Beezy lesson in `docs/characters/skate-style-references.md`): the right (outside) skate steps out wide, the left (inside) skate drags behind on its toe two times, then the right skate lifts and comes back in, in front of the left. The body leans into the turn and the shoulders turn with it.
+- Marcus `carve_left` is jam crossovers (2 beats, `skater_anim_v3.py`): the right skate lifts and crosses over in front of the left skate, then the left skate comes out from under and steps wide to the left. His chest turns into the curve more than Nia's.
+- `carve_right` is the mirror of `carve_left` for both skaters. The game plays the carve clip when the skater turns, and the renderer adds the bank lean of the turn.
+
+## Marcus's right arm and the clipping (owner feedback)
+
+- Marcus's right arm: `skater_anim_v3.py` keyed his right elbow at 84 degrees with half the swing of the left arm ("like a drum stick"). In the game it read as a stiff arm. In the push and the coast, the right arm is now the mirror of the left arm half a clip later (the arms swing in opposition). Right elbow range: push 70..89 -> 12..39 degrees, coast 76..83 -> 21..30 degrees (left: 9..35 and 17..27). The brake and the carves keep their deliberate asymmetric arm shapes.
+- Clipping: `scripts/blender/skater_clip_probe.py` models each limb as a capsule, each knee (with its knee pad) as a sphere, and each skate as a box. Thigh against thigh is not a pair, because the inner thighs touch. The pass moves a skate in the ground plane when a leg goes into the other leg, and swings an upper arm away from a thigh when a hand or forearm goes more than 2 cm into it. Then it shifts the hips so that the centre of mass is where it was before the fix, and measures again. The mirrored carve gets the same fix. Close-ups before and after: `compare/closeup-*.jpg` (Cycles renders).
+
+Deepest clip for each clip (capsule depth; up to about 2.5 cm is cloth contact with the baggy pants):
+
+| Clip | Before (main) | After |
+|---|---|---|
+| Nia push | l_hand>l_thigh 11.9 cm (4 pairs) | r_forearm>r_thigh 2.3 cm (4 pairs) |
+| Nia coast | l_forearm>l_thigh 4.9 cm (4 pairs) | l_forearm>l_thigh 2.2 cm (2 pairs) |
+| Nia carve_left | r_forearm>r_thigh 11.0 cm (3 pairs) | r_forearm>r_thigh 2.4 cm (1 pairs) |
+| Nia carve_right | l_forearm>l_thigh 11.8 cm (3 pairs) | l_forearm>l_thigh 1.9 cm (1 pairs) |
+| Marcus push | l_hand>l_thigh 4.7 cm (1 pairs) | r_hand>r_thigh 1.9 cm (2 pairs) |
+| Marcus coast | none over 1 cm | none over 1 cm |
+| Marcus carve_left | l_skate>r_skate 5.6 cm (1 pairs) | none over 1 cm |
+| Marcus carve_right | l_skate>r_skate 11.1 cm (3 pairs) | none over 1 cm |
+
 ## Files
 
 - `videos/<skater>-before-after.mp4` and `videos/<skater>-before-after-half-speed.mp4`: before (`main`) on the left, after on the right, three-quarter view on top and side view below. The clips are push, coast, carve_left, and carve_right; the short clips play two times. Made with `scripts/skater-clip-frames.mjs` (one PNG for each 30 fps frame from `skater.html`) and ffmpeg (`xstack`, then `setpts=2*PTS` for half speed).
@@ -17,6 +41,7 @@ The pass has five parts:
 - `compare/<skater>-push-recoil.jpg`: 8 frames around the end of one push stroke, before and after. These frames show the recoil.
 - `before.json`, `after.json`: the lowest skinned vertex at each 30 fps frame in the browser (the ground is y = 0), and the console errors (0).
 - `<skater>-metrics.json`: the Blender measures before and after, the recoil events, the joint-limit results, and the settings.
+- `<skater>-clip-probe-before.json`, `<skater>-clip-probe-after.json`: the clip probe on the `main` GLB and on the new GLB.
 - `<skater>-joint-limits.json`: the joint-limit gate on every clip of the new GLB.
 
 ## Measures (before = main -> after)

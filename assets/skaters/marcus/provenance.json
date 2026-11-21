@@ -278,7 +278,7 @@
     {
       "tool": "Blender 5.2.3 LTS (background mode, in the cloud container), scripts/blender/skater_physics_pass.py and skater_joint_limits.py; scripts/assets/graft-clips.mjs on Node 22 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
       "date": "2026-11-21",
-      "prompt": "Make push, coast, and carve_left more physically plausible as a quality test. Keep the wheels on the ground, the clip length, the beat timing, and no root travel. Mirror carve_left to carve_right. (Cascadeur was the first choice; it did not run in the cloud container: see docs/decisions.md, 2026-11-21.) Then add the Crossroads joint-limit gate and the attacker recoil rule (owner request). Then make the push drive faster with the Crossroads recipe (owner request). Then give the coast and the push an athletic stance (owner feedback: the coast looked upright).",
+      "prompt": "Make push, coast, and carve_left more physically plausible as a quality test. Keep the wheels on the ground, the clip length, the beat timing, and no root travel. Mirror carve_left to carve_right. (Cascadeur was the first choice; it did not run in the cloud container: see docs/decisions.md, 2026-11-21.) Then add the Crossroads joint-limit gate and the attacker recoil rule (owner request). Then make the push drive faster with the Crossroads recipe (owner request). Then give the coast and the push an athletic stance (owner feedback: the coast looked upright). Then fix Marcus's bent right arm and the clipping (owner feedback).",
       "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in assets/skaters/marcus/skater.glb --out assets/skaters/marcus/raw/physics; node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater.glb assets/skaters/marcus/raw/physics/marcus-physics.glb assets/skaters/marcus/skater.glb; node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater-1024.glb assets/skaters/marcus/raw/physics/marcus-physics.glb assets/skaters/marcus/skater-1024.glb",
       "settings": {
         "still": {
@@ -376,6 +376,13 @@
             "arms_fwd_deg": 0.0
           }
         },
+        "arm_mirror": {
+          "marcus": {
+            "push": "Left",
+            "coast": "Left"
+          }
+        },
+        "clip_clear_m": 0.005,
         "recoil_lead_back_frames": [
           3,
           4
@@ -427,6 +434,7 @@
       },
       "actions": [
         "Imported the shipped GLB (Draco decoded by the Blender importer) at 30 fps. Put every bone at rest before each clip sample.",
+        "Arm mirror (push, coast): the right arm chain is the mirror of the left arm half a clip later, in the frame of the chest.",
         "Athletic stance (coast, push): hinge forward at the hips until the shoulders are over the knees, coast hips to 0.78 of the leg length, 80% of the hinge back in the neck and head, coast arms 12 degrees forward; the leg IK keeps the skates.",
         "Centre of mass from Winter segment masses (60 kg body, 1.2 kg for each skate). Zero moment point (cart-table model) checked against the support polygon of the skates on the ground.",
         "Inertia on rollers: removed part of the fore-aft CoM oscillation (push 50%, coast 80%, carve 70%). Balance: solved (I - K D2) C = ZMP* so that the ZMP goes into the support polygon. Vertical: a symmetric Gaussian filter, widened until the CoM vertical acceleration is in -0.45 g to +0.6 g. All by a periodic shift of the hips (largest 6 cm horizontal, 3 cm vertical).",
@@ -436,6 +444,7 @@
         "Recoil (Crossroads attacker recoil rule): at the end of each push stroke (the drive skate lifts), at each step that lands in the carve, and on each coast downbeat, one bounce along the momentum: 3 frames up to the stop frame, 4 frames back, the pelvis bounce on the target CoM path before the balance solve, then the chest, upper arms, and head 1, 2, and 3 frames later.",
         "Joint limits (Crossroads gate #465, ported to the Mixamo rig in skater_joint_limits.py): every new clip PASS; the gate self-test catches a knee bent to the side, a hyperextended knee and elbow, and a spine bent 130 degrees.",
         "carve_right: the mirror of the new carve_left across X = 0 (D' = S D S on the rest-relative matrices), with the same IK solve for the feet.",
+        "Clipping fix: limb capsules, knee spheres, and skate boxes (skater_clip_probe.py); a leg in the other leg moves its skate in the ground plane; a hand or forearm more than 2 cm in a thigh or knee swings the upper arm away; then the hips rebalance to the old CoM path. The mirrored carve gets the same fix.",
         "Exported the 4 clips and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change."
       ],
       "result": {
@@ -491,6 +500,10 @@
               1.403,
               2.757
             ]
+          },
+          "clipping_overlap_max_m": {
+            "l_hand>l_thigh": 0.0177,
+            "r_hand>r_thigh": 0.0187
           }
         },
         "coast": {
@@ -535,7 +548,8 @@
               -0.101,
               0.001
             ]
-          }
+          },
+          "clipping_overlap_max_m": {}
         },
         "carve_left": {
           "zmp_outside_mean_m": [
@@ -565,7 +579,8 @@
             23,
             37,
             47
-          ]
+          ],
+          "clipping_overlap_max_m": {}
         },
         "carve_right": {
           "zmp_outside_mean_m": [
@@ -590,14 +605,15 @@
             "PASS",
             "PASS"
           ],
-          "recoil_events": []
+          "recoil_events": [],
+          "clipping_overlap_max_m": {}
         }
       },
       "files": {
-        "skater.glb": 3662904,
-        "skater-1024.glb": 2790292
+        "skater.glb": 3663048,
+        "skater-1024.glb": 2790436
       },
-      "evidence": "docs/characters/physics-pass/ (videos/marcus-before-after*.mp4, compare/marcus-<clip>.jpg, marcus-metrics.json, marcus-joint-limits.json, before.json, after.json)",
+      "evidence": "docs/characters/physics-pass/ (videos/marcus-before-after*.mp4, compare/marcus-<clip>.jpg, compare/closeup-*.jpg, marcus-metrics.json, marcus-joint-limits.json, marcus-clip-probe-*.json, before.json, after.json)",
       "local_files_not_in_git": [
         "assets/skaters/marcus/raw/physics/marcus-physics.glb",
         "assets/skaters/marcus/raw/physics/marcus-physics.json"
@@ -610,7 +626,7 @@
   "tripo_credits_after": 2970,
   "file": "assets/skaters/marcus/skater.glb",
   "triangles": 39074,
-  "file_size_bytes": 3662904,
+  "file_size_bytes": 3663048,
   "five_views": "assets/skaters/marcus/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "contact_sheets": "assets/skaters/marcus/clips/<clip>.png, made by e2e/skater-anim.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/marcus/provenance.json)",

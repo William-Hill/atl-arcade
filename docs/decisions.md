@@ -2670,3 +2670,18 @@ Sources (`docs/characters/skate-style-references.md`, rule 3a): WFTDA ("bend at 
 Change: a stance layer (STANCE in `scripts/blender/skater_physics_pass.py`) runs before the physics pass. It hinges the body forward at the hips until the shoulders are over the knees (the derby rule), lowers the coast hips to 0.78 of the leg length, puts 80% of the hinge back in the neck and head (the gaze stays level), and brings the arms 12 degrees forward in the coast. The leg IK keeps the skates where they were. The push gets the same hinge rule, so a blend between the coast and the push does not lift the chest.
 
 Result: coast trunk lean Nia 7.5 to 34.5 degrees, Marcus 12 to 24 degrees; coast knee bend about 60 to 76 degrees; push lean Nia 17 to 33 degrees, Marcus 21 to 24 degrees. The coast and the push stay balanced (ZMP excess 0.000), no wheel leaves the ground or goes into it, and the joint-limit gate passes on every clip. A real skater must confirm the depth and the lean.
+
+## 2026-11-21: Marcus's right arm, and a clipping fix in the skate clips
+
+Owner feedback: Marcus's right arm stays bent for no reason; fix the clipping. The owner also asked what the carve move is (see `docs/characters/physics-pass/README.md`: Nia's carve is the ATL Ryde corner step, Marcus's carve is jam crossovers).
+
+Marcus's right arm: `skater_anim_v3.py` keys his right elbow at 84 degrees with half the swing of the left arm ("like a drum stick"). This was already on `main` and not from the physics pass. In the push and the coast, the right arm is now the mirror of the left arm half a clip later, in the frame of the chest (ARM_MIRROR in `skater_physics_pass.py`). The raw Blender sources of his clips are not in git, so the fix is a layer on the shipped clips and not a new key in `skater_anim_v3.py`. Right elbow: push 70..89 to 12..39 degrees, coast 76..83 to 21..30 degrees. The brake and the carves keep their deliberate asymmetric arm shapes.
+
+Clipping: a first probe (a mesh-inside test) reported a clip on most frames, because cloth layers and the inner thighs always touch. It was replaced by `scripts/blender/skater_clip_probe.py`: limb capsules (radius from the rest mesh; the median for the thighs and forearms, which wear cloth), knee spheres (with the knee pads), and skate boxes, with thigh against thigh left out. Cycles close-ups checked each flagged spot. One "clip" (Marcus's knee pads in the carve, seen from the side) was one knee behind the other, 31 cm apart; the probe agreed.
+
+The fix in the pass: a leg that goes into the other leg moves its skate (the lifted or faster one) in the ground plane until there is a 5 mm gap, so the wheels stay down; a hand or forearm more than 2 cm into a thigh or knee swings the upper arm away from the thigh with a bias out to the side. Then the hips shift so that the centre of mass path is the same as before the fix, and the probe runs again. The mirrored carve gets the fix too, because the rig is not exactly symmetric.
+
+Result (deepest clip, before = `main`): Marcus carve skates 5.6 cm to none over 1 cm; Marcus carve_right skates 11.1 cm to none; Nia push and carve hands and forearms 10 to 12 cm to 2.4 cm or less; Marcus push hand 4.7 cm to 1.9 cm. The rest is cloth contact (up to 2.4 cm). The balance is the same as before the fix, every clip passes the joint-limit gate, and no wheel leaves the ground.
+
+Tests: `npx vitest run src/render` 642 of 642. `e2e/skater-model.spec.js` and the contact-sheet tests pass. "the scripted sessions show no marcus T-pose frame" times out at 120 s; it also times out with the `main` GLBs on this machine, so the cause is the scripted sessions merged from `main` on a 4-core SwiftShader container, not the clips. The Nia T-pose session test passes.
+

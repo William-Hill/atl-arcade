@@ -2542,3 +2542,7 @@ Design:
 - The prompts show once per browser (`localStorage` key `atl.teach.v1` = `done` after the combo tip). `?teach=1` shows them again, `?teach=0` turns them off. They show on geodata levels only, so the greybox screenshot test does not change.
 
 Code: `src/ui/teach-steps.js` (pure: steps, prompts, target, pin place), `src/ui/teach-prompt.js` (DOM), `src/ui/teach.css` (its own file, so it does not touch `src/shell.css`, which #305 also changes). `src/main.js` has 6 new lines: the import, the create call, one `observe` per tick, one `update` per frame, and `window.__atl.teach`. No change to the HUD files.
+
+## 2026-11-21: The game UI skills are deferred (#299)
+
+The owner decided on 2026-11-21 to defer the game UI skills. `threejs-game-ui-designer` (`majidmanzarpour/threejs-game-skills` `8286774`) and `game-ui-ux` (`gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c4`) are not added to `.claude/skills/`. A skill in that folder loads into every cloud session on this repository. They stay references: the install commands are in `docs/research/2026-11-20-game-ui-tools.md`. To add them later, make a new decision here.

@@ -9,6 +9,7 @@
   transform: translate(-50%, 0);
   z-index: 6;
   pointer-events: none;
+  width: max-content;
   max-width: calc(100vw - 32px);
 }
 #teach[hidden] { display: none; }
@@ -129,6 +130,17 @@
 
 /* Touch screens: above the stick and the buttons. */
 body.touch #teach { bottom: calc(230px + env(safe-area-inset-bottom)); }
+/* A phone in portrait: the stick zone is the bottom 55 % of the screen, and
+   a thumb can be anywhere in it. The card sits just above it, at the left,
+   clear of the buttons in the right column (settings, photo, full screen). */
+@media (max-width: 600px) and (orientation: portrait) {
+  body.touch #teach {
+    left: calc(16px + env(safe-area-inset-left));
+    transform: none;
+    bottom: calc(55% + 12px);
+    max-width: calc(100vw - 32px - 120px);
+  }
+}
 @media (max-height: 500px) {
   body.touch #teach { bottom: auto; top: calc(12px + env(safe-area-inset-top)); }
 }

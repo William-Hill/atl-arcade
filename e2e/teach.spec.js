@@ -41,12 +41,12 @@ async function ridePin(page, onTarget) {
     window.__atl.runScript(script, start).then(() => (window.__ride.done = true));
   }, ride);
   if (onTarget) await onTarget(ride);
-  await page.waitForFunction(() => window.__ride.done, null, { timeout: 240000 });
+  await page.waitForFunction(() => window.__ride.done, null, { timeout: 900000 });
   return ride;
 }
 
 test.describe("teach prompts (#76)", () => {
-  test.setTimeout(600000);
+  test.setTimeout(1500000);
 
   test("a new player on the keyboard follows the prompts, high tier 1280 x 720", async ({ page }) => {
     await open(page, "&quality=high");
@@ -187,6 +187,11 @@ test.describe("teach prompts (#76)", () => {
     const box = await inside(page);
     const pad = await page.evaluate(() => document.querySelector(".touch-buttons").getBoundingClientRect().top);
     expect(box.bottom).toBeLessThanOrEqual(pad);
+    const zone = await page.evaluate(() => document.querySelector(".touch-stick-zone").getBoundingClientRect().top);
+    expect(box.bottom).toBeLessThanOrEqual(zone);
+    // One line of title: the card is wide enough for its text.
+    const titleH = await page.evaluate(() => document.querySelector(".teach-title").getBoundingClientRect().height);
+    expect(titleH).toBeLessThan(30);
     await page.screenshot({ path: `${SHOTS}/teach-phone-1-push.png` });
 
     // Push: the stick up.

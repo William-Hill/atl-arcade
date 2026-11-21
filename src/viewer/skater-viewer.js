@@ -102,8 +102,8 @@ function setFace(eyes, mouth) {
 
 // Draws one clip as a row of frames from the three-quarter view (or another
 // VIEWS key): a contact sheet. The first frame is t = 0 and the last frame
-// is the clip end.
-function sheet(name, cols = 6, view = "three-quarter") {
+// is the clip end. `times` (s), when given, sets the frame times instead.
+function sheet(name, cols = 6, view = "three-quarter", times = null) {
   const clip = clips.find((c) => c.name === name);
   if (!clip) throw new Error(`Unknown clip: ${name}`);
   paused = true;
@@ -123,7 +123,7 @@ function sheet(name, cols = 6, view = "three-quarter") {
   renderer.setScissor(0, 0, size.x, size.y);
   renderer.clear();
   for (let i = 0; i < cols; i += 1) {
-    action.time = (clip.duration * i) / (cols - 1);
+    action.time = times ? times[i] : (clip.duration * i) / (cols - 1);
     mixer.update(0);
     renderer.setViewport(i * w, 0, w, size.y);
     renderer.setScissor(i * w, 0, w, size.y);

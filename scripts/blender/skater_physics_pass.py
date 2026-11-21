@@ -45,9 +45,13 @@ import sys
 
 import bpy
 import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import skater_joint_limits as joint_limits  # noqa: E402
 from mathutils import Matrix, Quaternion, Vector
 
 FPS = 30
+BEAT = 24  # frames: one beat at 75 BPM
 G = 9.81
 P = "mixamorig:"
 
@@ -92,6 +96,27 @@ SNAP = 0.006
 # A skate whose highest point in the clip is lower than this (m) is a
 # dragging or gliding skate, not a step.
 DRAG_LIFT = 0.04
+# Recoil (the Crossroads attacker recoil rule, docs/animation/attacker-recoil-rule.md,
+# #765): at the end of a drive, the body mass continues along its momentum,
+# stops, and comes back one time. Events: "lift" = the drive skate leaves the
+# ground (the end of a push stroke), "land" = a stepping skate touches down,
+# "beat" = each downbeat (24 frames). pelvis in m; chest, arms, head in degrees;
+# fwd, side, drop = the weights of the direction (forward, toward the glide
+# skate or along the CoM velocity, down).
+RECOIL = {
+    "push": {"event": "lift", "pelvis": 0.025, "chest": 5.0, "arms": 6.0, "head": 3.0, "fwd": 1.0, "side": 0.5, "drop": 0.4},
+    "carve_left": {"event": "land", "pelvis": 0.02, "chest": 4.0, "arms": 4.0, "head": 2.5, "fwd": 0.3, "side": 0.6, "drop": 1.0},
+    "coast": {"event": "beat", "pelvis": 0.012, "chest": 2.5, "arms": 3.0, "head": 1.5, "fwd": 0.0, "side": 1.0, "drop": 0.5},
+}
+# The bounce at 30 fps: it starts LEAD frames before the stop frame, peaks at
+# the stop frame, and comes back in BACK frames (the rule: 3 to 5 frames
+# before, 2 to 5 out, 6 to 7 back at 60 Hz; a skate stroke is slower than a
+# punch, so this uses the slow end: 6 frames up and 8 back at 60 Hz). The
+# pelvis bounce goes into the target CoM path before the balance solve, so
+# the solve cuts the part of a bounce that the skates cannot hold. Each segment is 1 frame later
+# than the one before: pelvis, chest, arms, head.
+RECOIL_LEAD, RECOIL_BACK = 3, 4
+RECOIL_DELAY = {"pelvis": 0, "chest": 1, "arms": 2, "head": 3}
 # The heading of the skater in Blender: the model faces -Y, X is the side.
 FORWARD = 1  # axis index of fore-aft (Y)
 SIDE = 0
@@ -453,6 +478,11 @@ def physics_pass(sk, name, s, m0):
         sigma_z += 0.25
         z = circ_gauss(C[:, 2], sigma_z)
     T[:, 2] = z
+    # 2b. Recoil (pelvis part) on the target CoM path: the CoM moves about
+    #     0.68 of a hips shift.
+    events = recoil_events(name, s, C)
+    rec = recoil_offsets(name, events, n)
+    T += 0.68 * rec
     # 3. Balance, cart-table model: ZMP = C - k C'' with k = z / (g + z'').
     #    Clamp the ZMP of the target path into the support polygon, then
     #    solve (I - K D2) C = ZMP* for the horizontal CoM. The solve is a
@@ -497,6 +527,7 @@ def physics_pass(sk, name, s, m0):
     hips0 = [s["mat"][f][P + "Hips"] for f in range(n)]
     shift = np.zeros((n, 3))
     rots = upper_body(s)
+    recoil_rotations(name, s, events, rots)
     best = None
     for it in range(4):
         C_now = []
@@ -525,8 +556,103 @@ def physics_pass(sk, name, s, m0):
             shift[f] *= 0.8
     info = {"sigma_z_frames": sigma_z, "com_target_error_max_m": round(best[0], 4),
             "wheel_lift_max_m": {k: round(float(v.max()), 4) for k, v in lift.items()},
-            "wheel_drop_max_m": {k: round(float(-v.min()), 4) for k, v in lift.items()}}
+            "wheel_drop_max_m": {k: round(float(-v.min()), 4) for k, v in lift.items()},
+            "recoil_events": [{"frame": e["frame"], "skate": e["skate"], "dir": [round(float(x), 3) for x in e["dir"]]} for e in events],
+            "recoil_pelvis_target_max_m": round(float(np.abs(0.68 * rec).max()), 4)}
     return shift, rots, targets, info
+
+
+def smoothstep(x):
+    x = min(max(x, 0.0), 1.0)
+    return x * x * (3 - 2 * x)
+
+
+def bounce(k):
+    """One bounce: 0 at k = -LEAD, 1 at k = 0, 0 at k = BACK, 0 outside."""
+    if k <= -RECOIL_LEAD or k >= RECOIL_BACK:
+        return 0.0
+    if k <= 0:
+        return smoothstep((k + RECOIL_LEAD) / RECOIL_LEAD)
+    return 1.0 - smoothstep(k / RECOIL_BACK)
+
+
+def recoil_events(name, s, C):
+    cfg = RECOIL.get(name)
+    n = s["n"]
+    if not cfg:
+        return []
+    z = {side: np.array([float(s["skate"][f][side][:, 2].min()) for f in range(n)]) for side in ("Left", "Right")}
+    vel = (np.roll(C, -1, axis=0) - np.roll(C, 1, axis=0)) * FPS / 2
+    out = []
+    for side in ("Left", "Right"):
+        zz = z[side]
+        for f in range(n):
+            prev, cur = zz[f - 1], zz[f]
+            if cfg["event"] == "lift" and prev < CONTACT <= cur and max(zz[(f + i) % n] for i in range(10)) >= DRAG_LIFT:
+                other = "Right" if side == "Left" else "Left"
+                glide_x = float(s["skate"][(f - 1) % n][other][:, 0].mean())
+                lat = np.array([math.copysign(1.0, glide_x - C[(f - 1) % n, 0]), 0, 0])
+                out.append({"frame": (f - 1) % n, "skate": side, "lat": lat})
+            if cfg["event"] == "land" and prev >= CONTACT > cur and max(zz[(f - i) % n] for i in range(10)) >= DRAG_LIFT:
+                v = vel[f].copy()
+                v[2] = 0
+                lat = v / max(np.linalg.norm(v), 1e-9)
+                out.append({"frame": f, "skate": side, "lat": lat})
+    if cfg["event"] == "beat":
+        for f in range(0, n, BEAT):
+            v = vel[f].copy()
+            v[2] = 0
+            out.append({"frame": f, "skate": "both", "lat": v / max(np.linalg.norm(v), 1e-9)})
+    for e in out:
+        d = cfg["fwd"] * np.array([0.0, -1.0, 0.0]) + cfg["side"] * e["lat"] + cfg["drop"] * np.array([0.0, 0.0, -1.0])
+        e["dir"] = d / np.linalg.norm(d)
+    return sorted(out, key=lambda e: e["frame"])
+
+
+def _active(events, f, delay, n):
+    """(weight, event) of the event with the largest bounce on frame f."""
+    best, bw = None, 0.0
+    for e in events:
+        w = bounce(((f - e["frame"] - delay + n // 2) % n) - n // 2)
+        if w > bw:
+            best, bw = e, w
+    return bw, best
+
+
+def recoil_offsets(name, events, n):
+    """The pelvis bounce (m) on each frame, [n, 3]."""
+    out = np.zeros((n, 3))
+    cfg = RECOIL.get(name)
+    if not cfg:
+        return out
+    for f in range(n):
+        w, e = _active(events, f, RECOIL_DELAY["pelvis"], n)
+        if e:
+            out[f] = cfg["pelvis"] * w * e["dir"]
+    return out
+
+
+def recoil_rotations(name, s, events, rots):
+    """The chest, upper arm, and head bounce: a lean along the horizontal
+    direction of the event, 1 frame later for each segment."""
+    cfg = RECOIL.get(name)
+    if not cfg:
+        return
+    n = s["n"]
+    parts = {"chest": ["Spine2"], "arms": ["LeftArm", "RightArm"], "head": ["Head"]}
+    for part, bones in parts.items():
+        for f in range(n):
+            w, e = _active(events, f, RECOIL_DELAY[part], n)
+            if not e:
+                continue
+            dh = Vector((e["dir"][0], e["dir"][1], 0.0))
+            if dh.length < 1e-6:
+                continue
+            W = Quaternion(Vector((0, 0, 1)).cross(dh.normalized()), math.radians(cfg[part] * w))
+            for b in bones:
+                key = P + b
+                M = s["mat"][f][key].to_quaternion()
+                rots[key][f] = list(Quaternion(rots[key][f]) @ (M.inverted() @ W @ M))
 
 
 def build_action(sk, name, s, shift, rots, targets):
@@ -626,7 +752,8 @@ def main():
     who = sk.arm.name.replace("Rig", "").lower()
     report = {"source": a.src, "skater": who, "settings": {
         "still": STILL, "sigma_frames": SIGMA, "follow": FOLLOW, "max_shift_m": MAX_SHIFT,
-        "contact_m": CONTACT, "support_margin_m": SUPPORT_MARGIN, "body_kg": BODY_KG, "skate_kg": SKATE_KG}, "clips": {}}
+        "contact_m": CONTACT, "support_margin_m": SUPPORT_MARGIN, "body_kg": BODY_KG, "skate_kg": SKATE_KG,
+        "recoil": RECOIL, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
     rest = {b: (bn.head_local.x, bn.head_local.y, bn.head_local.z) for b, bn in ((b, sk.arm.data.bones[b]) for b in (P + "LeftFoot", P + "RightFoot"))}
     report["rest_feet"] = rest
     originals = {}
@@ -634,12 +761,14 @@ def main():
     for name in a.clips.split(","):
         act = bpy.data.actions[name]
         originals[name] = act
+        gate0 = joint_limits.gate_action(sk.arm, act)
         s = sk.sample(act)
         m0 = metrics(sk, s)
         shift, rots, targets, info = physics_pass(sk, name, s, m0)
         act.name = name + "_before"
         new_act, reach = build_action(sk, name, s, shift, rots, targets)
         new[name] = new_act
+        gate1 = joint_limits.gate_action(sk.arm, new_act)
         s1 = sk.sample(new_act)
         m1 = metrics(sk, s1)
         # The skates: the largest move of a skate vertex between before and after.
@@ -650,19 +779,23 @@ def main():
             "hips_shift_max_m": [round(float(np.abs(shift[:, i]).max()), 4) for i in range(3)],
             "leg_reach_max": round(reach, 4),
             "skate_vertex_move_max_m": round(moved, 5),
+            "joint_limits": {"before": gate0, "after": gate1},
             **info,
         }
         print(f"[physics] {who} {name}: zmp out {m0['zmp_outside_frames']} -> {m1['zmp_outside_frames']} frames, "
               f"fore-aft {m0['com_fore_aft_range_m']} -> {m1['com_fore_aft_range_m']} m, "
-              f"jerk {m0['com_jerk_rms_ms3']} -> {m1['com_jerk_rms_ms3']}, skate move {moved:.5f} m")
+              f"jerk {m0['com_jerk_rms_ms3']} -> {m1['com_jerk_rms_ms3']}, skate move {moved:.5f} m, "
+              f"recoil {[e['frame'] for e in info['recoil_events']]}, joints {gate0['status']} -> {gate1['status']} {gate1['fail'] or gate1['warn']}")
     if "carve_left" in new and not a.no_mirror:
         old_right = bpy.data.actions.get("carve_right")
         s_old = sk.sample(old_right) if old_right else None
         m_old = metrics(sk, s_old) if s_old else None
         if old_right:
             old_right.name = "carve_right_before"
+        gate0 = joint_limits.gate_action(sk.arm, old_right) if old_right else None
         act, reach = build_mirror(sk, new["carve_left"], "carve_right")
         new["carve_right"] = act
+        gate1 = joint_limits.gate_action(sk.arm, act)
         s1 = sk.sample(act)
         m1 = metrics(sk, s1)
         report["clips"]["carve_right"] = {
@@ -670,6 +803,7 @@ def main():
             "before": {k: v for k, v in m_old.items() if not k.startswith("_")} if m_old else None,
             "after": {k: v for k, v in m1.items() if not k.startswith("_")},
             "leg_reach_max": round(reach, 4),
+            "joint_limits": {"before": gate0, "after": gate1},
         }
         print(f"[physics] {who} carve_right (mirror): zmp out {m_old and m_old['zmp_outside_frames']} -> {m1['zmp_outside_frames']}, wheel z {m1['wheel_z_min_m']}")
     # Export: the rig, the mesh, and the new clips only, without Draco.

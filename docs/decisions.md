@@ -2532,3 +2532,22 @@ Not fixed (stated plainly):
 Evidence: `docs/characters/physics-pass/` (before and after sheets at 3 frames, the metrics, the browser checks with 0 console errors). `npx vitest run`: 1937 of 1938 pass; the failure is a 5 s timeout in `src/level/geo/facade-kit.test.js`, which also fails on `main`. `e2e/skater-anim.spec.js` and `e2e/skater-model.spec.js`: 7 of 7 pass. Real skaters must review the move set before release.
 
 Next clips that the pass can improve (not in this change): `brake` and `ride_back` (ground clips; the same wheel and balance checks), `idle`, `manual` (balance over the back wheels), `land` (the vertical acceleration at the impact), and the `dance_*` clips that stay on the ground (smoothness and wheel contact). Not `jump`, `air_*`, `grind_*`, or `bail`: the pass has no flight phase and no rail contact. Owner idea for the next pass: take the joint limits and the recoil lessons of the Crossroads animation work.
+
+## 2026-11-21: Crossroads joint limits and attacker recoil on the skate clips
+
+Owner request: use the lessons of the Crossroads animation work (joint limits, recoil, a sense of speed and movement) on the skate clips. The sources are in `William-Hill/crossroads`: `pipeline/joint_limit_gate.py` (#465) and `docs/animation/attacker-recoil-rule.md` (#765, approved on three Duke clips on 2026-11-16).
+
+Joint limits:
+- `scripts/blender/skater_joint_limits.py` is a port of the Crossroads gate to the Mixamo rig: the same LIMITS (WARN) and IMPOSSIBLE (FAIL) values, the same hinge measure for the knee and the elbow, and the same pelvis and chest frames (Spine1 and Spine2 for Spine01 and Spine02). Head yaw is not measured, because the rig has no face-front joint.
+- `--self-test`: the rest pose and normal knee and elbow bends pass; a knee bent to the side, a hyperextended knee and elbow, and a spine bent 130 degrees fail. It passes on both rigs.
+- On `main` and on the new GLBs, every clip of both skaters passes. One WARN was already on `main`: Marcus `dance_drumline`, left knee 30.9 degrees off its hinge (limit 30). The knee off-hinge reads 23 degrees in the Nia leg clips: this is the knee pole angle of #170 (L 24 degrees), not a fault.
+
+Recoil (adapted for skating):
+- The "strike" of a skater is the end of a drive. Events: the push skate leaves the ground (push), a stepping skate lands (carve), and each downbeat (coast).
+- One bounce along the momentum: forward and toward the glide skate for the push, along the CoM velocity with a drop for the landings and the beats. The pelvis moves first, then the chest, the upper arms, and the head, each 1 frame later. The skates do not move.
+- Timing at 30 fps: 3 frames up to the stop frame and 4 frames back. That is the slow end of the rule (6 up and 8 back at 60 Hz), because a skate stroke is slower and heavier than a punch. A faster bounce (2 and 3 frames) put the Nia coast out of balance on 15 frames and doubled the jerk of the push. It was rejected.
+- The pelvis bounce goes into the target CoM path before the balance solve, so the solve cuts the part that the skates cannot hold. After the solve, the pelvis moves 1.1 to 1.4 cm in the push and the carve and 0.7 cm in the coast; the chest leans 2.5 to 5 degrees.
+
+Result (before = `main`): the ZMP excess falls in the push and the carves (Nia push 0.088 to 0.003 m, Marcus push 0.129 to 0.017 m, Marcus carve 0.133 to 0.032 m, Nia carve 0.154 to 0.071 m), and the coast stays balanced. The wheel fix and the clip lengths of the physics pass stay. The jerk is higher than on `main` in the coast (Nia 4 to 23, Marcus 16 to 25) and the same in the Marcus carve (85 to 87): the bounce is on purpose. Before-and-after sheets and an 8-frame recoil strip of each push are in `docs/characters/physics-pass/`.
+
+Not done: the Crossroads recipe also makes the swing faster (the swing length times 10/18) and adds a deeper load before it. For the push, that would be a time warp of each stroke (a quicker drive, a longer glide) with the same clip length. It is the next step for a sense of speed. No person has looked at the recoil at game speed, and real skaters must review the move set before release.

@@ -43,7 +43,7 @@
    "clips": {
     "push": {
      "duration": 1.4666666984558105,
-     "lowest_min_m": 0,
+     "lowest_min_m": -0.0001,
      "lowest_max_m": 0,
      "frames_below_minus_5mm": 0,
      "frames_above_5mm": 0,
@@ -60,7 +60,7 @@
     "carve_left": {
      "duration": 1.600000023841858,
      "lowest_min_m": 0,
-     "lowest_max_m": 0.0001,
+     "lowest_max_m": 0,
      "frames_below_minus_5mm": 0,
      "frames_above_5mm": 0,
      "frames": 48

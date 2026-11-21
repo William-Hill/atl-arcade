@@ -140,13 +140,16 @@ async function makeCol(spec) {
   const setLabel = PBR && spec.set === "hand" ? "hand keys, now (#292)" : (SET_LABEL[spec.set] ?? spec.set);
   const who = PBR ? "PBR Nia" : spec.skater;
   const label = manyDances ? `${spec.dance} ${setLabel}` : manySets ? `${who} ${setLabel}` : `${spec.skater} ${source === "hand" ? "hand keys" : "Meshy"}`;
-  return { ...spec, source, model, mixer, action, clip, label };
+  // The column identity: unique for each skater, set and dance. The
+  // measurements use it as the key, because two columns can have the same label.
+  const id = `${spec.skater}:${spec.set}:${spec.dance}`;
+  return { ...spec, id, source, model, mixer, action, clip, label };
 }
 
 let cols = [];
 try {
   for (const spec of SPECS) cols.push(await makeCol(spec));
-  out.cols = cols.map((c) => ({ label: c.label, duration: c.clip.duration, tracks: c.clip.tracks.length }));
+  out.cols = cols.map((c) => ({ id: c.id, label: c.label, duration: c.clip.duration, tracks: c.clip.tracks.length }));
   out.ready = true;
 } catch (err) {
   out.error = String(err?.message ?? err);
@@ -237,7 +240,7 @@ out.sheet = (cell = 240) => {
       poseAt(c, beats);
       drawCell(c, i * cell, HEAD + r * cell, cell, h);
       const low = lowestPointCm(c);
-      ground.push({ beats, col: c.label, lowestCm: low });
+      ground.push({ beats, col: c.id, label: c.label, lowestCm: low });
       label(`beat ${beats}  low ${low} cm`, i * cell + 6, HEAD + r * cell + cell - 20);
     });
   });
@@ -275,7 +278,7 @@ out.contact = () => {
       poseAt(c, k / 8);
       v.push(lowestPointCm(c));
     }
-    res[c.label] = { min: Math.min(...v), max: Math.max(...v) };
+    res[c.id] = { label: c.label, min: Math.min(...v), max: Math.max(...v) };
   }
   return res;
 };
@@ -314,9 +317,13 @@ out.motion = () => {
       wrist.push(bones.LeftHand.getWorldPosition(a).distanceTo(bones.RightHand.getWorldPosition(b)) * 100);
     }
     const range = (v) => [+Math.min(...v).toFixed(1), +Math.max(...v).toFixed(1)];
-    res[c.label] = { maxDeg: Object.fromEntries(Object.entries(maxDeg).map(([k, v]) => [k, +v.toFixed(1)])), hipCm: range(hip), wristGapCm: range(wrist) };
+    res[c.id] = { label: c.label, maxDeg: Object.fromEntries(Object.entries(maxDeg).map(([k, v]) => [k, +v.toFixed(1)])), hipCm: range(hip), wristGapCm: range(wrist) };
   }
   return res;
 };
 
 out.clipBeat = ANIM.clipBeat;
+
+// Draw the contact sheet on a direct page load. The capture scripts call
+// sheet() or frame() again with their own cell size.
+if (out.ready) out.sheet();

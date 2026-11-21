@@ -16,7 +16,8 @@
 // contact-<name>.png.
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium } from "@playwright/test";
 
@@ -37,16 +38,29 @@ const blender = (script, args) => execFileSync("blender", ["-b", "--factory-star
 if (!existsSync(join(CACHE, "skater.glb"))) {
   writeFileSync(join(CACHE, "skater.glb"), execFileSync("git", ["show", `${COMMIT}:assets/skaters/nia/skater.glb`], { maxBuffer: 64 << 20 }));
 }
-if (!existsSync(join(CACHE, "hand-clips.glb"))) {
-  blender("scripts/blender/skater_reclip.py", ["--in", join(CACHE, "skater.glb"), "--name", "nia", "--out", join(CACHE, "hand-clips.glb"), "--clips", HAND.map((d) => `dance_${d}`).join(",")]);
-}
+// A cached clip is made again when one of its input files changes. The
+// fingerprint (SHA-256 of the inputs and the arguments) is in <out>.inputs.
+const fingerprint = (files, args) => {
+  const h = createHash("sha256");
+  for (const f of files) h.update(f).update(readFileSync(f));
+  return h.update(JSON.stringify(args)).digest("hex");
+};
+const build = (out, script, files, args) => {
+  const stamp = `${out}.inputs`;
+  const fp = fingerprint([script, ...files], args);
+  if (existsSync(out) && existsSync(stamp) && readFileSync(stamp, "utf8") === fp) return;
+  blender(script, args);
+  writeFileSync(stamp, fp);
+};
+const handOut = join(CACHE, "hand-clips.glb");
+build(handOut, "scripts/blender/skater_reclip.py", [join(CACHE, "skater.glb"), "scripts/blender/nia_clips.py"], ["--in", join(CACHE, "skater.glb"), "--name", "nia", "--out", handOut, "--clips", HAND.map((d) => `dance_${d}`).join(",")]);
 const SOURCES = { "meshy-293": "source-smplh.glb", "meshy-293-r2": "source-bvh.glb", "meshy-293-lib": "source-rig.glb" };
 for (const [set, file] of Object.entries(SOURCES)) {
   for (const d of readdirSync(join("assets/dances", set))) {
     const out = join(CACHE, "meshy", set, `${d}.glb`);
-    if (existsSync(out)) continue;
+    const motion = join("assets/dances", set, d, file);
     mkdirSync(join(CACHE, "meshy", set), { recursive: true });
-    blender("scripts/blender/meshy_retarget.py", ["--skater", join(CACHE, "skater.glb"), "--name", "nia", "--motion", join("assets/dances", set, d, file), "--clip", `dance_${d}_meshy`, "--out", out, "--report", out.replace(/\.glb$/, ".json")]);
+    build(out, "scripts/blender/meshy_retarget.py", [join(CACHE, "skater.glb"), motion], ["--skater", join(CACHE, "skater.glb"), "--name", "nia", "--motion", motion, "--clip", `dance_${d}_meshy`, "--out", out, "--report", out.replace(/\.glb$/, ".json")]);
   }
 }
 

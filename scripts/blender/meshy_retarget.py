@@ -363,6 +363,7 @@ def main():
         # If an ankle target on the ground is out of reach of the leg, lower
         # the hips by the needed amount, so the IK can plant the wheels.
         drop = 0.0
+        plant = {}
         for full in ("Left", "Right"):
             up = tgt.pose.bones[f"mixamorig:{full}UpLeg"]
             foot = tgt.pose.bones[f"mixamorig:{full}Foot"]
@@ -371,9 +372,16 @@ def main():
             ank.z = trest[foot.name][0].z
             reach = REACH * (up.bone.length + tgt.pose.bones[f"mixamorig:{full}Leg"].bone.length)
             dxy = math.hypot(hip.x - ank.x, hip.y - ank.y)
-            if dxy < reach:
-                need = (hip.z - ank.z) - math.sqrt(reach * reach - dxy * dxy)
-                drop = max(drop, need)
+            # A lower hip cannot help an ankle that is horizontally out of
+            # reach. Move that ankle target toward the hip, into reach.
+            if dxy >= reach:
+                k = REACH * reach / dxy
+                ank.x = hip.x + (ank.x - hip.x) * k
+                ank.y = hip.y + (ank.y - hip.y) * k
+                dxy = REACH * reach
+            plant[full] = (ank.x, ank.y)
+            need = (hip.z - ank.z) - math.sqrt(reach * reach - dxy * dxy)
+            drop = max(drop, need)
         if drop > 0:
             hw = hw - Vector((0, 0, drop))
             hips_pb.location = hips_rest_rot.inverted() @ (hw - hips_rest_loc)
@@ -393,7 +401,7 @@ def main():
             # Flat foot: keep only the yaw of the motion.
             fyaw = yaw_of(fm.to_quaternion() @ trest[foot.name][1].inverted())
             rq = Quaternion(Vector((0, 0, 1)), fyaw)
-            pos = Vector((ankle.x, ankle.y, rest_m.to_translation().z))
+            pos = Vector((plant[full][0], plant[full][1], rest_m.to_translation().z))
             tgt_o.matrix_world = Matrix.Translation(pos) @ rq.to_matrix().to_4x4() @ rest_m.to_3x3().to_4x4()
             tgt_o.keyframe_insert("location", frame=f)
             tgt_o.keyframe_insert("rotation_euler", frame=f)

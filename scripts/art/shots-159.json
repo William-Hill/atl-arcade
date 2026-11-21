@@ -1,0 +1,14 @@
+{
+  "note": "Six BeltLine places for the #159 art direction check (docs/art-direction-pbr.md), plus a night frame and the trail on the phone and low tiers with look=pbr. cam = eye x, eye height over the ground, eye z, target x, target height, target z. Run: node scripts/art/pbr-frames.mjs --shots scripts/art/shots-159.json --out <dir>",
+  "shots": [
+    { "name": "159-pcm", "cam": [-98, 2.5, -812, -190, 22, -858] },
+    { "name": "159-telephone-factory", "cam": [240, 2, -285, 205, 10, -360] },
+    { "name": "159-trail", "cam": [312, 2, -175, 334, 3, -80] },
+    { "name": "159-skater", "cam": [338.9, 1.4, -2.9, 337.07, 0.95, -1.3] },
+    { "name": "159-mural-wall", "cam": [88.25, 2, 435.82, 105.4, 6.59, 447.56] },
+    { "name": "159-krog", "cam": [-150, 2, 780, -70, 5, 850] },
+    { "name": "159-night-street", "cam": [-80, 2.5, 640, -120, 5, 615], "params": { "time": "22.5" } },
+    { "name": "159-trail-phone", "cam": [312, 2, -175, 334, 3, -80], "params": { "quality": "phone" } },
+    { "name": "159-trail-low", "cam": [312, 2, -175, 334, 3, -80], "params": { "quality": "low" } }
+  ]
+}

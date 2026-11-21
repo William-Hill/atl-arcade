@@ -393,9 +393,12 @@ export function createBridge(options = {}) {
     };
     ws.onclose = () => {
       ws = null;
-      if (state === "connected") emitLocal("disconnected");
+      const wasConnected = state === "connected";
+      if (wasConnected) emitLocal("disconnected");
       state = closed ? "closed" : "connecting";
-      releaseAll();
+      // The agent's holds end with its connection. A connect that failed had
+      // no agent, so it keeps the holds of a running op (a game move hook).
+      if (wasConnected) releaseAll();
       stopRecording();
       retry();
     };

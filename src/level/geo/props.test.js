@@ -106,7 +106,7 @@ describe("prop placement", () => {
     // Only the kinds with no kit prop, and a few points on pavement, are refused.
     expect(f.placed).toBeGreaterThanOrEqual(40);
     const noKit = LEVEL.furniture.filter((p) => !FURNITURE_PROP[p.kind]).length;
-    expect(f.refused["no-kit-prop"]).toBe(noKit);
+    expect(f.refused["no-kit-prop"] ?? 0).toBe(noKit);
     const byId = new Map(LEVEL.furniture.map((p) => [p.id, p]));
     const placed = ps.filter((p) => p.osm);
     expect(placed.length).toBe(f.placed);
@@ -145,7 +145,10 @@ describe("prop placement", () => {
     const rack = ps.find((p) => p.osm === "n3");
     expect(rack.kind).toBe("bike_rack");
     expect(rack.x).toBeGreaterThan(2);
-    expect(report.furniture).toMatchObject({ points: 4, placed: 3, moved: 1, refused: { "no-kit-prop": 1 } });
+    // The drinking fountain is the Meshy fountain (people-props-view.js).
+    expect(ps.find((p) => p.osm === "n4")).toMatchObject({ kind: "drinking_fountain", x: 4, z: 60 });
+    expect(report.furniture).toMatchObject({ points: 4, placed: 4, moved: 1 });
+    expect(report.furniture.refused["no-kit-prop"]).toBeUndefined();
     // No fixed-rule bench within 30 m of the mapped bench, or bike rack within 90 m of the mapped rack.
     for (const p of ps.filter((q) => !q.osm)) {
       if (p.kind.startsWith("bench")) expect(Math.hypot(p.x - 4, p.z)).toBeGreaterThanOrEqual(30);

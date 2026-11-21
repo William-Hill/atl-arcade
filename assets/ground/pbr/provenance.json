@@ -1,0 +1,67 @@
+{
+  "tool": "scripts/ground-textures-pbr.py (Poly Haven API download, candidate scores, low-pass delight, resize, ORM pack, WebP)",
+  "prompt": null,
+  "license": "CC0 1.0",
+  "date": "2026-11-06",
+  "files": [
+    "albedo-1024.webp",
+    "albedo-512.webp",
+    "normal-1024.webp",
+    "orm-512.webp"
+  ],
+  "layers": [
+    {
+      "layer": 0,
+      "set": "asphalt",
+      "asset": "asphalt_floor",
+      "source": "https://polyhaven.com/a/asphalt_floor",
+      "credits": {
+        "eye-candy.xyz": "All"
+      },
+      "license": "CC0 1.0"
+    },
+    {
+      "layer": 1,
+      "set": "concrete",
+      "asset": "brushed_concrete_03",
+      "source": "https://polyhaven.com/a/brushed_concrete_03",
+      "credits": {
+        "Amal Kumar": "All"
+      },
+      "license": "CC0 1.0"
+    },
+    {
+      "layer": 2,
+      "set": "trail",
+      "asset": "granular_concrete",
+      "source": "https://polyhaven.com/a/granular_concrete",
+      "credits": {
+        "Dario Barresi": "Processing",
+        "Michael Jenkins": "Photography"
+      },
+      "license": "CC0 1.0"
+    },
+    {
+      "layer": 3,
+      "set": "grass",
+      "asset": "leafy_grass",
+      "source": "https://polyhaven.com/a/leafy_grass",
+      "credits": {
+        "Charlotte Baglioni": "All"
+      },
+      "license": "CC0 1.0"
+    },
+    {
+      "layer": 4,
+      "set": "brick",
+      "asset": "herringbone_brick",
+      "source": "https://polyhaven.com/a/herringbone_brick",
+      "credits": {
+        "Rob Tuytel": "All"
+      },
+      "license": "CC0 1.0"
+    }
+  ],
+  "details": "assets/ground/<set>/provenance.json (download URLs and candidate scores)",
+  "note": "Scanned photo textures, not generated art."
+}

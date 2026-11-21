@@ -4,6 +4,7 @@
 // same, so the test can compare the two runs.
 
 import { createSkateState, stepSkate, yawFromHeading } from "../sim/skate/controller.js";
+import { SKATE } from "../sim/skate/constants.js";
 
 const near = (a, b) => Math.abs(a[0] - b[0]) < 0.05 && Math.abs(a[1] - b[1]) < 0.05;
 
@@ -74,7 +75,8 @@ function wrap(a) {
 // Rides `frames` steps from the spawn along `line`, in the direction of the
 // spawn yaw. Pushes to `cruise` m/s. Returns { script, state, offTrack }:
 // offTrack is the largest distance from the line, in meters.
-export function followLineScript(line, spawn, env, { frames = 900, dt = 1 / 60, lookAhead = 8, cruise = 8, gain = 2.5 } = {}) {
+// k: the skate constants (SKATE, or a skater body's constants from body.js).
+export function followLineScript(line, spawn, env, { frames = 900, dt = 1 / 60, lookAhead = 8, cruise = 8, gain = 2.5, k = SKATE } = {}) {
   let s = createSkateState({ position: spawn.position, yaw: spawn.yaw });
   const start = projectOnLine(line, s.position[0], s.position[2]).s;
   const probe = pointAt(line, start + 1);
@@ -93,7 +95,7 @@ export function followLineScript(line, spawn, env, { frames = 900, dt = 1 / 60, 
     const last = script[script.length - 1];
     if (last && last.input.steer === input.steer && last.input.push === input.push) last.frames += 1;
     else script.push({ frames: 1, input });
-    s = stepSkate(s, input, dt, env);
+    s = stepSkate(s, input, dt, env, k);
   }
   return { script, state: s, offTrack };
 }

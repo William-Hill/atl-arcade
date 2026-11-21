@@ -17,6 +17,8 @@
 
 import { CAMERA, SKATE } from "./skate/constants.js";
 import { heading } from "./skate/controller.js";
+import { TREE_SPECIES, isTreeKind, treeKindFor } from "../level/geo/trees.js";
+import { CANOPY_FIT } from "./canopy-fit.js";
 
 export const NO_LOOK = Object.freeze({ yaw: 0, pitch: 0 });
 
@@ -161,4 +163,315 @@ export function placeCamera(cam, pivot, allowed) {
   if (!(allowed < len) || len < 1e-9) return cam;
   const f = allowed / len;
   return { ...cam, position: [0, 1, 2].map((i) => pivot[i] + d[i] * f) };
+}
+
+// --- Swing (playtest 2026-11-09) -----------------------------------------
+//
+// A wall or the edge fence close to the skater blocks the ray to the camera
+// goal behind her, and resolveClip pulls the camera in to 1 m or less: her
+// back fills the screen. So the follow camera tries orbit offsets around her
+// (like the look yaw) and swings to the nearest offset with a clear ray.
+// resolveClip still keeps the camera in front of a wall on every frame.
+
+// Pure: the orbit offset (rad) to swing to. `clearAt(offset)` gives the
+// distance from the pivot to the first blocker on the ray toward the camera
+// goal at that offset (Infinity for none). `range` is the unblocked pivot to
+// goal distance, `current` the offset now. Behind the skater (0) wins when it
+// is clear; then the smallest clear offset, on the side of `current` first.
+// When no offset is clear, the offset with the most room, if it is better
+// than `current`.
+export function chooseSwing(clearAt, range, current = 0, k = CAMERA) {
+  const need = k.swingBelow * range;
+  if (clearAt(0) >= need) return 0;
+  const side = current < 0 ? -1 : 1;
+  let best = current;
+  let room = clearAt(current);
+  for (let i = 1; i * k.swingStep <= k.swingMax + 1e-9; i += 1) {
+    const step = i * k.swingStep;
+    for (const offset of [side * step, -side * step]) {
+      const d = clearAt(offset);
+      if (d >= need) return offset;
+      if (d > room + 0.05) {
+        best = offset;
+        room = d;
+      }
+    }
+  }
+  return best;
+}
+
+// Pure: move the offset toward the target at no more than swingRate.
+export function stepSwing(offset, target, dt, k = CAMERA) {
+  const max = k.swingRate * dt;
+  return offset + Math.max(-max, Math.min(max, target - offset));
+}
+
+// Pure: `point` turned by `angle` rad about the vertical through `center`,
+// in the same sense as an orbit (look) yaw offset.
+export function orbitAbout(point, center, angle) {
+  const x = point[0] - center[0];
+  const z = point[2] - center[2];
+  const c = Math.cos(angle);
+  const s = Math.sin(angle);
+  return [center[0] + x * c + z * s, point[1], center[2] + z * c - x * s];
+}
+
+// --- Tree canopies (#230) -----------------------------------------------
+//
+// The wall ray hits the Rapier colliders, and the trees have none (a skater
+// rides under a crown). So the camera also casts its ray against a simple
+// volume for each tree: an ellipsoid around the crown and an upright
+// cylinder around the trunk. A volume on the ray from the pivot to the
+// camera counts as a wall hit, so `resolveClip` pulls the camera in front of
+// the crown and eases it back out after the tree. The tree meshes do not
+// change.
+//
+// The crown sizes come from CANOPY_FIT (src/sim/canopy-fit.js): for each
+// species and variant, the smallest crown ellipsoid that holds both tree
+// meshes of that variant, the procedural tree (src/level/geo/trees.js, with
+// its `grow` scale and crown offset) and the Blender GLB tree of the pbr look
+// (assets/trees). scripts/canopy-fit.mjs makes the table with fitCrown().
+// The ellipsoid is round about the trunk, so the placement yaw does not
+// change it. The size is times the placement scale. A pivot inside a volume
+// ignores that volume: the camera cannot help there, and a hit at 0 would
+// put the camera on the skater.
+
+
+// The species and variant of a tree placement, as the render picks them.
+function speciesOf(p) {
+  const [, species, variant] = treeKindFor(p).split(":");
+  return { species: p.species && TREE_SPECIES[p.species] ? p.species : species, variant: Number(variant) };
+}
+
+// Pure: the smallest upright crown ellipsoid, round about the trunk axis,
+// that holds every point at or over `bottom`. `meshes`: flat [x, y, z, ...]
+// position arrays in the template space. The ellipsoid bottom stays at most
+// `drop` m under `bottom`. `pad` makes it a little larger. Returns
+// { y, h, reach } in m: the center height, the half height and the radius,
+// or null when no point is at or over `bottom`.
+export function fitCrown(meshes, bottom, { drop = 1, pad = 0.02, steps = 48 } = {}) {
+  const ys = [];
+  const rs = [];
+  let top = -Infinity;
+  for (const P of meshes) {
+    for (let i = 0; i < P.length; i += 3) {
+      if (P[i + 1] < bottom) continue;
+      ys.push(P[i + 1]);
+      rs.push(Math.hypot(P[i], P[i + 2]));
+      top = Math.max(top, P[i + 1]);
+    }
+  }
+  if (!ys.length) return null;
+  let best = null;
+  for (let a = 0; a <= steps; a += 1) {
+    const y = bottom + ((top - bottom) * a) / steps;
+    const need = Math.max(top - y, y - bottom, 1e-3);
+    for (let b = 1; b <= steps; b += 1) {
+      const h = need * (1 + (b / steps) * 1.5);
+      if (y - h < bottom - drop) break;
+      let reach = 0;
+      for (let i = 0; i < ys.length; i += 1) {
+        const t = (ys[i] - y) / h;
+        reach = Math.max(reach, rs[i] / Math.sqrt(1 - t * t));
+      }
+      const cost = reach * reach * h;
+      if (!best || cost < best.cost) best = { y, h, reach, cost };
+    }
+  }
+  if (!best) {
+    // No ellipsoid fits over `bottom - drop`: a sphere around the points.
+    const y = (top + bottom) / 2;
+    const h = (top - bottom) / 2 + drop;
+    best = { y, h, reach: Math.max(...rs.map((r, i) => r / Math.sqrt(1 - ((ys[i] - y) / h) ** 2))) };
+  }
+  const k = 1 + pad;
+  return { y: best.y, h: best.h * k, reach: best.reach * k };
+}
+
+// Pure: the canopy volume of one tree at a placement, or null for a prop
+// that is not a tree. { crown: { center, radii }, trunk: { x, z, r, y0, y1 } }
+// in world meters.
+export function treeVolume(p) {
+  if (!isTreeKind(p.kind) && !p.species) return null;
+  const { species, variant } = speciesOf(p);
+  const sp = TREE_SPECIES[species];
+  const fit = CANOPY_FIT[species]?.[variant];
+  if (!sp || !fit) return null;
+  const s = p.scale ?? 1;
+  const y = p.y ?? 0;
+  const reach = fit.reach * s;
+  const half = fit.h * s;
+  const center = y + fit.y * s;
+  // A leaning trunk (the crape myrtle) gets a wider cylinder.
+  const trunkR = (sp.trunk.radius + sp.trunk.lean * sp.trunk.height * 0.5) * s;
+  return {
+    crown: { center: [p.x, center, p.z], radii: [reach, half, reach] },
+    trunk: { x: p.x, z: p.z, r: trunkR, y0: y, y1: center },
+  };
+}
+
+// Pure: the canopy volumes of a level's props.
+export function canopyVolumes(props) {
+  const out = [];
+  for (const p of props ?? []) {
+    const v = treeVolume(p);
+    if (v) out.push(v);
+  }
+  return out;
+}
+
+function insideCrown(c, q) {
+  const dx = (q[0] - c.center[0]) / c.radii[0];
+  const dy = (q[1] - c.center[1]) / c.radii[1];
+  const dz = (q[2] - c.center[2]) / c.radii[2];
+  return dx * dx + dy * dy + dz * dz < 1;
+}
+
+function insideTrunk(t, q) {
+  return q[1] >= t.y0 && q[1] <= t.y1 && Math.hypot(q[0] - t.x, q[2] - t.z) < t.r;
+}
+
+// Pure: is the point `q` inside the crown or the trunk of a volume.
+export function insideVolume(v, q) {
+  return insideCrown(v.crown, q) || insideTrunk(v.trunk, q);
+}
+
+// Entry distance along the unit ray (o, d) into the crown ellipsoid, or
+// Infinity. Scaled to a unit sphere.
+function crownEntry(c, o, d) {
+  const ox = (o[0] - c.center[0]) / c.radii[0];
+  const oy = (o[1] - c.center[1]) / c.radii[1];
+  const oz = (o[2] - c.center[2]) / c.radii[2];
+  const dx = d[0] / c.radii[0];
+  const dy = d[1] / c.radii[1];
+  const dz = d[2] / c.radii[2];
+  const a = dx * dx + dy * dy + dz * dz;
+  const b = 2 * (ox * dx + oy * dy + oz * dz);
+  const cc = ox * ox + oy * oy + oz * oz - 1;
+  const disc = b * b - 4 * a * cc;
+  if (disc < 0 || a < 1e-12) return Infinity;
+  const t = (-b - Math.sqrt(disc)) / (2 * a);
+  return t >= 0 ? t : Infinity;
+}
+
+// Entry distance along the unit ray (o, d) into the trunk cylinder, or
+// Infinity: the side wall, or the top cap from above.
+function trunkEntry(t, o, d) {
+  let best = Infinity;
+  const ox = o[0] - t.x;
+  const oz = o[2] - t.z;
+  const a = d[0] * d[0] + d[2] * d[2];
+  if (a > 1e-12) {
+    const b = 2 * (ox * d[0] + oz * d[2]);
+    const c = ox * ox + oz * oz - t.r * t.r;
+    const disc = b * b - 4 * a * c;
+    if (disc >= 0) {
+      const s = (-b - Math.sqrt(disc)) / (2 * a);
+      const y = o[1] + d[1] * s;
+      if (s >= 0 && y >= t.y0 && y <= t.y1) best = s;
+    }
+  }
+  if (Math.abs(d[1]) > 1e-12) {
+    for (let k = 0; k < 2; k += 1) {
+      const s = ((k === 0 ? t.y0 : t.y1) - o[1]) / d[1];
+      if (s >= 0 && s < best && Math.hypot(ox + d[0] * s, oz + d[2] * s) <= t.r) best = s;
+    }
+  }
+  return best;
+}
+
+// The unit ray direction of canopyDistance, reused each call.
+const RAY_DIR = [0, 0, 0];
+
+// Pure: the distance from `from` toward `to` to the first canopy volume on
+// the segment, or Infinity. Like the wall ray's hit distance. A volume
+// that holds `from` is skipped.
+export function canopyDistance(from, to, volumes) {
+  const dx = to[0] - from[0];
+  const dy = to[1] - from[1];
+  const dz = to[2] - from[2];
+  const len = Math.hypot(dx, dy, dz);
+  if (len < 1e-9) return Infinity;
+  // A reused unit vector: this runs each frame.
+  const u = RAY_DIR;
+  u[0] = dx / len;
+  u[1] = dy / len;
+  u[2] = dz / len;
+  let best = Infinity;
+  for (let i = 0; i < volumes.length; i += 1) {
+    const v = volumes[i];
+    if (insideVolume(v, from)) continue;
+    const t = Math.min(crownEntry(v.crown, from, u), trunkEntry(v.trunk, from, u));
+    if (t < best) best = t;
+  }
+  return best <= len ? best : Infinity;
+}
+
+// Pure: a grid of canopy volumes for fast segment queries. `cell` in m.
+// `distance(from, to)` is canopyDistance over the volumes near the segment;
+// `inside(q)` says if a point is in any volume. `near()` gives a new array
+// (for tests and debug). `distance` and `inside` run each frame, so they
+// use numeric cell keys and reuse one list and one stamp per volume: no
+// new Set, array or string per query.
+export function createCanopyIndex(volumes, cell = 16) {
+  const grid = new Map();
+  // A numeric key for a cell. The 2^21 span holds +/- 16,000 km of 16 m cells.
+  const SPAN = 2097152;
+  const keyOf = (ix, iz) => (ix + SPAN / 2) * SPAN + (iz + SPAN / 2);
+  volumes.forEach((v, i) => {
+    const r = Math.max(v.crown.radii[0], v.crown.radii[2], v.trunk.r);
+    for (let ix = Math.floor((v.crown.center[0] - r) / cell); ix <= Math.floor((v.crown.center[0] + r) / cell); ix += 1) {
+      for (let iz = Math.floor((v.crown.center[2] - r) / cell); iz <= Math.floor((v.crown.center[2] + r) / cell); iz += 1) {
+        const k = keyOf(ix, iz);
+        let list = grid.get(k);
+        if (!list) grid.set(k, (list = []));
+        list.push(i);
+      }
+    }
+  });
+  // The query stamp of each volume: a volume is in the list once per query.
+  const stamps = new Uint32Array(volumes.length);
+  let stamp = 0;
+  const found = [];
+  // Fills `found` with the volumes in the cells of the box. Returns its length.
+  function collect(minX, minZ, maxX, maxZ) {
+    found.length = 0;
+    stamp += 1;
+    if (stamp === 0xffffffff) {
+      stamps.fill(0);
+      stamp = 1;
+    }
+    const x1 = Math.floor(maxX / cell);
+    const z0 = Math.floor(minZ / cell);
+    const z1 = Math.floor(maxZ / cell);
+    for (let ix = Math.floor(minX / cell); ix <= x1; ix += 1) {
+      for (let iz = z0; iz <= z1; iz += 1) {
+        const list = grid.get(keyOf(ix, iz));
+        if (!list) continue;
+        for (let j = 0; j < list.length; j += 1) {
+          const i = list[j];
+          if (stamps[i] === stamp) continue;
+          stamps[i] = stamp;
+          found.push(volumes[i]);
+        }
+      }
+    }
+    return found.length;
+  }
+  return {
+    count: volumes.length,
+    near(minX, minZ, maxX, maxZ) {
+      collect(minX, minZ, maxX, maxZ);
+      return found.slice();
+    },
+    distance(from, to) {
+      if (!collect(Math.min(from[0], to[0]), Math.min(from[2], to[2]), Math.max(from[0], to[0]), Math.max(from[2], to[2]))) return Infinity;
+      return canopyDistance(from, to, found);
+    },
+    inside(q) {
+      collect(q[0], q[2], q[0], q[2]);
+      for (let i = 0; i < found.length; i += 1) if (insideVolume(found[i], q)) return true;
+      return false;
+    },
+  };
 }

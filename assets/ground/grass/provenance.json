@@ -1,0 +1,34 @@
+{
+  "tool": "scripts/ground-textures-pbr.py (Poly Haven API download, candidate scores, low-pass delight, resize, ORM pack, WebP)",
+  "prompt": null,
+  "source": "https://polyhaven.com/a/leafy_grass",
+  "files": {
+    "diffuse": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leafy_grass/leafy_grass_diff_1k.jpg",
+    "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leafy_grass/leafy_grass_ao_1k.jpg",
+    "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leafy_grass/leafy_grass_nor_gl_1k.jpg",
+    "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leafy_grass/leafy_grass_rough_1k.jpg"
+  },
+  "credits": {
+    "Charlotte Baglioni": "All"
+  },
+  "license": "CC0 1.0",
+  "date": "2026-11-06",
+  "maps": "albedo, normal (OpenGL), ORM (R ambient occlusion, G roughness, B metalness 0)",
+  "output": [
+    "assets/ground/pbr/albedo-1024.webp layer 3",
+    "assets/ground/pbr/albedo-512.webp layer 3",
+    "assets/ground/pbr/normal-1024.webp layer 3",
+    "assets/ground/pbr/orm-512.webp layer 3"
+  ],
+  "candidates": [
+    {
+      "asset": "leafy_grass",
+      "light": 0.0214,
+      "shadow": 0.1779,
+      "seam": 1.098,
+      "rejected": [],
+      "picked": true
+    }
+  ],
+  "note": "Scanned photo textures, not generated art."
+}

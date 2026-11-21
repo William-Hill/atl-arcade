@@ -31,7 +31,7 @@ async function sampleScript(page, script) {
     const tick = () => {
       if (!on) return;
       const fx = window.__atl.cameraFx;
-      samples.push({ fov: window.__atl.fov, base: fx.baseFov, offFov: fx.fov, up: fx.up, right: fx.right, roll: fx.roll, flash: fx.flash });
+      samples.push({ fov: window.__atl.fov, base: fx.baseFov, offFov: fx.fov, speedFov: fx.speedFov, up: fx.up, right: fx.right, roll: fx.roll, flash: fx.flash });
       requestAnimationFrame(tick);
     };
     const done = window.__atl.runScript(entries);
@@ -56,10 +56,12 @@ test("the speed FOV widens the view and the landing dips the camera", async ({ p
   expect(rest.fx.reduced).toBe(false);
 
   const { samples } = await sampleScript(page, PUSH_JUMP);
-  const wide = Math.max(...samples.map((s) => s.offFov));
+  // The speed FOV is the #105 boost (the #257 merge); `offFov` is the zoom punch.
+  const wide = Math.max(...samples.map((s) => s.speedFov + s.offFov));
   const low = Math.min(...samples.map((s) => s.up));
-  // The camera FOV is the base plus the offset on every frame.
-  for (const s of samples) expect(s.fov).toBeCloseTo(s.base + s.offFov, 6);
+  // The camera FOV is the base plus the boost and the offset on every frame
+  // (the camera skips a change under 1e-4 deg).
+  for (const s of samples) expect(s.fov).toBeCloseTo(s.base + s.speedFov + s.offFov, 3);
   expect(wide).toBeGreaterThan(2);
   expect(wide).toBeLessThanOrEqual(7.01);
   // A flat hop lands at about 5 m/s: a small dip, no shake.
@@ -77,7 +79,7 @@ test("the speed FOV widens the view and the landing dips the camera", async ({ p
   expect(errors).toEqual([]);
 });
 
-test("?camfx=0 keeps only a smaller speed FOV", async ({ page }) => {
+test("?camfx=0 keeps at most a smaller speed FOV", async ({ page }) => {
   const errors = collectErrors(page);
   await boot(page, "?camfx=0");
   expect(await page.evaluate(() => window.__atl.cameraFx.reduced)).toBe(true);
@@ -88,7 +90,7 @@ test("?camfx=0 keeps only a smaller speed FOV", async ({ page }) => {
     expect(s.roll).toBe(0);
     expect(s.flash).toBe(0);
   }
-  expect(Math.max(...samples.map((s) => s.offFov))).toBeLessThanOrEqual(3.51);
+  expect(Math.max(...samples.map((s) => s.speedFov + s.offFov))).toBeLessThanOrEqual(3.51);
   expect(errors).toEqual([]);
 });
 

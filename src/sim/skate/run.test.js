@@ -73,6 +73,16 @@ describe("style moves", () => {
     expect(a.duration).not.toBe(b.duration);
   });
 
+  it("times style moves in beats at the beat clock's BPM (per-track music, #110)", () => {
+    let r = createRun(GREYBOX);
+    r.skater.speed = 5;
+    const beat = { bpm: 125, judge: () => null };
+    const fast = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv, beat).skater.style;
+    const base = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv).skater.style;
+    expect(fast.duration).toBeCloseTo((STYLE.moves[0].beats * 60) / 125);
+    expect(base.duration).toBeCloseTo(styleDuration(STYLE.moves[0]));
+  });
+
   it("needs speed and cancels when the skater leaves the ground", () => {
     let r = createRun(GREYBOX);
     r = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv);

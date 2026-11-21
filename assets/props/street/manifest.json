@@ -1,0 +1,141 @@
+{
+  "frame": "glTF model space: +y up, +z forward, origin at the ground center of the footprint, meters. Nodes <id>_lod0 / <id>_lod1, extras.lodDistance in m. People and the dog: one skin over both LODs, clips by game name.",
+  "assets": {
+    "drinking_fountain": {
+      "file": "drinking_fountain.glb",
+      "bytes": 279292,
+      "triangles": {
+        "lod0": 1580,
+        "lod1": 400
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 20
+      },
+      "bounds": {
+        "min": [
+          -0.193,
+          0,
+          -0.193
+        ],
+        "max": [
+          0.193,
+          1,
+          0.193
+        ]
+      },
+      "size": [
+        0.386,
+        1,
+        0.386
+      ],
+      "textures": [
+        "drinking_fountain_color 1024x1024",
+        "drinking_fountain_metal_rough 512x512",
+        "drinking_fountain_normal 512x512"
+      ]
+    },
+    "bollard": {
+      "file": "bollard.glb",
+      "bytes": 36324,
+      "triangles": {
+        "lod0": 394,
+        "lod1": 120
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 20
+      },
+      "bounds": {
+        "min": [
+          -0.102,
+          0,
+          -0.102
+        ],
+        "max": [
+          0.102,
+          0.9,
+          0.102
+        ]
+      },
+      "size": [
+        0.204,
+        0.9,
+        0.204
+      ],
+      "textures": [
+        "bollard_color 512x512",
+        "bollard_metal_rough 256x256",
+        "bollard_normal 256x256"
+      ]
+    },
+    "traffic_cone": {
+      "file": "traffic_cone.glb",
+      "bytes": 69460,
+      "triangles": {
+        "lod0": 424,
+        "lod1": 118
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 20
+      },
+      "bounds": {
+        "min": [
+          -0.175,
+          0,
+          -0.174
+        ],
+        "max": [
+          0.175,
+          0.7,
+          0.174
+        ]
+      },
+      "size": [
+        0.35,
+        0.7,
+        0.348
+      ],
+      "textures": [
+        "traffic_cone_color 512x512",
+        "traffic_cone_metal_rough 256x256",
+        "traffic_cone_normal 256x256"
+      ]
+    },
+    "barricade": {
+      "file": "barricade.glb",
+      "bytes": 256592,
+      "triangles": {
+        "lod0": 911,
+        "lod1": 299
+      },
+      "lodDistance": {
+        "lod0": 0,
+        "lod1": 20
+      },
+      "bounds": {
+        "min": [
+          -0.6,
+          0,
+          -0.346
+        ],
+        "max": [
+          0.6,
+          0.776,
+          0.346
+        ]
+      },
+      "size": [
+        1.2,
+        0.776,
+        0.692
+      ],
+      "textures": [
+        "barricade_color 1024x1024",
+        "barricade_metal_rough 512x512",
+        "barricade_normal 512x512"
+      ]
+    }
+  }
+}

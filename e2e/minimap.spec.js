@@ -36,7 +36,8 @@ test("the desktop map shows the trail, the landmarks, and the skater arrow", asy
   expect(box.x + box.width).toBeGreaterThan(vp.width - 40);
   expect(box.y + box.height).toBeGreaterThan(vp.height - 40);
   await expect(page.locator("#minimap canvas")).toHaveAttribute("role", "img");
-  await expect(page.locator("#minimap canvas")).toHaveAttribute("aria-label", /Map of .*north up.*Ponce City Market/);
+  // The spawn is in the find zone of a spot (#219), so 0 or 1 spot is found.
+  await expect(page.locator("#minimap canvas")).toHaveAttribute("aria-label", /Map of .*north up.*Landmark spots: \d+ of \d+ found/);
   const icons = await page.evaluate(() => window.__atl.minimap.icons.map((i) => i.id));
   expect(icons).toEqual(expect.arrayContaining(["ponce-city-market", "krog-street-market"]));
   const p = await pixels(page);
@@ -105,6 +106,7 @@ for (const size of [
           ["grind", ".touch-grind"],
           ["groove", ".touch-style1"],
           ["spin", ".touch-style2"],
+          ["switch", ".touch-switch"],
           ["hud", "#hud-score"],
           ["style", ".hud-style"],
           ["pulse", "#hud-pulse"],

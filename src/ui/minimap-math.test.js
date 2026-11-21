@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { cropRect, headingAngle, initials, mapFrame, mapLandmarks, mapToWorld, needsRedraw, projectToView, stripWidth, stripsInOrder, viewTransform, worldToMap } from "./minimap-math.js";
+import { cropRect, headingAngle, initials, mapFrame, mapParks, mapToWorld, needsRedraw, projectToView, stripWidth, stripsInOrder, viewTransform, worldToMap } from "./minimap-math.js";
 import { pointInRings } from "../level/geo/geo-ground.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
@@ -117,20 +117,13 @@ describe("needsRedraw", () => {
 });
 
 describe("level content", () => {
-  it("finds the landmark icons inside their footprints", () => {
-    const icons = mapLandmarks(LEVEL);
-    const pcm = icons.find((i) => i.id === "ponce-city-market");
-    const krog = icons.find((i) => i.id === "krog-street-market");
-    expect(pcm.label).toBe("PCM");
-    expect(krog.label).toBe("KSM");
-    for (const i of [pcm, krog]) {
-      const b = LEVEL.buildings.find((x) => x.name === i.name);
-      expect(pointInRings(i.x, i.z, [b.outer, ...(b.holes ?? [])])).toBe(true);
-    }
-  });
-
   it("lists each named park once", () => {
-    const parks = mapLandmarks(LEVEL).filter((i) => i.kind === "park");
+    const parks = mapParks(LEVEL);
+    expect(parks.every((i) => i.kind === "park")).toBe(true);
+    for (const p of parks) {
+      const a = LEVEL.areas.find((x) => x.id === p.id);
+      expect(pointInRings(p.x, p.z, [a.outer, ...(a.holes ?? [])])).toBe(true);
+    }
     const names = parks.map((p) => p.name);
     expect(names).toContain("Freedom Park");
     expect(names).toContain("Historic Fourth Ward Park");

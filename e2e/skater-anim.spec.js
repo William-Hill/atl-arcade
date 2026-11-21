@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { SESSIONS } from "../src/playtest/sessions.js";
-import { CLIPS } from "../src/render/skater-anim.js";
+import { clipNamesFor } from "../src/render/skater-anim.js";
 
 function collectErrors(page) {
   const errors = [];
@@ -21,7 +21,7 @@ test(`every ${name} clip renders as a contact sheet`, async ({ page }) => {
   await page.goto(`/skater.html?skater=${name}`);
   await page.waitForFunction(() => window.__skater && (window.__skater.ready || window.__skater.error), null, { timeout: 30000 });
   const names = await page.evaluate(() => window.__skater.clips);
-  expect([...names].sort()).toEqual(Object.keys(CLIPS).sort());
+  expect([...names].sort()).toEqual(clipNamesFor(name).sort());
   for (const clip of names) {
     const info = await page.evaluate((n) => window.__skater.sheet(n), clip);
     expect(info.tracks).toBeGreaterThan(5);
@@ -36,7 +36,7 @@ test(`every ${name} clip renders as a contact sheet`, async ({ page }) => {
 test(`the scripted sessions show no ${name} T-pose frame`, async ({ page }) => {
   test.setTimeout(120000);
   const errors = collectErrors(page);
-  await page.goto(`/?mute=1&skater=${name}`);
+  await page.goto(`/?level=greybox&mute=1&skater=${name}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
   const tpose = await page.evaluate(() => window.__atl.skaterModel.tposeSilhouette());
   const tposePixels = tpose.reduce((a, b) => a + b, 0);
@@ -106,7 +106,7 @@ test(`the scripted sessions show no ${name} T-pose frame`, async ({ page }) => {
 test("the switch button turns the skater to ride backward", async ({ page }) => {
   test.setTimeout(60000);
   const errors = collectErrors(page);
-  await page.goto("/?mute=1");
+  await page.goto("/?level=greybox&mute=1");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.skaterModel.loaded, null, { timeout: 30000 });
   const samples = await page.evaluate(async () => {
     const atl = window.__atl;

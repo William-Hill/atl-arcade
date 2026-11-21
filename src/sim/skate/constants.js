@@ -60,6 +60,11 @@ export const CAMERA = {
   clipMargin: 0.3, // m kept between the camera and a wall it would clip. min 0.1 / typical 0.3 / max 0.6.
   minDistance: 1.2, // m closest the camera comes to the pivot when a wall pushes it in. min 0.5 / typical 1.2 / max 3.
   clipRelease: 4.0, // 1/s rate the camera eases back out after a wall clears. min 2 / typical 4 / max 10.
+  // Swing: a wall or the edge fence close to the skater turns the camera around her to a clear side (playtest 2026-11-09).
+  swingBelow: 0.55, // part of the camera range: a blocker nearer than this swings the camera. min 0.3 / typical 0.55 / max 0.8.
+  swingStep: 0.3, // rad between the swing probes. min 0.15 / typical 0.3 / max 0.5.
+  swingMax: 1.5, // rad: the widest swing to each side. min 0.6 / typical 1.5 / max 2.4.
+  swingRate: 5.0, // rad/s: the swing speed. min 2 / typical 5 / max 10.
   vertNormalY: 0.9, // ground normal y under which the skater is on vert and the camera holds its yaw. min 0.7 / typical 0.9 / max 0.97.
   // Player look control (mouse drag, right stick). The look offset turns the camera about the skater.
   mouseLookRate: 0.006, // rad of look per pixel of mouse drag. min 0.002 / typical 0.006 / max 0.012.
@@ -95,6 +100,7 @@ export const GRIND = {
 // `beats` sets the length on the game beat clock (BEAT.bpm). `clip` names
 // the skater clip, and `anim` names the placeholder capsule animation.
 // The sources for the dances are in docs/characters/atl-dance-references.md.
+// A dance with `skaters` plays only for those skaters (their GLB has the clip).
 export const STYLE = {
   minSpeed: 1.5, // m/s needed to start a style move. min 0.5 / typical 1.5 / max 3.
   moves: [
@@ -104,12 +110,18 @@ export const STYLE = {
       points: 150,
       anim: "tilt",
       dances: [
+        // Marcus' own dances (#107 follow-up): a retargeted Tripo motion and
+        // two Meshy text to motion clips. Real skaters review them before release.
+        { clip: "dance_jamgroove", name: "Jam Groove", skaters: ["marcus"] },
+        { clip: "dance_drumline", name: "Drumline Count", skaters: ["marcus"] },
+        { clip: "dance_jamstep", name: "Jam Step", skaters: ["marcus"] },
         { clip: "dance_bankhead", name: "Bankhead Bounce" },
         { clip: "dance_walkitout", name: "Walk It Out" },
         { clip: "dance_prep", name: "The Prep" },
         { clip: "dance_swagsurf", name: "Swag Surf" },
         { clip: "dance_snaplean", name: "Snap Lean" },
         { clip: "dance_crisscross", name: "Crisscross" },
+        { clip: "dance_smoothquad", name: "Smooth Quad" },
       ],
     },
     {
@@ -124,6 +136,9 @@ export const STYLE = {
     },
   ],
 };
+
+// The dances of a move for one skater. A dance with no `skaters` list is for every skater.
+export const dancesFor = (move, skater) => move.dances.filter((d) => !d.skaters || d.skaters.includes(skater));
 
 // The length of a style move in seconds at `bpm`.
 export const styleDuration = (move, bpm = BEAT.bpm) => (move.beats * 60) / bpm;

@@ -5,9 +5,7 @@
 For each set it downloads the 1k JPG color and AO maps from the Poly Haven
 API and writes assets/ground/<id>/:
 
-- color.jpg: the color map times the AO map, 1024 px.
-- normal.jpg: the OpenGL normal map, 1024 px (the pbr look only).
-- rough.jpg: the roughness map, 512 px (the pbr look only).
+- color.jpg: the color map times the AO map, 1024 px (the toon look).
 - set.json: the real tile size in meters, the mean linear color, the mean
   roughness, and the source and authors.
 
@@ -15,6 +13,11 @@ The game does not show these colors directly. The surface shader divides
 the map by its mean color and multiplies the result into the art color of
 each surface (src/render/geo-view.js), so the palette stays and the ground
 gets the real asphalt, slab, and grass detail.
+
+The pbr look has its own sets with normal and ORM maps:
+scripts/ground-textures-pbr.py (#158). The normal.jpg and rough.jpg that
+this script wrote before are gone; roughMean below still reads the scan
+roughness map.
 """
 
 import io
@@ -68,10 +71,7 @@ def main():
         Image.fromarray((np.clip(d, 0, 1) * 255 + 0.5).astype(np.uint8)).save(out / "color.jpg", quality=85)
         nor_url = files["nor_gl"]["1k"]["jpg"]["url"]
         rough_url = files["Rough"]["1k"]["jpg"]["url"]
-        nor = Image.open(io.BytesIO(fetch(nor_url))).convert("RGB").resize((SIZE, SIZE), Image.LANCZOS)
-        nor.save(out / "normal.jpg", quality=90)
         rough = Image.open(io.BytesIO(fetch(rough_url))).convert("L").resize((SIZE // 2, SIZE // 2), Image.LANCZOS)
-        rough.save(out / "rough.jpg", quality=85)
         rough_mean = float(np.asarray(rough, dtype=np.float64).mean() / 255)
         mean = srgb_to_linear(d).reshape(-1, 3).mean(axis=0)
         dims = info.get("dimensions") or [2000, 2000]
@@ -90,7 +90,7 @@ def main():
         credits.append({"set": set_id, "asset": asset, "authors": info.get("authors"), "url": meta["source"]})
         print(f"{set_id}: {asset}, tile {meta['tileMeters']} m, mean {meta['meanLinear']}")
     prov = {
-        "tool": "scripts/ground-textures.py (Poly Haven API download, AO multiply, resize; color, normal, and roughness maps)",
+        "tool": "scripts/ground-textures.py (Poly Haven API download, AO multiply, resize; toon color maps)",
         "prompt": None,
         "license": "CC0 1.0",
         "credits": credits,

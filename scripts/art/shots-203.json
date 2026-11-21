@@ -1,0 +1,7 @@
+{
+  "note": "Nia close-up for #203: the 159-skater camera (scripts/art/shots-159.json) on the pbr and toon looks. Run: node scripts/art/pbr-frames.mjs --shots scripts/art/shots-203.json --out <dir>",
+  "shots": [
+    { "name": "203-skater-pbr", "cam": [338.9, 1.4, -2.9, 337.07, 0.95, -1.3] },
+    { "name": "203-skater-toon", "cam": [338.9, 1.4, -2.9, 337.07, 0.95, -1.3], "params": { "look": "toon" } }
+  ]
+}

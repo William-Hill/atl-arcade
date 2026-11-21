@@ -17,21 +17,21 @@
   "buildings": 1042,
   "height": {
    "default": 110,
-   "height": 6,
+   "height": 5,
    "levels": 14,
-   "override": 5,
-   "overture": 809,
+   "override": 7,
+   "overture": 808,
    "overture-capped": 98
   },
   "floors": {
-   "estimate": 1018,
+   "estimate": 1017,
    "osm": 19,
-   "research": 5
+   "research": 6
   },
   "name": {
-   "none": 1008,
+   "none": 1007,
    "osm": 33,
-   "research": 1
+   "research": 2
   },
   "address": {
    "city": 813,
@@ -1887,16 +1887,17 @@
     "cityPoints": 1
    },
    "height": {
-    "value": 9.13,
-    "source": "overture",
+    "value": 17.8,
+    "source": "override",
     "confidence": "medium",
-    "ref": "Overture Maps buildings, release 2026-10-21.0"
+    "ref": "https://en.wikipedia.org/wiki/Telephone_Factory_Lofts",
+    "was": "9.13 m (Overture)"
    },
    "floors": {
-    "value": 3,
-    "source": "estimate",
-    "confidence": "low",
-    "ref": "(height - 1 m) / 3.2 m"
+    "value": 4,
+    "source": "research",
+    "confidence": "medium",
+    "ref": "https://en.wikipedia.org/wiki/Telephone_Factory_Lofts"
    },
    "facade": {
     "value": "modern-apartment",
@@ -39657,9 +39658,10 @@
    "osmId": "w619595557",
    "type": "retail",
    "name": {
-    "value": null,
-    "source": "none",
-    "confidence": "none"
+    "value": "Ponce City Market shipping room",
+    "source": "research",
+    "confidence": "medium",
+    "ref": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/16000769_text"
    },
    "address": {
     "value": null,
@@ -39667,10 +39669,11 @@
     "confidence": "none"
    },
    "height": {
-    "value": 10,
-    "source": "height",
-    "confidence": "high",
-    "ref": "OpenStreetMap tag height"
+    "value": 7,
+    "source": "override",
+    "confidence": "medium",
+    "ref": "https://npgallery.nps.gov/NRHP/GetAsset/NRHP/16000769_text",
+    "was": "10 m (OSM height)"
    },
    "floors": {
     "value": 2,

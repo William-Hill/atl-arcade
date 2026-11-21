@@ -1,14 +1,17 @@
 // The minimap (#86): a 2D canvas in a corner of the HUD. The level is drawn
 // once to a base image (footprints, streets, the trail, parks). Each frame
 // draws only the part of that image around the skater, moved and turned,
-// then the landmark icons and the skater arrow. The 3D scene is not drawn
+// then the landmark spot icons (#218: one look per state, from the landmark
+// module through src/ui/landmark-icons.js) and the skater arrow. The 3D scene is not drawn
 // a second time. The math is in src/ui/minimap-math.js.
 //
 // Keys: N changes north up and heading up. M opens the full map
 // (src/ui/fullmap.js); the expand button and a click on the map open it too.
 // The × button hides the minimap.
 
-import { MINIMAP, cropRect, mapFrame, mapLandmarks, needsRedraw, projectToView, stripWidth, stripsInOrder, viewTransform, worldToMap } from "./minimap-math.js";
+import { createIconSource, looksOf, mapSummary, minimapIconSize, newlyClaimed, pulseAt } from "./landmark-icons.js";
+import { drawSpotIcon } from "./spot-icon.js";
+import { MINIMAP, cropRect, mapFrame, needsRedraw, projectToView, stripWidth, stripsInOrder, viewTransform, worldToMap } from "./minimap-math.js";
 
 export const COLORS = {
   ground: "#1d2033",
@@ -18,7 +21,6 @@ export const COLORS = {
   path: "#9a8d63",
   trail: "#ff5fb2",
   building: "#c3c6dd",
-  landmarkBuilding: "#ffd166",
   ink: "#0b0b12",
   paper: "#f3f3f7",
 };
@@ -50,8 +52,10 @@ function ringPath(ctx, frame, ring) {
   ctx.closePath();
 }
 
-// Draws the level to a new canvas, one time. The full map uses it too.
-export function drawMapBase(level, frame, landmarkNames) {
+// Draws the level to a new canvas, one time. The full map uses it too. No
+// building has a color of its own: gold means Claimed on the maps (#218),
+// and a gold footprint would also mark a spot that is still Unknown.
+export function drawMapBase(level, frame) {
   const base = document.createElement("canvas");
   base.width = frame.width;
   base.height = frame.height;
@@ -84,8 +88,7 @@ export function drawMapBase(level, frame, landmarkNames) {
   }
 
   for (const b of level.buildings ?? []) {
-    const landmark = landmarkNames.has(b.name);
-    ctx.fillStyle = landmark ? COLORS.landmarkBuilding : COLORS.building;
+    ctx.fillStyle = COLORS.building;
     ctx.beginPath();
     ringPath(ctx, frame, b.outer);
     for (const h of b.holes ?? []) ringPath(ctx, frame, h);
@@ -97,34 +100,21 @@ export function drawMapBase(level, frame, landmarkNames) {
   return base;
 }
 
-// A landmark: a gold disc with its initials. A park: a green tree mark.
-// The two kinds have different shapes, so they do not differ by color only.
+// A park with no landmark spot: a green tree mark. The spots have their own
+// icons (src/ui/spot-icon.js).
 export function drawIcon(ctx, icon, x, y, s) {
   ctx.save();
   ctx.translate(x, y);
   ctx.lineWidth = 2 * s;
   ctx.strokeStyle = COLORS.ink;
-  if (icon.kind === "landmark") {
-    ctx.fillStyle = COLORS.landmarkBuilding;
-    ctx.beginPath();
-    ctx.arc(0, 0, 11 * s, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = COLORS.ink;
-    ctx.font = `700 ${Math.round(8 * s)}px system-ui, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(icon.label, 0, 0.5 * s);
-  } else {
-    ctx.fillStyle = "#7ef0a0";
-    ctx.beginPath();
-    ctx.moveTo(0, -8 * s);
-    ctx.lineTo(7 * s, 5 * s);
-    ctx.lineTo(-7 * s, 5 * s);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  }
+  ctx.fillStyle = "#7ef0a0";
+  ctx.beginPath();
+  ctx.moveTo(0, -8 * s);
+  ctx.lineTo(7 * s, 5 * s);
+  ctx.lineTo(-7 * s, 5 * s);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -158,16 +148,24 @@ function button(className, parent) {
 // `parent` gets the map. `mode` ("north" | "heading") and `hidden` override
 // the saved choice (for tests and links).
 // `onExpand` opens the full map (the expand button, a click on the map).
-export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMAP.viewMeters, onExpand = null } = {}) {
+// `source` gives the icons (landmark-icons.js createIconSource()); with none
+// the map shows the parks only. `reducedMotion()` is true when a newly
+// claimed icon must not pulse.
+export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMAP.viewMeters, onExpand = null, source = createIconSource({ level }), reducedMotion = () => false } = {}) {
   const prefs = readPrefs();
   const state = {
     mode: mode ?? (prefs.mode === "heading" ? "heading" : "north"),
     hidden: hidden ?? Boolean(prefs.hidden),
     draws: 0,
+    iconPx: 0, // the size of a spot icon, in CSS pixels
+    pulses: 0, // the count of claim pulses that started
   };
   const frame = mapFrame(level.bounds);
-  const icons = mapLandmarks(level);
-  const base = drawMapBase(level, frame, new Set(icons.filter((i) => i.kind === "landmark").map((i) => i.name)));
+  const base = drawMapBase(level, frame);
+  let version = -1;
+  let looks = null;
+  // The start time (ms) of the pulse of each newly claimed icon.
+  const pulses = new Map();
 
   const root = document.createElement("div");
   root.id = "minimap";
@@ -186,12 +184,13 @@ export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMA
   const ctx = canvas.getContext("2d");
 
   let last = null;
+  let lastView = null;
   let size = 0;
   let dpr = 1;
 
   function label() {
-    const names = icons.filter((i) => i.kind === "landmark").map((i) => i.name);
-    canvas.setAttribute("aria-label", `Map of ${level.title ?? level.name}, ${state.mode === "heading" ? "heading up" : "north up"}. Arrow: you. Gold discs: ${names.join(", ")}. Triangles: parks. Wide pink line: the BeltLine trail.`);
+    const spots = mapSummary(source.view);
+    canvas.setAttribute("aria-label", `Map of ${level.title ?? level.name}, ${state.mode === "heading" ? "heading up" : "north up"}. Arrow: you. ${spots ? `${spots} ` : ""}Triangles: parks. Wide pink line: the BeltLine trail.`);
   }
 
   function sync() {
@@ -259,10 +258,27 @@ export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMA
     root,
     canvas,
     state,
-    icons,
+    get icons() {
+      return source.icons;
+    },
     frame,
     setMode,
     setHidden,
+    // The spot icons of the last draw, in CSS pixels of the page (for the
+    // tests). `shown` is false for an icon outside the round map.
+    iconsOnScreen() {
+      if (!lastView || state.hidden) return [];
+      const r = canvas.getBoundingClientRect();
+      const px = canvas.width;
+      return source.icons
+        .filter((i) => i.spot)
+        .map((i) => {
+          const [ix, iy] = projectToView(frame, lastView, i.x, i.z);
+          const shown = Math.hypot(ix - px / 2, iy - px / 2) <= px / 2 - (8 * px) / 140;
+          // The canvas has a border: its picture starts at clientLeft, clientTop.
+          return { id: i.id, look: i.look, kind: i.kind, x: r.left + canvas.clientLeft + ix / dpr, y: r.top + canvas.clientTop + iy / dpr, size: state.iconPx, shown };
+        });
+    },
     // Called once per frame with the skater state.
     update(skater) {
       if (state.hidden) return;
@@ -270,11 +286,27 @@ export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMA
       const px = canvas.width;
       if (px < 2) return;
       const now = { x: skater.position[0], z: skater.position[2], yaw: skater.yaw, mode: state.mode };
-      if (!needsRedraw(last, now, { pxPerMeter: px / viewMeters })) return;
+      const icons = source.icons;
+      const time = performance.now();
+      if (source.version !== version) {
+        // A spot changed: new icons, a new label, and a pulse for a claim.
+        version = source.version;
+        if (!reducedMotion()) {
+          for (const id of newlyClaimed(looks, icons)) {
+            pulses.set(id, time);
+            state.pulses += 1;
+          }
+        }
+        looks = looksOf(icons);
+        label();
+        last = null;
+      }
+      if (!needsRedraw(last, now, { pxPerMeter: px / viewMeters }) && pulses.size === 0) return;
       last = now;
       state.draws += 1;
 
       const view = viewTransform(frame, now, { mode: state.mode, size: px, viewMeters });
+      lastView = view;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = COLORS.ground;
       ctx.fillRect(0, 0, px, px);
@@ -288,12 +320,31 @@ export function createMinimap(parent, level, { mode, hidden, viewMeters = MINIMA
       ctx.setTransform(1, 0, 0, 1, 0, 0);
 
       const s = px / 140;
+      state.iconPx = minimapIconSize(size);
+      const iconSize = state.iconPx * dpr;
       for (const icon of icons) {
         const [ix, iy] = projectToView(frame, view, icon.x, icon.z);
         const r = Math.hypot(ix - px / 2, iy - px / 2);
         if (r > px / 2 - 8 * s) continue;
-        drawIcon(ctx, icon, ix, iy, s);
+        if (!icon.spot) {
+          drawIcon(ctx, icon, ix, iy, s);
+          continue;
+        }
+        let pulse = null;
+        if (pulses.has(icon.id)) {
+          pulse = pulseAt((time - pulses.get(icon.id)) / 1000, { reducedMotion: reducedMotion() });
+          if (!pulse) pulses.delete(icon.id);
+        }
+        // The arrow of an edge marker points out of the map, on the screen.
+        let angle = 0;
+        if (icon.out) {
+          const [ox, oy] = projectToView(frame, view, icon.x + icon.out[0] * 10, icon.z + icon.out[1] * 10);
+          angle = Math.atan2(oy - iy, ox - ix);
+        }
+        drawSpotIcon(ctx, icon, ix, iy, iconSize, { angle, pulse });
       }
+      // A pulse of an icon that is off the map ends by its time.
+      for (const [id, t0] of pulses) if (time - t0 > 2000) pulses.delete(id);
 
       // The "N" mark on the edge, in heading up mode.
       if (state.mode === "heading") {

@@ -37,13 +37,14 @@ for (const name of ["nia", "marcus"]) {
     // The ink hull of LOD1 comes from the LOD1 mesh.
     expect(info.lod1.hull).toBe(true);
     expect(info.lod1.hullGeometry).toBe(true);
-    expect(info.clips).toHaveLength(24);
+    // The v3 bodies of the city-look epic: 26 clips (Nia), 29 (Marcus).
+    expect(info.clips.length).toBeGreaterThanOrEqual(24);
 
     // Every clip at 5 times: each skinned LOD1 vertex is finite and lies on
     // a skinned LOD0 vertex (within 5 mm: the Draco quantization). A vertex
     // with a wrong skin would move away from its LOD0 copy.
     const report = await page.evaluate(() => window.__lod.check());
-    expect(report).toHaveLength(24);
+    expect(report).toHaveLength(info.clips.length);
     for (const r of report) {
       expect(r.nonFinite, `${r.clip} non-finite vertices`).toBe(0);
       expect(r.gap, `${r.clip} largest gap to LOD0 (m)`).toBeLessThan(0.005);
@@ -58,10 +59,11 @@ for (const name of ["nia", "marcus"]) {
   });
 }
 
+// The NPC skaters are off by default since the city-look epic: ?skaters=1.
 test("in the game, a near NPC skater uses the full model and a far one uses LOD1", async ({ page }) => {
   test.setTimeout(240000);
   const errors = collectErrors(page);
-  await page.goto("/?level=beltline-eastside&mute=1&view=fixed&quality=phone");
+  await page.goto("/?level=beltline-eastside&mute=1&view=fixed&quality=phone&skaters=1");
   await page.waitForFunction(() => window.__atl?.ready && window.__atl.skaters && window.__atl.skaters.loaded + window.__atl.skaters.failed === window.__atl.skaters.count && window.__atl.frames > 5, null, { timeout: 120000 });
   // The camera 6 m from one NPC skater: that NPC is near, and the others are farther.
   const result = await page.evaluate(async () => {

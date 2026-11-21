@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 async function ready(page) {
-  await page.goto("/?mute=1");
+  await page.goto("/?level=greybox&mute=1");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
 }
 

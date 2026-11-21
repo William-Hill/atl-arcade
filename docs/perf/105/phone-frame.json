@@ -1,0 +1,207 @@
+{
+ "source": "scripts/perf.mjs --tiers phone --looks toon,pbr --repeat 3 (SwiftShader, 1280x720, the BeltLine trail ride of 15 s)",
+ "runs": {
+  "before (epic/city-look 7372b02)": [
+   {
+    "look": "toon",
+    "run": 1,
+    "frames": 189,
+    "meanMs": 176.3,
+    "p95Ms": 350,
+    "calls": 95,
+    "triangles": 310495,
+    "renderMeanMs": 8.122,
+    "renderP95Ms": 6.8,
+    "viewsMeanMs": 1.364,
+    "load": 0.2
+   },
+   {
+    "look": "pbr",
+    "run": 1,
+    "frames": 87,
+    "meanMs": 1627.3,
+    "p95Ms": 3383.1,
+    "calls": 112,
+    "triangles": 375108,
+    "renderMeanMs": 83.223,
+    "renderP95Ms": 32.7,
+    "viewsMeanMs": 2,
+    "load": 2.9
+   },
+   {
+    "look": "toon",
+    "run": 2,
+    "frames": 192,
+    "meanMs": 174.6,
+    "p95Ms": 350.1,
+    "calls": 96,
+    "triangles": 310265,
+    "renderMeanMs": 7.579,
+    "renderP95Ms": 7.6,
+    "viewsMeanMs": 1.426,
+    "load": 4.4
+   },
+   {
+    "look": "pbr",
+    "run": 2,
+    "frames": 87,
+    "meanMs": 1608.6,
+    "p95Ms": 3633.3,
+    "calls": 112,
+    "triangles": 373325,
+    "renderMeanMs": 90.628,
+    "renderP95Ms": 22.9,
+    "viewsMeanMs": 1.957,
+    "load": 4.2
+   },
+   {
+    "look": "toon",
+    "run": 3,
+    "frames": 192,
+    "meanMs": 178.3,
+    "p95Ms": 350,
+    "calls": 94,
+    "triangles": 309765,
+    "renderMeanMs": 8.184,
+    "renderP95Ms": 7.2,
+    "viewsMeanMs": 1.437,
+    "load": 3.9
+   },
+   {
+    "look": "pbr",
+    "run": 3,
+    "frames": 84,
+    "meanMs": 1699.9,
+    "p95Ms": 3716.5,
+    "calls": 112,
+    "triangles": 375820,
+    "renderMeanMs": 93.027,
+    "renderP95Ms": 21.2,
+    "viewsMeanMs": 1.845,
+    "load": 4.4
+   }
+  ],
+  "after": [
+   {
+    "look": "toon",
+    "run": 1,
+    "frames": 192,
+    "meanMs": 176.2,
+    "p95Ms": 366.6,
+    "calls": 95,
+    "triangles": 309635,
+    "renderMeanMs": 7.7,
+    "renderP95Ms": 7.8,
+    "viewsMeanMs": 1.789,
+    "load": 3.9
+   },
+   {
+    "look": "pbr",
+    "run": 1,
+    "frames": 87,
+    "meanMs": 1648.4,
+    "p95Ms": 3716.5,
+    "calls": 114,
+    "triangles": 374152,
+    "renderMeanMs": 131.348,
+    "renderP95Ms": 31.5,
+    "viewsMeanMs": 1.938,
+    "load": 3.6
+   },
+   {
+    "look": "toon",
+    "run": 2,
+    "frames": 186,
+    "meanMs": 171.6,
+    "p95Ms": 350,
+    "calls": 96,
+    "triangles": 310589,
+    "renderMeanMs": 7.227,
+    "renderP95Ms": 6.8,
+    "viewsMeanMs": 1.601,
+    "load": 4
+   },
+   {
+    "look": "pbr",
+    "run": 2,
+    "frames": 89,
+    "meanMs": 1620.9,
+    "p95Ms": 3699.9,
+    "calls": 113,
+    "triangles": 367368,
+    "renderMeanMs": 147.972,
+    "renderP95Ms": 28.4,
+    "viewsMeanMs": 2.039,
+    "load": 4.2
+   },
+   {
+    "look": "toon",
+    "run": 3,
+    "frames": 187,
+    "meanMs": 177.9,
+    "p95Ms": 350,
+    "calls": 96,
+    "triangles": 310325,
+    "renderMeanMs": 7.944,
+    "renderP95Ms": 9,
+    "viewsMeanMs": 1.421,
+    "load": 3.6
+   },
+   {
+    "look": "pbr",
+    "run": 3,
+    "frames": 84,
+    "meanMs": 1673.5,
+    "p95Ms": 3333.1,
+    "calls": 113,
+    "triangles": 375779,
+    "renderMeanMs": 108.065,
+    "renderP95Ms": 23.5,
+    "viewsMeanMs": 2.483,
+    "load": 3.6
+   }
+  ],
+  "after, ?fx=0": [
+   {
+    "look": "pbr",
+    "run": 1,
+    "frames": 86,
+    "meanMs": 1670.1,
+    "p95Ms": 3699.9,
+    "calls": 112,
+    "triangles": 368893,
+    "renderMeanMs": 62.938,
+    "renderP95Ms": 21,
+    "viewsMeanMs": 2.232,
+    "load": 2.3
+   },
+   {
+    "look": "pbr",
+    "run": 2,
+    "frames": 91,
+    "meanMs": 1586,
+    "p95Ms": 3233.2,
+    "calls": 109,
+    "triangles": 341681,
+    "renderMeanMs": 57.974,
+    "renderP95Ms": 25.3,
+    "viewsMeanMs": 2.352,
+    "load": 4
+   },
+   {
+    "look": "pbr",
+    "run": 3,
+    "frames": 87,
+    "meanMs": 1604,
+    "p95Ms": 3533.2,
+    "calls": 111,
+    "triangles": 373888,
+    "renderMeanMs": 140.425,
+    "renderP95Ms": 26.9,
+    "viewsMeanMs": 2.422,
+    "load": 4.1
+   }
+  ]
+ },
+ "date": "2026-11-09T05:37:21.301Z"
+}

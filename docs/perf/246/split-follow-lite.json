@@ -1,0 +1,241 @@
+{
+ "date": "2026-11-10T08:51:19.440Z",
+ "renderer": "swiftshader (software, CPU)",
+ "cam": "follow",
+ "look": "pbr",
+ "extra": "",
+ "rows": [
+  {
+   "kind": "surface",
+   "objects": 130,
+   "ms": 436,
+   "saved": 401
+  },
+  {
+   "kind": "props",
+   "objects": 1,
+   "ms": 604,
+   "saved": 233
+  },
+  {
+   "kind": "cars",
+   "objects": 1,
+   "ms": 744,
+   "saved": 93
+  },
+  {
+   "kind": "skater",
+   "objects": 1,
+   "ms": 746,
+   "saved": 91
+  },
+  {
+   "kind": "Group",
+   "objects": 1,
+   "ms": 751,
+   "saved": 86
+  },
+  {
+   "kind": "npcs",
+   "objects": 1,
+   "ms": 761,
+   "saved": 76
+  },
+  {
+   "kind": "landmark-glb-telephone-factory-lofts",
+   "objects": 1,
+   "ms": 768,
+   "saved": 69
+  },
+  {
+   "kind": "peds",
+   "objects": 1,
+   "ms": 775,
+   "saved": 62
+  },
+  {
+   "kind": "meshy-prop-food_cart_lod",
+   "objects": 1,
+   "ms": 775,
+   "saved": 62
+  },
+  {
+   "kind": "fact-cards",
+   "objects": 1,
+   "ms": 780,
+   "saved": 57
+  },
+  {
+   "kind": "meshy-prop-picnic_table_lod",
+   "objects": 1,
+   "ms": 783,
+   "saved": 54
+  },
+  {
+   "kind": "meshy-prop-sculpture_ribbon_lod",
+   "objects": 1,
+   "ms": 783,
+   "saved": 54
+  },
+  {
+   "kind": "landmark-shadow-telephone-factory-lofts",
+   "objects": 1,
+   "ms": 785,
+   "saved": 52
+  },
+  {
+   "kind": "landmark-shadow-new-realm-brewing",
+   "objects": 1,
+   "ms": 787,
+   "saved": 50
+  },
+  {
+   "kind": "meshy-prop-drinking_fountain_lod",
+   "objects": 1,
+   "ms": 790,
+   "saved": 47
+  },
+  {
+   "kind": "ped-models",
+   "objects": 1,
+   "ms": 791,
+   "saved": 46
+  },
+  {
+   "kind": "mural",
+   "objects": 17,
+   "ms": 793,
+   "saved": 44
+  },
+  {
+   "kind": "meshy-prop-patio_umbrella_lod",
+   "objects": 1,
+   "ms": 796,
+   "saved": 41
+  },
+  {
+   "kind": "landmark-glb-studioplex",
+   "objects": 1,
+   "ms": 798,
+   "saved": 39
+  },
+  {
+   "kind": "landmark-glb-new-realm-brewing",
+   "objects": 1,
+   "ms": 799,
+   "saved": 38
+  },
+  {
+   "kind": "skater-blob",
+   "objects": 1,
+   "ms": 800,
+   "saved": 37
+  },
+  {
+   "kind": "landmark-glb-bridge-north-ave",
+   "objects": 1,
+   "ms": 803,
+   "saved": 34
+  },
+  {
+   "kind": "edge-fence",
+   "objects": 1,
+   "ms": 810,
+   "saved": 27
+  },
+  {
+   "kind": "landmark-shadow-bridge-ralph-mcgill",
+   "objects": 1,
+   "ms": 813,
+   "saved": 24
+  },
+  {
+   "kind": "landmark-shadow-bridge-freedom-parkway",
+   "objects": 1,
+   "ms": 817,
+   "saved": 20
+  },
+  {
+   "kind": "landmark-glb-bridge-ponce",
+   "objects": 1,
+   "ms": 823,
+   "saved": 14
+  },
+  {
+   "kind": "landmark-glb-bridge-freedom-parkway",
+   "objects": 1,
+   "ms": 823,
+   "saved": 14
+  },
+  {
+   "kind": "landmark-shadow-bridge-ponce",
+   "objects": 1,
+   "ms": 824,
+   "saved": 13
+  },
+  {
+   "kind": "landmark-shadow-bridge-north-ave",
+   "objects": 1,
+   "ms": 828,
+   "saved": 9
+  },
+  {
+   "kind": "landmark-shadow-ponce-city-market",
+   "objects": 1,
+   "ms": 828,
+   "saved": 9
+  },
+  {
+   "kind": "landmark-shadow-studioplex",
+   "objects": 1,
+   "ms": 836,
+   "saved": 1
+  },
+  {
+   "kind": "(all)",
+   "ms": 837,
+   "saved": 0
+  },
+  {
+   "kind": "(all, again)",
+   "ms": 906,
+   "saved": 0
+  },
+  {
+   "kind": "landmark-glb-ponce-city-market_s",
+   "objects": 4,
+   "ms": 838,
+   "saved": -1
+  },
+  {
+   "kind": "building",
+   "objects": 119,
+   "ms": 850,
+   "saved": -13
+  },
+  {
+   "kind": "street-signs",
+   "objects": 3,
+   "ms": 858,
+   "saved": -21
+  },
+  {
+   "kind": "car-models",
+   "objects": 1,
+   "ms": 870,
+   "saved": -33
+  },
+  {
+   "kind": "landmarks",
+   "objects": 1,
+   "ms": 875,
+   "saved": -38
+  },
+  {
+   "kind": "landmark-glb-bridge-ralph-mcgill",
+   "objects": 1,
+   "ms": 877,
+   "saved": -40
+  }
+ ]
+}

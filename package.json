@@ -6,6 +6,8 @@
   "description": "ATL Arcade — Atlanta games on real open data. Skate ATL first.",
   "scripts": {
     "dev": "vite",
+    "validate:landmarks": "node scripts/validate-landmarks.mjs",
+    "prebuild": "npm run validate:landmarks",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -13,7 +15,12 @@
     "e2e": "playwright test",
     "playtest": "node scripts/playtest.mjs",
     "playtest:beltline": "node scripts/playtest.mjs --level beltline-eastside",
-    "loadcheck": "node scripts/load-check.mjs"
+    "loadcheck": "node scripts/load-check.mjs",
+    "perf": "node scripts/perf.mjs --out reports/perf/perf.json",
+    "perf:baseline": "node scripts/perf.mjs --repeat 2 --out docs/perf/baseline.json --md docs/perf/baseline.md",
+    "perf:check": "node scripts/perf.mjs --max-wall 900 --out reports/perf/perf.json --budget docs/perf/budget.json",
+    "perf:sim": "node scripts/sim-bench.mjs",
+    "npc:variety": "node scripts/npc-variety.mjs"
   },
   "devDependencies": {
     "@gltf-transform/core": "4.5.1",

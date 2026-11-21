@@ -141,10 +141,17 @@ export function crossingEnds(level) {
 // crossing that made a cross ramp (an OSM way id, or a crosswalk).
 // One layout per level object (the sampler, the meshes, the props, and the
 // grindables all ask for it).
+// Cached by the strips array: the layout reads only the strips, the
+// surfaces, and the crossings, so a copy of the level with other buildings
+// (the walker ground sampler, src/main.js) reuses it (#190).
 const LAYOUTS = new WeakMap();
 export function sidewalkLayout(level) {
-  if (!LAYOUTS.has(level)) LAYOUTS.set(level, buildLayout(level));
-  return LAYOUTS.get(level);
+  const key = level.strips ?? level;
+  const hit = LAYOUTS.get(key);
+  if (hit && hit.surfaces === level.surfaces && hit.crossings === level.crossings) return hit.layout;
+  const layout = buildLayout(level);
+  LAYOUTS.set(key, { surfaces: level.surfaces, crossings: level.crossings, layout });
+  return layout;
 }
 
 function buildLayout(level) {

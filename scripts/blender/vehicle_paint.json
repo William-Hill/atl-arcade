@@ -1,0 +1,146 @@
+{
+  "hatchback": [
+    {
+      "note": "made-up emblem on the grille",
+      "box": {
+        "x": [
+          -0.12,
+          0.12
+        ],
+        "y": [
+          0.6,
+          0.77
+        ],
+        "z": [
+          1.8,
+          2.2
+        ]
+      }
+    },
+    {
+      "note": "made-up emblem and lettering on the rear hatch",
+      "box": {
+        "x": [
+          -0.65,
+          0.65
+        ],
+        "y": [
+          0.82,
+          1.08
+        ],
+        "z": [
+          -2.2,
+          -1.75
+        ]
+      }
+    }
+  ],
+  "van": [
+    {
+      "note": "made-up oval emblem on the grille",
+      "box": {
+        "x": [
+          -0.14,
+          0.14
+        ],
+        "y": [
+          0.98,
+          1.26
+        ],
+        "z": [
+          2.2,
+          2.7
+        ]
+      }
+    }
+  ],
+  "taxi": [
+    {
+      "note": "made-up emblem on the grille",
+      "box": {
+        "x": [
+          -0.11,
+          0.11
+        ],
+        "y": [
+          0.64,
+          0.86
+        ],
+        "z": [
+          2.2,
+          2.5
+        ]
+      }
+    },
+    {
+      "note": "made-up emblem on the trunk lid",
+      "box": {
+        "x": [
+          -0.09,
+          0.09
+        ],
+        "y": [
+          1.08,
+          1.26
+        ],
+        "z": [
+          -2.5,
+          -2.2
+        ]
+      }
+    },
+    {
+      "note": "made-up lettering on the left rear door",
+      "box": {
+        "x": [
+          -1.2,
+          -0.5
+        ],
+        "y": [
+          0.62,
+          0.92
+        ],
+        "z": [
+          -0.75,
+          -0.18
+        ]
+      }
+    },
+    {
+      "note": "made-up lettering on the right rear door",
+      "box": {
+        "x": [
+          0.5,
+          1.2
+        ],
+        "y": [
+          0.6,
+          0.95
+        ],
+        "z": [
+          -1.1,
+          -0.12
+        ]
+      }
+    }
+  ],
+  "box_truck": [
+    {
+      "note": "made-up lettering on the cab front",
+      "box": {
+        "x": [
+          -0.35,
+          0.35
+        ],
+        "y": [
+          1.4,
+          1.58
+        ],
+        "z": [
+          3.3,
+          3.8
+        ]
+      }
+    }
+  ]
+}

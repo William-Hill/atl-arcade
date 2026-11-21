@@ -31,6 +31,7 @@ export const SKATE = {
   bodyRadius: 0.3, // m. The skater stops this far from a wall, so the body does not go into it. min 0.2 / typical 0.3 / max 0.4.
   maxStep: 0.25, // m rise the skater rolls over (curbs, stairs). min 0.15 / typical 0.25 / max 0.4.
   launchNormalY: 0.15, // ramp surface normal y under which the skater leaves the lip. min 0.05 / typical 0.15 / max 0.3.
+  lipNormalY: 0.5, // a face steeper than this (normal y under it) launches the skater straight up at its top, where a flatter deck or a drop starts (#262). The H4W quarter pipe tops out at 0.357. min 0.3 / typical 0.5 / max 0.7.
   bonkSpeedKeep: 0, // fraction of speed kept after a head-on wall hit (a bonk). min 0 / typical 0 / max 0.3.
   wallBonkAngle: 1.05, // rad between the travel direction and a wall face above which a hit is head-on and the skater bonks. Under it the skater slides. min 0.7 / typical 1.05 / max 1.4.
   wallSlideKeep: 0.8, // fraction of the along-wall speed kept on a slide just under wallBonkAngle. A shallower hit keeps more; a graze keeps all. min 0.5 / typical 0.8 / max 1.
@@ -93,6 +94,10 @@ export const GRIND = {
   fallSpeedKeep: 0.5, // fraction of speed kept after a fall. min 0 / typical 0.5 / max 1.
   resnapCooldown: 0.4, // s after an exit or fall before another snap. min 0.1 / typical 0.4 / max 1.
   endPop: 0.8, // m/s upward pop when the spline ends. min 0 / typical 0.8 / max 2.
+  // Ledge catch (#262): a skater who hits the side of a ledge with grind held, or presses grind
+  // just after the hit, snaps to its edge at a wider angle and keeps the speed from before the hit.
+  catchAlongDot: 0.2, // |cos| between heading and edge needed for a catch (about 78 degrees). min 0 / typical 0.2 / max 0.5.
+  catchWindow: 0.25, // s after a bonk in which a grind press still catches with the speed from before it. min 0.1 / typical 0.25 / max 0.4.
 };
 
 // Style (dance) moves on the roll-out. Each button has a list of dances.
@@ -147,7 +152,14 @@ export const styleDuration = (move, bpm = BEAT.bpm) => (move.beats * 60) / bpm;
 export const COMBO = {
   linkWindow: 0.8, // s after a move ends, rolling on flat, before the combo banks. min 0.3 / typical 0.8 / max 1.5.
   grindBase: 100, // points per grind. min 50 / typical 100 / max 200.
-  grindPerSecond: 300, // extra points per second on the rail. Keep it above the best dance rate (spin: 160 points in 0.6 s = 267/s), so a grind earns more per second than any dance (#75). min 280 / typical 300 / max 400.
+  // A grind scores the meters on the rail, not the seconds (#262): before, a slow grind of the
+  // same rail took longer, so it scored more. 35 points per m is the old 300 points per s at
+  // 8.6 m/s, so the score scale and the challenge targets stay near the old ones. At 8 m/s or faster a grind earns more per second than the best dance
+  // (spin: 267/s, #75); a slower grind earns less. min 30 / typical 35 / max 120 (120 keeps #75 at
+  // the 2.5 m/s floor, but a grind line then scores about 3 times more).
+  grindPerMeter: 35,
+  longGrindMeters: 10, // m on one rail for the "Long" name. Was 1.5 s, which favored slow grinds. min 6 / typical 10 / max 15.
+  rampAirPoints: 100, // points for air off a kicker or a ramp lip that is not vert (#262). min 50 / typical 100 / max 200.
   hopPoints: 50, // points for a jump that lands. min 20 / typical 50 / max 100.
   vertAirPoints: 200, // points for air off the quarter pipe. min 100 / typical 200 / max 400.
   manualPoints: 80, // points per manual (no input bound in M0). min 40 / typical 80 / max 150.

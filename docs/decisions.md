@@ -2592,3 +2592,22 @@ The owner wants punchy text graphics, as the "FIGHT" and "YOU WIN" cards of figh
 - Other specs: `goals.spec.js` 6 of 8 and `music.spec.js` 8 of 10 pass. The 2 phone results tests fail with the 30 s test limit on this branch and on `epic/city-look`. The beat timing test "first downbeat on beat 0" is flaky here: it passed 2 of 9 runs on `epic/city-look` and 0 of 11 on this branch (also 0 of 2 with `?callouts=0`). In the failed runs the music decode ends late and the track starts on bar 2, so the first windows are silent. Run it again on a quiet machine before the merge.
 - With the callouts on, the `goals.spec.js` phone screenshots `results-phone-*.png` show "ROUND OVER" over a hidden results card. The box checks of that test do not change (opacity does not move a box).
 - Not verified: no person saw the motion at full speed (the container is too slow to judge the 180 ms drop); no real phone; no landscape phone screenshot; the callout text is not translated yet.
+## 2026-11-21: A stopped car never holds the skater (#285)
+
+Autopilot run `20261114-135744` found a van-size car on Freedom Parkway near (454, -262) that held the skater for more than 60 s. Cause: a deadlock between two yield rules.
+
+- A car stopped for the skater while she was anywhere beside its body: `skaterAhead` counted her as "in the lane ahead" from `along >= -length`, so a skater beside the car held it at rest.
+- The skater treats a car as a wall. Scripted steering pushed her into the car side, so she did not move away.
+
+Each waited for the other. A Vitest test (`src/sim/traffic/traffic.test.js`, "a stopped car never pins the skater") put her between a stopped sedan and a parked car, pushing into the sedan. Before the fix she did not move in 60 s.
+
+**Rule.** When the skater is inside `TRAFFIC.safeRadius` (2 m) of a car body, she came to the car, so the car leaves her:
+
+- It crawls away: back when she is at its front half, on when she is at its rear half. If that way is blocked, it tries the other way. If both are blocked, it waits.
+- The crawl is at most `creepSpeed` 3 m/s (7 mph), with `creepAccel` 2.5 m/s² (the top of the calm accel range).
+- No crawl step brings the body nearer to her. A crawl never goes past the next stop line or the lane end, never backs onto the previous lane, and keeps 0.5 m to the other cars.
+- When she is out of the 2 m circle again, the normal rules apply. A car that backed off her front stops and waits with a gap of 2 m to 2.5 m. A car that drove on past her side goes on.
+
+We chose "the car leaves" over "the car is not solid while she touches it". A skater who goes through a car body looks broken, and a car that moves slowly away from a skater is calm traffic, not traffic danger (AGENTS.md political rules). The car never pushes, chases, or holds her.
+
+**Measured** (Vitest, flat street, skater 0.32 m from the side and pressed in by a parked car, push held): she moves free (0.3 m) in 0.98 s when she is at a quarter of the car length from an end. At the middle of the side, the worst spot: hatchback 1.57 s, sedan 1.60 s, taxi 1.67 s, van 1.75 s, pickup 1.83 s, box truck 2.10 s, bus 2.83 s. The box truck and the bus are longer than 2 s at the middle of the side because they are 7.5 m and 12 m long. The test sets their limits to 2.5 s and 3 s.

@@ -995,3 +995,32 @@ describe("far-step (#189)", () => {
     expect(calls).toBe(4);
   });
 });
+
+// #285 review: a car that backs off the skater must not back into an
+// intersection box that it cleared, past the car that holds that box.
+describe("a car that backs off the skater stops at a cleared box (#285)", () => {
+  it("keeps its rear out of the box and leaves the other reservation", () => {
+    const { t, car, fx, fz } = pinScene();
+    const lane = t.lanes[car.lane];
+    const half = CAR_SIZE.sedan.length / 2;
+    const st = lane.stops.find((x) => x.sExit + half + 5 < lane.length);
+    expect(st).toBeDefined();
+    // The car just cleared the box: its rear is 0.7 m past the box exit.
+    car.s = st.sExit + half + 0.7;
+    Object.assign(car, lanePose(lane, car.s));
+    car.box = -1;
+    car.next = lane.stops.findIndex((x) => x.sStop > car.s);
+    // Another car holds the box.
+    t.occupant[st.box] = 99;
+    // She stands 0.5 m in front of the front bumper and stays there.
+    const skater = [car.x + fx * (half + 0.5), 0, car.z + fz * (half + 0.5)];
+    let minRear = Infinity;
+    for (let i = 0; i < 60 * 12; i += 1) {
+      stepTraffic(t, DT, skater);
+      minRear = Math.min(minRear, car.s - half);
+    }
+    expect(minRear).toBeGreaterThanOrEqual(st.sExit - 1e-6);
+    expect(car.box).toBe(-1);
+    expect(t.occupant[st.box]).toBe(99);
+  });
+});

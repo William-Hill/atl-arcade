@@ -888,6 +888,20 @@ function roomBehind(state, car) {
   return room;
 }
 
+// The room (m) a car can back up before its rear enters an intersection box
+// it does not hold. A car that cleared a box gave up its reservation, so it
+// must not back into the box past crossing traffic (#285 review).
+function roomBeforeBox(lane, car, half) {
+  const rear = car.s - half;
+  let room = Infinity;
+  for (const st of lane.stops) {
+    if (st.box === car.box) continue;
+    if (st.sExit <= rear) room = Math.min(room, rear - st.sExit);
+    else if (st.sStop < rear) room = 0;
+  }
+  return room;
+}
+
 // The car with the skater inside safeRadius (#285). It crawls away from
 // her, at most creepSpeed: back when she is at its front half, on when she
 // is at its rear half, else the other way. A move never brings the body
@@ -911,7 +925,7 @@ function creepAway(state, car, dt, skater, lead, before, stride) {
       lane.length - car.s,
       st && car.box !== st.box ? st.sStop - (car.s + half) : Infinity,
     ),
-    [-1]: roomBehind(state, car) - 0.5,
+    [-1]: Math.min(roomBehind(state, car) - 0.5, roomBeforeBox(lane, car, half)),
   };
   let moved = 0;
   // The speed (m/s) along `dir` now: a car that drives on (not in a

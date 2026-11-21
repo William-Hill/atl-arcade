@@ -2512,7 +2512,7 @@ Full note: `docs/research/2026-11-20-game-ui-tools.md`.
 - Tested at these commits (7 days old or older): `gongnyang/awesome-ai-motion` `1e3c249`, `op7418/logo-generator-skill` `bf4e9ac`, `majidmanzarpour/threejs-game-skills` `8286774`, `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c4`. The full SHAs are in the note.
 - Keep as references: the motion skill (timings from its cards and recipes), `threejs-game-ui-designer` with `references/ui-patterns.md`, and `game-ui-ux` (checklist). Use the logo generator's design rules only: it makes abstract marks, not wordmarks.
 - Skip: the threejs-game-skills scaffold (TypeScript; our code is plain JavaScript), its director and its 3 generator skills, and the paid HiAPI and Scenario tools (no keys).
-- The skills are not in `.claude/skills/` yet. A committed skill loads into every cloud session, so the owner decides. The note gives the install commands.
+- The skills are not in `.claude/skills/` yet. A committed skill loads into every cloud session, so the owner decides. The note gives the install commands. Decision: deferred (see 2026-11-21, "The UI skills stay out").
 - Title screen and in-game text graphics: build them in code (DOM and CSS). Mock: `prototypes/title-screen-mock/`.
 - Logo: 3 options in `assets/brand/logo-options/`, made from OFL font outlines and code shapes, no generative model.
 
@@ -2542,3 +2542,12 @@ Design:
 - The prompts show once per browser (`localStorage` key `atl.teach.v1` = `done` after the combo tip). `?teach=1` shows them again, `?teach=0` turns them off. They show on geodata levels only, so the greybox screenshot test does not change.
 
 Code: `src/ui/teach-steps.js` (pure: steps, prompts, target, pin place), `src/ui/teach-prompt.js` (DOM), `src/ui/teach.css` (its own file, so it does not touch `src/shell.css`, which #305 also changes). `src/main.js` has 6 new lines: the import, the create call, one `observe` per tick, one `update` per frame, and `window.__atl.teach`. No change to the HUD files.
+
+## 2026-11-21: The UI skills stay out of `.claude/skills/` for now (#299)
+
+The owner decided on 2026-11-21: defer the install of `threejs-game-ui-designer` and `game-ui-ux`.
+
+- A skill in `.claude/skills/` loads into every cloud session on this repository, and its instructions apply there. Several sessions work on the repository at the same time.
+- The useful parts are 3 short files. Agents read them at the tested commits: `majidmanzarpour/threejs-game-skills` `8286774b22a2566bf894dbc825825c16921866af` and `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c41c839b68319ffc08430b99ab768debc32`. The install commands are in `docs/research/2026-11-20-game-ui-tools.md`, section "Install".
+- This replaces the open point in the 2026-11-20 entry ("the owner decides").
+- Look at this again when the title, pause, and settings screens start. An install then must use the tested commits or newer commits that are at least 7 days old.

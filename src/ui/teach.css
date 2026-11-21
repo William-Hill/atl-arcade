@@ -59,7 +59,8 @@
 .teach-icon-key { border-radius: 6px; border-bottom: 4px solid #9a9aae; }
 .teach-icon-pad { width: 36px; padding: 0; border-radius: 50%; background: #7ef0c2; }
 .teach-icon-stick { border-radius: 18px; background: transparent; color: #f3f3f7; border: 3px solid #f3f3f7; }
-.teach-icon-touch { border-radius: 18px; background: rgba(255, 95, 178, 0.9); color: #fff; font-size: 13px; letter-spacing: 0.04em; }
+/* Dark text on the pink pill: about 5.8:1 (white was about 3.3:1). */
+.teach-icon-touch { border-radius: 18px; background: rgba(255, 95, 178, 0.9); color: #0b0b12; font-size: 13px; letter-spacing: 0.04em; }
 .teach-icon-check { width: 36px; padding: 0; border-radius: 50%; background: #ffd166; font-size: 22px; }
 
 /* The grind pin: a label over the rail or ledge, or on the screen edge with
@@ -156,12 +157,12 @@ body.touch #teach { bottom: calc(230px + env(safe-area-inset-bottom)); }
 @media (max-width: 600px) {
   .teach-card {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "icons count" "text text";
     align-items: center;
     row-gap: 6px;
   }
-  .teach-icons { grid-area: icons; }
+  .teach-icons { grid-area: icons; flex-wrap: wrap; }
   .teach-count { grid-area: count; justify-self: end; align-self: start; }
   .teach-text { grid-area: text; min-width: 0; }
   .teach-icons[hidden] + .teach-text { grid-row: 1; }

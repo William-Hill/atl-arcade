@@ -233,6 +233,14 @@ test.describe("teach prompts (#76)", () => {
     await expect(page.locator(".touch-jump")).not.toHaveAttribute("data-teach", "1");
     await readable(page);
     await page.screenshot({ path: `${SHOTS}/teach-phone-4-dance.png` });
+    // A 360 px phone (the narrowest common width): the dance card still reads.
+    const size = page.viewportSize();
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.waitForTimeout(300);
+    await readable(page);
+    await inside(page);
+    await page.screenshot({ path: `${SHOTS}/teach-phone-360-dance.png` });
+    await page.setViewportSize(size);
     // Dance: a tap on SPIN while rolling.
     await page.waitForFunction(() => window.__atl.run.skater.state === "rolling" && window.__atl.run.skater.speed > 2, null, { timeout: 30000 });
     await finger.start(3, c.style2.x, c.style2.y);

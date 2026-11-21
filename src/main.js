@@ -953,10 +953,11 @@ function simulate(dt) {
   const sampled = sampleInput();
   const before = run.skater;
   perf.begin("skater");
-  run = stepRun(run, goals && goals.ended ? {} : sampled, dt, env, skaterEnv, beat.running ? beat : null);
+  const applied = goals && goals.ended ? {} : sampled;
+  run = stepRun(run, applied, dt, env, skaterEnv, beat.running ? beat : null);
   perf.end("skater");
   skater = run.skater;
-  teach.observe(before, skater, sampled, run.combo, dt);
+  teach.observe(before, skater, applied, run.combo, dt);
   effects.observe(before, skater, run.moves);
   sfx.observe(before, skater);
   follow?.observe(before, skater);

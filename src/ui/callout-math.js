@@ -175,7 +175,14 @@ export function stepCallouts(state, dt, beat = { phase: null, bpm: 0 }, k = CALL
   const time = state.time + Math.max(0, dt);
   let { current, queue, shown } = state;
   const len = beat.bpm > 0 ? beatSeconds(beat.bpm, k) : null;
-  // The phase was read at `time`.
+  // A card that waited for its beat before this step follows the beat of the
+  // music now, also when this step passes its old start: a pause in the wait
+  // does not leave it on the old beat. With no pause the start stays the
+  // same (the two clocks agree). The phase was read at `time`.
+  if (current && dt > 0 && state.time < current.start && beat.phase !== null && beat.phase !== undefined) {
+    const start = snapBeat(time, beat.phase, beat.bpm, k);
+    if (Math.abs(start - current.start) > 1e-6) current = cardAt(current, current.index, start, current.beat);
+  }
   if (current && time >= current.end) {
     const next = current.index + 1;
     current = next < current.cards.length ? cardAt(current, next, snapBeat(time, beat.phase, beat.bpm, k), len ?? current.beat) : null;
@@ -185,13 +192,6 @@ export function stepCallouts(state, dt, beat = { phase: null, bpm: 0 }, k = CALL
     current = cardAt(next, 0, snapBeat(time, beat.phase, beat.bpm, k), len ?? beatSeconds(beat.bpm, k));
     queue = rest;
     shown += 1;
-  }
-  // A card that waits for its beat follows the beat of the music now, so a
-  // pause in the wait does not leave it on the old beat. With no pause the
-  // start stays the same (the two clocks agree).
-  if (current && current === state.current && dt > 0 && time < current.start && beat.phase !== null && beat.phase !== undefined) {
-    const start = snapBeat(time, beat.phase, beat.bpm, k);
-    if (Math.abs(start - current.start) > 1e-6) current = cardAt(current, current.index, start, current.beat);
   }
   if (time === state.time && current === state.current && queue === state.queue) return state;
   return { time, current, queue, shown };

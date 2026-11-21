@@ -2577,7 +2577,7 @@ The owner wants punchy text graphics, as the "FIGHT" and "YOU WIN" cards of figh
 
 **Beat.** Each callout starts on the next beat of the music (at most 1 beat of wait), and each card is a whole number of beats long. One beat is kept between 0.4 s and 0.75 s, so a fast or a slow track does not make a callout too short or too long. With no music (before the first gesture, or with the click track off) the callout starts at once with the beat length of the track. The count-in waits while the beat clock starts and the track loads, for at most 3 s of game time, so the first card does not land on the music start.
 
-**Beat after a pause or a slow frame (#310 review).** Each card finds the music beat again when it starts: a card that comes up to 60 ms after a beat starts on that beat, a later card waits for the next beat. The callout clock uses the real frame time (at most 1 s), not the 0.1 s cap of the views, so a slow frame does not put it behind the music. The round end also cancels a count-in that still waits.
+**Beat after a pause or a slow frame (#310 review).** Each card finds the music beat again when it starts: a card that comes up to 60 ms after a beat starts on that beat, a later card waits for the next beat. The callout clock uses the real frame time (at most 1 s), not the 0.1 s cap of the views, so a slow frame does not put it behind the music. A card that waits for its beat follows the live beat until it shows, so a pause in the wait does not leave it on the old beat. The round end also cancels a count-in that still waits.
 
 **Queue.** One callout shows at a time. Priority: round end > claim > round start > combo. A new combo replaces a combo that waits. At most 3 wait; the lowest priority leaves. The round end clears the queue and stops the callout on show. The callout clock stops while the game is paused (photo mode, the full map, the settings menu).
 
@@ -2585,7 +2585,7 @@ The owner wants punchy text graphics, as the "FIGHT" and "YOU WIN" cards of figh
 
 **Overlap with the Claimed banner (#219).** The banner also says "SPOT CLAIMED", above the callout. We kept the banner as it is: its text is tested, and it also gives the spot name. If the two read as one too many, the owner can choose to change the banner title to the spot name.
 
-**Files.** `src/ui/callout-math.js` (pure: queue, beat timing, card look), `src/ui/callout-math.test.js`, `src/ui/callouts.js` (DOM), `src/ui/callouts.css`, about 40 lines in `src/main.js`, `e2e/callouts.spec.js`. `?callouts=0` turns the callouts off. Test hook: `window.__atl.callouts` (`state`, `start`, `claim`, `combo`, `end`, `stopOn`).
+**Files.** `src/ui/callout-math.js` (pure: queue, beat timing, card look), `src/ui/callout-math.test.js`, `src/ui/callouts.js` (DOM), `src/ui/callouts.css`, about 40 lines in `src/main.js`, `e2e/callouts.spec.js`. `?callouts=0` turns the callouts off. Test hook: `window.__atl.callouts` (`state`, `start`, `claim`, `combo`, `end`, `stopOn`, `maxStep`).
 
 **Verification (cloud container, headless Chromium with SwiftShader).**
 - Vitest: `src/ui/callout-math.test.js`, 24 tests pass (queue, priority, beat timing, combo names, card look, reduced motion). `npm test`: 1855 of 1858 pass; the 3 failures are the known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js` (80 of 80 pass with a 60 s limit). `npm run build` passes.

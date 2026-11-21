@@ -1371,6 +1371,8 @@ window.__atl = {
         end: (results) => callouts.end(results),
         // Stops the callout clock when the card `text` holds still (null: run again).
         stopOn: (text) => callouts.stopOn(text),
+        // Steps of at most `s` seconds (null: real time), for a slow test browser.
+        maxStep: (s) => callouts.setMaxStep(s),
       }
     : null,
   // The late downloads (#190): the plan, and when each group started and

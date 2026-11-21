@@ -43,6 +43,8 @@ export function createCallouts(parent, { reducedMotion = () => false, beat = () 
   // For the screenshots: the clock stops when this card text holds still.
   let stopAt = null;
   let stopped = false;
+  // For the tests: the longest step in s (null: no limit).
+  let maxStep = null;
   // The count-in waits for the music beat (the beat clock starts a moment
   // after the first key or tap, and the track loads), for at most
   // START_WAIT s; then it plays anyway.
@@ -86,6 +88,7 @@ export function createCallouts(parent, { reducedMotion = () => false, beat = () 
       if (stopped) dt = 0;
       // The screenshot hook steps at most 0.1 s, so a slow test browser does not jump over the card.
       else if (stopAt !== null) dt = Math.min(dt, 0.1);
+      if (maxStep !== null) dt = Math.min(dt, maxStep);
       const b = beat();
       if (startWait !== null) {
         startWait -= Math.max(0, dt);
@@ -125,6 +128,11 @@ export function createCallouts(parent, { reducedMotion = () => false, beat = () 
     },
     // For the screenshots: stop the clock when the card `text` holds still
     // (null: run again).
+    // For the tests: steps of at most `s` seconds, so a slow test browser
+    // shows every part of a card (null: real time).
+    setMaxStep(s) {
+      maxStep = s;
+    },
     stopOn(text) {
       stopAt = text;
       stopped = false;

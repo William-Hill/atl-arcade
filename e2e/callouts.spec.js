@@ -100,6 +100,8 @@ test("with prefers-reduced-motion a callout only fades: no scale, no move", asyn
     () =>
       new Promise((resolve) => {
         const out = [];
+        // Small steps, so a slow test browser shows the fades.
+        window.__atl.callouts.maxStep(0.05);
         window.__atl.callouts.claim(200);
         const t0 = performance.now();
         const tick = () => {

@@ -171,6 +171,9 @@ export function addLod1Mesh(skinnedMesh, lod1) {
   mesh.frustumCulled = skinnedMesh.frustumCulled;
   mesh.bind(skinnedMesh.skeleton, skinnedMesh.bindMatrix);
   mesh.visible = false;
+  // The LOD1 mesh stays out of the merged hull and the merged shadow
+  // (src/render/toon.js, skin-merge.js): it shows when LOD0 hides.
+  mesh.userData.lod1 = true;
   skinnedMesh.parent.add(mesh);
   return mesh;
 }

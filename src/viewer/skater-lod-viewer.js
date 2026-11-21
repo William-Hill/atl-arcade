@@ -47,12 +47,15 @@ try {
   toonSkater(lod0);
   toonSkater(lod1);
   // Show one level in each clone: the mesh and its own hull.
+  // LOD0 is one skinned mesh for each glTF primitive (#167); a merged hull
+  // outlines a list of meshes (src/render/toon.js).
+  const lod0Of = (model) => model.skinnedMeshes ?? [model.skinnedMesh];
   const showLevel = (model, level) => {
-    const keep = level === 0 ? model.skinnedMesh : model.lod1Mesh;
+    const keep = level === 0 ? lod0Of(model) : [model.lod1Mesh];
     model.root.traverse((o) => {
-      if (!o.isSkinnedMesh) return;
-      const src = o.userData.outlineOf ?? o;
-      o.visible = src === keep;
+      if (!o.isSkinnedMesh || o.userData.standIn) return;
+      const src = [o.userData.outlineOf ?? o].flat();
+      o.visible = src.some((m) => keep.includes(m));
     });
   };
   showLevel(lod0, 0);
@@ -97,13 +100,13 @@ try {
       for (const t of [0, 0.25, 0.5, 0.75, 1]) {
         pose(clip.name, t);
         const grid = new Map();
-        const m0 = lod0.skinnedMesh;
-        for (let i = 0; i < m0.geometry.attributes.position.count; i += 1) {
-          m0.getVertexPosition(i, v);
-          const k = key(Math.floor(v.x / cell), Math.floor(v.y / cell), Math.floor(v.z / cell));
-          if (!grid.has(k)) grid.set(k, []);
-          grid.get(k).push(v.x, v.y, v.z);
-        }
+        for (const m0 of lod0Of(lod0))
+          for (let i = 0; i < m0.geometry.attributes.position.count; i += 1) {
+            m0.getVertexPosition(i, v);
+            const k = key(Math.floor(v.x / cell), Math.floor(v.y / cell), Math.floor(v.z / cell));
+            if (!grid.has(k)) grid.set(k, []);
+            grid.get(k).push(v.x, v.y, v.z);
+          }
         const m1 = lod1.lod1Mesh;
         for (let i = 0; i < m1.geometry.attributes.position.count; i += 1) {
           m1.getVertexPosition(i, v);
@@ -133,7 +136,11 @@ try {
   const tri = (g) => g.index.count / 3;
   state.info = {
     clips: clips.map((c) => c.name),
-    lod0: { triangles: tri(lod0.skinnedMesh.geometry), vertices: lod0.skinnedMesh.geometry.attributes.position.count, bones: lod0.skinnedMesh.skeleton.bones.length },
+    lod0: {
+      triangles: lod0Of(lod0).reduce((n, m) => n + tri(m.geometry), 0),
+      vertices: lod0Of(lod0).reduce((n, m) => n + m.geometry.attributes.position.count, 0),
+      bones: lod0.skinnedMesh.skeleton.bones.length,
+    },
     lod1: {
       triangles: tri(lod1.lod1Mesh.geometry),
       vertices: lod1.lod1Mesh.geometry.attributes.position.count,

@@ -387,6 +387,10 @@ export function createSkaterView({ lean: leanOn = true, footIk = false, sampleGr
         } else clock += dt;
         // The clip values go back before play(): a new action saves the bone
         // values as its original state, and these must not hold the layers.
+        // Undo in the reverse order of the changes: the foot IK (applied
+        // last) first, then the anim-fx rig. The other order writes the
+        // rig's twist back each frame, and the hips turn without a stop.
+        restoreBones();
         if (rig) rig.restore();
         const r = stepAnim(anim, state, dt);
         anim = r.anim;
@@ -401,7 +405,6 @@ export function createSkaterView({ lean: leanOn = true, footIk = false, sampleGr
         applyLean();
         facing = stepFacing(facing, anim.facing, dt);
         pivot.rotation.y = facing;
-        restoreBones();
         mixer.update(dt);
         if (rig) {
           // Frozen (for the tests): the layers hold their last values.

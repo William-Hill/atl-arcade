@@ -175,8 +175,11 @@ export function toonSkater(loaded) {
     m.material = Array.isArray(m.material) ? m.material.map(toonMaterial) : toonMaterial(m.material);
   }
   const opaque = meshes.filter((m) => m.isSkinnedMesh && !isTransparent(m));
-  const parts = mergeableParts(loaded.root);
-  const hulls = parts.length === opaque.length && parts.length ? [mergedHull(parts)] : opaque.map(outlineHull);
+  // A LOD1 mesh (#280) shows when the LOD0 parts hide, so it keeps its own
+  // hull and stays out of the merge.
+  const lod0 = opaque.filter((m) => !m.userData.lod1);
+  const parts = mergeableParts(loaded.root, (m) => !m.userData.lod1);
+  const hulls = parts.length === lod0.length && parts.length ? [mergedHull(parts), ...opaque.filter((m) => m.userData.lod1).map(outlineHull)] : opaque.map(outlineHull);
   mergeShadow(loaded.root);
   return hulls;
 }

@@ -156,8 +156,14 @@ export function dressNpc(loaded, outfit, { toon = true, look = "toon" } = {}) {
 // their ink hulls. Null when the NPC has no LOD1 mesh.
 function levelMeshes(model, hulls) {
   if (!model.lod1Mesh) return null;
-  const of = (mesh) => [mesh, ...hulls.filter((h) => h.userData.outlineOf === mesh)];
-  return [lod0Meshes(model).flatMap(of), of(model.lod1Mesh)];
+  return [withHulls(lod0Meshes(model), hulls), withHulls([model.lod1Mesh], hulls)];
+}
+
+// The meshes and the hulls that outline them. A merged hull
+// (src/render/toon.js) outlines a list of meshes.
+function withHulls(meshes, hulls) {
+  const owns = (h) => [h.userData.outlineOf].flat().some((m) => meshes.includes(m));
+  return [...meshes, ...hulls.filter(owns)];
 }
 
 function lod0Meshes(model) {
@@ -192,7 +198,7 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
         const hulls = dressNpc(model, outfit, { toon, look });
         view.attachModel(model);
         entry.levels = lod ? levelMeshes(model, hulls) : null;
-        const all = lod0Meshes(model).flatMap((m) => [m, ...hulls.filter((h) => h.userData.outlineOf === m)]);
+        const all = withHulls(lod0Meshes(model), hulls);
         entry.vertices = entry.levels ? entry.levels.map(vertexCount) : [vertexCount(all), vertexCount(all)];
         setLevel(entry, 0);
         entry.ready = true;

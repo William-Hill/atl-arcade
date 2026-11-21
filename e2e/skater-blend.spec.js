@@ -21,7 +21,10 @@ for (const name of SKATERS) {
     test.setTimeout(180000);
     const errors = collectErrors(page);
     await page.setViewportSize({ width: 1500, height: 900 });
-    await page.goto(`/anim-lab.html?skater=${name}`);
+    // ?animfx=0: this spec measures the blend, lean, and IK layers. The
+    // anim-fx layers (#291) add a beat bounce and an arm follow-through on
+    // purpose; e2e/anim-fx.spec.js tests them (#257 merge).
+    await page.goto(`/anim-lab.html?skater=${name}&animfx=0`);
     await page.waitForFunction(() => window.__lab && (window.__lab.ready || window.__lab.error), null, { timeout: 60000 });
     expect(await page.evaluate(() => window.__lab.error)).toBeNull();
 

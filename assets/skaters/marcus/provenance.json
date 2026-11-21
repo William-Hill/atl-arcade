@@ -306,7 +306,7 @@
   },
   "lod1_variant": {
     "file": "assets/skaters/marcus/skater-lod1.glb",
-    "file_size_bytes": 59304,
+    "file_size_bytes": 59264,
     "triangles": 2991,
     "used_by": "the far NPC skaters (src/render/npc-skaters-view.js, NPC_DRAW lod1From), bound to the skeleton of skater.glb or skater-1024.glb",
     "screenshots": "e2e/__screenshots__/skater-lod-marcus-*.png, made by e2e/skater-lod.spec.js"

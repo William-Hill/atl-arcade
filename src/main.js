@@ -1081,7 +1081,7 @@ function runScript(entries, { position, yaw } = {}) {
 // Mouse drag on the canvas and the right stick turn the follow camera.
 let lookInput = null;
 if (view === "follow") {
-  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater, props: env.props, canopy: params.get("canopycam") !== "0", fence: env.fence, motion: () => ({ reducedMotion: effects.reducedMotion, off: params.get("fx") === "0" }) });
+  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater, props: env.props, canopy: params.get("canopycam") !== "0", fence: env.fence, motion: () => ({ reducedMotion: effects.reducedMotion, off: params.get("fx") === "0" || camFxOff }) });
   lookInput = createLookInput({ element: renderer.domElement });
 }
 
@@ -2013,7 +2013,9 @@ window.__atl = {
   },
   // Camera effects (#253): the offsets of the last frame and the gate.
   get cameraFx() {
-    return follow ? { ...follow.fx, reduced: camFxReduced(), baseFov: camera.userData.baseFov ?? camera.fov, flashShown: screenFlash ? screenFlash.amount : 0 } : null;
+    // `speedFov` is the #105 speed boost (the #257 merge keeps it in place of
+    // the #253 speed FOV); `fov` is the #253 zoom punch.
+    return follow ? { ...follow.fx, reduced: camFxReduced(), baseFov: camera.userData.baseFov ?? camera.fov, speedFov: follow.feel.fovBoost, flashShown: screenFlash ? screenFlash.amount : 0 } : null;
   },
   // The material types in the scene and any toon material left (#157).
   get materials() {

@@ -148,7 +148,7 @@ export function mergeableParts(root, keep = () => true) {
 // no shadow pass shows the stand-ins.
 export function mergeShadow(root) {
   if (!standIns.on) return null;
-  const parts = mergeableParts(root, (p) => p.castShadow);
+  const parts = mergeableParts(root, (p) => p.castShadow && !p.userData.lod1);
   if (!parts.length) return null;
   const caster = mergedSkin(parts, new THREE.MeshBasicMaterial({ side: materials(parts[0])[0].side, colorWrite: false }), "skater-shadow");
   caster.castShadow = true;

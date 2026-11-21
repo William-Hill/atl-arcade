@@ -2557,3 +2557,15 @@ Faster push drive (owner request, the same day): the Crossroads recipe makes the
 - Open: the game moves the skater at the sim speed. If the push impulse of the sim does not come at the drive of the clip, the feet and the speed do not agree. No person has looked at it in the game.
 
 Before and after videos (real speed and half speed) are in `docs/characters/physics-pass/videos/`. No person has looked at the recoil or the drive at game speed, and real skaters must review the move set before release.
+
+## 2026-11-21: Athletic stance for the coast and the push
+
+Owner feedback: the coast "doesn't fit biomechanically with skating"; the skaters look like they stand straight up when they coast. They should be in a more athletic stance, with a lean.
+
+Measured on `main`: the coast was the most upright skating clip. Trunk lean (Hips to Neck, from the vertical) was 7.5 degrees for Nia and 12 degrees for Marcus, against 17 to 21 degrees in the push and 20 to 22 degrees in the carve. The hips dropped only 10 cm from the rest pose (hip-ankle 0.86 and 0.83 of the leg length).
+
+Sources (`docs/characters/skate-style-references.md`, rule 3a): WFTDA ("bend at the knees, not at the waist", the weight centered over the skates), derby coaching (the shoulders, knees, and toes in a line; a straight back, the head and chest up), Rollerenligne (lean slightly forward with a straight back). The speed-skating basic position (knees about 100 degrees, thighs almost parallel) is deeper than a recreational coast and was not used. Games: no written analysis of the skate poses in Jet Set Radio or Bomb Rush Cyberfunk was found, and the session did not watch video. Hi-Fi Rush has no roller skating; its animation lesson is that the end of each action lands on the beat.
+
+Change: a stance layer (STANCE in `scripts/blender/skater_physics_pass.py`) runs before the physics pass. It hinges the body forward at the hips until the shoulders are over the knees (the derby rule), lowers the coast hips to 0.78 of the leg length, puts 80% of the hinge back in the neck and head (the gaze stays level), and brings the arms 12 degrees forward in the coast. The leg IK keeps the skates where they were. The push gets the same hinge rule, so a blend between the coast and the push does not lift the chest.
+
+Result: coast trunk lean Nia 7.5 to 34.5 degrees, Marcus 12 to 24 degrees; coast knee bend about 60 to 76 degrees; push lean Nia 17 to 33 degrees, Marcus 21 to 24 degrees. The coast and the push stay balanced (ZMP excess 0.000), no wheel leaves the ground or goes into it, and the joint-limit gate passes on every clip. A real skater must confirm the depth and the lean.

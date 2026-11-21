@@ -129,6 +129,20 @@ RECOIL_DELAY = {"pelvis": 0, "chest": 1, "arms": 2, "head": 3}
 # The clip length does not change. LOAD (m): an extra dip of the CoM at the
 # start of the drive.
 DRIVE = {"push": {"ratio": 10 / 18, "load": 0.01, "load_sigma": 2.5}}
+# Athletic stance (owner feedback 2026-11-21: the coast looked upright). The
+# derby and coaching cues: bend at the knees and the hips, not at the waist;
+# the back straight, the chest and head up; the shoulders, knees, and toes in
+# one vertical line; the weight over the skates. The stance pass hinges the
+# body forward at the hips until the shoulders (Neck) are over the knees,
+# lowers the hips to hip_ankle x the leg length, keeps the gaze level
+# (head_keep of the hinge goes back in the neck and head), and brings the
+# upper arms forward. The skates do not move (leg IK).
+STANCE = {
+    "coast": {"hip_ankle": 0.78, "max_hinge_deg": 35.0, "head_keep": 0.8, "arms_fwd_deg": 12.0},
+    # The push is already lower than 0.78; it gets the same hinge rule, so a
+    # blend between the coast and the push does not lift the chest.
+    "push": {"hip_ankle": 0.78, "max_hinge_deg": 35.0, "head_keep": 0.8, "arms_fwd_deg": 0.0},
+}
 # The heading of the skater in Blender: the model faces -Y, X is the side.
 FORWARD = 1  # axis index of fore-aft (Y)
 SIDE = 0
@@ -782,6 +796,90 @@ def drive_speed(s, plan_drives):
     return out
 
 
+def local_delta(s, f, bone, W):
+    """The local rotation that turns bone by the armature-space rotation W."""
+    M = s["mat"][f][bone].to_quaternion()
+    return M.inverted() @ W @ M
+
+
+def stance_pose(sk, s, f, drop, hinge, cfg):
+    """(hips matrix, rots) of frame f with the stance applied."""
+    H0 = s["mat"][f][P + "Hips"]
+    piv = H0.to_translation()
+    R = Matrix.Rotation(math.radians(hinge), 4, "X")  # +X tilts up toward -Y (forward)
+    H = Matrix.Translation((0, 0, -drop)) @ Matrix.Translation(piv) @ R @ Matrix.Translation(-piv) @ H0
+    rots = {}
+    back = -hinge * cfg["head_keep"]
+    for bone, share in ((P + "Neck", 0.4), (P + "Head", 0.6)):
+        W = Quaternion((1, 0, 0), math.radians(back * share))
+        rots[bone] = s["basis"][f][bone][1] @ local_delta(s, f, bone, W)
+    for side in ("Left", "Right"):
+        bone = P + side + "Arm"
+        W = Quaternion((1, 0, 0), math.radians(cfg["arms_fwd_deg"]))
+        rots[bone] = s["basis"][f][bone][1] @ local_delta(s, f, bone, W)
+    return H, rots
+
+
+def leg_length(sk):
+    b = sk.arm.data.bones
+    return ((b[P + "LeftLeg"].head_local - b[P + "LeftUpLeg"].head_local).length
+            + (b[P + "LeftFoot"].head_local - b[P + "LeftLeg"].head_local).length)
+
+
+def stance_pass(sk, name, s):
+    """A new action with the athletic stance, or None. Returns (action, info)."""
+    cfg = STANCE.get(name)
+    if not cfg:
+        return None, None
+    n = s["n"]
+    leg = leg_length(sk)
+
+    def hip_ankle(mats):
+        return min((mats[P + sd + "UpLeg"].to_translation() - mats[P + sd + "Foot"].to_translation()).length
+                   for sd in ("Left", "Right")) / leg
+
+    def lean(mats):
+        t = mats[P + "Neck"].to_translation() - mats[P + "Hips"].to_translation()
+        return math.degrees(math.atan2(-t.y, t.z))
+
+    ratio0 = float(np.mean([hip_ankle(s["mat"][f]) for f in range(n)]))
+    lean0 = float(np.mean([lean(s["mat"][f]) for f in range(n)]))
+    drop = max(0.0, (ratio0 - cfg["hip_ankle"]) * leg)
+    probe = list(range(0, n, 4))
+
+    def apply(f, hinge):
+        H, r = stance_pose(sk, s, f, drop, hinge, cfg)
+        rq = {b: np.array([list(q)] * n) for b, q in r.items()}
+        mats, _ = write_pose(sk, f, s, H, rq, s["mat"][f])
+        return mats
+
+    def offset(hinge):
+        # Fore-aft distance (m) of the shoulders in front of the knees: + = in front.
+        d = []
+        for f in probe:
+            m = apply(f, hinge)
+            knee = (m[P + "LeftLeg"].to_translation() + m[P + "RightLeg"].to_translation()) / 2
+            d.append(-(m[P + "Neck"].to_translation().y - knee.y))
+        return float(np.mean(d))
+
+    best = min(range(0, int(cfg["max_hinge_deg"]) + 1), key=lambda h: abs(offset(h)))
+    sk.arm.animation_data.action = None
+    for f in range(n + 1):
+        g = f % n
+        H, r = stance_pose(sk, s, g, drop, best, cfg)
+        rq = {b: np.array([list(q)] * n) for b, q in r.items()}
+        write_pose(sk, g, s, H, rq, s["mat"][g])
+        key_frame(sk, f)
+    act = sk.arm.animation_data.action
+    act.name = name + "_stance"
+    s1 = sk.sample(act, with_mesh=False)
+    info = {"hinge_deg": best, "hips_drop_m": round(drop, 4),
+            "trunk_lean_deg": [round(lean0, 1), round(float(np.mean([lean(s1["mat"][f]) for f in range(n)])), 1)],
+            "hip_ankle_over_leg": [round(ratio0, 3), round(float(np.mean([hip_ankle(s1["mat"][f]) for f in range(n)])), 3)],
+            "shoulders_ahead_of_knees_m": [round(offset(0), 3), round(offset(best), 3)]}
+    return act, info
+
+
 def build_action(sk, name, s, shift, rots, targets):
     # keyframe_insert makes a new action (with its slot) when none is bound.
     sk.arm.animation_data.action = None
@@ -880,7 +978,7 @@ def main():
     report = {"source": a.src, "skater": who, "settings": {
         "still": STILL, "sigma_frames": SIGMA, "follow": FOLLOW, "max_shift_m": {**MAX_SHIFT, "default": MAX_SHIFT_DEFAULT},
         "contact_m": CONTACT, "support_margin_m": SUPPORT_MARGIN, "body_kg": BODY_KG, "skate_kg": SKATE_KG,
-        "recoil": RECOIL, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
+        "recoil": RECOIL, "stance": STANCE, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
     rest = {b: (bn.head_local.x, bn.head_local.y, bn.head_local.z) for b, bn in ((b, sk.arm.data.bones[b]) for b in (P + "LeftFoot", P + "RightFoot"))}
     report["rest_feet"] = rest
     originals = {}
@@ -891,12 +989,16 @@ def main():
         gate0 = joint_limits.gate_action(sk.arm, act)
         s = sk.sample(act)
         m0 = metrics(sk, s)
+        stance_info = None
+        st_act, stance_info = stance_pass(sk, name, s)
+        if st_act:
+            s = sk.sample(st_act)
         plan = drive_plan(name, s)
         drive_info = None
         if plan:
             # The physics pass works on the retimed clip; "before" stays the
             # shipped clip.
-            src_act = retime(sk, act, plan, name + "_drive")
+            src_act = retime(sk, st_act or act, plan, name + "_drive")
             s0 = s
             s = sk.sample(src_act)
             s["drive"] = plan
@@ -907,10 +1009,12 @@ def main():
                           "warp": [round(w, 2) for w in plan["warp"]]}
             m_pass = mw
         else:
-            m_pass = m0
+            m_pass = metrics(sk, s) if st_act else m0
         shift, rots, targets, info = physics_pass(sk, name, s, m_pass)
         if drive_info:
             info["drive"] = drive_info
+        if stance_info:
+            info["stance"] = stance_info
         act.name = name + "_before"
         new_act, reach = build_action(sk, name, s, shift, rots, targets)
         new[name] = new_act

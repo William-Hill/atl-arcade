@@ -30,6 +30,7 @@ The sources do not describe the posture or a tempo in numbers. The values below 
 2. The pushes alternate left and right. The arms swing in opposition to the legs: the arm on the glide side swings forward and across the body with a bent elbow, and the other arm swings back almost straight. The shoulders turn with the arms, and the head stays on the line of travel.
 3. The body bounces on every beat. The knees go down on the beat.
    The glide (coast) is the ATL Ryde, from the Dun Beezy lesson "How to ATL Ryde on Roller Skates" (https://www.youtube.com/watch?v=oUeLJ5qbyoc). On each downbeat both skates press out on the outside edges, and the arms throw forward and down. On the half beat the skates drag in on the inside edges, on the toes, past parallel, so one skate ends behind the other. The fists come up near the chest ("dice roll"). The skate that goes behind changes on each step. The chest leans forward, as in the Cascade footage in the lesson. On the corners the lesson steps out with the right skate, drags the left skate twice, and then brings the right skate back in. The carve clips use this corner step (2 beats); `carve_right` is the mirror.
+3a. Athletic stance (owner feedback, 2026-11-21: the coast looked upright). In the coast and the push the skater stays low: the knees bend about 75 to 85 degrees, the body hinges forward at the hips (not at the waist) until the shoulders are over the knees, the back stays straight, and the head and chest stay up. Sources: WFTDA minimum skills ("bend at the knees, not at the waist", the weight centered over the skates), derby coaching ("shoulders, knees, and toes" in a line; "bent flexible knees, straight back, head and chest up"), Rollerenligne ("lean slightly forward but your back should remain straight"). `scripts/blender/skater_physics_pass.py` (STANCE) applies the rule.
 4. The weight shifts from skate to skate every beat. The shoulders turn against the hips.
 5. The turns use the ATL Ryde corner step: the outside skate steps out wide, the inside skate drags twice behind on its toe, and the outside skate comes back in. (The first version used a Cross Step. No source gave its mechanics.)
 6. The switch button (R, or LB on a gamepad) turns the skater to ride backward. She swizzles the skates and looks over each shoulder in turn. The travel direction does not change.
@@ -66,6 +67,12 @@ Aggressive inline skating was in the first ESPN X Games in 1995, with vert and s
 The controller already turns the skater in the air (`SKATE.airTurnRate`). Thus a grab plus the turn gives a 360 or a 540. Flips (misty, backflip) need a pitch turn of the whole body. They are not in this clip set.
 
 ## Sources
+
+- WFTDA minimum skills assessment companion: https://static.wftda.com/resources/wftda-minimum-skills-assessment-companion.pdf
+- Fresh Meat derby stance: https://fcrdrecruitment.blogspot.com/2018/08/the-basics-derby-stance.html
+- Skating posture and stride, derby coaching compendium: https://sites.google.com/view/hrd-coaching-compendium/footwork/basic-skating/skating-posture-stride
+- Basics: the skating stance, Rollerenligne: https://en.rollerenligne.com/?p=88653
+- Special Olympics BC speed skating skills (basic position, knees about 100 degrees): https://www.specialolympics.ca/sites/default/files/SOBC_SpeedSkatingSkillsBook_Aug2012.pdf
 
 - Culture Roll, USA Roller Sports: https://www.usarollersports.org/culture-roll
 - "Rolling in Rhythm: Black Culture and the Heart of Skate", Rolla Skate Club: https://www.rollaskateclub.com/rolla-blog/rolling-in-rhythm-black-culture-and-the-heart-of-skate

@@ -2512,7 +2512,7 @@ Full note: `docs/research/2026-11-20-game-ui-tools.md`.
 - Tested at these commits (7 days old or older): `gongnyang/awesome-ai-motion` `1e3c249`, `op7418/logo-generator-skill` `bf4e9ac`, `majidmanzarpour/threejs-game-skills` `8286774`, `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c4`. The full SHAs are in the note.
 - Keep as references: the motion skill (timings from its cards and recipes), `threejs-game-ui-designer` with `references/ui-patterns.md`, and `game-ui-ux` (checklist). Use the logo generator's design rules only: it makes abstract marks, not wordmarks.
 - Skip: the threejs-game-skills scaffold (TypeScript; our code is plain JavaScript), its director and its 3 generator skills, and the paid HiAPI and Scenario tools (no keys).
-- The skills are not in `.claude/skills/` yet. A committed skill loads into every cloud session, so the owner decides. The note gives the install commands.
+- The skills are not in `.claude/skills/` yet. A committed skill loads into every cloud session, so the owner decides. The note gives the install commands. Decision: deferred (see 2026-11-21, "The UI skills stay out").
 - Title screen and in-game text graphics: build them in code (DOM and CSS). Mock: `prototypes/title-screen-mock/`.
 - Logo: 3 options in `assets/brand/logo-options/`, made from OFL font outlines and code shapes, no generative model.
 
@@ -2526,3 +2526,13 @@ The owner chose option B on 2026-11-21 (PR #306). Reasons: it is the only option
 - Key art: `assets/brand/key-art/skate-atl-key-art-1920x1080.png`. It is a capture of the real game renderer (pbr look, quality high, 9:30 on 21 June, clear): Nia mid-push on the Eastside Trail, with people on the trail under the bridge. A soft navy grade and the logo (34 % of the width, top left) are on top. No paintover, no image model. The raw frame is next to it, for later title and store images.
 - Method (`scripts/brand/key-art.mjs`, shots in `scripts/brand/key-art-shots.json`): load the level, hold the push key for 12 frames, open the settings menu to stop the simulation (the frame still draws; the menu DOM is hidden), then place the camera from the skater's real position and heading with `__atl.setFixedCamera`. Heading is `(cos yaw, -sin yaw)`. On SwiftShader the level load takes about 17 minutes and each 1920 x 1080 view about 5 more.
 - We chose a game capture over a generated image: it shows the game as it is, it costs 0 credits, and the same script can make it again after the look changes.
+
+## 2026-11-21: The UI skills stay out of `.claude/skills/` for now (#299)
+
+The owner decided on 2026-11-21: defer the install of `threejs-game-ui-designer` and `game-ui-ux`.
+
+- A skill in `.claude/skills/` loads into every cloud session on this repository, and its instructions apply there. Several sessions work on the repository at the same time.
+- The useful parts are 3 short files. Agents read them at the tested commits: `majidmanzarpour/threejs-game-skills` `8286774b22a2566bf894dbc825825c16921866af` and `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c41c839b68319ffc08430b99ab768debc32`. The install commands are in `docs/research/2026-11-20-game-ui-tools.md`, section "Install".
+- This replaces the open point in the 2026-11-20 entry ("the owner decides").
+- Look at this again when the title, pause, and settings screens start. An install then must use the tested commits or newer commits that are at least 7 days old.
+

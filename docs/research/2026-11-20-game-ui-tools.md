@@ -82,6 +82,8 @@ Issue #299 asks for the skills in the project `.claude/skills/`. I did not commi
 1. Other cloud sessions work on this repository now. A committed skill loads into every session on its next start, and its instructions apply there too. That needs the owner's decision.
 2. The useful parts are 3 short files. A link to the commit is enough for now.
 
+Owner decision, 2026-11-21: defer the install. See `docs/decisions.md`, 2026-11-21.
+
 To install later, at the tested commits:
 
 ```bash

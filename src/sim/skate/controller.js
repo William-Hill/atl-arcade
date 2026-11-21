@@ -521,7 +521,8 @@ function slideAir(s, env, ny, prevY, dt, k) {
 
 // (x, z) moved out of the walls near it: the shortest move, in one of the
 // RING directions, that clears the body ring. Null when no wall is near or
-// no move of up to one body radius clears it. Only an air bonk calls it.
+// no move of up to one body radius clears it. An air bonk and a roll off
+// the ground (leaveAt) call it.
 const PUSH_STEP = 0.02; // m between the push lengths tried.
 function pushOut(env, x, z, isWall, y, k) {
   const radius = k.bodyRadius * RING_SCALE;

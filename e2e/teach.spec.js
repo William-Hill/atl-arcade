@@ -28,6 +28,19 @@ async function inside(page) {
   expect(r.right).toBeLessThanOrEqual(r.w);
   expect(r.top).toBeGreaterThanOrEqual(0);
   expect(r.bottom).toBeLessThanOrEqual(r.h);
+  // The card covered the PHOTO and SETTINGS buttons on a phone in landscape.
+  const hits = await page.evaluate(() => {
+    const t = document.getElementById("teach").getBoundingClientRect();
+    const out = [];
+    for (const sel of ["#photo-toggle", "#settings-toggle", "#fullscreen-toggle", "#minimap"]) {
+      const el = document.querySelector(sel);
+      if (!el || getComputedStyle(el).display === "none" || getComputedStyle(el).visibility === "hidden") continue;
+      const b = el.getBoundingClientRect();
+      if (b.width && !(t.right <= b.left || b.right <= t.left || t.bottom <= b.top || b.bottom <= t.top)) out.push(sel);
+    }
+    return out;
+  });
+  expect(hits).toEqual([]);
   return r;
 }
 
@@ -161,6 +174,18 @@ test.describe("teach prompts (#76)", () => {
     expect(t.kind).toBe("gamepad");
     expect(t.prompt.icons[0].type).toBe("stick");
     expect(t.prompt.hint).toBe("Left stick");
+  });
+
+  test("touch: on a phone in landscape the card keeps clear of the top buttons", async ({ browser }) => {
+    const { defaultBrowserType, ...pixel } = devices["Pixel 7 landscape"]; // eslint-disable-line no-unused-vars
+    const context = await browser.newContext({ ...pixel });
+    const page = await context.newPage();
+    await open(page, "&touch=1");
+    await page.waitForFunction(() => window.__atl.teach.visible, null, { timeout: 60000 });
+    await inside(page);
+    await readable(page);
+    await page.screenshot({ path: `${SHOTS}/teach-phone-landscape-1-push.png` });
+    await context.close();
   });
 
   test("touch: a new player on a phone in portrait follows the prompts", async ({ browser }) => {

@@ -2551,6 +2551,7 @@ The owner decided on 2026-11-21: defer the install of `threejs-game-ui-designer`
 - The useful parts are 3 short files. Agents read them at the tested commits: `majidmanzarpour/threejs-game-skills` `8286774b22a2566bf894dbc825825c16921866af` and `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c41c839b68319ffc08430b99ab768debc32`. The install commands are in `docs/research/2026-11-20-game-ui-tools.md`, section "Install".
 - This replaces the open point in the 2026-11-20 entry ("the owner decides").
 - Look at this again when the title, pause, and settings screens start. An install then must use the tested commits or newer commits that are at least 7 days old.
+
 ## 2026-11-20: Fighting game text callouts (#305)
 
 The owner wants punchy text graphics, as the "FIGHT" and "YOU WIN" cards of fighting games. No open-source tool makes these (comment on #298). Decision: build the text in code, DOM and CSS. No video file and no image, so the text scales and can be translated.
@@ -2592,6 +2593,15 @@ The owner wants punchy text graphics, as the "FIGHT" and "YOU WIN" cards of figh
 - Other specs: `goals.spec.js` 6 of 8 and `music.spec.js` 8 of 10 pass. The 2 phone results tests fail with the 30 s test limit on this branch and on `epic/city-look`. The beat timing test "first downbeat on beat 0" is flaky here: it passed 2 of 9 runs on `epic/city-look` and 0 of 11 on this branch (also 0 of 2 with `?callouts=0`). In the failed runs the music decode ends late and the track starts on bar 2, so the first windows are silent. Run it again on a quiet machine before the merge.
 - With the callouts on, the `goals.spec.js` phone screenshots `results-phone-*.png` show "ROUND OVER" over a hidden results card. The box checks of that test do not change (opacity does not move a box).
 - Not verified: no person saw the motion at full speed (the container is too slow to judge the 180 ms drop); no real phone; no landscape phone screenshot; the callout text is not translated yet.
+
+## 2026-11-21: The short map credit on every screen
+
+On a desktop screen, the full map credit (about 330 characters) wrapped across the top of the screen and covered the timer and the score chips.
+
+- Every screen now shows the short credit "© OpenStreetMap contributors" as a pill at the top right (top left on a compact screen). A click or a tap shows the full text.
+- This replaces the 2026-11 rule from #73 that a desktop shows the full credit. The ODbL credit to OpenStreetMap stays visible at all times.
+- Owner decision, 2026-11-21.
+
 ## 2026-11-21: Skatepark fixes: the ledge catch, the quarter pipe lip, the grind score, the body in walls (#262)
 
 Branch `fix/262-skatepark` from `epic/city-look`. Source: the 2026-11-13 design audit, run 3 (`production/audits/2026-11-13-design-audit/REPORT.md`, C2, C3, C5, C6). Tests: `src/sim/skate/skatepark-262.test.js` (11 tests on the real H4W park; 10 fail on `epic/city-look`, the head-on bonk test passes on both), `src/sim/skate/balance.test.js`, and the Playwright test "the skatepark fixes of #262" in `e2e/skatepark.spec.js`.

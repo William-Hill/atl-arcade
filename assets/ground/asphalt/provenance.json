@@ -1,0 +1,60 @@
+{
+  "tool": "scripts/ground-textures-pbr.py (Poly Haven API download, candidate scores, low-pass delight, resize, ORM pack, WebP)",
+  "prompt": null,
+  "source": "https://polyhaven.com/a/asphalt_floor",
+  "files": {
+    "diffuse": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_floor/asphalt_floor_diff_1k.jpg",
+    "ao": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_floor/asphalt_floor_ao_1k.jpg",
+    "nor": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_floor/asphalt_floor_nor_gl_1k.jpg",
+    "rough": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_floor/asphalt_floor_rough_1k.jpg"
+  },
+  "credits": {
+    "eye-candy.xyz": "All"
+  },
+  "license": "CC0 1.0",
+  "date": "2026-11-06",
+  "maps": "albedo, normal (OpenGL), ORM (R ambient occlusion, G roughness, B metalness 0)",
+  "output": [
+    "assets/ground/pbr/albedo-1024.webp layer 0",
+    "assets/ground/pbr/albedo-512.webp layer 0",
+    "assets/ground/pbr/normal-1024.webp layer 0",
+    "assets/ground/pbr/orm-512.webp layer 0"
+  ],
+  "candidates": [
+    {
+      "asset": "asphalt_track",
+      "light": 0.0057,
+      "shadow": 0.2707,
+      "seam": 0.997,
+      "rejected": [],
+      "picked": false
+    },
+    {
+      "asset": "clean_asphalt",
+      "light": 0.0007,
+      "shadow": 0.0,
+      "seam": 1.006,
+      "rejected": [
+        "review: a crack line across the tile"
+      ],
+      "picked": false
+    },
+    {
+      "asset": "asphalt_05",
+      "light": 0.0031,
+      "shadow": 0.232,
+      "seam": 0.975,
+      "rejected": [],
+      "picked": false
+    },
+    {
+      "asset": "asphalt_floor",
+      "light": 0.0021,
+      "shadow": 0.0918,
+      "seam": 1.008,
+      "rejected": [],
+      "picked": true
+    }
+  ],
+  "note": "Scanned photo textures, not generated art."
+}

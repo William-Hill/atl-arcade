@@ -1,0 +1,12 @@
+{
+  "asset": "Nia, the Blender source of the shipped skater (rig, mesh, packed textures, 2 actions)",
+  "file": "assets/skaters/nia/source/nia-forward.blend",
+  "bytes": 7342935,
+  "date": "2026-11-09",
+  "blender": "Blender 5.2.2 LTS (file version 5.2.45)",
+  "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it. The full history (Tripo generation, retopology, rig, repair, forward v2 body) is in assets/skaters/nia/provenance.json.",
+  "from": "assets/skaters/nia/raw/forward-v2/nia-forward.blend on the author's machine (git ignores raw/)",
+  "steps": ["Packed the 88 Tripo textures into the file with Blender 5.2.2 LTS (bpy.ops.file.pack_all, then save_as_mainfile with compress). Before, the file linked them from assets/skaters/nia/raw/nia-tripo-pbr/ on the author's machine."],
+  "use": "The --source of scripts/blender/skater_anim_v3.py. New clips go to a clips GLB, and scripts/assets/graft-clips.mjs puts them into assets/skaters/nia/skater.glb and skater-1024.glb. So a cloud session with Blender 5.2 can key new clips without the raw folder.",
+  "check": "skater_anim_v3.py --name nia --source assets/skaters/nia/source/nia-forward.blend ran to exit 0 on 2026-11-09 (5 clips, knee residual 0.0 degrees)."
+}

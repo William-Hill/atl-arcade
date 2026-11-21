@@ -2,9 +2,47 @@
 // meter, balance meter while grinding. Plain DOM, updated once per frame
 // from the run state. The simulation never sees this.
 
-import { comboString, comboValue } from "../sim/skate/combo.js";
+import { COMBO_LINE, comboLine } from "../sim/skate/combo.js";
 import { formatClock } from "../sim/skate/goals.js";
-import { startHint } from "./layout.js";
+import { isCompact, startHint } from "./layout.js";
+import { nearEdge } from "../level/edge-fence.js";
+import { createHudGoals } from "./hud-goals.js";
+
+// The hint near the level edge fence (#229).
+export const EDGE_HINT = "Edge of the map. Turn around and keep skating.";
+
+// The style meter label, and the label when the signature move is ready
+// (#97, MOB-12). The ready label has a text and a star shape, so the cue
+// does not need color vision. The full bar also gets stripes (shell.css).
+export const STYLE_LABEL = "STYLE";
+export const STYLE_READY_LABEL = "\u2605 READY";
+
+export function styleLabel(ready) {
+  return ready ? STYLE_READY_LABEL : STYLE_LABEL;
+}
+
+// Pure: the beat pulse at a beat phase (0 at the beat, 1 just before the
+// next). The ring flashes and grows on each beat. With reduced motion
+// (#97, MOB-11) it does not grow; it only gets brighter and darker, so the
+// beat still shows.
+export function pulseLook(beatPhase, reducedMotion = false) {
+  const fade = 1 - beatPhase;
+  return { opacity: 0.25 + 0.75 * fade * fade, scale: reducedMotion ? 1 : 1 + 0.6 * fade * fade };
+}
+
+// The "+N" of a banked combo shows for BANKED_SHOW_MS, then fades out in
+// BANKED_FADE_MS (the opacity transition in shell.css), then goes (#269).
+export const BANKED_SHOW_MS = 2500;
+export const BANKED_FADE_MS = 400;
+
+// Pure: the "+N" line after a bank. `bankedAt` is the time of the bank, or
+// null before the first bank. Returns { text, fade }.
+export function bankedLine(lastBanked, bankedAt, nowMs, showMs = BANKED_SHOW_MS, fadeMs = BANKED_FADE_MS) {
+  if (!(lastBanked > 0) || bankedAt === null) return { text: "", fade: false };
+  const age = nowMs - bankedAt;
+  if (age >= showMs + fadeMs) return { text: "", fade: false };
+  return { text: `+${lastBanked.toLocaleString("en-US")}`, fade: age >= showMs };
+}
 
 function el(tag, className, parent) {
   const node = document.createElement(tag);
@@ -14,7 +52,10 @@ function el(tag, className, parent) {
 }
 
 // `touch` is true when the touch controls show: the hints name a tap.
-export function createHud(root, { touch = false } = {}) {
+// `fence` is the level edge fence (src/level/edge-fence.js), or null.
+// `reducedMotion()` is true when the beat pulse must not move (#97).
+// `goalDef` is the goal definition of the level, or null for free skate.
+export function createHud(root, { touch = false, fence = null, reducedMotion = () => false, goalDef = null } = {}) {
   root.innerHTML = "";
   // The score and the run timer (M1-05) share the top line.
   const top = el("div", "hud-top", root);
@@ -23,6 +64,8 @@ export function createHud(root, { touch = false } = {}) {
   const timer = el("div", "hud-timer", top);
   timer.id = "hud-timer";
   timer.hidden = true;
+  // The round goals and the confirmation of a met goal (#268).
+  const roundGoals = createHudGoals(top, root);
   const combo = el("div", "hud-combo", root);
   combo.id = "hud-combo";
   const pending = el("div", "hud-pending", root);
@@ -34,9 +77,26 @@ export function createHud(root, { touch = false } = {}) {
   const hint = el("div", "hud-hint", root);
   hint.id = "hud-hint";
   hint.textContent = startHint(touch);
+  const edge = el("div", "hud-hint hud-edge", root);
+  edge.id = "hud-edge";
+  edge.textContent = EDGE_HINT;
+  edge.hidden = true;
+  // A one-time line from the game, for example the look step-down (#246).
+  const notice = el("div", "hud-hint hud-notice", root);
+  notice.id = "hud-notice";
+  notice.setAttribute("role", "status");
+  notice.hidden = true;
+  let noticeTimer = null;
+  // The goal line of landmark discovery (#219): the challenge of the nearest
+  // Found spot. The text is plain text from the data file (textContent).
+  const goal = el("div", "hud-hint hud-goal", root);
+  goal.id = "hud-goal";
+  goal.hidden = true;
 
   const styleWrap = el("div", "hud-meter hud-style", root);
-  el("span", "hud-label", styleWrap).textContent = "STYLE";
+  const styleText = el("span", "hud-label", styleWrap);
+  styleText.id = "hud-style-label";
+  styleText.textContent = STYLE_LABEL;
   const styleBar = el("div", "hud-bar", styleWrap);
   const styleFill = el("div", "hud-fill", styleBar);
   styleFill.id = "hud-style-fill";
@@ -50,30 +110,49 @@ export function createHud(root, { touch = false } = {}) {
 
   let tagUntil = 0;
   let seenSeq = 0;
+  // The time of the last bank: the combo was active, and now it is not.
+  let wasActive = false;
+  let bankedAt = null;
 
   return {
     // `goals` is the goal state (src/sim/skate/goals.js), or null for free skate.
-    update(run, nowMs = performance.now(), beatPhase = null, goals = null) {
+    // `goalLine` is the landmark goal line (src/landmarks/play.js), or null.
+    update(run, nowMs = performance.now(), beatPhase = null, goals = null, goalLine = null) {
+      if (goal.hidden !== !goalLine) goal.hidden = !goalLine;
+      if (goalLine && goal.textContent !== goalLine) goal.textContent = goalLine;
       const c = run.combo;
       timer.hidden = !goals;
+      roundGoals.update(goals ? goalDef : null, goals, nowMs);
       if (goals) {
         timer.textContent = formatClock(goals.timeLeft);
         timer.dataset.low = goals.timeLeft <= 10 ? "1" : "0";
       }
       score.textContent = c.score.toLocaleString("en-US");
       if (c.active) {
-        combo.textContent = comboString(c);
+        const phone = isCompact(window.innerWidth, window.innerHeight);
+        const text = comboLine(c.links, phone ? COMBO_LINE.phone : COMBO_LINE.desktop);
+        if (combo.textContent !== text) combo.textContent = text;
         pending.textContent = `${c.pending.toLocaleString("en-US")} x ${c.multiplier}`;
         combo.dataset.active = "1";
+        combo.dataset.fade = "0";
+        bankedAt = null;
       } else {
-        combo.textContent = c.lastBanked ? `+${comboValue({ pending: c.lastBanked, multiplier: 1 }).toLocaleString("en-US")}` : "";
+        if (wasActive) bankedAt = nowMs;
+        const line = bankedLine(c.lastBanked, bankedAt, nowMs);
+        if (combo.textContent !== line.text) combo.textContent = line.text;
+        combo.dataset.rm = reducedMotion() ? "1" : "0";
+        combo.dataset.fade = line.fade ? "1" : "0";
         pending.textContent = "";
         combo.dataset.active = "0";
       }
+      wasActive = c.active;
       styleFill.style.width = `${Math.round(c.style * 100)}%`;
       styleWrap.dataset.ready = c.signatureReady ? "1" : "0";
+      const label = styleLabel(c.signatureReady);
+      if (styleText.textContent !== label) styleText.textContent = label;
 
       const s = run.skater;
+      edge.hidden = !nearEdge(fence, s.position[0], s.position[2]);
       if (s.state === "grind" && s.grind) {
         balanceWrap.style.display = "";
         balanceDot.style.left = `${50 + Math.max(-1, Math.min(1, s.grind.balance)) * 48}%`;
@@ -101,11 +180,20 @@ export function createHud(root, { touch = false } = {}) {
         pulse.style.display = "none";
       } else {
         pulse.style.display = "";
-        const fade = 1 - beatPhase;
-        pulse.style.opacity = String(0.25 + 0.75 * fade * fade);
-        pulse.style.transform = `scale(${1 + 0.6 * fade * fade})`;
+        const look = pulseLook(beatPhase, reducedMotion());
+        pulse.style.opacity = String(look.opacity);
+        pulse.style.transform = `scale(${look.scale})`;
       }
     },
-    elements: { score, timer, combo, pending, tag, pulse, styleFill, balanceWrap, balanceDot },
+    // Shows one plain line for `ms`, then hides it.
+    notice(text, ms = 6000) {
+      notice.textContent = text;
+      notice.hidden = false;
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => {
+        notice.hidden = true;
+      }, ms);
+    },
+    elements: { score, timer, roundGoals: roundGoals.elements.list, goalMet: roundGoals.elements.met, combo, pending, tag, pulse, edge, notice, goal, styleWrap, styleText, styleFill, balanceWrap, balanceDot },
   };
 }

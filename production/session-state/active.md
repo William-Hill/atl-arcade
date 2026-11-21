@@ -6,6 +6,105 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## #76 Teach the moves in the world, 2026-11-21
+
+Branch `feat/76-teach-moves` from `epic/city-look`; draft PR, base `epic/city-look` (change the base to `main` after PR #304 merges). Design: `docs/decisions.md`, 2026-11-21.
+
+| Part | Where | Verified |
+|---|---|---|
+| Steps, prompts, grind target, pin place (pure) | `src/ui/teach-steps.js` | Vitest `teach-steps.test.js`, 25 tests |
+| Pin ride from the spawn to the skatepark rail | `e2e/teach-ride.js` | Vitest `teach-ride.test.js`, 2 tests: snap at 9.3 s, combo Rail Grind, Hop, Toe Spin |
+| Prompt card, pin, touch glow | `src/ui/teach-prompt.js`, `src/ui/teach.css`, 6 lines in `src/main.js` | Playwright `e2e/teach.spec.js` 3 of 3: keyboard on the high tier 1280 x 720 (15.0 min), gamepad (simulated pad), touch on Pixel 7 portrait; pictures `e2e/__screenshots__/teach-*.png` |
+
+#76 tests, cloud container: `npm test` 1860 of 1861 pass (the known 5 s timeout in `facade-kit.test.js`). `npm run build` passes. `npm run perf:check -- --no-build --tiers phone,high`: budget PASS; phone 97 draw calls in toon and 113 in pbr lite; the high tier rides stopped at the 240 s wall limit. The low tier did not run.
+
+#76 NOT verified: no person played the prompts; no real phone, GPU, or gamepad; touch in landscape has no test; the browser grind ride starts 25 m before the rail (the full ride from the spawn runs in the pure simulation only); real skaters did not review the prompt words.
+## #262 skatepark: ledge catch, quarter pipe lip, grind score, clipping, 2026-11-21
+
+Branch `fix/262-skatepark` from `epic/city-look`; draft PR with base `epic/city-look` (base changes to `main` after PR #304 merges). Details: `docs/decisions.md`, 2026-11-21.
+
+| Part | Where | Verified |
+|---|---|---|
+| Ledge catch | `src/sim/skate/skater.js`, `GRIND.catchAlongDot`, `GRIND.catchWindow` | Vitest `skatepark-262.test.js`; Playwright ledge catch ride (snap at 7.55 m/s at 70 degrees) |
+| Quarter pipe lip launch, kicker pop | `src/sim/skate/controller.js` (`atLip`, `launchVert`, `popUp`), `SKATE.lipNormalY`, `COMBO.rampAirPoints` | Vitest; Playwright vert air ride (top 1.85 m over the pad) |
+| Grind score by meters | `src/sim/skate/run.js`, `grind.js`, `COMBO.grindPerMeter` 35, `COMBO.longGrindMeters` 10 | Vitest `skatepark-262.test.js`, `balance.test.js` |
+| Body out of walls | `src/sim/skate/controller.js` (`faceHeight`, `airWall`, `pushOut`, `leaveAt`) | Vitest sweep, 96 rides per feature; Playwright pictures `e2e/__screenshots__/skatepark-262-*.jpg` |
+
+#262 tests, cloud container: `npm test` 1843 of 1845 pass (the 2 known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`). Playwright `e2e/skatepark.spec.js` 8 of 8 pass (50.7 min, SwiftShader). The full e2e suite did not run.
+
+#262 NOT done: the beat lines over the park features (render); an Autopilot run in the park; the upright body under the quarter pipe lip (render). Owner decision open: `grindPerMeter` 35 (keeps the score scale; #75 holds at 8 m/s and up) or 120 (#75 at every speed; grind combos score about 3 times more).
+
+## #218 landmark icons on the maps and the Guide tab, 2026-11-12
+
+Branch `claude/218-landmark-map-icons` from `epic/city-look`; no PR yet (the owner asks for it). Details: `docs/decisions.md`, 2026-11-12.
+
+| Part | Where | Verified |
+|---|---|---|
+| Icon math (looks, sizes, 6 glyphs, icon list, Guide rows, panel text, https check, pulse) | `src/ui/landmark-icons.js` | Vitest `src/ui/landmark-icons.test.js`, 28 tests |
+| Canvas icon, Guide tab and panel DOM | `src/ui/spot-icon.js`, `src/ui/landmark-guide.js` | Playwright (below) |
+| Minimap and full map read the tracker | `src/ui/minimap.js`, `src/ui/fullmap.js`, `src/ui/minimap-math.js` (`mapParks` replaces `mapLandmarks`), `src/shell.css` | Playwright `e2e/landmark-map.spec.js` 11 of 11: the 4 states (Unknown, Found, Claimed, edge Found) on the minimap and the full map in the toon look and `?look=pbr`, at 1280 x 720 and 390 x 844, icons 22 px and 14 px on the minimap and 24 px on the full map; a click, a tap and the keyboard open the panel of each state; Escape, the close button and a tap outside close it; the Guide tab shows "2 of 13 claimed" and "5 of 15 found"; the free run text; the pulse and no pulse with reduced motion |
+| Tracker and test hook in the game | `src/main.js` (after the `skateparkView` block), `src/level/levels.js` `loadLandmarks()` | `window.__atl.landmarks` in the dev server; the spec sets the states with it |
+
+#218 tests, cloud container: `npm test` 1737 of 1739 pass (the 2 known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`). `npm run build` passes. Playwright `landmark-map`, `fullmap`, `minimap`: 22 of 23 pass; the 1 failure is `minimap.spec.js` "the choice stays after a reload", which passes the 30 s test limit with 2 page loads and fails the same way on `epic/city-look`. The full e2e suite did not run. `npm run perf:check -- --tiers phone` (both looks): budget PASS, 95 draw calls in toon and 111 in pbr lite, heap 61.7 MB and 50.3 MB (cap 100); the low and high tiers did not finish inside the 10 minute limit of the first run and were not run again.
+
+#218 NOT verified: M-3 (a person must judge the grayscale pictures `e2e/__screenshots__/landmark-map-grayscale*.png`); no person used the maps or read a panel; no real phone or GPU. This branch does not step the tracker: a spot changes only through the test hook until #219 merges. The panel is plain; the trading card, the results row and "Reset progress" are #220. `/ux-design` did not run for the Guide tab (the GDD UX flag).
+
+For the merge with #219: both branches add the tracker after the `skateparkView` block in `src/main.js` and `window.__atl.landmarks`; keep one copy of each. Here the hook is on with `import.meta.env.DEV` only.
+
+## #219 Landmark rings, banners, HUD goal line and chimes, 2026-11-12
+
+Branch `claude/219-landmark-rings-banners` from `epic/city-look`; no PR yet (the owner asks for it). Design: `design/gdd/landmark-discovery.md` on `main`. Decisions: `docs/decisions.md`, 2026-11-12. #218 (map icons, the Guide tab) runs in another session at the same time: both branches create `landmarkTracker` in `src/main.js` after the `skateparkView` block and put `landmarkTestHook` at `window.__atl.landmarks`.
+
+| Part | Where | Verified |
+|---|---|---|
+| Tracker in the game loop | `src/main.js` (data from `loadLandmarks()` of #218), `src/landmarks/play.js` | Vitest `play.test.js`; Playwright: a ride finds and claims, the claim is in `atl.landmarks` after a reload |
+| Banners (Found, Claimed) | `src/ui/landmark-banner.js`, `#landmark-banner` in `src/shell.css`, `hold` in `src/sim/landmarks.js` | Vitest; Playwright in both looks at 1280 x 720, 390 x 844, 360 x 640 and 1024 x 550 |
+| HUD goal line | `src/ui/hud.js` (`#hud-goal`), `goalLine()` in `src/landmarks/play.js` | Vitest; Playwright |
+| Challenge rings | `src/render/landmark-rings.js`, `landmark-rings-math.js` | Vitest (V-1, tiers, shapes); Playwright: 4 shapes in both looks, +1 draw call with 5 Found spots on the phone tier and +0 with none, no red pixel |
+| Chimes | `src/audio/chimes.js`, `chime-math.js` | Vitest (notes, start time, duck, queue); Playwright: on the beat grid, under 1 beat, the music ducks |
+| Rides with the real controller | `e2e/landmark-rides.js`, `src/landmarks/rides.test.js`, `e2e/landmarks.spec.js` | All 13 challenges claim in the pure simulation; 4 run in the browser in both looks (Freedom Parkway gap, Ralph McGill grind, Telephone Factory line, skatepark combo) |
+
+#219 tests, cloud container: `npm test` 1771 of 1773 pass (the 2 known 5 s timeouts). Playwright `e2e/landmarks.spec.js` 19 of 19 pass (about 29 minutes, SwiftShader); pictures `e2e/__screenshots__/landmarks-*.jpg`. `fact-cards`, `goals` and `phone-layout` have 4 failures that fail the same way on `epic/city-look` in this container (see `docs/decisions.md`). The full e2e suite did not run. Release build: `window.__atl.landmarks` is `null`. `npm run perf:check`: budget PASS (phone tier 95 draw calls in toon, 111 in pbr lite; no cap changed).
+
+#219 NOT verified: no person played a challenge, heard a chime or read a banner; no real GPU or phone (P-2 open); the high tier ran once by hand (pbr, night), not in the spec; real skaters did not review the challenges. The 13 rides are scripts with exact timing: they show each position can be ridden, not that a tier fits a person.
+
+#219 open points for the owner (in `docs/decisions.md`, "GDD points decided here"): the ring grows wider far from the camera; the banner at 30 vh ends just over the skater's head; the Claimed fill by the trail is an ochre near the landmark gold; the first run of a new save shows the Freedom Parkway banner at the spawn; a chime before the first key or tap is dropped. Not in #219: the results row and cards (#220), the claim burst and petals (#221), the map icons and the Guide tab (#218), "Reset progress" and the "Progress is not saved" notice in the settings menu (E-5, E-8).
+
+## #246 pbr lite on the phone tier, 2026-11-10
+
+Branch `claude/246-pbr-lite-phone` from `epic/city-look`; no PR yet (the owner asks for it). Decision (the owner): the pbr look stays on phones as "pbr lite"; see `docs/decisions.md`, 2026-11-10, and `docs/perf/246/README.md`.
+
+| Part | Where | Verified |
+|---|---|---|
+| Ranked costs | `scripts/phone-look-perf.mjs`, `scripts/phone-look-split.mjs`, `docs/perf/246/*.json` | SwiftShader runs on the audit's 4 phone profiles: the Blender tree leaf cards are 79 % of the extra frame by the spawn, then the pbr ground shader |
+| Pbr lite | `src/render/pbr-lite.js`, `trees.js` (`cards: 6`), `pbr-ground.js` (`GROUND_CUTS`), `murals.js` (1024 px atlas) | pbr / toon 4.0x to 10.3x before, 3.1x to 5.6x after (12 rows); download 15.77 to 14.16 MB; Playwright screenshots of toon, full pbr and pbr lite at 2 cameras (`e2e/__screenshots__/pbr-lite-*.jpg`, `docs/perf/246/*.jpg`) |
+| Budget | `docs/perf/budget.json` `phone/pbr`, `vsToon` in `scripts/perf-lib.mjs` | `perf:check` (phone tier, both looks): PASS for pbr lite, exit 1 for the old phone pbr (`&pbrlite=0`) |
+| Governor step to toon | `src/render/governor.js`, `src/render/look-down.js`, `src/ui/hud.js` | Vitest; Playwright: a 1 ms budget reloads pbr lite into toon and shows the HUD line once |
+| Frame-time readout | `?fps=1`, `src/perf/frame-readout.js` | Vitest; Playwright screenshot |
+
+#246 tests, cloud container: `npm test` 1587 of 1589 pass (the 2 failures are the known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`). Playwright `pbr-lite`, `phone-tier`, `settings`, `late-load`, `leaf-cut`: 18 pass (the 5 `ground-pbr` tests skip themselves). The full e2e suite did not run. On the phone tier, `leaf-cut.spec.js` with `look=pbr` now draws the pbr lite trees.
+
+#246 NOT verified: the frame time on a real phone. This machine has no GPU; every frame time is SwiftShader and only compares looks. The #246 acceptance (a real mid-range phone under the #24 target) is open; the owner's steps are at the end of `docs/perf/246/README.md`. No person looked at pbr lite on a phone screen. Not done: 512 px textures for the Meshy people. The audit file `mobile-pbr/FINDINGS.md` is not on this branch.
+
+## #107 animation code, 2026-11-06
+
+Branch `claude/107-anim-blends` from `epic/city-look`; PR into `epic/city-look`. Code only: per-transition fade times (`fadeFor()` in `src/render/skater-anim.js`), a weight blender with no reset in the middle of a fade (`src/render/anim-blend.js`), the carve lean (body bank and additive carve pose), and foot IK on stairs and ramps (`src/render/foot-ik.js`, off on the phone tier). Evidence: `e2e/skater-blend.spec.js`, contact sheets `e2e/__screenshots__/anim-107-*.png`; details in `docs/decisions.md`. Not done: the wall slide, bonk, and hard landing clips (Blender and the gitignored `.blend` files); real skaters did not review it.
+
+## Landmark discovery (epic #223), 2026-11-10
+
+| Issue | Branch | PR | Verified |
+|---|---|---|---|
+| #216 Landmark data file, facts with sources, validator | `claude/clever-hamilton-qxs6up` (from `epic/city-look`) | no PR yet | `npm run validate:landmarks` passes: 12 claim spots and 2 edge markers; Vitest `src/landmarks/validate.test.js` 17 of 17 pass; `npm run build` runs the validator first and passes; 7 quotes fetched again from the source pages and found |
+| #222 Historic Fourth Ward Skatepark as a skate spot | `claude/222-h4w-skatepark` (from `epic/city-look`) | no PR yet | Vitest: 22 new tests (`skatepark.test.js`, `skatepark-view.test.js`, `validate.test.js`), `npm test` 1569 of 1570 (the known `facade-kit.test.js` 5 s timeout); `npm run validate:landmarks` 13 claim spots and 2 edge markers; `npm run build` passes; Playwright `e2e/skatepark.spec.js` 6 of 6: in the toon look and the pbr look the skater rides the pyramid, the quarter pipe, the kicker and the bank, grinds the 9 m rail, the 6 m ledge and the 3 m rail, and banks 2740 points in the zone, with no fall through the ground and the page within 1 cm of the pure simulation; pictures `e2e/__screenshots__/skatepark-*.jpg`; `npm run perf:check` budget PASS (phone tier 94 to 108 draw calls, cap 185) |
+
+| #217 Pure landmark module (states, find check, challenges, claim points, banner queue, save) | `claude/217-landmark-module` (from `epic/city-look`) | no PR yet | Vitest `src/sim/landmarks.test.js` 75 of 75 pass (AC-2, AC-4, AC-5, AC-6, F-1 to F-8, E-1, E-2, E-4, E-6; 5 tests with the real controller on the Beltline level); `git diff epic/city-look -- src/sim/skate` is empty; `npm test` 1621 of 1622 pass (the `facade-kit.test.js` timeout) |
+
+#217 not verified: the module is not in `src/main.js`, so nothing ran in a browser; no person played a challenge; the grind, line and combo spots of the real file ran with scripted observations only. Claim points of the file: 3500 (not 5800); outfit unlocks at 5, 9 and 12. See `docs/decisions.md`, 2026-11-10, "The pure landmark module". Next: #218 (the maps) and #219 (rings, banners, chimes) call `createLandmarkTracker` and put `landmarkTestHook` at `window.__atl.landmarks` in a dev build.
+
+#216 not verified: no person played a challenge or read a fact. 8 GDD spots are out (4 art spots, the skatepark, Excelsior Mill, Atlanta Art Park, Parque en el centro bonito); see `docs/decisions.md`, 2026-11-10, and `docs/research/2026-11-10-landmark-facts.md`. `npm test` in the cloud container: 1546 of 1548 pass; the 2 failures are 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js` (6 to 8 s on this machine), and they fail the same way on `epic/city-look`. The GDD itself is still in PR #228.
+
+#222: the park is "Thomas Taylor Memorial Skatepark" (the 2024 name), at the center of OSM way 182470291 ([264.4, 3.3]); the pad shape and the layout are approximate, because the OSM outline is not in `raw/` and the Overpass API is not reachable from the cloud container. Data: `levels/beltline-eastside/skatepark.json`; code: `src/level/skatepark.js`, `src/render/skatepark-view.js`; notes: `docs/skate-features.md` ("In a level") and `docs/decisions.md`, 2026-11-10. #222 not verified: no person skated the park or tried the 2000 point combo; no real GPU or phone; real skaters did not review the layout. The spot is in `landmarks.json` (13 claim spots now), but the game finds and claims spots only after #217. For #217: the footprint area `skatepark:h4w-skatepark` is in the loaded level, not in `level.json`.
+
 ## M2 early work, 2026-11-03
 
 | Issue | Branch | PR | Verified |
@@ -128,3 +227,16 @@ William's first play found camera faults on the quarter pipe; the fix is on M0-0
    ```
 
 6. Play for 15 minutes with sound, then write `prototypes/greybox-skate/REPORT.md` with the five answers (hypothesis check, best moment, worst moment, surprise, verdict) and the latest `reports/playtest-*.json` numbers. Record the verdict in `docs/decisions.md`. M1 starts only on PROCEED.
+
+## #305 Fighting game text callouts, 2026-11-20
+
+Branch `feat/305-callouts` from `epic/city-look`; draft PR, base `epic/city-look` (the base changes to `main` after PR #304 merges). Design and verification: `docs/decisions.md`, 2026-11-20.
+
+| Part | Where | Verified |
+|---|---|---|
+| Queue, beat timing, card look (pure) | `src/ui/callout-math.js` | Vitest `callout-math.test.js`, 24 tests |
+| DOM and type | `src/ui/callouts.js`, `src/ui/callouts.css` | Playwright `e2e/callouts.spec.js` 5 of 5; screenshots `e2e/__screenshots__/callout-*.jpg` |
+| Hooks: first key, run end, replay | `src/main.js` (about 40 lines) | Same spec (a real key, a real run end, a real replay) |
+| Hooks: landmark claim, combo bank | `src/main.js` | NOT verified by the spec: it pushes the claim and combo callouts through `window.__atl.callouts`, not through a real claim or a real bank |
+
+NOT verified: the 55 FPS gate (3.5 FPS in this container with or without the callouts); the motion at full speed; a real phone.

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { createSkaterView } from "./skater-view.js";
-import { toonSkater } from "./toon.js";
+import { pbrSkater, toonSkater } from "./toon.js";
 
 // Three.js view of the NPC skaters (#134). Each NPC is a clone of a skater
 // GLB (src/render/skater-model.js: one parse for each GLB), with its own
@@ -11,12 +11,12 @@ import { toonSkater } from "./toon.js";
 // An outfit moves the texels whose hue is inside `band` (degrees) by
 // `shift` degrees, and scales their saturation by `sat`. Only texels with a
 // saturation of `minSat` or more change, so the skin and the white parts
-// keep their color. Nia: the band holds the green pants and wristband (her
-// jacket and her skin have the same hue, so the jacket keeps its color).
+// keep their color. Nia: the band holds the navy pants (#203). The green
+// wristband, the metal trucks, the jacket and the skin are outside the band.
 // Marcus: the band holds the teal jacket, the navy shorts, and the wheels.
 export const OUTFITS = {
-  cobalt: { model: "nia", band: [70, 170], shift: 110, sat: 1.1, minSat: 0.18 },
-  plum: { model: "nia", band: [70, 170], shift: 175, sat: 1.15, minSat: 0.18 },
+  wine: { model: "nia", band: [205, 245], shift: 115, sat: 1.1, minSat: 0.3 },
+  plum: { model: "nia", band: [205, 245], shift: 65, sat: 1.1, minSat: 0.3 },
   sunset: { model: "marcus", band: [150, 250], shift: 185, sat: 1.1, minSat: 0.2 },
   lime: { model: "marcus", band: [150, 250], shift: -85, sat: 1.0, minSat: 0.2 },
   berry: { model: "marcus", band: [150, 250], shift: 130, sat: 1.1, minSat: 0.2 },
@@ -140,23 +140,34 @@ export function outfitMaterial(source, outfit) {
   return mat;
 }
 
-// Gives a cloned skater (cloneSkaterModel()) an outfit and the toon look.
+// Gives a cloned skater (cloneSkaterModel()) an outfit and the look's
+// materials: the toon swap + ink hull, or the pbr env-lit GLB materials.
 // `toon: false` keeps the GLB shading (?toon=0).
-export function dressNpc(loaded, outfit, { toon = true } = {}) {
+export function dressNpc(loaded, outfit, { toon = true, look = "toon" } = {}) {
   loaded.root.traverse((o) => {
     if (!o.isMesh) return;
     o.material = Array.isArray(o.material) ? o.material.map((m) => outfitMaterial(m, outfit)) : outfitMaterial(o.material, outfit);
   });
-  return toon ? toonSkater(loaded) : [];
+  return toon ? (look === "pbr" ? pbrSkater : toonSkater)(loaded) : [];
 }
 
 // The meshes of each level of a dressed NPC: [LOD0 meshes, LOD1 meshes].
-// Each level is its skinned mesh and its ink hull. Null when the NPC has no
-// LOD1 mesh.
+// Each level is its skinned meshes (one for each glTF primitive, #167) and
+// their ink hulls. Null when the NPC has no LOD1 mesh.
 function levelMeshes(model, hulls) {
   if (!model.lod1Mesh) return null;
-  const of = (mesh) => [mesh, ...hulls.filter((h) => h.userData.outlineOf === mesh)];
-  return [of(model.skinnedMesh), of(model.lod1Mesh)];
+  return [withHulls(lod0Meshes(model), hulls), withHulls([model.lod1Mesh], hulls)];
+}
+
+// The meshes and the hulls that outline them. A merged hull
+// (src/render/toon.js) outlines a list of meshes.
+function withHulls(meshes, hulls) {
+  const owns = (h) => [h.userData.outlineOf].flat().some((m) => meshes.includes(m));
+  return [...meshes, ...hulls.filter(owns)];
+}
+
+function lod0Meshes(model) {
+  return model.skinnedMeshes ?? [model.skinnedMesh];
 }
 
 // Pure: the skinned vertices of a list of meshes.
@@ -166,8 +177,8 @@ function vertexCount(meshes) {
 
 // The view. `state` is from createNpcSkaters(). `load(model, { lod1 })`
 // returns a promise of a cloned skater (cloneSkaterModel()). `lod: false`
-// keeps the full model at all distances (?npclod=0).
-export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW.high, lod = true } = {}) {
+// keeps the full model at all distances (?npclod=0). `look`: "toon" or "pbr".
+export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW.high, lod = true, look = "toon" } = {}) {
   const group = new THREE.Group();
   group.name = "npc-skaters";
   const views = new Map();
@@ -181,13 +192,13 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
     group.add(view.group);
     const entry = { view, ready: false, outfit: npc.spec.outfit, levels: null, level: 0, vertices: [0, 0] };
     views.set(npc.id, entry);
-    const outfit = { name: npc.spec.outfit, ...(OUTFITS[npc.spec.outfit] ?? OUTFITS.cobalt) };
+    const outfit = { name: npc.spec.outfit, ...(OUTFITS[npc.spec.outfit] ?? OUTFITS.wine) };
     load(npc.spec.model, { lod1: lod })
       .then((model) => {
-        const hulls = dressNpc(model, outfit, { toon });
+        const hulls = dressNpc(model, outfit, { toon, look });
         view.attachModel(model);
         entry.levels = lod ? levelMeshes(model, hulls) : null;
-        const all = [model.skinnedMesh, ...hulls.filter((h) => h.userData.outlineOf === model.skinnedMesh)];
+        const all = withHulls(lod0Meshes(model), hulls);
         entry.vertices = entry.levels ? entry.levels.map(vertexCount) : [vertexCount(all), vertexCount(all)];
         setLevel(entry, 0);
         entry.ready = true;
@@ -231,9 +242,10 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
     get skinnedVertices() {
       return skinnedVertices;
     },
-    // Two draw calls for each NPC drawn: the skin and the ink hull.
+    // Two draw calls for each NPC drawn under the toon look (the skin and
+    // the ink hull); the pbr look draws the skin only.
     get drawCalls() {
-      return drawn * (toon ? 2 : 1);
+      return drawn * (toon && look !== "pbr" ? 2 : 1);
     },
     // Compiles the NPC shader programs before the first NPC comes into view.
     // The outfit gives the NPC skin its own program; without this step, a
@@ -266,8 +278,11 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
     lodOf(id) {
       return views.get(id)?.level ?? 0;
     },
-    // dt: the frame time. beat: { time, bpm } or null. eye: the camera position.
-    sync(next, dt, beat, eye) {
+    // dt: the frame time. beat: { time, bpm } or null. eye: the camera
+    // position. view: { sees(x, y, z, r) } (src/render/view-cull.js) or
+    // null; an NPC out of the view stays drawn (its shadow) and moves to its
+    // place, but skips the clip sync until it comes back.
+    sync(next, dt, beat, eye, view = null) {
       drawn = 0;
       lod1Drawn = 0;
       skinnedVertices = 0;
@@ -292,6 +307,11 @@ export function createNpcSkatersView(state, { load, toon = true, draw = NPC_DRAW
         drawn += 1;
         if (entry.level === 1) lod1Drawn += 1;
         skinnedVertices += entry.vertices[entry.level];
+        const [x, y, z] = npc.skater.position;
+        if (view && !view.sees(x, y + 0.9, z, 1.2)) {
+          entry.view.place(npc.skater);
+          continue;
+        }
         entry.view.sync(npc.skater, dt, beat);
       }
     },

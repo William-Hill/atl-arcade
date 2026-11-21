@@ -28,6 +28,18 @@ export function inputTime(domTimeStamp, anchor, startTime, totalOffsetSec = 0) {
   return audio - startTime - totalOffsetSec;
 }
 
+// The anchor from the scheduler's recent { perf, audio } readings (oldest
+// first). The browser updates currentTime in chunks, so a reading is late
+// by up to one chunk, never early: the reading with the largest
+// audio - perf offset is the freshest, and the anchor uses it at the
+// newest perf time.
+export function envelopeAnchor(samples) {
+  const last = samples[samples.length - 1];
+  let best = -Infinity;
+  for (const s of samples) best = Math.max(best, s.audio - s.perf / 1000);
+  return { perf: last.perf, audio: last.perf / 1000 + best };
+}
+
 // The performance.now() timestamp at which an input would judge as exactly
 // on beat `index`. The inverse of inputTime.
 export function beatPerfTime(index, bpm, anchor, startTime, totalOffsetSec = 0) {

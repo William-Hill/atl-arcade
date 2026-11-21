@@ -1,5 +1,5 @@
-// The low-poly toon car kit (issue #132): sedan, hatchback, pickup, van, and
-// a city bus in the MARTA colors (white, blue, and orange; no logo, no
+// The low-poly toon car kit (issue #132): sedan, hatchback, pickup, van,
+// taxi, box truck, and a city bus in the MARTA colors (white, blue, and orange; no logo, no
 // text). Pure: plain arrays, no Three.js. Built in code, so there is no
 // generated model and no provenance file.
 //
@@ -155,6 +155,79 @@ function van() {
   return b.done();
 }
 
+// A plain yellow taxi with a teal stripe and a blank roof light, like
+// assets/vehicles/taxi.glb. It keeps its own colors (no paint).
+function taxi() {
+  const { length: L, width: W, height: H } = CAR_SIZE.taxi;
+  const b = builder();
+  const h = W / 2;
+  const yellow = hex(0xf5c518);
+  b.shadow(L, W);
+  b.block({ x0: -L / 2, x1: L / 2, y0: 0.3, y1: 0.84, w0: h }, yellow);
+  b.block(
+    { x0: -L / 2 + 0.05, x1: L / 2 - 0.05, y0: 0.25, y1: 0.42, w0: h + 0.02 },
+    TRIM,
+  );
+  for (const s of [1, -1])
+    b.block(
+      { x0: -1.2, x1: 1.0, y0: 0.62, y1: 0.7, w0: 0.02, z: s * (h - 0.005) },
+      hex(0x1aa59a),
+    );
+  b.block(
+    {
+      x0: -1.3,
+      x1: 1.0,
+      y0: 0.84,
+      y1: 1.42,
+      w0: h - 0.08,
+      tx0: -1.0,
+      tx1: 0.5,
+      w1: h - 0.2,
+    },
+    GLASS,
+  );
+  b.block({ x0: -1.02, x1: 0.52, y0: 1.41, y1: 1.47, w0: h - 0.19 }, yellow);
+  b.block({ x0: -0.45, x1: 0.15, y0: 1.47, y1: H, w0: 0.42 }, hex(0xf4f1ea));
+  b.wheels([-1.45, 1.45], 0.32, h);
+  b.lights(L / 2, -L / 2, 0.6, h);
+  return b.done();
+}
+
+// A box truck: a painted cab and a white cargo box.
+function boxTruck() {
+  const { length: L, width: W, height: H } = CAR_SIZE.box_truck;
+  const b = builder();
+  const h = W / 2;
+  const cab = L / 2 - 1.9;
+  b.shadow(L, W);
+  b.block({ x0: -L / 2, x1: L / 2, y0: 0.45, y1: 0.75, w0: h - 0.1 }, TRIM);
+  b.block(
+    { x0: -L / 2, x1: cab - 0.15, y0: 0.75, y1: H, w0: h },
+    hex(0xf4f4f0),
+  );
+  b.block({ x0: cab, x1: L / 2, y0: 0.75, y1: 1.6, w0: h - 0.05 }, WHITE, 1);
+  b.block(
+    {
+      x0: cab,
+      x1: L / 2 - 0.25,
+      y0: 1.6,
+      y1: 2.6,
+      w0: h - 0.08,
+      tx1: L / 2 - 0.7,
+      w1: h - 0.12,
+    },
+    GLASS,
+  );
+  b.block(
+    { x0: cab, x1: L / 2 - 0.68, y0: 2.6, y1: 2.75, w0: h - 0.12 },
+    WHITE,
+    1,
+  );
+  b.wheels([-L / 2 + 1.6, L / 2 - 1.3], 0.48, h, 0.3);
+  b.lights(L / 2, -L / 2, 0.85, h, 0.18);
+  return b.done();
+}
+
 // A city bus in the MARTA colors: a white body, a blue band, and an orange
 // line. It keeps its own colors (no paint).
 function bus() {
@@ -186,6 +259,26 @@ function farShape(kind) {
     b.block({ x0: -L / 2, x1: L / 2, y0: 0.3, y1: H, w0: h }, hex(0xf4f4f0));
     return b.done();
   }
+  if (kind === "box_truck") {
+    b.block(
+      { x0: -L / 2, x1: L / 2 - 2.05, y0: 0.45, y1: H, w0: h },
+      hex(0xf4f4f0),
+    );
+    b.block(
+      { x0: L / 2 - 1.9, x1: L / 2, y0: 0.45, y1: 2.75, w0: h - 0.05 },
+      WHITE,
+      1,
+    );
+    return b.done();
+  }
+  if (kind === "taxi") {
+    b.block(
+      { x0: -L / 2, x1: L / 2, y0: 0.25, y1: 0.84, w0: h },
+      hex(0xf5c518),
+    );
+    b.block({ x0: -1.1, x1: 0.7, y0: 0.84, y1: H, w0: h - 0.15 }, GLASS);
+    return b.done();
+  }
   const split = kind === "van" ? 1.05 : kind === "pickup" ? 1.0 : 0.84;
   b.block({ x0: -L / 2, x1: L / 2, y0: 0.25, y1: split, w0: h }, WHITE, 1);
   if (kind === "van") b.block({ x0: -L / 2, x1: 1.6, y0: split, y1: H, w0: h - 0.02 }, WHITE, 1);
@@ -194,7 +287,7 @@ function farShape(kind) {
   return b.done();
 }
 
-const BUILD = { sedan, hatchback, pickup, van, bus };
+const BUILD = { sedan, hatchback, pickup, van, taxi, box_truck: boxTruck, bus };
 
 // { kind: template, `${kind}_lod1`: template } for every car kind.
 export function carTemplates() {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BEAT } from "../sim/skate/constants.js";
-import { beatLength, beatPerfTime, inputTime, judge, mean, phase, stddev } from "./beat-math.js";
+import { beatLength, beatPerfTime, envelopeAnchor, inputTime, judge, mean, phase, stddev } from "./beat-math.js";
 
 describe("judge", () => {
   const len = beatLength(100); // 0.6 s
@@ -51,6 +51,23 @@ describe("anchor mapping", () => {
       expect(r.index).toBe(i);
       expect(Math.abs(r.offsetMs)).toBeLessThan(1e-6);
     }
+  });
+
+  it("takes the freshest reading of a clock that updates in chunks (envelopeAnchor)", () => {
+    // True audio time = perf / 1000 + 2; currentTime updates every 21.3 ms.
+    const chunk = 1024 / 48000;
+    const samples = [];
+    for (let perf = 1000; perf <= 1500; perf += 25 + (perf % 7)) {
+      const truth = perf / 1000 + 2;
+      samples.push({ perf, audio: Math.floor(truth / chunk) * chunk });
+    }
+    const a = envelopeAnchor(samples);
+    const last = samples[samples.length - 1];
+    expect(a.perf).toBe(last.perf);
+    expect(Math.abs(a.audio - (last.perf / 1000 + 2))).toBeLessThan(0.002);
+    // A single reading is late by up to one chunk.
+    expect(last.perf / 1000 + 2 - last.audio).toBeGreaterThanOrEqual(0);
+    expect(envelopeAnchor([{ perf: 10, audio: 3 }])).toEqual({ perf: 10, audio: 3 });
   });
 
   it("gives the beat phase in 0..1", () => {

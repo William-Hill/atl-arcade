@@ -6,7 +6,7 @@ import { createSkaterEnv } from "../skate/skater.js";
 import { createSkateState, stepSkate } from "../skate/controller.js";
 import { BEAT } from "../skate/constants.js";
 import { chainStrips, followLineScript, pointAt } from "../../playtest/trail-script.js";
-import { BELTLINE_SKATERS, GREYBOX_SKATERS, beatPhase, createNpcSkaters, projectNear, skaterObstacles, stepNpcSkaters } from "./skaters.js";
+import { BELTLINE_SKATERS, GREYBOX_SKATERS, PILOT, beatPhase, createNpcSkaters, projectNear, skaterObstacles, stepNpcSkaters } from "./skaters.js";
 import { createPath } from "./path.js";
 import { createCrowd, stepCrowd } from "./crowd.js";
 
@@ -106,9 +106,8 @@ describe("NPC skaters", () => {
       }
     }
     st.npcs.forEach(expectClean);
-    // A skater body is 0.3 m in radius. The crowd does not stop for a
-    // skater, so a crowd NPC can brush a skater that waits (one event in this
-    // minute, 0.16 m from the skater center). No skater runs into the crowd.
+    // A skater body is 0.3 m in radius. No skater runs into the crowd, and
+    // a crowd NPC does not step into a skater who waits (crowd.js).
     expect(closest).toBeGreaterThan(0.1);
     // They still ride: at least 150 m each in the minute.
     for (const n of st.npcs) expect(n.stats.distance, `${n.id} distance`).toBeGreaterThan(150);
@@ -176,5 +175,64 @@ describe("NPC skaters", () => {
     const copy = [...player];
     ride(worlds.beltline, BELTLINE_SKATERS, 120, { player: () => player });
     expect(player).toEqual(copy);
+  });
+});
+
+describe("NPC skaters far-step (#189)", () => {
+  it("rides 60 s far from the camera on the long step, with no fall, no bonk, and no NPC contact", () => {
+    // The camera far off: every NPC steps every PILOT.far stride ticks.
+    const focus = [1e5, 1e5];
+    let st = createNpcSkaters(BELTLINE, { env: worlds.beltline.env });
+    let minGap = Infinity;
+    let skipped = 0;
+    for (let i = 0; i < MINUTE; i += 1) {
+      const before = st.npcs;
+      st = stepNpcSkaters(st, DT, worlds.beltline.env, worlds.beltline.skaterEnv, { focus });
+      skipped += st.npcs.filter((n, k) => n === before[k]).length;
+      for (let a = 0; a < st.npcs.length; a += 1) {
+        for (let b = a + 1; b < st.npcs.length; b += 1) {
+          const pa = st.npcs[a].skater.position;
+          const pb = st.npcs[b].skater.position;
+          minGap = Math.min(minGap, Math.hypot(pa[0] - pb[0], pa[2] - pb[2]));
+        }
+      }
+    }
+    const stride = PILOT.far[PILOT.far.length - 1][1];
+    expect(skipped).toBe(st.npcs.length * MINUTE * (1 - 1 / stride));
+    st.npcs.forEach(expectClean);
+    expect(minGap).toBeGreaterThan(0.8);
+    for (const n of st.npcs) {
+      expect(n.stats.distance, `${n.id} distance`).toBeGreaterThan(150);
+      expect(n.stats.jumps + n.stats.dances).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it("steps an NPC near the camera on every tick", () => {
+    let st = createNpcSkaters(BELTLINE, { env: worlds.beltline.env });
+    const [x, , z] = st.npcs[0].skater.position;
+    for (let i = 0; i < 30; i += 1) {
+      const before = st.npcs[0];
+      st = stepNpcSkaters(st, DT, worlds.beltline.env, worlds.beltline.skaterEnv, { focus: [st.npcs[0].skater.position[0], st.npcs[0].skater.position[2]] });
+      expect(st.npcs[0]).not.toBe(before);
+    }
+    expect(Math.hypot(st.npcs[0].skater.position[0] - x, st.npcs[0].skater.position[2] - z)).toBeGreaterThan(0);
+  });
+});
+
+
+describe("the body of an NPC skater", () => {
+  it("is SKATE, not the player's body from skaterEnv", async () => {
+    const { bodyFor, skateFor } = await import("../skate/body.js");
+    const world = worlds.greybox;
+    const run = (skaterEnv) => {
+      let st = createNpcSkaters(world.level, { specs: GREYBOX_SKATERS, env: world.env });
+      for (let i = 0; i < 600; i += 1) st = stepNpcSkaters(st, DT, world.env, skaterEnv);
+      return st.npcs.map((n) => [...n.skater.position, n.skater.speed]);
+    };
+    // The player is Marcus: his body and his dances must not reach the NPCs.
+    const asMarcus = { ...world.skaterEnv, skater: "marcus", skate: skateFor(bodyFor("marcus")) };
+    const asNia = { ...world.skaterEnv, skater: "nia", skate: skateFor(bodyFor("nia")) };
+    expect(run(asMarcus)).toEqual(run(asNia));
+    expect(bodyFor("constructor")).toBeNull();
   });
 });

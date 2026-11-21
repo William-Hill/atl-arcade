@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { createBridge } from "./autopilot-bridge.js";
-import { controlsFromBindings, createSkateHooks, movementNumbers, playerFromSkater, steerToward, SKATER_HALF_HEIGHT } from "./hooks.js";
+import { controlsFromBindings, createSkateHooks, movementNumbers, playerFromSkater, steerToward, MOVE_WALL_FACTOR, SKATER_HALF_HEIGHT } from "./hooks.js";
+import { FIXED_DT } from "../sim/fixed-step.js";
 import { createBindings } from "../input/bindings.js";
 import { createSkateState } from "../sim/skate/controller.js";
 import { SKATE } from "../sim/skate/constants.js";
@@ -60,8 +61,45 @@ describe("movementNumbers", () => {
 
 // The vendored bridge on a real Three.js scene graph and the real greybox
 // level view: paths, classes, and the kit frame.
+describe("the move hook", () => {
+  // A fake game: each frame() runs `steps` fixed ticks and takes `wallMs`.
+  function fakeGame({ steps, wallMs }) {
+    let wall = 0;
+    const atl = { ticks: 0, skater: { yaw: 0 }, input: { bindings: createBindings() } };
+    const held = [];
+    const keys = {
+      hold: (k) => held.push(`hold:${k}`),
+      release: (k) => held.push(`release:${k}`),
+      frame: async () => {
+        atl.ticks += steps;
+        wall += wallMs;
+      },
+    };
+    const hooks = createSkateHooks({ atl, level: GREYBOX, now: () => wall });
+    return { atl, keys, hooks, held, wall: () => wall };
+  }
+
+  it("counts the seconds in game time, so a slow frame rate gives the same move", async () => {
+    const fast = fakeGame({ steps: 1, wallMs: 1000 / 60 });
+    await fast.hooks.move({ direction: [1, 0, 0], seconds: 2, scale: 1, keys: fast.keys });
+    // 5 steps in a 300 ms frame: the fixed-step limit on a slow machine.
+    const slow = fakeGame({ steps: 5, wallMs: 300 });
+    await slow.hooks.move({ direction: [1, 0, 0], seconds: 2, scale: 1, keys: slow.keys });
+    expect(fast.atl.ticks).toBe(Math.round(2 / FIXED_DT));
+    expect(slow.atl.ticks).toBe(fast.atl.ticks);
+    expect(slow.held.at(-1)).toMatch(/^release:/);
+  });
+
+  it("stops a move in a paused game after MOVE_WALL_FACTOR times the seconds", async () => {
+    const paused = fakeGame({ steps: 0, wallMs: 100 });
+    await paused.hooks.move({ direction: [1, 0, 0], seconds: 0.5, scale: 1, keys: paused.keys });
+    expect(paused.wall()).toBe(0.5 * 1000 * MOVE_WALL_FACTOR);
+    expect(paused.held.at(-1)).toMatch(/^release:/);
+  });
+});
+
 describe("the bridge on Skate ATL's scene", () => {
-  function setup() {
+  function setup(extra = {}) {
     const scene = new THREE.Scene();
     const levelView = createLevelView(GREYBOX);
     scene.add(levelView.root);
@@ -93,6 +131,7 @@ describe("the bridge on Skate ATL's scene", () => {
       keyTarget: { dispatchEvent: (e) => keys.push(`${e.type}:${e.code}`) },
       global: { navigator: { getGamepads: () => [] } },
       requestFrame: () => {},
+      ...extra,
     });
     return { bridge, atl, keys, resets: () => resets };
   }
@@ -140,5 +179,40 @@ describe("the bridge on Skate ATL's scene", () => {
     const { bridge } = setup();
     const r = await bridge.handle("rc", { verb: "property", body: { objectPath: "atl", propertyName: "skater.state" } });
     expect(r).toEqual({ "skater.state": "rolling" });
+  });
+
+  // A fake WebSocket: the test opens, welcomes, and closes it by hand.
+  function fakeSockets() {
+    const sockets = [];
+    class FakeSocket {
+      constructor(url) {
+        this.url = url;
+        sockets.push(this);
+      }
+      send() {}
+      close() {}
+    }
+    return { sockets, WebSocket: FakeSocket };
+  }
+
+  it("keeps the held keys when a connect fails, and lets them go when a connected agent leaves", async () => {
+    vi.useFakeTimers();
+    try {
+      const { sockets, WebSocket } = fakeSockets();
+      const { bridge, keys } = setup({ WebSocket });
+      bridge.connect();
+      await bridge.handle("key", { key: "W", mode: "hold", lease: 10 });
+      // A failed connect (no agent service): the key stays down.
+      sockets[0].onclose();
+      expect(keys).toEqual(["keydown:KeyW"]);
+      // A connected agent leaves: its keys go up.
+      vi.advanceTimersByTime(1000);
+      sockets[1].onmessage({ data: JSON.stringify({ type: "welcome" }) });
+      sockets[1].onclose();
+      expect(keys).toEqual(["keydown:KeyW", "keyup:KeyW"]);
+      bridge.close?.();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

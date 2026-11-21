@@ -1,0 +1,192 @@
+{
+  "pbr-high": {
+    "quality": "high",
+    "look": "pbr",
+    "views": {
+      "trail": {
+        "calls": 253,
+        "triangles": 798593,
+        "textures": 86,
+        "geometries": 149
+      },
+      "trail-high": {
+        "calls": 251,
+        "triangles": 810323,
+        "textures": 86,
+        "geometries": 149
+      },
+      "street": {
+        "calls": 343,
+        "triangles": 1097769,
+        "textures": 87,
+        "geometries": 224
+      },
+      "sidewalk": {
+        "calls": 105,
+        "triangles": 284129,
+        "textures": 87,
+        "geometries": 233
+      },
+      "brick": {
+        "calls": 253,
+        "triangles": 976829,
+        "textures": 87,
+        "geometries": 253
+      }
+    },
+    "groundTextures": [],
+    "groundTextureBytes": 0
+  },
+  "pbr-phone": {
+    "quality": "phone",
+    "look": "pbr",
+    "views": {
+      "trail": {
+        "calls": 56,
+        "triangles": 189440,
+        "textures": 55,
+        "geometries": 86
+      },
+      "trail-high": {
+        "calls": 56,
+        "triangles": 194652,
+        "textures": 55,
+        "geometries": 86
+      },
+      "street": {
+        "calls": 80,
+        "triangles": 247518,
+        "textures": 55,
+        "geometries": 112
+      },
+      "sidewalk": {
+        "calls": 27,
+        "triangles": 89629,
+        "textures": 56,
+        "geometries": 128
+      },
+      "brick": {
+        "calls": 57,
+        "triangles": 184236,
+        "textures": 56,
+        "geometries": 157
+      }
+    },
+    "groundTextures": [],
+    "groundTextureBytes": 0
+  },
+  "pbr-low": {
+    "quality": "low",
+    "look": "pbr",
+    "views": {
+      "trail": {
+        "calls": 55,
+        "triangles": 140584,
+        "textures": 53,
+        "geometries": 95
+      },
+      "trail-high": {
+        "calls": 55,
+        "triangles": 146492,
+        "textures": 53,
+        "geometries": 96
+      },
+      "street": {
+        "calls": 79,
+        "triangles": 180403,
+        "textures": 53,
+        "geometries": 127
+      },
+      "sidewalk": {
+        "calls": 26,
+        "triangles": 79874,
+        "textures": 54,
+        "geometries": 146
+      },
+      "brick": {
+        "calls": 56,
+        "triangles": 143298,
+        "textures": 54,
+        "geometries": 181
+      }
+    },
+    "groundTextures": [],
+    "groundTextureBytes": 0
+  },
+  "toon-high": {
+    "quality": "high",
+    "look": "toon",
+    "views": {
+      "trail": {
+        "calls": 234,
+        "triangles": 642873,
+        "textures": 62,
+        "geometries": 130
+      },
+      "trail-high": {
+        "calls": 232,
+        "triangles": 642061,
+        "textures": 62,
+        "geometries": 130
+      },
+      "street": {
+        "calls": 302,
+        "triangles": 1009829,
+        "textures": 62,
+        "geometries": 198
+      },
+      "sidewalk": {
+        "calls": 98,
+        "triangles": 285469,
+        "textures": 62,
+        "geometries": 207
+      },
+      "brick": {
+        "calls": 242,
+        "triangles": 852011,
+        "textures": 62,
+        "geometries": 227
+      }
+    },
+    "groundTextures": [],
+    "groundTextureBytes": 0
+  },
+  "toon-low": {
+    "quality": "low",
+    "look": "toon",
+    "views": {
+      "trail": {
+        "calls": 50,
+        "triangles": 111627,
+        "textures": 33,
+        "geometries": 77
+      },
+      "trail-high": {
+        "calls": 50,
+        "triangles": 117067,
+        "textures": 33,
+        "geometries": 78
+      },
+      "street": {
+        "calls": 62,
+        "triangles": 145104,
+        "textures": 33,
+        "geometries": 102
+      },
+      "sidewalk": {
+        "calls": 26,
+        "triangles": 80672,
+        "textures": 34,
+        "geometries": 121
+      },
+      "brick": {
+        "calls": 54,
+        "triangles": 125590,
+        "textures": 34,
+        "geometries": 156
+      }
+    },
+    "groundTextures": [],
+    "groundTextureBytes": 0
+  }
+}

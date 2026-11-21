@@ -5,8 +5,9 @@ import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { patchPedVertex } from "./peds-view.js";
 import { withLeafCut } from "./leaf-cut.js";
-import { GRADE } from "./look.js";
+import { GRADE_PIVOT, SPLIT, TIME_GRADES } from "./pbr-palette.js";
 
 // The high tier post chain:
 //   scene (MSAA x4) -> GTAO ambient occlusion -> ink outlines -> bloom -> output.
@@ -156,72 +157,184 @@ const InkShader = {
     }`,
 };
 
-// The color grade of the pbr look (look.js GRADE and gradeColor()). It runs
-// on the linear HDR color, before the tone mapping of the output pass.
+// The grade pass (pbr look), on the linear color before the tone mapping:
+// a contrast on the luma around a mid gray (GRADE_PIVOT), a saturation that
+// keeps the luma, a split tone (cool shadows, warm lights) scaled by uWarm,
+// a small black lift, and the district tint (src/render/pbr-palette.js
+// gradePixel() is the same formula). src/render/pbr-look.js writes the
+// uniforms each frame by the time of day and the district.
+const v3 = (c) => `vec3(${c.map((v) => v.toFixed(4)).join(", ")})`;
+
+// The grade formula in GLSL, for the grade passes and for the material grade
+// of the low tier (src/render/pbr-look.js installMaterialGrade()).
+// The input and the output are linear colors before the tone mapping.
+// The guard lets a shader have it two times: the material grade puts it in
+// the tone mapping chunk of every shader with tone mapping, and the phone
+// grade pass draws to the canvas with tone mapping.
+export const PBR_GRADE_GLSL = /* glsl */ `
+    #ifndef PBR_GRADE_FN
+    #define PBR_GRADE_FN
+    vec3 pbrGrade(vec3 col, float contrast, float sat, float warm, float lift, vec3 tint) {
+      vec3 c = max(col, vec3(0.0));
+      float l0 = dot(c, vec3(0.2126, 0.7152, 0.0722));
+      float l1 = l0 > 0.0 ? ${GRADE_PIVOT.toFixed(4)} * pow(l0 / ${GRADE_PIVOT.toFixed(4)}, contrast) : 0.0;
+      c *= l0 > 1e-6 ? l1 / l0 : 0.0;
+      float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+      c = max(vec3(l) + (c - vec3(l)) * sat, vec3(0.0));
+      float w = smoothstep(${SPLIT.range[0].toFixed(4)}, ${SPLIT.range[1].toFixed(4)}, l);
+      return (c * (vec3(1.0) + warm * mix(${v3(SPLIT.shadow)}, ${v3(SPLIT.light)}, w)) + vec3(lift)) * tint;
+    }
+    #endif`;
+
 const GradeShader = {
-  uniforms: { tDiffuse: { value: null } },
+  uniforms: {
+    tDiffuse: { value: null },
+    uContrast: { value: TIME_GRADES.day.contrast },
+    uSat: { value: TIME_GRADES.day.saturation },
+    uWarm: { value: TIME_GRADES.day.warm },
+    uLift: { value: 0.0 },
+    uTint: { value: new THREE.Vector3(1, 1, 1) },
+  },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
-    void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse;
+    uniform float uContrast;
+    uniform float uSat;
+    uniform float uWarm;
+    uniform float uLift;
+    uniform vec3 uTint;
     varying vec2 vUv;
+    ${PBR_GRADE_GLSL}
     void main() {
-      vec4 c = texture2D(tDiffuse, vUv);
-      const vec3 W = vec3(0.2126, 0.7152, 0.0722);
-      float l0 = dot(c.rgb, W);
-      float l1 = l0 > 0.0 ? 0.18 * pow(l0 / 0.18, ${f3(GRADE.contrast)}) : 0.0;
-      vec3 o = c.rgb * (l0 > 0.0 ? l1 / l0 : 0.0);
-      float l = dot(o, W);
-      o = max(vec3(l) + (o - vec3(l)) * ${f3(GRADE.saturation)}, 0.0);
-      float w = smoothstep(${f3(GRADE.split[0])}, ${f3(GRADE.split[1])}, l);
-      o *= mix(vec3(${GRADE.shadowTint.map(f3).join(", ")}), vec3(${GRADE.lightTint.map(f3).join(", ")}), w);
-      gl_FragColor = vec4(o, c.a);
+      vec4 col = texture2D(tDiffuse, vUv);
+      gl_FragColor = vec4(pbrGrade(col.rgb, uContrast, uSat, uWarm, uLift, uTint), col.a);
     }`,
 };
 
-export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true, ink: inkStrength = 0.85, grade = false }) {
+// The GTAO pass draws the scene again for its normal and depth buffer, with
+// renderer.render(). Three.js draws the sun shadow map in every
+// renderer.render() of a lit scene, so the shadow map was drawn twice per
+// frame (107 draw calls and 156 k triangles on high toon, #188). The normal
+// material reads no shadow, and the main pass has already drawn this frame's
+// map, so this pass keeps it.
+export function keepShadowMap(pass) {
+  const renderOverride = pass._renderOverride;
+  pass._renderOverride = function (renderer, ...rest) {
+    const shadowMap = renderer.shadowMap;
+    const auto = shadowMap.autoUpdate;
+    const needs = shadowMap.needsUpdate;
+    shadowMap.autoUpdate = false;
+    shadowMap.needsUpdate = false;
+    try {
+      return renderOverride.call(this, renderer, ...rest);
+    } finally {
+      shadowMap.autoUpdate = auto;
+      shadowMap.needsUpdate = needs;
+    }
+  };
+  return pass;
+}
+
+export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true, ink: inkStrength = 0.85, look = "toon" }) {
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
 
   const gtao = new GTAOPass(scene, camera, size.x, size.y);
-  // The tree leaf cards (src/render/leaf-cut.js): AO and ink see the leaves.
+  // The tree leaf cut (src/render/leaf-cut.js): the AO sees the trunks, the
+  // crown cores and the impostors, but not the leaf cards (#202).
   withLeafCut(gtao.normalMaterial);
+  // The walkers (src/render/peds-view.js): the walk and the hidden parts in
+  // the vertex shader. Without this, the ink drew the outline of every
+  // optional part (a skirt, a bag, a hat) on every walker.
+  const leafCompile = gtao.normalMaterial.onBeforeCompile;
+  const leafKey = gtao.normalMaterial.customProgramCacheKey;
+  gtao.normalMaterial.onBeforeCompile = (shader, r) => {
+    leafCompile(shader, r);
+    patchPedVertex(shader);
+  };
+  gtao.normalMaterial.customProgramCacheKey = () => `${leafKey()}-peds`;
+  keepShadowMap(gtao);
   // World units are meters: a 2.5 m radius darkens the ground at a wall
-  // foot, the inside corners, and under the trees.
-  gtao.updateGtaoMaterial({ radius: 2.5, distanceExponent: 1.5, thickness: 4, scale: 1.2, samples: 12 });
+  // foot, the inside corners, and under the trees. A 1 m thickness: only
+  // geometry within 1 m in depth occludes, so a pole in front of open
+  // ground leaves no dark halo on it.
+  gtao.updateGtaoMaterial({ radius: 2.5, distanceExponent: 1.5, thickness: 1, scale: 1.2, samples: 12 });
   gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
-  gtao.blendIntensity = grade ? 1.0 : 0.9;
+  const pbr = look === "pbr";
+  // Characters (skinned: Nia, the NPC skaters, the people, the dog; and the
+  // baked walkers of ped-crowd.js, userData.character) stay out of the AO
+  // depth, as points and lines do: their legs left a speckled dark patch on
+  // the ground around the feet. The sun shadow grounds them. Only the pbr
+  // look: the toon ink reads its outlines from this depth.
+  if (pbr) gtao._overrideVisibility = function () {
+    const cache = this._visibilityCache;
+    this.scene.traverse((o) => {
+      if ((o.isPoints || o.isLine || o.isLine2 || o.isSkinnedMesh || o.userData.character || o.userData.overlay) && o.visible) {
+        o.visible = false;
+        cache.push(o);
+      }
+    });
+  };
+  // The toon look: a skater's merged outline hull (src/render/toon.js)
+  // draws the same surface as its parts under the override material, so
+  // the parts stay out of this pass: one draw call per skater in place of
+  // 22 to 26 (#188). The depth and normals do not change.
+  // In both looks, an overlay (the comic effects, #113, userData.overlay)
+  // stays out: it is drawn in clip space or as a billboard, so the override
+  // material cannot draw it, and it must not get ink or AO.
+  else gtao._overrideVisibility = function () {
+    const cache = this._visibilityCache;
+    this.scene.traverse((o) => {
+      if ((o.isPoints || o.isLine || o.isLine2 || o.userData.normalStandIn?.visible || o.userData.overlay) && o.visible) {
+        o.visible = false;
+        cache.push(o);
+      }
+    });
+  };
+  gtao.blendIntensity = pbr ? 1.0 : 0.9;
   composer.addPass(gtao);
 
-  const ink = new ShaderPass(InkShader);
-  ink.uniforms.fadeNear.value = fadeNear;
-  ink.uniforms.fadeFar.value = fadeFar;
-  if (!halftone) ink.uniforms.halftone.value.x = 0;
-  ink.uniforms.strength.value = inkStrength;
-  composer.addPass(ink);
+  // The pbr look drops the ink lines and the halftone dots — the Jet Set
+  // Radio effect — and grades instead. The toon look keeps the ink pass.
+  let ink = null;
+  let grade = null;
+  if (pbr) {
+    grade = new ShaderPass(GradeShader);
+    composer.addPass(grade);
+  } else {
+    ink = new ShaderPass(InkShader);
+    ink.uniforms.fadeNear.value = fadeNear;
+    ink.uniforms.fadeFar.value = fadeFar;
+    if (!halftone) ink.uniforms.halftone.value.x = 0;
+    ink.uniforms.strength.value = inkStrength;
+    composer.addPass(ink);
+  }
 
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.28, 0.5, 0.92);
   composer.addPass(bloom);
-  if (grade) composer.addPass(new ShaderPass(GradeShader));
   composer.addPass(new OutputPass());
 
   function sync() {
-    ink.uniforms.tDepth.value = gtao.depthTexture;
-    ink.uniforms.tNormal.value = gtao.normalTexture;
-    ink.uniforms.cameraNear.value = camera.near;
-    ink.uniforms.cameraFar.value = camera.far;
-    ink.uniforms.ortho.value = camera.isOrthographicCamera ? 1 : 0;
-    ink.uniforms.thickness.value = 1.25 * Math.max(1, renderer.getPixelRatio());
-    if (ink.uniforms.halftone.value.x > 0) ink.uniforms.halftone.value.x = HALFTONE.cell * Math.max(1, renderer.getPixelRatio());
+    if (ink) {
+      ink.uniforms.tDepth.value = gtao.depthTexture;
+      ink.uniforms.tNormal.value = gtao.normalTexture;
+      ink.uniforms.cameraNear.value = camera.near;
+      ink.uniforms.cameraFar.value = camera.far;
+      ink.uniforms.ortho.value = camera.isOrthographicCamera ? 1 : 0;
+      ink.uniforms.thickness.value = 1.25 * Math.max(1, renderer.getPixelRatio());
+      if (ink.uniforms.halftone.value.x > 0) ink.uniforms.halftone.value.x = HALFTONE.cell * Math.max(1, renderer.getPixelRatio());
+    }
   }
   return {
     kind: "full",
     composer,
     gtao,
     ink,
+    grade,
     bloom,
     render() {
       sync();
@@ -231,7 +344,7 @@ export function createPost(renderer, scene, camera, { fadeNear, fadeFar, halfton
       const s = renderer.getDrawingBufferSize(new THREE.Vector2());
       // EffectComposer multiplies by the pixel ratio itself.
       syncComposerSize(composer, renderer, s);
-      ink.uniforms.resolution.value.set(s.x, s.y);
+      if (ink) ink.uniforms.resolution.value.set(s.x, s.y);
     },
     dispose() {
       // The composer also disposes `target`, its first render target.
@@ -317,27 +430,66 @@ const LiteInkShader = {
     }`,
 };
 
-export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true }) {
+// The phone tier post pass of the pbr look (#195): one scene pass into a
+// target with no MSAA (as the ink pass), then one fullscreen pass that
+// applies the grade (PBR_GRADE_GLSL), the tone mapping and the output color
+// space. The pbr look has no ink and no halftone, so the pass reads one
+// texel and no depth. A direct draw to the canvas costs more: the canvas
+// has MSAA.
+const LiteGradeShader = {
+  uniforms: {
+    tDiffuse: { value: null },
+    uContrast: { value: TIME_GRADES.day.contrast },
+    uSat: { value: TIME_GRADES.day.saturation },
+    uWarm: { value: TIME_GRADES.day.warm },
+    uLift: { value: 0.0 },
+    uTint: { value: new THREE.Vector3(1, 1, 1) },
+  },
+  vertexShader: LiteInkShader.vertexShader,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform float uContrast;
+    uniform float uSat;
+    uniform float uWarm;
+    uniform float uLift;
+    uniform vec3 uTint;
+    varying vec2 vUv;
+    ${PBR_GRADE_GLSL}
+    void main() {
+      vec4 col = texture2D(tDiffuse, vUv);
+      gl_FragColor = vec4(pbrGrade(col.rgb, uContrast, uSat, uWarm, uLift, uTint), col.a);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }`,
+};
+
+export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, halftone = true, look = "toon" }) {
+  // The pbr look (#195): the grade pass, with no ink, no halftone and no
+  // depth texture.
+  const pbr = look === "pbr";
+  const shader = pbr ? LiteGradeShader : LiteInkShader;
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
   const target = new THREE.WebGLRenderTarget(size.x, size.y, {
-    depthTexture: new THREE.DepthTexture(size.x, size.y),
+    depthTexture: pbr ? null : new THREE.DepthTexture(size.x, size.y),
     depthBuffer: true,
   });
   // An sRGB target keeps 8-bit colors without dark banding.
   target.texture.colorSpace = THREE.SRGBColorSpace;
   const material = new THREE.ShaderMaterial({
-    uniforms: THREE.UniformsUtils.clone(LiteInkShader.uniforms),
-    vertexShader: LiteInkShader.vertexShader,
-    fragmentShader: LiteInkShader.fragmentShader,
+    uniforms: THREE.UniformsUtils.clone(shader.uniforms),
+    vertexShader: shader.vertexShader,
+    fragmentShader: shader.fragmentShader,
     depthTest: false,
     depthWrite: false,
   });
   const u = material.uniforms;
   u.tDiffuse.value = target.texture;
-  u.tDepth.value = target.depthTexture;
-  u.fadeNear.value = fadeNear;
-  u.fadeFar.value = fadeFar;
-  if (!halftone) u.halftone.value.x = 0;
+  if (!pbr) {
+    u.tDepth.value = target.depthTexture;
+    u.fadeNear.value = fadeNear;
+    u.fadeFar.value = fadeFar;
+    if (!halftone) u.halftone.value.x = 0;
+  }
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
   quad.frustumCulled = false;
   const quadScene = new THREE.Scene();
@@ -345,6 +497,7 @@ export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, hal
   const quadCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
   function sync() {
+    if (pbr) return;
     u.cameraNear.value = camera.near;
     u.cameraFar.value = camera.far;
     const pr = Math.max(1, renderer.getPixelRatio());
@@ -353,7 +506,9 @@ export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, hal
   }
   return {
     kind: "lite",
-    ink: { uniforms: u },
+    // src/render/pbr-look.js writes the grade uniforms each frame.
+    ink: pbr ? null : { uniforms: u },
+    grade: pbr ? { uniforms: u } : null,
     render() {
       sync();
       renderer.setRenderTarget(target);
@@ -364,7 +519,7 @@ export function createLitePost(renderer, scene, camera, { fadeNear, fadeFar, hal
     setSize() {
       const s = renderer.getDrawingBufferSize(new THREE.Vector2());
       target.setSize(s.x, s.y);
-      u.resolution.value.set(s.x, s.y);
+      if (u.resolution) u.resolution.value.set(s.x, s.y);
     },
     dispose() {
       target.dispose();

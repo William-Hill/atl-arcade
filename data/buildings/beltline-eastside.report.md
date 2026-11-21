@@ -7,19 +7,19 @@ Written by `scripts/building-sources.mjs`. 1042 buildings.
 | Source | Buildings |
 | --- | ---: |
 | default | 110 |
-| height | 6 |
+| height | 5 |
 | levels | 14 |
-| override | 5 |
-| overture | 809 |
+| override | 7 |
+| overture | 808 |
 | overture-capped | 98 |
 
 ## Floors
 
 | Source | Buildings |
 | --- | ---: |
-| estimate | 1018 |
+| estimate | 1017 |
 | osm | 19 |
-| research | 5 |
+| research | 6 |
 
 ## Address
 
@@ -33,9 +33,9 @@ Written by `scripts/building-sources.mjs`. 1042 buildings.
 
 | Source | Buildings |
 | --- | ---: |
-| none | 1008 |
+| none | 1007 |
 | osm | 33 |
-| research | 1 |
+| research | 2 |
 
 ## Facade
 

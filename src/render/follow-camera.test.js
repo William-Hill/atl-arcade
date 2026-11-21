@@ -1,10 +1,11 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import * as THREE from "three";
 import { createFollowCamera } from "./follow-camera.js";
-import { createCameraState } from "../sim/camera.js";
+import { cameraPivot, createCameraState } from "../sim/camera.js";
 
 const offsets = vi.hoisted(() => ({ right: 0, up: 0, roll: 0, fov: 0, flash: 0 }));
 vi.mock("../sim/camera-fx.js", () => ({
+  CAMERA_FX: {},
   createCameraFx: () => ({}),
   stepCameraFx: (fx) => fx,
   cameraFxOffsets: () => offsets,
@@ -56,7 +57,11 @@ test("clipped cameras suppress movement offsets", () => {
   offsets.up = -0.3;
   const { camera, castRay, base, update } = setup([{ timeOfImpact: 1 }]);
   update();
-  expect(castRay).toHaveBeenCalledTimes(1);
+  // The close wall also makes the swing probes (#257 merge: the epic swing
+  // around a close blocker), but each ray starts at the skater pivot: no
+  // ray starts at the camera for an offset movement.
+  const pivot = new THREE.Vector3(...cameraPivot({ position: [0, 0, 0], yaw: 0, speed: 0 }));
+  for (const [ray] of castRay.mock.calls) expect(new THREE.Vector3(...Object.values(ray.origin)).distanceTo(pivot)).toBeLessThan(1e-10);
   expect(camera.position.distanceTo(base)).toBeGreaterThan(1);
 });
 

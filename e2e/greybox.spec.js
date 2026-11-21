@@ -11,7 +11,7 @@ function collectErrors(page) {
 
 test("the greybox block matches the reference from a fixed camera", async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto("/?view=fixed");
+  await page.goto("/?level=greybox&view=fixed");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
 
   const info = await page.evaluate(() => ({
@@ -27,7 +27,7 @@ test("the greybox block matches the reference from a fixed camera", async ({ pag
 
 test("every level object has a Rapier collider and the debug overlay draws them", async ({ page }) => {
   const errors = collectErrors(page);
-  await page.goto("/?view=fixed&debug=1");
+  await page.goto("/?level=greybox&view=fixed&debug=1");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
 
   const info = await page.evaluate(() => ({

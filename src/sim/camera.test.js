@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CAMERA, SKATE } from "./skate/constants.js";
-import { NO_LOOK, cameraGoal, createCameraState, createLook, mapLook, stepCamera, stepLook } from "./camera.js";
+import { NO_LOOK, cameraGoal, cameraPivot, chooseSwing, createCameraState, createLook, mapLook, orbitAbout, stepCamera, stepLook, stepSwing } from "./camera.js";
 import { createSkateState } from "./skate/controller.js";
 
 function skaterAt(position, yaw, speed) {
@@ -257,5 +257,258 @@ describe("player look", () => {
     let cam = createCameraState(s);
     for (let i = 0; i < 120; i += 1) cam = stepCamera(cam, s, 1 / 60, k, { yaw: Math.PI / 2, pitch: 0 });
     expect(cam.position[2]).toBeCloseTo(k.distance, 2);
+  });
+});
+
+// #230: the follow camera went inside a tree canopy and hid the skater.
+import { canopyDistance, canopyVolumes, createCanopyIndex, fitCrown, insideVolume, treeVolume } from "./camera.js";
+import { TREE_SPECIES, TREE_VARIANTS, treeKindFor, treeTemplate } from "../level/geo/trees.js";
+import { CANOPY_FIT } from "./canopy-fit.js";
+
+// A tree placement at x on the line z = 0 that gets `variant` of `species`.
+function placementOf(species, variant, extra = {}) {
+  for (let x = 0; x < 100; x += 0.7) {
+    const p = { kind: "tree_round", species, x, y: 0, z: 0, yaw: 0, ...extra };
+    if (treeKindFor(p) === `tree:${species}:${variant}`) return p;
+  }
+  throw new Error(`no placement for ${species}:${variant}`);
+}
+
+describe("tree canopy", () => {
+  // The camera step of follow-camera.js, with the canopy as the only blocker.
+  function settle(skater, volumes, frames = 90) {
+    const index = createCanopyIndex(volumes);
+    let cam = createCameraState(skater);
+    let allowed = Infinity;
+    let placed = cam;
+    for (let i = 0; i < frames; i += 1) {
+      cam = stepCamera(cam, skater, 1 / 60);
+      const pivot = cameraPivot(skater);
+      const full = Math.hypot(cam.position[0] - pivot[0], cam.position[1] - pivot[1], cam.position[2] - pivot[2]);
+      allowed = resolveClip(allowed, full, index.distance(pivot, cam.position), 1 / 60);
+      placed = placeCamera(cam, pivot, allowed);
+    }
+    return { cam, placed, pivot: cameraPivot(skater) };
+  }
+
+  it("builds a crown and a trunk volume for a tree prop, and none for a bench", () => {
+    const p = { kind: "tree_round", species: "oak", x: 4, y: 1, z: -2, yaw: 0, scale: 1.2 };
+    const v = treeVolume(p);
+    const fit = CANOPY_FIT.oak[Number(treeKindFor(p).split(":")[2])];
+    expect(v.crown.center[0]).toBe(4);
+    expect(v.crown.center[1]).toBeCloseTo(1 + fit.y * 1.2, 9);
+    expect(v.crown.radii).toEqual([fit.reach * 1.2, fit.h * 1.2, fit.reach * 1.2]);
+    expect(v.trunk.y0).toBe(1);
+    expect(treeVolume({ kind: "bench", x: 0, y: 0, z: 0 })).toBe(null);
+    expect(canopyVolumes([{ kind: "bench", x: 0, y: 0, z: 0 }, { kind: "tree_tall", x: 1, y: 0, z: 1 }])).toHaveLength(1);
+  });
+
+  it("finds the near side of a crown on the segment, and nothing past the end", () => {
+    const crown = { center: [-5, 3, 0], radii: [2, 1, 2] };
+    const trunk = { x: -5, z: 0, r: 0.3, y0: 0, y1: 3 };
+    const v = [{ crown, trunk }];
+    expect(canopyDistance([0, 3, 0], [-10, 3, 0], v)).toBeCloseTo(3, 9);
+    expect(canopyDistance([0, 3, 0], [-2, 3, 0], v)).toBe(Infinity);
+    // Low ray: the trunk blocks it.
+    expect(canopyDistance([0, 1, 0], [-10, 1, 0], v)).toBeCloseTo(4.7, 9);
+    // A pivot inside the crown ignores it.
+    expect(canopyDistance([-5, 3, 0], [-10, 3, 0], v)).toBe(Infinity);
+  });
+
+  it("moves the camera out of a canopy between the skater and the camera, with the skater in view", () => {
+    // Skater at the origin facing +x: the camera goal is 6.5 m behind, 2.8 m up.
+    const s = skaterAt([0, 0, 0], 0, 0);
+    const goal = cameraGoal(s, 0).position;
+    // A low crown (a magnolia) right around the camera goal.
+    const tree = { kind: "tree_tall", species: "magnolia", x: goal[0] - 0.5, y: 0, z: 0, yaw: 0 };
+    const volumes = canopyVolumes([tree]);
+    expect(insideVolume(volumes[0], goal)).toBe(true); // the bug: the camera ends in the leaves
+
+    const { placed, pivot } = settle(s, volumes);
+    expect(insideVolume(volumes[0], placed.position)).toBe(false);
+    // Pulled in toward the skater, still behind it.
+    const d = Math.hypot(placed.position[0] - pivot[0], placed.position[1] - pivot[1], placed.position[2] - pivot[2]);
+    expect(d).toBeLessThan(Math.hypot(goal[0] - pivot[0], goal[1] - pivot[1], goal[2] - pivot[2]));
+    expect(placed.position[0]).toBeLessThan(0);
+    // The skater is in view: nothing of the canopy on the line from the camera to the skater.
+    expect(canopyDistance(placed.position, pivot, volumes)).toBe(Infinity);
+    expect(canopyDistance(placed.position, [0, 0.2, 0], volumes)).toBe(Infinity);
+  });
+
+  it("leaves the camera alone when the canopy is off the line", () => {
+    const s = skaterAt([0, 0, 0], 0, 0);
+    const volumes = canopyVolumes([{ kind: "tree_round", species: "oak", x: -3, y: 0, z: 12, yaw: 0 }]);
+    const { placed, cam } = settle(s, volumes);
+    expect(placed.position).toEqual(cam.position);
+  });
+
+  it("eases back out after the tree, like after a wall", () => {
+    const s = skaterAt([0, 0, 0], 0, 0);
+    const goal = cameraGoal(s, 0).position;
+    const index = createCanopyIndex(canopyVolumes([{ kind: "tree_tall", species: "magnolia", x: goal[0], y: 0, z: 0, yaw: 0 }]));
+    const pivot = cameraPivot(s);
+    const full = Math.hypot(goal[0] - pivot[0], goal[1] - pivot[1]);
+    let allowed = resolveClip(Infinity, full, index.distance(pivot, goal), 1 / 60);
+    expect(allowed).toBeLessThan(full);
+    const empty = createCanopyIndex([]);
+    for (let i = 0; i < 180; i += 1) allowed = resolveClip(allowed, full, empty.distance(pivot, goal), 1 / 60);
+    expect(allowed).toBeCloseTo(full, 1);
+  });
+
+  it("indexes volumes by cell and answers inside() like the plain test", () => {
+    const props = [];
+    for (let i = 0; i < 50; i += 1) props.push({ kind: "tree_round", species: "oak", x: i * 9, y: 0, z: (i % 5) * 11, yaw: 0 });
+    const volumes = canopyVolumes(props);
+    const index = createCanopyIndex(volumes);
+    for (const q of [[9, 7, 11], [4.5, 7, 5], [100, 2, 30], [270, 6, 0]]) {
+      expect(index.inside(q)).toBe(volumes.some((v) => insideVolume(v, q)));
+    }
+    expect(index.distance([1, 1, 3], [60, 3, 3])).toBe(canopyDistance([1, 1, 3], [60, 3, 3], volumes));
+  });
+
+  // Review of #234: the volume ignored the variant `grow` scale and the
+  // crown offset, so a large crown reached past it.
+  it("holds every crown vertex of each procedural tree variant, at any scale and yaw", () => {
+    for (const species of Object.keys(TREE_SPECIES)) {
+      for (let variant = 0; variant < TREE_VARIANTS; variant += 1) {
+        for (const scale of [1, 1.3]) {
+          const p = placementOf(species, variant, { scale, y: 0.5 });
+          const v = treeVolume(p);
+          for (const cards of [false, true]) {
+            const P = treeTemplate(species, variant, 0, "summer", { cards }).positions;
+            const yaw = 1.1;
+            for (let i = 0; i < P.length; i += 3) {
+              if (P[i + 1] < TREE_SPECIES[species].clear) continue; // the trunk under the crown
+              const x = P[i] * Math.cos(yaw) + P[i + 2] * Math.sin(yaw);
+              const z = -P[i] * Math.sin(yaw) + P[i + 2] * Math.cos(yaw);
+              const q = [p.x + x * scale, p.y + P[i + 1] * scale, p.z + z * scale];
+              if (!insideVolume(v, q)) throw new Error(`${species}:${variant} ${cards ? "cards" : "puffs"} vertex ${i / 3} is outside the volume`);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  it("has a fit for each species and variant", () => {
+    for (const species of Object.keys(TREE_SPECIES)) {
+      expect(CANOPY_FIT[species]).toHaveLength(TREE_VARIANTS);
+      for (const f of CANOPY_FIT[species]) expect(f.reach).toBeGreaterThan(0);
+    }
+  });
+
+  it("fits the smallest round ellipsoid over the crown bottom", () => {
+    // Points on a sphere of radius 2 at height 5, and a trunk under it.
+    const pts = [];
+    for (let i = 0; i < 400; i += 1) {
+      const a = i * 2.39996;
+      const y = 1 - (2 * (i + 0.5)) / 400;
+      const r = Math.sqrt(1 - y * y);
+      pts.push(Math.cos(a) * r * 2, 5 + y * 2, Math.sin(a) * r * 2);
+    }
+    const trunk = [0.3, 0, 0, 0.3, 2.9, 0];
+    const f = fitCrown([pts, trunk], 3, { pad: 0 });
+    expect(f.y).toBeCloseTo(5, 0);
+    expect(f.h).toBeLessThan(2.6);
+    expect(f.reach).toBeLessThan(2.6);
+    for (let i = 0; i < pts.length; i += 3) {
+      const t = (pts[i + 1] - f.y) / f.h;
+      expect(Math.hypot(pts[i], pts[i + 2]) / f.reach).toBeLessThanOrEqual(Math.sqrt(1 - t * t) + 1e-9);
+    }
+    expect(fitCrown([trunk], 3)).toBe(null);
+  });
+
+  // Review of #234: distance() and near() made a Set, arrays and string
+  // keys each frame.
+  it("answers the same as the plain test with reused lists, across many queries", () => {
+    const props = [];
+    for (let i = 0; i < 80; i += 1) props.push({ kind: "tree_round", species: i % 2 ? "oak" : "magnolia", x: (i % 10) * 9 - 40, y: 0, z: Math.floor(i / 10) * 9 - 30, yaw: 0 });
+    const volumes = canopyVolumes(props);
+    const index = createCanopyIndex(volumes, 8);
+    let seed = 7;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 100 - 50;
+    for (let n = 0; n < 300; n += 1) {
+      const a = [rand(), 3, rand()];
+      const b = [rand(), 6, rand()];
+      expect(index.distance(a, b)).toBe(canopyDistance(a, b, volumes));
+      expect(index.inside(a)).toBe(volumes.some((v) => insideVolume(v, a)));
+    }
+    // near() lists each volume once, and its list is the caller's own.
+    const box = index.near(-50, -50, 50, 50);
+    expect(new Set(box).size).toBe(box.length);
+    expect(box).toHaveLength(volumes.length);
+    index.near(0, 0, 0, 0);
+    expect(box).toHaveLength(volumes.length);
+  });
+});
+
+// Playtest 2026-11-09: a wall or the edge fence close to the skater pulled the
+// camera in to 0.77 m. The camera now swings around her to a clear side.
+describe("swing around a close blocker", () => {
+  // A wall along x = 0.4 m east of the skater (the edge fence), and a probe
+  // that gives the distance from the pivot to the wall on the ray toward the
+  // camera goal for an orbit offset.
+  const skater = skaterAt([0, 0, 0], Math.PI / 2 + 0.6, 6); // north, away from the wall at 0.6 rad
+  const pivot = cameraPivot(skater);
+  const goalAt = (offset) => cameraGoal(skater, skater.yaw, CAMERA, { yaw: offset, pitch: 0 }).position;
+  const wallX = 0.4;
+  const hit = (offset) => {
+    const g = goalAt(offset);
+    const dx = g[0] - pivot[0];
+    const len = Math.hypot(dx, g[1] - pivot[1], g[2] - pivot[2]);
+    if (g[0] <= wallX) return Infinity;
+    return (len * (wallX - pivot[0])) / dx;
+  };
+  const range = Math.hypot(...goalAt(0).map((v, i) => v - pivot[i]));
+
+  it("keeps the camera behind the skater when nothing blocks it", () => {
+    expect(chooseSwing(() => Infinity, range, 0)).toBe(0);
+  });
+
+  it("swings to the nearest clear side when a blocker is close", () => {
+    expect(hit(0)).toBeLessThan(1.2);
+    const target = chooseSwing(hit, range, 0);
+    expect(target).not.toBe(0);
+    expect(hit(target)).toBeGreaterThanOrEqual(CAMERA.swingBelow * range);
+    // The smallest clear swing: one step less is still blocked.
+    const back = target - Math.sign(target) * CAMERA.swingStep;
+    if (Math.abs(back) > 1e-9) expect(hit(back)).toBeLessThan(CAMERA.swingBelow * range);
+  });
+
+  it("goes back behind the skater when the blocker clears", () => {
+    expect(chooseSwing(() => Infinity, range, 0.9)).toBe(0);
+  });
+
+  it("keeps the side it already swung to", () => {
+    const both = () => Infinity;
+    const blocked0 = (o) => (Math.abs(o) < 1e-9 ? 0.5 : both(o));
+    expect(chooseSwing(blocked0, range, -0.3)).toBeLessThan(0);
+    expect(chooseSwing(blocked0, range, 0.3)).toBeGreaterThan(0);
+  });
+
+  it("goes to the clearest offset when no offset is clear, and holds when nothing is better", () => {
+    const probe = (o) => 1 + Math.max(0, -o);
+    expect(chooseSwing(probe, range, 0)).toBeCloseTo(-CAMERA.swingMax, 6);
+    expect(chooseSwing(() => 1, range, 0.3)).toBe(0.3);
+  });
+
+  it("swings at most swingRate per second", () => {
+    expect(stepSwing(0, 1, 0.1)).toBeCloseTo(CAMERA.swingRate * 0.1, 9);
+    expect(stepSwing(0.95, 1, 0.1)).toBe(1);
+    expect(stepSwing(0, -1, 0.1)).toBeCloseTo(-CAMERA.swingRate * 0.1, 9);
+  });
+
+  it("orbitAbout turns a camera point like the look offset does", () => {
+    const a = goalAt(0);
+    const b = orbitAbout(a, skater.position, 0.7);
+    const want = goalAt(0.7);
+    for (let i = 0; i < 3; i += 1) expect(b[i]).toBeCloseTo(want[i], 9);
+  });
+
+  it("a frame loop gets the camera clear of the wall within 0.3 s", () => {
+    let offset = 0;
+    const dt = 1 / 60;
+    for (let i = 0; i < 18; i += 1) offset = stepSwing(offset, chooseSwing(hit, range, offset), dt);
+    expect(hit(offset)).toBeGreaterThanOrEqual(CAMERA.swingBelow * range);
   });
 });

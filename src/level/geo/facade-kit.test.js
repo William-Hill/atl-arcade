@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEPTH_TILE, FRONT, HOUSE_FRONT, KIT, WALK, buildingKit, crownKit, crownPanel, doorBay, facadeKit, frontEdge, frontEdges, frontWalk, gableRoof, houseFronts, housePorch, ledge, minRect, offsetRing, porchSpan, roofSolar, roofVents, shopEntrance, shopFront, solidBox, stairBulkhead, wallBox, wallClear, wallDepth } from "./facade-kit.js";
+import { DEPTH_TILE, FRONT, HOUSE_FRONT, KIT, MURAL_FRAME, WALK, buildingKit, muralFrame, crownKit, crownPanel, doorBay, facadeKit, frontEdge, frontEdges, frontWalk, gableRoof, houseFronts, housePorch, ledge, minRect, offsetRing, porchSpan, roofSolar, roofVents, shopEntrance, shopFront, solidBox, stairBulkhead, wallBox, wallClear, wallDepth } from "./facade-kit.js";
 import { streetTest } from "./geo-mesh.js";
 import { createGeoGroundSampler } from "./geo-ground.js";
 import { buildingSpan } from "./terrain.js";
@@ -898,5 +898,50 @@ describe("the solar rows and the level counts", () => {
     const { counts } = facadeKit(LEVEL);
     expect(counts.solar).toBeGreaterThan(40);
     expect(counts.porch).toBeGreaterThan(150);
+  });
+});
+
+describe("facadeKit and the claimed landmark footprints (#200)", () => {
+  // Ponce City Market: the GLB draws the building, and its roof is lower
+  // than the top of the OSM footprint on the slope.
+  const pcm = LEVEL.buildings.find((b) => b.name === "Ponce City Market");
+  const only = { ...LEVEL, buildings: [pcm] };
+
+  it("builds the kit of a footprint that is not claimed", () => {
+    const { tiles } = facadeKit(only, undefined, null, undefined, null, new Set());
+    expect(tiles.length).toBeGreaterThan(0);
+  });
+
+  it("builds no cornice, coping or crown on a claimed footprint", () => {
+    const { tiles, depthTiles, counts } = facadeKit(only, undefined, null, undefined, null, new Set([pcm.id]));
+    expect(tiles).toEqual([]);
+    expect(depthTiles).toEqual([]);
+    expect(counts.cornice + counts.coping + counts.crown).toBe(0);
+  });
+});
+
+describe("the mural frame (#198)", () => {
+  it("puts a cap over and a base under each mural only with muralFrames", () => {
+    const murals = muralWalls(LEVEL);
+    const off = facadeKit(LEVEL);
+    const on = facadeKit(LEVEL, undefined, null, undefined, null, undefined, { muralFrames: true });
+    expect(off.counts.muralFrame).toBe(0);
+    expect(on.counts.muralFrame).toBe(murals.length);
+  });
+
+  it("frames the mural in the trim color under the trim ceiling", () => {
+    const m = { positions: [], indices: [], colors: [], facade: [] };
+    const mural = { a: [0, 0], b: [10, 0], n: [0, 1], y0: 2, y1: 8 };
+    const style = STYLES.find((s) => Math.max(...s.trim) > MURAL_FRAME.ceiling) ?? STYLES[0];
+    muralFrame(m, mural, style);
+    const ys = [];
+    for (let i = 1; i < m.positions.length; i += 3) ys.push(m.positions[i]);
+    expect(Math.max(...ys)).toBeCloseTo(8 + MURAL_FRAME.gap + MURAL_FRAME.height, 5);
+    expect(Math.min(...ys)).toBeCloseTo(2 - MURAL_FRAME.gap - MURAL_FRAME.height, 5);
+    expect(Math.max(...m.colors)).toBeLessThanOrEqual(MURAL_FRAME.ceiling + 1e-9);
+    // The pieces stand out of the wall, past the 8 cm of the mural.
+    const zs = [];
+    for (let i = 2; i < m.positions.length; i += 3) zs.push(m.positions[i]);
+    expect(Math.max(...zs)).toBeCloseTo(MURAL_FRAME.out, 5);
   });
 });

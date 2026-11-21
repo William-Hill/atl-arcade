@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TOUCH, mapTouch, steerFromX, stickVector, wantsTouch } from "./touch-map.js";
+import { TOUCH, TOUCH_BUTTONS, createButtonState, mapTouch, steerFromX, stickVector, wantsTouch } from "./touch-map.js";
 import { EMPTY_INPUT } from "./mapping.js";
 
 describe("stickVector", () => {
@@ -54,6 +54,15 @@ describe("mapTouch", () => {
     const m = mapTouch({ stick: null, buttons: { jump: true, grind: true, style1: false, style2: true } });
     expect(m).toMatchObject({ jump: true, grind: true, style1: false, style2: true, switch: false });
   });
+  it("passes SWITCH through, so a touch player can ride backward", () => {
+    expect(mapTouch({ stick: null, buttons: { switch: true } }).switch).toBe(true);
+    expect(mapTouch({ stick: { x: 0, y: -1 }, buttons: { switch: true } })).toMatchObject({ push: true, switch: true });
+    expect(mapTouch({ stick: null, buttons: { switch: false } }).switch).toBe(false);
+  });
+  it("has a button for every button action of the controller input", () => {
+    const actions = Object.keys(EMPTY_INPUT).filter((k) => typeof EMPTY_INPUT[k] === "boolean" && k !== "push" && k !== "brake");
+    expect([...TOUCH_BUTTONS].sort()).toEqual(actions.sort());
+  });
   it("never gives a negative zero steer", () => {
     expect(Object.is(mapTouch({ stick: { x: -0.01, y: 0 } }).steer, -0)).toBe(false);
   });
@@ -68,5 +77,39 @@ describe("wantsTouch", () => {
     expect(wantsTouch(null, { maxTouchPoints: 5 })).toBe(true);
     expect(wantsTouch(null, { coarse: true })).toBe(true);
     expect(wantsTouch(null, { maxTouchPoints: 0, coarse: false })).toBe(false);
+  });
+});
+
+describe("createButtonState", () => {
+  it("is down while a pointer holds the button", () => {
+    const b = createButtonState();
+    b.down("jump", 1);
+    expect(b.snapshot().jump).toBe(true);
+    expect(b.snapshot().jump).toBe(true);
+    b.up("jump", 1);
+    expect(b.snapshot().jump).toBe(false);
+  });
+  it("keeps a tap that ends before the next sample for one sample only", () => {
+    const b = createButtonState();
+    b.down("switch", 7);
+    b.up("switch", 7);
+    expect(b.isDown("switch")).toBe(false);
+    expect(b.snapshot()).toMatchObject({ switch: true, jump: false });
+    expect(b.snapshot().switch).toBe(false);
+  });
+  it("stays down until the last of two pointers lifts", () => {
+    const b = createButtonState();
+    b.down("grind", 1);
+    b.down("grind", 2);
+    b.up("grind", 1);
+    expect(b.isDown("grind")).toBe(true);
+    expect(b.any).toBe(true);
+    b.up("grind", 2);
+    b.snapshot();
+    expect(b.any).toBe(false);
+    expect(b.snapshot().grind).toBe(false);
+  });
+  it("gives every touch button in the snapshot", () => {
+    expect(Object.keys(createButtonState().snapshot()).sort()).toEqual([...TOUCH_BUTTONS].sort());
   });
 });

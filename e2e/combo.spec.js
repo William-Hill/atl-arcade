@@ -14,7 +14,7 @@ const THREE_LINK = [
 ];
 
 async function ready(page, query = "") {
-  await page.goto(`/${query}`);
+  await page.goto(`/?level=greybox${query}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
 }
 
@@ -60,7 +60,7 @@ test("a scripted grind, jump, style move yields a 3-link combo on the HUD", asyn
 });
 
 test("the two style moves animate the capsule differently", async ({ page }) => {
-  await ready(page, "?skater=capsule");
+  await ready(page, "&skater=capsule");
   const samples = await page.evaluate(async () => {
     const out = {};
     for (const [key, name] of [["style1", "shuffle"], ["style2", "spin"]]) {

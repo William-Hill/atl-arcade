@@ -9,11 +9,11 @@
 // - B: 0.
 // - A: the coverage.
 // The game multiplies the shade by the season colors of each tree
-// (src/render/tree-impostors.js), so one texture serves every season.
+// (src/render/far-trees.js), so one texture serves every season.
 
 import * as THREE from "three";
 import { treeTemplate } from "../../src/level/geo/trees.js";
-import { IMPOSTOR_CELLS, SHADE_SCALE, templateBounds } from "../../src/render/tree-impostors.js";
+import { IMPOSTOR_CELLS, SHADE_SCALE, templateBounds } from "../../src/render/far-trees.js";
 
 const CELL = 256;
 const SAMPLES = 4;

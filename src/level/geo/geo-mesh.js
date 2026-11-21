@@ -13,6 +13,7 @@ import { JOIN_LIFT, streetJunctions } from "./junctions.js";
 import { medianMesh, medianStrips } from "./medians.js";
 import { piecePoints, rampMesh, sidewalkLayout } from "./curbs.js";
 import { approachTrims, bridgeLayout, bridgeLayouts, densify, parapetRuns, ribbonEdges, slicePolyline, trimPolyline } from "./bridges.js";
+import { claimedIds } from "./landmarks.js";
 
 export const GEO_TILE = 125; // m. Small enough that the camera culls most of the draped terrain.
 export const PROP_TILE = 50; // m. Small, so only near props get full detail.
@@ -53,7 +54,16 @@ export const SURFACE_COLORS = {
   patchLight: [0.39, 0.4, 0.48],
   iron: [0.17, 0.17, 0.19],
   bike: [0.3, 0.72, 0.45],
+  // A path with an OSM brick or paver surface (#158). Within 0.015 of the
+  // path color, so the toon look shows it as a path; the pbr surface shader
+  // tells the two apart (distance > 0.01) and gives it the brick set.
+  brick: [0.8, 0.77, 0.685],
 };
+
+// Pure: the art color of a strip: its surface, else its kind.
+export function stripColor(s) {
+  return SURFACE_COLORS[s.surface] ?? SURFACE_COLORS[s.kind];
+}
 
 // Building wall colors: a warm, bright palette (Jet Set Radio style). The
 // roof is a lighter tint of the wall, or the style roof color.
@@ -142,15 +152,19 @@ function nearestOnLines(lines, x, z) {
 
 function quad(mesh, a, b, c, d, color, uv = null) {
   // a, b, c, d are [x, y, z] in order around the face.
+  // Both sides, so an awning shows from below and above. Each side has its
+  // own 4 vertices: on shared vertices the two sides' normals sum to 0, and
+  // a 0 normal is NaN in the shader (the bloom spreads it over the frame).
   const base = mesh.positions.length / 3;
-  for (const [i, p] of [a, b, c, d].entries()) {
-    mesh.positions.push(p[0], p[1], p[2]);
-    if (mesh.colors) mesh.colors.push(color[0], color[1], color[2]);
-    if (mesh.facade) mesh.facade.push(0, 0, 0, FACE.roof);
-    if (mesh.uvs) mesh.uvs.push(uv[i][0], uv[i][1]);
+  for (let side = 0; side < 2; side += 1) {
+    for (const [i, p] of [a, b, c, d].entries()) {
+      mesh.positions.push(p[0], p[1], p[2]);
+      if (mesh.colors) mesh.colors.push(color[0], color[1], color[2]);
+      if (mesh.facade) mesh.facade.push(0, 0, 0, FACE.roof);
+      if (mesh.uvs) mesh.uvs.push(uv[i][0], uv[i][1]);
+    }
   }
-  // Both sides, so an awning shows from below and above.
-  mesh.indices.push(base, base + 1, base + 2, base, base + 2, base + 3, base, base + 2, base + 1, base, base + 3, base + 2);
+  mesh.indices.push(base, base + 1, base + 2, base, base + 2, base + 3, base + 4, base + 6, base + 5, base + 4, base + 7, base + 6);
 }
 
 // The walls of a ring that face a street: the indices of the walls whose
@@ -232,7 +246,8 @@ export function awningsFor(b, style, isStreet) {
 
 // A bridge (issue #131): the deck top is a surface ribbon from joint to
 // joint (bridges.js), with mitered turns and its height from bridgeDeck().
-// The structure is in the facade material (no windows): the slab under the
+// The structure is in the facade material (no windows, FACE.concrete, so
+// the pbr look gives it the concrete class, #199): the slab under the
 // OSM span, a parapet on each open side of the span, and at each OSM end an
 // end post and a wing wall that turns out away from the road and down into
 // the ground. A parapet side that is inside another deck (a sidewalk bridge
@@ -245,7 +260,7 @@ function face(m, p0, p1, p2, p3, hint, color) {
   for (const q of [p0, p1, p2, p3]) {
     m.positions.push(q[0], q[1], q[2]);
     m.colors.push(color[0], color[1], color[2]);
-    m.facade.push(0, 0, 0, FACE.cornice);
+    m.facade.push(0, 0, 0, FACE.concrete);
   }
   const ux = p1[0] - p0[0];
   const uy = p1[1] - p0[1];
@@ -292,7 +307,7 @@ export function bridgeMeshes(level, s) {
   const L = bridgeLayout(level, s);
   const h = s.width / 2;
   const pw = BRIDGE.parapetWidth;
-  const color = SURFACE_COLORS[s.kind];
+  const color = stripColor(s);
   // The deck top, from joint to joint: a row each 1.5 m, so it follows the
   // arch, with mitered turns. The whole top is draped on the deck height
   // (bridgeDeck), cut on the terrain triangles like the approach road it
@@ -398,13 +413,26 @@ export function bridgeMeshes(level, s) {
 // (facade-kit.js) puts no sill or pier in that span. On a storefront style
 // the mural starts above the awnings and the belt course, so no ledge
 // crosses it.
+// Murals go on low walls (a real mural wall is a blank side wall of a
+// walk-up, a loft, or a shop), not on towers, glass, or open decks.
+export const MURAL_MAX_FLOORS = 5;
+const MURAL_SKIP_STYLES = new Set(["glass-office", "parking-deck"]);
+
 export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
   const trails = (level.strips ?? []).filter((s) => s.kind === "trail").map((s) => s.points);
   const out = [];
   if (!trails.length) return out;
   const buildings = (level.buildings ?? []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));
+  // A claimed footprint is drawn by its landmark model, so no mural there.
+  const claimed = claimedIds(level);
   for (const b of buildings) {
-    if (b.height < 5) continue;
+    if (b.height < 5 || claimed.has(b.id)) continue;
+    const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
+    if (MURAL_SKIP_STYLES.has(style.id)) continue;
+    const span = buildingSpan(level, b);
+    const floors = Math.max(1, Math.round((span.top - span.base) / style.floorHeight));
+    // A storefront keeps its shop floor: one floor is no blank wall.
+    if (floors > MURAL_MAX_FLOORS || (style.storefront && floors < 2)) continue;
     const ring = orientRing(b.outer, false);
     let best = null;
     for (let i = 0; i < ring.length; i += 1) {
@@ -428,15 +456,15 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
     const t = (best.len - w) / 2 / best.len;
     const [px, pz] = best.p;
     const [qx, qz] = best.q;
-    // On a slope the mural starts over the higher end of its wall.
+    // On a slope the mural starts over the higher end of its wall, and over
+    // the plinth: a building on a slope stands on a plain plinth up to its
+    // base (terrain.js buildingSpan()), with no blank wall under the base.
     const terrain = terrainOf(level);
     const ma = [px + (qx - px) * t, pz + (qz - pz) * t];
     const mb = [qx - (qx - px) * t, qz - (qz - pz) * t];
-    const g = Math.max(terrain.height(ma[0], ma[1]), terrain.height(mb[0], mb[1]));
-    const span = buildingSpan(level, b);
+    const g = Math.max(terrain.height(ma[0], ma[1]), terrain.height(mb[0], mb[1]), span.base);
     const y1 = Math.min(g + h, span.top - 0.6);
     let y0 = g + 0.8;
-    const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
     if (style.storefront) {
       // The same floors as the facade kit: the belt course is over the
       // ground floor when the building has two floors or more.
@@ -455,6 +483,8 @@ export function muralWalls(level, { maxCount = 60, maxDistance = 35 } = {}) {
       y1,
       cell: hash32(`${b.id}:mural`) % MURAL_CELLS,
       edge: best.edge,
+      // The wall has no windows from this floor up (FACE.blank).
+      floor0: style.storefront ? 1 : 0,
       t0: (best.len - w) / 2,
       t1: (best.len + w) / 2,
     });
@@ -547,9 +577,15 @@ function jointEnds(level) {
 // `detail: false` the buildings are plain boxes (the M1-03 look).
 // `terrainStep` > 1 drapes on a coarser terrain (a far level of detail for
 // the render only), and `surfacesOnly` leaves out everything but the flat
-// surfaces.
-export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfacesOnly = false } = {}) {
+// surfaces. `shard: { index, count }` builds only the tiles of one shard
+// (shardOf()), so `count` workers can share a build (#98); mergeGeoShards()
+// joins their results into the same list as one full build.
+export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfacesOnly = false, shard = null } = {}) {
   const parts = new Map();
+  // An item is built only in the shard of its tile. Every mesh of a
+  // (material, tile) key comes from items of that tile, so each merged mesh
+  // is built whole, in one shard, in the same order as a full build.
+  const mine = shard ? (item) => shardOf(tileOf(...firstPoint(item)), shard.count) === shard.index : () => true;
   function add(material, item, mesh) {
     const [x, z] = firstPoint(item);
     const key = `${material}|${tileOf(x, z)}`;
@@ -577,11 +613,11 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
         [bx, bz],
         [ax, bz],
       ];
-      add("surface", { outer }, drape(flatPolygon(outer, [], groundTop, { color: SURFACE_COLORS.ground })));
+      if (mine({ outer })) add("surface", { outer }, drape(flatPolygon(outer, [], groundTop, { color: SURFACE_COLORS.ground })));
     }
   }
 
-  for (const a of level.areas ?? []) add("surface", a, drape(flatPolygon(a.outer, a.holes ?? [], surfaceTop(level, a.kind), { color: SURFACE_COLORS[a.kind] })));
+  for (const a of level.areas ?? []) if (mine(a)) add("surface", a, drape(flatPolygon(a.outer, a.holes ?? [], surfaceTop(level, a.kind), { color: SURFACE_COLORS[a.kind] })));
 
   // A deck runs on over the end of its approach road to the joint, so the
   // approach road mesh stops at the joint (bridges.js).
@@ -591,20 +627,22 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
   // junction and a disk at each joint (junctions.js, #138).
   const J = streetJunctions(level, { flat: terrain.flat });
   const streetTopY = (level.strips ?? []).some((s) => s.kind === "street") ? surfaceTop(level, "street") : 0;
-  for (const p of J.pieces) add("surface", p.strip, drape(stripMesh(p.points, p.width, streetTopY, { bottom: 0, color: SURFACE_COLORS.street })));
-  for (const j of J.junctions) add("surface", { points: [[j.x, j.z]] }, drape(flatPolygon(j.ring, [], streetTopY + JOIN_LIFT, { color: SURFACE_COLORS.street })));
+  for (const p of J.pieces) if (mine(p.strip)) add("surface", p.strip, drape(stripMesh(p.points, p.width, streetTopY, { bottom: 0, color: SURFACE_COLORS.street })));
+  for (const j of J.junctions) if (mine({ points: [[j.x, j.z]] })) add("surface", { points: [[j.x, j.z]] }, drape(flatPolygon(j.ring, [], streetTopY + JOIN_LIFT, { color: SURFACE_COLORS.street })));
   for (const j of J.joints) {
+    if (!mine({ points: [[j.x, j.z]] })) continue;
     const ring = [];
     for (let k = 0; k < 16; k += 1) ring.push([j.x + Math.cos((k / 16) * Math.PI * 2) * j.r, j.z + Math.sin((k / 16) * Math.PI * 2) * j.r]);
     add("surface", { points: [[j.x, j.z]] }, drape(flatPolygon(ring, [], streetTopY, { color: SURFACE_COLORS.street })));
   }
   // The raised grass medians of the divided roads (medians.js).
   if (level.surfaces?.sidewalk !== undefined) {
-    for (const m of medianStrips(level)) add("surface", m, drape(medianMesh(m, surfaceTop(level, "sidewalk"), { grass: SURFACE_COLORS.park, curb: SURFACE_COLORS.sidewalk })));
+    for (const m of medianStrips(level)) if (mine(m)) add("surface", m, drape(medianMesh(m, surfaceTop(level, "sidewalk"), { grass: SURFACE_COLORS.park, curb: SURFACE_COLORS.sidewalk })));
   }
   const walks = sidewalkLayout(level);
   for (const s of level.strips ?? []) {
     if (s.kind === "street" && !(s.bridge && !terrain.flat)) continue;
+    if (!mine(s)) continue;
     const top = surfaceTop(level, s.kind);
     const curb = s.kind === "sidewalk";
     if (s.bridge && !terrain.flat) {
@@ -628,17 +666,17 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
       for (const [a, b] of lay.pieces) {
         const r = [Math.max(a, lo), Math.min(b, hi)];
         if (r[1] - r[0] < 0.05) continue;
-        stripMesh(piecePoints(s.points, r), s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind], mesh: m });
+        stripMesh(piecePoints(s.points, r), s.width, top, { curb, bottom: 0, color: stripColor(s), mesh: m });
       }
       for (const r of lay.ramps) if (r.s0 >= lo && r.s1 <= hi) rampMesh(r, SURFACE_COLORS.sidewalk, 0, m);
-    } else m = stripMesh(points, s.width, top, { curb, bottom: 0, color: SURFACE_COLORS[s.kind] });
+    } else m = stripMesh(points, s.width, top, { curb, bottom: 0, color: stripColor(s) });
     // Two strips that meet end to end near a bridge get a joint disk, as at
     // an inner point, so a turn at the meeting point leaves no wedge.
     for (const [cut, p] of [[trim?.start, s.points[0]], [trim?.end, s.points[s.points.length - 1]]]) {
       if (cut > 0 || !endDisks.has(`${s.kind}:${p[0]},${p[1]}`)) continue;
       const ring = [];
       for (let k = 0; k < 16; k += 1) ring.push([p[0] + Math.cos((k / 16) * Math.PI * 2) * (s.width / 2), p[1] + Math.sin((k / 16) * Math.PI * 2) * (s.width / 2)]);
-      flatPolygon(ring, [], top, { color: SURFACE_COLORS[s.kind], mesh: m });
+      flatPolygon(ring, [], top, { color: stripColor(s), mesh: m });
     }
     add("surface", s, drape(m));
   }
@@ -647,24 +685,37 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     // Only the surfaces (a far level of detail): no buildings, murals, or bridges.
   } else if (detail) {
     const isStreet = streetTest(level);
+    // A landmark with `claim: true` replaces its building's extrusion; the
+    // mesh still merges as "claimed", so the physics keeps its collider
+    // and the render skips it (geo-view.js).
+    const claimed = claimedIds(level);
+    const murals = muralWalls(level);
+    const muralOf = new Map(murals.map((mw) => [mw.id, mw]));
     for (const b of level.buildings ?? []) {
-      const style = STYLES[STYLE_INDEX[chooseStyle(b)]];
+      if (!mine(b)) continue;
+      const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
       const color = wallColor(style, b.id);
+      const mural = muralOf.get(b.id);
+      // The mural wall is blank: no windows behind the mural.
+      const blank = mural ? { edge: mural.edge, from: mural.floor0 } : null;
       const span = buildingSpan(level, b);
       // The OSM level count, when it fits the height (styles.js floorCount()).
-      const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, floors: floorCount(b, style, span.top - span.base), parapet: style.parapet, corniceColor: style.trim };
+      const facade = { style: STYLE_INDEX[style.id], bay: style.bay, floorHeight: style.floorHeight, floors: floorCount(b, style, span.top - span.base), parapet: style.parapet, corniceColor: style.trim, blank };
       // The plinth is cast stone: the style trim, a little darker.
       const plinth = { bottom: span.foot, color: style.trim.map((c) => c * PLINTH_SHADE) };
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: roofColorOf(style, color), facade, plinth }));
+      const bucket = claimed.has(b.id) ? "claimed" : "building";
+      add(bucket, b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.base, top: span.top }, { color, roofColor: roofColorOf(style, color), facade, plinth }));
       const aw = awningsFor(b, style, isStreet);
-      if (aw.indices.length) add("building", b, span.base ? liftMesh(aw, () => span.base) : aw);
+      if (aw.indices.length) add(bucket, b, span.base ? liftMesh(aw, () => span.base) : aw);
     }
-    for (const m of muralWalls(level)) add("mural", { points: [m.a] }, muralMesh(m));
+    for (const m of murals) if (mine({ points: [m.a] })) add("mural", { points: [m.a] }, muralMesh(m));
   } else {
+    const claimed = claimedIds(level);
     for (const b of level.buildings ?? []) {
+      if (!mine(b)) continue;
       const color = buildingColor(b.id);
       const span = buildingSpan(level, b);
-      add("building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.foot, top: span.top }, { color, roofColor: tint(color, 0.35) }));
+      add(claimed.has(b.id) ? "claimed" : "building", b, extrudeFootprint({ outer: b.outer, holes: b.holes ?? [], base: span.foot, top: span.top }, { color, roofColor: tint(color, 0.35) }));
     }
   }
 
@@ -673,6 +724,25 @@ export function buildGeoMeshes(level, { detail = true, terrainStep = 1, surfaces
     const [material, tile] = key.split("|");
     out.push({ material, tile, mesh: mergeMeshes(list) });
   }
-  out.sort((a, b) => GEO_MATERIALS.indexOf(a.material) - GEO_MATERIALS.indexOf(b.material) || (a.tile < b.tile ? -1 : 1));
-  return out;
+  return sortGeoMeshes(out);
+}
+
+// The order of the merged meshes: by material, then by tile. In place.
+export function sortGeoMeshes(list) {
+  return list.sort((a, b) => GEO_MATERIALS.indexOf(a.material) - GEO_MATERIALS.indexOf(b.material) || (a.tile < b.tile ? -1 : a.tile > b.tile ? 1 : 0));
+}
+
+// The shard (0 to count - 1) of a tile key ("x,z"): diagonal stripes (a
+// checkerboard for 2), so neighbor tiles (the dense middle of a level) go to
+// different shards.
+export function shardOf(tile, count) {
+  if (count <= 1) return 0;
+  const [i, j] = tile.split(",").map(Number);
+  return (((i + j) % count) + count) % count;
+}
+
+// Joins the results of the shards of one build: the same list as the full
+// build (each key is built in one shard only).
+export function mergeGeoShards(results) {
+  return sortGeoMeshes(results.flat());
 }

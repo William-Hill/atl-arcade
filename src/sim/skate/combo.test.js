@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { COMBO } from "./constants.js";
-import { comboBail, comboBank, comboMove, comboString, comboTick, comboValue, createCombo } from "./combo.js";
+import { COMBO_LINE, comboBail, comboBank, comboLine, comboMove, comboString, comboTick, comboValue, createCombo } from "./combo.js";
 
 const grind = { move: "grind", name: "Grind", points: 100 };
 const hop = { move: "air", name: "Hop", points: 50 };
@@ -100,5 +100,52 @@ describe("on-beat bonus", () => {
     const c = comboMove(createCombo(), { ...hop, onBeat: true });
     expect(c.pending).toBe(Math.round(50 * COMBO.beatBonus));
     expect(comboString(c)).toBe("Hop!");
+  });
+});
+
+describe("the HUD combo line (#269)", () => {
+  const link = (name, onBeat = false) => ({ name, onBeat });
+  // The 8-link combo of the audit (run 3).
+  const EIGHT = [link("Ledge Grind"), link("Hop", true), link("Rail Grind"), link("Hop"), link("Rail Grind"), link("Hop", true), link("Rail Grind"), link("Hop", true)];
+
+  it("shows a short combo in full, as comboString does", () => {
+    expect(comboLine([])).toBe("");
+    expect(comboLine([link("Rail Grind"), link("Hop"), link("Bankhead Bounce")])).toBe("Rail Grind + Hop + Bankhead Bounce");
+    expect(comboLine([link("Hop", true)])).toBe("Hop!");
+  });
+
+  it("shows the last 4 links and the count of an 8-link combo on desktop", () => {
+    const text = comboLine(EIGHT, COMBO_LINE.desktop);
+    expect(text).toBe("\u2026 Rail Grind + Hop! + Rail Grind + Hop! (8)");
+    expect(text.length).toBeLessThanOrEqual(COMBO_LINE.desktop.maxChars + 5);
+  });
+
+  it("shows fewer links on a phone", () => {
+    const text = comboLine(EIGHT, COMBO_LINE.phone);
+    expect(text).toBe("\u2026 Hop! + Rail Grind + Hop! (8)");
+    expect(text.length).toBeLessThanOrEqual(COMBO_LINE.phone.maxChars + 5);
+  });
+
+  it("counts every link of repeated names", () => {
+    const hops = Array.from({ length: 12 }, () => link("Hop"));
+    expect(comboLine(hops, COMBO_LINE.desktop)).toBe("\u2026 Hop + Hop + Hop + Hop (12)");
+    expect(comboLine(hops.slice(0, 4), COMBO_LINE.desktop)).toBe("Hop + Hop + Hop + Hop");
+    expect(comboLine(hops.slice(0, 4), COMBO_LINE.phone)).toBe("\u2026 Hop + Hop + Hop (4)");
+  });
+
+  it("drops older links when the names are long, and always keeps the last link", () => {
+    const long = [link("Bankhead Bounce"), link("Bankhead Bounce"), link("Bankhead Bounce")];
+    expect(comboLine(long, COMBO_LINE.phone)).toBe("\u2026 Bankhead Bounce (3)");
+    const huge = [link("A very long move name that does not fit at all")];
+    expect(comboLine(huge, { maxLinks: 3, maxChars: 10 })).toBe("A very long move name that does not fit at all");
+  });
+
+  it("stays in limits for every combo length", () => {
+    for (const k of [COMBO_LINE.desktop, COMBO_LINE.phone]) {
+      for (let n = 1; n <= 40; n += 1) {
+        const text = comboLine(Array.from({ length: n }, (_, i) => EIGHT[i % 8]), k);
+        expect(text.length).toBeLessThanOrEqual(k.maxChars + 5);
+      }
+    }
   });
 });

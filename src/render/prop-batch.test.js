@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { placeTemplate } from "../level/geo/extrude.js";
-import { createPropBatch, placementMatrix, propLodFor } from "./prop-batch.js";
+import { createPropBatch, fadeLodsFor, placementMatrix, propLodFor } from "./prop-batch.js";
 
 const box = (size, color) => ({
   positions: [0, 0, 0, size, 0, 0, size, size, 0, 0, size, 1],
@@ -52,7 +52,7 @@ describe("createPropBatch", () => {
     // 3 props and 3 spare instances for the fade copies (#279).
     expect(batch.mesh.instanceCount).toBe(6);
     expect(batch.fade.copies).toBe(3);
-    expect(createPropBatch(placements, templates, material, { lod0Distance: 60, drawDistance: 200, fade: false }).mesh.instanceCount).toBe(3);
+    expect(createPropBatch(placements, templates, material, { lod0Distance: 60, drawDistance: 200, lodFade: false }).mesh.instanceCount).toBe(3);
   });
 
   it("picks the LOD of each prop by its own distance", () => {
@@ -83,7 +83,7 @@ describe("createPropBatch", () => {
 
   it("fades a LOD switch with a copy for the fade time, then ends the fade (#279)", () => {
     const one = [{ kind: "bench", x: 61, y: 0, z: 0 }];
-    const batch = createPropBatch(one, templates, material, { lod0Distance: 60, drawDistance: 200, fade: true });
+    const batch = createPropBatch(one, templates, material, { lod0Distance: 60, drawDistance: 200, lodFade: true });
     const copy = 1;
     batch.update({ x: 0, z: 0 }, 10);
     // No fade on the first frame.
@@ -105,7 +105,7 @@ describe("createPropBatch", () => {
 
   it("fades out at the draw distance and makes a hard switch after a teleport", () => {
     const one = [{ kind: "bench", x: 199, y: 0, z: 0 }];
-    const batch = createPropBatch(one, templates, material, { lod0Distance: 60, drawDistance: 200, fade: true });
+    const batch = createPropBatch(one, templates, material, { lod0Distance: 60, drawDistance: 200, lodFade: true });
     batch.update({ x: 0, z: 0 }, 0);
     batch.update({ x: -2, z: 0 }, 0.1);
     // The prop keeps its shape during the fade out, with no copy.
@@ -118,5 +118,40 @@ describe("createPropBatch", () => {
     batch.update({ x: 150, z: 0 }, 0.6);
     expect(batch.fade.fading).toBe(0);
     expect(batch.mesh.getVisibleAt(0)).toBe(true);
+  });
+
+  it("gives a fading kind a near and a far instance, both shown over the fade band", () => {
+    const fade = { band: 10, kinds: ["bench", "lamp"] };
+    const batch = createPropBatch(placements, templates, material, { lod0Distance: 60, drawDistance: 200, fade, lodFade: false });
+    // The lamp has no LOD1, so it does not fade: 2 benches x 2 + 1 lamp.
+    // The lamp (one instance) comes first: id 0. The near bench is ids 1, 2.
+    expect(batch.mesh.instanceCount).toBe(5);
+    expect(batch.info.instances).toBe(3);
+    batch.update({ x: -45, z: 0 });
+    expect(batch.info).toMatchObject({ drawn: 2, lod0: 1, fading: 0 });
+    batch.update({ x: -55, z: 0 });
+    // The bench at x 0 is 55 m away: in the band, both shapes.
+    expect(batch.info.fading).toBe(1);
+    expect(batch.mesh.getVisibleAt(1)).toBe(true);
+    expect(batch.mesh.getVisibleAt(2)).toBe(true);
+    batch.update({ x: 150, z: 0 });
+    expect(batch.mesh.getVisibleAt(1)).toBe(false);
+    expect(batch.mesh.getVisibleAt(2)).toBe(true);
+  });
+
+  it("colors each placement by tint()", () => {
+    const batch = createPropBatch(placements, templates, material, { lod0Distance: 60, drawDistance: 200, tint: (p) => (p.x === 100 ? [0.5, 1, 1] : null) });
+    const c = new THREE.Color();
+    expect(batch.mesh.getColorAt(1, c).r).toBeCloseTo(0.5);
+    expect(batch.mesh.getColorAt(0, c).r).toBeCloseTo(1);
+  });
+});
+
+describe("fadeLodsFor", () => {
+  it("shows the near shape under the LOD distance and the far one from the band start", () => {
+    expect(fadeLodsFor(10, 60, 200, 10)).toEqual([true, false]);
+    expect(fadeLodsFor(55, 60, 200, 10)).toEqual([true, true]);
+    expect(fadeLodsFor(60, 60, 200, 10)).toEqual([false, true]);
+    expect(fadeLodsFor(200, 60, 200, 10)).toEqual([false, false]);
   });
 });

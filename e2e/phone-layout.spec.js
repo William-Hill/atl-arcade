@@ -38,6 +38,12 @@ function boxes(page) {
       ["grind", ".touch-grind"],
       ["groove", ".touch-style1"],
       ["spin", ".touch-style2"],
+      ["switch", ".touch-switch"],
+      // The landmark goal line (#219): the spawn is in the find zone of a spot.
+      ["goal", "#hud-goal"],
+      // The round goals (#268) and the confirmation of a met goal.
+      ["goals", "#hud-goals"],
+      ["met", "#hud-met"],
     ];
     const out = [];
     for (const [name, sel] of items) {
@@ -55,8 +61,8 @@ function boxes(page) {
 }
 
 // The longest HUD a player sees: a combo, the pending score, a move tag,
-// and the balance meter. The render loop pauses first, so the HUD update
-// does not clear the text.
+// the balance meter, and the confirmation of a met goal (#268). The render
+// loop pauses first, so the HUD update does not clear the text.
 async function fillHud(page) {
   await page.evaluate(() => {
     window.__atl.renderPaused = true;
@@ -68,6 +74,10 @@ async function fillHud(page) {
     tag.textContent = "PERFECT Bankhead Bounce";
     tag.style.opacity = "1";
     document.getElementById("hud-balance").style.display = "";
+    // A met round goal (#268): the confirmation line shows.
+    const met = document.getElementById("hud-met");
+    met.textContent = "\u2713 Goal met: Stone Mountain Trail Bridge Hop";
+    met.hidden = false;
   });
 }
 
@@ -148,11 +158,43 @@ test.describe("phone landscape camera", () => {
   });
 });
 
-test("a desktop keeps the full credit and the 60 degree view", async ({ page }) => {
+test("a desktop shows the short credit, clear of the HUD, and the 60 degree view", async ({ page }) => {
   await ready(page);
   expect(await page.evaluate(() => window.__atl.fov)).toBe(60);
+  const short = page.locator("#attribution .attr-short");
+  await expect(short).toBeVisible();
+  await expect(short).toContainText("OpenStreetMap contributors");
+  await expect(page.locator("#attribution .attr-full")).toBeHidden();
+  // The full credit covered the timer on a desktop screen.
+  const a = await short.boundingBox();
+  const hits = (p, r) => p.x < r.x + r.width && r.x < p.x + p.width && p.y < r.y + r.height && r.y < p.y + p.height;
+  for (const sel of ["#hud > *", "#skater-select button"]) {
+    for (const b of await page.locator(sel).all()) {
+      const r = await b.boundingBox();
+      if (r) expect(hits(a, r), sel).toBe(false);
+    }
+  }
+  // The pill covered the beat pulse. ready() loads mute=1, so the HUD hides
+  // the pulse; show it for one synchronous read of its box.
+  const pulse = await page.evaluate(() => {
+    const el = document.getElementById("hud-pulse");
+    const was = el.style.display;
+    el.style.display = "";
+    const r = el.getBoundingClientRect();
+    el.style.display = was;
+    // The beat animation scales the pulse up to 1.6 times (pulseLook).
+    const g = r.width * 0.3;
+    return { x: r.x - g, y: r.y - g, width: r.width + 2 * g, height: r.height + 2 * g };
+  });
+  expect(hits(a, pulse), "#hud-pulse").toBe(false);
+  // The controls hint ran under the PHOTO button.
+  const hint = await page.locator("#shell-info").boundingBox();
+  for (const sel of ["#photo-toggle", "#settings-toggle", "#minimap"]) {
+    const r = await page.locator(sel).boundingBox();
+    if (r) expect(hits(hint, r), sel).toBe(false);
+  }
+  await short.click();
   await expect(page.locator("#attribution .attr-full")).toBeVisible();
-  await expect(page.locator("#attribution .attr-short")).toBeHidden();
 });
 
 test("a tap on the short credit shows the full text", async ({ browser }) => {

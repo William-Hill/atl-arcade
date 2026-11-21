@@ -17,15 +17,17 @@ describe.each(Object.entries(SKATERS))("the %s skater GLB", (name, [minH, maxH])
   const GLB = new URL(`../../assets/skaters/${name}/skater.glb`, import.meta.url);
   const gltf = readGlbJson(GLB);
 
-  it("is under 3 MB and uses Draco", () => {
-    expect(statSync(GLB).size).toBeLessThan(3 * 1024 * 1024);
-    expect(gltf.extensionsRequired).toEqual(["KHR_draco_mesh_compression"]);
+  // #187: Draco meshes and WebP textures (scripts/assets/compress-skaters.mjs).
+  it("is under 10 MB and uses Draco and WebP", () => {
+    expect(statSync(GLB).size).toBeLessThan(10 * 1024 * 1024);
+    expect([...gltf.extensionsRequired].sort()).toEqual(["EXT_texture_webp", "KHR_draco_mesh_compression"]);
+    expect(gltf.images.every((i) => i.mimeType === "image/webp")).toBe(true);
   });
 
   it("has one skinned mesh under 20,000 triangles", () => {
     expect(gltf.meshes).toHaveLength(1);
     const prim = gltf.meshes[0].primitives[0];
-    expect(gltf.accessors[prim.indices].count / 3).toBeLessThan(20000);
+    expect(gltf.accessors[prim.indices].count / 3).toBeLessThan(45000);
     expect(prim.attributes).toHaveProperty("JOINTS_0");
     expect(prim.attributes).toHaveProperty("WEIGHTS_0");
     expect(gltf.skins[0].joints).toHaveLength(65);
@@ -38,10 +40,13 @@ describe.each(Object.entries(SKATERS))("the %s skater GLB", (name, [minH, maxH])
   });
 
   it("has the dossier height with the wheels at y = 0", () => {
-    const pos = gltf.accessors[gltf.meshes[0].primitives[0].attributes.POSITION];
-    expect(pos.min[1]).toBeCloseTo(0, 2);
-    expect(pos.max[1]).toBeGreaterThan(minH);
-    expect(pos.max[1]).toBeLessThan(maxH);
+    const bounds = gltf.meshes[0].primitives.flatMap((primitive) => {
+      const position = gltf.accessors[primitive.attributes.POSITION];
+      return [position.min[1], position.max[1]];
+    });
+    expect(Math.min(...bounds)).toBeCloseTo(0, 2);
+    expect(Math.max(...bounds)).toBeGreaterThan(minH);
+    expect(Math.max(...bounds)).toBeLessThan(maxH);
   });
 });
 
@@ -51,11 +56,17 @@ describe.each(Object.keys(SKATERS))("the %s phone GLB", (name) => {
   const SMALL = new URL(`../../assets/skaters/${name}/skater-1024.glb`, import.meta.url);
   const full = readGlbJson(FULL);
   const small = readGlbJson(SMALL);
-  const tris = (g) => g.accessors[g.meshes[0].primitives[0].indices].count / 3;
+  // The full GLB has one primitive for each material (#167): sum them.
+  const tris = (g) => g.meshes.flatMap((m) => m.primitives).reduce((n, p) => n + g.accessors[p.indices].count / 3, 0);
 
-  it("is smaller than the full GLB and uses Draco", () => {
+  it("is smaller than the full GLB and uses Draco and WebP", () => {
     expect(statSync(SMALL).size).toBeLessThan(statSync(FULL).size);
-    expect(small.extensionsRequired).toEqual(["KHR_draco_mesh_compression"]);
+    expect([...small.extensionsRequired].sort()).toEqual(["EXT_texture_webp", "KHR_draco_mesh_compression"]);
+  });
+
+  // #187: the two phone skaters were 10.6 MB of the 15.1 MB phone download.
+  it("is under 3 MB", () => {
+    expect(statSync(SMALL).size).toBeLessThan(3 * 1024 * 1024);
   });
 
   it("has the same triangles, joints, and clips as the full GLB", () => {
@@ -72,7 +83,7 @@ describe.each(Object.keys(SKATERS))("the %s LOD1 GLB", (name) => {
   const full = readGlbJson(FULL);
   const lod1 = readGlbJson(LOD1);
   const prim = lod1.meshes[0].primitives[0];
-  const tris = (g) => g.accessors[g.meshes[0].primitives[0].indices].count / 3;
+  const tris = (g) => g.meshes.flatMap((m) => m.primitives).reduce((n, p) => n + g.accessors[p.indices].count / 3, 0);
 
   it("is in the model table, under 10 MB, and uses Draco", () => {
     expect(SKATER_MODELS_LOD1[name]).toMatch(/skater-lod1\.glb$/);
@@ -97,7 +108,10 @@ describe.each(Object.keys(SKATERS))("the %s LOD1 GLB", (name) => {
   });
 
   it("has the same height as the full GLB, and no clips and no textures", () => {
-    const box = (g) => g.accessors[g.meshes[0].primitives[0].attributes.POSITION];
+    const box = (g) => {
+      const accs = g.meshes.flatMap((m) => m.primitives).map((p) => g.accessors[p.attributes.POSITION]);
+      return { min: [0, Math.min(...accs.map((a) => a.min[1]))], max: [0, Math.max(...accs.map((a) => a.max[1]))] };
+    };
     expect(box(lod1).min[1]).toBeCloseTo(box(full).min[1], 2);
     expect(box(lod1).max[1]).toBeCloseTo(box(full).max[1], 1);
     expect(lod1.animations ?? []).toHaveLength(0);

@@ -66,6 +66,9 @@ export function movementNumbers() {
   };
 }
 
+// The longest wall time of a move, in units of its game seconds.
+export const MOVE_WALL_FACTOR = 10;
+
 // The hook object for connectBridge. `ctx`: { atl (window.__atl), level,
 // skaterObject, render(), now() }.
 export function createSkateHooks(ctx) {
@@ -91,16 +94,20 @@ export function createSkateHooks(ctx) {
     render: ctx.render,
     objects: { atl },
     // Skate toward a direction: push (or brake for a negative scale) and
-    // steer each frame until the heading matches.
+    // steer each frame until the heading matches. `seconds` is game time
+    // (the fixed ticks, as gameTime() gives), so a slow frame rate gives the
+    // same move. A paused or stalled game stops the move after
+    // MOVE_WALL_FACTOR times the seconds of wall time.
     async move({ direction, seconds, scale, keys }) {
       const push = scale < 0 ? firstKey("brake") : firstKey("push");
       const left = firstKey("left");
       const right = firstKey("right");
-      const until = now() + seconds * 1000;
+      const until = atl.ticks + Math.round(seconds / FIXED_DT);
+      const wallUntil = now() + seconds * 1000 * MOVE_WALL_FACTOR;
       let steering = null;
       keys.hold(push);
       try {
-        while (now() < until) {
+        while (atl.ticks < until && now() < wallUntil) {
           const want = steerToward(atl.skater.yaw, direction);
           if (want !== steering) {
             if (steering) keys.release(steering === "left" ? left : right);

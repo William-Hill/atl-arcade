@@ -7,14 +7,20 @@
 //   street lamp first (FURNITURE_PROP). A bench faces the nearest trail,
 //   path, or sidewalk. When the point is on pavement or too near another
 //   prop, the prop moves away from that way, 0.5 m at a time, up to
-//   FURNITURE_SHIFT m. A drinking fountain and a bollard have no kit prop.
+//   FURNITURE_SHIFT m. A drinking fountain and a bollard get the Meshy
+//   props (assets/props/street/, drawn by src/render/people-props-view.js).
 //   The fixed rules below put no bench, bin, bike rack, or lamp within half
 //   their spacing of a mapped prop of the same kind.
 // - Trail: a tree each 12 m on each side, 2.5 m past the edge; a lamp each
 //   24 m, sides in turn, 0.7 m past the edge; a bench each 60 m, 1.2 m past
 //   the edge and turned to face the trail, with a bin 2.5 m after it (each
 //   second pair of benches is the Poly Haven painted bench); a bike rack
-//   each 180 m.
+//   each 180 m. BeltLine stops (#115, the Meshy props of
+//   assets/props/beltline/): each 160 m a picnic table 3.2 m past the edge
+//   with a patio umbrella beside it, and a food cart at each second stop;
+//   each 200 m a bike dock 1.6 m past the edge with a city bike and an
+//   e-scooter parked by it; each 480 m an original sculpture 5 m out.
+//   The stops go before the trail trees, so a tree never takes their spot.
 // - Sidewalks: a tree each 16 m and a lamp each 36 m, 1.8 m and 0.5 m past
 //   the edge, on the side that is open ground.
 // - Medians (#138): a street tree each 18 m on a median of a divided road
@@ -56,6 +62,17 @@ export const PROP_SOLID = {
   bin: { r: 0.35, h: 1.05 },
   bike_rack: { r: 0.8, h: 0.85 },
   street_sign: { r: 0.12, h: 3.2 },
+  // The Meshy props (assets/props/street/ and assets/props/beltline/):
+  // their footprint circle and height.
+  drinking_fountain: { r: 0.25, h: 1.0 },
+  bollard: { r: 0.12, h: 0.9 },
+  picnic_table: { r: 0.9, h: 0.82 },
+  patio_umbrella: { r: 0.15, h: 2.5 },
+  food_cart: { r: 1.1, h: 2.8 },
+  bike_dock: { r: 0.75, h: 1.1 },
+  city_bike: { r: 0.9, h: 1.09 },
+  e_scooter: { r: 0.58, h: 1.09 },
+  sculpture_ribbon: { r: 0.7, h: 4.0 },
   // The kit planter at PLANTER.scale: 1.2 m square and 0.82 m high. It is a
   // ledge for the skater.
   planter: { r: 0.6, h: 0.82 },
@@ -67,14 +84,15 @@ export const PLANTER = { scale: 0.8, out: 1.0 };
 
 const MIN_GAP = 2.5;
 
-// The kit prop for each OSM furniture kind. null: no kit prop yet.
+// The prop for each OSM furniture kind (the fountain and the bollard are
+// Meshy props, not kit props). null: no prop.
 export const FURNITURE_PROP = {
   bench: "bench",
   waste_basket: "bin",
   bicycle_parking: "bike_rack",
   street_lamp: "lamp",
-  drinking_water: null,
-  bollard: null,
+  drinking_water: "drinking_fountain",
+  bollard: "bollard",
 };
 
 // The largest move off the pavement for a mapped prop, in m.
@@ -361,6 +379,34 @@ export function streetProps(level, sample, fronts = null, report = null) {
     const half = s.width / 2;
     const rand = seededRandom(hash32(s.id));
     if (s.kind === "trail") {
+      // The BeltLine stops go first, so the row trees leave them room:
+      // tables (long side along the trail), umbrellas,
+      // food carts, bike docks with a bike and a scooter, sculptures.
+      along(s.points, 160, 40, (x, z, dx, dz, i) => {
+        const side = i % 2 === 0 ? -1 : 1;
+        const nx = -dz * side;
+        const nz = dx * side;
+        const tx = x + nx * (half + 3.2);
+        const tz = z + nz * (half + 3.2);
+        if (!put("picnic_table", tx, tz, yawToward(dx, dz))) return;
+        put("patio_umbrella", tx + dx * 2.6, tz + dz * 2.6, 0);
+        if (i % 2 === 1) put("food_cart", tx - dx * 3.6, tz - dz * 3.6, yawFrontToward(-nx, -nz));
+      });
+      along(s.points, 200, 120, (x, z, dx, dz, i) => {
+        const side = i % 2 === 0 ? 1 : -1;
+        const nx = -dz * side;
+        const nz = dx * side;
+        const bx = x + nx * (half + 1.6);
+        const bz = z + nz * (half + 1.6);
+        if (!put("bike_dock", bx, bz, yawToward(dx, dz))) return;
+        put("city_bike", bx + dx * 2.6, bz + dz * 2.6, yawFrontToward(dx, dz));
+        put("e_scooter", bx - dx * 2.6, bz - dz * 2.6, yawFrontToward(dx, dz));
+      });
+      // Its own seed: the row trees keep their draws.
+      const turn = seededRandom(hash32(`sculpture:${s.id}`));
+      along(s.points, 480, 240, (x, z, dx, dz) => {
+        put("sculpture_ribbon", x - dz * (half + 5), z + dx * (half + 5), turn() * Math.PI * 2);
+      });
       along(s.points, 12, 6, (x, z, dx, dz) => {
         for (const side of [1, -1]) {
           const nx = -dz * side;

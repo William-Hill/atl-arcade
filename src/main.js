@@ -104,6 +104,7 @@ import { createLandmarkRings } from "./render/landmark-rings.js";
 import { ringCapacity } from "./render/landmark-rings-math.js";
 import { createLandmarkBanner, districtAccent } from "./ui/landmark-banner.js";
 import { createChimes } from "./audio/chimes.js";
+import { createTeachPrompts } from "./ui/teach-prompt.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -844,6 +845,8 @@ runReady = true;
 // The goals of the run (M1-05), or null with ?run=free. The HUD shows them (#268).
 const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
 const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef });
+// Teach the moves in the world (#76): one prompt at a time, ?teach=1 or 0.
+const teach = createTeachPrompts({ levelName: level.name, geo, param: params.get("teach"), storage: safeStorage(), grindables: skaterEnv.grindables, touch: Boolean(touch), gamepad: () => input.gamepadId !== null, reducedMotion: () => effects.reducedMotion });
 // After the step from pbr lite to toon (#246): one line, one time. The flag
 // leaves the address, so a refresh does not show the line again.
 const lookNotice = lookDownNotice(window.location.href);
@@ -953,6 +956,7 @@ function simulate(dt) {
   run = stepRun(run, goals && goals.ended ? {} : sampled, dt, env, skaterEnv, beat.running ? beat : null);
   perf.end("skater");
   skater = run.skater;
+  teach.observe(before, skater, sampled, run.combo, dt);
   effects.observe(before, skater, run.moves);
   sfx.observe(before, skater);
   follow?.observe(before, skater);
@@ -1253,6 +1257,7 @@ function frame(now) {
   }
   const landmarkNow = landmarkViewNow;
   hud.update(run, now, beat.running ? beat.phase() : null, goals, landmarkNow ? (goalLine(landmarkNow, skater.position, { timed: landmarkTimed })?.text ?? null) : null);
+  teach.update({ nowMs: now, camera, source: input.source, bindings: input.bindings, position: skater.position, hidden: paused || Boolean(results?.shown) });
   if (landmarkNow) {
     // The banner hides while the fact pop-up shows, while the game is paused
     // (its time stops too), and under the results screen.
@@ -1822,6 +1827,7 @@ window.__atl = {
         },
       }
     : null,
+  teach: teach.hook,
   input: {
     get source() {
       return input.source;

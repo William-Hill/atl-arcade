@@ -97,7 +97,7 @@ The clip lengths (frames at 30 fps) do not change: Nia push 52, coast 96, carves
 
 ## What did not improve
 
-- Nia carve: on beat 2 the right skate lifts for 13 frames. Nia then stands on the left skate only, and that skate drags 10 to 27 cm behind her centre of mass. The pass cannot fix this with a hips shift of 6 cm or less. The step or the drag must change. A real skater must review this.
+- Nia carve: beat 2 is fixed (see above), but beat 1& (frames 10 to 13, both skates down) is still out of balance by up to 0.19 m, and the touch-down frame by 0.21 m. A real skater must review the corner step.
 - Marcus carve: the step landings now have a recoil, and the upward CoM acceleration peak went from 7.1 to 9.1 m/s^2 (0.93 g). The jerk is the same as on `main` (85 -> 86). Look at it in the game.
 - Push: the drive is twice as fast, but the game moves the skater at the speed of the sim, not of the clip. If the push impulse of the sim does not come at the drive, the feet and the speed do not agree. Look at it in the game.
 - Coast: the stance is now low and leaning, and the recoil on each downbeat adds a small bounce. The jerk is higher than on `main` (Nia 4 -> 23). A person must decide if it feels better.

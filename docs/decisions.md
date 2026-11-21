@@ -2551,6 +2551,51 @@ The owner decided on 2026-11-21: defer the install of `threejs-game-ui-designer`
 - The useful parts are 3 short files. Agents read them at the tested commits: `majidmanzarpour/threejs-game-skills` `8286774b22a2566bf894dbc825825c16921866af` and `gamedev-skills/awesome-gamedev-agent-skills` `c6ca6c41c839b68319ffc08430b99ab768debc32`. The install commands are in `docs/research/2026-11-20-game-ui-tools.md`, section "Install".
 - This replaces the open point in the 2026-11-20 entry ("the owner decides").
 - Look at this again when the title, pause, and settings screens start. An install then must use the tested commits or newer commits that are at least 7 days old.
+
+## 2026-11-20: Fighting game text callouts (#305)
+
+The owner wants punchy text graphics, as the "FIGHT" and "YOU WIN" cards of fighting games. No open-source tool makes these (comment on #298). Decision: build the text in code, DOM and CSS. No video file and no image, so the text scales and can be translated.
+
+**Callouts.**
+
+| Moment | Cards | Beats | Trigger |
+|---|---|---|---|
+| Round start | "3", "2", "1", "SKATE!" | 1, 1, 1, 2 | The first key or tap of a timed run (the music starts then), and each replay from the results screen |
+| Landmark claim | "SPOT CLAIMED" and "+points" | 3 | A `landmark-claimed` event |
+| Long combo | The combo name and "x6  12,400" | 3 | A banked combo of 4 links or more and 2,500 points or more |
+| Round end | "ROUND OVER", then "GOLD", "SILVER" or "BRONZE" with the score | 3, then 4 | The run ends (the results screen opens) |
+
+- Combo names by banked points: 2,500 "NICE COMBO", 6,000 "BIG COMBO", 12,000 "HUGE COMBO", 25,000 "ATL LEGEND". All words are positive (political rules).
+- With no medal, "ROUND OVER" shows the score and no medal card follows.
+- The round end score is `medalScore` (the score plus the claim points), the number that sets the medal.
+
+**Timing source.** The motion design skill of the X post on #298 is `gongnyang/awesome-ai-motion` (MIT, "637 techniques"). The X post did not load in the cloud container; the repo matches by the count and the subject. We read its files as text and did not install it. The numbers:
+- Main card, "Stamp Impact" (Nº 635, `effects/stamp-impact`): scale 1.2 to 1 and opacity 0 to 1 in 180 ms (power4.in); press to scaleY 0.98 for 50 ms and back (power2.out); 2 px shake for 3 frames of 33 ms; then a still hold.
+- The skill says to stamp once per screen. So the count-in digits use a "pop": the same drop with no press and no shake.
+- Exit ("exit before enter" rule): fade and rise 12 px in 0.25 s (power2.out). On a 1 beat digit the exit is a third of the card.
+- Reduced motion: a fade in and a fade out of 0.2 s, no scale, no move (issue rule; the skill's swap fade is 200 ms or less).
+
+**Beat.** Each callout starts on the next beat of the music (at most 1 beat of wait), and each card is a whole number of beats long. One beat is kept between 0.4 s and 0.75 s, so a fast or a slow track does not make a callout too short or too long. With no music (before the first gesture, or with the click track off) the callout starts at once with the beat length of the track. The count-in waits while the beat clock starts and the track loads, for at most 3 s of game time, so the first card does not land on the music start.
+
+**Beat after a pause or a slow frame (#310 review).** Each card finds the music beat again when it starts: a card that comes up to 60 ms after a beat starts on that beat, a later card waits for the next beat. The callout clock uses the real frame time (at most 1 s), not the 0.1 s cap of the views, so a slow frame does not put it behind the music. A card that waits for its beat keeps its start while the callout clock and the music agree (20 ms or less off a beat). When a pause in the wait puts the start off the beat, the card finds the next beat. The round end also cancels a count-in that still waits.
+
+**Queue.** One callout shows at a time. Priority: round end > claim > round start > combo. A new combo replaces a combo that waits. At most 3 wait; the lowest priority leaves. The round end clears the queue and stops the callout on show. The callout clock stops while the game is paused (photo mode, the full map, the settings menu).
+
+**Place.** Center, 58 vh from the top on a desktop (56 vh on a phone): under the landmark banner (30 vh), clear of the HUD column, the minimap and the touch controls. The type is heavy italic system-ui with a dark ink outline and a hard offset shadow, so it reads on a bright sky or a white wall. On a phone in landscape the callout stays between the HUD column and the buttons (262 px on each side, as the banner). During "ROUND OVER" and the medal the results card waits at opacity 0 and then fades in. The results screen is open and works during that time (Enter and Replay work).
+
+**Overlap with the Claimed banner (#219).** The banner also says "SPOT CLAIMED", above the callout. We kept the banner as it is: its text is tested, and it also gives the spot name. If the two read as one too many, the owner can choose to change the banner title to the spot name.
+
+**Files.** `src/ui/callout-math.js` (pure: queue, beat timing, card look), `src/ui/callout-math.test.js`, `src/ui/callouts.js` (DOM), `src/ui/callouts.css`, about 40 lines in `src/main.js`, `e2e/callouts.spec.js`. `?callouts=0` turns the callouts off. Test hook: `window.__atl.callouts` (`state`, `start`, `claim`, `combo`, `end`, `stopOn`, `maxStep`).
+
+**Verification (cloud container, headless Chromium with SwiftShader).**
+- Vitest: `src/ui/callout-math.test.js`, 24 tests pass (queue, priority, beat timing, combo names, card look, reduced motion). `npm test`: 1855 of 1858 pass; the 3 failures are the known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js` (80 of 80 pass with a 60 s limit). `npm run build` passes.
+- Playwright `e2e/callouts.spec.js`, 5 of 5 pass. Screenshots `e2e/__screenshots__/callout-high-*.jpg` (1280 x 720, `?quality=high`) and `callout-phone-portrait-*.jpg` (390 x 844, touch, `?quality=phone`): 3, SKATE!, SPOT CLAIMED, HUGE COMBO, ROUND OVER, GOLD. Each picture is the still hold. The test checks that each card is inside the screen and does not cover the HUD score, combo and goal lines, the minimap, the landmark banner or a touch control. The spec pushes the claim and combo callouts through the test hook: the claim and the combo bank hooks in `src/main.js` are not verified with a real claim or a real bank. The spec also checks: reduced motion (scale 1, no move, only the opacity changes), the first key plays 3, 2, 1, SKATE! once, the round end hides the results card and then fades it in, replay plays the count-in again, and `?callouts=0`.
+- SwiftShader draws the high tier at about 0.3 fps here, so the high tier test takes about 20 to 24 minutes.
+- FPS gate: NOT verified. `npm run playtest:beltline` gives a median of 3.5 FPS in this container with or without the callouts (A/B on this branch, load average 2.5 to 4.7: `?callouts=0` 3.5 and 3.5; on 3.5 and 3.3; reports `reports/playtest-beltline-eastside-2026-11-21-*.json`). The gate is 55. The callouts add no draw call (DOM, not WebGL) and set 2 style values per frame only while a card shows. The gate session does no tricks, so no callout shows in it. Run the gate again on a machine with a GPU.
+- Other specs: `goals.spec.js` 6 of 8 and `music.spec.js` 8 of 10 pass. The 2 phone results tests fail with the 30 s test limit on this branch and on `epic/city-look`. The beat timing test "first downbeat on beat 0" is flaky here: it passed 2 of 9 runs on `epic/city-look` and 0 of 11 on this branch (also 0 of 2 with `?callouts=0`). In the failed runs the music decode ends late and the track starts on bar 2, so the first windows are silent. Run it again on a quiet machine before the merge.
+- With the callouts on, the `goals.spec.js` phone screenshots `results-phone-*.png` show "ROUND OVER" over a hidden results card. The box checks of that test do not change (opacity does not move a box).
+- Not verified: no person saw the motion at full speed (the container is too slow to judge the 180 ms drop); no real phone; no landscape phone screenshot; the callout text is not translated yet.
+
 ## 2026-11-21: The short map credit on every screen
 
 On a desktop screen, the full map credit (about 330 characters) wrapped across the top of the screen and covered the timer and the score chips.
@@ -2558,6 +2603,7 @@ On a desktop screen, the full map credit (about 330 characters) wrapped across t
 - Every screen now shows the short credit "© OpenStreetMap contributors" as a pill at the top right (top left on a compact screen). A click or a tap shows the full text.
 - This replaces the 2026-11 rule from #73 that a desktop shows the full credit. The ODbL credit to OpenStreetMap stays visible at all times.
 - Owner decision, 2026-11-21.
+
 ## 2026-11-21: Skatepark fixes: the ledge catch, the quarter pipe lip, the grind score, the body in walls (#262)
 
 Branch `fix/262-skatepark` from `epic/city-look`. Source: the 2026-11-13 design audit, run 3 (`production/audits/2026-11-13-design-audit/REPORT.md`, C2, C3, C5, C6). Tests: `src/sim/skate/skatepark-262.test.js` (11 tests on the real H4W park; 10 fail on `epic/city-look`, the head-on bonk test passes on both), `src/sim/skate/balance.test.js`, and the Playwright test "the skatepark fixes of #262" in `e2e/skatepark.spec.js`.

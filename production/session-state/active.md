@@ -227,3 +227,16 @@ William's first play found camera faults on the quarter pipe; the fix is on M0-0
    ```
 
 6. Play for 15 minutes with sound, then write `prototypes/greybox-skate/REPORT.md` with the five answers (hypothesis check, best moment, worst moment, surprise, verdict) and the latest `reports/playtest-*.json` numbers. Record the verdict in `docs/decisions.md`. M1 starts only on PROCEED.
+
+## #305 Fighting game text callouts, 2026-11-20
+
+Branch `feat/305-callouts` from `epic/city-look`; draft PR, base `epic/city-look` (the base changes to `main` after PR #304 merges). Design and verification: `docs/decisions.md`, 2026-11-20.
+
+| Part | Where | Verified |
+|---|---|---|
+| Queue, beat timing, card look (pure) | `src/ui/callout-math.js` | Vitest `callout-math.test.js`, 24 tests |
+| DOM and type | `src/ui/callouts.js`, `src/ui/callouts.css` | Playwright `e2e/callouts.spec.js` 5 of 5; screenshots `e2e/__screenshots__/callout-*.jpg` |
+| Hooks: first key, run end, replay | `src/main.js` (about 40 lines) | Same spec (a real key, a real run end, a real replay) |
+| Hooks: landmark claim, combo bank | `src/main.js` | NOT verified by the spec: it pushes the claim and combo callouts through `window.__atl.callouts`, not through a real claim or a real bank |
+
+NOT verified: the 55 FPS gate (3.5 FPS in this container with or without the callouts); the motion at full speed; a real phone.

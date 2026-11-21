@@ -4,8 +4,8 @@
 //
 // A callout is a list of cards. A card is one word or line that slams in,
 // holds and leaves ("3", "2", "1", "SKATE!"). Each card starts on a music
-// beat: the first card waits for the next beat (at most 1 beat), and each
-// next card starts on a beat after the one before.
+// beat: each card waits for the next beat of the music as it is then (at
+// most 1 beat), so a pause or a slow frame does not move the cards off the beat.
 //
 // Timing comes from the motion design skill of #298: gongnyang/awesome-ai-motion
 // (MIT). The numbers are its "Stamp Impact" card (Nº 635,
@@ -37,6 +37,9 @@ export const CALLOUT = {
   // track does not make a callout too long or too short.
   minBeat: 0.4, // s (150 bpm)
   maxBeat: 0.75, // s (80 bpm)
+  // A card that comes up to `lateSnap` s after a beat starts on that beat
+  // (its age starts a little past 0); a later card waits for the next beat.
+  lateSnap: 0.06, // s
   // The most callouts that wait. A new combo replaces a combo that waits.
   maxQueue: 3,
   // The shortest combo that gets a callout, and the names by banked points.
@@ -122,7 +125,7 @@ export function endCallout({ medal = null, score = 0 } = {}) {
 }
 
 // The queue. State: { time, current, queue, shown }.
-// current: { kind, cards, start, beat, ends: [s] } — the end time of each card.
+// current: the card on show (see stepCallouts).
 export function createCallouts() {
   return { time: 0, current: null, queue: [], shown: 0 };
 }
@@ -147,30 +150,39 @@ export function pushCallout(state, callout, k = CALLOUT) {
   return { ...state, queue };
 }
 
-// The card times of a callout that starts at `start` with a beat of `beat` s.
-export function cardEnds(cards, start, beat) {
-  const ends = [];
-  let t = start;
-  for (const c of cards) {
-    t += c.beats * beat;
-    ends.push(t);
-  }
-  return ends;
+// The start of a card that comes up at `now`: on the beat. A beat that
+// passed `lateSnap` s ago or less is the start (so a card that is a little
+// late does not wait a full beat); otherwise the next beat. With no beat
+// playing: `now`.
+export function snapBeat(now, phase, bpm, k = CALLOUT) {
+  if (phase === null || phase === undefined || !(bpm > 0)) return now;
+  const since = (((phase % 1) + 1) % 1) * (60 / bpm);
+  if (since <= k.lateSnap) return now - since;
+  return nextBeat(now, phase, bpm);
+}
+
+// The current callout with card `index` on show from `start`.
+function cardAt(c, index, start, beatLen) {
+  return { kind: c.kind, cards: c.cards, index, start, beat: beatLen, end: start + c.cards[index].beats * beatLen };
 }
 
 // Moves the clock by `dt` (0 while the game is paused). `beat` is
 // { phase, bpm } of the music now, or { phase: null, bpm } when no beat
-// plays. A callout from the queue starts on the next beat.
+// plays. Each card starts on a beat of the music as it is now: after a
+// pause, or after slow frames, the next card finds the beat again.
+// current: { kind, cards, index, start, beat, end } (s).
 export function stepCallouts(state, dt, beat = { phase: null, bpm: 0 }, k = CALLOUT) {
   const time = state.time + Math.max(0, dt);
   let { current, queue, shown } = state;
-  if (current && time >= current.ends[current.ends.length - 1]) current = null;
+  const len = beat.bpm > 0 ? beatSeconds(beat.bpm, k) : null;
+  // The phase was read at `time`.
+  if (current && time >= current.end) {
+    const next = current.index + 1;
+    current = next < current.cards.length ? cardAt(current, next, snapBeat(time, beat.phase, beat.bpm, k), len ?? current.beat) : null;
+  }
   if (!current && queue.length) {
     const [next, ...rest] = queue;
-    // The phase was read at `time`: the next beat comes after it.
-    const start = nextBeat(time, beat.phase, beat.bpm);
-    const len = beatSeconds(beat.bpm, k);
-    current = { kind: next.kind, cards: next.cards, start, beat: len, ends: cardEnds(next.cards, start, len) };
+    current = cardAt(next, 0, snapBeat(time, beat.phase, beat.bpm, k), len ?? beatSeconds(beat.bpm, k));
     queue = rest;
     shown += 1;
   }
@@ -179,16 +191,11 @@ export function stepCallouts(state, dt, beat = { phase: null, bpm: 0 }, k = CALL
 }
 
 // The card on show now and its age: { card, index, age, length } or null
-// (before the first beat, or with no callout).
+// (before its beat, or with no callout).
 export function activeCard(state) {
   const c = state.current;
-  if (!c || state.time < c.start) return null;
-  let from = c.start;
-  for (let i = 0; i < c.cards.length; i += 1) {
-    if (state.time < c.ends[i]) return { card: c.cards[i], index: i, age: state.time - from, length: c.ends[i] - from };
-    from = c.ends[i];
-  }
-  return null;
+  if (!c || state.time < c.start || state.time >= c.end) return null;
+  return { card: c.cards[c.index], index: c.index, age: state.time - c.start, length: c.end - c.start };
 }
 
 const power4In = (t) => t ** 4;

@@ -4,7 +4,6 @@ import {
   activeCard,
   beatSeconds,
   busy,
-  cardEnds,
   cardLook,
   claimCallout,
   comboCallout,
@@ -13,6 +12,7 @@ import {
   endCallout,
   nextBeat,
   pushCallout,
+  snapBeat,
   startCallout,
   stepCallouts,
 } from "./callout-math.js";
@@ -42,8 +42,12 @@ describe("beat timing", () => {
     for (let p = 0; p < 1; p += 0.05) expect(nextBeat(0, p, 90) - 0).toBeLessThanOrEqual(60 / 90 + 1e-9);
   });
 
-  it("puts each card end on a beat", () => {
-    expect(cardEnds(startCallout().cards, 2, 0.5)).toEqual([2.5, 3, 3.5, 4.5]);
+  it("snaps a card that is a little late back to the beat, else waits for the next beat", () => {
+    // 120 bpm: 0.5 s a beat. 0.04 s past a beat: start on it.
+    expect(snapBeat(10, 0.08, 120)).toBeCloseTo(9.96);
+    // 0.1 s past a beat: wait for the next one.
+    expect(snapBeat(10, 0.2, 120)).toBeCloseTo(10.4);
+    expect(snapBeat(10, null, 120)).toBe(10);
   });
 });
 
@@ -108,11 +112,48 @@ describe("queue", () => {
     expect(s.shown).toBe(1);
   });
 
-  it("keeps the beat length of the start, also when the music changes", () => {
+  it("keeps the beat length of a card, also when the music changes", () => {
     let s = stepCallouts(pushCallout(createCallouts(), claimCallout(200)), 0, { phase: 0, bpm: 100 });
     expect(s.current.beat).toBeCloseTo(0.6);
     s = stepCallouts(s, 1, { phase: 0.3, bpm: 150 });
-    expect(s.current.ends).toEqual([expect.closeTo(1.8, 6)]);
+    expect(s.current.end).toBeCloseTo(1.8);
+  });
+
+  // The music keeps time in seconds; `music(t)` gives its beat at time t.
+  const music = (t, bpm = 120) => ({ phase: (t * bpm) / 60 - Math.floor((t * bpm) / 60), bpm });
+
+  it("finds the beat again after a pause (#310 review)", () => {
+    let s = pushCallout(createCallouts(), startCallout());
+    let t = 0;
+    s = stepCallouts(s, 0, music(t));
+    // Show "3" for 0.1 s, then pause for 0.25 s: the callout clock stops, the music goes on.
+    s = stepCallouts(s, 0.1, music((t += 0.1)));
+    t += 0.25;
+    // Play on in 0.02 s frames until "2" shows.
+    while (activeCard(s)?.card.text !== "2") s = stepCallouts(s, 0.02, music((t += 0.02)));
+    // "2" starts on a beat of the music: 0.5 s steps, less than 1 frame off.
+    const musicStart = t - activeCard(s).age;
+    expect(Math.abs(musicStart / 0.5 - Math.round(musicStart / 0.5)) * 0.5).toBeLessThan(0.021);
+  });
+
+  it("keeps each card on the beat after slow frames (#310 review)", () => {
+    let s = pushCallout(createCallouts(), startCallout());
+    let t = 0;
+    s = stepCallouts(s, 0, music(t));
+    const starts = [];
+    let last = null;
+    // 160 ms frames.
+    for (let i = 0; i < 40 && (s.current || i === 0); i += 1) {
+      s = stepCallouts(s, 0.16, music((t += 0.16)));
+      const a = activeCard(s);
+      if (a && a.index !== last) {
+        last = a.index;
+        starts.push(s.current.start);
+      }
+    }
+    expect(starts).toHaveLength(4);
+    // Each card starts on a beat of the music (the clocks agree here).
+    for (const st of starts) expect(Math.abs(st / 0.5 - Math.round(st / 0.5))).toBeLessThan(1e-9);
   });
 
   it("does not move while the game is paused", () => {

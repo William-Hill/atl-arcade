@@ -68,17 +68,24 @@ export function createCallouts(parent, { reducedMotion = () => false, beat = () 
     // `points` is the banked combo; `combo` is the combo before the bank
     // (its links and multiplier).
     combo: (points, combo) => push(comboCallout(points, { links: combo?.links?.length ?? 0, multiplier: combo?.multiplier ?? 1 })),
-    end: (results) => push(endCallout({ medal: results?.medal ?? null, score: results?.medalScore ?? results?.score ?? 0 })),
+    end(results) {
+      // A count-in that still waits must not play after the round end.
+      startWait = null;
+      return push(endCallout({ medal: results?.medal ?? null, score: results?.medalScore ?? results?.score ?? 0 }));
+    },
     // Removes every callout (a new run).
     clear() {
       q = createQueue();
       startWait = null;
       hide();
     },
-    // `dt` in s; 0 while the game is paused (the callout stops too).
+    // `dt` in s of real time (the music time); 0 while the game is paused
+    // (the callout stops too).
     // `held` hides the callout (the clock still runs).
     update(dt, { held = false } = {}) {
       if (stopped) dt = 0;
+      // The screenshot hook steps at most 0.1 s, so a slow test browser does not jump over the card.
+      else if (stopAt !== null) dt = Math.min(dt, 0.1);
       const b = beat();
       if (startWait !== null) {
         startWait -= Math.max(0, dt);

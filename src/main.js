@@ -1291,7 +1291,9 @@ function frame(now) {
     results.show(end);
     callouts?.end(end);
   }
-  callouts?.update(paused ? 0 : Math.min(elapsed, 0.1), { held: paused });
+  // Real time, not the 0.1 s step cap of the views: the music does not slow
+  // down in a slow frame. Each card finds the beat again (callout-math.js).
+  callouts?.update(paused ? 0 : Math.min(elapsed, 1), { held: paused });
   if (minimap) minimap.update(skater);
   if (fullmap) fullmap.update(skater);
   if (factCardsView) factCardsView.update(run.cards.collected, now / 1000);

@@ -22,6 +22,7 @@ const UNLIT_OK = [
   /<fact-card-/, // the fact cards (a UI panel in the world)
   /^skater-shadow</, // the shadow blob of a GLB skater (player and NPC skaters)
   /^skater-blob<Scene$/, // the shadow blob on a tier with no shadow map (phone, low)
+  /^landmark-ring(s|-cones)</, // the challenge rings (#219): a shader ground decal with its own glow
   // The patterns below test the mesh name (the path up to the first "<"),
   // not a parent name, so a new mesh under one of these groups is not
   // allowed by accident.
@@ -37,6 +38,7 @@ const OTHER_OK = [
   /^ShaderMaterial rain<Scene$/, // the rain streaks (src/render/rain.js)
   /^ShaderMaterial fx-(bursts|screen)<Scene$/, // the effects (src/render/effects/effects-view.js)
   /^LineBasicMaterial debug-colliders<Scene$/, // the collider lines (?debug, hidden by default)
+  /^ShaderMaterial far-trees<[\w-]+<Scene$/, // the far tree impostors past the prop draw distance (#281, src/render/far-trees.js)
 ];
 
 async function waitLoaded(page) {

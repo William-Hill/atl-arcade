@@ -62,6 +62,11 @@ async function fillHud(page) {
     const met = document.getElementById("hud-met");
     met.textContent = "✓ Goal met: Stone Mountain Trail Bridge Hop";
     met.hidden = false;
+    // The banner of the spot at the spawn waits while the first fact
+    // pop-up shows (src/main.js), so the test shows it like the HUD text.
+    const banner = document.getElementById("landmark-banner");
+    banner.hidden = false;
+    banner.style.opacity = "1";
   });
   // The landmark banner (#219) shows at the spawn: the spawn is in the find
   // zone of a spot. The goals are measured against it too.

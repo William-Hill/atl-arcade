@@ -147,3 +147,71 @@ export function rampRides() {
     bank: { script: [{ frames: 70, input: { push: true } }, { frames: 110, input: {} }], start: startAt(-4, 3, -1, 0) },
   };
 }
+
+// The states of a ride, one per tick, in the pure simulation.
+export function trace(script, start) {
+  const { env, skaterEnv } = park();
+  let run = newRun(start);
+  const states = [];
+  for (const entry of script) {
+    for (let i = 0; i < entry.frames; i += 1) {
+      run = stepRun(run, entry.input ?? {}, 1 / 60, env, skaterEnv);
+      states.push({ skater: run.skater, moves: run.moves });
+    }
+  }
+  return states;
+}
+
+// A plain input script from a closed loop planner: input(skater) per tick.
+function plan(start, frames, input) {
+  const { env, skaterEnv } = park();
+  let run = newRun(start);
+  const inputs = [];
+  for (let t = 0; t < frames; t += 1) {
+    const i = input(run.skater, t);
+    run = stepRun(run, i, 1 / 60, env, skaterEnv);
+    inputs.push(i);
+  }
+  const script = [];
+  for (const i of inputs) {
+    const key = JSON.stringify(i);
+    if (script.length && JSON.stringify(script[script.length - 1].input) === key) script[script.length - 1].frames += 1;
+    else script.push({ frames: 1, input: i });
+  }
+  return script;
+}
+
+// The rides of #262. Each has a `stop`: the tick of its picture.
+export function rides262() {
+  const top = park().level.skatepark.top;
+  // Vert air: the pyramid and quarter pipe ride. The picture is at the top of the air.
+  const vert = rampRides().pyramidAndQuarter;
+  const vs = trace(vert.script, vert.start);
+  const apex = vs.reduce((best, s, i) => (s.skater.state === "air" && s.skater.position[1] > vs[best].skater.position[1] ? i : best), 0);
+  // The ledge catch: from rest at 70 degrees to the 6 m ledge, push, and hold grind.
+  const a = (70 * Math.PI) / 180;
+  const ledgeStart = startAt(4 - 5 * Math.cos(a), -3.25 + 5 * Math.sin(a), Math.cos(a), -Math.sin(a));
+  const ledgeScript = plan(ledgeStart, 120, (s) => (s.state === "grind" ? { grind: s.stats.exits === 0, steer: BALANCE } : s.stats.exits > 0 ? {} : { push: true, grind: true }));
+  const ls = trace(ledgeScript, ledgeStart);
+  // The planter: a hop from 4 m at 195 degrees that comes down onto the end
+  // of the planter (before #262 the body went 0.26 m into a cap). The
+  // picture is 3 ticks after the bonk.
+  const pa = (195 * Math.PI) / 180;
+  const planterStart = startAt(-2 - 4 * Math.cos(pa), -6.2 - 4 * Math.sin(pa), Math.cos(pa), Math.sin(pa));
+  const planterScript = [{ frames: 30, input: { push: true } }, { frames: 1, input: { jump: true } }, { frames: 60, input: {} }];
+  const ps = trace(planterScript, planterStart);
+  // The back of the quarter pipe: from the grass east of the pad into its back.
+  const backStart = startAt(19, 3, -1, 0);
+  const backScript = [{ frames: 70, input: { push: true } }, { frames: 20, input: {} }];
+  const bs = trace(backScript, backStart);
+  const after = (states, test, plus) => {
+    const i = states.findIndex(test);
+    return i < 0 ? -1 : Math.min(states.length - 1, i + plus);
+  };
+  return {
+    vert: { ...vert, stop: apex + 1, states: vs, top },
+    ledgeCatch: { script: ledgeScript, start: ledgeStart, stop: after(ls, (s) => s.skater.justSnapped, 10), states: ls },
+    planter: { script: planterScript, start: planterStart, stop: after(ps, (s) => s.skater.state === "air" && s.skater.bonked, 3), states: ps },
+    quarterBack: { script: backScript, start: backStart, stop: after(bs, (s) => s.skater.bonked, 5), states: bs },
+  };
+}

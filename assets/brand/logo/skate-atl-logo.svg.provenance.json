@@ -1,0 +1,30 @@
+{
+  "file": "skate-atl-logo.svg",
+  "generated": "2026-11-21",
+  "issue": "William-Hill/atl-arcade#300",
+  "choice": "Option B \"Trail Speed\", chosen by the owner on 2026-11-21 (PR #306).",
+  "tool": {
+    "script": "scripts/brand/logo-final.mjs (crop of the view box to the ink, 3 % margin)",
+    "source": "assets/brand/logo-options/option-b-trail-speed.svg, made by scripts/brand/logo-options.mjs: hand-written SVG shapes; letters are Anton glyph outlines converted to <path> data with opentype.js 2.0.0.",
+    "render": null
+  },
+  "command": "node scripts/brand/logo-final.mjs",
+  "prompt": "none (no generative model)",
+  "credits": {
+    "meshy": 0,
+    "tripo": 0,
+    "imageGeneration": 0,
+    "total": 0
+  },
+  "font": {
+    "family": "Anton",
+    "package": "@fontsource/anton@5.3.0",
+    "license": "SIL Open Font License 1.1",
+    "author": "The Anton Project Authors (Vernon Adams)"
+  },
+  "originality": "Original work for ATL Arcade. It does not copy or imitate any existing game logo (Jet Set Radio included), team logo, or the official City of Atlanta seal.",
+  "license": "Original work for ATL Arcade. Font outlines remain under the SIL OFL 1.1 (embedding in artwork is allowed).",
+  "sizePx": null,
+  "bytes": 4805,
+  "sha256": "1d3460ffd259f35d2fec1980823256fbde4e64e9054edcfc952dcb855b06c177"
+}

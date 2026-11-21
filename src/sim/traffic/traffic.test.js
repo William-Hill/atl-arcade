@@ -7,6 +7,7 @@ import {
   carBodyDistance,
   carGroundSampler,
   createTraffic,
+  lanePose,
   oppositeSide,
   stepTraffic,
   streetHeightSampler,
@@ -18,6 +19,8 @@ import {
   FLAT_GROUND,
   createSkateState,
   runScript,
+  stepSkate,
+  yawFromHeading,
 } from "../skate/controller.js";
 import { SKATE } from "../skate/constants.js";
 import { seededRandom } from "../../level/geo/styles.js";
@@ -600,6 +603,164 @@ describe("cars as obstacles", () => {
   });
 });
 
+// #285: a stopped car must never pin the skater. One sedan on Main Street,
+// stopped mid-block (no stop line near), with the skater against its body.
+function pinScene({ side = 0.32, kind = "sedan" } = {}) {
+  const t = createTraffic(TOWN, { streets: MAIN, perKm: 1 });
+  const car = t.cars[0];
+  t.cars = [car];
+  car.kind = kind;
+  car.speed = 0;
+  car.s = 120;
+  Object.assign(car, lanePose(t.lanes[car.lane], car.s));
+  car.next = t.lanes[car.lane].stops.findIndex((st) => st.sStop > car.s);
+  const fx = Math.cos(car.yaw);
+  const fz = -Math.sin(car.yaw);
+  // The right of the car heading (the curb side).
+  const nx = -fz;
+  const nz = fx;
+  const w = CAR_SIZE[kind].width / 2;
+  return { t, car, fx, fz, nx, nz, w, side };
+}
+
+describe("a stopped car never pins the skater (#285)", () => {
+  // The time limit (s) by car kind, for the skater at the middle of the
+  // side (the worst spot). The long box truck and bus take longer at the
+  // calm crawl.
+  it.each([
+    ["hatchback", 2],
+    ["sedan", 2],
+    ["taxi", 2],
+    ["pickup", 2],
+    ["van", 2],
+    ["box_truck", 2.5],
+    ["bus", 3],
+  ])(
+    "frees a skater pressed between a stopped %s and a parked car within %s s",
+    (kind, limit) => {
+      const { t, car, nx, nz, w, side } = pinScene({ kind });
+      // The skater stands beside the middle of the car, 0.32 m from its side,
+      // and a parked car is 0.32 m behind her: a slot just wider than her body.
+      const sx = car.x + nx * (w + side);
+      const sz = car.z + nz * (w + side);
+      const parkedW = CAR_SIZE.sedan.width / 2;
+      const parked = [
+        {
+          kind: "sedan",
+          x: sx + nx * (side + parkedW),
+          z: sz + nz * (side + parkedW),
+          yaw: car.yaw,
+          y: 0,
+        },
+      ];
+      const env = {
+        sampleGround: carGroundSampler(
+          FLAT_GROUND.sampleGround,
+          parked,
+          () => t.cars,
+        ),
+      };
+      // Scripted steering, as in the Autopilot run: she faces the car and
+      // pushes into its side the whole time.
+      let s = createSkateState({
+        position: [sx, 0, sz],
+        yaw: yawFromHeading(-nx, -nz),
+      });
+      let freeAt = null;
+      for (let i = 0; i < 60 * 60 && freeAt === null; i += 1) {
+        s = stepSkate(s, { push: true }, DT, env);
+        const before = carBodyDistance(car, s.position[0], s.position[2]);
+        stepTraffic(t, DT, s.position);
+        const after = carBodyDistance(car, s.position[0], s.position[2]);
+        // The car never pushes her: no move brings its body nearer.
+        expect(after).toBeGreaterThanOrEqual(before - 1e-9);
+        expect(after).toBeGreaterThanOrEqual(SKATE.bodyRadius - 1e-6);
+        // Free: she moves one body radius out of the pin spot.
+        if (
+          Math.hypot(s.position[0] - sx, s.position[2] - sz) > SKATE.bodyRadius
+        )
+          freeAt = (i + 1) * DT;
+      }
+      expect(freeAt).not.toBeNull();
+      expect(freeAt).toBeLessThanOrEqual(limit);
+    },
+  );
+
+  it("backs a stopped car off a skater at its front bumper, then waits with a gap", () => {
+    const { t, car, fx, fz } = pinScene();
+    const half = CAR_SIZE.sedan.length / 2;
+    // She stands 0.5 m in front of the front bumper.
+    const skater = [car.x + fx * (half + 0.5), 0, car.z + fz * (half + 0.5)];
+    let clearAt = null;
+    for (let i = 0; i < 60 * 12; i += 1) {
+      const before = carBodyDistance(car, skater[0], skater[2]);
+      stepTraffic(t, DT, skater);
+      const gap = carBodyDistance(car, skater[0], skater[2]);
+      expect(gap).toBeGreaterThanOrEqual(before - 1e-9);
+      if (clearAt === null && gap >= TRAFFIC.safeRadius) clearAt = (i + 1) * DT;
+    }
+    expect(clearAt).not.toBeNull();
+    expect(clearAt).toBeLessThanOrEqual(2);
+    // It waits: stopped, out of the 2 m circle, not far back.
+    const gap = carBodyDistance(car, skater[0], skater[2]);
+    expect(car.speed).toBe(0);
+    expect(gap).toBeGreaterThanOrEqual(TRAFFIC.safeRadius);
+    expect(gap).toBeLessThan(TRAFFIC.safeRadius + 0.5);
+  });
+
+  it("drives a stopped car on, slowly, away from a skater who stands beside it", () => {
+    const { t, car, fx, fz, nx, nz, w } = pinScene();
+    const skater = [car.x + nx * (w + 0.5), 0, car.z + nz * (w + 0.5)];
+    const half = CAR_SIZE.sedan.length / 2;
+    const s0 = car.s;
+    let top = 0;
+    let pastAt = null;
+    let clearAt = null;
+    for (let i = 0; i < 60 * 4; i += 1) {
+      const before = carBodyDistance(car, skater[0], skater[2]);
+      stepTraffic(t, DT, skater);
+      const gap = carBodyDistance(car, skater[0], skater[2]);
+      expect(gap).toBeGreaterThanOrEqual(before - 1e-9);
+      // The rear bumper is past her: the car no longer stands beside her.
+      const along = (skater[0] - car.x) * fx + (skater[2] - car.z) * fz;
+      if (along < -half) pastAt ??= (i + 1) * DT;
+      if (gap < TRAFFIC.safeRadius) top = Math.max(top, car.speed);
+      else clearAt ??= (i + 1) * DT;
+    }
+    expect(car.s).toBeGreaterThan(s0);
+    expect(pastAt).not.toBeNull();
+    expect(pastAt).toBeLessThanOrEqual(2);
+    expect(clearAt).toBeLessThanOrEqual(3);
+    // A crawl while it is near her.
+    expect(top).toBeLessThanOrEqual(TRAFFIC.creepSpeed + 1e-9);
+  });
+});
+
+describe("a moving car with the skater inside 2 m (#285)", () => {
+  it("slows to the crawl with hardBrake, never in one step, and goes on", () => {
+    const { t, car, fx, fz, nx, nz, w } = pinScene();
+    const half = CAR_SIZE.sedan.length / 2;
+    car.speed = 7;
+    // She rolls up 1 m beside the rear half of the moving car.
+    const skater = [
+      car.x + nx * (w + 1) - fx * half * 0.5,
+      0,
+      car.z + nz * (w + 1) - fz * half * 0.5,
+    ];
+    let v = car.speed;
+    const s0 = car.s;
+    for (let i = 0; i < 30; i += 1) {
+      stepTraffic(t, DT, skater);
+      expect(v - car.speed).toBeLessThanOrEqual(TRAFFIC.hardBrake * DT + 1e-9);
+      v = car.speed;
+    }
+    expect(car.s).toBeGreaterThan(s0 + 1);
+    expect(carBodyDistance(car, skater[0], skater[2])).toBeGreaterThanOrEqual(
+      1 - 1e-9,
+    );
+  });
+});
+
 describe("lights, signals, and crosswalks", () => {
   it("lights the brakes while it slows for a stop line, and not while it cruises", () => {
     const t = createTraffic(TOWN, { streets: MAIN, perKm: 1 });
@@ -832,5 +993,34 @@ describe("far-step (#189)", () => {
     car.yaw = Math.PI;
     expect(pitch(car)).toBeLessThan(0);
     expect(calls).toBe(4);
+  });
+});
+
+// #285 review: a car that backs off the skater must not back into an
+// intersection box that it cleared, past the car that holds that box.
+describe("a car that backs off the skater stops at a cleared box (#285)", () => {
+  it("keeps its rear out of the box and leaves the other reservation", () => {
+    const { t, car, fx, fz } = pinScene();
+    const lane = t.lanes[car.lane];
+    const half = CAR_SIZE.sedan.length / 2;
+    const st = lane.stops.find((x) => x.sExit + half + 5 < lane.length);
+    expect(st).toBeDefined();
+    // The car just cleared the box: its rear is 0.7 m past the box exit.
+    car.s = st.sExit + half + 0.7;
+    Object.assign(car, lanePose(lane, car.s));
+    car.box = -1;
+    car.next = lane.stops.findIndex((x) => x.sStop > car.s);
+    // Another car holds the box.
+    t.occupant[st.box] = 99;
+    // She stands 0.5 m in front of the front bumper and stays there.
+    const skater = [car.x + fx * (half + 0.5), 0, car.z + fz * (half + 0.5)];
+    let minRear = Infinity;
+    for (let i = 0; i < 60 * 12; i += 1) {
+      stepTraffic(t, DT, skater);
+      minRear = Math.min(minRear, car.s - half);
+    }
+    expect(minRear).toBeGreaterThanOrEqual(st.sExit - 1e-6);
+    expect(car.box).toBe(-1);
+    expect(t.occupant[st.box]).toBe(99);
   });
 });

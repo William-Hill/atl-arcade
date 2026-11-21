@@ -158,11 +158,25 @@ test.describe("phone landscape camera", () => {
   });
 });
 
-test("a desktop keeps the full credit and the 60 degree view", async ({ page }) => {
+test("a desktop shows the short credit, clear of the HUD, and the 60 degree view", async ({ page }) => {
   await ready(page);
   expect(await page.evaluate(() => window.__atl.fov)).toBe(60);
+  const short = page.locator("#attribution .attr-short");
+  await expect(short).toBeVisible();
+  await expect(short).toContainText("OpenStreetMap contributors");
+  await expect(page.locator("#attribution .attr-full")).toBeHidden();
+  // The full credit covered the timer on a desktop screen.
+  const a = await short.boundingBox();
+  for (const sel of ["#hud > *", "#skater-select button"]) {
+    for (const b of await page.locator(sel).all()) {
+      const r = await b.boundingBox();
+      if (!r) continue;
+      const hit = a.x < r.x + r.width && r.x < a.x + a.width && a.y < r.y + r.height && r.y < a.y + a.height;
+      expect(hit, sel).toBe(false);
+    }
+  }
+  await short.click();
   await expect(page.locator("#attribution .attr-full")).toBeVisible();
-  await expect(page.locator("#attribution .attr-short")).toBeHidden();
 });
 
 test("a tap on the short credit shows the full text", async ({ browser }) => {

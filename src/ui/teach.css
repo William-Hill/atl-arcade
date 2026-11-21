@@ -142,8 +142,11 @@ body.touch #teach { bottom: calc(230px + env(safe-area-inset-bottom)); }
     max-width: calc(100vw - 32px - 120px);
   }
 }
+/* A phone in landscape: the card sits at the top middle, under the beat
+   pulse (top 28 px), the PHOTO button (top 40 px) and the SETTINGS button
+   (top 30 px, 44 px tall), so it covers none of them. */
 @media (max-height: 500px) {
-  body.touch #teach { bottom: auto; top: calc(12px + env(safe-area-inset-top)); }
+  body.touch #teach { bottom: auto; top: calc(84px + env(safe-area-inset-top)); }
 }
 @media (max-width: 600px), (max-height: 500px) {
   .teach-title { font-size: 17px; }

@@ -15,6 +15,7 @@ export function createSkater(level, { position, yaw } = {}) {
     grindCooldown: 0,
     grindHeld: false,
     grindBuffer: 0, // s left on a buffered grind press
+    bonkCatch: null, // { speed, left }: the speed before a bonk, for a ledge catch (#262)
     justSnapped: false,
     justFell: false,
     justExited: false,
@@ -73,14 +74,25 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     s.justFell = false;
     s.justExited = false;
     s.exitReason = null;
+    s.endedGrind = null;
     const lean = input.steer ? Math.sign(input.steer) : stats.snaps % 2 === 0 ? 1 : -1;
     // Input buffer: a grind tap stays live for GRIND.buffer s, so a tap just
     // before the rail comes in range still snaps.
     s.grindBuffer = grindEdge ? k.grind.buffer : Math.max(0, (prev.grindBuffer ?? 0) - dt);
+    // Ledge catch (#262): a bonk keeps the speed from before the hit for
+    // catchWindow s. A grind in that window snaps at a wider angle with that
+    // speed, so a ledge hit does not end in a slow grind that tips over.
+    let caught = prev.bonkCatch && prev.bonkCatch.left > dt ? { ...prev.bonkCatch, left: prev.bonkCatch.left - dt } : null;
+    const before = prev.state === "air" ? Math.hypot(prev.velocity[0], prev.velocity[2]) : Math.abs(prev.speed);
+    if (s.bonked && before > (caught?.speed ?? 0)) caught = { speed: before, left: k.grind.catchWindow };
+    s.bonkCatch = caught;
     if ((wantsGrind || s.grindBuffer > 0) && s.grindCooldown <= 0 && grindables.length) {
-      const snap = findSnap(grindables, s, k.grind);
+      let snap = findSnap(grindables, s, k.grind);
+      if (!snap && caught) snap = findSnap(grindables, s, { ...k.grind, minAlongDot: k.grind.catchAlongDot });
       if (snap) {
-        s = startGrind(s, snap, lean, k.grind);
+        s = startGrind(caught ? { ...s, speed: Math.max(Math.abs(s.speed), caught.speed) } : s, snap, lean, k.grind);
+        s.bonked = false;
+        s.bonkCatch = null;
         s.grindBuffer = 0;
         s.jumpBuffer = 0;
         s.tick = prev.tick + 1;

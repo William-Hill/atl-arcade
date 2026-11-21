@@ -19,6 +19,20 @@ Branch `feat/76-teach-moves` from `epic/city-look`; draft PR, base `epic/city-lo
 #76 tests, cloud container: `npm test` 1860 of 1861 pass (the known 5 s timeout in `facade-kit.test.js`). `npm run build` passes. `npm run perf:check -- --no-build --tiers phone,high`: budget PASS; phone 97 draw calls in toon and 113 in pbr lite; the high tier rides stopped at the 240 s wall limit. The low tier did not run.
 
 #76 NOT verified: no person played the prompts; no real phone, GPU, or gamepad; touch in landscape has no test; the browser grind ride starts 25 m before the rail (the full ride from the spawn runs in the pure simulation only); real skaters did not review the prompt words.
+## #262 skatepark: ledge catch, quarter pipe lip, grind score, clipping, 2026-11-21
+
+Branch `fix/262-skatepark` from `epic/city-look`; draft PR with base `epic/city-look` (base changes to `main` after PR #304 merges). Details: `docs/decisions.md`, 2026-11-21.
+
+| Part | Where | Verified |
+|---|---|---|
+| Ledge catch | `src/sim/skate/skater.js`, `GRIND.catchAlongDot`, `GRIND.catchWindow` | Vitest `skatepark-262.test.js`; Playwright ledge catch ride (snap at 7.55 m/s at 70 degrees) |
+| Quarter pipe lip launch, kicker pop | `src/sim/skate/controller.js` (`atLip`, `launchVert`, `popUp`), `SKATE.lipNormalY`, `COMBO.rampAirPoints` | Vitest; Playwright vert air ride (top 1.85 m over the pad) |
+| Grind score by meters | `src/sim/skate/run.js`, `grind.js`, `COMBO.grindPerMeter` 35, `COMBO.longGrindMeters` 10 | Vitest `skatepark-262.test.js`, `balance.test.js` |
+| Body out of walls | `src/sim/skate/controller.js` (`faceHeight`, `airWall`, `pushOut`, `leaveAt`) | Vitest sweep, 96 rides per feature; Playwright pictures `e2e/__screenshots__/skatepark-262-*.jpg` |
+
+#262 tests, cloud container: `npm test` 1843 of 1845 pass (the 2 known 5 s timeouts in `facade-kit.test.js` and `geo-mesh.test.js`). Playwright `e2e/skatepark.spec.js` 8 of 8 pass (50.7 min, SwiftShader). The full e2e suite did not run.
+
+#262 NOT done: the beat lines over the park features (render); an Autopilot run in the park; the upright body under the quarter pipe lip (render). Owner decision open: `grindPerMeter` 35 (keeps the score scale; #75 holds at 8 m/s and up) or 120 (#75 at every speed; grind combos score about 3 times more).
 
 ## #218 landmark icons on the maps and the Guide tab, 2026-11-12
 

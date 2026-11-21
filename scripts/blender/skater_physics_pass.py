@@ -81,8 +81,12 @@ FOLLOW = [
 SMOOTH_BONES = ["Spine", "Spine1", "Spine2", "Neck", "Head",
                 "LeftShoulder", "RightShoulder", "LeftArm", "RightArm",
                 "LeftForeArm", "RightForeArm", "LeftHand", "RightHand"]
-# The largest hips shift (m): horizontal, vertical.
-MAX_SHIFT = (0.06, 0.03)
+# The largest hips shift (m): to the side, fore-aft, vertical. In the push, a
+# skater moves the hips far over the glide skate, so the side limit is the
+# largest. In the carve, 12 cm to the side put the Nia knee 35 degrees off its
+# hinge (the joint-limit gate WARN), so the other clips keep 6 cm.
+MAX_SHIFT = {"push": (0.12, 0.06, 0.03)}
+MAX_SHIFT_DEFAULT = (0.06, 0.06, 0.03)
 # A skate touches the ground when its lowest vertex is this close (m).
 CONTACT = 0.015
 # The margin of the support polygon around the wheel points (m).
@@ -117,6 +121,14 @@ RECOIL = {
 # than the one before: pelvis, chest, arms, head.
 RECOIL_LEAD, RECOIL_BACK = 3, 4
 RECOIL_DELAY = {"pelvis": 0, "chest": 1, "arms": 2, "head": 3}
+# A faster drive (the Crossroads recipe: the swing length times 10/18, and a
+# deeper load before it). For the push only: each drive (both skates on the
+# ground, from the touch-down of the other skate to the lift-off of the drive
+# skate) plays in DRIVE_RATIO of its frames. The lift-off frames stay, the
+# other skate lands later, so the glide on one skate gets the saved frames.
+# The clip length does not change. LOAD (m): an extra dip of the CoM at the
+# start of the drive.
+DRIVE = {"push": {"ratio": 10 / 18, "load": 0.01, "load_sigma": 2.5}}
 # The heading of the skater in Blender: the model faces -Y, X is the side.
 FORWARD = 1  # axis index of fore-aft (Y)
 SIDE = 0
@@ -483,6 +495,12 @@ def physics_pass(sk, name, s, m0):
     events = recoil_events(name, s, C)
     rec = recoil_offsets(name, events, n)
     T += 0.68 * rec
+    # 2c. The deeper load at the start of each drive (DRIVE).
+    if s.get("drive"):
+        cfg = s["drive"]
+        for d in cfg["drives"]:
+            k = ((np.arange(n) - d["land_new"] + n // 2) % n) - n // 2
+            T[:, 2] -= cfg["load"] * np.exp(-0.5 * (k / cfg["load_sigma"]) ** 2)
     # 3. Balance, cart-table model: ZMP = C - k C'' with k = z / (g + z'').
     #    Clamp the ZMP of the target path into the support polygon, then
     #    solve (I - K D2) C = ZMP* for the horizontal CoM. The solve is a
@@ -542,10 +560,8 @@ def physics_pass(sk, name, s, m0):
         else:
             break
         shift = shift + err / 0.68
-        hmax, vmax = MAX_SHIFT
-        horiz = np.linalg.norm(shift[:, :2], axis=1, keepdims=True)
-        shift[:, :2] *= np.minimum(1, hmax / np.maximum(horiz, 1e-9))
-        shift[:, 2] = np.clip(shift[:, 2], -vmax, vmax)
+        for axis, cap in enumerate(MAX_SHIFT.get(name, MAX_SHIFT_DEFAULT)):
+            shift[:, axis] = np.clip(shift[:, axis], -cap, cap)
     shift = best[1]
     # 6. Keep the legs in reach: scale the shift down on a frame if needed.
     for f in range(n):
@@ -655,6 +671,117 @@ def recoil_rotations(name, s, events, rots):
                 rots[key][f] = list(Quaternion(rots[key][f]) @ (M.inverted() @ W @ M))
 
 
+def contact_events(s):
+    """Per skate: lift-off frames (the last frame on the ground before a step)
+    and touch-down frames (the first frame on the ground after a step)."""
+    n = s["n"]
+    out = {}
+    for side in ("Left", "Right"):
+        z = np.array([float(s["skate"][f][side][:, 2].min()) for f in range(n)])
+        lifts, lands = [], []
+        for f in range(n):
+            if z[f - 1] < CONTACT <= z[f] and max(z[(f + i) % n] for i in range(10)) >= DRAG_LIFT:
+                lifts.append((f - 1) % n)
+            if z[f - 1] >= CONTACT > z[f] and max(z[(f - i) % n] for i in range(10)) >= DRAG_LIFT:
+                lands.append(f)
+        out[side] = {"lift": lifts, "land": lands}
+    return out
+
+
+def pchip(xk, yk, x):
+    """Monotone cubic interpolation (Fritsch-Carlson)."""
+    xk, yk = np.asarray(xk, float), np.asarray(yk, float)
+    h = np.diff(xk)
+    d = np.diff(yk) / h
+    m = np.zeros_like(yk)
+    for i in range(1, len(xk) - 1):
+        if d[i - 1] * d[i] > 0:
+            w1, w2 = 2 * h[i] + h[i - 1], h[i] + 2 * h[i - 1]
+            m[i] = (w1 + w2) / (w1 / d[i - 1] + w2 / d[i])
+    m[0], m[-1] = d[0], d[-1]
+    out = []
+    for t in np.atleast_1d(x):
+        i = int(np.clip(np.searchsorted(xk, t) - 1, 0, len(h) - 1))
+        u = (t - xk[i]) / h[i]
+        h00, h10, h01, h11 = 2 * u**3 - 3 * u**2 + 1, u**3 - 2 * u**2 + u, -2 * u**3 + 3 * u**2, u**3 - u**2
+        out.append(h00 * yk[i] + h10 * h[i] * m[i] + h01 * yk[i + 1] + h11 * h[i] * m[i + 1])
+    return np.array(out)
+
+
+def drive_plan(name, s):
+    """The drives of a clip and the time warp: output frame -> source frame."""
+    cfg = DRIVE.get(name)
+    if not cfg:
+        return None
+    n = s["n"]
+    ev = contact_events(s)
+    drives = []
+    for side, other in (("Left", "Right"), ("Right", "Left")):
+        for lo in ev[side]["lift"]:
+            lands = ev[other]["land"]
+            if not lands:
+                continue
+            land = max(lands, key=lambda f: -((lo - f) % n))  # the nearest touch-down before the lift-off
+            length = (lo - land) % n
+            new = max(2, int(round(length * cfg["ratio"])))
+            drives.append({"skate": side, "lift": lo, "land": land, "frames": length,
+                           "land_new": (lo - new) % n, "frames_new": new})
+    if not drives:
+        return None
+    knots = sorted({(d["lift"], d["lift"]) for d in drives} | {(d["land_new"], d["land"]) for d in drives})
+    # Unwrap the source frames so that they rise with the output frames.
+    xs, ys = [], []
+    for x, y in knots:
+        if ys and y < ys[-1]:
+            y += n
+        xs.append(x)
+        ys.append(y)
+    k = len(xs)
+    xk = [x - n for x in xs] + xs + [x + n for x in xs]
+    yk = [y - n for y in ys] + ys + [y + n for y in ys]
+    warp = pchip(xk, yk, np.arange(n)) % n
+    return {"drives": drives, "warp": [float(w) for w in warp], **cfg}
+
+
+def retime(sk, action, plan, name):
+    """A new action: frame f shows the pose of the source at warp[f]."""
+    scene = bpy.context.scene
+    pb = sk.pb
+    n = len(plan["warp"])
+    poses = []
+    for f in range(n):
+        t = plan["warp"][f]
+        for b in pb:
+            b.location = (0, 0, 0)
+            b.rotation_quaternion = (1, 0, 0, 0)
+        bind(sk.arm, action)
+        scene.frame_set(int(math.floor(t)), subframe=t - math.floor(t))
+        poses.append({b.name: (b.location.copy(), b.rotation_quaternion.copy()) for b in pb})
+    sk.arm.animation_data.action = None
+    for f in range(n + 1):
+        for b in pb:
+            loc, rot = poses[f % n][b.name]
+            b.location = loc
+            b.rotation_quaternion = rot
+        key_frame(sk, f)
+    act = sk.arm.animation_data.action
+    act.name = name
+    return act
+
+
+def drive_speed(s, plan_drives):
+    """The peak speed (m/s) of the drive skate against the hips, in each drive."""
+    n = s["n"]
+    out = []
+    for d in plan_drives:
+        side = d["skate"]
+        pos = [s["skate"][f][side][:, :2].mean(0) - np.array(s["mat"][f][P + "Hips"].to_translation())[:2] for f in range(n)]
+        frames = [(d["lift"] - k) % n for k in range(d["frames_new"] if "frames_new" in d else d["frames"])]
+        v = [np.linalg.norm(pos[f] - pos[f - 1]) * FPS for f in frames]
+        out.append(round(float(max(v)), 3))
+    return out
+
+
 def build_action(sk, name, s, shift, rots, targets):
     # keyframe_insert makes a new action (with its slot) when none is bound.
     sk.arm.animation_data.action = None
@@ -751,7 +878,7 @@ def main():
     base = os.path.splitext(os.path.basename(a.src))[0]
     who = sk.arm.name.replace("Rig", "").lower()
     report = {"source": a.src, "skater": who, "settings": {
-        "still": STILL, "sigma_frames": SIGMA, "follow": FOLLOW, "max_shift_m": MAX_SHIFT,
+        "still": STILL, "sigma_frames": SIGMA, "follow": FOLLOW, "max_shift_m": {**MAX_SHIFT, "default": MAX_SHIFT_DEFAULT},
         "contact_m": CONTACT, "support_margin_m": SUPPORT_MARGIN, "body_kg": BODY_KG, "skate_kg": SKATE_KG,
         "recoil": RECOIL, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
     rest = {b: (bn.head_local.x, bn.head_local.y, bn.head_local.z) for b, bn in ((b, sk.arm.data.bones[b]) for b in (P + "LeftFoot", P + "RightFoot"))}
@@ -764,7 +891,26 @@ def main():
         gate0 = joint_limits.gate_action(sk.arm, act)
         s = sk.sample(act)
         m0 = metrics(sk, s)
-        shift, rots, targets, info = physics_pass(sk, name, s, m0)
+        plan = drive_plan(name, s)
+        drive_info = None
+        if plan:
+            # The physics pass works on the retimed clip; "before" stays the
+            # shipped clip.
+            src_act = retime(sk, act, plan, name + "_drive")
+            s0 = s
+            s = sk.sample(src_act)
+            s["drive"] = plan
+            mw = metrics(sk, s)
+            drive_info = {"drives": plan["drives"], "ratio": plan["ratio"], "load_m": plan["load"],
+                          "drive_skate_peak_speed_ms_before": drive_speed(s0, [{**d, "frames_new": d["frames"]} for d in plan["drives"]]),
+                          "drive_skate_peak_speed_ms_after_warp": drive_speed(s, plan["drives"]),
+                          "warp": [round(w, 2) for w in plan["warp"]]}
+            m_pass = mw
+        else:
+            m_pass = m0
+        shift, rots, targets, info = physics_pass(sk, name, s, m_pass)
+        if drive_info:
+            info["drive"] = drive_info
         act.name = name + "_before"
         new_act, reach = build_action(sk, name, s, shift, rots, targets)
         new[name] = new_act

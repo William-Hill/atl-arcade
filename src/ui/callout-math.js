@@ -186,6 +186,13 @@ export function stepCallouts(state, dt, beat = { phase: null, bpm: 0 }, k = CALL
     queue = rest;
     shown += 1;
   }
+  // A card that waits for its beat follows the beat of the music now, so a
+  // pause in the wait does not leave it on the old beat. With no pause the
+  // start stays the same (the two clocks agree).
+  if (current && current === state.current && dt > 0 && time < current.start && beat.phase !== null && beat.phase !== undefined) {
+    const start = snapBeat(time, beat.phase, beat.bpm, k);
+    if (Math.abs(start - current.start) > 1e-6) current = cardAt(current, current.index, start, current.beat);
+  }
   if (time === state.time && current === state.current && queue === state.queue) return state;
   return { time, current, queue, shown };
 }

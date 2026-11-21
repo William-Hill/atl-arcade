@@ -136,6 +136,20 @@ describe("queue", () => {
     expect(Math.abs(musicStart / 0.5 - Math.round(musicStart / 0.5)) * 0.5).toBeLessThan(0.021);
   });
 
+  it("moves a card that waits for its beat when a pause comes in the wait (#310 review)", () => {
+    // 120 bpm, phase 0.5: the first card waits 0.25 s for the beat at 0.25.
+    let s = stepCallouts(pushCallout(createCallouts(), claimCallout(200)), 0, music(0.25));
+    expect(s.current.start).toBeCloseTo(0.25);
+    // With no pause the start stays.
+    const same = stepCallouts(s, 0.1, music(0.35));
+    expect(same.current.start).toBeCloseTo(0.25);
+    // A pause of 0.15 s (the music goes on, the callout clock stops), then 0.02 s of play.
+    s = stepCallouts(s, 0.02, music(0.25 + 0.15 + 0.02));
+    // Music time = callout time + 0.4: the music beat at 0.5 is callout time 0.1 (the old start, 0.25, is off the beat).
+    expect(s.current.start).toBeCloseTo(0.1);
+    expect(activeCard(s)).toBeNull();
+  });
+
   it("keeps each card on the beat after slow frames (#310 review)", () => {
     let s = pushCallout(createCallouts(), startCallout());
     let t = 0;

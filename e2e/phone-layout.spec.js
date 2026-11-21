@@ -174,6 +174,19 @@ test("a desktop shows the short credit, clear of the HUD, and the 60 degree view
       if (r) expect(hits(a, r), sel).toBe(false);
     }
   }
+  // The pill covered the beat pulse. ready() loads mute=1, so the HUD hides
+  // the pulse; show it for one synchronous read of its box.
+  const pulse = await page.evaluate(() => {
+    const el = document.getElementById("hud-pulse");
+    const was = el.style.display;
+    el.style.display = "";
+    const r = el.getBoundingClientRect();
+    el.style.display = was;
+    // The beat animation scales the pulse up to 1.6 times (pulseLook).
+    const g = r.width * 0.3;
+    return { x: r.x - g, y: r.y - g, width: r.width + 2 * g, height: r.height + 2 * g };
+  });
+  expect(hits(a, pulse), "#hud-pulse").toBe(false);
   // The controls hint ran under the PHOTO button.
   const hint = await page.locator("#shell-info").boundingBox();
   for (const sel of ["#photo-toggle", "#settings-toggle", "#minimap"]) {

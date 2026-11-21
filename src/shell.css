@@ -130,7 +130,9 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
 /* Map data attribution (ODbL). Shown on every geodata level. */
 #attribution {
   position: fixed;
-  right: calc(8px + env(safe-area-inset-right));
+  /* Left of the beat pulse (right 24px, top 24px, 18px wide), so the pill
+     never covers it while it scales on the beat (up to 1.6 times). */
+  right: calc(56px + env(safe-area-inset-right));
   top: calc(6px + env(safe-area-inset-top));
   font: 11px/1.3 system-ui, sans-serif;
   color: #fff;

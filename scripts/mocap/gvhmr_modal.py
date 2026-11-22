@@ -116,10 +116,14 @@ image = (
         f"uv pip install -q -p {VENV_PY} --no-deps -e {GVHMR}",
         f"uv pip install -q -p {VENV_PY} --exclude-newer {EXCLUDE_NEWER} yacs",
     )
+    # MediaPipe (feet and hands in step 9) loads libGLESv2.so.2. A separate layer, so the layers above stay cached.
+    .apt_install("libgles2")
     # Graphics libraries from the NVIDIA driver, for Blender's EGL (Workbench renders in step 12).
     .env({"NVIDIA_DRIVER_CAPABILITIES": "all", "PYTHONUNBUFFERED": "1"})
     .add_local_dir(str(REPO_ROOT / "scripts/mocap"), f"{ATL}/scripts/mocap",
                    ignore=[".out", "__pycache__", "*.ipynb"])
+    # nia_mocap_clip.py runs prune_static_channels() from this file (read only, not changed).
+    .add_local_file(str(REPO_ROOT / "scripts/blender/nia_clips.py"), f"{ATL}/scripts/blender/nia_clips.py")
     .add_local_file(str(REPO_ROOT / "assets/skaters/nia/skater.glb"), f"{ATL}/assets/skaters/nia/skater.glb")
 )
 

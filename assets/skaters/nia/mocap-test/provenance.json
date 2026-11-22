@@ -1,0 +1,148 @@
+{
+ "asset": "mocap_test_push: GVHMR video mocap test clip on Nia (evaluation only, not shipped)",
+ "date": "2026-11-22",
+ "status": "evaluation only. Do not ship: GVHMR and SMPL-X are licensed for non-commercial research only.",
+ "tools": {
+  "mixamo-llm-mocap": {
+   "repo": "https://github.com/squall01337/mixamo-llm-mocap",
+   "commit": "da5e7cc48557f0272832429a8df3fbf2b3c1273d",
+   "license": "MIT"
+  },
+  "GVHMR": {
+   "repo": "https://github.com/zju3dv/GVHMR",
+   "commit": "ee960bb6e2ea2d381aa97f08e9b71ef320b624b1",
+   "license": "educational, research and non-profit use only; modifications open source; no commercial use"
+  },
+  "blender": "Blender 5.1.2",
+  "atl-arcade": {
+   "branch": "claude/wizardly-mayer-binhnd",
+   "commit": "a34f1cdaac15dd56152bb45dc2ee03396bb7aac6 (with local changes in scripts/mocap)",
+   "scripts": [
+    "scripts/mocap/gvhmr_modal.py",
+    "scripts/mocap/nia_rig_profile.py",
+    "scripts/mocap/nia_mocap_clip.py",
+    "scripts/mocap/nia_mocap_compare.py"
+   ]
+  },
+  "gpu": "Tesla T4",
+  "runner": "Modal (T4)"
+ },
+ "model_weights": {
+  "gvhmr/gvhmr_siga24_release.ckpt": {
+   "url": "https://huggingface.co/camenduru/GVHMR/resolve/main/gvhmr/gvhmr_siga24_release.ckpt",
+   "bytes": 163508011,
+   "sha256": "4fae7da2de388d5da3514cb27a2d003f364dacb280e9cf88972b710e589c6b91",
+   "source": "unofficial Hugging Face mirror (camenduru/GVHMR) of the GVHMR release checkpoints"
+  },
+  "yolo/yolov8x.pt": {
+   "url": "https://huggingface.co/camenduru/GVHMR/resolve/main/yolo/yolov8x.pt",
+   "bytes": 136867539,
+   "sha256": "c4d5a3f000d771762f03fc8b57ebd0aae324aeaefdd6e68492a9c4470f2d1e8b",
+   "source": "unofficial Hugging Face mirror (camenduru/GVHMR) of the GVHMR release checkpoints"
+  },
+  "vitpose/vitpose-h-multi-coco.pth": {
+   "url": "https://huggingface.co/camenduru/GVHMR/resolve/main/vitpose/vitpose-h-multi-coco.pth",
+   "bytes": 2549075546,
+   "sha256": "50e33f4077ef2a6bcfd7110c58742b24c5859b7798fb0eedd6d2215e0a8980bc",
+   "source": "unofficial Hugging Face mirror (camenduru/GVHMR) of the GVHMR release checkpoints"
+  },
+  "hmr2/epoch=10-step=25000.ckpt": {
+   "url": "https://huggingface.co/camenduru/GVHMR/resolve/main/hmr2/epoch%3D10-step%3D25000.ckpt",
+   "bytes": 2709494041,
+   "sha256": "2dcf79638109781d1ae5f5c44fee5f55bc83291c210653feead9b7f04fa6f20e",
+   "source": "unofficial Hugging Face mirror (camenduru/GVHMR) of the GVHMR release checkpoints"
+  },
+  "SMPLX_NEUTRAL.npz": {
+   "version": "SMPL-X v1.1",
+   "sha256": "376021446ddc86e99acacd795182bbef903e61d33b76b9d8b359c2b0865bd992",
+   "license": "MPI SMPL-X license: non-commercial scientific research only; not redistributed"
+  }
+ },
+ "weight_licenses": {
+  "gvhmr_siga24_release.ckpt": "GVHMR license (non-commercial)",
+  "yolov8x.pt": "AGPL-3.0 (Ultralytics)",
+  "vitpose-h-multi-coco.pth": "Apache-2.0 code (ViTPose); trained on COCO",
+  "hmr2 epoch=10-step=25000.ckpt": "MIT code (4D-Humans); outputs SMPL, so the SMPL license applies",
+  "mediapipe pose/hand landmarker": "Apache-2.0"
+ },
+ "video_source": {
+  "site": "Pexels",
+  "title": "a-woman-using-her-roller-skates-8402599",
+  "page": "https://www.pexels.com/video/a-woman-using-her-roller-skates-8402599/",
+  "file_url": "https://videos.pexels.com/video-files/8402599/8402599-hd_1920_1080_25fps.mp4",
+  "creator": "SHVETS production",
+  "license": "Pexels License",
+  "license_url": "https://www.pexels.com/license/",
+  "trim_s": [
+   0.0,
+   15.0
+  ],
+  "downloaded": "2026-11-22T19:57:22.580351Z",
+  "sha256": "f9614b4c8ec0f05ba8f9e4fb363e78bd4e54129f6062f67354a98b45d3b91ad9"
+ },
+ "retarget_spec": {
+  "name": "skate",
+  "action_name": "mocap_test_push",
+  "clip_dir": "clips/skate",
+  "landmarks": "plates/skate/landmarks.json",
+  "smplx": "plates/skate/smplx.npz",
+  "rig_profile": "/work/nia.json",
+  "estimator": "gvhmr_siga24",
+  "src_fps": 30,
+  "dst_fps": 30,
+  "smplx_retarget": {
+   "pin_static_feet": false,
+   "contact_threshold": 1.01,
+   "contact_max_speed": 0.0,
+   "contact_still_px": 0.0,
+   "contact_swing_height": 10.0,
+   "contact_geo_speed": 0.0,
+   "floor_snap": true
+  }
+ },
+ "clip_report": {
+  "clip": "mocap_test_push",
+  "motion": "motion.npz",
+  "frames": 54,
+  "fps": 30.0,
+  "seconds": 1.8,
+  "loop_motion_frames": [
+   393,
+   447
+  ],
+  "loop_cost": 0.0029,
+  "blend_frames": 6,
+  "source_travel_m": 0.454,
+  "source_speed_m_s": 0.252,
+  "heading_drift_removed_deg_s": -2.09,
+  "sway_range_m": [
+   0.099,
+   0.082
+  ],
+  "body_ground_shift_m": [
+   -0.117,
+   -0.039
+  ],
+  "raw_lowest_skate_m": [
+   0.035,
+   0.118
+  ],
+  "ik": {
+   "lifted": 26,
+   "lowered": 55,
+   "clamped": 12,
+   "max_adjust_m": 0.0178
+  },
+  "final_lowest_skate_m": [
+   -0.0,
+   0.0077
+  ],
+  "glb_bytes": 2152960
+ },
+ "outputs": {
+  "mocap_test_push.glb": 2152960,
+  "clip_report.json": 573,
+  "compare/metrics.json": 722,
+  "compare/compare_sheet.png": 3216242
+ }
+}

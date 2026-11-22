@@ -2768,3 +2768,23 @@ Change (`scripts/blender/skater_physics_pass.py`, HAND_TARGETS):
 
 Result: every grab holds the skate (palm to target 1 cm or less), every clap meets, and every clip passes the joint-limit gate with no WARN. Nia's grabs move the skate 6 to 19 cm toward the hand with a chest bend of 4 to 7 degrees; Marcus's mute and japan move it 16 to 19 cm with a chest bend of 28 to 30 degrees. The grab point is the nearest point of the boot, often the upper boot, not the wheel frame. A real skater must review the grabs.
 
+
+## 2026-11-22: Trick input with a direction plus a button (#324)
+
+Owner feedback: the tricks must feel like Tony Hawk's Pro Skater. The player chooses a trick with a direction plus a button. Before this, the game chose: Q/E started the next dance in a list, air grabs and grind stances cycled by themselves, and the manual had no input.
+
+Design: `docs/gdd/trick-input.md` (the `design-system` skill, with the `game-designer` and `systems-designer` agents; lean review mode). No gameplay code changed.
+
+Owner choices (all the recommended option):
+1. Up and down: a fresh direction. A direction counts only if it starts 150 ms before to 60 ms after the press, so a held W (push) or S (brake) gives the neutral trick.
+2. Manual: hold GRIND on the ground with no rail in snap range. A rail in range wins.
+3. Phone: a tap on a trick button gives the neutral trick; a flick from the button gives the direction. No new button (#245).
+4. Bail: the combo banks 25% of the pending points at multiplier 1.
+5. A grab held at the touchdown: a stumble (speed 0.7 times, the link pays half, the combo continues).
+6. Beat bonus for air: judged at the touchdown. A new PERFECT tier pays 1.75 times.
+7. Clips: 5 new per skater (2 grabs, 2 grind stances, 1 toe roll), 10 in total. The present clips are reused.
+8. One-button mode: TRICK picks from the context.
+
+Rejected: a modifier hold (it stops the push), push off W (the phone needs a new button), the THPS up-down tap for the manual (it collides with push and brake), a full loss of the combo on a bail (against Pillar 1).
+
+Design review (independent agent, lean depth): NEEDS REVISION, with 4 blockers (spins could not happen at `SKATE.airTurnRate` 3 rad/s, the manual cap against the link window, the one-button precedence, the phone flick timing). The revision of the same day fixes all 4 and 9 smaller findings; see "Review log" in the GDD. A second review did not run.

@@ -250,10 +250,8 @@ def blender_filter(line: str) -> bool:
 @app.function(volumes={VOL: volume}, timeout=3 * 3600)
 def setup_remote() -> dict:
     """Notebook cells 3 and 6, without the GPU: check SMPL-X, download the checkpoints to the volume."""
+    # The checkpoints download first, so the setup does useful work before SMPL-X is on the volume.
     smplx = f"{VOL}/SMPLX_NEUTRAL.npz"
-    assert os.path.exists(smplx), (
-        f"{VOL_NAME}:/SMPLX_NEUTRAL.npz not found. Register at https://smpl-x.is.tue.mpg.de/, accept the license, "
-        "download SMPL-X v1.1 (NPZ+PKL), then: modal volume put skate-atl-mocap SMPLX_NEUTRAL.npz /SMPLX_NEUTRAL.npz")
     weights = {}
     for remote, local in CKPT_FILES.items():
         dst = f"{VOL}/checkpoints/{local}"
@@ -266,6 +264,11 @@ def setup_remote() -> dict:
     json.dump(weights, open(f"{VOL}/checkpoints/weights.json", "w"), indent=1)
     volume.commit()
     sh(f"{BLENDER} --version | head -1")
+    volume.reload()
+    assert os.path.exists(smplx), (
+        f"{VOL_NAME}:/SMPLX_NEUTRAL.npz not found (the checkpoints are on the volume). Register at "
+        "https://smpl-x.is.tue.mpg.de/, accept the license, download SMPL-X v1.1 (NPZ+PKL), then: "
+        "modal volume put skate-atl-mocap SMPLX_NEUTRAL.npz /SMPLX_NEUTRAL.npz")
     return {"smplx_sha256": sha256(smplx), "weights": weights}
 
 

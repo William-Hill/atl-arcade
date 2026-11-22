@@ -165,11 +165,43 @@ CLEAR = 0.005
 # A hand or forearm against the cloth of a thigh is light contact up to this
 # depth (m); only a deeper clip swings the arm out.
 ARM_CLIP = 0.02
-CLIP_ITERS = 4
+CLIP_ITERS = 10
+# Rounds of the clip fix and the rebalance (see main).
+FIX_ROUNDS = 3
 LEG_PAIRS = {"l_knee>r_knee", "l_knee>r_shin", "r_knee>l_shin", "l_knee>r_thigh", "r_knee>l_thigh", "l_shin>r_shin", "l_thigh>r_shin", "r_thigh>l_shin",
              "l_skate>r_skate", "l_skate>r_shin", "r_skate>l_shin"}
 ARM_PAIRS = {"l_hand>l_thigh": "Left", "r_hand>r_thigh": "Right", "l_hand>l_knee": "Left", "r_hand>r_knee": "Right",
              "l_forearm>l_thigh": "Left", "r_forearm>r_thigh": "Right"}
+# The torso pairs (#323): an arm in the jacket or the hips swings out from
+# the body (abduction) until it is less than TORSO_CLIP deep. The probe
+# criterion is 1 cm; the fix aims under 0 (the hips shift of the rebalance
+# after the fix moves the arms a little).
+ARM_PAIRS.update({"l_forearm>torso": "Left", "r_forearm>torso": "Right", "l_uparm>torso": "Left",
+                  "r_uparm>torso": "Right", "l_hand>torso": "Left", "r_hand>torso": "Right"})
+TORSO_CLIP = -0.003
+# The largest swing-out (degrees) that the clip fix may add to an upper arm.
+ARM_OUT_MAX = 45.0
+# Loose arms (owner feedback 2026-11-22, #323: Nia's arms are too stiff, and
+# the backswing goes through the body). In the frame of the chest, for each
+# arm, per frame:
+#   elbow: the elbow bends elbow_deg more, plus elbow_fwd_deg more at the
+#     front of the swing (a running arm bends in front and opens behind),
+#     so the elbow range is larger.
+#   follow: on the backswing (the upper arm moves back), the forearm trails
+#     the upper arm: it keeps follow of the turn of the upper arm from
+#     follow_lag frames before (follow-through), up to follow_max_deg.
+#   wrist: the hand trails the forearm by wrist of its turn from 1 frame
+#     before, up to wrist_max_deg (a small wrist lag).
+#   out: at the back of the swing (the upper arm from back_from_deg to
+#     back_full_deg behind the chest), the upper arm swings out from the body
+#     by up to out_deg, so the arm passes beside the hips, not through them.
+# The swing timing does not change, so the arms stay in opposition to the legs.
+ARM_LOOSE = {"nia": {
+    "push": {"elbow_deg": 8.0, "elbow_fwd_deg": 18.0, "follow": 0.6, "follow_lag": 2, "follow_max_deg": 14.0,
+             "wrist": 0.5, "wrist_max_deg": 10.0, "out_deg": 12.0, "back_from_deg": 5.0, "back_full_deg": 35.0},
+    "coast": {"elbow_deg": 10.0, "elbow_fwd_deg": 14.0, "follow": 0.6, "follow_lag": 2, "follow_max_deg": 10.0,
+              "wrist": 0.5, "wrist_max_deg": 8.0, "out_deg": 10.0, "back_from_deg": 5.0, "back_full_deg": 35.0},
+}}
 # Support (owner request 2026-11-21: fix Nia's carve step on beat 2). When
 # one skate is in the air, the skate on the ground must be under the centre
 # of mass. A skate can roll along its own heading without a skid, so the
@@ -509,6 +541,132 @@ def upper_body(s):
     return out
 
 
+def chest_frame(mats):
+    """Unit vectors (up, side to the left, forward) of the chest, armature space."""
+    up = np.array(mats[P + "Spine2"].to_3x3().col[1])
+    up /= np.linalg.norm(up)
+    side = np.array(mats[P + "LeftArm"].to_translation() - mats[P + "RightArm"].to_translation())
+    side -= up * (side @ up)
+    side /= np.linalg.norm(side)
+    return up, side, np.cross(side, up)
+
+
+def arm_swing_deg(mats, sd):
+    """The fore-aft angle of the upper arm in the chest frame (degrees, + = in
+    front of the chest) and the angle out from the body (+ = out)."""
+    up, side, fwd = chest_frame(mats)
+    u = np.array(mats[P + sd + "ForeArm"].to_translation() - mats[P + sd + "Arm"].to_translation())
+    u /= np.linalg.norm(u)
+    sg = 1.0 if sd == "Left" else -1.0
+    return math.degrees(math.atan2(u @ fwd, -(u @ up))), math.degrees(math.atan2(sg * (u @ side), -(u @ up)))
+
+
+def elbow_deg(mats, sd):
+    u = mats[P + sd + "ForeArm"].to_translation() - mats[P + sd + "Arm"].to_translation()
+    w = mats[P + sd + "Hand"].to_translation() - mats[P + sd + "ForeArm"].to_translation()
+    return math.degrees(u.angle(w))
+
+
+def elbow_range(s):
+    out = {}
+    for sd in ("Left", "Right"):
+        e = [elbow_deg(s["mat"][f], sd) for f in range(s["n"])]
+        out[sd] = [round(min(e), 1), round(max(e), 1)]
+    return out
+
+
+def _out_axis(mats, sd):
+    """The armature-space axis that swings the upper arm of side sd out from
+    the body (abduction), by the right-hand rule."""
+    _, _, fwd = chest_frame(mats)
+    return Vector((fwd if sd == "Left" else -fwd).tolist())
+
+
+def arm_loose(who, name, s, rots):
+    """Loose arms (ARM_LOOSE): changes rots in place. Returns info."""
+    cfg = ARM_LOOSE.get(who, {}).get(name)
+    if not cfg:
+        return None
+    n = s["n"]
+    info = {}
+    for sd in ("Left", "Right"):
+        up_b, lo_b, ha_b = P + sd + "Arm", P + sd + "ForeArm", P + sd + "Hand"
+        fa = np.array([arm_swing_deg(s["mat"][f], sd)[0] for f in range(n)])
+        fa_s = circ_gauss(fa, 1.0)
+        lo_f, hi_f = np.percentile(fa_s, 5), np.percentile(fa_s, 95)
+        front = np.clip((fa_s - lo_f) / max(hi_f - lo_f, 1e-6), 0, 1)
+        vel = (np.roll(fa_s, -1) - np.roll(fa_s, 1)) / 2  # deg per frame
+        # The chest-frame direction of each segment, before the change.
+        def dirs(a, b):
+            out = []
+            for f in range(n):
+                up, side, fwd = chest_frame(s["mat"][f])
+                v = np.array(s["mat"][f][b].to_translation() - s["mat"][f][a].to_translation())
+                out.append(np.array([v @ side, v @ fwd, v @ up]) / np.linalg.norm(v))
+            return out
+        d_up = dirs(up_b, lo_b)
+        # The elbow hinge axis (armature space), smoothed: the normal of the
+        # bend plane. A nearly straight elbow takes the mean axis.
+        axes = []
+        for f in range(n):
+            M = s["mat"][f]
+            u = M[lo_b].to_translation() - M[up_b].to_translation()
+            w = M[ha_b].to_translation() - M[lo_b].to_translation()
+            c = u.cross(w)
+            axes.append(np.array(c.normalized()) if c.length > 1e-6 else np.zeros(3))
+        axes = np.array(axes)
+        mean_ax = axes.sum(0)
+        mean_ax /= max(np.linalg.norm(mean_ax), 1e-9)
+        for f in range(n):
+            if np.linalg.norm(axes[f]) < 0.5 or axes[f] @ mean_ax < 0.3:
+                axes[f] = mean_ax
+        axes = circ_gauss(axes, 1.5)
+        axes /= np.linalg.norm(axes, axis=1, keepdims=True)
+        add_el, add_out, add_wr = np.zeros(n), np.zeros(n), np.zeros(n)
+        for f in range(n):
+            M = s["mat"][f]
+            up, side, fwd = chest_frame(M)
+            to_arm = np.stack([side, fwd, up], axis=1)  # chest frame -> armature
+            # 1. Elbow bend, larger at the front of the swing.
+            bend = cfg["elbow_deg"] + cfg["elbow_fwd_deg"] * smoothstep(front[f])
+            # 2. Follow-through: on the backswing, the forearm keeps part of
+            #    the turn of the upper arm since follow_lag frames before.
+            g = (f - cfg["follow_lag"]) % n
+            trail = 0.0
+            if vel[f] < 0:
+                turn = math.degrees(math.acos(float(np.clip(d_up[f] @ d_up[g], -1, 1))))
+                trail = min(cfg["follow"] * turn, cfg["follow_max_deg"])
+            add_el[f] = bend + trail
+            W = Quaternion(Vector(axes[f].tolist()), math.radians(add_el[f]))
+            rots[lo_b][f] = list(Quaternion(rots[lo_b][f]) @ local_delta(s, f, lo_b, W))
+            # 3. Out at the back of the swing.
+            back = smoothstep((-fa_s[f] - cfg["back_from_deg"]) / (cfg["back_full_deg"] - cfg["back_from_deg"]))
+            add_out[f] = cfg["out_deg"] * back
+            if add_out[f] > 0:
+                Wo = Quaternion(_out_axis(M, sd), math.radians(add_out[f]))
+                rots[up_b][f] = list(Quaternion(rots[up_b][f]) @ local_delta(s, f, up_b, Wo))
+            # 4. Wrist lag: the hand keeps part of the forearm turn of the
+            #    frame before, about the elbow hinge axis.
+            M0, M1 = s["mat"][(f - 1) % n], M
+            v0 = M0[ha_b].to_translation() - M0[lo_b].to_translation()
+            v1 = M1[ha_b].to_translation() - M1[lo_b].to_translation()
+            u0, s0, f0 = chest_frame(M0)
+            c0 = np.array([np.array(v0) @ s0, np.array(v0) @ f0, np.array(v0) @ u0])
+            c1 = np.array([np.array(v1) @ side, np.array(v1) @ fwd, np.array(v1) @ up])
+            # The turn of the forearm in the chest frame, signed about the hinge.
+            ax_c = np.array([axes[f] @ side, axes[f] @ fwd, axes[f] @ up])
+            sgn = math.copysign(1.0, float(np.cross(c0, c1) @ ax_c))
+            turn = math.degrees(math.acos(float(np.clip(c0 @ c1 / (np.linalg.norm(c0) * np.linalg.norm(c1)), -1, 1))))
+            add_wr[f] = -sgn * min(cfg["wrist"] * turn, cfg["wrist_max_deg"])
+            if add_wr[f]:
+                Wh = Quaternion(Vector(axes[f].tolist()), math.radians(add_wr[f]))
+                rots[ha_b][f] = list(Quaternion(rots[ha_b][f]) @ local_delta(s, f, ha_b, Wh))
+        info[sd] = {"elbow_add_deg": [round(float(add_el.min()), 1), round(float(add_el.max()), 1)],
+                    "out_add_max_deg": round(float(add_out.max()), 1),
+                    "wrist_lag_max_deg": round(float(np.abs(add_wr).max()), 1)}
+    return info
+
+
 def palm(mats, side):
     return (mats[P + side + "Hand"].to_translation() + mats[P + side + "HandMiddle1"].to_translation()) / 2
 
@@ -687,6 +845,10 @@ def physics_pass(sk, name, s, m0):
     hips0 = [s["mat"][f][P + "Hips"] for f in range(n)]
     shift = np.zeros((n, 3))
     rots = upper_body(s)
+    # Every arm bone gets a series, so arm_loose can change it.
+    for b in ("LeftArm", "RightArm", "LeftForeArm", "RightForeArm", "LeftHand", "RightHand"):
+        rots.setdefault(P + b, quat_series(s, P + b))
+    loose = arm_loose(SKATER["who"], name, s, rots)
     recoil_rotations(name, s, events, rots)
     best = None
     for it in range(4):
@@ -717,6 +879,8 @@ def physics_pass(sk, name, s, m0):
             "wheel_drop_max_m": {k: round(float(-v.min()), 4) for k, v in lift.items()},
             "recoil_events": [{"frame": e["frame"], "skate": e["skate"], "dir": [round(float(x), 3) for x in e["dir"]]} for e in events],
             "recoil_pelvis_target_max_m": round(float(np.abs(0.68 * rec).max()), 4)}
+    if loose:
+        info["arm_loose"] = {"settings": ARM_LOOSE[SKATER["who"]][name], **loose}
     return shift, rots, targets, info
 
 
@@ -1076,12 +1240,16 @@ def rebalance(sk, name, s, shift, rots, targets, C_ref, iters=2):
     return float(np.abs(C_ref - com_path(sk, s, shift, rots, targets)).max())
 
 
+def arm_allow(k):
+    """The depth (m) that an arm pair may have: cloth contact on a thigh."""
+    return TORSO_CLIP if k.endswith(">torso") else ARM_CLIP
+
+
 def resolve_clips(sk, s, shift, rots, targets, radii, boxes):
     """Moves skates and upper arms until the limbs are clear. Returns info."""
     n = s["n"]
     foot_off = {sd: np.zeros((n, 3)) for sd in ("Left", "Right")}
     arm_deg = {sd: np.zeros(n) for sd in ("Left", "Right")}
-    arm_axis = {sd: [Vector((0, 1, 0))] * n for sd in ("Left", "Right")}
     hips0 = [s["mat"][f][P + "Hips"] for f in range(n)]
     zs = {sd: np.array([float(s["skate"][f][sd][:, 2].min()) for f in range(n)]) for sd in ("Left", "Right")}
     base_t = [dict(t) for t in targets]
@@ -1102,7 +1270,7 @@ def resolve_clips(sk, s, shift, rots, targets, radii, boxes):
             for f in range(n):
                 q = Quaternion(base_r[key][f])
                 if arm_deg[sd][f]:
-                    W = Quaternion(arm_axis[sd][f], math.radians(arm_deg[sd][f]))
+                    W = Quaternion(_out_axis(s["mat"][f], sd), math.radians(arm_deg[sd][f]))
                     q = q @ local_delta(s, f, key, W)
                 rots[key][f] = list(q)
 
@@ -1116,7 +1284,7 @@ def resolve_clips(sk, s, shift, rots, targets, radii, boxes):
 
     for it in range(CLIP_ITERS + 1):
         res = measure()
-        worst = max(max(v - (ARM_CLIP if k in ARM_PAIRS else 0) for k, v in o.items()) for _, o in res)
+        worst = max(max(v - (arm_allow(k) if k in ARM_PAIRS else 0) for k, v in o.items()) for _, o in res)
         if first is None:
             first = {k: round(max(o[k] for _, o in res), 4) for k in res[0][1]}
         if it == CLIP_ITERS or worst <= CLEAR:
@@ -1143,27 +1311,21 @@ def resolve_clips(sk, s, shift, rots, targets, radii, boxes):
                     dvec /= np.linalg.norm(dvec)
                     if need > np.linalg.norm(add_f[mover][f]):
                         add_f[mover][f] = dvec * need
-                elif k in ARM_PAIRS and d > ARM_CLIP:
+                elif k in ARM_PAIRS and d > arm_allow(k):
+                    # Swing the upper arm out from the body (abduction about
+                    # the forward axis of the chest), for a thigh and for the
+                    # torso. The axis is the same on every frame, so the fix
+                    # is smooth in time. #323: the #313 fix swung the hand
+                    # away from the thigh about a new axis on each frame (a
+                    # default axis on the frames next to a clip): the arm
+                    # jumped up to 30 degrees in one frame, and in the carve
+                    # it went into the torso.
                     sd = ARM_PAIRS[k]
                     shoulder = np.array(mats[P + sd + "Arm"].to_translation())
-                    hand = np.array(mats[P + sd + "Hand"].to_translation())
-                    thigh = seg[sd[0].lower() + "_thigh"]
-                    # Swing the hand away from the nearest point of the thigh,
-                    # with a bias out to the side, so the arm never swings into
-                    # the body.
-                    out = np.array([1.0 if sd == "Left" else -1.0, 0.0, 0.0])
-                    t0, t1 = thigh
-                    tt = np.clip((hand - t0) @ (t1 - t0) / max((t1 - t0) @ (t1 - t0), 1e-9), 0, 1)
-                    away = hand - (t0 + tt * (t1 - t0))
-                    away[2] = 0
-                    nrm = np.linalg.norm(away)
-                    away = (away / nrm if nrm > 1e-6 else out) + 0.5 * out
-                    arm_dir = hand - shoulder
-                    axis = Vector(np.cross(arm_dir, away))
-                    if axis.length < 1e-6:
-                        continue
-                    arm_axis[sd][f] = axis.normalized()
-                    add_a[sd][f] = max(add_a[sd][f], math.degrees((d - ARM_CLIP + CLEAR) / max(np.linalg.norm(arm_dir), 0.2)))
+                    part = k.split(">")[0]
+                    a_p, e_p = seg[part]
+                    lever = max(np.linalg.norm((a_p + e_p) / 2 - shoulder), 0.12)
+                    add_a[sd][f] = max(add_a[sd][f], math.degrees((d - arm_allow(k) + CLEAR) / lever))
         for sd in ("Left", "Right"):
             f_new = foot_off[sd] + add_f[sd]
             mag = np.linalg.norm(f_new, axis=1)
@@ -1172,7 +1334,7 @@ def resolve_clips(sk, s, shift, rots, targets, radii, boxes):
             scale = np.where(smag > 1e-9, np.maximum(mag, smag) / np.maximum(smag, 1e-9), 0)
             foot_off[sd] = sm * np.minimum(scale, 3)[:, None]
             a_new = arm_deg[sd] + add_a[sd]
-            arm_deg[sd] = np.maximum(a_new, circ_gauss(a_new, 1.5))
+            arm_deg[sd] = np.minimum(np.maximum(a_new, circ_gauss(a_new, 2.0)), ARM_OUT_MAX)
         apply()
     last = {k: round(max(o[k] for _, o in res), 4) for k in res[0][1]}
     return {"overlap_max_m_before": {k: v for k, v in first.items() if v > 0},
@@ -1537,7 +1699,7 @@ def main():
     report = {"source": a.src, "skater": who, "settings": {
         "still": STILL, "sigma_frames": SIGMA, "follow": FOLLOW, "max_shift_m": {**MAX_SHIFT, "default": MAX_SHIFT_DEFAULT},
         "contact_m": CONTACT, "support_margin_m": SUPPORT_MARGIN, "body_kg": BODY_KG, "skate_kg": SKATE_KG,
-        "recoil": RECOIL, "recoil_skater": RECOIL_SKATER, "stance": STANCE, "arm_mirror": ARM_MIRROR, "support": SUPPORT, "clip_clear_m": CLEAR, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
+        "recoil": RECOIL, "recoil_skater": RECOIL_SKATER, "arm_loose": ARM_LOOSE, "torso_clip_m": TORSO_CLIP, "arm_out_max_deg": ARM_OUT_MAX, "stance": STANCE, "arm_mirror": ARM_MIRROR, "support": SUPPORT, "clip_clear_m": CLEAR, "recoil_lead_back_frames": [RECOIL_LEAD, RECOIL_BACK], "recoil_delay_frames": RECOIL_DELAY}, "clips": {}}
     rest = {b: (bn.head_local.x, bn.head_local.y, bn.head_local.z) for b, bn in ((b, sk.arm.data.bones[b]) for b in (P + "LeftFoot", P + "RightFoot"))}
     report["rest_feet"] = rest
     originals = {}
@@ -1548,6 +1710,7 @@ def main():
         gate0 = joint_limits.gate_action(sk.arm, act)
         s = sk.sample(act)
         m0 = metrics(sk, s)
+        elbows0 = elbow_range(s)
         arm_act, arm_info = arm_mirror_pass(sk, who, name, s)
         if arm_act:
             s = sk.sample(arm_act)
@@ -1586,15 +1749,27 @@ def main():
             info["support"] = support_info
         C_ref = com_path(sk, s, shift, rots, targets)
         setup = clip_setup(sk)
-        info["clipping"] = resolve_clips(sk, s, shift, rots, targets, *setup)
-        info["clipping"]["com_error_after_rebalance_m"] = round(rebalance(sk, name, s, shift, rots, targets, C_ref), 4)
-        # The rebalance moves the hips: measure the clips once more.
         hips0 = [s["mat"][f][P + "Hips"] for f in range(s["n"])]
-        final = {}
-        for f in range(s["n"]):
-            mats, _ = write_pose(sk, f, s, Matrix.Translation(Vector(shift[f])) @ hips0[f], rots, targets[f])
-            for k, d in clip_probe.overlaps(sk.arm, setup[0], mats, setup[1]).items():
-                final[k] = max(final.get(k, 0.0), round(d, 4))
+        # The rebalance moves the hips, and so the arms a little: fix, then
+        # rebalance, then measure, up to FIX_ROUNDS times, until no torso
+        # pair is deeper than the probe limit (#323).
+        for rnd in range(FIX_ROUNDS):
+            clip_info = resolve_clips(sk, s, shift, rots, targets, *setup)
+            if rnd == 0:
+                info["clipping"] = clip_info
+            else:
+                info["clipping"]["overlap_max_m_after"] = clip_info["overlap_max_m_after"]
+                for sd, v in clip_info["arm_swing_out_max_deg"].items():
+                    info["clipping"]["arm_swing_out_max_deg"][sd] = round(info["clipping"]["arm_swing_out_max_deg"][sd] + v, 1)
+            info["clipping"]["com_error_after_rebalance_m"] = round(rebalance(sk, name, s, shift, rots, targets, C_ref), 4)
+            final = {}
+            for f in range(s["n"]):
+                mats, _ = write_pose(sk, f, s, Matrix.Translation(Vector(shift[f])) @ hips0[f], rots, targets[f])
+                for k, d in clip_probe.overlaps(sk.arm, setup[0], mats, setup[1]).items():
+                    final[k] = max(final.get(k, 0.0), round(d, 4))
+            info["clipping"]["fix_rounds"] = rnd + 1
+            if max(v for k, v in final.items() if k.endswith(">torso")) <= clip_probe.DEPTH_LIMIT * 0.9:
+                break
         info["clipping"]["overlap_max_m_final"] = {k: v for k, v in final.items() if v > 0}
         act.name = name + "_before"
         new_act, reach = build_action(sk, name, s, shift, rots, targets)
@@ -1611,6 +1786,7 @@ def main():
             "leg_reach_max": round(reach, 4),
             "skate_vertex_move_max_m": round(moved, 5),
             "joint_limits": {"before": gate0, "after": gate1},
+            "elbow_deg_range": {"before": elbows0, "after": elbow_range(s1)},
             **info,
         }
         print(f"[physics] {who} {name}: zmp out {m0['zmp_outside_frames']} -> {m1['zmp_outside_frames']} frames, "

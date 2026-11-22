@@ -2768,3 +2768,17 @@ Change (`scripts/blender/skater_physics_pass.py`, HAND_TARGETS):
 
 Result: every grab holds the skate (palm to target 1 cm or less), every clap meets, and every clip passes the joint-limit gate with no WARN. Nia's grabs move the skate 6 to 19 cm toward the hand with a chest bend of 4 to 7 degrees; Marcus's mute and japan move it 16 to 19 cm with a chest bend of 28 to 30 degrees. The grab point is the nearest point of the boot, often the upper boot, not the wheel frame. A real skater must review the grabs.
 
+
+## 2026-11-22: Nia's arms: loose arms, and no backswing through the body (#323)
+
+Owner feedback after #313: Nia's arms are too stiff while she skates, and on the backswing her arms go through her body.
+
+Causes: the clip probe tested only the hands against the torso, and its torso capsule stopped at the `Hips` joint, so the hips and the seat of the pants were not in it. The #313 thigh fix turned the upper arm about a new axis on each frame (a default fore-aft axis next to a clip); the arm jumped up to 30 degrees in one frame and went through the hip, and in the carve the arm went 8 to 9 cm into the jacket. The elbow range was 33 degrees in the push and 12.5 degrees in the coast.
+
+Decisions:
+- The torso in the probe has a radius from the mesh in 16 directions and 4 bands (the pelvis, Hips, Spine, Spine1), not one radius. The jacket is 17 to 19 cm wide at each side but 9 to 12 cm deep.
+- The upper-arm pair covers the elbow end only (the last 25% of the upper arm), with the radius of the arm inside the sleeve (30th percentile). Nia's shoulder joint is 12 cm from the mid line and her jacket is 19 cm wide at each side, so the upper half of a hanging sleeve is always in the jacket (cloth on cloth). With the whole upper arm, a relaxed arm 30 degrees out from the body read as 5 cm deep. This calibration is a choice, and the README says what it does not measure.
+- An arm fix is one abduction about the forward axis of the chest, the same on every frame. The thigh-away direction of #313 was removed, because it drove the arm into the torso in the carve.
+- ARM_LOOSE for Nia's push and coast: more elbow bend (more at the front), a 2-frame forearm follow-through on the backswing, a 1-frame wrist lag, and the upper arm out by up to 12 degrees at the back. The swing timing stays, so the arms stay in opposition to the legs.
+
+Result: no arm capsule goes more than 1 cm into the torso in Nia's push, coast, carve_left, carve_right, or brake (before: 6.7, 6.9, 8.7, 8.1 cm, and none). Elbow range: push 33.1 to 54.7 degrees, coast 12.5 to 26.6 degrees. The hand angular jerk in the push fell from about 1500 to about 470. The ZMP balance, the recoil events, and the push drive frames of #313 stay. The joint-limit gate passes on all 26 clips. Marcus has no torso pair over 1 cm and does not change. Open: in the carve, the hand rests on the knee pad (2.4 cm, cloth contact); a check in the game and the owner approval are still to do. Evidence: `docs/characters/arm-pass/README.md`.

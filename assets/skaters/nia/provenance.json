@@ -691,6 +691,22 @@
         "assets/skaters/nia/raw/physics/nia-physics.json"
       ],
       "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_physics_pass.py, skater_clip_probe.py, and skater_joint_limits.py; scripts/assets/graft-clips.mjs on Node 26 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
+      "date": "2026-11-22",
+      "issue": "#323",
+      "prompt": "Nia's arms are too stiff while she skates, and on the backswing her arms go through her body (owner feedback after #313).",
+      "command": "git show 5b1d2412^:assets/skaters/nia/skater.glb > nia-pre313.glb && blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in nia-pre313.glb --out assets/skaters/nia/raw/arms && node scripts/assets/graft-clips.mjs assets/skaters/nia/skater.glb assets/skaters/nia/raw/arms/nia-physics.glb assets/skaters/nia/skater.glb && node scripts/assets/graft-clips.mjs assets/skaters/nia/skater-1024.glb assets/skaters/nia/raw/arms/nia-physics.glb assets/skaters/nia/skater-1024.glb",
+      "actions": [
+        "The clip probe now tests the forearms and the elbow end of the upper arms against the torso. The torso radius comes from the mesh in 16 directions and 4 bands, with the hips and the seat of the pants in the lowest band.",
+        "ARM_LOOSE (push, coast): more elbow bend (more at the front of the swing), a 2-frame forearm follow-through on the backswing, a 1-frame wrist lag, and the upper arm out from the body by up to 12 degrees at the back of the swing.",
+        "The clip fix swings an arm out from the body about the forward axis of the chest on every frame. The #313 fix used a new axis on each frame and made the arm jump up to 30 degrees in one frame.",
+        "Re-ran the full pass of #313 on the clips before #313, and grafted push, coast, carve_left, carve_right, air_mute, air_japan, air_liukang, and dance_prep. dance_walkitout and the other clips do not change."
+      ],
+      "result": "skater.glb 2,722,112 bytes; skater-1024.glb 2,272,156 bytes. No arm capsule more than 1 cm in the torso in push, coast, carve_left, carve_right, or brake. Elbow range: push 33.1 to 54.7 degrees, coast 12.5 to 26.6 degrees. Joint-limit gate PASS on all 26 clips.",
+      "evidence": "docs/characters/arm-pass/README.md",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 155,

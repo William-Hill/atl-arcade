@@ -104,10 +104,10 @@ Athletic stance (trunk lean: the Hips-to-Neck line from the vertical; hip-ankle:
 
 | Clip | Trunk lean (deg) | Hip-ankle / leg | Shoulders ahead of knees (m) | Hip hinge added (deg) |
 |---|---|---|---|---|
-| Nia push | 17.2 -> 0.001 | 0.734 -> 0.737 | -0.104 -> -0.002 | 16 |
-| Nia coast | 7.5 -> 0.000 | 0.863 -> 0.791 | -0.179 -> 0.001 | 27 |
-| Marcus push | 21.3 -> 0.000 | 0.685 -> 0.686 | -0.026 -> -0.002 | 3 |
-| Marcus coast | 12.1 -> 0.000 | 0.831 -> 0.785 | -0.101 -> 0.001 | 12 |
+| Nia push | 17.2 -> 33.2 | 0.734 -> 0.737 | -0.104 -> -0.002 | 16 |
+| Nia coast | 7.5 -> 34.5 | 0.863 -> 0.791 | -0.179 -> 0.001 | 27 |
+| Marcus push | 21.3 -> 24.3 | 0.685 -> 0.686 | -0.026 -> -0.002 | 3 |
+| Marcus coast | 12.1 -> 24.1 | 0.831 -> 0.785 | -0.101 -> 0.001 | 12 |
 
 Push drive (one stroke; both strokes are the same):
 

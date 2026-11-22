@@ -279,7 +279,7 @@
       "tool": "Blender 5.2.3 LTS (background mode, in the cloud container), scripts/blender/skater_physics_pass.py and skater_joint_limits.py; scripts/assets/graft-clips.mjs on Node 22 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
       "date": "2026-11-21",
       "prompt": "Make push, coast, and carve_left more physically plausible as a quality test. Keep the wheels on the ground, the clip length, the beat timing, and no root travel. Mirror carve_left to carve_right. (Cascadeur was the first choice; it did not run in the cloud container: see docs/decisions.md, 2026-11-21.) Then add the Crossroads joint-limit gate and the attacker recoil rule (owner request). Then make the push drive faster with the Crossroads recipe (owner request). Then give the coast and the push an athletic stance (owner feedback: the coast looked upright). Then fix Marcus's bent right arm and the clipping (owner feedback). Then add arm IK with hand targets (owner request).",
-      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in assets/skaters/marcus/skater.glb --out assets/skaters/marcus/raw/physics; node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater.glb assets/skaters/marcus/raw/physics/marcus-physics.glb assets/skaters/marcus/skater.glb; node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater-1024.glb assets/skaters/marcus/raw/physics/marcus-physics.glb assets/skaters/marcus/skater-1024.glb",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in assets/skaters/marcus/skater.glb --out assets/skaters/marcus/raw/physics && node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater.glb assets/skaters/marcus/raw/physics/marcus-physics.glb assets/skaters/marcus/skater.glb && node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater-1024.glb assets/skaters/marcus/raw/physics/marcus-physics.glb assets/skaters/marcus/skater-1024.glb",
       "settings": {
         "still": {
           "push": 0.5,
@@ -428,7 +428,7 @@
             "head": 2.5,
             "fwd": 0.3,
             "side": 0.6,
-            "drop": 1.0
+            "drop": 0.25
           },
           "coast": {
             "event": "beat",
@@ -461,7 +461,7 @@
         "Joint limits (Crossroads gate #465, ported to the Mixamo rig in skater_joint_limits.py): every new clip PASS; the gate self-test catches a knee bent to the side, a hyperextended knee and elbow, and a spine bent 130 degrees.",
         "carve_right: the mirror of the new carve_left across X = 0 (D' = S D S on the rest-relative matrices), with the same IK solve for the feet.",
         "Clipping fix: limb capsules, knee spheres, and skate boxes (skater_clip_probe.py); a leg in the other leg moves its skate in the ground plane; a hand or forearm more than 2 cm in a thigh or knee swings the upper arm away; then the hips rebalance to the old CoM path. The mirrored carve gets the same fix.",
-        "Exported the 4 clips and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change.",
+        "Exported the 8 clips (push, coast, carve_left, carve_right, air_mute, air_japan, air_liukang, dance_prep) and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change.",
         "Landing recoil starts at the touch-down; carve landing drop weight 0.25; Nia's carve has no pelvis bounce at the landing.",
         "Arm IK with hand targets (air_mute, air_japan, air_liukang, dance_prep): two-bone arm IK; grabs put the palm on the grabbed skate (the skate comes toward the hand inside the leg LIMITS, then the chest bends inside the spine LIMITS); claps meet once per beat."
       ],
@@ -473,7 +473,7 @@
           ],
           "com_jerk_rms_ms3": [
             68.79,
-            39.59
+            39.25
           ],
           "wheel_z_min_m": [
             {
@@ -531,7 +531,7 @@
           ],
           "com_jerk_rms_ms3": [
             16.09,
-            24.76
+            24.83
           ],
           "wheel_z_min_m": [
             {
@@ -576,7 +576,7 @@
           ],
           "com_jerk_rms_ms3": [
             85.1,
-            86.09
+            62.46
           ],
           "wheel_z_min_m": [
             {
@@ -593,10 +593,10 @@
             "PASS"
           ],
           "recoil_events": [
-            13,
-            23,
-            37,
-            47
+            2,
+            16,
+            26,
+            40
           ],
           "clipping_overlap_max_m": {}
         },
@@ -607,7 +607,7 @@
           ],
           "com_jerk_rms_ms3": [
             85.36,
-            86.56
+            65.31
           ],
           "wheel_z_min_m": [
             {

@@ -62,7 +62,11 @@ def seg_dist(p1, q1, p2, q2):
     c, b = d1.dot(r), d1.dot(d2)
     denom = a * e - b * b
     s = min(max((b * f - c * e) / denom, 0.0), 1.0) if denom > 1e-12 else 0.0
-    t = (b * s + f) / e if e > 1e-12 else 0.0
+    if e <= 1e-12:
+        # The second segment is a point: project it onto the first segment.
+        s = min(max(-c / a, 0.0), 1.0) if a > 1e-12 else 0.0
+        return float(np.linalg.norm((p1 + d1 * s) - p2))
+    t = (b * s + f) / e
     if t < 0:
         t, s = 0.0, (min(max(-c / a, 0.0), 1.0) if a > 1e-12 else 0.0)
     elif t > 1:
@@ -131,7 +135,9 @@ def point_box(p, b):
 def capsule_radii(arm, mesh):
     """The radius of each capsule, from the rest mesh."""
     bones = arm.data.bones
-    co = np.array([list(mesh.matrix_world @ v.co) for v in mesh.data.vertices])
+    # The bone heads are in armature space: put the mesh vertices there too.
+    to_arm = arm.matrix_world.inverted() @ mesh.matrix_world
+    co = np.array([list(to_arm @ v.co) for v in mesh.data.vertices])
     out = {}
     for part, (b0, b1, start) in CAPSULES.items():
         a = np.array(bones[P + b0].head_local)

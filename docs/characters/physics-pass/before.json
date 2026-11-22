@@ -1,6 +1,6 @@
 {
  "label": "before",
- "frames": "t = 0, 1/3, 2/3 of each clip",
+ "frames": "lowest point: every 30 fps frame (t = i / 30); screenshots: t = 0, 1/3, 2/3 of each clip",
  "skaters": {
   "nia": {
    "clips": {

@@ -1634,7 +1634,8 @@ def main():
         targets_m = [dict(s_m["mat"][f]) for f in range(nm)]
         mirror_clip = resolve_clips(sk, s_m, shift_m, rots_m, targets_m, *clip_setup(sk))
         act.name = "carve_right_mirror"
-        act, _ = build_action(sk, "carve_right", s_m, shift_m, rots_m, targets_m)
+        # The final action has the clip fix: its reach is the one to report.
+        act, reach = build_action(sk, "carve_right", s_m, shift_m, rots_m, targets_m)
         new["carve_right"] = act
         gate1 = joint_limits.gate_action(sk.arm, act)
         s1 = sk.sample(act)
@@ -1687,6 +1688,13 @@ def main():
     with open(os.path.join(a.out, f"{who}-physics.json"), "w") as f:
         json.dump(report, f, indent=1)
     print("[physics] wrote", glb, report["glb_bytes"])
+    # The joint-limit gate: a FAIL on an exported clip stops the run with a
+    # non-zero exit code (--python-exit-code 1), so the graft step does not
+    # run. A WARN is reported and does not stop the run.
+    failed = [n for n, c in report["clips"].items()
+              if ((c.get("joint_limits") or {}).get("after") or {}).get("status") == "FAIL"]
+    if failed:
+        raise RuntimeError(f"[physics] joint-limit gate FAIL: {', '.join(failed)}")
 
 
 main()

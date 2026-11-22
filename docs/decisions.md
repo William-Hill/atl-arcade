@@ -2695,3 +2695,17 @@ Recoil changes: a landing bounce now starts at the touch-down (before, it starte
 
 Result: Nia carve beat 2 ZMP excess 0.163 to 0.039 m (mean); whole clip 0.154 to 0.040 m; Marcus carve 0.133 to 0.001 m. Every clip passes the joint-limit gate, no clip is deeper than 2.4 cm (cloth contact), and no wheel leaves the ground. Open: beat 1& (both skates down) is still out by up to 0.19 m. The T-pose session tests time out at 120 s for both skaters with the `main` GLBs too (the scripted sessions from `main` on this machine).
 
+## 2026-11-21: Arm IK with hand targets
+
+Owner request: add arm IK with hand targets. Before this, the arms, the spine, and the head had no IK: they were keyed as rotations (FK).
+
+Measured on `main` (palm to target): Nia's grabs missed the skate by 24 cm (mute), 5 to 10 cm (japan), and 8 cm (liu kang); Marcus's mirrored grabs missed by 26 to 32 cm (his mute hand was above his head); the `dance_prep` claps did not meet (Nia 7 cm, Marcus 7 to 14 cm between the palm centres at the clap).
+
+Change (`scripts/blender/skater_physics_pass.py`, HAND_TARGETS):
+- A two-bone arm IK in `write_pose`: the elbow stays in its own bend plane, the hand follows the forearm.
+- Grab targets: the nearest point of the grabbed skate box, one hand radius off the surface, every frame. When the skate is out of reach, the leg IK brings the skate toward the hand, scaled down on each frame until the leg is inside the joint LIMITS (the first version moved Marcus's skate 21 to 23 cm and failed the gate: a knee 74 degrees off its hinge, a hip extended 174 degrees). The rest is a chest bend toward the skate (up to 30 degrees, inside the spine LIMITS).
+- Clap targets: one clap per beat, at the closest palms of that beat. The first version took every small minimum of the palm distance and pulled the hands together during the hands-at-the-hips hold; this was wrong and was fixed before the commit.
+- Marcus's air clips and `dance_prep` are the mirror of Nia's, so his sides swap.
+
+Result: every grab holds the skate (palm to target 1 cm or less), every clap meets, and every clip passes the joint-limit gate with no WARN. Nia's grabs move the skate 6 to 19 cm toward the hand with a chest bend of 4 to 7 degrees; Marcus's mute and japan move it 16 to 19 cm with a chest bend of 28 to 30 degrees. The grab point is the nearest point of the boot, often the upper boot, not the wheel frame. A real skater must review the grabs.
+

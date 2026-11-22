@@ -257,7 +257,7 @@
     {
       "tool": "Blender 5.2.3 LTS (background mode, in the cloud container), scripts/blender/skater_physics_pass.py and skater_joint_limits.py; scripts/assets/graft-clips.mjs on Node 22 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
       "date": "2026-11-21",
-      "prompt": "Make push, coast, and carve_left more physically plausible as a quality test. Keep the wheels on the ground, the clip length, the beat timing, and no root travel. Mirror carve_left to carve_right. (Cascadeur was the first choice; it did not run in the cloud container: see docs/decisions.md, 2026-11-21.) Then add the Crossroads joint-limit gate and the attacker recoil rule (owner request). Then make the push drive faster with the Crossroads recipe (owner request). Then give the coast and the push an athletic stance (owner feedback: the coast looked upright). Then fix Marcus's bent right arm and the clipping (owner feedback). Then fix Nia's carve step on beat 2 (owner request).",
+      "prompt": "Make push, coast, and carve_left more physically plausible as a quality test. Keep the wheels on the ground, the clip length, the beat timing, and no root travel. Mirror carve_left to carve_right. (Cascadeur was the first choice; it did not run in the cloud container: see docs/decisions.md, 2026-11-21.) Then add the Crossroads joint-limit gate and the attacker recoil rule (owner request). Then make the push drive faster with the Crossroads recipe (owner request). Then give the coast and the push an athletic stance (owner feedback: the coast looked upright). Then fix Marcus's bent right arm and the clipping (owner feedback). Then fix Nia's carve step on beat 2 (owner request). Then add arm IK with hand targets (owner request).",
       "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in assets/skaters/nia/skater.glb --out assets/skaters/nia/raw/physics; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater.glb assets/skaters/nia/raw/physics/nia-physics.glb assets/skaters/nia/skater.glb; node scripts/assets/graft-clips.mjs assets/skaters/nia/skater-1024.glb assets/skaters/nia/raw/physics/nia-physics.glb assets/skaters/nia/skater-1024.glb",
       "settings": {
         "still": {
@@ -441,7 +441,8 @@
         "carve_right: the mirror of the new carve_left across X = 0 (D' = S D S on the rest-relative matrices), with the same IK solve for the feet.",
         "Clipping fix: limb capsules, knee spheres, and skate boxes (skater_clip_probe.py); a leg in the other leg moves its skate in the ground plane; a hand or forearm more than 2 cm in a thigh or knee swings the upper arm away; then the hips rebalance to the old CoM path. The mirrored carve gets the same fix.",
         "Exported the 4 clips and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change.",
-        "Landing recoil starts at the touch-down; carve landing drop weight 0.25; Nia's carve has no pelvis bounce at the landing."
+        "Landing recoil starts at the touch-down; carve landing drop weight 0.25; Nia's carve has no pelvis bounce at the landing.",
+        "Arm IK with hand targets (air_mute, air_japan, air_liukang, dance_prep): two-bone arm IK; grabs put the palm on the grabbed skate (the skate comes toward the hand inside the leg LIMITS, then the chest bends inside the spine LIMITS); claps meet once per beat."
       ],
       "result": {
         "push": {
@@ -625,13 +626,66 @@
           "clipping_overlap_max_m": {
             "l_forearm>l_thigh": 0.0185
           }
+        },
+        "air_mute": {
+          "palm_to_target_max_m": [
+            0.2338,
+            0.0004
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "skate_moved_to_hand_max_m": 0.187,
+          "chest_bend_to_skate_max_deg": 7.4,
+          "clap_frames": []
+        },
+        "air_japan": {
+          "palm_to_target_max_m": [
+            0.0693,
+            0.0046
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "skate_moved_to_hand_max_m": 0.073,
+          "chest_bend_to_skate_max_deg": 6.4,
+          "clap_frames": []
+        },
+        "air_liukang": {
+          "palm_to_target_max_m": [
+            0.0539,
+            0.0
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "skate_moved_to_hand_max_m": 0.055,
+          "chest_bend_to_skate_max_deg": 3.5,
+          "clap_frames": []
+        },
+        "dance_prep": {
+          "palm_to_target_max_m": [
+            0.0103,
+            0.0001
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "clap_frames": [
+            0,
+            24
+          ]
         }
       },
       "files": {
-        "skater.glb": 2464176,
-        "skater-1024.glb": 2014216
+        "skater.glb": 2719700,
+        "skater-1024.glb": 2269744
       },
-      "evidence": "docs/characters/physics-pass/ (videos/nia-before-after*.mp4, compare/nia-<clip>.jpg, compare/closeup-*.jpg, nia-metrics.json, nia-joint-limits.json, nia-clip-probe-*.json, before.json, after.json)",
+      "evidence": "docs/characters/physics-pass/ (videos/nia-before-after*.mp4, videos/nia-hands-before-after*.mp4, compare/, nia-metrics.json, nia-joint-limits.json, nia-clip-probe-*.json, before.json, after.json)",
       "local_files_not_in_git": [
         "assets/skaters/nia/raw/physics/nia-physics.glb",
         "assets/skaters/nia/raw/physics/nia-physics.json"
@@ -644,7 +698,7 @@
   "tripo_credits_after": 2715,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2464176,
+  "file_size_bytes": 2719700,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
   "animations": 25,

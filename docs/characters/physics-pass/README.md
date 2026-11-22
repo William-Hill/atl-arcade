@@ -1,4 +1,4 @@
-# Physics pass, athletic stance, clipping fix, joint limits, recoil, and a faster push drive (2026-11-21)
+# Physics pass, athletic stance, clipping fix, arm IK, joint limits, recoil, and a faster push drive (2026-11-21)
 
 `scripts/blender/skater_physics_pass.py` changed these clips in headless Blender 5.2.3: `push`, `coast`, `carve_left`, and `carve_right` (the mirror of the new `carve_left`). It did this for Nia and for Marcus. Cascadeur did not run in the cloud container (see `docs/decisions.md`, 2026-11-21).
 
@@ -51,6 +51,29 @@ Deepest clip for each clip (capsule depth; up to about 2.5 cm is cloth contact w
 | Marcus coast | none over 1 cm | none over 1 cm |
 | Marcus carve_left | l_skate>r_skate 5.6 cm (1 pairs) | none over 1 cm |
 | Marcus carve_right | l_skate>r_skate 11.1 cm (3 pairs) | none over 1 cm |
+
+## Arm IK with hand targets (owner request)
+
+`skater_physics_pass.py` has a two-bone arm IK (shoulder, elbow, wrist). The elbow stays in its own bend plane, and the hand keeps its local rotation, so it follows the forearm. A hand target is a point for the palm (the middle of the wrist and the middle-finger knuckle), with a weight.
+
+- Grab (`air_mute`, `air_japan`, `air_liukang`): the palm goes to the nearest point of the grabbed skate (the skate box, which includes the boot), one hand radius off its surface, on every frame. A grab is a meeting: when the skate is out of arm's reach, the leg IK brings the skate toward the hand (the foot is free in the air), but only as far as the leg stays inside the joint LIMITS; the rest is a chest bend toward the skate (Spine1 and Spine2, up to 30 degrees, inside the spine LIMITS). The arm IK closes the last gap.
+- Clap (`dance_prep`): one clap per beat, at the frame where the palms are closest in that beat (a held pose between the claps is not a clap). At each clap the palms meet at their midpoint, the thickness of two palms apart, with a 4-frame blend on each side.
+- Marcus's air clips and dances are the mirror of Nia's (`marcus_style`), so his grabs use the other hand and the other skate.
+
+These four clips get only the IK layer: no balance, stance, or recoil.
+
+| Clip | Target | Palm to target, max (before -> after) | Help from the body | Joints |
+|---|---|---|---|---|
+| Nia air_mute | left hand on r skate | 23.4 -> 0.0 cm | skate to hand 19 cm, chest bend 7 deg | PASS |
+| Nia air_japan | left hand on r skate | 6.9 -> 0.5 cm | skate to hand 7 cm, chest bend 6 deg | PASS |
+| Nia air_liukang | left hand on l skate | 5.4 -> 0.0 cm | skate to hand 6 cm, chest bend 4 deg | PASS |
+| Nia dance_prep | clap (frames [0, 24]) | 1.0 -> 0.0 cm | - | PASS |
+| Marcus air_mute | right hand on l skate | 27.7 -> 1.0 cm | skate to hand 16 cm, chest bend 28 deg | PASS |
+| Marcus air_japan | right hand on l skate | 31.5 -> 0.8 cm | skate to hand 19 cm, chest bend 30 deg | PASS |
+| Marcus air_liukang | right hand on r skate | 2.8 -> 0.0 cm | skate to hand 3 cm, chest bend 3 deg | PASS |
+| Marcus dance_prep | clap (frames [0, 24]) | 7.8 -> 0.1 cm | - | PASS |
+
+Videos: `videos/<skater>-hands-before-after[-half-speed].mp4` (the four clips, three-quarter and front views). Close-ups: `compare/closeup-<skater>-grab-<trick>.jpg`, `compare/<skater>-clap.jpg`.
 
 ## Files
 

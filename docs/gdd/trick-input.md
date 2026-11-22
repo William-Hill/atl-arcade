@@ -1,7 +1,7 @@
 # Trick input
 
 > **Status**: Approved by the owner 2026-11-22 (after the review fixes). Implementation: #326 (prototype, first), #327 (sim), #328 (input), #329 (animation), #330 (HUD), #331 (tutorial).
-> **Design review**: NEEDS REVISION 2026-11-22 (independent agent, lean depth): 4 blockers and 9 recommended fixes. All are fixed in this revision; see "Review log" at the end.
+> **Design review**: second review 2026-11-22 (independent agent, lean depth): **NEEDS REVISION**, 3 blocking, 9 recommended, 5 nice-to-have. The findings are in "Review log", pass 4, and are not fixed yet. (First review: NEEDS REVISION, fixed in passes 1 to 3.)
 > **Author**: William Hill + Claude agents (`game-designer`, `systems-designer`)
 > **Last Updated**: 2026-11-22
 > **Issue**: #324
@@ -573,3 +573,23 @@ A second review did not run.
 A third review did not run.
 
 **Pass 3, 2026-11-22: the rest of the pass 2 findings.** Added 7 acceptance criteria from the `qa-lead` coverage table (the TRICK touch label, the gamepad manual balance, a wall hit in a manual, GRIND in the air, the one-button cycle, the one-button repeat decay, the grayscale check of R12.4) and 2 `art-director` details (the reference HUD styles #305 and #269, the drift side on the balance bar). A new review did not run.
+
+**Pass 4, 2026-11-22: second `design-review` (independent agent, lean depth): NEEDS REVISION.** All 7 questions of #324 are answered, and the arithmetic and the code claims are correct. Not fixed yet:
+
+Blocking:
+1. The grind-to-manual link in the anchor moment cannot happen: the rail end sends the skater to the air, and a GRIND held through an air starts no manual. Fix: a GRIND held from a grind exit starts a manual at the touchdown; add a criterion.
+2. `landingGrace` works in the wrong direction: a larger value gives more stumbles, so "Relaxed timing" (0.2 s) is harder. Fix: a stumble is "TRICK held at the touchdown" only; keep `landingGrace` for the late-press rule.
+3. The input contract (`dir`, `dirAge`) loses a tap that ended before the press. Fix: keep `lastDir` and `lastDirAt` after the release; the newest key wins; read the direction from W/A/S/D and the arrows, not from `push`.
+
+Recommended:
+1. "A press in the last `landingGrace` before the touchdown" needs the future. Fix: void the grab at the touchdown event; in one-button mode a held grab is never a stumble.
+2. The grind names omit "Long" (`grindName` in `run.js` at 10 m or more), so the F7 example name is wrong and "Long Ledge Makio Grind" (22 characters) breaks the 18-character HUD limit. Fix: the word order and a short form.
+3. The one-button sets omit Toe Spin, Smooth Quad, and Sit Spin, and do not say what SPIN does. Fix: list all slots and add a criterion.
+4. ATL Rydin has no beats or points, and R7 says "No dance clip is new". Fix both (the spec is 2 bars, 8 beats).
+5. Add `stumbleStyleLoss` (0.25) and the PERFECT hit stop to Tuning Knobs.
+6. Define the spin angle (`controller.js` wraps the yaw, so it needs a new total) and `airBase` for an edge drop.
+7. The touch GRIND press comes up to 120 ms late. Fix: send the GRIND press at the touch-down and apply the stance at the resolve.
+8. R3: say that a direction that starts after the press cannot override a fresh direction at the press.
+9. R12 calls the neutral stance "Frontside"; R6 calls it "(edge) Grind". The "banned list" of the name criterion is not defined.
+
+Nice-to-have: put Q4 before Q5; write the criterion times as frames at 60 Hz; R1 says two labels change, but only GROOVE changes; the 240 spin points are not reachable at 3 rad/s; The Prep is also a rink move, so the "footwork goes to SPIN" reason is not consistent.

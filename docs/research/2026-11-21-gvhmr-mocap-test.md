@@ -19,6 +19,17 @@ Date: 2026-11-21. Branch: `claude/wizardly-mayer-binhnd` from `main`.
 
 Cell 8 stops if the license is not CC0, public domain, CC BY, CC BY-SA, or the Pexels license.
 
+### Other runner: Modal (no browser)
+
+`scripts/mocap/gvhmr_modal.py` does the same 14 steps on a Modal GPU (T4 by default; set `MOCAP_GPU=L4` for an L4). It uses the same pins, the same retarget values, and the same Blender scripts. An agent can run it from start to end with `modal run`, because it does not need a browser tab. Run it from a computer that can reach Modal: the Modal client uses gRPC, and the cloud session proxy does not allow gRPC.
+
+1. One time: `pip install "modal==1.6.4"`, `modal token new`, `modal volume create skate-atl-mocap`, and `modal volume put skate-atl-mocap SMPLX_NEUTRAL.npz /SMPLX_NEUTRAL.npz`.
+2. `modal run scripts/mocap/gvhmr_modal.py::setup` downloads the checkpoints to the volume on a CPU.
+3. `::candidates` lists the Commons videos. `::preview --commons-file ... --t0 ... --t1 ...` cuts the video on a CPU and writes 4 frames to `scripts/mocap/.out/preview-<time>/frames.png`.
+4. `::run` with the same video values does the GPU steps. It writes the git-safe outputs and `log.txt` to `scripts/mocap/.out/<time>/` (git ignores this folder). The `drive-only/` data stays on the volume at `/out/<time>/drive-only/`. Do not commit it.
+
+The Modal script was not run in the cloud session (Modal and Commons are blocked here). Only its syntax and the app definition were checked.
+
 ## Steps of the run
 
 | Step | Where | Tool | Tested here |

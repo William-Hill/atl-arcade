@@ -16,3 +16,4 @@ landmarks/*/ref/reference-4000.jpg
 .env*
 .cache/
 reports/perf/
+scripts/mocap/.out/

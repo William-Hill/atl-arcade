@@ -1,0 +1,35 @@
+{
+ "push (hand-keyed)": {
+  "frames": 42,
+  "seconds": 1.75,
+  "penetration_m": -0.0003,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0003,
+   0.0
+  ],
+  "jitter_rms_m_s2": 6.9,
+  "skid_mean_m_s": 0.514,
+  "skid_p95_m_s": 1.148,
+  "grounded_skate_frames": 66,
+  "loop_seam_m_s": 0.816
+ },
+ "mocap_test_push (GVHMR)": {
+  "frames": 42,
+  "seconds": 1.75,
+  "penetration_m": -0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0,
+   0.0
+  ],
+  "jitter_rms_m_s2": 29.44,
+  "skid_mean_m_s": 0.661,
+  "skid_p95_m_s": 1.821,
+  "grounded_skate_frames": 65,
+  "loop_seam_m_s": 2.476
+ },
+ "skid_speed_m_s": 3.0
+}

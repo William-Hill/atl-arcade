@@ -2788,3 +2788,10 @@ Owner choices (all the recommended option):
 Rejected: a modifier hold (it stops the push), push off W (the phone needs a new button), the THPS up-down tap for the manual (it collides with push and brake), a full loss of the combo on a bail (against Pillar 1).
 
 Design review (independent agent, lean depth): NEEDS REVISION, with 4 blockers (spins could not happen at `SKATE.airTurnRate` 3 rad/s, the manual cap against the link window, the one-button precedence, the phone flick timing). The revision of the same day fixes all 4 and 9 smaller findings; see "Review log" in the GDD. A second review did not run.
+
+Specialist pass on the trick input GDD (#324, the same day): `creative-director` (CD-GDD-ALIGN), `art-director`, and `qa-lead` each gave CONCERNS. The owner chose (the recommended option each time):
+- Add an ATL Rydin clip in the SPIN up slot. This changes choice 7 above: 6 new clips per skater, 12 in total.
+- Put Swag Surf in Marcus's neutral TRICK slot, in place of Jam Groove (no source).
+- Use the placeholder name "Side Grab" for the `air_liukang` grab now (trademark risk). The skater review picks the final name.
+
+Other fixes: "Crisscross" becomes "Cross Step" (its sourced name); the moves with no source say "rink move (no source yet)"; `manual_toe` rolls on the front wheels with the toe stops clear of the ground; the sim input gets `dir` and `dirAge`; the manual gets `manualFriction`; 62 acceptance criteria. See "Review log, pass 2" in `docs/gdd/trick-input.md`.

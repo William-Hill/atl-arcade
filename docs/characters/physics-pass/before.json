@@ -1,0 +1,80 @@
+{
+ "label": "before",
+ "frames": "lowest point: every 30 fps frame (t = i / 30); screenshots: t = 0, 1/3, 2/3 of each clip",
+ "skaters": {
+  "nia": {
+   "clips": {
+    "push": {
+     "duration": 1.7333333492279053,
+     "lowest_min_m": -0.0001,
+     "lowest_max_m": 0.0001,
+     "frames_below_minus_5mm": 0,
+     "frames_above_5mm": 0,
+     "frames": 52
+    },
+    "coast": {
+     "duration": 3.200000047683716,
+     "lowest_min_m": -0.0002,
+     "lowest_max_m": 0,
+     "frames_below_minus_5mm": 0,
+     "frames_above_5mm": 0,
+     "frames": 96
+    },
+    "carve_left": {
+     "duration": 1.600000023841858,
+     "lowest_min_m": -0.0388,
+     "lowest_max_m": 0.0037,
+     "frames_below_minus_5mm": 20,
+     "frames_above_5mm": 0,
+     "frames": 48
+    },
+    "carve_right": {
+     "duration": 1.600000023841858,
+     "lowest_min_m": -0.0401,
+     "lowest_max_m": 0.0036,
+     "frames_below_minus_5mm": 20,
+     "frames_above_5mm": 0,
+     "frames": 48
+    }
+   },
+   "console_errors": []
+  },
+  "marcus": {
+   "clips": {
+    "push": {
+     "duration": 1.4666666984558105,
+     "lowest_min_m": -0.0001,
+     "lowest_max_m": 0,
+     "frames_below_minus_5mm": 0,
+     "frames_above_5mm": 0,
+     "frames": 44
+    },
+    "coast": {
+     "duration": 1.600000023841858,
+     "lowest_min_m": -0.0001,
+     "lowest_max_m": 0.0001,
+     "frames_below_minus_5mm": 0,
+     "frames_above_5mm": 0,
+     "frames": 48
+    },
+    "carve_left": {
+     "duration": 1.600000023841858,
+     "lowest_min_m": -0.0001,
+     "lowest_max_m": 0.0001,
+     "frames_below_minus_5mm": 0,
+     "frames_above_5mm": 0,
+     "frames": 48
+    },
+    "carve_right": {
+     "duration": 1.600000023841858,
+     "lowest_min_m": -0.0001,
+     "lowest_max_m": 0.0001,
+     "frames_below_minus_5mm": 0,
+     "frames_above_5mm": 0,
+     "frames": 48
+    }
+   },
+   "console_errors": []
+  }
+ }
+}

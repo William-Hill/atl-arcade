@@ -2664,3 +2664,107 @@ Each waited for the other. A Vitest test (`src/sim/traffic/traffic.test.js`, "a 
 We chose "the car leaves" over "the car is not solid while she touches it". A skater who goes through a car body looks broken, and a car that moves slowly away from a skater is calm traffic, not traffic danger (AGENTS.md political rules). The car never pushes, chases, or holds her.
 
 **Measured** (Vitest, flat street, skater 0.32 m from the side and pressed in by a parked car, push held): she moves free (0.3 m) in 0.98 s when she is at a quarter of the car length from an end. At the middle of the side, the worst spot: hatchback 1.57 s, sedan 1.60 s, taxi 1.67 s, van 1.75 s, pickup 1.83 s, box truck 2.10 s, bus 2.83 s. The box truck and the bus are longer than 2 s at the middle of the side because they are 7.5 m and 12 m long. The test sets their limits to 2.5 s and 3 s.
+
+## 2026-11-21: Physics pass on push, coast, and carve in Blender, not Cascadeur
+
+Goal: make the skate clips more physically plausible, as a quality test. The first choice was Cascadeur (AutoPhysics, balance, and inertia), in the cloud only, never on the owner's Mac.
+
+Cascadeur result: it did not run.
+- This cloud session had no Cascadeur MCP and no Blender MCP (tool search: `No matching deferred tools found`). The earlier MCP check ran on the owner's Mac.
+- The network policy refused `cascadeur.com` (`CONNECT tunnel failed, response 403`). The owner allowed `cascadeur.com` and `www.cascadeur.com` on the `atl-arcade` environment.
+- The download needs an accepted Nekki end-user licence (version 2025.1) and a registered account, and the app needs a sign-in. The Linux requirements ask for an NVIDIA GPU (GTX 950 or better). The container has 4 CPU cores, 15 GB memory, and no GPU. The download was not started.
+- Owner decision: use Blender for now.
+
+What was done:
+- Blender 5.2.3 LTS installs in the container from `download.blender.org` in 20 s and runs with no screen. No Blender MCP is necessary: the scripts use the Blender Python API with `blender -b -P`.
+- `scripts/blender/skater_physics_pass.py` does a Cascadeur-like pass on the shipped clips: centre of mass from segment masses, a zero moment point (ZMP) balance solve, less fore-aft CoM motion on free rollers (inertia), a symmetric filter on the hips path and the upper body (no time shift), and a follow-through lag on the forearms, hands, and head. A two-bone IK solve keeps each skate where it was. `carve_right` is the mirror of the new `carve_left`.
+- `scripts/assets/graft-clips.mjs` put the 4 clips into `skater.glb` and `skater-1024.glb` of Nia and Marcus. The mesh, the textures, the rig, and the other clips do not change. Sizes: Nia 2,461,308 and 2,011,348 bytes; Marcus 3,662,144 and 2,789,532 bytes (all under 10 MB; the phone GLBs under 3 MB).
+- New wheel rule: a skate that never lifts more than 4 cm in a clip drags or glides, so it stays on the ground all clip long.
+
+Found and fixed: the Nia carves put a skate up to 3.9 cm into the ground on 20 of 48 frames (browser check), and the dragging skate also floated up to 3.4 cm. After the pass, no frame of the 8 clips is more than 5 mm below or above the ground. In the Nia carve and Marcus push, the CoM dropped at almost free fall (-9.8 and -12.0 m/s^2). It is now -4.4 m/s^2 or less.
+
+Not fixed (stated plainly):
+- Nia carve, beat 2: she stands on the dragging left skate only, 10 to 27 cm behind her centre of mass, for 13 frames. The ZMP excess is half of what it was (0.154 to 0.071 m), but the balance is still not possible. The step or the drag must change.
+- Marcus push: the ZMP is still outside the support on 25 of 44 frames (mean 4.8 cm, was 12.9 cm).
+- The coast is smoother, but the arms move less. It can look less lively. No person looked at it in the game.
+- The pass does not know the game speed or the turn rate. The renderer adds the carve bank lean and the procedural layers (#291) on top.
+
+Evidence: `docs/characters/physics-pass/` (before and after sheets at 3 frames, the metrics, the browser checks with 0 console errors). `npx vitest run`: 1937 of 1938 pass; the failure is a 5 s timeout in `src/level/geo/facade-kit.test.js`, which also fails on `main`. `e2e/skater-anim.spec.js` and `e2e/skater-model.spec.js`: 7 of 7 pass. Real skaters must review the move set before release.
+
+Next clips that the pass can improve (not in this change): `brake` and `ride_back` (ground clips; the same wheel and balance checks), `idle`, `manual` (balance over the back wheels), `land` (the vertical acceleration at the impact), and the `dance_*` clips that stay on the ground (smoothness and wheel contact). Not `jump`, `air_*`, `grind_*`, or `bail`: the pass has no flight phase and no rail contact. Owner idea for the next pass: take the joint limits and the recoil lessons of the Crossroads animation work.
+
+## 2026-11-21: Crossroads joint limits and attacker recoil on the skate clips
+
+Owner request: use the lessons of the Crossroads animation work (joint limits, recoil, a sense of speed and movement) on the skate clips. The sources are in `William-Hill/crossroads`: `pipeline/joint_limit_gate.py` (#465) and `docs/animation/attacker-recoil-rule.md` (#765, approved on three Duke clips on 2026-11-16).
+
+Joint limits:
+- `scripts/blender/skater_joint_limits.py` is a port of the Crossroads gate to the Mixamo rig: the same LIMITS (WARN) and IMPOSSIBLE (FAIL) values, the same hinge measure for the knee and the elbow, and the same pelvis and chest frames (Spine1 and Spine2 for Spine01 and Spine02). Head yaw is not measured, because the rig has no face-front joint.
+- `--self-test`: the rest pose and normal knee and elbow bends pass; a knee bent to the side, a hyperextended knee and elbow, and a spine bent 130 degrees fail. It passes on both rigs.
+- On `main` and on the new GLBs, every clip of both skaters passes. One WARN was already on `main`: Marcus `dance_drumline`, left knee 30.9 degrees off its hinge (limit 30). The knee off-hinge reads 23 degrees in the Nia leg clips: this is the knee pole angle of #170 (L 24 degrees), not a fault.
+
+Recoil (adapted for skating):
+- The "strike" of a skater is the end of a drive. Events: the push skate leaves the ground (push), a stepping skate lands (carve), and each downbeat (coast).
+- One bounce along the momentum: forward and toward the glide skate for the push, along the CoM velocity with a drop for the landings and the beats. The pelvis moves first, then the chest, the upper arms, and the head, each 1 frame later. The skates do not move.
+- Timing at 30 fps: 3 frames up to the stop frame and 4 frames back. That is the slow end of the rule (6 up and 8 back at 60 Hz), because a skate stroke is slower and heavier than a punch. A faster bounce (2 and 3 frames) put the Nia coast out of balance on 15 frames and doubled the jerk of the push. It was rejected.
+- The pelvis bounce goes into the target CoM path before the balance solve, so the solve cuts the part that the skates cannot hold. After the solve, the pelvis moves 1.1 to 1.4 cm in the push and the carve and 0.7 cm in the coast; the chest leans 2.5 to 5 degrees.
+
+Result (before = `main`): the ZMP excess falls in the push and the carves (Nia push 0.088 to 0.003 m, Marcus push 0.129 to 0.017 m, Marcus carve 0.133 to 0.032 m, Nia carve 0.154 to 0.071 m), and the coast stays balanced. The wheel fix and the clip lengths of the physics pass stay. The jerk is higher than on `main` in the coast (Nia 4 to 23, Marcus 16 to 25) and the same in the Marcus carve (85 to 87): the bounce is on purpose. Before-and-after sheets and an 8-frame recoil strip of each push are in `docs/characters/physics-pass/`.
+
+Faster push drive (owner request, the same day): the Crossroads recipe makes the swing faster (the swing length times 10/18) and adds a deeper load before it.
+- In the push, the drive is the time with both skates on the ground, from the touch-down of the other skate to the lift-off of the drive skate (Nia 15 frames, Marcus 13). A monotone cubic time warp plays each drive in 10/18 of its frames (Nia 8, Marcus 7). The lift-off frames and the clip length stay; the other skate lands later, so the glide on one skate gets the saved frames. The hips dip 1 cm more at the start of each drive.
+- The peak speed of the drive skate against the hips is about two times higher: Nia 0.85 to 1.84 m/s, Marcus 1.40 to 2.74 m/s.
+- The longer glide on one skate needs the body over the glide skate. With the 6 cm hips limit, the push lost its balance (Marcus ZMP excess 0.093 m). In the push, the hips may now move 12 cm to the side; the push ZMP excess is then 0.000 for both skaters. The same 12 cm in the carve put the Nia knee 35 degrees off its hinge (a joint-limit WARN), so the other clips keep 6 cm.
+- Open: the game moves the skater at the sim speed. If the push impulse of the sim does not come at the drive of the clip, the feet and the speed do not agree. No person has looked at it in the game.
+
+Before and after videos (real speed and half speed) are in `docs/characters/physics-pass/videos/`. No person has looked at the recoil or the drive at game speed, and real skaters must review the move set before release.
+
+## 2026-11-21: Athletic stance for the coast and the push
+
+Owner feedback: the coast "doesn't fit biomechanically with skating"; the skaters look like they stand straight up when they coast. They should be in a more athletic stance, with a lean.
+
+Measured on `main`: the coast was the most upright skating clip. Trunk lean (Hips to Neck, from the vertical) was 7.5 degrees for Nia and 12 degrees for Marcus, against 17 to 21 degrees in the push and 20 to 22 degrees in the carve. The hips dropped only 10 cm from the rest pose (hip-ankle 0.86 and 0.83 of the leg length).
+
+Sources (`docs/characters/skate-style-references.md`, rule 3a): WFTDA ("bend at the knees, not at the waist", the weight centered over the skates), derby coaching (the shoulders, knees, and toes in a line; a straight back, the head and chest up), Rollerenligne (lean slightly forward with a straight back). The speed-skating basic position (knees about 100 degrees, thighs almost parallel) is deeper than a recreational coast and was not used. Games: no written analysis of the skate poses in Jet Set Radio or Bomb Rush Cyberfunk was found, and the session did not watch video. Hi-Fi Rush has no roller skating; its animation lesson is that the end of each action lands on the beat.
+
+Change: a stance layer (STANCE in `scripts/blender/skater_physics_pass.py`) runs before the physics pass. It hinges the body forward at the hips until the shoulders are over the knees (the derby rule), lowers the coast hips to 0.78 of the leg length, puts 80% of the hinge back in the neck and head (the gaze stays level), and brings the arms 12 degrees forward in the coast. The leg IK keeps the skates where they were. The push gets the same hinge rule, so a blend between the coast and the push does not lift the chest.
+
+Result: coast trunk lean Nia 7.5 to 34.5 degrees, Marcus 12 to 24 degrees; coast knee bend (flexion from a straight leg) about 60 to 76 degrees, below the 75 to 85 degree target of rule 3a (the target is not met); push lean Nia 17 to 33 degrees, Marcus 21 to 24 degrees. The coast and the push stay balanced (ZMP excess 0.000), no wheel leaves the ground or goes into it, and the joint-limit gate passes on every clip. A real skater must confirm the depth and the lean.
+
+## 2026-11-21: Marcus's right arm, and a clipping fix in the skate clips
+
+Owner feedback: Marcus's right arm stays bent for no reason; fix the clipping. The owner also asked what the carve move is (see `docs/characters/physics-pass/README.md`: Nia's carve is the ATL Ryde corner step, Marcus's carve is jam crossovers).
+
+Marcus's right arm: `skater_anim_v3.py` keys his right elbow at 84 degrees with half the swing of the left arm ("like a drum stick"). This was already on `main` and not from the physics pass. In the push and the coast, the right arm is now the mirror of the left arm half a clip later, in the frame of the chest (ARM_MIRROR in `skater_physics_pass.py`). The raw Blender sources of his clips are not in git, so the fix is a layer on the shipped clips and not a new key in `skater_anim_v3.py`. Right elbow: push 70..89 to 12..39 degrees, coast 76..83 to 21..30 degrees. The brake and the carves keep their deliberate asymmetric arm shapes.
+
+Clipping: a first probe (a mesh-inside test) reported a clip on most frames, because cloth layers and the inner thighs always touch. It was replaced by `scripts/blender/skater_clip_probe.py`: limb capsules (radius from the rest mesh; the median for the thighs and forearms, which wear cloth), knee spheres (with the knee pads), and skate boxes, with thigh against thigh left out. Cycles close-ups checked each flagged spot. One "clip" (Marcus's knee pads in the carve, seen from the side) was one knee behind the other, 31 cm apart; the probe agreed.
+
+The fix in the pass: a leg that goes into the other leg moves its skate (the lifted or faster one) in the ground plane until there is a 5 mm gap, so the wheels stay down; a hand or forearm more than 2 cm into a thigh or knee swings the upper arm away from the thigh with a bias out to the side. Then the hips shift so that the centre of mass path is the same as before the fix, and the probe runs again. The mirrored carve gets the fix too, because the rig is not exactly symmetric.
+
+Result (deepest clip, before = `main`): Marcus carve skates 5.6 cm to none over 1 cm; Marcus carve_right skates 11.1 cm to none; Nia push and carve hands and forearms 10 to 12 cm to 2.4 cm or less; Marcus push hand 4.7 cm to 1.9 cm. The rest is cloth contact (up to 2.4 cm). The balance is the same as before the fix, every clip passes the joint-limit gate, and no wheel leaves the ground.
+
+Tests: `npx vitest run src/render` 642 of 642. `e2e/skater-model.spec.js` and the contact-sheet tests pass. "the scripted sessions show no marcus T-pose frame" times out at 120 s; it also times out with the `main` GLBs on this machine, so the cause is the scripted sessions merged from `main` on a 4-core SwiftShader container, not the clips. The Nia T-pose session test passes.
+
+## 2026-11-21: Nia's carve step on beat 2
+
+Owner request: fix Nia's carve step on beat 2. On `main`, the right skate is in the air for 13 frames, and Nia stands on the left skate while it drags on its toe stop (pitched 28 degrees up) 10 to 27 cm behind her centre of mass. The ZMP excess of beat 2 was 0.163 m (mean).
+
+Fix (SUPPORT in `skater_physics_pass.py`, Nia's carve only): when one skate is in the air, the skate on the ground is levelled onto its wheels and rolls along its own heading until the CoM is over the middle 30% of its wheelbase (up to 21 cm). A roll along the heading needs no skid. The roll blends in while both skates are down and out after the landing. A drag skate never counts as lifted. When a foot target moves, the leg IK now turns the knee bend toward the heading of the foot (as the knee pole of `skater_runtime.py`); without this, the knee went 34 to 36 degrees off its hinge (a joint-limit WARN). Marcus's crossover carve was already in balance and does not get the layer (it made his ZMP excess 0.024 to 0.054 m).
+
+Recoil changes: a landing bounce now starts at the touch-down (before, it started 3 frames before it, when the body was still on one skate). The carve landing bounce is mostly horizontal (drop weight 0.25, was 1.0): at a touch-down the ground pushes up, so a sharp drop is the wrong sign. Nia's carve has no pelvis bounce at the landing (ZMP excess 0.040 m without it, 0.048 to 0.051 m with it); the chest, arms, and head still follow through.
+
+Result: Nia carve beat 2 ZMP excess 0.163 to 0.039 m (mean); whole clip 0.154 to 0.040 m; Marcus carve 0.133 to 0.001 m. Every clip passes the joint-limit gate, no clip is deeper than 2.4 cm (cloth contact), and no wheel leaves the ground. Open: beat 1& (both skates down) is still out by up to 0.19 m. The T-pose session tests time out at 120 s for both skaters with the `main` GLBs too (the scripted sessions from `main` on this machine).
+
+## 2026-11-21: Arm IK with hand targets
+
+Owner request: add arm IK with hand targets. Before this, the arms, the spine, and the head had no IK: they were keyed as rotations (FK).
+
+Measured on `main` (palm to target): Nia's grabs missed the skate by 24 cm (mute), 5 to 10 cm (japan), and 8 cm (liu kang); Marcus's mirrored grabs missed by 26 to 32 cm (his mute hand was above his head); the `dance_prep` claps did not meet (Nia 7 cm, Marcus 7 to 14 cm between the palm centres at the clap).
+
+Change (`scripts/blender/skater_physics_pass.py`, HAND_TARGETS):
+- A two-bone arm IK in `write_pose`: the elbow stays in its own bend plane, the hand follows the forearm.
+- Grab targets: the nearest point of the grabbed skate box, one hand radius off the surface, every frame. When the skate is out of reach, the leg IK brings the skate toward the hand, scaled down on each frame until the leg is inside the joint LIMITS (the first version moved Marcus's skate 21 to 23 cm and failed the gate: a knee 74 degrees off its hinge, a hip extended 174 degrees). The rest is a chest bend toward the skate (up to 30 degrees, inside the spine LIMITS).
+- Clap targets: one clap per beat, at the closest palms of that beat. The first version took every small minimum of the palm distance and pulled the hands together during the hands-at-the-hips hold; this was wrong and was fixed before the commit.
+- Marcus's air clips and `dance_prep` are the mirror of Nia's, so his sides swap.
+
+Result: every grab holds the skate (palm to target 1 cm or less), every clap meets, and every clip passes the joint-limit gate with no WARN. Nia's grabs move the skate 6 to 19 cm toward the hand with a chest bend of 4 to 7 degrees; Marcus's mute and japan move it 16 to 19 cm with a chest bend of 28 to 30 degrees. The grab point is the nearest point of the boot, often the upper boot, not the wheel frame. A real skater must review the grabs.
+

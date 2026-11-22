@@ -2795,3 +2795,5 @@ Specialist pass on the trick input GDD (#324, the same day): `creative-director`
 - Use the placeholder name "Side Grab" for the `air_liukang` grab now (trademark risk). The skater review picks the final name.
 
 Other fixes: "Crisscross" becomes "Cross Step" (its sourced name); the moves with no source say "rink move (no source yet)"; `manual_toe` rolls on the front wheels with the toe stops clear of the ground; the sim input gets `dir` and `dirAge`; the manual gets `manualFriction`; 62 acceptance criteria. See "Review log, pass 2" in `docs/gdd/trick-input.md`.
+
+Second design review of the trick input GDD (#324, the same day): NEEDS REVISION (3 blocking, 9 recommended, 5 nice-to-have). Pass 5 fixes all 17. The main rule changes: a GRIND held from a grind exit starts a manual at the touchdown (the THPS 2 link); a stumble is a grab still held at the touchdown, and `landingGrace` voids a late grab, so a larger value is more lenient; the input gives `dir`, `lastDir`, and `lastDirAt` from 4 new direction actions, and the newest key wins; ATL Rydin has 8 beats and 600 points. A third review did not run.

@@ -1,7 +1,7 @@
 # Trick input
 
 > **Status**: Approved by the owner 2026-11-22 (after the review fixes). Implementation: #326 (prototype, first), #327 (sim), #328 (input), #329 (animation), #330 (HUD), #331 (tutorial).
-> **Design review**: second review 2026-11-22 (independent agent, lean depth): **NEEDS REVISION**, 3 blocking, 9 recommended, 5 nice-to-have. The findings are in "Review log", pass 4, and are not fixed yet. (First review: NEEDS REVISION, fixed in passes 1 to 3.)
+> **Design review**: second review 2026-11-22 (independent agent, lean depth): **NEEDS REVISION**, 3 blocking, 9 recommended, 5 nice-to-have. The findings are in "Review log", pass 4, and pass 5 fixes all 17. A third review did not run. (First review: NEEDS REVISION, fixed in passes 1 to 3.)
 > **Author**: William Hill + Claude agents (`game-designer`, `systems-designer`)
 > **Last Updated**: 2026-11-22
 > **Issue**: #324
@@ -59,7 +59,7 @@ Flips do not apply to quad roller skates: the skater has no board. The roller-sk
 
 ### Core Rules
 
-**R1. Buttons.** The system uses the present actions. Only two labels change.
+**R1. Buttons.** The system uses the present actions. Only one label changes: the touch GROOVE button becomes TRICK. R3 adds 4 direction actions.
 
 | Action (code) | Keyboard | Gamepad | Touch label | Name in this GDD |
 |---|---|---|---|---|
@@ -68,9 +68,9 @@ Flips do not apply to quad roller skates: the skater has no board. The roller-sk
 | `grind` | F | RT | GRIND | GRIND |
 | `jump` | Space | A | JUMP | JUMP |
 
-**R2. Directions.** A direction is one of neutral, left, right, up, or down. Keyboard: A, D, W, S or the arrows. Gamepad: the left stick or the d-pad. The stick needs 0.5 travel, and the main axis wins (no diagonals). Touch: the flick from the button (R11).
+**R2. Directions.** A direction is one of neutral, left, right, up, or down. Keyboard: A, D, W, S or the arrows, read from the keys themselves through 4 new rebindable actions (`dirLeft`, `dirRight`, `dirUp`, `dirDown`), not from the `push` or `brake` actions. Shift pushes and gives no direction. When two direction keys are down, the newest key wins. Gamepad: the left stick or the d-pad. The stick needs 0.5 travel, and the main axis wins (no diagonals). Touch: the flick from the button (R11).
 
-**R3. Fresh direction (owner choice 1).** A direction counts only if it started in the window from `dirBefore` (150 ms) before the button press to `dirAfter` (60 ms) after it. A direction held from earlier (for example, a held W to push) does not count, so the trick is neutral. If two directions start in the window, the later one wins. The trick starts at the press frame when a fresh direction exists. Otherwise it starts `dirAfter` after the press. A touch flick has its own timing (R11).
+**R3. Fresh direction (owner choice 1).** A direction counts only if it started in the window from `dirBefore` (150 ms) before the button press to `dirAfter` (60 ms) after it. A direction held from earlier (for example, a held W to push) does not count, so the trick is neutral. A tap counts: a direction key pressed and let go before the trick press is fresh if it started inside `dirBefore`. If two directions start before the press inside the window, the later one wins. The trick starts at the press frame when a fresh direction exists, and a direction that starts after the press cannot change it. Only when no fresh direction exists at the press does the game wait up to `dirAfter` for one; the first direction that starts in that time sets the trick, else the trick is neutral. A touch flick has its own timing (R11).
 
 **R4. Air: grabs.** In the air, a press of TRICK starts a grab. The air must have lasted `grabMinAir` (0.1 s). The first press in one air sets the grab; a later press in the same air does nothing. The grab lasts while TRICK is held.
 
@@ -82,11 +82,11 @@ Flips do not apply to quad roller skates: the skater has no board. The roller-sk
 | Up | Rocket Grab | `air_rocket` | Yes |
 | Down | Tuck Knee | `air_tuckknee` | Yes |
 
-Steer turns the skater in the air as now (`SKATE.airTurnRate`). Each full half turn scores as a spin (Formulas F3). With the present constants (3 rad/s, about 172 degrees per second, and 0.5 s for a hop), only a long vert air reaches 180 degrees, so spins seldom pay. Playtest 1 decides if `SKATE.airTurnRate` goes up (its max is 6 rad/s). A partial turn is never a fault: the landing is clean at any yaw. SPIN does nothing in the air in version 1.
+Steer turns the skater in the air as now (`SKATE.airTurnRate`). The sim adds a new field, `airYaw`: the signed sum of the yaw change in this air, with no wrap (`controller.js` wraps `yaw`). A turn back cancels a turn out. Each full half turn of `|airYaw|` scores as a spin (Formulas F3). With the present constants (3 rad/s, about 172 degrees per second, and 0.5 s for a hop), only a long vert air reaches 180 degrees, so spins seldom pay. Playtest 1 decides if `SKATE.airTurnRate` goes up (its max is 6 rad/s). A partial turn is never a fault: the landing is clean at any yaw. SPIN does nothing in the air in version 1.
 
 **R5. Ramp air with no press.** A ramp air with no grab plays the `jump` clip and scores the air only. The game no longer plays a grab by itself.
 
-**R6. Rails: grind stances.** GRIND snaps to a rail as now (`GRIND.buffer`, `snapRadius`). The fresh direction at the GRIND press, or at the snap if the press was buffered, sets the stance. The stance does not change during the grind.
+**R6. Rails: grind stances.** GRIND snaps to a rail as now (`GRIND.buffer`, `snapRadius`). The fresh direction at the GRIND press, or at the snap if the press was buffered, sets the stance. The stance does not change during the grind, except once on a phone (below).
 
 | Direction | Stance | Clip | New clip |
 |---|---|---|---|
@@ -96,9 +96,11 @@ Steer turns the skater in the air as now (`SKATE.airTurnRate`). Each full half t
 | Up | Makio Grind | `grind_makio` | Yes |
 | Down | Royale Grind | `grind_royale` | Yes |
 
-A direction stance joins the edge name: a Soul Grind on a ledge is "Ledge Soul Grind". The neutral stance keeps the present name ("Ledge Grind").
+The name order is: [Long] [edge] [stance] Grind. "Long" comes from `grindName` in `run.js` at `COMBO.longGrindMeters` (10 m) or more. Examples: "Ledge Soul Grind", "Long Ledge Soul Grind". The neutral stance has no stance word ("Ledge Grind", "Long Rail Grind"). The HUD short form drops the final word "Grind" for a direction stance ("Long Ledge Makio", 16 characters), so every grind name fits the 18-character limit.
 
-**R7. Ground: dances.** On the ground at `STYLE.minSpeed` (1.5 m/s) or faster, a press of TRICK or SPIN starts the dance of that slot. The dance length and the hold-to-repeat rule stay as now. No dance clip is new.
+On a phone, the touch layer sends the GRIND press at the touch-down, so the snap buffer starts at once. The stance comes at the flick resolve (R11). If the snap comes before the resolve, the stance changes once, at the resolve frame (at most `flickMaxMs` after the touch-down). This is the only stance change during a grind.
+
+**R7. Ground: dances.** On the ground at `STYLE.minSpeed` (1.5 m/s) or faster, a press of TRICK or SPIN starts the dance of that slot. The dance length and the hold-to-repeat rule stay as now. One dance clip is new: ATL Rydin.
 
 | Direction | TRICK (Nia) | TRICK (Marcus) | SPIN (both) |
 |---|---|---|---|
@@ -112,7 +114,7 @@ Every neutral slot holds a sourced dance, because the neutral slot gets the most
 
 The sources are in `docs/characters/atl-dance-references.md`. The sourced dances are Bankhead Bounce, Walk It Out, The Prep, Swag Surf, Snap Lean, Cross Step, and ATL Rydin (rank 1, the signature move of ATL style). The other moves show "rink move (no source yet)" in R7 and on the trick list until the skater review gives a source or a new name.
 
-The clip `dance_crisscross` is the Cross Step (`docs/decisions.md`, 2026-11-03; `nia-sway-ellis.md`), so its game name changes from "Crisscross" to "Cross Step" in `STYLE.moves`. ATL Rydin gets a new clip (owner choice 2026-11-22). Cross Step and Smooth Quad move to SPIN because they are footwork, not grooves. Each dance keeps its own beat count and points: Cross Step and Smooth Quad keep 2 beats and 150 points, so the clips play at full length. This needs `beats` and `points` per dance, not per move.
+The clip `dance_crisscross` is the Cross Step (`docs/decisions.md`, 2026-11-03; `nia-sway-ellis.md`), so its game name changes from "Crisscross" to "Cross Step" in `STYLE.moves`. ATL Rydin gets a new clip (owner choice 2026-11-22). Cross Step and Smooth Quad move from the TRICK list to SPIN, so that SPIN has 5 slots. The Prep is also a rink move, but it stays on TRICK, its present button. Each dance keeps its own beat count and points: Cross Step and Smooth Quad keep 2 beats and 150 points, so the clips play at full length. ATL Rydin has 8 beats (the 2-bar spec) and 600 points (75 points per beat, the same rate as the grooves). This needs `beats` and `points` per dance, not per move.
 
 **R8. Manual (owner choice 2).** On the ground, GRIND held for `manualDelay` (0.15 s, the same as `GRIND.buffer`) with no rail in snap range starts a manual at `manualMinSpeed` (3 m/s) or faster. The delay lets a player hold GRIND just before a rail, as now, with no manual. A fresh up at the GRIND press starts a Toe Roll (the front-wheel manual, new clip `manual_toe`); any other direction starts a Manual (`manual`).
 
@@ -121,6 +123,7 @@ The clip `dance_crisscross` is the Cross Step (`docs/decisions.md`, 2026-11-03; 
 - The manual ends with no penalty when the player lets go of GRIND, jumps, or slows below `manualMinSpeed`.
 - The manual ends in a stumble when the balance reaches the limit (R10).
 - A rail that comes in snap range during the manual takes the GRIND input: the manual ends clean and the grind snaps.
+- **The grind-to-manual link (THPS 2).** A GRIND held with no release from a grind exit (the rail end or a jump off the rail) through the air starts a manual at the touchdown, with no `manualDelay`, if no rail is in snap range and the speed is at `manualMinSpeed` or more. A GRIND press that starts in the air with no rail does not start a manual at the touchdown.
 - A manual keeps the combo open (the link window does not count down). At `manualCapMeters` (30 m) the game adds the manual link at its full pay (F2), and the link window starts to count down. The skater can stay in the manual after the cap, but it pays no more and does not keep the combo open.
 
 **R9. Repeat decay by trick name.** The combo already decays repeats by name (`COMBO.repeatDecay` [1, 0.5, 0.25]). Each trick now has its own name, so a varied line pays more than one trick again and again.
@@ -130,7 +133,8 @@ The clip `dance_crisscross` is the Cross Step (`docs/decisions.md`, 2026-11-03; 
 | Result | Cause | Effect |
 |---|---|---|
 | Clean | No fault | Full points, beat bonus allowed. |
-| Stumble (owner choice 5) | TRICK still held at the touchdown or let go less than `landingGrace` (0.1 s) before it; a manual balance out. A partial spin is not a cause (R4). | Speed times `stumbleSpeedKeep` (0.7). The trick link pays `stumbleKeep` (0.5). No beat bonus. Style meter minus 0.25. The combo and the multiplier continue. The `land` clip plays a stumble variant. A TRICK press in the last `landingGrace` before the touchdown starts no grab, so a button held from that press is not a stumble. |
+| Stumble (owner choice 5) | A grab still held (TRICK down) at the touchdown; a manual balance out. A release before the touchdown, by any time, is clean. A partial spin is not a cause (R4). | Speed times `stumbleSpeedKeep` (0.7). The trick link pays `stumbleKeep` (0.5). No beat bonus. Style meter minus `stumbleStyleLoss` (0.25). The combo and the multiplier continue. The `land` clip plays a stumble variant. |
+| Late grab (void) | A grab that started less than `landingGrace` (0.1 s) before the touchdown | The sim decides at the touchdown event (it does not need to know the future). The grab is void: no grab points (`trickBase` 0, no hold pay), no stumble, and the grab clip blends out. A larger `landingGrace` is more lenient. |
 | Bail (owner choice 4) | A grind balance out (as now) or a respawn (a fall under `SKATE.fallFloor` or out of the level bounds; no trick input can cause it) | Speed times `GRIND.fallSpeedKeep` (0.5), as now. The combo banks `bailBank` (25%) of the pending points at multiplier 1. Style meter minus `COMBO.bailStyleLoss` (0.5). |
 
 **R11. Devices (owner choice 3).**
@@ -152,20 +156,22 @@ The phone keeps 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH), so this system add
    | Ground, rail in snap range | Grind snap (the rail wins) | Stay on the rail |
    | Ground, no rail | Nothing at the press. A release before `oneButtonHold` (0.5 s) starts the next dance. | At 0.5 s, a manual starts. |
    | Air, rail in snap range | Grind snap (buffered as `GRIND.buffer`) | Stay on the rail |
-   | Air, no rail | The next grab of the one-button set | Hold the grab; the grab lets go by itself before the touchdown (no stumble) |
+   | Air, no rail | The next grab of the one-button set | Hold the grab. In this mode a held grab is never a stumble: the landing is clean. |
    | Grind | Nothing | Stay on the rail |
    | Manual | Nothing | Stay in the manual (the release ends it) |
 
    The one-button set, in order (the next press takes the next item, and the list starts again after the last one):
    - Air: Mute Grab, Japan Grab, Side Grab, Rocket Grab, Tuck Knee.
-   - Grind: Frontside (the neutral stance), Soul, Unity, Makio, Royale.
-   - Ground, Nia: Bankhead Bounce, Walk It Out, The Prep, Swag Surf, Snap Lean, Cross Step, ATL Rydin.
-   - Ground, Marcus: Swag Surf, Walk It Out, The Prep, Bankhead Bounce, Snap Lean, Cross Step, ATL Rydin, Jam Groove, Drumline Count, Jam Step.
+   - Grind: the neutral stance ("(edge) Grind"), Soul, Unity, Makio, Royale.
+   - Ground, Nia (all 10 slots): Bankhead Bounce, Walk It Out, The Prep, Swag Surf, Snap Lean, Cross Step, Toe Spin, Smooth Quad, ATL Rydin, Sit Spin.
+   - Ground, Marcus (all 10 slots, then 3 more): Swag Surf, Walk It Out, The Prep, Drumline Count, Jam Step, Cross Step, Toe Spin, Smooth Quad, ATL Rydin, Sit Spin, Jam Groove, Bankhead Bounce, Snap Lean.
+
+   In one-button mode, SPIN, GRIND, and the directions still work, but the player does not need them. SPIN plays its neutral slot (Cross Step). GRIND works as in R6 and R8 with the neutral stance.
 2. **Remapping.** Every action in `ACTIONS` is rebindable now (`rebind()` in `src/input/bindings.js`). The settings menu gets a remap screen for the keyboard and the gamepad. The game blocks two actions on one key. The direction source (WASD, arrows, stick, d-pad) is a choice.
 3. **Longer windows.** A "Relaxed timing" switch sets `dirBefore` to 250 ms, `dirAfter` to 100 ms, `flickMaxMs` to 250 ms, and `landingGrace` to 0.2 s.
 4. **No color-only signal.** The trick name and the direction arrow show as text and shape.
 
-**R13. Names and political rules.** Every trick name is positive or neutral. Grab and grind names are standard skate terms. The dances keep their Atlanta sources and the content flags of `docs/characters/atl-dance-references.md` (lyric checks for Bankhead Bounce, Walk It Out, Snap Lean). No name refers to crime, danger, or decline. The standard skate name of the `air_liukang` grab uses the name of a fighting-game character, which is a trademark risk for an official city game. The game uses the placeholder "Side Grab" from the start (owner choice 2026-11-22), and the skater review picks the final name (Q3). The trick list shows the origin of a dance only (place, year, creators, public source). It shows a song title only after the lyric check of that song passes. Nae Nae stays out of the map. Real skaters review the move set and the names before release (AGENTS.md).
+**R13. Names and political rules.** Every trick name is positive or neutral. Grab and grind names are standard skate terms. The dances keep their Atlanta sources and the content flags of `docs/characters/atl-dance-references.md` (lyric checks for Bankhead Bounce, Walk It Out, Snap Lean). No name refers to crime, danger, or decline. The banned word list is a new data file, `src/content/banned-words.js`, with words for crime, police, violence, weapons, drugs, decline, and failure (for example "crash" and "fail"); the HUD issue (#330) writes it from the AGENTS.md political rules, and a test checks every trick name against it. The standard skate name of the `air_liukang` grab uses the name of a fighting-game character, which is a trademark risk for an official city game. The game uses the placeholder "Side Grab" from the start (owner choice 2026-11-22), and the skater review picks the final name (Q3). The trick list shows the origin of a dance only (place, year, creators, public source). It shows a song title only after the lyric check of that song passes. Nae Nae stays out of the map. Real skaters review the move set and the names before release (AGENTS.md).
 
 ### States and Transitions
 
@@ -187,6 +193,7 @@ The phone keeps 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH), so this system add
 | Ground | Manual | GRIND held for `manualDelay`, no rail in range, speed at `manualMinSpeed` or more |
 | Air | Ground | Touchdown: clean or stumble (R10) |
 | Air | Grind | GRIND held or buffered at rail contact |
+| Air | Manual | GRIND held with no release from a grind exit, touchdown with no rail in range (R8) |
 | Grind | Air | JUMP or the rail end |
 | Grind | Ground | Bail (balance out) |
 | Manual | Ground | GRIND let go, slow speed, or a balance out (stumble) |
@@ -197,7 +204,7 @@ The phone keeps 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH), so this system add
 
 | System | Data in | Data out | Owner |
 |---|---|---|---|
-| Input (`src/input/`) | Device events | Per frame, the present fields plus `dir` (`"n"`, `"l"`, `"r"`, `"u"`, `"d"`) and `dirAge` (s since `dir` started; the sim applies R3 with it). Touch: the touch layer gives the trick button press at the flick resolve frame (R11), with the flick `dir` and `dirAge` 0. | Input |
+| Input (`src/input/`) | Device events | Per frame, the present fields plus `dir` (the held direction: `"n"`, `"l"`, `"r"`, `"u"`, `"d"`; the newest key wins), `lastDir` (the newest direction start event, kept after the key is let go), and `lastDirAt` (the time of that event, in s on the sim clock). The sim applies R3 with `lastDir` and `lastDirAt`. A gamepad start event is a stick crossing 0.5 on a new axis side, or a d-pad press. Touch: the TRICK and SPIN press come at the flick resolve frame (R11), with `lastDir` the flick direction and `lastDirAt` that frame. The GRIND press comes at the touch-down, and its stance at the resolve (R6). | Input |
 | Skater sim (`src/sim/skate/skater.js`, `controller.js`) | The input per frame | `state.trick` (`{ kind, id, name, clip, dir, held }`), `state.manual` (`{ balance, meters }`), the landing result | Sim |
 | Grind (`grind.js`) | The stance id at the snap | The grind meters and the balance, as now | Sim |
 | Combo (`combo.js`, `run.js`) | The trick name, the points, the beat offset at the judged moment, the landing result | The links, the multiplier, the bank | Sim |
@@ -247,16 +254,16 @@ Source: `systems-designer` proposal, adjusted to the owner choices. The present 
 
 | Variable | Symbol | Type | Range | Description |
 |---|---|---|---|---|
-| air base | airBase | int | 50, 100, 200 | `hopPoints`, `rampAirPoints`, `vertAirPoints` (present). |
+| air base | airBase | int | 0, 50, 100, 200 | 0 for a roll off an edge (a drop; it scores no link now), `hopPoints`, `rampAirPoints`, `vertAirPoints` (present). A drop with a grab is a link with the grab name only. |
 | trick base | trickBase | int | 0 to 300 | 0 with no grab; neutral grab 80; direction grab 120. |
 | hold rate | holdRate | float | 20 to 120 | Points per second of grab held. Typical 60. |
 | hold time | tHold | float | 0 and up | Seconds TRICK is held in this air. |
 | hold cap | holdCap | float | 0.5 to 3 | Seconds that pay. Typical 1.5. |
 | spin rate | spinPer180 | int | 20 to 80 | Points per half turn. Typical 40. |
-| spin angle | theta | float (deg) | 0 and up | Yaw turned in this air. Only full half turns pay. |
+| spin angle | theta | float (deg) | 0 and up | `|airYaw|` (R4): the signed yaw sum of this air, with no wrap. Only full half turns pay. |
 | spin cap | spinCapHalfTurns | int | 4 to 8 | Typical 6. |
 
-**Output range:** a hop with no trick stays 50. The typical maximum is 200 + 120 + 90 + 240 = 650 (the spin part needs a faster `SKATE.airTurnRate`, see R4). One air gives one link.
+**Output range:** a hop with no trick stays 50. The typical maximum is 200 + 120 + 90 + 240 = 650 in theory. It is not reachable now: 6 half turns take about 6.3 s of air at 3 rad/s, and even at the 6 rad/s maximum they take about 3.1 s. With the present constants, a vert air of about 0.9 s turns about 150 degrees, so no spin pays and the practical maximum is 200 + 120 + 90 = 410. One half turn (450 in total) needs about 1.05 s of air (see R4 and Q5). One air gives one link.
 **Example:** ramp air, Japan Grab held 0.8 s, no full half turn: 100 + 120 + 60 * 0.8 + 0 = 268. The same air on vert with a 180: 200 + 120 + 48 + 40 = 408.
 
 ### F4. Grind points
@@ -300,7 +307,7 @@ The judged moment (owner choice 6): air, the touchdown; grind, the snap; manual,
 
 **Full example (grind, manual, air grab, land):**
 
-1. Ledge Grind (neutral), 12 m, snap off the beat. P = 100 + 35 * 12 = 520. Pending 520. Multiplier 1.
+1. Long Ledge Grind (neutral stance; 12 m is over `longGrindMeters`), snap off the beat. P = 100 + 35 * 12 = 520. Pending 520. Multiplier 1.
 2. Manual, 20 m, press 40 ms from the beat. 340 * 1.5 = 510. Pending 1030. Multiplier 2.
 3. Ramp air, Japan Grab held 0.8 s, clean landing 80 ms off the beat. 268. Pending 1298. Multiplier 3.
 4. 0.8 s of roll. The combo banks 1298 * 3 = **3894**.
@@ -314,11 +321,14 @@ With TRICK still held at the touchdown, link 3 pays 134: pending 1164, bank 3492
 - **If the player spins without end**: `spinCapHalfTurns` stops the pay at 240. A partial turn at the touchdown is clean.
 - **If the player repeats one trick**: the 4th and later repeats pay 0 and add no multiplier.
 - **If the player holds W to push and presses TRICK**: the direction is not fresh (R3), so the trick is neutral. To get Up, the player taps W in the window.
-- **If two directions start in the window**: the later one wins.
+- **If two directions start before the press in the window**: the later one wins. A direction that starts after the press does not change a fresh direction at the press.
+- **If the player taps W and lets go before the TRICK press**: `lastDir` keeps the Up, so the trick is Up if the tap started inside `dirBefore`.
+- **If the player holds W and presses A**: A is the newest key, so `lastDir` is left.
 - **If TRICK is pressed before `grabMinAir` (0.1 s) or in an air shorter than `COMBO.minAirTime` (0.2 s)**: no grab and no link.
-- **If TRICK is pressed in the last `landingGrace` before the touchdown**: no grab starts, and a button held from that press is not a stumble. Only a grab that exists and is held at the touchdown is a stumble.
+- **If a grab starts in the last `landingGrace` before the touchdown**: the grab is void at the touchdown event: no grab points and no stumble. Only a grab that started earlier and is still held at the touchdown is a stumble.
 - **If GRIND is held toward a rail that is still out of range**: for `manualDelay` (0.15 s) nothing happens and the push stays on. After that, the manual starts, and the grind snaps when the rail comes in range. The manual ends clean and scores its meters.
 - **If GRIND is pressed in the air with no rail**: the press is buffered for `GRIND.buffer` as now; it does not start a manual at the touchdown. The player presses again for a manual.
+- **If GRIND is held with no release from a grind exit through the air**: the manual starts at the touchdown (R8, the grind-to-manual link).
 - **If the manual rolls onto a ramp**: the manual scores and ends at the launch; the air starts a new link.
 - **If the skater hits a wall in a manual**: the bonk rule applies; the manual ends clean if the speed drops under `manualMinSpeed`.
 - **If the speed is under `STYLE.minSpeed` at a dance press**: no dance, as now.
@@ -372,12 +382,15 @@ All knobs go in `src/sim/skate/constants.js` (a new `TRICK` block, and `COMBO` a
 | `holdCap` (s) | 0.5 / 1.5 / 3 | — | Hold farm |
 | `spinPer180` | 20 / 40 / 80 | Spins not worth it | Spin farm |
 | `spinCapHalfTurns` | 4 / 6 / 8 | — | Spin farm |
-| `landingGrace` (s) | 0.05 / 0.1 / 0.2 | Unfair stumbles | No risk |
+| `landingGrace` (s) | 0.05 / 0.1 / 0.2 | A late press pays and then stumbles | Late grabs are void too often (no points) |
+| `stumbleStyleLoss` | 0 / 0.25 / 0.5 | No cost | Harsh |
+| `perfectHitStopMs` (ms) | 0 / 60 / 100 | No punch on PERFECT | The game feels to stop |
 | `stumbleKeep` | 0.25 / 0.5 / 0.75 | Harsh | No cost |
 | `stumbleSpeedKeep` | 0.5 / 0.7 / 0.9 | Breaks flow | No cost |
 | `bailBank` | 0 / 0.25 / 0.5 | THPS harsh | No cost |
 | `beatPerfectBonus` | 1.5 / 1.75 / 2 | Perfect = good | Beat dominates |
 | `oneButtonHold` (s) | 0.3 / 0.5 / 0.8 | Taps start manuals | Manual hard to start |
+| `atlRydinBeats` / points | 4 / 8 / 8 beats; 75 points per beat | — | A very long dance |
 
 `manualPerMeter` must stay under `grindPerMeter` (35). `beatPerfectBonus` must be at or above `beatBonus`.
 
@@ -412,7 +425,7 @@ Risks (`art-director`):
 | Tier | Feedback |
 |---|---|
 | Clean | The present landing dust and the `land` clip. No new effect. |
-| PERFECT | A ring of 8 to 10 short wheel sparks on the ground, larger than the clean dust, for 0.3 s. A 1-frame hit stop (60 ms). The "PERFECT" tag. |
+| PERFECT | A ring of 8 to 10 short wheel sparks on the ground, larger than the clean dust, for 0.3 s. A hit stop of `perfectHitStopMs` (60 ms). The "PERFECT" tag. |
 | Stumble | A small dust puff, a 0.2 s arm-wave recovery, and a short "WOBBLE" tag in a neutral color. No red and no loss sound. Until the clip exists, the fallback is `land` at 1.3 times speed plus a small arm-wave layer. |
 | Bail | The present `bail` clip, a comic dust cloud, and the faded "+N" of the 25% bank. No red, no damage flash, no loud shake, and no words such as "FAIL" or "CRASH". The skater is up inside 0.9 s. |
 
@@ -431,13 +444,18 @@ Risks (`art-director`):
 
 ## Acceptance Criteria
 
-Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the input fields `dir` and `dirAge` (Interactions table). "Off the beat" means more than 60 ms from the nearest beat.
+Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the input fields `dir`, `lastDir`, and `lastDirAt` (Interactions table). "Off the beat" means more than 60 ms from the nearest beat. Times: the sim steps at 60 Hz (16.7 ms per frame). A criterion time on the sim clock means the nearest whole frame (100 ms = frame 6, 150 ms = frame 9, 160 ms = frame 10, 20 ms = frame 1, 60 ms = frame 4). A beat offset (F6) is in ms from the audio clock, not in frames, so the 20/21 ms and 60/61 ms cases are tests of the pure beat function with those offsets.
 
 **Input and direction (R1 to R3, R11)**
 - **GIVEN** a ramp air of 0.3 s, **WHEN** A starts 100 ms before Q, **THEN** `state.trick.id` is `japan` and the clip is `air_japan` at the Q frame.
 - **GIVEN** a skater on the ground, **WHEN** Q is pressed with a fresh right that started 100 ms before, **THEN** the dance is The Prep; **WHEN** the right started 160 ms before, **THEN** the dance is the neutral slot.
 - **GIVEN** a skater on the ground, **WHEN** a fresh up starts 20 ms after the Q press, **THEN** the dance starts at the 20 ms frame; **WHEN** no fresh direction comes, **THEN** the neutral dance starts 60 ms after the press.
-- **GIVEN** left and then right start in the window, **WHEN** Q is pressed, **THEN** right wins.
+- **GIVEN** left and then right start before the press in the window, **WHEN** Q is pressed, **THEN** right wins.
+- **GIVEN** a fresh left at the Q press, **WHEN** up starts 2 frames after the press, **THEN** the trick stays left.
+- **GIVEN** W tapped down and up between frame -6 and frame -3 before the Q press, **THEN** the trick is Up.
+- **GIVEN** W held for 1 s, **WHEN** A goes down 3 frames before the Q press, **THEN** the trick is Left.
+- **GIVEN** Shift held to push, **WHEN** Q is pressed, **THEN** the trick is neutral (Shift gives no direction).
+- **GIVEN** a touch on GRIND, **THEN** the GRIND press reaches the sim at the touch-down frame; **WHEN** the finger then moves 24 px up after the snap, **THEN** the stance changes to Makio at that frame, once.
 - **GIVEN** the player holds W for 1 s to push, **WHEN** the player presses Q on the ground, **THEN** the dance is the neutral slot (Bankhead Bounce for Nia).
 - **GIVEN** the gamepad stick at x 0.49, **WHEN** TRICK is pressed, **THEN** the trick is neutral; at x 0.5, **THEN** it is left or right; at x 0.6 and y 0.7, **THEN** up or down wins.
 - **GIVEN** the same direction on the keyboard, a simulated gamepad, and touch, **WHEN** TRICK is pressed in the air, **THEN** `state.trick.id` is the same for all 3.
@@ -462,14 +480,16 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 
 **Grind (R6, F4)**
 - **GIVEN** a ledge snap with a fresh left, **THEN** the clip is `grind_soul` and the name is "Ledge Soul Grind".
-- **GIVEN** a ledge snap with a fresh up, **THEN** the name is "Ledge Makio Grind" and the link is 100 + 35 x meters + 30.
-- **GIVEN** a neutral ledge snap, **THEN** the name is "Ledge Grind".
+- **GIVEN** a ledge snap with a fresh up and a grind under 10 m, **THEN** the name is "Ledge Makio Grind" and the link is 100 + 35 x meters + 30.
+- **GIVEN** a neutral ledge snap and a grind under 10 m, **THEN** the name is "Ledge Grind"; at 12 m, **THEN** it is "Long Ledge Grind".
+- **GIVEN** a Makio Grind of 12 m on a ledge, **THEN** the name is "Long Ledge Makio Grind" and the HUD shows "Long Ledge Makio" (16 characters).
 - **GIVEN** a GRIND tap 100 ms before the rail and a fresh right at the snap, **THEN** the stance is Unity.
 - **GIVEN** a grind, **WHEN** a new direction starts during it, **THEN** the clip does not change.
 
 **Ground dances (R7)**
 - **GIVEN** a speed of 1.4 m/s, **WHEN** Q is pressed, **THEN** no dance starts; at 1.5 m/s, **THEN** a dance starts.
 - **GIVEN** Nia, **WHEN** E is pressed with no direction, **THEN** the Cross Step plays for 2 beats and pays 150 points.
+- **GIVEN** Nia with the ATL Rydin clip, **WHEN** E is pressed with up, **THEN** ATL Rydin plays for 8 beats and pays 600 points.
 - **GIVEN** Marcus, **WHEN** Q is pressed with no direction, **THEN** the dance is Swag Surf; with up, **THEN** it is Drumline Count.
 
 **Manual (R8, F1, F2)**
@@ -487,12 +507,14 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 - **GIVEN** a manual with no balance input, **WHEN** |m| reaches 1 (about 1.25 s), **THEN** the state is rolling, the landing result is a stumble, and the speed is 0.7 times the speed of the step before.
 - **GIVEN** a manual of 20 m that ends clean off the beat, **THEN** the link is 340.
 - **GIVEN** a manual with `manualFriction` 0 and the balance held near 0, **WHEN** the meters reach 30 at 8 m/s, **THEN** the combo holds one manual link of 490, and the bank comes 0.8 s after the cap.
+- **GIVEN** a grind with F held, **WHEN** the rail ends and the skater lands at 5 m/s with no rail in range and F still held, **THEN** a manual starts at the touchdown frame.
 - **GIVEN** a manual that rolls onto a ramp, **THEN** the manual link is added at the launch and the air starts a new link.
 
 **Landings, combo, and beat (R9, R10, F5 to F7)**
 - **GIVEN** the same air with TRICK held 0.8 s up to the touchdown, **THEN** the link is 134, the speed is 0.7 times, and the style meter drops 0.25.
-- **GIVEN** TRICK let go 0.05 s before the touchdown, **THEN** the landing is a stumble; at 0.11 s, **THEN** it is clean.
-- **GIVEN** a TRICK press 0.05 s before the touchdown and held through it, **THEN** no grab starts and the landing is clean.
+- **GIVEN** a grab that started 0.5 s before the touchdown, **WHEN** TRICK is let go 1 frame before the touchdown, **THEN** the landing is clean; **WHEN** TRICK is held at the touchdown, **THEN** it is a stumble.
+- **GIVEN** a grab that started 3 frames (0.05 s) before the touchdown and held through it, **THEN** the grab is void (no grab points) and the landing is clean.
+- **GIVEN** `landingGrace` 0.2 s (Relaxed timing), **WHEN** a grab starts 0.15 s before the touchdown, **THEN** the grab is void and the landing is clean.
 - **GIVEN** a stumble on a beat, **THEN** B is 1.
 - **GIVEN** a touchdown offset of 20 ms, **THEN** B is 1.75; 21 ms, 1.5; 60 ms, 1.5; 61 ms, 1.
 - **GIVEN** a grind snap, a manual press, and a dance end, **THEN** the beat offset uses those moments.
@@ -507,12 +529,14 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 **Accessibility and names (R12, R13)**
 - **GIVEN** one-button mode and a rail in snap range, **WHEN** TRICK is pressed, **THEN** the skater snaps to the rail.
 - **GIVEN** one-button mode on the ground with no rail, **WHEN** TRICK is tapped, **THEN** the next dance of the one-button set starts at the release; **WHEN** TRICK is held 0.5 s, **THEN** a manual starts and no dance.
-- **GIVEN** one-button mode in the air with no rail, **WHEN** TRICK is pressed in 3 airs, **THEN** the grabs are Mute Grab, Japan Grab, and Side Grab, and no landing is a stumble.
+- **GIVEN** one-button mode in the air with no rail, **WHEN** TRICK is pressed in 3 airs and held at each touchdown, **THEN** the grabs are Mute Grab, Japan Grab, and Side Grab, and every landing is clean.
+- **GIVEN** one-button mode and Nia on the ground, **WHEN** TRICK is tapped 11 times, **THEN** the dances are the 10 slots of the Nia set in order, then Bankhead Bounce again.
+- **GIVEN** one-button mode, **WHEN** a scripted run of each goal in `src/sim/skate/goals.js` and each landmark challenge uses TRICK and steer only, **THEN** each goal completes.
 - **GIVEN** one-button mode in the air with no rail, **WHEN** TRICK is pressed in 6 airs, **THEN** the 6th grab is the Mute Grab again (the set starts again after Tuck Knee).
 - **GIVEN** one-button mode, **WHEN** the next item of the set is a name already used 3 times in this combo, **THEN** its link pays 0 and adds no multiplier (the repeat decay still applies).
 - **GIVEN** grayscale screenshots of the HUD trick line, the manual balance bar, the flick ring, and the 4 landing tiers, **WHEN** a person reviews them, **THEN** each state reads from shape and text alone (R12.4).
 - **GIVEN** G bound to grind, **WHEN** the player binds G to jump, **THEN** the bind is refused and G still grinds; F does nothing for grind.
-- **GIVEN** the list of all trick names, **THEN** each name is in the approved list of this GDD and no name contains a word of the banned list.
+- **GIVEN** the list of all trick names, **THEN** each name is in the approved list of this GDD and no name contains a word of `src/content/banned-words.js`.
 - **Performance**: the trick input adds under 0.1 ms per sim step on the phone tier (`npm run perf:check`).
 - **Evidence**: Vitest for every sim criterion; Playwright on the keyboard, a simulated gamepad, and touch on a Pixel 7 viewport, with screenshots of the flick ring and the HUD trick line.
 
@@ -531,8 +555,8 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 | Q1 | Marcus's Jam Groove, Bankhead Bounce, and Snap Lean have no direction slot. Add a third style set later, or keep them in the one-button set only? | One-button mode only | Owner | Before the animation story |
 | Q2 | Does SPIN do anything in the air (a flat spin trick)? | No, in version 1 | Owner | After playtest 1 |
 | Q3 | Are "Makio Grind", "Royale Grind", "Rocket Grab", and "Tuck Knee" the right names for quad skaters? What is the final name of the Side Grab? Do Toe Spin, Sit Spin, Smooth Quad, Drumline Count, Jam Step, and Jam Groove get a source or a new name? | Yes to the 4 names; "Side Grab" until the review; "rink move (no source yet)" | Skater reviewers, owner | Before release |
-| Q5 | Does `SKATE.airTurnRate` go up so that spins pay (R4)? | No change before playtest 1 | Owner | After playtest 1 |
 | Q4 | Does the touch label GROOVE change to TRICK? | Yes | Owner | HUD story |
+| Q5 | Does `SKATE.airTurnRate` go up so that spins pay (R4)? | No change before playtest 1 | Owner | After playtest 1 |
 
 ## Review log
 
@@ -593,3 +617,12 @@ Recommended:
 9. R12 calls the neutral stance "Frontside"; R6 calls it "(edge) Grind". The "banned list" of the name criterion is not defined.
 
 Nice-to-have: put Q4 before Q5; write the criterion times as frames at 60 Hz; R1 says two labels change, but only GROOVE changes; the 240 spin points are not reachable at 3 rad/s; The Prep is also a rink move, so the "footwork goes to SPIN" reason is not consistent.
+
+**Pass 5, 2026-11-22: all 17 findings of the second review fixed.**
+- Blocking 1: the grind-to-manual link (R8, States, Edge Cases, a new criterion).
+- Blocking 2: a stumble is a grab still held at the touchdown; `landingGrace` now voids a late grab at the touchdown event, so a larger value is more lenient (R10, Tuning Knobs, criteria).
+- Blocking 3: the input contract has `dir`, `lastDir`, and `lastDirAt`; the newest key wins; 4 direction actions read the keys, not `push` (R2, R3, Interactions, criteria).
+- Recommended: the late grab rule needs no future; a held grab in one-button mode is clean; the "Long" grind names and the 16-character HUD short form; full one-button sets and the SPIN rule; ATL Rydin 8 beats and 600 points; `stumbleStyleLoss` and `perfectHitStopMs`; `airYaw` and the drop `airBase` 0; the touch GRIND press at the touch-down; the R3 rule for a direction after the press; one neutral stance name; the banned word list file.
+- Nice-to-have: Q4 before Q5; criterion times as frames; R1 label count; the real F3 maximum (450); the SPIN move reason.
+
+A third review did not run.

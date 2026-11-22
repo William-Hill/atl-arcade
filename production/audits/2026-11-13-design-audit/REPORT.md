@@ -109,7 +109,7 @@ The run reports in `reports/autopilot/` are the raw Autopilot output and stay un
 
 | Finding | Issue |
 |---|---|
-| A2 Round goals on the HUD | #268 |
-| C7 and E2 HUD text (combo line, +N, ring line restart) | #269 |
-| B6 Find banners | #270 |
-| B8 Fast travel | #271 |
+| A2 Round goals on the HUD | [#268](https://github.com/William-Hill/atl-arcade/issues/268) |
+| C7 and E2 HUD text (combo line, +N, ring line restart) | [#269](https://github.com/William-Hill/atl-arcade/issues/269) |
+| B6 Find banners | [#270](https://github.com/William-Hill/atl-arcade/issues/270) |
+| B8 Fast travel | [#271](https://github.com/William-Hill/atl-arcade/issues/271) |

@@ -1,6 +1,6 @@
 # Trick input
 
-> **Status**: Designed (owner choices answered 2026-11-22)
+> **Status**: Approved by the owner 2026-11-22 (after the review fixes). Implementation: #326 (prototype, first), #327 (sim), #328 (input), #329 (animation), #330 (HUD), #331 (tutorial).
 > **Design review**: NEEDS REVISION 2026-11-22 (independent agent, lean depth): 4 blockers and 9 recommended fixes. All are fixed in this revision; see "Review log" at the end.
 > **Author**: William Hill + Claude agents (`game-designer`, `systems-designer`)
 > **Last Updated**: 2026-11-22

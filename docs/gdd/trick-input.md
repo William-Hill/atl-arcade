@@ -420,8 +420,8 @@ Risks (`art-director`):
 
 ## UI Requirements
 
-- **HUD trick line**: the name of each link with its direction stance ("Ledge Soul Grind + Manual + Japan Grab x3"). One line with the 3 newest links; older links fold into "+2". 18 characters or fewer per link. A direction arrow glyph before each name. A dark outline for a contrast of 4.5:1 or more on the bright sky. Reuse the present callout style. No motion when reduced motion is on.
-- **Manual balance bar**: a vertical bar in screen space, 56 px beside the projected skater (smoothed, not anchored in the world), 160 px high or more on a phone. A 20 px triangle marker. Three zones with fill patterns, not only color: safe to 0.5, warning to 0.8, limit with hatching. The marker pulses at 0.7 or more. W and S arrows at the ends.
+- **HUD trick line**: the name of each link with its direction stance ("Ledge Soul Grind + Manual + Japan Grab x3"). One line with the 3 newest links; older links fold into "+2". 18 characters or fewer per link. A direction arrow glyph before each name. A dark outline for a contrast of 4.5:1 or more on the bright sky. Reuse the present callout style (#305) and the short combo line (#269). No motion when reduced motion is on.
+- **Manual balance bar**: a vertical bar in screen space, 56 px beside the projected skater (smoothed, not anchored in the world), 160 px high or more on a phone. A 20 px triangle marker. Three zones with fill patterns, not only color: safe to 0.5, warning to 0.8, limit with hatching. The marker pulses at 0.7 or more. W and S arrows at the ends. The drift side shows from the marker motion within 0.3 s of the manual start; the bar needs no other drift sign.
 - **Touch flick ring**: 4 faint tick marks on TRICK, SPIN, and GRIND at rest, so the player knows the flick before the touch. At the touch-down, a ring of 4 arrows at a radius of 40 px or less, outside the thumb contact area. The arrow lights when the drag crosses `flickMin` and shows the short trick name. Only the ring of the active button shows. Each button stays 44 px or larger.
 - **Trick list screen**: a pause menu page with the map per context, per skater, with the direction arrows, the dance origins (R13), and "rink move (no source yet)" for the moves with no source.
 - **Settings**: "One-button tricks", "Relaxed timing", and the remap screen.
@@ -445,6 +445,7 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 - **GIVEN** a touch on TRICK in the air, **WHEN** the finger lifts at 50 ms with less than 24 px of travel, **THEN** the Mute Grab starts.
 - **GIVEN** a touch on TRICK in the air, **WHEN** 120 ms pass with no drag, **THEN** the Mute Grab starts.
 - **GIVEN** Relaxed timing, **WHEN** a direction starts 240 ms before the press, **THEN** it counts.
+- **GIVEN** a touch screen, **WHEN** the game starts, **THEN** the `style1` button shows "TRICK" and the touch layout has 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH).
 
 **Air (R4, R5, F3)**
 - **GIVEN** an air of 0.09 s, **WHEN** TRICK is pressed, **THEN** no grab starts; at 0.11 s, **THEN** a grab starts.
@@ -480,6 +481,9 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 - **GIVEN** a manual, **WHEN** F is let go, or JUMP is pressed, or the speed drops under 3 m/s, **THEN** the manual ends clean with no speed loss.
 - **GIVEN** a manual, **WHEN** a rail comes in snap range, **THEN** the manual ends clean and the grind snaps.
 - **GIVEN** F1 with m = 0.3, side = +1, s = 0.2, dt = 1/60, **THEN** m becomes 0.3043.
+- **GIVEN** a manual on a gamepad, **WHEN** the left stick y is held up at 0.64 with m = 0.9, **THEN** m goes down, and the X button does not push.
+- **GIVEN** a manual, **WHEN** the skater hits a wall head-on and the speed drops under 3 m/s, **THEN** the manual ends clean and the link is added.
+- **GIVEN** GRIND pressed in the air with no rail, **WHEN** the skater lands and GRIND is still held, **THEN** no manual starts; **WHEN** GRIND is let go and pressed again for 0.2 s, **THEN** a manual starts.
 - **GIVEN** a manual with no balance input, **WHEN** |m| reaches 1 (about 1.25 s), **THEN** the state is rolling, the landing result is a stumble, and the speed is 0.7 times the speed of the step before.
 - **GIVEN** a manual of 20 m that ends clean off the beat, **THEN** the link is 340.
 - **GIVEN** a manual with `manualFriction` 0 and the balance held near 0, **WHEN** the meters reach 30 at 8 m/s, **THEN** the combo holds one manual link of 490, and the bank comes 0.8 s after the cap.
@@ -504,6 +508,9 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 - **GIVEN** one-button mode and a rail in snap range, **WHEN** TRICK is pressed, **THEN** the skater snaps to the rail.
 - **GIVEN** one-button mode on the ground with no rail, **WHEN** TRICK is tapped, **THEN** the next dance of the one-button set starts at the release; **WHEN** TRICK is held 0.5 s, **THEN** a manual starts and no dance.
 - **GIVEN** one-button mode in the air with no rail, **WHEN** TRICK is pressed in 3 airs, **THEN** the grabs are Mute Grab, Japan Grab, and Side Grab, and no landing is a stumble.
+- **GIVEN** one-button mode in the air with no rail, **WHEN** TRICK is pressed in 6 airs, **THEN** the 6th grab is the Mute Grab again (the set starts again after Tuck Knee).
+- **GIVEN** one-button mode, **WHEN** the next item of the set is a name already used 3 times in this combo, **THEN** its link pays 0 and adds no multiplier (the repeat decay still applies).
+- **GIVEN** grayscale screenshots of the HUD trick line, the manual balance bar, the flick ring, and the 4 landing tiers, **WHEN** a person reviews them, **THEN** each state reads from shape and text alone (R12.4).
 - **GIVEN** G bound to grind, **WHEN** the player binds G to jump, **THEN** the bind is refused and G still grinds; F does nothing for grind.
 - **GIVEN** the list of all trick names, **THEN** each name is in the approved list of this GDD and no name contains a word of the banned list.
 - **Performance**: the trick input adds under 0.1 ms per sim step on the phone tier (`npm run perf:check`).
@@ -561,6 +568,8 @@ A second review did not run.
 9. Clip risks: the two-hand and shin IK targets, Marcus first, 7 clips with a new source, the clip groups in `skater-anim.js`.
 10. The sim input contract (`dir`, `dirAge`), the one-button set, the `landingGrace` rule, and `manualFriction` (R8, R12, Interactions, Edge Cases).
 11. The repeat decay edge case after the capped manual was wrong. Fixed.
-12. The acceptance criteria went from 21 items to 62 (with the performance and evidence items), with each rule and formula covered.
+12. The acceptance criteria went from 21 items to 62 (with the performance and evidence items), with each rule and formula covered (69 after pass 3).
 
 A third review did not run.
+
+**Pass 3, 2026-11-22: the rest of the pass 2 findings.** Added 7 acceptance criteria from the `qa-lead` coverage table (the TRICK touch label, the gamepad manual balance, a wall hit in a manual, GRIND in the air, the one-button cycle, the one-button repeat decay, the grayscale check of R12.4) and 2 `art-director` details (the reference HUD styles #305 and #269, the drift side on the balance bar). A new review did not run.

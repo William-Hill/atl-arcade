@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createRenderer, fitToWindow } from "../render/renderer.js";
-import { fetchSkaterModel, loadSkaterModel } from "../render/skater-model.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { fetchSkaterModel, getDracoLoader, loadSkaterModel } from "../render/skater-model.js";
 import { EYES, MOUTHS } from "../render/face-anim.js";
 import { pbrSkater } from "../render/toon.js";
 import { bodyFor, modelScale } from "../sim/skate/body.js";
@@ -161,7 +162,16 @@ try {
   scene.add(model.root);
   // The model stands at the dossier height: the face moves with the scale.
   FACE_TARGET.y = FACE_Y * modelScale(bodyFor(name));
-  clips = model.animations;
+  clips = [...model.animations];
+  // ?clips=<url>: a GLB with more clips for the same rig, for example an
+  // evaluation clip that the game does not ship. Its clips go after the
+  // shipped clips, and sheet() can draw them.
+  if (params.get("clips")) {
+    const loader = new GLTFLoader();
+    loader.setDRACOLoader(getDracoLoader());
+    const extra = await loader.loadAsync(params.get("clips"));
+    clips.push(...extra.animations);
+  }
   face = model.face;
   if (face && params.get("face")) {
     const [eyes, mouth] = params.get("face").split(",");

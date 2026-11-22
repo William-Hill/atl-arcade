@@ -202,6 +202,78 @@ The goal is the official game of the City of Atlanta. A clip made with this pipe
 
 The notebook keeps `smplx.npz`, `motion.npz`, and the overlay video in Drive only (`drive-only/`). Only the GLB, the metrics, the renders, and the provenance are for git.
 
+## Follow-up: smoothing and loop seams (2026-11-22)
+
+The first run found two faults that a script can fix: the jitter of the mocap clip, and loop seams. These tests ran on the CPU with local Blender 5.2.2. Sigma 0 gives the same metrics as the T4 run (jitter 15.4), so the two Blender versions agree.
+
+### Smoothing filter
+
+`nia_mocap_clip.py` has a new option, `--smooth-sigma` (frames, default 0 = off). It applies a circular Gaussian filter to the bone rotations and the hips location of the loop, after the loop blend and before the leg IK. Because the filter is circular, the loop stays closed. Because the IK runs after it, the skates stay on the ground.
+
+The same GVHMR motion, at 5 values of sigma:
+
+| Sigma (frames) | Jitter (m/s²) | Skid mean / p95 (m/s) | Loop seam (m/s) | IK clamped frames |
+|---|---|---|---|---|
+| 0 (T4 clip) | 15.4 | 0.518 / 0.995 | 0.437 | 12 |
+| 1 | 6.31 | 0.519 / 0.976 | 0.236 | 9 |
+| **1.5** | **5.37** | 0.527 / 1.054 | 0.177 | 8 |
+| 2 | 4.73 | 0.531 / 1.081 | 0.131 | 9 |
+| 3 | 3.82 | 0.559 / 1.187 | 0.135 | 8 |
+
+At sigma 1.5, the mocap jitter is lower than the jitter of `push` (7.59). The poses on the sheet do not change. Above 1.5, the skid becomes worse. Use 1.5 as the start value.
+
+The filter does not fix the main faults: the upright pose and the low speed come from the video. Thus the verdict above does not change.
+
+### Seam audit of the shipped clips
+
+`scripts/mocap/nia_clip_audit.py` measures every looping clip of a skater GLB with the metrics of `nia_mocap_compare.py`. It reads the GLB only. Result for `assets/skaters/nia/skater.glb` (23 looping clips; `nia-clip-audit.json`), largest seam first:
+
+| Clip | Loop seam (m/s) | Jitter (m/s²) |
+|---|---|---|
+| `dance_swagsurf` | 1.711 | 36.08 |
+| `dance_walkitout` | 1.368 | 11.89 |
+| `push` | 1.262 | 7.59 |
+| `grind_soul` | 0.61 | 4.04 |
+| `dance_bankhead` | 0.452 | 6.61 |
+| `dance_snaplean` | 0.375 | 4.54 |
+| `dance_crisscross` | 0.334 | 3.96 |
+| `carve_left` | 0.318 | 6.21 |
+| `carve_right` | 0.318 | 6.21 |
+| `grind_unity` | 0.298 | 2.55 |
+| `ride_back` | 0.237 | 8.16 |
+| `dance_prep` | 0.231 | 5.32 |
+| `dance_smoothquad` | 0.151 | 8.19 |
+| `dance_spin` | 0.118 | 0.99 |
+| `brake` | 0.089 | 1.38 |
+| `air_mute` | 0.078 | 0.95 |
+| `air_japan` | 0.068 | 0.52 |
+| `coast` | 0.059 | 0.78 |
+| `air_liukang` | 0.049 | 0.39 |
+| `dance_sitspin` | 0.047 | 0.64 |
+| `idle` | 0.042 | 0.58 |
+| `manual` | 0.022 | 0.18 |
+| `grind_frontside` | 0.002 | 0.62 |
+
+A seam above approximately 1 m/s shows as a hitch once in each loop. 3 clips are above it: `dance_swagsurf`, `dance_walkitout`, and `push`. The jitter metric also counts fast moves that are correct, so a high value for a dance clip is not always a fault.
+
+### The filter on hand-keyed clips (not shipped)
+
+Each clip was sampled at its key rate (24 fps, 3 repeats, with no travel, drift, noise, or sink) and rebuilt with `nia_mocap_clip.py --loop N:N`. The rebuild at sigma 0 already lowers the seam, because the loop blend and the leg IK run on it.
+
+| Clip | Shipped seam / jitter | Rebuild, sigma 0 | Rebuild, sigma 1.5 |
+|---|---|---|---|
+| `push` | 1.262 / 7.59 | 0.745 / 7.16 | **0.446 / 5.56** |
+| `dance_walkitout` | 1.368 / 11.89 | 1.488 / 10.11 | **0.176 / 6.16** |
+| `dance_swagsurf` | 1.711 / 36.08 | 2.322 / 34.01 | 1.414 / 25.99 |
+
+The sheet shows the shipped `push` next to the sigma 1.5 rebuild. The key poses stay the same. (The label of the right column says "GVHMR" because the compare script writes that label. The clip is the hand-keyed `push`.)
+
+![push (shipped) next to push rebuilt with sigma 1.5](2026-11-21-gvhmr-mocap-test/push-smoothed-sheet.jpg)
+
+For `dance_swagsurf`, the filter is not sufficient. Its seam must be fixed in the keys of `scripts/blender/nia_clips.py`.
+
+No shipped clip changed in this test. To ship a smoothed clip, change the bake step of `scripts/blender/nia_clips.py`, and do a playtest first.
+
 ## Outputs
 
 In git, in `assets/skaters/nia/mocap-test/`: `mocap_test_push.glb`, `clip_report.json`, `metrics.json`, `compare_sheet.jpg` (a JPG of the 3360×1280 PNG), `video_source.json`, and `provenance.json`.

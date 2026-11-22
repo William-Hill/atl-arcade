@@ -258,4 +258,5 @@ def main():
     print(f"[compare] wrote {sheet}")
 
 
-main()
+if __name__ == "__main__":
+    main()

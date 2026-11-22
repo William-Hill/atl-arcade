@@ -56,6 +56,8 @@ def args():
     p.add_argument("--snap-lo", type=float, default=0.015, help="a skate this near the ground goes fully down")
     p.add_argument("--snap-hi", type=float, default=0.04, help="a skate above this height stays free")
     p.add_argument("--ground-sigma", type=float, default=2.0, help="frames, smoothing of the body height")
+    p.add_argument("--smooth-sigma", type=float, default=0.0,
+                   help="frames, circular Gaussian on the bone rotations and the hips (0 = off)")
     p.add_argument("--no-draco", action="store_true")
     return p.parse_args(argv)
 
@@ -236,6 +238,22 @@ def main():
     out_q[N] = quat[start]
     out_h[N] = hips_new[start]
 
+    # -- optional smoothing: a circular Gaussian over the loop, so the seam ---
+    # stays closed. It runs before the leg IK, so the IK still puts the
+    # skates on the ground. A bone whose quaternion path does not close
+    # (q[N] = -q[0]) keeps its keys, because the average would break there.
+    smoothed_bones = 0
+    if a.smooth_sigma > 0:
+        q = q_unroll(out_q.copy())
+        closed = np.sum(q[N] * q[0], -1) > 0
+        sm = q_norm(gauss_circular(q[:N], a.smooth_sigma))
+        out_q[:N, closed] = sm[:, closed]
+        out_q[N] = out_q[0]
+        out_h[:N] = gauss_circular(out_h[:N], a.smooth_sigma)
+        out_h[N] = out_h[0]
+        smoothed_bones = int(closed.sum())
+        print(f"[mocap] smoothing sigma {a.smooth_sigma} frames on {smoothed_bones} of {len(names)} bones")
+
     # -- ground and leg IK -----------------------------------------------------
     skate = {}
     for side, full in SIDES.items():
@@ -386,6 +404,8 @@ def main():
         "loop_motion_frames": [int(start), int(start + L)],
         "loop_cost": None if cost is None else round(cost, 5),
         "blend_frames": a.blend,
+        "smooth_sigma_frames": a.smooth_sigma,
+        "smoothed_bones": smoothed_bones,
         "source_travel_m": round(float(np.linalg.norm(travel)), 3),
         "source_speed_m_s": round(src_speed, 3),
         "heading_drift_removed_deg_s": round(math.degrees(k_yaw) * fps, 2),

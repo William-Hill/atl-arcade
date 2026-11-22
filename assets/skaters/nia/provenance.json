@@ -691,6 +691,21 @@
         "assets/skaters/nia/raw/physics/nia-physics.json"
       ],
       "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode, local Mac), scripts/blender/skater_loop_smooth.py; scripts/assets/graft-clips.mjs on Node 26 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
+      "date": "2026-11-22",
+      "prompt": "Lower the loop seam of dance_walkitout (1.368 m/s, a hitch once in each loop) with the circular smoothing filter of the GVHMR mocap test (PR #316). Keep the clip length, the beat timing, and the other clips. (Owner request, with a playtest.)",
+      "command": "blender -b --factory-startup -P scripts/blender/skater_loop_smooth.py -- --in assets/skaters/nia/skater.glb --name nia --clip dance_walkitout --sigma-s 0.08 --out /tmp/nia-walkitout.glb && node scripts/assets/graft-clips.mjs assets/skaters/nia/skater.glb /tmp/nia-walkitout.glb assets/skaters/nia/skater.glb && node scripts/assets/graft-clips.mjs assets/skaters/nia/skater-1024.glb /tmp/nia-walkitout.glb assets/skaters/nia/skater-1024.glb",
+      "settings": {
+        "clip": "dance_walkitout",
+        "sigma_s": 0.08,
+        "sigma_frames_at_30_fps": 2.4,
+        "filter": "circular Gaussian on the local bone rotations (quaternions, normalized) and the hips location; first frame = last frame"
+      },
+      "result": "dance_walkitout: loop seam 1.368 -> 0.577 m/s, jitter 11.89 -> 5.12 m/s^2, lowest wheel -0.01 -> -0.17 cm, hover frames 0 -> 0, clip length 48 frames (1.6 s) unchanged. The other 22 looping clips have the same metrics as before. skater.glb 2,719,700 -> 2,726,236 bytes; skater-1024.glb 2,269,744 -> 2,276,280 bytes.",
+      "evidence": "docs/characters/loop-seam/ (walkitout-before-after*.mp4, walkitout-seam.jpg, game-walkitout.jpg, nia-audit-before.json, nia-audit-after.json)",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 155,
@@ -698,7 +713,7 @@
   "tripo_credits_after": 2715,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2719700,
+  "file_size_bytes": 2726236,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
   "animations": 25,

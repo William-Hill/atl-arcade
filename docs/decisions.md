@@ -2768,3 +2768,11 @@ Change (`scripts/blender/skater_physics_pass.py`, HAND_TARGETS):
 
 Result: every grab holds the skate (palm to target 1 cm or less), every clap meets, and every clip passes the joint-limit gate with no WARN. Nia's grabs move the skate 6 to 19 cm toward the hand with a chest bend of 4 to 7 degrees; Marcus's mute and japan move it 16 to 19 cm with a chest bend of 28 to 30 degrees. The grab point is the nearest point of the boot, often the upper boot, not the wheel frame. A real skater must review the grabs.
 
+
+## 2026-11-22: A circular filter for the loop seam of Nia's Walk It Out
+
+Context: the GVHMR mocap test (PR #316) measured all 23 looping clips of Nia. `dance_walkitout` had the largest seam after `dance_swagsurf`: 1.368 m/s, so the arms snapped once in each loop. The owner asked for the fix, with a playtest.
+
+Decision: filter only `dance_walkitout`, with a circular Gaussian of 0.08 s on the local bone rotations and the hips location (`scripts/blender/skater_loop_smooth.py`), and graft it with `scripts/assets/graft-clips.mjs`. Do not filter `push`: #313 already took its seam to 0.236 m/s, and its fast drive and recoil are deliberate. Do not filter `dance_swagsurf` yet: the filter takes its seam only from 1.711 to approximately 1.4 m/s, so its keys must change in `scripts/blender/nia_clips.py`.
+
+Result: seam 1.368 -> 0.577 m/s, jitter 11.89 -> 5.12 m/s². The other clips have the same metrics. Evidence: `docs/characters/loop-seam/`. A person must look at the dance at full game speed.

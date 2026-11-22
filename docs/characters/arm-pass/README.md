@@ -91,7 +91,7 @@ Other measures (before -> after):
 - The wrist lag and the follow-through add hand angular jerk (push about 20 to 60% more, coast about 70% more). The hands move more; this is the purpose of the layer, but look at it in the game.
 - In the push, from behind, the right hand swings across behind the back (frame 14). This was also in #313. The probe shows no contact there.
 
-Files: `videos/marcus-arms-before-after[-half-speed].mp4` (push 2 times, coast 2 times, carve_left 2 times, carve_right 2 times), `compare/closeup-marcus-push-back-left.jpg`, `compare/closeup-marcus-push-front.jpg` (push frames 6, 14, 28, 36), `compare/closeup-marcus-coast.jpg` (coast frames 12 and 36), `marcus-elbow-ranges.json`, `marcus-metrics.json`, `marcus-joint-limits.json`.
+Files: `videos/marcus-arms-before-after[-half-speed].mp4` (push 2 times, coast 2 times, carve_left 2 times, carve_right 2 times), `compare/closeup-marcus-push-backleft.jpg`, `compare/closeup-marcus-push-front.jpg` (push frames 6, 14, 28, 36), `compare/closeup-marcus-coast.jpg` (coast frames 12 and 36), `marcus-elbow-ranges.json`, `marcus-metrics.json`, `marcus-joint-limits.json`.
 
 ## Files
 

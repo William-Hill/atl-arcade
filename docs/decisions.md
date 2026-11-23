@@ -2878,3 +2878,9 @@ Not decided here, and not changed:
   - `main` after the city-look merge (#304), default (NPC skaters off): 85 calls and 252,910 triangles.
   - The same build with `--extra '&skaters=1'`: 91 calls and 270,892 triangles (`reports/prop-perf/skaters-settled-spawn-low.json`).
   - A before/after run with `&skaters=1` and a `before` build with no `settled` (`53784e1`) sampled both builds, with no timeout.
+
+## 2026-11-23: Content checklist by an agent, real skater review for Version 1 (#22)
+
+- Owner decision on #22: for the City pitch, an agent fills `docs/review/content-checklist.md` against the 5 political rules in `AGENTS.md`, and the owner reviews it. The real skater review (`docs/review/skater-review.md`) stays open for v1.0.0.
+- Result on `main` at `82b84e1`: 24 checks, 20 pass, 3 flagged, 1 open. Flags: #353 (the first load can show a dark, rainy night; the clock uses the device time zone), #354 (the New Realm Brewing card names beer and spirits), #261 (traffic, open before; owner decision 2026-11-23: calm traffic with no collision, changed in another PR).
+- This review changes no code.

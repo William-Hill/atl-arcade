@@ -2866,6 +2866,18 @@ Not decided here, and not changed:
 - **Load screen.** The art replaces the pink "Skate ATL" text title in `#loader`. The bar fill uses the three stripe colors. `src/ui/loader.js` is unchanged: it moves the bar and removes the screen, as before.
 - **Not verified.** The link preview check with a card validator on the production URL: this cloud session cannot reach the production host, and the files are not on production before this change merges.
 
+## 2026-11-23: The phone teach card and the button column do not overlap (#347, #245)
+
+At 360 x 740 portrait, the "Dance while you roll" teach card was 208 px wide and covered FULL SCREEN by 1 px (#347). The button column is 10 px from the right edge, and FULL SCREEN is its widest button (about 127 px).
+
+Decision, for a phone in portrait (width 600 px or less):
+- The teach card starts 10 px from the left (was 16 px). It keeps 146 px on the right free for the column and an 8 px gap. At 360 px the card is 204 px wide or less.
+- At 380 px wide or less, the teach title is 16 px (was 17 px). "Dance while you roll" is then about 158 px wide, so it stays on one line with a margin for other system fonts.
+
+Decision, for a landscape phone (height 500 px or less): the beat pulse was under PHOTO (#245, MOB2-1 P2). It moves to 90 px left of the middle, to the left of the PHOTO and SETTINGS pair. The pair of #277 (no key letters, PHOTO 44 px high, 8 px from the top) was for a width of 740 px or less. At 844 x 390, PHOTO was centered, 36 px high, showed its key letter and sat over the pulse. Now every landscape phone uses the pair.
+
+Verification: a new test in `e2e/phone-layout.spec.js` checks PHOTO, SETTINGS and FULL SCREEN at 360 x 640, iPhone 15, Pixel 7, iPhone 15 landscape and 844 x 390. Each button is 44 px or more and shows no key letter. No button covers the skater buttons, the minimap, the full HUD column, the beat pulse (at 1.6 times its size), the goals or the touch controls. Screenshots: `e2e/__screenshots__/phone-buttons-*.png`.
+
 ## 2026-11-14: prop-perf waits for the NPC skater models (#281 follow-up)
 
 `window.__atl.ready` is `true` at module load, so `scripts/prop-perf.mjs` could start a sample before the NPC skater models loaded. In `reports/prop-perf/281-far-trees-low.json`, one spawn run had 52 calls and 179,472 triangles, and the other runs had 50 or 51 calls and about 144k triangles. The prop count was the same.

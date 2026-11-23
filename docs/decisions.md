@@ -2866,3 +2866,16 @@ Decision, for a phone in portrait (width 600 px or less):
 Decision, for a landscape phone (height 500 px or less): the beat pulse was under PHOTO (#245, MOB2-1 P2). It moves to 90 px left of the middle, to the left of the PHOTO and SETTINGS pair. The pair of #277 (no key letters, PHOTO 44 px high, 8 px from the top) was for a width of 740 px or less. At 844 x 390, PHOTO was centered, 36 px high, showed its key letter and sat over the pulse. Now every landscape phone uses the pair.
 
 Verification: a new test in `e2e/phone-layout.spec.js` checks PHOTO, SETTINGS and FULL SCREEN at 360 x 640, iPhone 15, Pixel 7, iPhone 15 landscape and 844 x 390. Each button is 44 px or more and shows no key letter. No button covers the skater buttons, the minimap, the full HUD column, the beat pulse (at 1.6 times its size), the goals or the touch controls. Screenshots: `e2e/__screenshots__/phone-buttons-*.png`.
+
+## 2026-11-14: prop-perf waits for the NPC skater models (#281 follow-up)
+
+`window.__atl.ready` is `true` at module load, so `scripts/prop-perf.mjs` could start a sample before the NPC skater models loaded. In `reports/prop-perf/281-far-trees-low.json`, one spawn run had 52 calls and 179,472 triangles, and the other runs had 50 or 51 calls and about 144k triangles. The prop count was the same.
+
+- `__atl.skaters.settled` is `true` when each NPC skater model has loaded or failed (`loaded + failed === count`). The NPC skater view does not change.
+- `scripts/prop-perf.mjs` waits for the NPC skaters before a sample. When `__atl.skaters` is `null`, the script does not wait. An old build has no `settled`, so for that build the script compares `loaded + failed` with `count`. (`?npcs=0` removes only the crowd, which loads no models.)
+- Since `757d07c`, the NPC skaters are off by default and `?skaters=1` turns them on. Thus a default run has no NPC skaters, and the wait applies only with `--extra '&skaters=1'`.
+- Check, with `node scripts/prop-perf.mjs --quality low --repeat 3 --cams spawn` on one build. Each set of 3 runs gave the same calls and triangles in each run:
+  - The #284 build (NPC skaters on by default): 50 calls and 143,680 triangles.
+  - `main` after the city-look merge (#304), default (NPC skaters off): 85 calls and 252,910 triangles.
+  - The same build with `--extra '&skaters=1'`: 91 calls and 270,892 triangles (`reports/prop-perf/skaters-settled-spawn-low.json`).
+  - A before/after run with `&skaters=1` and a `before` build with no `settled` (`53784e1`) sampled both builds, with no timeout.

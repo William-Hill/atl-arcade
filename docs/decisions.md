@@ -2855,6 +2855,17 @@ Not decided here, and not changed:
 - The fact pop-up in landscape still uses 262 px on each side. At 667 x 375 it can touch a met chip ("✓ Combo 1K/1K"). It was not measured.
 - No person checked the layout on a real phone.
 
+## 2026-11-23: Share assets: social card, favicon set, and load screen art (#303)
+
+- **Files.** `scripts/brand/share-assets.mjs` makes all of them from the brand files of #300. No image model, 0 credits. Each file has a `<file>.provenance.json` next to it.
+  - `public/share/skate-atl-card-1200x630.jpg`: the key art, scaled to 1200 x 675 and cropped to 630 high (15 px off the top, 30 px off the bottom). JPEG quality 88, 170 KB.
+  - `public/favicon.svg`, `public/favicon-32.png`, `public/apple-touch-icon.png` (180 x 180): the mark. The mark is the three trail stripes and the S of the logo, cut from the logo SVG with a clip. The full word mark is not legible at 32 px. The Apple icon has a cream background, because iOS fills a transparent icon with black.
+  - `public/brand/loader-art.svg`: the logo over a flat skyline of generic towers and the three trail stripes, in the logo style (navy outline, brand colors). The towers do not copy any real building.
+- **Why `public/`.** Vite copies `public/` to the site root with no hash in the name. Link preview crawlers and browsers need a stable URL. Files under `assets/` get a hashed name in the build.
+- **Absolute URLs.** `og:image` and `twitter:image` use `https://skate-atl.vercel.app`, the production domain of the Vercel project `skate-atl`. If the production domain changes (for example, a city domain), change the URLs in `index.html` and `og:url`.
+- **Load screen.** The art replaces the pink "Skate ATL" text title in `#loader`. The bar fill uses the three stripe colors. `src/ui/loader.js` is unchanged: it moves the bar and removes the screen, as before.
+- **Not verified.** The link preview check with a card validator on the production URL: this cloud session cannot reach the production host, and the files are not on production before this change merges.
+
 ## 2026-11-23: The phone teach card and the button column do not overlap (#347, #245)
 
 At 360 x 740 portrait, the "Dance while you roll" teach card was 208 px wide and covered FULL SCREEN by 1 px (#347). The button column is 10 px from the right edge, and FULL SCREEN is its widest button (about 127 px).

@@ -4,6 +4,28 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Skate ATL — ATL Arcade</title>
+  <meta name="description" content="Roller skate real Atlanta neighborhoods in your browser. Grind rails, dance on the beat, and skate the BeltLine. Free to play." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+  <meta name="theme-color" content="#0b0b12" />
+  <!-- Link previews (#303). The image URL is absolute: link preview crawlers do not
+       resolve a relative URL. The production site is https://skate-atl.vercel.app. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ATL Arcade" />
+  <meta property="og:title" content="Skate ATL" />
+  <meta property="og:description" content="Roller skate real Atlanta neighborhoods in your browser. Grind rails, dance on the beat, and skate the BeltLine. Free to play." />
+  <meta property="og:url" content="https://skate-atl.vercel.app/" />
+  <meta property="og:image" content="https://skate-atl.vercel.app/share/skate-atl-card-1200x630.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="The Skate ATL logo over Nia, a roller skater, on the BeltLine Eastside Trail on a sunny day." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Skate ATL" />
+  <meta name="twitter:description" content="Roller skate real Atlanta neighborhoods in your browser. Grind rails, dance on the beat, and skate the BeltLine. Free to play." />
+  <meta name="twitter:image" content="https://skate-atl.vercel.app/share/skate-atl-card-1200x630.jpg" />
+  <meta name="twitter:image:alt" content="The Skate ATL logo over Nia, a roller skater, on the BeltLine Eastside Trail on a sunny day." />
   <link rel="stylesheet" href="/src/shell.css" />
 </head>
 <body>
@@ -13,12 +35,13 @@
     <style>
       #loader { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: #0b0b12; color: #f3f3f7; font: 600 16px system-ui, sans-serif; transition: opacity 0.35s; }
       #loader[data-hidden="1"] { opacity: 0; pointer-events: none; }
-      #loader .loader-title { font-size: 28px; font-weight: 800; color: #ff5fb2; letter-spacing: 0.04em; }
+      #loader .loader-art { display: block; width: min(86vw, 560px); height: auto; aspect-ratio: 900 / 460; }
       #loader .loader-bar { width: min(70vw, 320px); height: 10px; border-radius: 5px; background: rgba(255, 255, 255, 0.15); overflow: hidden; }
-      #loader .loader-fill { width: 0; height: 100%; background: #ff5fb2; transition: width 0.2s; }
+      #loader .loader-fill { width: 0; height: 100%; background: linear-gradient(90deg, #f6905a, #ffc533 50%, #17a398); transition: width 0.2s; }
       @media (prefers-reduced-motion: reduce) { #loader, #loader .loader-fill { transition: none; } }
     </style>
-    <div class="loader-title">Skate ATL</div>
+    <!-- Load screen art (#303): public/brand/loader-art.svg, made by scripts/brand/share-assets.mjs. -->
+    <img class="loader-art" src="/brand/loader-art.svg" alt="Skate ATL" width="900" height="460" />
     <div class="loader-bar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="loader-fill"></div></div>
     <div>Lacing up the skates…</div>
   </div>

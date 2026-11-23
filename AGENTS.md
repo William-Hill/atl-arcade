@@ -17,6 +17,7 @@ Skate ATL: a free-skate roller skate game in real Atlanta neighborhoods, Tony Ha
 ## Political rules (the game must shine a positive light on Atlanta)
 - Every neighborhood is shown at its best. No decline, no stigma.
 - No crime, police, or traffic danger as content. Obstacles are cones, crowds, and construction.
+- Cars (decision 2026-11-23, #261): calm traffic with no collision. Cars move, but they slow and stop for the skater. A contact with a moving car never knocks the skater down and never stops or pins her. Parked cars are solid, as walls.
 - Murals, not graffiti.
 - Facts are positive or neutral, sourced from the open data catalog. Landmark story cards may also cite a public source (see `docs/decisions.md`, 2026-11-07).
 - Real skaters review the move set before release.

@@ -23,6 +23,7 @@ import {
   yawFromHeading,
 } from "../skate/controller.js";
 import { SKATE } from "../skate/constants.js";
+import { createSkater, stepSkater } from "../skate/skater.js";
 import { seededRandom } from "../../level/geo/styles.js";
 import beltline from "../../../levels/beltline-eastside/level.json" with { type: "json" };
 
@@ -1022,5 +1023,139 @@ describe("a car that backs off the skater stops at a cleared box (#285)", () => 
     expect(minRear).toBeGreaterThanOrEqual(st.sExit - 1e-6);
     expect(car.box).toBe(-1);
     expect(t.occupant[st.box]).toBe(99);
+  });
+});
+
+// #261, owner decision 2026-11-23: calm traffic with no collision. Cars
+// still move, but they slow and stop for the skater, and a contact with a
+// car never knocks her down (no bail) and never stops her (no bonk).
+describe("calm traffic with no collision (#261)", () => {
+  // The skater and the traffic, one tick at a time, as in the game loop.
+  function ride(t, skater, input, ticks, onTick = () => {}) {
+    const env = {
+      sampleGround: carGroundSampler(FLAT_GROUND.sampleGround, [], () => t.cars),
+    };
+    let s = skater;
+    const log = { bonks: 0, falls: 0, slides: 0 };
+    for (let i = 0; i < ticks; i += 1) {
+      s = stepSkater(s, input(i, s), DT, env);
+      stepTraffic(t, DT, s.position);
+      if (s.bonked) log.bonks += 1;
+      if (s.justFell) log.falls += 1;
+      if (s.wallSlide) log.slides += 1;
+      onTick(s, i);
+    }
+    return { s, log };
+  }
+
+  it("a car yields to a skater who rides into the street ahead of it", () => {
+    const t = createTraffic(TOWN, { streets: MAIN, perKm: 1 });
+    const car = t.cars[0];
+    t.cars = [car];
+    car.s = 60;
+    car.speed = 7;
+    Object.assign(car, lanePose(t.lanes[car.lane], car.s));
+    car.next = t.lanes[car.lane].stops.findIndex((st) => st.sStop > car.s);
+    const fx = Math.cos(car.yaw);
+    const fz = -Math.sin(car.yaw);
+    // She starts on the far side of the street, 25 m ahead of the car, and
+    // rides into the street (Main Street is 12 m wide). She stops near the
+    // middle, stands 3 s, and then pushes on across the car lane.
+    const x = car.x + fx * 25;
+    const start = createSkater(null, {
+      position: [x, 0, -8 * Math.sign(car.z || 1)],
+      yaw: yawFromHeading(0, Math.sign(car.z || 1)),
+    });
+    const sg = Math.sign(car.z || 1);
+    let stopTick = null;
+    const input = (i, st) => {
+      if (stopTick === null && st.position[2] * sg > -1) stopTick = i;
+      if (stopTick === null || i > stopTick + 180) return { push: true };
+      return { brake: true };
+    };
+    let stopped = false;
+    let minGap = Infinity;
+    const { s, log } = ride(t, start, input, 60 * 6, (st) => {
+      if (car.speed === 0) stopped = true;
+      minGap = Math.min(minGap, carBodyDistance(car, st.position[0], st.position[2]));
+    });
+    expect(t.yields).toBeGreaterThan(0);
+    expect(stopped).toBe(true);
+    expect(minGap).toBeGreaterThanOrEqual(TRAFFIC.safeRadius);
+    expect(log.bonks).toBe(0);
+    expect(log.falls).toBe(0);
+    // She crossed the street.
+    expect(s.position[2] * sg).toBeGreaterThan(8);
+  });
+
+  it.each(["sedan", "van", "bus"])(
+    "a skater who rolls head-on into the side of a %s glances off: no bonk, no bail, no stop",
+    (kind) => {
+      const { t, car, nx, nz, w } = pinScene({ kind });
+      // She rolls at 6 m/s straight at the middle of the car side, from 4 m.
+      const start = createSkater(null, {
+        position: [car.x + nx * (w + 4), 0, car.z + nz * (w + 4)],
+        yaw: yawFromHeading(-nx, -nz),
+      });
+      start.speed = 6;
+      let contact = null;
+      let before = 0;
+      let after = 0;
+      let minSpeed = Infinity;
+      let minGap = Infinity;
+      let prev = start.speed;
+      const { s, log } = ride(t, start, () => ({}), 90, (st, i) => {
+        const gap = carBodyDistance(car, st.position[0], st.position[2]);
+        minGap = Math.min(minGap, gap);
+        if (contact === null && st.wallSlide) {
+          contact = i;
+          before = prev;
+          after = st.speed;
+        }
+        if (contact !== null) minSpeed = Math.min(minSpeed, Math.abs(st.speed));
+        prev = st.speed;
+      });
+      expect(contact).not.toBeNull();
+      expect(log.bonks).toBe(0);
+      expect(log.falls).toBe(0);
+      // She keeps rolling: the contact keeps softWallKeep of the speed (a
+      // head-on hit), and after it only the roll friction slows her.
+      expect(after).toBeGreaterThanOrEqual(before * SKATE.softWallKeep - 0.05);
+      expect(minSpeed).toBeGreaterThan(1);
+      // The body never goes into the car.
+      expect(minGap).toBeGreaterThanOrEqual(SKATE.bodyRadius - 1e-6);
+      expect(s.state).toBe("rolling");
+    },
+  );
+
+  it("a skater who jumps into the side of a car glances off in the air and lands rolling", () => {
+    const { t, car, nx, nz, w } = pinScene();
+    const start = createSkater(null, {
+      position: [car.x + nx * (w + 2), 0, car.z + nz * (w + 2)],
+      yaw: yawFromHeading(-nx, -nz),
+    });
+    start.speed = 6;
+    let air = false;
+    const { s, log } = ride(t, start, (i) => ({ jump: i === 0 }), 90, (st) => {
+      if (st.state === "air") air = true;
+      expect(carBodyDistance(car, st.position[0], st.position[2])).toBeGreaterThanOrEqual(
+        SKATE.bodyRadius - 1e-6,
+      );
+    });
+    expect(air).toBe(true);
+    expect(log.bonks).toBe(0);
+    expect(log.falls).toBe(0);
+    expect(log.slides).toBeGreaterThan(0);
+    expect(s.state).toBe("rolling");
+    expect(s.speed).toBeGreaterThan(1);
+  });
+
+  it("marks a moving car as a soft wall, and a parked car as a solid one", () => {
+    const parked = [{ kind: "sedan", x: 10, z: 0, yaw: 0, y: 0 }];
+    const moving = [{ kind: "van", x: -10, z: 0, yaw: 0, y: 0 }];
+    const s = carGroundSampler(FLAT_GROUND.sampleGround, parked, () => moving);
+    expect(s(10, 0).soft).toBeUndefined();
+    expect(s(-10, 0).soft).toBe(true);
+    expect(s(0, 0).soft).toBeUndefined();
   });
 });

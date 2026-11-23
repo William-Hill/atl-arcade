@@ -442,6 +442,39 @@ function slideVelocity(vx, vz, n, k) {
   return [ax * scrub, az * scrub];
 }
 
+// A soft wall (#261): a sample with `soft: true`, which carGroundSampler
+// gives for a moving car. A contact with it is never a bonk: the skater
+// glances off along its face. `side` picks the direction along the face on
+// a hit that is exactly head-on (+1 left of the normal, -1 right). The
+// speed kept goes from all of it on a graze to softWallKeep head-on.
+function softSlideVelocity(vx, vz, n, k, side = 1) {
+  const sp = Math.hypot(vx, vz);
+  if (sp < 1e-9) return null;
+  const into = -(vx * n[0] + vz * n[1]) / sp;
+  if (into <= 0) return [vx, vz];
+  let ax = vx + into * sp * n[0];
+  let az = vz + into * sp * n[1];
+  let len = Math.hypot(ax, az);
+  if (len < 1e-3 * sp) {
+    ax = -n[1] * side;
+    az = n[0] * side;
+    len = 1;
+  } else if (side < 0) {
+    // The other way along the face (the first way is blocked).
+    ax = -ax;
+    az = -az;
+  }
+  const keep = sp * (1 - (1 - k.softWallKeep) * into);
+  return [(ax / len) * keep, (az / len) * keep];
+}
+
+// Is the wall found by findWall a soft wall? The sample just inside the
+// edge line tells.
+function isSoft(env, wall, y) {
+  const p = env.sampleGround(wall.point[0] - wall.normal[0] * 0.05, wall.point[1] - wall.normal[1] * 0.05, y);
+  return Boolean(p && p.soft);
+}
+
 // Move (x, z) by (vx, vz) dt, then push it out to the ring radius (plus a
 // margin) from the wall edge line.
 function slideTo(x, z, v, dt, wall, k) {
@@ -468,14 +501,27 @@ function slideRolling(s, env, t, ref, dt, k) {
   if (!wall) return false;
   const hx = t[0] * s.speed;
   const hz = t[2] * s.speed;
-  const v = slideVelocity(hx, hz, wall.normal, k);
+  // A soft wall (a moving car, #261) tries both ways along its face, so a
+  // contact never stops the skater unless both ways are blocked.
+  const soft = isSoft(env, wall, ref);
+  let v = null;
+  let px = 0;
+  let pz = 0;
+  let g = null;
+  let rise = 0;
+  for (const side of soft ? [1, -1] : [0]) {
+    const tryV = soft ? softSlideVelocity(hx, hz, wall.normal, k, side) : slideVelocity(hx, hz, wall.normal, k);
+    if (!tryV) continue;
+    const [tx, tz] = slideTo(x, z, tryV, dt, wall, k);
+    const tg = env.sampleGround(tx, tz, ref);
+    const trise = tg ? tg.height - y : -Infinity;
+    if (trise > k.maxStep) continue;
+    const top = tg ? Math.max(y, tg.height) : y;
+    if (ringHits(env, tx, tz, k.bodyRadius * RING_SCALE, rollWall(top, k), top)) continue;
+    [v, px, pz, g, rise] = [tryV, tx, tz, tg, trise];
+    break;
+  }
   if (!v) return false;
-  const [px, pz] = slideTo(x, z, v, dt, wall, k);
-  const g = env.sampleGround(px, pz, ref);
-  const rise = g ? g.height - y : -Infinity;
-  if (rise > k.maxStep) return false;
-  const top = g ? Math.max(y, g.height) : y;
-  if (ringHits(env, px, pz, k.bodyRadius * RING_SCALE, rollWall(top, k), top)) return false;
   const h = Math.hypot(hx, hz);
   const sp = Math.hypot(v[0], v[1]);
   const speed = h > 1e-9 ? s.speed * (sp / h) : 0;
@@ -508,15 +554,19 @@ function slideAir(s, env, ny, prevY, dt, k) {
   const reach = k.bodyRadius * WALL_REACH + Math.hypot(s.velocity[0], s.velocity[2]) * dt + 0.05;
   const wall = findWall(env, x, z, reach, isWall, prevY);
   if (!wall) return null;
-  const v = slideVelocity(s.velocity[0], s.velocity[2], wall.normal, k);
-  if (!v) return null;
-  const [px, pz] = slideTo(x, z, v, dt, wall, k);
-  const g = env.sampleGround(px, pz, prevY);
-  if (g && isWall(g)) return null;
-  if (ringHits(env, px, pz, k.bodyRadius * RING_SCALE, isWall, prevY)) return null;
-  s.velocity[0] = v[0];
-  s.velocity[2] = v[1];
-  return { nx: px, nz: pz, g };
+  const soft = isSoft(env, wall, prevY);
+  for (const side of soft ? [1, -1] : [0]) {
+    const v = soft ? softSlideVelocity(s.velocity[0], s.velocity[2], wall.normal, k, side) : slideVelocity(s.velocity[0], s.velocity[2], wall.normal, k);
+    if (!v) continue;
+    const [px, pz] = slideTo(x, z, v, dt, wall, k);
+    const g = env.sampleGround(px, pz, prevY);
+    if (g && isWall(g)) continue;
+    if (ringHits(env, px, pz, k.bodyRadius * RING_SCALE, isWall, prevY)) continue;
+    s.velocity[0] = v[0];
+    s.velocity[2] = v[1];
+    return { nx: px, nz: pz, g };
+  }
+  return null;
 }
 
 // (x, z) moved out of the walls near it: the shortest move, in one of the

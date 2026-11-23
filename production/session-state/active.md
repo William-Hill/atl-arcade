@@ -6,6 +6,19 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## #20 CC0 placeholder music for the City pitch, 2026-11-23
+
+Branch `claude/dazzling-cray-15m01y` from `main`. Owner decision: 4 CC0 or royalty-free placeholder tracks for v0.9.0; local Atlanta artists for v1.0.0. Details: `docs/decisions.md`, 2026-11-23.
+
+| Part | Where | Verified |
+|---|---|---|
+| 4 CC0 tracks from OpenGameArt (Raspberry Jam, Headspin, Funky Disco Beats, Funked Up), Opus and AAC, each under 1 MB | `assets/music/<id>.ogg`, `.m4a`, `tracks.json` | `scripts/music/build_cc0_tracks.py`: SHA-256 of each source, sample-exact decode checks |
+| License file for each track, CC0 legal code, sources | `assets/music/<id>.LICENSE.md`, `CC0-1.0.txt`, `cc0-sources.json`, `LICENSE.md` | Vitest `src/audio/music-grid.test.js` |
+| BPM and offset against the beat clock grid, 3 loops of each of the 8 tracks | `scripts/music/check_grid.py`, `reports/m2-music-grid.json` | Vitest `music-grid.test.js`: mean offset under 0.3 ms, drift under 0.1 ms per bar, every bar inside PERFECT |
+| Track select on the results screen shows the author | `src/audio/music-tracks.js` (`trackChoices`); `src/ui/results.js` not changed | Playwright `e2e/music.spec.js`: each CC0 track loads, the beat clock follows it; live audio check for each track |
+
+#20 NOT verified: no person listened to the loop seams; for the 4 CC0 tracks the bar start (downbeat) can be 1 beat off; no real phone and no Safari check of the AAC files.
+
 ## #76 Teach the moves in the world, 2026-11-21
 
 Branch `feat/76-teach-moves` from `epic/city-look`; draft PR, base `epic/city-look` (change the base to `main` after PR #304 merges). Design: `docs/decisions.md`, 2026-11-21.

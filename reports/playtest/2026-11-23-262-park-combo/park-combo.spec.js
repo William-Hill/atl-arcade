@@ -63,7 +63,8 @@ async function ride(page, name, { script, start }) {
   await page.evaluate(({ script, start }) => {
     const atl = window.__atl;
     const r = { stops: ["air", "bank"], stopped: null, running: true, bonks: 0 };
-    const n0 = atl.events.length;
+    // runScript resets the skater, and the reset clears atl.events.
+    const n0 = 0;
     const watch = () => {
       const s = atl.skater;
       if (s.bonked) r.bonks += 1;

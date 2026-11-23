@@ -81,14 +81,14 @@ Other measures (before -> after):
 
 | Clip | ZMP excess mean (m) | CoM jerk RMS | Hand angular jerk RMS L, R | Deepest arm pair |
 |---|---|---|---|---|
-| push | 0.0004 -> 0.0005 | 39.3 -> 39.3 | 494, 357 -> 597, 570 | l_hand>l_knee 2.1 cm (cloth contact) |
-| coast | 0.000 -> 0.000 | 24.8 -> 24.8 | 148, 147 -> 256, 249 | r_hand>r_thigh 1.1 cm |
+| push | 0.0004 -> 0.0004 | 39.3 -> 39.3 | 494, 357 -> 749, 539 | l_hand>l_knee 2.1 cm (cloth contact) |
+| coast | 0.000 -> 0.000 | 24.8 -> 24.8 | 148, 147 -> 332, 324 | r_hand>r_thigh 1.4 cm |
 | carve_left, carve_right | same as #313 | same as #313 | same as #313 | none over 1 cm |
 
 - No arm capsule goes more than 1 cm into the torso in push, coast, carve_left, carve_right, or brake.
 - The joint-limit gate passes on every clip, with one WARN that was already on `main`: `dance_drumline`, left knee 30.9 degrees off its hinge (limit 30).
 - The push drive frames and the recoil events are the same as in #313.
-- The wrist lag and the follow-through add hand angular jerk (push about 20 to 60% more, coast about 70% more). The hands move more; this is the purpose of the layer, but look at it in the game.
+- The wrist lag and the follow-through add hand angular jerk (push about 50% more, coast about 120% more). With the corrected wrist sign of the #332 review, the jerk is higher than in the first version of this step (push 597 and 570, coast 256 and 249): the wrist now trails the forearm. Look at the hands in the game.
 - In the push, from behind, the right hand swings across behind the back (frame 14). This was also in #313. The probe shows no contact there.
 
 Files: `videos/marcus-arms-before-after[-half-speed].mp4` (push 2 times, coast 2 times, carve_left 2 times, carve_right 2 times), `compare/closeup-marcus-push-backleft.jpg`, `compare/closeup-marcus-push-front.jpg` (push frames 6, 14, 28, 36), `compare/closeup-marcus-coast.jpg` (coast frames 12 and 36), `marcus-elbow-ranges.json`, `marcus-metrics.json`, `marcus-joint-limits.json`.

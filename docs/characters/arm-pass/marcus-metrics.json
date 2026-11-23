@@ -313,17 +313,17 @@
     "loop_error_m": 0.0,
     "com_fore_aft_range_m": 0.0178,
     "com_fore_aft_accel_peak_ms2": 2.055,
-    "com_side_accel_peak_ms2": 3.069,
+    "com_side_accel_peak_ms2": 3.07,
     "com_up_accel_min_ms2": -3.142,
-    "com_up_accel_max_ms2": 2.569,
+    "com_up_accel_max_ms2": 2.568,
     "com_jerk_rms_ms3": 39.31,
     "zmp_outside_frames": 6,
-    "zmp_outside_max_m": 0.0067,
-    "zmp_outside_mean_m": 0.0005,
+    "zmp_outside_max_m": 0.006,
+    "zmp_outside_mean_m": 0.0004,
     "zmp_outside_by_frame_m": [
      0.0,
      0.0,
-     0.007,
+     0.006,
      0.0,
      0.0,
      0.002,
@@ -346,7 +346,7 @@
      0.0,
      0.0,
      0.0,
-     0.005,
+     0.002,
      0.0,
      0.0,
      0.0,
@@ -369,8 +369,8 @@
     "angular_jerk_rms": {
      "Spine2": 140.6,
      "Head": 127.6,
-     "LeftHand": 597.4,
-     "RightHand": 569.9
+     "LeftHand": 748.8,
+     "RightHand": 539.2
     },
     "wheel_z_min_m": {
      "Left": -0.0,
@@ -428,12 +428,12 @@
     ]
    },
    "hips_shift_max_m": [
-    0.0799,
+    0.0798,
     0.0389,
     0.0146
    ],
    "leg_reach_max": 0.9259,
-   "skate_vertex_move_max_m": 0.00517,
+   "skate_vertex_move_max_m": 0.00516,
    "joint_limits": {
     "before": {
      "status": "PASS",
@@ -475,7 +475,7 @@
       "left_knee_flex:knee hyperextension": -44.4,
       "right_knee_flex:knee hyperextension": -46.5,
       "left_knee_off_hinge:knee off hinge": 12.2,
-      "right_knee_off_hinge:knee off hinge": 11.1,
+      "right_knee_off_hinge:knee off hinge": 11.0,
       "left_elbow_flex:elbow bend": 63.3,
       "right_elbow_flex:elbow bend": 66.8,
       "left_elbow_flex:elbow hyperextension": -16.7,
@@ -678,32 +678,32 @@
    },
    "clipping": {
     "overlap_max_m_before": {
-     "l_hand>l_thigh": 0.0449,
-     "r_hand>r_thigh": 0.0291,
-     "l_hand>l_knee": 0.0475,
-     "r_hand>r_knee": 0.0331
+     "l_hand>l_thigh": 0.0432,
+     "r_hand>r_thigh": 0.0265,
+     "l_hand>l_knee": 0.0444,
+     "r_hand>r_knee": 0.0256
     },
     "overlap_max_m_after": {
-     "l_hand>l_thigh": 0.0162,
-     "r_hand>r_thigh": 0.018,
-     "l_hand>l_knee": 0.0199,
-     "r_hand>r_knee": 0.0178
+     "l_hand>l_thigh": 0.0168,
+     "r_hand>r_thigh": 0.0182,
+     "l_hand>l_knee": 0.0203,
+     "r_hand>r_knee": 0.0191
     },
     "skate_move_max_m": {
      "Left": 0.0,
      "Right": 0.0
     },
     "arm_swing_out_max_deg": {
-     "Left": 8.6,
-     "Right": 4.7
+     "Left": 8.0,
+     "Right": 2.4
     },
     "com_error_after_rebalance_m": 0.0001,
     "fix_rounds": 1,
     "overlap_max_m_final": {
-     "l_hand>l_thigh": 0.0165,
-     "r_hand>r_thigh": 0.0181,
-     "l_hand>l_knee": 0.0205,
-     "r_hand>r_knee": 0.0181
+     "l_hand>l_thigh": 0.0171,
+     "r_hand>r_thigh": 0.0183,
+     "l_hand>l_knee": 0.0208,
+     "r_hand>r_knee": 0.0193
     }
    }
   },
@@ -841,7 +841,7 @@
     "com_fore_aft_range_m": 0.001,
     "com_fore_aft_accel_peak_ms2": 0.333,
     "com_side_accel_peak_ms2": 2.738,
-    "com_up_accel_min_ms2": -0.642,
+    "com_up_accel_min_ms2": -0.643,
     "com_up_accel_max_ms2": 1.823,
     "com_jerk_rms_ms3": 24.82,
     "zmp_outside_frames": 0,
@@ -900,8 +900,8 @@
     "angular_jerk_rms": {
      "Spine2": 69.4,
      "Head": 60.2,
-     "LeftHand": 256.2,
-     "RightHand": 249.3
+     "LeftHand": 332.2,
+     "RightHand": 324.4
     },
     "wheel_z_min_m": {
      "Left": -0.0,
@@ -1137,10 +1137,10 @@
    },
    "clipping": {
     "overlap_max_m_before": {
-     "r_hand>r_thigh": 0.0115
+     "r_hand>r_thigh": 0.0136
     },
     "overlap_max_m_after": {
-     "r_hand>r_thigh": 0.0115
+     "r_hand>r_thigh": 0.0136
     },
     "skate_move_max_m": {
      "Left": 0.0,
@@ -1153,7 +1153,7 @@
     "com_error_after_rebalance_m": 0.0,
     "fix_rounds": 1,
     "overlap_max_m_final": {
-     "r_hand>r_thigh": 0.0115
+     "r_hand>r_thigh": 0.0136
     }
    }
   },

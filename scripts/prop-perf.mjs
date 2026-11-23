@@ -90,8 +90,12 @@ for (let r = 0; r < repeat; r += 1) {
       const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
       page.on("pageerror", (e) => errors.push(`${d.label} ${cam}: ${e}`));
       const view = value ? `&view=fixed&cam=${value}` : "";
+      // A sample starts only when the props and the NPC skater models are
+      // loaded. The NPC skaters are off by default (?skaters=1 turns them on, for
+      // example --extra "&skaters=1"); then __atl.skaters is null. An old build
+      // has no `settled`, so the script compares the counts for that build.
       await page.goto(`${d.base}/?level=beltline-eastside&quality=${quality}&mute=1&npcseed=1${view}${extra}`);
-      await page.waitForFunction(() => window.__atl?.ready && (window.__atl.level.props?.loaded || !window.__atl.level.props || new URL(location.href).searchParams.get("props") === "0") && window.__atl.frames > 30, null, { timeout: 180000 });
+      await page.waitForFunction(() => window.__atl?.ready && (window.__atl.level.props?.loaded || !window.__atl.level.props || new URL(location.href).searchParams.get("props") === "0") && (!window.__atl.skaters || (window.__atl.skaters.settled ?? window.__atl.skaters.loaded + window.__atl.skaters.failed === window.__atl.skaters.count)) && window.__atl.frames > 30, null, { timeout: 180000 });
       await page.waitForTimeout(1500);
       const load = loadavg()[0];
       const info = await page.evaluate(() => ({ r: window.__atl.rendererInfo, props: window.__atl.level.props }));

@@ -51,3 +51,16 @@ The human playtest asks two numbers of William, not of the script: time to the f
 ## Machine note
 
 Headless Chromium renders through SwiftShader (software) and is capped at 60 FPS by the frame scheduler. On this development Mac the median is 59.9 FPS. A headed Chrome on the same machine runs at 120 FPS.
+
+## Trick input playtest 1 (#326)
+
+The prototype is `prototypes/trick-input/`. Its automated playtest runs with `node prototypes/trick-input/playtest/playtest.mjs` and writes `prototypes/trick-input/playtest/results.md`. It uses 5 synthetic player profiles (a model of human timing), not humans.
+
+| Metric | Target | Automated result (2026-11-23, mean of 5 synthetic players) |
+|---|---|---|
+| Tricks as wanted | 90% or more | Keyboard 88.8%, phone 82.8%, gamepad 92.1% |
+| Unwanted Up from push taps | under 5% | Keyboard 2.9% (0% on the phone and the gamepad) |
+| Unwanted Left/Right from carves | under 5% | Keyboard 11.3%, gamepad 6.4%, phone 0% |
+| Time to the first 3-link combo with a manual | under 3 minutes | 6.1 s for the route bot (the shortest route, not a human) |
+
+**Verdict: pending.** The human playtest (5 or more players, keyboard and phone) is open. The owner records PROCEED, PIVOT, or KILL here after it. The findings and the checklist are in `prototypes/trick-input/REPORT.md`.

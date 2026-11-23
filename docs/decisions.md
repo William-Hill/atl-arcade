@@ -2896,3 +2896,9 @@ Owner decision (William, 2026-11-23, on #261): calm traffic with no collision. T
 **Limits.**
 - Past the car the skater can still bonk on a level wall (in the Playwright ride she glances to the sidewalk and stops at a tree trunk). Walls are not part of this rule.
 - A head-on glance halves her speed and turns her along the car face. Real skaters must review this feel before release (AGENTS.md).
+
+## 2026-11-23: Content checklist by an agent, real skater review for Version 1 (#22)
+
+- Owner decision on #22: for the City pitch, an agent fills `docs/review/content-checklist.md` against the 5 political rules in `AGENTS.md`, and the owner reviews it. The real skater review (`docs/review/skater-review.md`) stays open for v1.0.0.
+- Result on `main` at `82b84e1`: 24 checks, 20 pass, 3 flagged, 1 open. Flags: #353 (the first load can show a dark, rainy night; the clock uses the device time zone), #354 (the New Realm Brewing card names beer and spirits), #261 (traffic, open before; owner decision 2026-11-23: calm traffic with no collision, changed in another PR).
+- This review changes no code.

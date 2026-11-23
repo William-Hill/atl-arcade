@@ -13,6 +13,7 @@ Skate ATL: a free-skate roller skate game in real Atlanta neighborhoods, Tony Ha
 - Use dependency versions published at least 7 days ago.
 - Never commit secrets, GLB files over 10 MB, or generated art without a `provenance.json` next to it (tool, prompt, credits, date).
 - Record decisions in `docs/decisions.md`.
+- Ask the owner every question with the `AskUserQuestion` tool (the chat input). Never put a question in a chat reply, a list of action items, a PR, or an issue. Give 2 to 4 options, with the recommended option first. When an item needs an owner decision, ask it at once; do not only list it.
 
 ## Political rules (the game must shine a positive light on Atlanta)
 - Every neighborhood is shown at its best. No decline, no stigma.

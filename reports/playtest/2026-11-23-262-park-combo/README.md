@@ -33,7 +33,9 @@ npx playwright test --config reports/playtest/2026-11-23-262-park-combo/playwrig
 
 Headless Chromium (SwiftShader), dev server, high tier, toon look, 960 x 540, clear weather at 14:00. `npm ci`, a real
 `node_modules` folder. The pure simulation plans each ride (closed loop). The page replays the input script tick for
-tick, and the page events must equal the simulation. Time: 5.5 min. Console errors: 0. Data: `result.json`.
+tick. For the two ramp rides, the page moves and banks must equal the simulation. For the ledge ride, the test does
+not compare the page moves and banks with the simulation. It checks 0 bonks in the simulation, 0 falls, bails, and
+respawns in the page, and the page exit reason "end". Time: 5.5 min. Console errors: 0. Data: `result.json`.
 
 | Ride | Start (pad m) | Moves (page) | Banked | Falls, bails, respawns |
 |---|---|---|---|---|

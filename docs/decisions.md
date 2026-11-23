@@ -2869,6 +2869,7 @@ Decision: a Tour mode with no timer, not a longer demo round. A longer round kee
 - **The held key after "Skate again" (audit E1):** not reproduced. A Playwright test holds W from before the end, through the results, and after a replay with Enter and with a click: the skater pushes at once both times. The input keeps held keys through the results screen (only photo mode, the full map and the settings menu clear them). The 20 s stop of run 1 was most likely the Autopilot hold (its lease or its pause), not the game. The test stays as a guard.
 
 Rejected: a longer demo round (it moves the cut, it does not remove it); a timer that pauses near a spot (hard to read); a compass arrow on the screen (a new HUD element in a full phone layout; the minimap already shows the icons).
+
 ## 2026-11-14: prop-perf waits for the NPC skater models (#281 follow-up)
 
 `window.__atl.ready` is `true` at module load, so `scripts/prop-perf.mjs` could start a sample before the NPC skater models loaded. In `reports/prop-perf/281-far-trees-low.json`, one spawn run had 52 calls and 179,472 triangles, and the other runs had 50 or 51 calls and about 144k triangles. The prop count was the same.

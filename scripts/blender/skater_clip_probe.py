@@ -7,11 +7,28 @@ than 0.5) to the segment, in the rest pose, so a loose sleeve or a knee pad
 does not make the capsule too fat. Two capsules clip when the distance
 between their segments is less than the sum of the radii; the overlap is the
 depth. The thigh capsules start 30% down the thigh, because the inner thighs
-touch at the top in a normal body.
+touch at the top in a normal body. The upper-arm capsules cover only the
+elbow end (the last 25% of the upper arm), for the same reason: the armpit,
+the shoulder, and the upper sleeve touch the chest. On Nia the shoulder
+joint is 12 cm from the mid line and the puffy jacket is 19 cm wide at each
+side of the chest, so the upper half of a hanging sleeve is always in the
+jacket (cloth on cloth, the same orange). The upper-arm radius is the 30th
+percentile, not the median: the sleeve is puffy (6.6 cm median on Nia), and
+the arm is inside it.
+
+The torso is a capsule from Hips to Spine2 with a radius that changes with
+the direction (#323). The jacket is wide at the sides and thin at the front
+and the back, so one radius is wrong for an arm beside the body or behind
+it. The radius table has TORSO_SECTORS directions around the axis in each of
+four bands: the pelvis cap below the Hips joint (the hips and the seat of
+the pants), Hips, Spine, and Spine1. Each value is the median
+distance (the jacket is cloth, as the pants) from the axis to the torso
+vertices in that band and direction, in the rest pose. A point is in the
+frame of its band bone, so the table bends and turns with the spine.
 
 The pairs are limbs that must not go through each other: the legs, the
-skates, the hands and forearms against the thighs, and the hands against the
-torso. Joined limbs (a thigh and its own shin) are not tested.
+skates, the hands and forearms against the thighs, and the hands, the
+forearms, and the upper arms against the torso. Joined limbs (a thigh and its own shin) are not tested.
 
 Run:
   blender -b --factory-startup -P scripts/blender/skater_clip_probe.py -- \
@@ -33,6 +50,7 @@ CAPSULES = {
     "l_skate": ("LeftFoot", "LeftToe_End", 0.0), "r_skate": ("RightFoot", "RightToe_End", 0.0),
     "l_forearm": ("LeftForeArm", "LeftHand", 0.0), "r_forearm": ("RightForeArm", "RightHand", 0.0),
     "l_hand": ("LeftHand", "LeftHandMiddle1", 0.0), "r_hand": ("RightHand", "RightHandMiddle1", 0.0),
+    "l_uparm": ("LeftArm", "LeftForeArm", 0.75), "r_uparm": ("RightArm", "RightForeArm", 0.75),
     "torso": ("Hips", "Spine2", 0.0),
     # The knees (with the knee pads) as spheres at the knee joint.
     "l_knee": ("LeftLeg", "LeftLeg", 0.0), "r_knee": ("RightLeg", "RightLeg", 0.0),
@@ -42,7 +60,8 @@ WEIGHT_BONES = {
     "l_thigh": ["LeftUpLeg"], "r_thigh": ["RightUpLeg"], "l_shin": ["LeftLeg"], "r_shin": ["RightLeg"],
     "l_skate": ["LeftFoot", "LeftToeBase", "LeftToe_End"], "r_skate": ["RightFoot", "RightToeBase", "RightToe_End"],
     "l_forearm": ["LeftForeArm"], "r_forearm": ["RightForeArm"],
-    "l_hand": ["LeftHand"], "r_hand": ["RightHand"], "torso": ["Hips", "Spine", "Spine1"],
+    "l_hand": ["LeftHand"], "r_hand": ["RightHand"], "torso": ["Hips", "Spine", "Spine1", "Spine2"],
+    "l_uparm": ["LeftArm"], "r_uparm": ["RightArm"],
     "l_knee": ["LeftUpLeg", "LeftLeg"], "r_knee": ["RightUpLeg", "RightLeg"],
 }
 # Thigh against thigh is not a pair: the inner thighs touch in a normal body.
@@ -51,6 +70,7 @@ PAIRS = [
     ("l_skate", "r_skate"), ("l_skate", "r_shin"), ("r_skate", "l_shin"),
     ("l_hand", "l_thigh"), ("r_hand", "r_thigh"), ("l_forearm", "l_thigh"), ("r_forearm", "r_thigh"),
     ("l_hand", "torso"), ("r_hand", "torso"),
+    ("l_forearm", "torso"), ("r_forearm", "torso"), ("l_uparm", "torso"), ("r_uparm", "torso"),
     ("l_knee", "r_knee"), ("l_knee", "r_shin"), ("r_knee", "l_shin"), ("l_knee", "r_thigh"), ("r_knee", "l_thigh"),
     ("l_hand", "l_knee"), ("r_hand", "r_knee"),
 ]
@@ -81,6 +101,125 @@ def _point_seg(p, a, b):
 
 
 SKATES = {"l_skate": "LeftFoot", "r_skate": "RightFoot"}
+# The torso radius table: the bands along the Hips -> Spine2 segment (t from 0
+# to 1), each in the frame of its bone, and the number of directions.
+TORSO_BANDS = [("Hips", -np.inf, 0.0), ("Hips", 0.0, 0.3), ("Spine", 0.3, 0.63), ("Spine1", 0.63, 1.0)]
+TORSO_SECTORS = 16
+# The percentile of the jacket distances in each band and direction.
+TORSO_PCT = 50
+TORSO_SAMPLES = 13  # points along a limb segment for the torso test
+
+
+def _torso_rest(arm):
+    bones = arm.data.bones
+    a = np.array(bones[P + "Hips"].head_local)
+    b = np.array(bones[P + "Spine2"].head_local)
+    return a, b
+
+
+def _band(t):
+    for i, (_, t0, t1) in enumerate(TORSO_BANDS):
+        if t < t1:
+            return i
+    return len(TORSO_BANDS) - 1
+
+
+def _polar(arm, i, q):
+    """q: points in the rest frame of band bone i. Returns (t along the rest
+    torso segment, not clamped; distance to the segment; sector; angle)."""
+    bone = arm.data.bones[P + TORSO_BANDS[i][0]]
+    Minv = np.array(bone.matrix_local.inverted())
+    a, b = _torso_rest(arm)
+    a = Minv[:3, :3] @ a + Minv[:3, 3]
+    b = Minv[:3, :3] @ b + Minv[:3, 3]
+    ab = b - a
+    t_raw = ((q - a) @ ab) / (ab @ ab)
+    t = np.clip(t_raw, 0, 1)
+    rad = q - (a + t[:, None] * ab)
+    d = np.linalg.norm(rad, axis=1)
+    # Bone-local X and Z are across the bone; Y is along it.
+    ang = np.arctan2(rad[:, 2], rad[:, 0])
+    sec = np.floor((ang + np.pi) / (2 * np.pi) * TORSO_SECTORS).astype(int) % TORSO_SECTORS
+    return t_raw, d, sec, ang
+
+
+def _torso_points(arm, mesh):
+    """The rest vertices of the torso in armature space: the jacket and the
+    pelvis. The pelvis band below the Hips joint also has the hips and the
+    seat of the pants, the top of the thighs that the thigh capsules (which
+    start 30% down the thigh) do not cover. The arm backswing passes there."""
+    bones = arm.data.bones
+    to_arm = arm.matrix_world.inverted() @ mesh.matrix_world
+    groups = {g.index: g.name[len(P):] for g in mesh.vertex_groups if g.name.startswith(P)}
+    a, b = _torso_rest(arm)
+    out = []
+    for v in mesh.data.vertices:
+        w = {}
+        for g in v.groups:
+            if g.group in groups:
+                w[groups[g.group]] = w.get(groups[g.group], 0.0) + g.weight
+        c = np.array(list(to_arm @ v.co))
+        if sum(w.get(x, 0.0) for x in WEIGHT_BONES["torso"]) > 0.5:
+            out.append(c)
+            continue
+        for leg in ("LeftUpLeg", "RightUpLeg"):
+            if w.get(leg, 0.0) > 0.5:
+                h = np.array(bones[P + leg].head_local)
+                k = np.array(bones[P + leg].tail_local)
+                tt = (c - h) @ (k - h) / ((k - h) @ (k - h))
+                if tt < CAPSULES["l_thigh"][2] and (c - a) @ (b - a) < 0:
+                    out.append(c)
+    return np.array(out) if out else None
+
+
+def torso_table(arm, mesh):
+    """The torso radius (m) for each band and direction, from the rest mesh."""
+    bones = arm.data.bones
+    co = _torso_points(arm, mesh)
+    if co is None:
+        return None
+    a, b = _torso_rest(arm)
+    ab = b - a
+    t_all = ((co - a) @ ab) / (ab @ ab)
+    table = np.zeros((len(TORSO_BANDS), TORSO_SECTORS))
+    for i, (bone, t0, t1) in enumerate(TORSO_BANDS):
+        # The top band stops at the armpit (t = 1): the shoulders are not the torso.
+        pts = co[(t_all >= t0) & (t_all < t1)]
+        if not len(pts):
+            continue
+        Minv = np.array(bones[P + bone].matrix_local.inverted())
+        q = pts @ Minv[:3, :3].T + Minv[:3, 3]
+        _, d, sec, _ = _polar(arm, i, q)
+        for k in range(TORSO_SECTORS):
+            if (sec == k).any():
+                table[i, k] = float(np.percentile(d[sec == k], TORSO_PCT))
+    # A direction with no vertices gets the mean of its neighbours.
+    for i in range(len(TORSO_BANDS)):
+        for k in range(TORSO_SECTORS):
+            if table[i, k] == 0:
+                nb = [table[i, (k + j) % TORSO_SECTORS] for j in (-1, 1) if table[i, (k + j) % TORSO_SECTORS] > 0]
+                table[i, k] = float(np.mean(nb)) if nb else 0.1
+    return table
+
+
+def torso_depth(arm, mats, table, a, e, r):
+    """The deepest overlap (m) of a capsule (a, e, radius r) with the torso."""
+    best = -1e9
+    pts = np.array([a + (e - a) * t for t in np.linspace(0, 1, TORSO_SAMPLES)])
+    for i, (bone, _, _) in enumerate(TORSO_BANDS):
+        Minv = np.array(mats[P + bone].inverted())
+        q = pts @ Minv[:3, :3].T + Minv[:3, 3]
+        t, d, sec, ang = _polar(arm, i, q)
+        for j in range(len(pts)):
+            if _band(t[j]) != i:
+                continue
+            # Linear blend between the two nearest directions.
+            x = (ang[j] + np.pi) / (2 * np.pi) * TORSO_SECTORS - 0.5
+            k0 = int(np.floor(x)) % TORSO_SECTORS
+            w = x - np.floor(x)
+            R = table[i, k0] * (1 - w) + table[i, (k0 + 1) % TORSO_SECTORS] * w
+            best = max(best, R + r - d[j])
+    return float(best)
 
 
 def skate_boxes(arm, mesh):
@@ -149,10 +288,17 @@ def capsule_radii(arm, mesh):
         pts = co[sel] if sel else np.zeros((0, 3))
         if part.endswith("knee") and len(pts):
             pts = pts[np.linalg.norm(pts - a, axis=1) < KNEE_REACH]
+        if part.endswith("uparm") and len(pts):
+            # Only the sleeve along the capsule, not the shoulder above it.
+            pts = pts[((pts - a) @ (b - a)) >= 0]
         d = _point_seg(pts, a, b) if len(pts) else np.array([0.03])
         # Cloth (baggy pants, sleeves) makes the thigh and forearm meshes wide,
         # so those capsules use the median: the body is inside the cloth.
-        out[part] = float(np.percentile(d, 50 if part.endswith(("thigh", "forearm")) else 70))
+        pct = 30 if part.endswith("uparm") else 50 if part.endswith(("thigh", "forearm")) else 70
+        out[part] = float(np.percentile(d, pct))
+    table = torso_table(arm, mesh)
+    if table is not None:
+        out["_torso_table"] = table
     return out
 
 
@@ -174,8 +320,11 @@ def capsule_segments(arm, mats):
 def overlaps(arm, radii, mats, boxes=None):
     seg = capsule_segments(arm, mats)
     out = {}
+    table = radii.get("_torso_table")
     for x, y in PAIRS:
-        if boxes and x in boxes and y in boxes:
+        if y == "torso" and table is not None:
+            out[f"{x}>{y}"] = torso_depth(arm, mats, table, *seg[x], radii[x])
+        elif boxes and x in boxes and y in boxes:
             out[f"{x}>{y}"] = box_overlap(_box(mats, x, boxes[x]), _box(mats, y, boxes[y]))
         elif boxes and x in boxes:
             b = _box(mats, x, boxes[x])
@@ -230,7 +379,7 @@ def main():
     radii = {}
     for m in meshes:
         for k, v in capsule_radii(arm, m).items():
-            radii[k] = max(radii.get(k, 0.0), v)
+            radii[k] = np.maximum(radii[k], v) if k in radii else v
     boxes = {}
     for m in meshes:
         for k, v in skate_boxes(arm, m).items():
@@ -239,8 +388,13 @@ def main():
             else:
                 boxes[k] = (np.minimum(boxes[k][0], v[0]), np.maximum(boxes[k][1], v[1]))
     print("[clip-probe] skate boxes " + ", ".join(f"{k} {np.round((v[1] - v[0]) * 100, 1).tolist()} cm" for k, v in boxes.items()))
+    table = radii.pop("_torso_table")
     print("[clip-probe] radii " + ", ".join(f"{k} {v * 100:.1f} cm" for k, v in radii.items()))
-    report = {"radii_m": radii, "skate_box_m": {k: [v[0].tolist(), v[1].tolist()] for k, v in boxes.items()}, "clips": {}}
+    print("[clip-probe] torso table (cm, bands x directions) " + str(np.round(table * 100, 1).tolist()))
+    # JSON has no infinity: an open band limit is null (the pelvis band has
+    # no lower limit).
+    report = {"radii_m": {k: float(v) for k, v in radii.items()}, "torso_table_m": {"bands": [[bone, None if not np.isfinite(t0) else t0, t1] for bone, t0, t1 in TORSO_BANDS], "sectors": TORSO_SECTORS, "radius": np.round(table, 4).tolist()}, "skate_box_m": {k: [v[0].tolist(), v[1].tolist()] for k, v in boxes.items()}, "clips": {}}
+    radii["_torso_table"] = table
     for name in [c for c in a.clips.split(",") if c]:
         act = bpy.data.actions.get(name)
         if not act:

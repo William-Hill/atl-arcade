@@ -41,6 +41,7 @@ const STYLE = `
   min-width: 96px; min-height: 44px; padding: 6px 14px; border: 2px solid rgba(255, 255, 255, 0.35); border-radius: 8px;
   background: rgba(11, 11, 18, 0.7); color: var(--atl-paper, #f3f3f7); font: 600 13px system-ui, sans-serif; letter-spacing: 0.08em; cursor: pointer;
 }
+#front .front-settings kbd { font: inherit; opacity: 0.75; margin-left: 6px; }
 #front button:focus-visible { outline: 3px solid #ff5fb2; outline-offset: 2px; }
 body.reduced-motion #front .front-press { animation: none; }
 @media (prefers-reduced-motion: reduce) { #front .front-press { animation: none; } }
@@ -87,6 +88,12 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
   const navHome = skaterNav?.parentNode ?? null;
   if (skaterNav) row.appendChild(skaterNav);
   const settings = Object.assign(document.createElement("button"), { type: "button", className: "front-settings", textContent: "SETTINGS" });
+  settings.setAttribute("aria-keyshortcuts", "O");
+  if (!touch) settings.append(Object.assign(document.createElement("kbd"), { textContent: "O" }));
+  // As the skater select: the button never keeps the focus, so Space and
+  // Enter start the game, also after the settings dialog closes and gives
+  // the focus back. The O key opens the settings from the keyboard.
+  settings.addEventListener("focus", () => settings.blur());
   settings.addEventListener("click", (e) => {
     e.stopPropagation();
     onSettings();

@@ -1,4 +1,8 @@
-import { expect, test, devices } from "@playwright/test";
+import { expect as baseExpect, test, devices } from "@playwright/test";
+
+// The high tier on SwiftShader keeps the main thread busy: a DOM check can
+// take more than the default 5 s.
+const expect = baseExpect.configure({ timeout: 60000 });
 
 // The intro and the title screen (#301). The pure phase logic has Vitest
 // tests (src/ui/intro.test.js). Playwright runs under WebDriver, so the game
@@ -69,6 +73,12 @@ test.describe("intro and title screen", () => {
 
     // The Settings button opens the settings menu; the title screen stays.
     await page.locator("#front .front-settings").click();
+    await expect.poll(() => page.evaluate(() => window.__atl.settings.isOpen)).toBe(true);
+    await page.keyboard.press("Escape");
+    await expect.poll(() => page.evaluate(() => window.__atl.settings.isOpen)).toBe(false);
+    expect(await phase(page)).toBe("title");
+    // The O key opens the settings menu too, and Escape closes it.
+    await page.keyboard.press("KeyO");
     await expect.poll(() => page.evaluate(() => window.__atl.settings.isOpen)).toBe(true);
     await page.keyboard.press("Escape");
     await expect.poll(() => page.evaluate(() => window.__atl.settings.isOpen)).toBe(false);

@@ -48,6 +48,58 @@
       "loopStart": 0,
       "loopEnd": 56.0,
       "license": "MIT (ACE-Step 1.5 code and weights); output: original work for this repository, see LICENSE.md"
+    },
+    {
+      "id": "raspberry-jam",
+      "title": "Raspberry Jam",
+      "author": "congusbongus",
+      "file": "raspberry-jam.ogg",
+      "fallback": "raspberry-jam.m4a",
+      "bpm": 112.253486,
+      "firstDownbeat": 0,
+      "bars": 32,
+      "loopStart": 0,
+      "loopEnd": 68.41658333333334,
+      "license": "CC0 1.0, Raspberry Jam by congusbongus (OpenGameArt); see raspberry-jam.LICENSE.md"
+    },
+    {
+      "id": "headspin",
+      "title": "Headspin",
+      "author": "congusbongus",
+      "file": "headspin.ogg",
+      "fallback": "headspin.m4a",
+      "bpm": 118.266009,
+      "firstDownbeat": 0,
+      "bars": 32,
+      "loopStart": 0,
+      "loopEnd": 64.93835416666667,
+      "license": "CC0 1.0, Headspin by congusbongus (OpenGameArt); see headspin.LICENSE.md"
+    },
+    {
+      "id": "funky-disco",
+      "title": "Funky Disco Beats",
+      "author": "fupi",
+      "file": "funky-disco.ogg",
+      "fallback": "funky-disco.m4a",
+      "bpm": 109.999991,
+      "firstDownbeat": 0,
+      "bars": 32,
+      "loopStart": 0,
+      "loopEnd": 69.8181875,
+      "license": "CC0 1.0, Funky Disco Beats by fupi (OpenGameArt); see funky-disco.LICENSE.md"
+    },
+    {
+      "id": "funked-up",
+      "title": "Funked Up",
+      "author": "joth",
+      "file": "funked-up.ogg",
+      "fallback": "funked-up.m4a",
+      "bpm": 86.999503,
+      "firstDownbeat": 0,
+      "bars": 20,
+      "loopStart": 0,
+      "loopEnd": 55.17272916666667,
+      "license": "CC0 1.0, Funked Up by joth (OpenGameArt); see funked-up.LICENSE.md"
     }
   ]
 }

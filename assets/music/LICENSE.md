@@ -21,6 +21,19 @@ Checked 2026-11-05, before any track was made.
 
 ## The tracks
 
-The four tracks in `tracks.json` (`*.ogg`, and the `*.m4a` fallbacks) are original works made for this repository with ACE-Step 1.5. They may be used in Skate ATL and its promotion. `provenance.json` records the prompt, the seed, the settings, the render time, and the measured tempo of each one.
+The four ACE-Step tracks in `tracks.json` (`day-trail`, `peachtree-house`, `porch-light`, `rink-night`; `*.ogg`, and the `*.m4a` fallbacks) are original works made for this repository with ACE-Step 1.5. They may be used in Skate ATL and its promotion. `provenance.json` records the prompt, the seed, the settings, the render time, and the measured tempo of each one.
 
 Decision on #20 ("written licenses and local or original tracks"): these are original tracks with written licenses. Tracks by Atlanta artists can replace or join them later (#20); `tracks.json` takes more entries.
+
+## The CC0 placeholder tracks (#20, 2026-11-23)
+
+The owner decided on 2026-11-23: for the City pitch (v0.9.0), 4 CC0 or royalty-free placeholder tracks; for Version 1 (v1.0.0), tracks commissioned from local Atlanta artists. The 4 CC0 tracks are next to the ACE-Step tracks in `tracks.json`. Each one has its own license file:
+
+| Track | Author | License file |
+|---|---|---|
+| Raspberry Jam | congusbongus | `raspberry-jam.LICENSE.md` |
+| Headspin | congusbongus | `headspin.LICENSE.md` |
+| Funky Disco Beats | fupi | `funky-disco.LICENSE.md` |
+| Funked Up | joth | `funked-up.LICENSE.md` |
+
+`CC0-1.0.txt` is the CC0 1.0 Universal legal code (from the `spdx-license-list` npm package 6.9.0). `cc0-sources.json` records the source URL, the SHA-256 of the downloaded file, the measured tempo and the loop cut of each track. `scripts/music/build_cc0_tracks.py` makes them again from `scripts/music/cc0.spec.json`.

@@ -34,8 +34,9 @@ export function writeChoice(storage, id) {
   }
 }
 
-// The track list for the results screen: the tracks, then the click.
-export const trackChoices = (tracks = TRACKS) => [...tracks.map((t) => ({ id: t.id, title: t.title })), { id: CLICK_ID, title: "Click (no music)" }];
+// The track list for the results screen: the tracks, then the click. A
+// track with an author (the CC0 placeholders, #20) shows the author too.
+export const trackChoices = (tracks = TRACKS) => [...tracks.map((t) => ({ id: t.id, title: t.author ? `${t.title} (${t.author})` : t.title })), { id: CLICK_ID, title: "Click (no music)" }];
 
 export function beatClockOptions(params, storage, { fetchFn = globalThis.fetch, canPlayType } = {}) {
   const off = params.get("music") === "0";

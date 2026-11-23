@@ -1,0 +1,125 @@
+{
+  "date": "2026-11-23T20:18:29.445Z",
+  "attempt": 1,
+  "loadAverage": {
+    "before": [
+      3.82,
+      2.69,
+      1.52
+    ],
+    "after": [
+      3.71,
+      2.7,
+      1.53
+    ]
+  },
+  "track": "headspin",
+  "bpm": 118.266009,
+  "sampleRate": 48000,
+  "bufferSampleRate": 48000,
+  "outputLatencyMs": 42.02,
+  "beat0AudioTime": 0.25,
+  "musicStartAudioTime": 2.279324,
+  "musicStartOffsetSec": 2.029324,
+  "musicStartedOnBarLine": true,
+  "windows": 12,
+  "maxAbsLagSamples": 0,
+  "checks": [
+    {
+      "beatTime": 2.51,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.00000489,
+      "roundedResidual": 0.0914
+    },
+    {
+      "beatTime": 3.0167,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.0000035,
+      "roundedResidual": 0.0655
+    },
+    {
+      "beatTime": 3.5233,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.00000342,
+      "roundedResidual": 0.0641
+    },
+    {
+      "beatTime": 4.03,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.00000444,
+      "roundedResidual": 0.0829
+    },
+    {
+      "beatTime": 4.5367,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.00000325,
+      "roundedResidual": 0.0609
+    },
+    {
+      "beatTime": 5.0433,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.000004,
+      "roundedResidual": 0.0748
+    },
+    {
+      "beatTime": 5.55,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.00000373,
+      "roundedResidual": 0.0698
+    },
+    {
+      "beatTime": 6.0567,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.00000337,
+      "roundedResidual": 0.0631
+    },
+    {
+      "beatTime": 6.5633,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.00000353,
+      "roundedResidual": 0.0662
+    },
+    {
+      "beatTime": 7.07,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.00000144,
+      "roundedResidual": 0.027
+    },
+    {
+      "beatTime": 7.5767,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.00000146,
+      "roundedResidual": 0.0274
+    },
+    {
+      "beatTime": 8.0833,
+      "lagSamples": 0,
+      "lagMs": 0,
+      "subSampleShift": 0.4685,
+      "residual": 0.0000018,
+      "roundedResidual": 0.0338
+    }
+  ]
+}

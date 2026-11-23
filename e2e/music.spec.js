@@ -33,6 +33,38 @@ const LAG_FN = `(ref, at, got, search) => {
   return { lag: bestK, residual: best };
 }`;
 
+// In the page: the sub-sample shift (-1..1 samples, step 0.01, then 0.0005
+// near the best step) at which
+// `got` best matches `ref` read with linear interpolation from the
+// fractional position `pos`, and the residual there. Chromium starts a
+// source on the next whole sample frame, so a track whose bar is not a whole
+// number of samples (the CC0 tracks, #20) plays up to 1 sample (0.02 ms)
+// off the exact grid; the rounded match then leaves a residual near 1e-2.
+const SUBLAG_FN = `(ref, pos, got) => {
+  const fit = (shift) => {
+    const q = pos + shift;
+    const i0 = Math.floor(q), f = q - i0;
+    let d = 0, e = 0;
+    for (let i = 0; i < got.length; i += 1) {
+      const r = (ref[i0 + i] ?? 0) * (1 - f) + (ref[i0 + i + 1] ?? 0) * f;
+      d += (got[i] - r) ** 2;
+      e += r * r;
+    }
+    return Math.sqrt(d / Math.max(1e-12, e));
+  };
+  let best = { shift: 0, residual: Infinity };
+  for (let s = -100; s <= 100; s += 1) {
+    const res = fit(s / 100);
+    if (res < best.residual) best = { shift: s / 100, residual: res };
+  }
+  const coarse = best.shift;
+  for (let s = -20; s <= 20; s += 1) {
+    const res = fit(coarse + s / 2000);
+    if (res < best.residual) best = { shift: Number((coarse + s / 2000).toFixed(4)), residual: res };
+  }
+  return best;
+}`;
+
 test("every track decodes in Chromium to a whole number of bars, sample exact", async ({ page }) => {
   await ready(page, "mute=1");
   const out = await page.evaluate(async (tracks) => {
@@ -103,7 +135,10 @@ for (const TRACK of META.tracks) test(`three loops of ${TRACK.id} from the beat 
   expect(bad).toEqual([]);
 });
 
-test("the track plays on the beat clock's AudioContext with its first downbeat on beat 0 @beat-timing", async ({ page }, testInfo) => {
+// The first track, and each CC0 placeholder track (#20: the ones with an author).
+const LIVE = [TRACK, ...META.tracks.filter((t) => t.author)];
+
+for (const TRACK of LIVE) test(`${TRACK.id} plays on the beat clock's AudioContext with its first downbeat on beat 0 @beat-timing`, async ({ page }, testInfo) => {
   test.setTimeout(120000);
   const errors = [];
   page.on("pageerror", (err) => errors.push(String(err)));
@@ -112,8 +147,9 @@ test("the track plays on the beat clock's AudioContext with its first downbeat o
   await page.keyboard.press("KeyL"); // a gesture starts the clock
   await page.waitForFunction(() => window.__atl.beat.musicState === "playing", null, { timeout: 20000 });
   const out = await page.evaluate(
-    async ({ lagSrc }) => {
+    async ({ lagSrc, subSrc }) => {
       const lagOf = eval(lagSrc);
+      const subLagOf = eval(subSrc);
       const clock = window.__atl.beat;
       const c = clock.ctx;
       const sr = c.sampleRate;
@@ -127,7 +163,8 @@ test("the track plays on the beat clock's AudioContext with its first downbeat o
       gain.connect(tap).connect(mute).connect(c.destination);
       const blocks = [];
       tap.port.onmessage = (e) => blocks.push(e.data);
-      await new Promise((r) => setTimeout(r, 6000));
+      // 8 s: the track can start up to 1 bar (2.76 s at 87 BPM) after beat 0.
+      await new Promise((r) => setTimeout(r, 8000));
       tap.port.onmessage = null;
       gain.disconnect(tap);
       const ref = source.buffer.getChannelData(0);
@@ -142,12 +179,16 @@ test("the track plays on the beat clock's AudioContext with its first downbeat o
         for (let j = 0; j < 8; j += 1) got.set(blocks[i + j].data.map((x) => x / scale), j * 128);
         const tBeat = f0 / sr - clock.startTime;
         if (tBeat < 0) continue;
+        // When the decode ends after beat 0, the clock starts the track on a
+        // later bar line (musicStartedOnBarLine): no music before that.
+        if (f0 / sr < at) continue;
         const len = track.loopEnd - track.loopStart;
         let pos = track.firstDownbeat + tBeat;
         if (pos >= track.loopEnd) pos = track.loopStart + ((pos - track.loopStart) % len);
         const want = Math.round(pos * sr);
-        const { lag, residual } = lagOf(ref, want, got, 480);
-        checks.push({ beatTime: Number(tBeat.toFixed(4)), lagSamples: lag, lagMs: Number(((lag / sr) * 1000).toFixed(3)), residual: Number(residual.toExponential(2)) });
+        const { lag, residual: roundedResidual } = lagOf(ref, want, got, 480);
+        const { shift, residual } = subLagOf(ref, pos * sr, got);
+        checks.push({ beatTime: Number(tBeat.toFixed(4)), lagSamples: lag, lagMs: Number(((lag / sr) * 1000).toFixed(3)), subSampleShift: shift, residual: Number(residual.toExponential(2)), roundedResidual: Number(roundedResidual.toExponential(2)) });
       }
       return {
         track: track.id,
@@ -162,7 +203,7 @@ test("the track plays on the beat clock's AudioContext with its first downbeat o
         checks,
       };
     },
-    { lagSrc: LAG_FN },
+    { lagSrc: LAG_FN, subSrc: SUBLAG_FN },
   );
   const loadAfter = loadavg();
   const round = (a) => a.map((x) => Number(x.toFixed(2)));
@@ -183,7 +224,8 @@ test("the track plays on the beat clock's AudioContext with its first downbeat o
     musicStartedOnBarLine: out.startedOnBar,
     // Each check: 1024 samples tapped from the music output, matched to the
     // file at the position the beat grid predicts. lag 0 with a residual
-    // near 0 = the audio plays exactly on the grid.
+    // near 0 at a sub-sample shift under 1 sample = the audio plays on the
+    // grid to within 1 sample.
     windows: out.checks.length,
     maxAbsLagSamples: Math.max(...lags.map(Math.abs)),
     checks: out.checks,
@@ -197,8 +239,63 @@ test("the track plays on the beat clock's AudioContext with its first downbeat o
   expect(out.checks.length).toBeGreaterThanOrEqual(8);
   for (const c of out.checks) {
     expect(c.lagSamples).toBe(0);
+    expect(Math.abs(c.subSampleShift)).toBeLessThan(1);
     expect(c.residual).toBeLessThan(1e-3);
   }
+  expect(errors).toEqual([]);
+});
+
+// #20: pick each CC0 track on the results screen while music plays. The
+// clock changes to the track's BPM at a bar line, the track starts there on
+// its first downbeat, and the music output follows the new grid.
+test("the results screen switches to each CC0 track and the beat clock follows it", async ({ page }) => {
+  test.setTimeout(120000);
+  const errors = [];
+  page.on("pageerror", (err) => errors.push(String(err)));
+  await ready(page, `music=${TRACK.id}`);
+  await page.evaluate(() => localStorage.removeItem("skate-atl.music"));
+  await page.keyboard.press("KeyL");
+  await page.waitForFunction(() => window.__atl.beat.musicState === "playing", null, { timeout: 20000 });
+  await page.evaluate(() => window.__atl.goals.setTimeLeft(0));
+  await page.waitForFunction(() => window.__atl.goals.shown, null, { timeout: 10000 });
+  const select = page.locator("#results-track");
+  const rows = [];
+  for (const t of META.tracks.filter((x) => x.author)) {
+    await expect(select.locator(`option[value="${t.id}"]`)).toHaveText(`${t.title} (${t.author})`);
+    await select.selectOption(t.id);
+    await page.waitForFunction((id) => {
+      const b = window.__atl.beat;
+      return b.musicState === "playing" && b.music && b.music.track.id === id && !b.pending && b.ctx.currentTime > b.music.at + 0.5;
+    }, t.id, { timeout: 20000 });
+    const row = await page.evaluate(() => {
+      const b = window.__atl.beat;
+      const c = b.ctx;
+      const m = b.music;
+      // Where the file plays now, from the source's own start: compare it
+      // with the position the beat clock's grid gives for the same time.
+      const played = m.offset + (c.currentTime - m.at);
+      const len = m.track.loopEnd - m.track.loopStart;
+      const fromSource = played < m.track.loopEnd ? played : m.track.loopStart + ((played - m.track.loopStart) % len);
+      const beatTime = c.currentTime - b.startTime;
+      const fromGrid = m.track.firstDownbeat + beatTime;
+      return {
+        id: m.track.id,
+        clockBpm: b.bpm,
+        trackBpm: m.track.bpm,
+        startedOnBeat0: Math.abs(m.at - b.startTime) < 1e-9 && m.offset === m.track.firstDownbeat,
+        positionErrorMs: Math.abs(fromSource - (fromGrid < m.track.loopEnd ? fromGrid : m.track.loopStart + ((fromGrid - m.track.loopStart) % len))) * 1000,
+        judgedBeat: b.judge(beatTime).index === Math.round(beatTime / (60 / b.bpm)),
+        click: b.sched.click,
+      };
+    });
+    rows.push(row);
+    expect(row).toMatchObject({ id: t.id, clockBpm: t.bpm, trackBpm: t.bpm, startedOnBeat0: true, judgedBeat: true, click: false });
+    expect(row.positionErrorMs).toBeLessThan(0.01);
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("skate-atl.music"))).toBe(t.id);
+  }
+  console.log(`results track switch: ${JSON.stringify(rows)}`);
+  await page.screenshot({ path: "e2e/__screenshots__/results-music-cc0.png" });
+  await page.evaluate(() => localStorage.removeItem("skate-atl.music"));
   expect(errors).toEqual([]);
 });
 

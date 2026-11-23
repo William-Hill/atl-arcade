@@ -2867,3 +2867,31 @@ Not decided here, and not changed:
   - `main` after the city-look merge (#304), default (NPC skaters off): 85 calls and 252,910 triangles.
   - The same build with `--extra '&skaters=1'`: 91 calls and 270,892 triangles (`reports/prop-perf/skaters-settled-spawn-low.json`).
   - A before/after run with `&skaters=1` and a `before` build with no `settled` (`53784e1`) sampled both builds, with no timeout.
+
+## 2026-11-23: CC0 placeholder music for the City pitch, Atlanta artists for v1.0.0 (#20)
+
+**Decision (owner, 2026-11-23, #20).** For the City pitch (v0.9.0) the game uses 4 CC0 or royalty-free placeholder tracks, each with a license file and a verified BPM and offset. For Version 1 (v1.0.0) the City commissions tracks from local Atlanta artists. #20 stays open for the artist tracks.
+
+**Owner answers in this session (AskUserQuestion).** The 4 CC0 tracks go next to the 4 ACE-Step tracks of #110 (not in place of them): the results screen lists 8 tracks and the click. The source is OpenGameArt; `freepd.com` and `opengameart.org` were added to the cloud environment's network list. FreePD shows "Site Closed" now, so all 4 tracks come from OpenGameArt.
+
+**The tracks.** Only pages with CC0 as the one license, by the uploader as the author, and with no note about samples from other works. Hip-hop, new jack swing and funk, all instrumental.
+
+| Track | Author | Source | BPM (grid) | Loop |
+|---|---|---|---|---|
+| Raspberry Jam | congusbongus | https://opengameart.org/content/raspberry-jam | 112.253486 | 32 bars, 68.42 s |
+| Headspin | congusbongus | https://opengameart.org/content/headspin | 118.266009 | 32 bars, 64.94 s |
+| Funky Disco Beats | fupi | https://opengameart.org/content/funky-disco-beats-to-boogiewoogie-to | 109.999991 | 32 bars, 69.82 s |
+| Funked Up | joth | https://opengameart.org/content/funked-up | 86.999503 | 20 bars, 55.17 s |
+
+- Each track has `assets/music/<id>.LICENSE.md` (source page, source file and its SHA-256, author, date, license, the changes we made). `assets/music/CC0-1.0.txt` is the CC0 legal code. `assets/music/cc0-sources.json` has the measurements. The results screen shows the author after the title ("Raspberry Jam (congusbongus)"): CC0 does not ask for it, but we credit the authors. The change is in `trackChoices()` (`src/audio/music-tracks.js`); `src/ui/results.js` does not change (#260 changes that file).
+- **Measure.** `scripts/music/build_cc0_tracks.py` downloads each file, checks the SHA-256, and runs `loop_take.py` (#110) at the tempo measured first: drift −0.02 to −0.13 ms per bar, jitter 0.45 to 1.67 ms. The two congusbongus tracks are MilkyTracker songs; their XM headers say 112 and 118 BPM at speed 6, but the rendered files play at 112.25 and 118.27 BPM, so the grid uses the measured tempo. The loop is cut on a bar line plus the mean onset offset (2.2 to 3.0 ms), so beat 0 is the first sample (`firstDownbeat` 0).
+- **Whole samples.** A bar at these tempos is not a whole number of samples at 48 kHz. The loop is a whole number of samples, and the BPM in `tracks.json` is `bars × 240 × 48000 / samples`, within 0.0001 % of the measured tempo. Chromium starts a source on the next whole sample frame, so the music plays up to 1 sample (0.02 ms) off the exact grid: the live test measured 0.12 to 0.47 sample.
+- **AAC.** ffmpeg's AAC encoder drops a last part frame. The AAC input is padded with the loop start to whole 1024-sample frames; `loopEnd` is explicit, so the pad never plays.
+- **Size.** Opus 96 kb/s: 679 to 895 KB per track; AAC fallback 681 to 861 KB.
+- **Downbeat.** The bar line (beat 1 of 4) is the kick and chord-change estimate of `loop_take.py`. On these tracks the 4 slot scores are close, so the bar line can be 1 beat off. That does not change the beat judge (it uses beats, not bars); it changes only where a track change starts. No person listened to the loops.
+
+**Verification against the beat clock.**
+- `scripts/music/check_grid.py` decodes each game file, plays 3 loops as the beat clock does, and measures the onsets of each bar against the `tracks.json` grid. Report: `reports/m2-music-grid.json`. All 8 tracks: mean offset −0.05 to +0.27 ms, drift under 0.08 ms per bar, every bar inside ±11.5 ms (the CC0 tracks ±3.5 ms; PERFECT is ±20 ms).
+- Vitest `src/audio/music-grid.test.js` checks the report, judges every beat of 3 loops PERFECT with the pure math, maps every bar line to a bar line of the file, and checks the license files and sizes.
+- Playwright `e2e/music.spec.js`: each CC0 track decodes sample exact in Chromium; 3 loops from the beat clock's own source stay on the grid; the live AudioWorklet tap test now runs for `day-trail` and each CC0 track (max lag 0 samples, residual under 2e-4 at the sub-sample shift); a new test picks each CC0 track on the results screen while music plays, and the clock takes its BPM at a bar line with the track's first downbeat on beat 0.
+- **Live tap test fix.** On `main` this test failed in this container: the decode ended after beat 0, so the clock started the track on the next bar line (allowed, `musicStartedOnBarLine`), and the windows before the start were silent (lag −480, the search limit). The test now skips windows before the music source starts and records 8 s, not 6 s. It also fits the residual at a sub-sample shift (±1 sample), for the CC0 tracks above; the lag must still be 0 whole samples.

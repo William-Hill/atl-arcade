@@ -1,0 +1,62 @@
+{
+  "note": "CC0 placeholder tracks for the City pitch (v0.9.0), #20. Local Atlanta artists replace them for Version 1 (v1.0.0). bpm is the tempo measured by loop_take.py; bars is the loop length.",
+  "accessed": "2026-11-23",
+  "tracks": [
+    {
+      "id": "raspberry-jam",
+      "title": "Raspberry Jam",
+      "author": "congusbongus",
+      "authorUrl": "https://opengameart.org/users/congusbongus",
+      "sourcePage": "https://opengameart.org/content/raspberry-jam",
+      "sourceFile": "https://opengameart.org/sites/default/files/raspberry_jam.ogg",
+      "sha256": "99d2ff8088f26abaf5bd0b492e870e46ab798eed4eb71bcad6eb310af1049c12",
+      "posted": "2020-09-27",
+      "authorNote": "New Jack Swing style funky tune, made with milkytracker (source in zip file). Also available at https://soundcloud.com/congus-bongus/raspberry-jam",
+      "style": "new jack swing, funk",
+      "bpm": 112.2535,
+      "bars": 32
+    },
+    {
+      "id": "headspin",
+      "title": "Headspin",
+      "author": "congusbongus",
+      "authorUrl": "https://opengameart.org/users/congusbongus",
+      "sourcePage": "https://opengameart.org/content/headspin",
+      "sourceFile": "https://opengameart.org/sites/default/files/headspin_0.mp3",
+      "sha256": "72cc8de16910372969988788a7f03a5c7289fa91c14c10879a32c0b41650b497",
+      "posted": "2021-04-22",
+      "authorNote": "Hip-hop style milkytracker. Also available at https://soundcloud.com/congus-bongus/headspin",
+      "style": "hip-hop",
+      "bpm": 118.266,
+      "bars": 32
+    },
+    {
+      "id": "funky-disco",
+      "title": "Funky Disco Beats",
+      "author": "fupi",
+      "authorUrl": "https://opengameart.org/users/fupi",
+      "sourcePage": "https://opengameart.org/content/funky-disco-beats-to-boogiewoogie-to",
+      "sourceFile": "https://opengameart.org/sites/default/files/funkydiscobeatstoboogieslashwoogieto.flac",
+      "sha256": "c279ed958fbe2022f80d01c5dbdad2e4a19786b764cf149730ab72773e209d38",
+      "posted": "2025-01-24",
+      "authorNote": "Just got in the mood to make a funky disco loop so here it is!! (Full title on OpenGameArt: \"Funky Disco Beats to Boogie/Woogie to\".)",
+      "style": "funk, disco",
+      "bpm": 110,
+      "bars": 32
+    },
+    {
+      "id": "funked-up",
+      "title": "Funked Up",
+      "author": "joth",
+      "authorUrl": "https://opengameart.org/users/joth",
+      "sourcePage": "https://opengameart.org/content/funked-up",
+      "sourceFile": "https://opengameart.org/sites/default/files/Funked%20Up.mp3",
+      "sha256": "57cd81254a0f4e068535c5421f93b586514332ad2377f81aea190dd91659fff3",
+      "posted": "2019-10-25",
+      "authorNote": "A very groovy looping track. I imagine it fitting into a customization menu before you start the mission, or a garage before the race starts.",
+      "style": "70s funk, live band",
+      "bpm": 86.9995,
+      "bars": 20
+    }
+  ]
+}

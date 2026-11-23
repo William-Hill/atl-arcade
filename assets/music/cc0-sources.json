@@ -1,0 +1,228 @@
+{
+  "date": "2026-11-23",
+  "pipeline": "scripts/music/build_cc0_tracks.py (loop_take.py, build_tracks.py checks)",
+  "issue": "#20",
+  "status": "placeholders for v0.9.0; Atlanta artists for v1.0.0",
+  "tracks": [
+    {
+      "id": "raspberry-jam",
+      "title": "Raspberry Jam",
+      "author": "congusbongus",
+      "authorUrl": "https://opengameart.org/users/congusbongus",
+      "sourcePage": "https://opengameart.org/content/raspberry-jam",
+      "sourceFile": "https://opengameart.org/sites/default/files/raspberry_jam.ogg",
+      "sourceSha256": "99d2ff8088f26abaf5bd0b492e870e46ab798eed4eb71bcad6eb310af1049c12",
+      "posted": "2020-09-27",
+      "accessed": "2026-11-23",
+      "license": "CC0-1.0",
+      "style": "new jack swing, funk",
+      "files": [
+        "raspberry-jam.ogg",
+        "raspberry-jam.m4a",
+        "raspberry-jam.LICENSE.md"
+      ],
+      "measured": {
+        "nominalBpm": 112.2535,
+        "bestFitBpm": 112.2535,
+        "gridBpm": 112.253486,
+        "sourceFirstDownbeat": 1.099,
+        "loopStartBar": 24,
+        "driftMsPerBar": -0.054,
+        "jitterMs": 1.548,
+        "meanOffsetMs": 2.656,
+        "maxAbsOffsetMs": 6.0,
+        "seamSimilarity": 0.9983
+      },
+      "loop": {
+        "bars": 32,
+        "samples": 3283996,
+        "seconds": 68.41658333333334,
+        "startSeconds": 52.41408,
+        "crossfadeSamples": 25656
+      },
+      "loudness": {
+        "sourceLufs": -12.7,
+        "sourcePeakDbfs": 0.4,
+        "gainDb": -3.3
+      },
+      "encode": {
+        "raspberry-jam.ogg": {
+          "bytes": 757049,
+          "decodedSamples": 3283996,
+          "lagSamples": 0
+        },
+        "raspberry-jam.m4a": {
+          "bytes": 846389,
+          "decodedSamples": 3284992,
+          "lagSamples": 0
+        }
+      },
+      "credits": "No paid credits. Downloaded from OpenGameArt; measured and encoded on this VM's CPU."
+    },
+    {
+      "id": "headspin",
+      "title": "Headspin",
+      "author": "congusbongus",
+      "authorUrl": "https://opengameart.org/users/congusbongus",
+      "sourcePage": "https://opengameart.org/content/headspin",
+      "sourceFile": "https://opengameart.org/sites/default/files/headspin_0.mp3",
+      "sourceSha256": "72cc8de16910372969988788a7f03a5c7289fa91c14c10879a32c0b41650b497",
+      "posted": "2021-04-22",
+      "accessed": "2026-11-23",
+      "license": "CC0-1.0",
+      "style": "hip-hop",
+      "files": [
+        "headspin.ogg",
+        "headspin.m4a",
+        "headspin.LICENSE.md"
+      ],
+      "measured": {
+        "nominalBpm": 118.266,
+        "bestFitBpm": 118.266,
+        "gridBpm": 118.266009,
+        "sourceFirstDownbeat": 0.027,
+        "loopStartBar": 48,
+        "driftMsPerBar": -0.132,
+        "jitterMs": 1.668,
+        "meanOffsetMs": 3.016,
+        "maxAbsOffsetMs": 6.5,
+        "seamSimilarity": 1.0
+      },
+      "loop": {
+        "bars": 32,
+        "samples": 3117041,
+        "seconds": 64.93835416666667,
+        "startSeconds": 97.43756,
+        "crossfadeSamples": 24352
+      },
+      "loudness": {
+        "sourceLufs": -10.8,
+        "sourcePeakDbfs": 0.8,
+        "gainDb": -5.2
+      },
+      "encode": {
+        "headspin.ogg": {
+          "bytes": 679417,
+          "decodedSamples": 3117041,
+          "lagSamples": 0
+        },
+        "headspin.m4a": {
+          "bytes": 795152,
+          "decodedSamples": 3117056,
+          "lagSamples": 0
+        }
+      },
+      "credits": "No paid credits. Downloaded from OpenGameArt; measured and encoded on this VM's CPU."
+    },
+    {
+      "id": "funky-disco",
+      "title": "Funky Disco Beats",
+      "author": "fupi",
+      "authorUrl": "https://opengameart.org/users/fupi",
+      "sourcePage": "https://opengameart.org/content/funky-disco-beats-to-boogiewoogie-to",
+      "sourceFile": "https://opengameart.org/sites/default/files/funkydiscobeatstoboogieslashwoogieto.flac",
+      "sourceSha256": "c279ed958fbe2022f80d01c5dbdad2e4a19786b764cf149730ab72773e209d38",
+      "posted": "2025-01-24",
+      "accessed": "2026-11-23",
+      "license": "CC0-1.0",
+      "style": "funk, disco",
+      "files": [
+        "funky-disco.ogg",
+        "funky-disco.m4a",
+        "funky-disco.LICENSE.md"
+      ],
+      "measured": {
+        "nominalBpm": 110,
+        "bestFitBpm": 110.001,
+        "gridBpm": 109.999991,
+        "sourceFirstDownbeat": 1.6464,
+        "loopStartBar": 3,
+        "driftMsPerBar": -0.024,
+        "jitterMs": 0.867,
+        "meanOffsetMs": 2.453,
+        "maxAbsOffsetMs": 4.5,
+        "seamSimilarity": 0.9989
+      },
+      "loop": {
+        "bars": 32,
+        "samples": 3351273,
+        "seconds": 69.8181875,
+        "startSeconds": 8.19427,
+        "crossfadeSamples": 26182
+      },
+      "loudness": {
+        "sourceLufs": -16.0,
+        "sourcePeakDbfs": -0.8,
+        "gainDb": -0.2
+      },
+      "encode": {
+        "funky-disco.ogg": {
+          "bytes": 895093,
+          "decodedSamples": 3351273,
+          "lagSamples": 0
+        },
+        "funky-disco.m4a": {
+          "bytes": 861371,
+          "decodedSamples": 3351552,
+          "lagSamples": 0
+        }
+      },
+      "credits": "No paid credits. Downloaded from OpenGameArt; measured and encoded on this VM's CPU."
+    },
+    {
+      "id": "funked-up",
+      "title": "Funked Up",
+      "author": "joth",
+      "authorUrl": "https://opengameart.org/users/joth",
+      "sourcePage": "https://opengameart.org/content/funked-up",
+      "sourceFile": "https://opengameart.org/sites/default/files/Funked%20Up.mp3",
+      "sourceSha256": "57cd81254a0f4e068535c5421f93b586514332ad2377f81aea190dd91659fff3",
+      "posted": "2019-10-25",
+      "accessed": "2026-11-23",
+      "license": "CC0-1.0",
+      "style": "70s funk, live band",
+      "files": [
+        "funked-up.ogg",
+        "funked-up.m4a",
+        "funked-up.LICENSE.md"
+      ],
+      "measured": {
+        "nominalBpm": 86.9995,
+        "bestFitBpm": 86.9995,
+        "gridBpm": 86.999503,
+        "sourceFirstDownbeat": 1.4873,
+        "loopStartBar": 2,
+        "driftMsPerBar": -0.03,
+        "jitterMs": 0.454,
+        "meanOffsetMs": 2.225,
+        "maxAbsOffsetMs": 3.0,
+        "seamSimilarity": 0.9987
+      },
+      "loop": {
+        "bars": 20,
+        "samples": 2648291,
+        "seconds": 55.17272916666667,
+        "startSeconds": 7.00681,
+        "crossfadeSamples": 33104
+      },
+      "loudness": {
+        "sourceLufs": -11.5,
+        "sourcePeakDbfs": 0.4,
+        "gainDb": -4.5
+      },
+      "encode": {
+        "funked-up.ogg": {
+          "bytes": 744661,
+          "decodedSamples": 2648291,
+          "lagSamples": 0
+        },
+        "funked-up.m4a": {
+          "bytes": 681258,
+          "decodedSamples": 2649088,
+          "lagSamples": 0
+        }
+      },
+      "credits": "No paid credits. Downloaded from OpenGameArt; measured and encoded on this VM's CPU."
+    }
+  ]
+}

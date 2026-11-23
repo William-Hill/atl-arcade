@@ -72,14 +72,14 @@ describe("pickTrack", () => {
 
 describe("assets/music/tracks.json", () => {
   const meta = JSON.parse(readFileSync(new URL("../../assets/music/tracks.json", import.meta.url), "utf8"));
-  it("has four valid tracks, each loop a whole number of bars at 48 kHz", () => {
-    expect(meta.tracks.length).toBe(4);
+  it("has eight valid tracks (4 ACE-Step, 4 CC0), each loop a whole number of bars at 48 kHz", () => {
+    expect(meta.tracks.length).toBe(8);
     for (const t of meta.tracks) {
       expect(trackErrors(t, meta.sampleRate)).toEqual([]);
       const samples = (t.loopEnd - t.loopStart) * meta.sampleRate;
       expect(Math.abs(samples - Math.round(samples))).toBeLessThan(1e-6);
     }
-    expect(new Set(meta.tracks.map((t) => t.id)).size).toBe(4);
+    expect(new Set(meta.tracks.map((t) => t.id)).size).toBe(8);
   });
   it("names an existing file and fallback for every track", () => {
     for (const t of meta.tracks) {

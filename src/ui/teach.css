@@ -133,14 +133,24 @@
 body.touch #teach { bottom: calc(230px + env(safe-area-inset-bottom)); }
 /* A phone in portrait: the stick zone is the bottom 55 % of the screen, and
    a thumb can be anywhere in it. The card sits just above it, at the left,
-   clear of the buttons in the right column (settings, photo, full screen). */
+   clear of the buttons in the right column (settings, photo, full screen).
+   The column is 10 px from the right edge, and FULL SCREEN is its widest
+   button (about 127 px), so the card keeps 146 px on the right free (an
+   8 px gap). At 360 px the card was 208 px wide and covered FULL SCREEN
+   (#347); now it is 204 px or less. */
 @media (max-width: 600px) and (orientation: portrait) {
   body.touch #teach {
-    left: calc(16px + env(safe-area-inset-left));
+    left: calc(10px + env(safe-area-inset-left));
     transform: none;
     bottom: calc(55% + 12px);
-    max-width: calc(100vw - 32px - 120px);
+    max-width: calc(100vw - 10px - 146px - env(safe-area-inset-left) - env(safe-area-inset-right));
   }
+}
+/* A narrow phone in portrait (360 px): the longest title, "Dance while you
+   roll", needs about 168 px at 17 px. At 16 px it keeps one line with a
+   margin for other system fonts. */
+@media (max-width: 380px) and (orientation: portrait) {
+  body.touch #teach .teach-title { font-size: 16px; }
 }
 /* A phone in landscape: the card sits at the top middle, under the beat
    pulse (top 28 px), the PHOTO button (top 40 px) and the SETTINGS button

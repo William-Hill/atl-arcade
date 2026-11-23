@@ -2854,3 +2854,15 @@ Not decided here, and not changed:
 - In portrait, a full HUD column (a combo, the "+N", a move tag and the landmark goal line) can reach the banner band at 390 x 844 and 360 x 640. That is the column height limit of #268. The new test allows it in portrait.
 - The fact pop-up in landscape still uses 262 px on each side. At 667 x 375 it can touch a met chip ("✓ Combo 1K/1K"). It was not measured.
 - No person checked the layout on a real phone.
+
+## 2026-11-23: The phone teach card and the button column do not overlap (#347, #245)
+
+At 360 x 740 portrait, the "Dance while you roll" teach card was 208 px wide and covered FULL SCREEN by 1 px (#347). The button column is 10 px from the right edge, and FULL SCREEN is its widest button (about 127 px).
+
+Decision, for a phone in portrait (width 600 px or less):
+- The teach card starts 10 px from the left (was 16 px). It keeps 146 px on the right free for the column and an 8 px gap. At 360 px the card is 204 px wide or less.
+- At 380 px wide or less, the teach title is 16 px (was 17 px). "Dance while you roll" is then about 158 px wide, so it stays on one line with a margin for other system fonts.
+
+Decision, for a landscape phone (height 500 px or less): the beat pulse was under PHOTO (#245, MOB2-1 P2). It moves to 90 px left of the middle, to the left of the PHOTO and SETTINGS pair. The pair of #277 (no key letters, PHOTO 44 px high, 8 px from the top) was for a width of 740 px or less. At 844 x 390, PHOTO was centered, 36 px high, showed its key letter and sat over the pulse. Now every landscape phone uses the pair.
+
+Verification: a new test in `e2e/phone-layout.spec.js` checks PHOTO, SETTINGS and FULL SCREEN at 360 x 640, iPhone 15, Pixel 7, iPhone 15 landscape and 844 x 390. Each button is 44 px or more and shows no key letter. No button covers the skater buttons, the minimap, the full HUD column, the beat pulse (at 1.6 times its size), the goals or the touch controls. Screenshots: `e2e/__screenshots__/phone-buttons-*.png`.

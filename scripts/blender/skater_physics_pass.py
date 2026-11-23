@@ -196,12 +196,15 @@ ARM_OUT_MAX = 45.0
 #     back_full_deg behind the chest), the upper arm swings out from the body
 #     by up to out_deg, so the arm passes beside the hips, not through them.
 # The swing timing does not change, so the arms stay in opposition to the legs.
-ARM_LOOSE = {"nia": {
+_LOOSE = {
     "push": {"elbow_deg": 8.0, "elbow_fwd_deg": 18.0, "follow": 0.6, "follow_lag": 2, "follow_max_deg": 14.0,
              "wrist": 0.5, "wrist_max_deg": 10.0, "out_deg": 12.0, "back_from_deg": 5.0, "back_full_deg": 35.0},
     "coast": {"elbow_deg": 10.0, "elbow_fwd_deg": 14.0, "follow": 0.6, "follow_lag": 2, "follow_max_deg": 10.0,
               "wrist": 0.5, "wrist_max_deg": 8.0, "out_deg": 10.0, "back_from_deg": 5.0, "back_full_deg": 35.0},
-}}
+}
+# Marcus gets the same layer (owner feedback 2026-11-22: his arms look stiff
+# too). It comes after ARM_MIRROR, so both arms stay in opposition.
+ARM_LOOSE = {"nia": _LOOSE, "marcus": _LOOSE}
 # Support (owner request 2026-11-21: fix Nia's carve step on beat 2). When
 # one skate is in the air, the skate on the ground must be under the centre
 # of mass. A skate can roll along its own heading without a skid, so the

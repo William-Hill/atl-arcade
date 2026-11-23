@@ -690,6 +690,21 @@
         "assets/skaters/marcus/raw/physics/marcus-physics.json"
       ],
       "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_physics_pass.py, skater_clip_probe.py, and skater_joint_limits.py; scripts/assets/graft-clips.mjs on Node 26 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
+      "date": "2026-11-22",
+      "issue": "#323",
+      "prompt": "Marcus's arms look stiff too (owner feedback after the Nia arm pass).",
+      "command": "git show 5b1d2412^:assets/skaters/marcus/skater.glb > marcus-pre313.glb && blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in marcus-pre313.glb --out assets/skaters/marcus/raw/arms && node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater.glb assets/skaters/marcus/raw/arms/marcus-physics.glb assets/skaters/marcus/skater.glb && node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater-1024.glb assets/skaters/marcus/raw/arms/marcus-physics.glb assets/skaters/marcus/skater-1024.glb",
+      "actions": [
+        "ARM_LOOSE for Marcus push and coast (the same settings as Nia), after the arm mirror of #313: more elbow bend, a 2-frame forearm follow-through on the backswing, a 1-frame wrist lag, and the upper arm out from the body at the back of the swing.",
+        "Re-ran the full pass of #313 on the clips before #313, and grafted push, coast, carve_left, carve_right, air_mute, air_japan, air_liukang, and dance_prep. The carve and IK clips have the same measures as in #313.",
+        "Rebuilt after the #332 review fixes (2026-11-23): the wrist lag uses the right-handed order (fwd, side, up) of the chest frame, and ARM_OUT_MAX bounds the total swing-out of all clip-fix rounds."
+      ],
+      "result": "skater.glb 3,905,492 bytes; skater-1024.glb 3,032,884 bytes. Elbow range: push 26.6 to 46.6 degrees, coast 9.7 to 23.9 degrees. No arm capsule more than 1 cm in the torso. Joint-limit gate: PASS, with the dance_drumline WARN that was already on main.",
+      "evidence": "docs/characters/arm-pass/README.md",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 115,

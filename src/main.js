@@ -106,6 +106,8 @@ import { createLandmarkBanner, districtAccent } from "./ui/landmark-banner.js";
 import { createChimes } from "./audio/chimes.js";
 import { createTeachPrompts } from "./ui/teach-prompt.js";
 import { createCallouts } from "./ui/callouts.js";
+import { flightLine, flightPose, introPlan, introSeen, markIntroSeen, titlePose } from "./ui/intro.js";
+import { createFrontScreen } from "./ui/front-screen.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -640,7 +642,7 @@ const skaterSwitch = createSkaterSwitch({
     console.error(err);
   },
 });
-createSkaterSelect(document.body, skaterName, { onSelect: (name) => skaterSwitch.select(name) });
+const skaterNav = createSkaterSelect(document.body, skaterName, { onSelect: (name) => skaterSwitch.select(name) });
 if (skaterName !== "capsule") {
   skaterLoad(skaterName)
     .then((loaded) => {
@@ -939,9 +941,12 @@ let camFxEvent = 0;
 // the on-beat bonus and a PERFECT / GOOD tag.
 // Call start() on every gesture: a context made too early stays suspended
 // until a gesture resumes it.
+// The intro and the title screen (#301), made below, or null in the game.
+let front = null;
 function startBeat() {
   if (!beat.running) beat.start().catch(() => {});
-  if (calloutStart && goals && !goals.ended) {
+  // On the title screen the music starts, the count-in waits for the game.
+  if (calloutStart && goals && !goals.ended && !front?.active) {
     calloutStart = false;
     callouts?.start();
   }
@@ -964,20 +969,23 @@ function sampleInput() {
 }
 
 function simulate(dt) {
-  // After the run ends the skater gets no input and rolls to a stop.
-  const sampled = sampleInput();
+  // After the run ends the skater gets no input and rolls to a stop. In the
+  // intro and on the title screen (#301) the world moves, the skater stands,
+  // and the goals, the lessons and the landmarks wait for the game.
+  const attract = Boolean(front?.active);
+  const sampled = attract ? {} : sampleInput();
   const before = run.skater;
   const comboBefore = run.combo;
   perf.begin("skater");
-  const applied = goals && goals.ended ? {} : sampled;
+  const applied = attract || (goals && goals.ended) ? {} : sampled;
   run = stepRun(run, applied, dt, env, skaterEnv, beat.running ? beat : null);
   perf.end("skater");
   skater = run.skater;
-  teach.observe(before, skater, applied, run.combo, dt);
+  if (!attract) teach.observe(before, skater, applied, run.combo, dt);
   effects.observe(before, skater, run.moves);
   sfx.observe(before, skater);
   follow?.observe(before, skater);
-  if (goals && !goals.ended) {
+  if (goals && !goals.ended && !attract) {
     goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
     if (goals.ended) events.push({ tick: run.tick, type: "run-end", ...goalsJson(goals, goalDef) });
@@ -1019,7 +1027,7 @@ function simulate(dt) {
   if (skater.justJumped) events.push({ tick: skater.tick, type: "jump" });
   // Landmark discovery, after the goals and the fact cards of this tick. A
   // banner waits while the fact pop-up shows. Play never pauses for it.
-  if (landmarkTracker) {
+  if (landmarkTracker && !attract) {
     const step = landmarkStepArgs(run, { timed: landmarkTimed, goals, teleported: landmarkTravel });
     landmarkTravel = false;
     const changed = landmarkTracker.step(step.obs, dt, { active: step.active, hold: Boolean(factPopup?.state.visible) });
@@ -1178,6 +1186,46 @@ fullmap =
       })
     : null;
 
+// The intro and the title screen (#301, src/ui/intro.js). The intro flies
+// the camera along the BeltLine trail under the logo; any key, click, tap or
+// pad button skips it. The title screen circles the skater and shows the
+// skater select and Settings. The level and the physics are ready before the
+// first frame; the skater GLB and the late loads (#187) arrive during the
+// intro. ?intro=0 goes straight to the game, ?intro=1 plays the intro, and
+// ?intro=title shows the title screen. A WebDriver browser (Playwright) goes
+// to the game unless the flag says otherwise. Reduced motion: no flight.
+const introStorage = safeStorage();
+const introLine = geo ? flightLine(level.strips) : null;
+const frontPlan = introPlan({ param: params.get("intro"), webdriver: Boolean(navigator.webdriver), seen: introSeen(introStorage), reducedMotion: effects.reducedMotion, geo: Boolean(introLine), view, autopilot: params.get("autopilot") === "1" });
+front = createFrontScreen({
+  plan: frontPlan,
+  touch: Boolean(touch),
+  skaterNav,
+  reducedMotion: () => effects.reducedMotion,
+  settingsOpen: () => settingsMenu.isOpen,
+  onSettings: () => settingsMenu.open(),
+  onGesture: startBeat,
+  onPhase: (phase) => {
+    if (phase === "title") markIntroSeen(introStorage);
+    if (phase === "play") {
+      // A clean run from the spawn: the timer, the goals, and the count-in start now.
+      resetSkater();
+      calloutStart = false;
+      if (goalDef) callouts?.start();
+      input.reset();
+      events.push({ tick: run.tick, type: "front-play" });
+    }
+  },
+});
+if (front && frontPlan.start === "title") markIntroSeen(introStorage);
+// The camera of the intro and the title screen, for one frame.
+function frontCamera(state) {
+  const height = (x, z) => terrainOf(level).height(x, z);
+  const pose = state.phase === "intro" ? flightPose(introLine, state.flight, height) : titlePose(skater.position, skater.yaw, state.orbit);
+  camera.position.set(...pose.position);
+  camera.lookAt(...pose.target);
+}
+
 // The results of the run. Claim points count toward the medal only: the
 // score and the score goal keep the banked score (GDD, Claim points).
 function runResults() {
@@ -1261,7 +1309,11 @@ function frame(now) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
-  if (follow && !paused) {
+  if (front?.active && !paused) {
+    front.update(elapsed, { moving: !effects.reducedMotion });
+    if (front.active) frontCamera(front.state);
+  }
+  if (follow && !paused && !front?.active) {
     const dt = Math.min(elapsed, 0.1);
     const fresh = events.slice(camFxEvent);
     camFxEvent = events.length;
@@ -1277,11 +1329,11 @@ function frame(now) {
   }
   const landmarkNow = landmarkViewNow;
   hud.update(run, now, beat.running ? beat.phase() : null, goals, landmarkNow ? (goalLine(landmarkNow, skater.position, { timed: landmarkTimed })?.text ?? null) : null);
-  teach.update({ nowMs: now, camera, source: input.source, bindings: input.bindings, position: skater.position, hidden: paused || Boolean(results?.shown) });
+  teach.update({ nowMs: now, camera, source: input.source, bindings: input.bindings, position: skater.position, hidden: paused || Boolean(results?.shown) || Boolean(front?.active) });
   if (landmarkNow) {
     // The banner hides while the fact pop-up shows, while the game is paused
     // (its time stops too), and under the results screen.
-    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown), accent: () => districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
+    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown) || Boolean(front?.active), accent: () => districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
     landmarkRings?.update(landmarkNow.spots, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed, night: weatherView?.state.night ?? 0 });
   }
   if (paused) chimes.clear();
@@ -1359,6 +1411,18 @@ requestAnimationFrame(frame);
 
 // Read by the Playwright tests.
 window.__atl = {
+  // The intro and the title screen (#301): the phase ("intro", "title" or
+  // "play"), the plan, and press() (the same as a key).
+  front: {
+    get phase() {
+      return front ? front.phase : "play";
+    },
+    get state() {
+      return front ? front.state : { phase: "play" };
+    },
+    plan: frontPlan,
+    press: () => (front ? front.press() : "play"),
+  },
   // The text callouts (#305), or null with ?callouts=0. state: what shows now.
   callouts: callouts
     ? {

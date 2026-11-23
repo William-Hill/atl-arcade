@@ -18,7 +18,10 @@ function el(tag, className, parent, text) {
 
 const fmt = (n) => Math.round(n).toLocaleString("en-US");
 
-export function createResults(parent, { title = "", onReplay = () => {}, tracks = [], trackId = null, onTrack = () => {} } = {}) {
+// `onTour` (#260), when given, adds a second button that starts a tour: the
+// landmark loop with no timer.
+export const TOUR_BUTTON = "Tour (no timer)";
+export function createResults(parent, { title = "", onReplay = () => {}, tracks = [], trackId = null, onTrack = () => {}, onTour = null } = {}) {
   const root = el("div", "results", parent);
   root.id = "results";
   root.hidden = true;
@@ -66,6 +69,17 @@ export function createResults(parent, { title = "", onReplay = () => {}, tracks 
   replay.id = "results-replay";
   replay.type = "button";
 
+  let tour = null;
+  if (onTour) {
+    tour = el("button", "results-tour", card, TOUR_BUTTON);
+    tour.id = "results-tour";
+    tour.type = "button";
+    tour.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (shown) onTour();
+    });
+  }
+
   let shown = null;
   const doReplay = () => {
     if (!shown) return;
@@ -77,7 +91,7 @@ export function createResults(parent, { title = "", onReplay = () => {}, tracks 
   });
   // Enter replays. The keys of the game (Space, R) keep their own meaning.
   window.addEventListener("keydown", (e) => {
-    if (shown && e.code === "Enter" && document.activeElement !== replay && document.activeElement !== music) {
+    if (shown && e.code === "Enter" && document.activeElement !== replay && document.activeElement !== music && document.activeElement !== tour) {
       e.preventDefault();
       doReplay();
     }

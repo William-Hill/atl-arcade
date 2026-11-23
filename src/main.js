@@ -28,9 +28,12 @@ import { BeatClock } from "./audio/beat-clock.js";
 import { beatClockOptions, trackChoices, writeChoice } from "./audio/music-tracks.js";
 import { createSfx } from "./audio/sfx.js";
 import { loadLandmarks, loadLevel, resolveLevelName } from "./level/levels.js";
-import { createLandmarkTracker, landmarkTestHook } from "./sim/landmarks.js";
+import { LANDMARKS, createLandmarkTracker, landmarkTestHook } from "./sim/landmarks.js";
 import { goalsFor } from "./level/goals.js";
 import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
+import { modeHref, modeRules, runMode } from "./sim/skate/run-mode.js";
+import { roundPhase, roundStatus } from "./sim/skate/round-end.js";
+import { guideLine } from "./landmarks/guide.js";
 import { createResults } from "./ui/results.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createSkateparkView } from "./render/skatepark-view.js";
@@ -99,7 +102,7 @@ import { createViewCull } from "./render/view-cull.js";
 import { createEffects } from "./render/effects/effects-view.js";
 import { createLateLoads, lateLoadPlan, propTimeoutFor } from "./render/late-load.js";
 import { medalScore } from "./sim/landmarks.js";
-import { goalLine, landmarkStepArgs, withClaimMedal, withGapGoal } from "./landmarks/play.js";
+import { landmarkStepArgs, withClaimMedal, withGapGoal } from "./landmarks/play.js";
 import { createLandmarkRings } from "./render/landmark-rings.js";
 import { ringCapacity } from "./render/landmark-rings-math.js";
 import { createLandmarkBanner, districtAccent } from "./ui/landmark-banner.js";
@@ -391,8 +394,12 @@ if (skateparkView) {
 // Landmark discovery (#217): the spot states of this level, with the save
 // under `atl.landmarks`. It takes the loaded level: the skatepark pad that
 // a spot names is an area of the loaded level only (#222).
+// The run mode (#260, src/sim/skate/run-mode.js): ?run=tour plays the
+// landmark loop with no timer, ?run=free is free skate, and no `run` is a
+// timed round. A tour has no medal, so its claims have no run cap.
+const runRules = modeRules(runMode(params.get("run")), { hasGoals: Boolean(goalsFor(resolveLevelName(params.get("level")))) });
 const landmarkData = geo ? await loadLandmarks(level.name) : null;
-const landmarkTracker = landmarkData ? createLandmarkTracker({ data: landmarkData, level, storage: settingsStorage }) : null;
+const landmarkTracker = landmarkData ? createLandmarkTracker({ data: landmarkData, level, storage: settingsStorage, k: runRules.capped ? LANDMARKS : { ...LANDMARKS, runCap: Infinity } }) : null;
 // The challenge rings (#219, src/render/landmark-rings.js): 1 draw call for
 // all rings, and none when no spot is Found. ?rings=0 leaves them out.
 const landmarkGround = env.sampleGroundNoFence ?? env.sampleGround;
@@ -843,9 +850,9 @@ const input = createInput({ target: window, touch });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 runReady = true;
-// The goals of the run (M1-05), or null with ?run=free. The HUD shows them (#268).
-const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
-const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef });
+// The goals of the run (M1-05), or null with ?run=free or ?run=tour. The HUD shows them (#268).
+const goalDef = runRules.timer ? goalsFor(resolveLevelName(params.get("level"))) : null;
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef, tour: runRules.mode === "tour" });
 // Teach the moves in the world (#76): one prompt at a time, ?teach=1 or 0.
 const teach = createTeachPrompts({ levelName: level.name, geo, param: params.get("teach"), storage: safeStorage(), grindables: skaterEnv.grindables, touch: Boolean(touch), gamepad: () => input.gamepadId !== null, reducedMotion: () => effects.reducedMotion });
 // After the step from pbr lite to toon (#246): one line, one time. The flag
@@ -883,9 +890,9 @@ beat.preload();
 // Game-feel sounds (#105): bonk, landing and wall scrape on the beat clock's context.
 const sfx = createSfx(beat);
 // The landmark banner and chimes (#219). The banner is its own element: it is
-// not the HUD notice line. A timed run has a goal list; a free run finds
-// spots and claims none.
-const landmarkTimed = Boolean(goalDef);
+// not the HUD notice line. A timed run and a tour (#260) claim spots; a free
+// run finds spots and claims none.
+const landmarkTimed = runRules.claims;
 const landmarkBanner = landmarkTracker ? createLandmarkBanner(document.body, { reducedMotion: () => effects.reducedMotion }) : null;
 const landmarkAnchors = geo ? districtAnchors(level) : [];
 const chimes = createChimes(beat);
@@ -894,6 +901,8 @@ let landmarkTravel = false;
 // The landmark view of the last frame, and the state it was made from.
 let landmarkViewOf = null;
 let landmarkViewNow = null;
+// The guide line of the last frame (src/landmarks/guide.js), for the tests.
+let landmarkGuide = null;
 const musicChoices = beat.tracks.length ? trackChoices(beat.tracks) : [];
 const onTrack = (id) => {
   writeChoice(settingsStorage, id);
@@ -909,7 +918,15 @@ const replayRun = () => {
   resetSkater();
   callouts?.start();
 };
-const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: replayRun, tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack }) : null;
+// "Tour (no timer)" on the results screen (#260) loads the same level as a tour.
+const onTour = landmarkTracker ? () => window.location.assign(modeHref(window.location.href, "tour")) : null;
+const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: replayRun, tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack, onTour }) : null;
+// The sim time since the run ended: the soft round end (#260) holds the
+// results screen for ROUND_END.hold s while the skater rolls on.
+let roundEndedFor = 0;
+let roundStatusText = null;
+// True when the round end callout of this run has started.
+let roundEndCalled = false;
 // The minimap (#86) on a geodata level. ?minimap=0 leaves it out, and
 // ?minimap=north or ?minimap=heading sets the mode.
 const minimapParam = params.get("minimap");
@@ -977,6 +994,7 @@ function simulate(dt) {
   effects.observe(before, skater, run.moves);
   sfx.observe(before, skater);
   follow?.observe(before, skater);
+  if (goals && goals.ended) roundEndedFor += dt;
   if (goals && !goals.ended) {
     goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
@@ -1020,7 +1038,7 @@ function simulate(dt) {
   // Landmark discovery, after the goals and the fact cards of this tick. A
   // banner waits while the fact pop-up shows. Play never pauses for it.
   if (landmarkTracker) {
-    const step = landmarkStepArgs(run, { timed: landmarkTimed, goals, teleported: landmarkTravel });
+    const step = landmarkStepArgs(run, { timed: landmarkTimed, goals, teleported: landmarkTravel, tour: runRules.mode === "tour" });
     landmarkTravel = false;
     const changed = landmarkTracker.step(step.obs, dt, { active: step.active, hold: Boolean(factPopup?.state.visible) });
     for (const id of changed.found) {
@@ -1069,6 +1087,8 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
     goals = createGoals(goalDef);
     factCards.clear();
     results.hide();
+    roundEndedFor = 0;
+    roundEndCalled = false;
   }
   if (crowd) crowd = createCrowd(level, { seed: npcSeed });
   if (traffic) traffic = makeTraffic();
@@ -1162,8 +1182,8 @@ fullmap =
   geo && params.get("fullmap") !== "0"
     ? createFullMap(document.body, level, {
         source: mapIconSource,
-        // A free run has no timer, so no spot can be claimed in it.
-        freeRun: !goalDef,
+        // A free run claims no spot. A timed run and a tour (#260) claim.
+        freeRun: !landmarkTimed,
         reducedMotion: () => effects.reducedMotion,
         canOpen: () => !photo.isOpen && !settingsMenu.isOpen,
         onChange: () => input.reset(),
@@ -1276,8 +1296,18 @@ function frame(now) {
     landmarkViewNow = landmarkTracker.view();
   }
   const landmarkNow = landmarkViewNow;
-  hud.update(run, now, beat.running ? beat.phase() : null, goals, landmarkNow ? (goalLine(landmarkNow, skater.position, { timed: landmarkTimed })?.text ?? null) : null);
-  teach.update({ nowMs: now, camera, source: input.source, bindings: input.bindings, position: skater.position, hidden: paused || Boolean(results?.shown) });
+  // The guide line (#260): the claim line, the pointer to the next spot, and
+  // the reach warning of a timed round. No warning in the overtime.
+  const phase = roundPhase(goals, { endedFor: roundEndedFor });
+  landmarkGuide = landmarkNow ? guideLine(landmarkNow, skater.position, skater.yaw, { claims: landmarkTimed, timeLeft: phase === "play" ? goals.timeLeft : null }) : null;
+  hud.update(run, now, beat.running ? beat.phase() : null, goals, phase === "play" || phase === "none" ? (landmarkGuide?.text ?? null) : null);
+  // The soft round end (#260): the HUD says why the input stops.
+  const status = roundStatus(phase, goals, goalDef ?? {});
+  if (status !== roundStatusText) {
+    roundStatusText = status;
+    hud.status(status);
+  }
+  teach.update({ nowMs: now, camera, source: input.source, bindings: input.bindings, position: skater.position, hidden: paused || Boolean(results?.shown) || phase === "stopping" });
   if (landmarkNow) {
     // The banner hides while the fact pop-up shows, while the game is paused
     // (its time stops too), and under the results screen.
@@ -1286,10 +1316,17 @@ function frame(now) {
   }
   if (paused) chimes.clear();
   else chimes.update();
-  if (results && goals.ended && !results.shown) {
+  // ROUND OVER and the medal start when the input stops; the results card
+  // follows after the hold (#260) and waits under the callout.
+  if (results && phase === "stopping" && !roundEndCalled) {
+    roundEndCalled = true;
+    callouts?.end(runResults());
+  }
+  if (results && phase === "results" && !results.shown) {
     const end = runResults();
     results.show(end);
-    callouts?.end(end);
+    if (!roundEndCalled) callouts?.end(end);
+    roundEndCalled = true;
   }
   // Real time, not the 0.1 s step cap of the views: the music does not slow
   // down in a slow frame. Each card finds the beat again (callout-math.js).
@@ -1823,6 +1860,10 @@ window.__atl = {
         get shown() {
           return results.shown;
         },
+        // The soft round end (#260): "play", "overtime", "stopping" or "results".
+        get phase() {
+          return roundPhase(goals, { endedFor: roundEndedFor });
+        },
         collectCard: collectFactCard,
         // Sets the time left (for tests): setTimeLeft(0) ends the run when
         // no combo is open.
@@ -1851,6 +1892,12 @@ window.__atl = {
           return chimes.info;
         },
         timed: landmarkTimed,
+        // The run mode (#260): "timed", "tour" or "free".
+        mode: runRules.mode,
+        // The guide line: { id, kind, text, warn } or null.
+        get guide() {
+          return landmarkGuide;
+        },
         get saved() {
           return landmarkTracker.saved;
         },

@@ -22,11 +22,11 @@ ARM_LOOSE (Nia `push` and `coast`), in the frame of the chest, for each arm:
 
 - Elbow: 8 degrees (coast 10) more bend, plus up to 18 degrees (coast 14) more at the front of the swing. A running arm bends in front and opens behind.
 - Follow-through: on the backswing, the forearm keeps 60% of the turn of the upper arm since 2 frames before (up to 14 degrees in the push, 10 in the coast).
-- Wrist lag: the hand keeps 50% of the turn of the forearm since 1 frame before (up to 10 degrees; 5.1 degrees used in the push, 1.0 in the coast).
+- Wrist lag: the hand keeps 50% of the turn of the forearm since 1 frame before (up to 10 degrees; 5.1 degrees used in the push, 1.0 in the coast). The signed turn uses the right-handed order (fwd, side, up) of the chest frame. The first version used (side, fwd, up), which is left-handed, and the wrist went with the turn (review of #332).
 - Out at the back: from 5 to 35 degrees behind the chest, the upper arm swings out from the body by up to 12 degrees (coast 10).
 - The swing timing does not change, so the arms stay in opposition to the legs.
 
-The clip fix: an arm in the torso, a thigh, or a knee now swings out from the body (abduction) about the forward axis of the chest. The axis is the same on every frame, so the fix is smooth in time. A torso pair must be under 0 cm (TORSO_CLIP -0.3 cm, with a 0.5 cm gap); a thigh or knee pair keeps the 2 cm cloth allowance of #313. The rebalance after the fix moves the hips, so the fix, the rebalance, and the probe run up to 3 times (FIX_ROUNDS). The swing-out is at most 45 degrees (ARM_OUT_MAX). The largest is 35.3 degrees, on the right arm in `carve_left` (the left arm in `carve_right`).
+The clip fix: an arm in the torso, a thigh, or a knee now swings out from the body (abduction) about the forward axis of the chest. The axis is the same on every frame, so the fix is smooth in time. A torso pair must be under 0 cm (TORSO_CLIP -0.3 cm, with a 0.5 cm gap); a thigh or knee pair keeps the 2 cm cloth allowance of #313. The rebalance after the fix moves the hips, so the fix, the rebalance, and the probe run up to 3 times (FIX_ROUNDS). The total swing-out of all rounds is at most 45 degrees (ARM_OUT_MAX) on each frame. The largest is 35.3 degrees, on the right arm in `carve_left` (the left arm in `carve_right`).
 
 ## Results
 
@@ -34,8 +34,8 @@ Deepest arm-to-torso depth (before = the shipped GLB after #313; the new probe o
 
 | Clip | Before | After |
 |---|---|---|
-| Nia push | r_uparm>torso 6.7 cm (23 frames over 1 cm) | 0.2 cm (0 frames) |
-| Nia coast | r_forearm>torso 6.9 cm (48 frames) | 0.4 cm (0 frames) |
+| Nia push | r_uparm>torso 6.7 cm (23 frames over 1 cm) | l_uparm>torso 0.8 cm (0 frames) |
+| Nia coast | r_forearm>torso 6.9 cm (48 frames) | r_uparm>torso 0.4 cm (0 frames) |
 | Nia carve_left | r_uparm>torso 8.7 cm (44 frames) | none over 0 cm |
 | Nia carve_right | l_uparm>torso 8.1 cm (45 frames) | none over 0 cm |
 | Nia brake | none over 1 cm | none over 1 cm (no change) |
@@ -52,8 +52,8 @@ Other measures (before -> after):
 
 | Clip | ZMP excess mean (m) | CoM jerk RMS | Hand angular jerk RMS L, R | Deepest thigh or knee pair |
 |---|---|---|---|---|
-| push | 0.001 -> 0.000 | 37.3 -> 37.6 | 1470, 1526 -> 484, 456 | 2.6 -> 1.8 cm |
-| coast | 0.000 -> 0.000 | 22.6 -> 22.6 | 132, 126 -> 232, 120 | 2.2 -> under 1 cm |
+| push | 0.001 -> 0.000 | 37.3 -> 37.6 | 1470, 1526 -> 468, 463 | 2.6 -> 1.9 cm |
+| coast | 0.000 -> 0.000 | 22.6 -> 22.6 | 132, 126 -> 231, 126 | 2.2 -> under 1 cm |
 | carve_left | 0.040 -> 0.036 | 48.2 -> 43.3 | 122, 1275 -> 122, 179 | 1.9 -> 2.4 cm (r_hand>r_knee) |
 | carve_right | 0.052 -> 0.050 | 53.6 -> 49.2 | 1400, 122 -> 188, 122 | 2.4 -> 2.2 cm |
 
@@ -63,7 +63,7 @@ The joint-limit gate passes on all 26 clips with no WARN (`nia-joint-limits.json
 
 - The upper-arm pair is calibrated (the elbow end, the arm inside the sleeve). The upper half of the sleeve still goes into the side of the jacket on most frames. It is cloth on cloth of the same color, and the renders do not show it, but the probe does not measure it.
 - In the carve, the hand now rests on the knee pad (r_hand>r_knee 2.4 cm on 41 frames, up from under 1 cm). This is cloth contact under the 2.5 cm level of #313, but it is a new contact. Look at it in the game.
-- The wrist lag adds angular jerk to the left hand in the coast (132 -> 232).
+- The angular jerk of the left hand in the coast goes up (132 -> 231). The wrist lag is at most 1.0 degree in the coast, so the cause is the elbow and the swing-out, not the wrist.
 - Not done: a check in the game at full speed, and the owner approval. These are acceptance criteria of #323.
 
 ## Files
@@ -71,7 +71,7 @@ The joint-limit gate passes on all 26 clips with no WARN (`nia-joint-limits.json
 - `videos/nia-arms-before-after.mp4`, `videos/nia-arms-before-after-half-speed.mp4`: before (#313) on the left, after on the right; three-quarter view on top, left view below. Clips: push (2 times), coast, carve_left (2 times), carve_right (2 times). Made with `scripts/skater-clip-frames.mjs` and ffmpeg (`xstack`, then `setpts=2*PTS`).
 - `compare/closeup-nia-push-back-left.jpg`, `compare/closeup-nia-push-front.jpg`: push frames 8, 16, 24, 42; top row before, bottom row after (Blender Workbench).
 - `compare/closeup-nia-carve-coast.jpg`: carve_left frames 12 (front, back right) and 30, coast frame 30 (front, back left); top before, bottom after.
-- `nia-clip-probe-before.json`, `nia-clip-probe-after.json`: the new probe on the #313 GLB and on the new GLB. `marcus-clip-probe.json`: the new probe on Marcus (no change).
+- `nia-clip-probe-before.json`, `nia-clip-probe-after.json`: the new probe on the #313 GLB and on the new GLB. The open lower limit of the pelvis band is `null` in `torso_table_m.bands`. `marcus-clip-probe.json`: the new probe on Marcus (no change).
 - `nia-elbow-ranges.json`: the elbow ranges above.
 - `nia-metrics.json`: the pass report (the source is the GLB before #313, as in #313). `nia-joint-limits.json`: the gate on every clip of the new GLB.
 

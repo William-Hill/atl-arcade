@@ -20,7 +20,7 @@
   "bands": [
    [
     "Hips",
-    -Infinity,
+    null,
     0.0
    ],
    [
@@ -148,37 +148,37 @@
     "frames": []
    },
    "l_hand>l_thigh": {
-    "max_depth_m": 0.0176,
+    "max_depth_m": 0.0189,
     "frames": [
      25,
      26
     ]
    },
    "r_hand>r_thigh": {
-    "max_depth_m": 0.0175,
+    "max_depth_m": 0.018,
     "frames": [
      0,
      51
     ]
    },
    "r_forearm>r_thigh": {
-    "max_depth_m": 0.0034,
+    "max_depth_m": 0.0041,
     "frames": []
    },
    "l_uparm>torso": {
-    "max_depth_m": 0.0017,
+    "max_depth_m": 0.0081,
     "frames": []
    },
    "r_uparm>torso": {
-    "max_depth_m": 0.0003,
+    "max_depth_m": 0.0056,
     "frames": []
    },
    "l_hand>l_knee": {
-    "max_depth_m": 0.0092,
+    "max_depth_m": 0.0096,
     "frames": []
    },
    "r_hand>r_knee": {
-    "max_depth_m": 0.016,
+    "max_depth_m": 0.0136,
     "frames": [
      0,
      51

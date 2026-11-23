@@ -391,7 +391,9 @@ def main():
     table = radii.pop("_torso_table")
     print("[clip-probe] radii " + ", ".join(f"{k} {v * 100:.1f} cm" for k, v in radii.items()))
     print("[clip-probe] torso table (cm, bands x directions) " + str(np.round(table * 100, 1).tolist()))
-    report = {"radii_m": {k: float(v) for k, v in radii.items()}, "torso_table_m": {"bands": TORSO_BANDS, "sectors": TORSO_SECTORS, "radius": np.round(table, 4).tolist()}, "skate_box_m": {k: [v[0].tolist(), v[1].tolist()] for k, v in boxes.items()}, "clips": {}}
+    # JSON has no infinity: an open band limit is null (the pelvis band has
+    # no lower limit).
+    report = {"radii_m": {k: float(v) for k, v in radii.items()}, "torso_table_m": {"bands": [[bone, None if not np.isfinite(t0) else t0, t1] for bone, t0, t1 in TORSO_BANDS], "sectors": TORSO_SECTORS, "radius": np.round(table, 4).tolist()}, "skate_box_m": {k: [v[0].tolist(), v[1].tolist()] for k, v in boxes.items()}, "clips": {}}
     radii["_torso_table"] = table
     for name in [c for c in a.clips.split(",") if c]:
         act = bpy.data.actions.get(name)

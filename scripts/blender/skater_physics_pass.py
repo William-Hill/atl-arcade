@@ -651,10 +651,14 @@ def arm_loose(who, name, s, rots):
             v0 = M0[ha_b].to_translation() - M0[lo_b].to_translation()
             v1 = M1[ha_b].to_translation() - M1[lo_b].to_translation()
             u0, s0, f0 = chest_frame(M0)
-            c0 = np.array([np.array(v0) @ s0, np.array(v0) @ f0, np.array(v0) @ u0])
-            c1 = np.array([np.array(v1) @ side, np.array(v1) @ fwd, np.array(v1) @ up])
-            # The turn of the forearm in the chest frame, signed about the hinge.
-            ax_c = np.array([axes[f] @ side, axes[f] @ fwd, axes[f] @ up])
+            # The turn of the forearm in the chest frame, signed about the
+            # hinge. The order (fwd, side, up) is right-handed (fwd x side =
+            # up), so the sign of the cross product is the sign of the turn
+            # in armature space. (side, fwd, up) is left-handed and gave the
+            # wrong sign: the wrist went with the turn (review of #332).
+            c0 = np.array([np.array(v0) @ f0, np.array(v0) @ s0, np.array(v0) @ u0])
+            c1 = np.array([np.array(v1) @ fwd, np.array(v1) @ side, np.array(v1) @ up])
+            ax_c = np.array([axes[f] @ fwd, axes[f] @ side, axes[f] @ up])
             sgn = math.copysign(1.0, float(np.cross(c0, c1) @ ax_c))
             turn = math.degrees(math.acos(float(np.clip(c0 @ c1 / (np.linalg.norm(c0) * np.linalg.norm(c1)), -1, 1))))
             add_wr[f] = -sgn * min(cfg["wrist"] * turn, cfg["wrist_max_deg"])
@@ -1245,7 +1249,9 @@ def arm_allow(k):
     return TORSO_CLIP if k.endswith(">torso") else ARM_CLIP
 
 
-def resolve_clips(sk, s, shift, rots, targets, radii, boxes):
+def resolve_clips(sk, s, shift, rots, targets, radii, boxes, out_used=None):
+    """out_used: side -> the swing-out (degrees, per frame) of earlier calls
+    on the same rots. The total of all calls stays at ARM_OUT_MAX or less."""
     """Moves skates and upper arms until the limbs are clear. Returns info."""
     n = s["n"]
     foot_off = {sd: np.zeros((n, 3)) for sd in ("Left", "Right")}
@@ -1334,13 +1340,15 @@ def resolve_clips(sk, s, shift, rots, targets, radii, boxes):
             scale = np.where(smag > 1e-9, np.maximum(mag, smag) / np.maximum(smag, 1e-9), 0)
             foot_off[sd] = sm * np.minimum(scale, 3)[:, None]
             a_new = arm_deg[sd] + add_a[sd]
-            arm_deg[sd] = np.minimum(np.maximum(a_new, circ_gauss(a_new, 2.0)), ARM_OUT_MAX)
+            room = ARM_OUT_MAX - (out_used[sd] if out_used else 0.0)
+            arm_deg[sd] = np.minimum(np.maximum(a_new, circ_gauss(a_new, 2.0)), np.maximum(room, 0.0))
         apply()
     last = {k: round(max(o[k] for _, o in res), 4) for k in res[0][1]}
     return {"overlap_max_m_before": {k: v for k, v in first.items() if v > 0},
             "overlap_max_m_after": {k: v for k, v in last.items() if v > 0},
             "skate_move_max_m": {sd: round(float(np.linalg.norm(foot_off[sd], axis=1).max()), 4) for sd in foot_off},
-            "arm_swing_out_max_deg": {sd: round(float(arm_deg[sd].max()), 1) for sd in arm_deg}}
+            "arm_swing_out_max_deg": {sd: round(float(arm_deg[sd].max()), 1) for sd in arm_deg},
+            "_arm_deg": arm_deg}
 
 
 def support_pass(sk, who, name, s):
@@ -1753,14 +1761,19 @@ def main():
         # The rebalance moves the hips, and so the arms a little: fix, then
         # rebalance, then measure, up to FIX_ROUNDS times, until no torso
         # pair is deeper than the probe limit (#323).
+        # The swing-out of all rounds adds up, per frame; the total stays at
+        # ARM_OUT_MAX or less (review of #332).
+        out_used = {sd: np.zeros(s["n"]) for sd in ("Left", "Right")}
         for rnd in range(FIX_ROUNDS):
-            clip_info = resolve_clips(sk, s, shift, rots, targets, *setup)
+            clip_info = resolve_clips(sk, s, shift, rots, targets, *setup, out_used=out_used)
+            used = clip_info.pop("_arm_deg")
+            for sd in out_used:
+                out_used[sd] = out_used[sd] + used[sd]
             if rnd == 0:
                 info["clipping"] = clip_info
             else:
                 info["clipping"]["overlap_max_m_after"] = clip_info["overlap_max_m_after"]
-                for sd, v in clip_info["arm_swing_out_max_deg"].items():
-                    info["clipping"]["arm_swing_out_max_deg"][sd] = round(info["clipping"]["arm_swing_out_max_deg"][sd] + v, 1)
+            info["clipping"]["arm_swing_out_max_deg"] = {sd: round(float(v.max()), 1) for sd, v in out_used.items()}
             info["clipping"]["com_error_after_rebalance_m"] = round(rebalance(sk, name, s, shift, rots, targets, C_ref), 4)
             final = {}
             for f in range(s["n"]):
@@ -1809,6 +1822,7 @@ def main():
         rots_m = {P + b: quat_series(s_m, P + b) for b in ("LeftArm", "RightArm")}
         targets_m = [dict(s_m["mat"][f]) for f in range(nm)]
         mirror_clip = resolve_clips(sk, s_m, shift_m, rots_m, targets_m, *clip_setup(sk))
+        mirror_clip.pop("_arm_deg")
         act.name = "carve_right_mirror"
         # The final action has the clip fix: its reach is the one to report.
         act, reach = build_action(sk, "carve_right", s_m, shift_m, rots_m, targets_m)

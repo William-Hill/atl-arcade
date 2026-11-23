@@ -2878,3 +2878,9 @@ The automated playtest 1 of `prototypes/trick-input/` found two risks (`prototyp
 Correction (PR 351 review): the bots counted a phone grind flick that resolves after the snap as a miss. With the fix, the phone gives 90.3% tricks as wanted at 24 px and 95.9% at 16 px. The two toggles stay as the owner chose.
 
 Neither toggle goes into `src/` before the playtest verdict.
+
+## 2026-11-23: Content checklist by an agent, real skater review for Version 1 (#22)
+
+- Owner decision on #22: for the City pitch, an agent fills `docs/review/content-checklist.md` against the 5 political rules in `AGENTS.md`, and the owner reviews it. The real skater review (`docs/review/skater-review.md`) stays open for v1.0.0.
+- Result on `main` at `82b84e1`: 24 checks, 20 pass, 3 flagged, 1 open. Flags: #353 (the first load can show a dark, rainy night; the clock uses the device time zone), #354 (the New Realm Brewing card names beer and spirits), #261 (traffic, open before; owner decision 2026-11-23: calm traffic with no collision, changed in another PR).
+- This review changes no code.

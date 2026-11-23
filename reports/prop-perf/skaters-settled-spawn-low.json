@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-23T19:01:46.697Z",
+  "date": "2026-11-23T19:15:42.473Z",
   "gpu": "swiftshader",
   "quality": "low",
   "seconds": 6,
@@ -11,14 +11,14 @@
       "cam": "spawn",
       "quality": "low",
       "gpu": "swiftshader",
-      "load": 1.5,
-      "calls": 85,
-      "triangles": 252910,
+      "load": 3.5,
+      "calls": 91,
+      "triangles": 270892,
       "propCount": 8231,
-      "frames": 16,
-      "medianFps": 3.5,
+      "frames": 15,
+      "medianFps": 3.8,
       "p90Ms": 483.3,
-      "p99Ms": 500
+      "p99Ms": 516.8
     },
     {
       "run": 2,
@@ -26,14 +26,14 @@
       "cam": "spawn",
       "quality": "low",
       "gpu": "swiftshader",
-      "load": 2.5,
-      "calls": 85,
-      "triangles": 252910,
+      "load": 3.4,
+      "calls": 91,
+      "triangles": 270892,
       "propCount": 8231,
-      "frames": 16,
-      "medianFps": 3.8,
-      "p90Ms": 533.3,
-      "p99Ms": 550
+      "frames": 10,
+      "medianFps": 3.3,
+      "p90Ms": 483.3,
+      "p99Ms": 483.3
     },
     {
       "run": 3,
@@ -41,33 +41,33 @@
       "cam": "spawn",
       "quality": "low",
       "gpu": "swiftshader",
-      "load": 3,
-      "calls": 85,
-      "triangles": 252910,
+      "load": 3.6,
+      "calls": 91,
+      "triangles": 270892,
       "propCount": 8231,
-      "frames": 14,
-      "medianFps": 3.2,
-      "p90Ms": 366.6,
-      "p99Ms": 433.2
+      "frames": 16,
+      "medianFps": 4,
+      "p90Ms": 283.4,
+      "p99Ms": 500
     }
   ],
   "table": [
     {
       "build": "after",
       "cam": "spawn",
-      "calls": "85",
-      "triangles": "252910",
-      "medianFps": 3.5,
+      "calls": "91",
+      "triangles": "270892",
+      "medianFps": 3.8,
       "p90Ms": 483.3,
       "runsP90Ms": [
         483.3,
-        533.3,
-        366.6
+        483.3,
+        283.4
       ],
       "load": [
-        1.5,
-        2.5,
-        3
+        3.5,
+        3.4,
+        3.6
       ]
     }
   ],

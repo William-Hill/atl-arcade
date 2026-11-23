@@ -2785,6 +2785,15 @@ Result: no arm capsule goes more than 1 cm into the torso in Nia's push, coast, 
 
 Review fixes (#332): the wrist lag used the left-handed order (side, fwd, up) of the chest frame, so the wrist went with the forearm turn; it now uses (fwd, side, up). The arm swing-out limit (ARM_OUT_MAX, 45 degrees) now bounds the total of all clip-fix rounds, not each round. The probe report writes the open pelvis band limit as `null`, not `-Infinity`.
 
+
+## 2026-11-22: A circular filter for the loop seam of Nia's Walk It Out
+
+Context: the GVHMR mocap test (PR #316) measured all 23 looping clips of Nia. `dance_walkitout` had the largest seam after `dance_swagsurf`: 1.368 m/s, so the arms snapped once in each loop. The owner asked for the fix, with a playtest.
+
+Decision: filter only `dance_walkitout`, with a circular Gaussian of 0.08 s on the local bone rotations and the hips location (`scripts/blender/skater_loop_smooth.py`), and graft it with `scripts/assets/graft-clips.mjs`. Do not filter `push`: #313 already took its seam to 0.236 m/s, and its fast drive and recoil are deliberate. Do not filter `dance_swagsurf` yet: the filter takes its seam only from 1.711 to approximately 1.4 m/s, so its keys must change in `scripts/blender/nia_clips.py`.
+
+Result: seam 1.368 -> 0.577 m/s, jitter 11.89 -> 5.12 m/s². The other clips have the same metrics. Evidence: `docs/characters/loop-seam/`. A person must look at the dance at full game speed.
+
 ## 2026-11-22: Marcus gets the loose-arm layer (#323)
 
 Owner feedback after the Nia arm pass: Marcus's arms look stiff too. He had no arm in the torso, so only the loose-arm layer applies. `ARM_LOOSE` has a `marcus` entry with Nia's settings. It runs after the #313 arm mirror, so his arms stay in opposition. Result: elbow range push 26.6 to 46.6 degrees, coast 9.7 to 23.9 degrees; no arm capsule over 1 cm in the torso; the balance, the drive, and the recoil of #313 stay; the joint-limit gate passes (with the `dance_drumline` WARN that was already on `main`). The hand angular jerk goes up (push 494 and 357 to 749 and 539; coast 148 and 147 to 332 and 324), because the hands now move more and the wrist trails the forearm (the clips are built with the wrist sign fix of the #332 review). A check in the game and the owner approval are still to do. Evidence: `docs/characters/arm-pass/README.md`.

@@ -1,0 +1,55 @@
+{
+ "note": "Elbow bend in degrees (0 = straight): [min, max, range] for each arm. before = the shipped GLB after #313; after = the arm pass.",
+ "before": {
+  "push": {
+   "Left": [
+    8.7,
+    35.3,
+    26.6
+   ],
+   "Right": [
+    12.2,
+    38.8,
+    26.6
+   ]
+  },
+  "coast": {
+   "Left": [
+    17.1,
+    26.8,
+    9.7
+   ],
+   "Right": [
+    20.6,
+    30.3,
+    9.7
+   ]
+  }
+ },
+ "after": {
+  "push": {
+   "Left": [
+    16.7,
+    63.3,
+    46.6
+   ],
+   "Right": [
+    20.2,
+    66.8,
+    46.6
+   ]
+  },
+  "coast": {
+   "Left": [
+    27.1,
+    51.0,
+    23.9
+   ],
+   "Right": [
+    30.6,
+    54.5,
+    23.9
+   ]
+  }
+ }
+}

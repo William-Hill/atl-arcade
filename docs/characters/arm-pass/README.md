@@ -1,6 +1,6 @@
-# Nia arm pass: loose arms, and no backswing through the body (#323, 2026-11-22)
+# Arm pass: loose arms, and no backswing through the body (#323, 2026-11-22)
 
-Owner feedback after #313: Nia's arms are too stiff while she skates, and on the backswing her arms go through her body. This pass changes Nia's `push`, `coast`, `carve_left`, and `carve_right` (and re-exports the four hand IK clips of #313 with no change in their numbers). Marcus does not change.
+Owner feedback after #313: Nia's arms are too stiff while she skates, and on the backswing her arms go through her body. This pass changes Nia's `push`, `coast`, `carve_left`, and `carve_right` (and re-exports the four hand IK clips of #313 with no change in their numbers). A second step (see "Marcus" below) gives Marcus's `push` and `coast` the same loose-arm layer.
 
 ## What was wrong
 
@@ -39,7 +39,7 @@ Deepest arm-to-torso depth (before = the shipped GLB after #313; the new probe o
 | Nia carve_left | r_uparm>torso 8.7 cm (44 frames) | none over 0 cm |
 | Nia carve_right | l_uparm>torso 8.1 cm (45 frames) | none over 0 cm |
 | Nia brake | none over 1 cm | none over 1 cm (no change) |
-| Marcus, all 5 clips | none over 1 cm | (no change) |
+| Marcus, all 5 clips | none over 1 cm | none over 1 cm (see "Marcus") |
 
 Elbow bend (degrees, min..max, range; both arms have the same range):
 
@@ -66,12 +66,39 @@ The joint-limit gate passes on all 26 clips with no WARN (`nia-joint-limits.json
 - The angular jerk of the left hand in the coast goes up (132 -> 231). The wrist lag is at most 1.0 degree in the coast, so the cause is the elbow and the swing-out, not the wrist.
 - Not done: a check in the game at full speed, and the owner approval. These are acceptance criteria of #323.
 
+## Marcus
+
+Marcus had no arm in the torso (no torso pair over 1 cm in the 5 clips). The owner looked at him and said that his arms look stiff too. So `ARM_LOOSE` has a `marcus` entry with the same settings as Nia. It runs after the arm mirror of #313, so his arms stay in opposition.
+
+Elbow bend (degrees):
+
+| Clip | Before (#313) | After |
+|---|---|---|
+| push | L 8.7..35.3, R 12.2..38.8 (range 26.6) | L 16.7..63.3, R 20.2..66.8 (range 46.6) |
+| coast | L 17.1..26.8, R 20.6..30.3 (range 9.7) | L 27.1..51.0, R 30.6..54.5 (range 23.9) |
+
+Other measures (before -> after):
+
+| Clip | ZMP excess mean (m) | CoM jerk RMS | Hand angular jerk RMS L, R | Deepest arm pair |
+|---|---|---|---|---|
+| push | 0.0004 -> 0.0004 | 39.3 -> 39.3 | 494, 357 -> 749, 539 | l_hand>l_knee 2.1 cm (cloth contact) |
+| coast | 0.000 -> 0.000 | 24.8 -> 24.8 | 148, 147 -> 332, 324 | r_hand>r_thigh 1.4 cm |
+| carve_left, carve_right | same as #313 | same as #313 | same as #313 | none over 1 cm |
+
+- No arm capsule goes more than 1 cm into the torso in push, coast, carve_left, carve_right, or brake.
+- The joint-limit gate passes on every clip, with one WARN that was already on `main`: `dance_drumline`, left knee 30.9 degrees off its hinge (limit 30).
+- The push drive frames and the recoil events are the same as in #313.
+- The wrist lag and the follow-through add hand angular jerk (push about 50% more, coast about 120% more). With the corrected wrist sign of the #332 review, the jerk is higher than in the first version of this step (push 597 and 570, coast 256 and 249): the wrist now trails the forearm. Look at the hands in the game.
+- In the push, from behind, the right hand swings across behind the back (frame 14). This was also in #313. The probe shows no contact there.
+
+Files: `videos/marcus-arms-before-after[-half-speed].mp4` (push 2 times, coast 2 times, carve_left 2 times, carve_right 2 times), `compare/closeup-marcus-push-backleft.jpg`, `compare/closeup-marcus-push-front.jpg` (push frames 6, 14, 28, 36), `compare/closeup-marcus-coast.jpg` (coast frames 12 and 36), `marcus-elbow-ranges.json`, `marcus-metrics.json`, `marcus-joint-limits.json`.
+
 ## Files
 
 - `videos/nia-arms-before-after.mp4`, `videos/nia-arms-before-after-half-speed.mp4`: before (#313) on the left, after on the right; three-quarter view on top, left view below. Clips: push (2 times), coast, carve_left (2 times), carve_right (2 times). Made with `scripts/skater-clip-frames.mjs` and ffmpeg (`xstack`, then `setpts=2*PTS`).
 - `compare/closeup-nia-push-back-left.jpg`, `compare/closeup-nia-push-front.jpg`: push frames 8, 16, 24, 42; top row before, bottom row after (Blender Workbench).
 - `compare/closeup-nia-carve-coast.jpg`: carve_left frames 12 (front, back right) and 30, coast frame 30 (front, back left); top before, bottom after.
-- `nia-clip-probe-before.json`, `nia-clip-probe-after.json`: the new probe on the #313 GLB and on the new GLB. The open lower limit of the pelvis band is `null` in `torso_table_m.bands`. `marcus-clip-probe.json`: the new probe on Marcus (no change).
+- `nia-clip-probe-before.json`, `nia-clip-probe-after.json`: the new probe on the #313 GLB and on the new GLB. The open lower limit of the pelvis band is `null` in `torso_table_m.bands`. `marcus-clip-probe-before.json`, `marcus-clip-probe-after.json`: the same for Marcus.
 - `nia-elbow-ranges.json`: the elbow ranges above.
 - `nia-metrics.json`: the pass report (the source is the GLB before #313, as in #313). `nia-joint-limits.json`: the gate on every clip of the new GLB.
 

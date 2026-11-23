@@ -87,6 +87,11 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
   const row = Object.assign(document.createElement("div"), { className: "front-row" });
   const navHome = skaterNav?.parentNode ?? null;
   if (skaterNav) row.appendChild(skaterNav);
+  // The keyboard path to the skater select: the digit keys 1, 2, ... select
+  // the skater buttons in menu order.
+  const skaterButtons = skaterNav ? [...skaterNav.querySelectorAll("button[data-skater]")] : [];
+  const shortcutsBefore = skaterButtons.map((b) => b.getAttribute("aria-keyshortcuts"));
+  skaterButtons.forEach((b, i) => b.setAttribute("aria-keyshortcuts", String(i + 1)));
   const settings = Object.assign(document.createElement("button"), { type: "button", className: "front-settings", textContent: "SETTINGS" });
   settings.setAttribute("aria-keyshortcuts", "O");
   if (!touch) settings.append(Object.assign(document.createElement("kbd"), { textContent: "O" }));
@@ -114,6 +119,7 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
     el.dataset.phase = state.phase;
     if (state.phase === "play") {
       if (skaterNav && navHome) navHome.appendChild(skaterNav);
+      skaterButtons.forEach((b, i) => (shortcutsBefore[i] === null ? b.removeAttribute("aria-keyshortcuts") : b.setAttribute("aria-keyshortcuts", shortcutsBefore[i])));
       el.remove();
       style.remove();
       document.body.classList.remove("front-open");
@@ -135,8 +141,17 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
       onSettings();
       return;
     }
-    if (state.phase === "intro" ? !e.repeat : keyStarts(e, { settingsCode })) {
+    const digit = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+    const pick = state.phase === "title" && digit && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey ? skaterButtons[Number(digit[1]) - 1] : null;
+    if (pick) {
       e.preventDefault();
+      pick.click();
+      return;
+    }
+    if (state.phase === "intro" ? !e.repeat : keyStarts(e, { settingsCode })) {
+      // In the intro every new key skips, but only the keys that start the
+      // game lose their browser action (F5 and Ctrl+R still reload).
+      if (state.phase !== "intro" || keyStarts(e, { settingsCode: null })) e.preventDefault();
       apply(frontPress(state));
     }
   }
@@ -176,7 +191,11 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
     // One frame: the clock, the flight, the logo, and the pad.
     update(dt, { moving = true } = {}) {
       if (state.phase === "play") return state;
-      if (!settingsOpen() && pollPad()) apply(frontPress(state));
+      if (!settingsOpen() && pollPad()) {
+        // A pad press is a user gesture too: it starts the beat clock.
+        onGesture();
+        apply(frontPress(state));
+      }
       if (state.phase === "play") return state;
       apply(frontStep(state, dt, { moving }));
       logo.style.opacity = String(logoOpacity(state, { reducedMotion: reducedMotion() }));

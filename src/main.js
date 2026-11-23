@@ -1219,11 +1219,15 @@ front = createFrontScreen({
 });
 if (front && frontPlan.start === "title") markIntroSeen(introStorage);
 // The camera of the intro and the title screen, for one frame.
+// The point the intro camera looks at: the shadow box follows it, because
+// the flight goes far from the skater.
+let frontFocus = null;
 function frontCamera(state) {
   const height = (x, z) => terrainOf(level).height(x, z);
   const pose = state.phase === "intro" ? flightPose(introLine, state.flight, height) : titlePose(skater.position, skater.yaw, state.orbit);
   camera.position.set(...pose.position);
   camera.lookAt(...pose.target);
+  frontFocus = state.phase === "intro" ? pose.target : null;
 }
 
 // The results of the run. Claim points count toward the medal only: the
@@ -1354,6 +1358,7 @@ function frame(now) {
   // it looks at; the skater can be far away.
   if (geoLights && isoFocus) geoLights.follow(isoFocus.x, isoFocus.z, isoFocus.y);
   else if (geoLights && shadowFocus) geoLights.follow(shadowFocus[0], shadowFocus[2], shadowFocus[1]);
+  else if (geoLights && front?.active && frontFocus) geoLights.follow(frontFocus[0], frontFocus[2], frontFocus[1]);
   else if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
   if (blob) {
     // With the skater height, as the controller samples: under a bridge the

@@ -83,6 +83,12 @@ test.describe("intro and title screen", () => {
     await page.keyboard.press("Escape");
     await expect.poll(() => page.evaluate(() => window.__atl.settings.isOpen)).toBe(false);
     expect(await phase(page)).toBe("title");
+    // The digit keys select a skater from the keyboard; the title screen stays.
+    await expect(page.locator("#front #skater-select button[data-skater=nia]")).toHaveAttribute("aria-keyshortcuts", "1");
+    await expect(page.locator("#front #skater-select button[data-skater=marcus]")).toHaveAttribute("aria-keyshortcuts", "2");
+    await page.keyboard.press("Digit1");
+    expect(await phase(page)).toBe("title");
+    await expect(page.locator("#front #skater-select button[data-skater=nia]")).toHaveAttribute("aria-pressed", "true");
 
     // A key starts the game: the first game frame follows.
     const framesBefore = await page.evaluate(() => window.__atl.frames);
@@ -93,6 +99,7 @@ test.describe("intro and title screen", () => {
     await expect(page.locator("#hud")).toBeVisible();
     // The skater select is back in the game HUD.
     await expect(page.locator("body > #skater-select")).toHaveCount(1);
+    await expect(page.locator("body > #skater-select button[aria-keyshortcuts]")).toHaveCount(0);
     const events = await page.evaluate(() => window.__atl.events.map((e) => e.type));
     expect(events).toContain("front-play");
     // The follow camera has the skater in view.

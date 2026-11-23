@@ -1159,3 +1159,78 @@ describe("calm traffic with no collision (#261)", () => {
     expect(s(0, 0).soft).toBeUndefined();
   });
 });
+
+// #261 review: a contact with a moving car never stops the skater, also at
+// a car corner and in a passage where the car blocks both ways along it.
+describe("a moving car never stops the skater (#261 review)", () => {
+  const UP = [0, 1, 0];
+  function rideStill(base, cars, start, ticks) {
+    const env = { sampleGround: carGroundSampler(base, [], () => cars) };
+    let s = start;
+    const log = { bonks: 0, falls: 0, slides: 0, minSpeed: Infinity, minGap: Infinity };
+    for (let i = 0; i < ticks; i += 1) {
+      s = stepSkater(s, {}, DT, env);
+      if (s.bonked) log.bonks += 1;
+      if (s.justFell) log.falls += 1;
+      if (s.wallSlide) log.slides += 1;
+      if (log.slides > 0) log.minSpeed = Math.min(log.minSpeed, Math.abs(s.speed));
+      for (const c of cars) log.minGap = Math.min(log.minGap, carBodyDistance(c, s.position[0], s.position[2]));
+    }
+    return { s, log };
+  }
+
+  it("glances off the corner of a moving sedan with no bonk", () => {
+    const car = { kind: "sedan", x: 0, y: 0, z: 0, yaw: 0, speed: 0 };
+    for (const deg of [10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80]) {
+      const a = (deg * Math.PI) / 180;
+      const start = createSkater(null, {
+        position: [6 * Math.cos(a), 0, 6 * Math.sin(a)],
+        yaw: yawFromHeading(-Math.cos(a), -Math.sin(a)),
+      });
+      start.speed = 6;
+      const { s, log } = rideStill(FLAT_GROUND.sampleGround, [car], start, 90);
+      expect(log.bonks, `${deg} deg`).toBe(0);
+      expect(log.falls, `${deg} deg`).toBe(0);
+      expect(log.slides, `${deg} deg`).toBeGreaterThan(0);
+      expect(log.minSpeed, `${deg} deg`).toBeGreaterThan(1);
+      // At a corner the wall ring samples the body edge in 16 directions,
+      // so a roll step can put the body a few cm under the body radius.
+      // This is the same for a parked car and is not part of #261.
+      expect(log.minGap, `${deg} deg`).toBeGreaterThanOrEqual(SKATE.bodyRadius - 0.05);
+      expect(s.state, `${deg} deg`).toBe("rolling");
+    }
+  });
+
+  it("backs off a moving car that closes a narrow passage, with no bonk", () => {
+    // A slot 0.64 m wide between two tall walls ends at the side of a sedan
+    // (its side is at z = 0.9). The body ring (0.31 m) just fits, so both
+    // ways along the car side are blocked on the contact.
+    const base = (x, z) =>
+      Math.abs(x) > 0.32 && z > 0.9 ? { height: 3, normal: UP, id: "wall" } : { height: 0, normal: UP, id: "flat" };
+    const car = { kind: "sedan", x: 0, y: 0, z: 0, yaw: 0, speed: 0 };
+    const start = createSkater(null, { position: [0, 0, 4], yaw: yawFromHeading(0, -1) });
+    start.speed = 6;
+    const { s, log } = rideStill(base, [car], start, 90);
+    expect(log.bonks).toBe(0);
+    expect(log.falls).toBe(0);
+    expect(log.slides).toBeGreaterThan(0);
+    expect(log.minSpeed).toBeGreaterThan(1);
+    expect(log.minGap).toBeGreaterThanOrEqual(SKATE.bodyRadius - 1e-6);
+    expect(s.state).toBe("rolling");
+    // She went back up the slot, away from the car.
+    expect(s.position[2]).toBeGreaterThan(1.5);
+  });
+
+  it("still bonks on a parked car head-on", () => {
+    const parked = [{ kind: "sedan", x: 0, y: 0, z: 0, yaw: 0 }];
+    const env = { sampleGround: carGroundSampler(FLAT_GROUND.sampleGround, parked, () => []) };
+    let s = createSkater(null, { position: [0, 0, 4], yaw: yawFromHeading(0, -1) });
+    s.speed = 6;
+    let bonks = 0;
+    for (let i = 0; i < 90; i += 1) {
+      s = stepSkater(s, {}, DT, env);
+      if (s.bonked) bonks += 1;
+    }
+    expect(bonks).toBeGreaterThan(0);
+  });
+});

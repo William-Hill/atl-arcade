@@ -2855,6 +2855,19 @@ Not decided here, and not changed:
 - The fact pop-up in landscape still uses 262 px on each side. At 667 x 375 it can touch a met chip ("✓ Combo 1K/1K"). It was not measured.
 - No person checked the layout on a real phone.
 
+## 2026-11-14: prop-perf waits for the NPC skater models (#281 follow-up)
+
+`window.__atl.ready` is `true` at module load, so `scripts/prop-perf.mjs` could start a sample before the NPC skater models loaded. In `reports/prop-perf/281-far-trees-low.json`, one spawn run had 52 calls and 179,472 triangles, and the other runs had 50 or 51 calls and about 144k triangles. The prop count was the same.
+
+- `__atl.skaters.settled` is `true` when each NPC skater model has loaded or failed (`loaded + failed === count`). The NPC skater view does not change.
+- `scripts/prop-perf.mjs` waits for the NPC skaters before a sample. When `__atl.skaters` is `null`, the script does not wait. An old build has no `settled`, so for that build the script compares `loaded + failed` with `count`. (`?npcs=0` removes only the crowd, which loads no models.)
+- Since `757d07c`, the NPC skaters are off by default and `?skaters=1` turns them on. Thus a default run has no NPC skaters, and the wait applies only with `--extra '&skaters=1'`.
+- Check, with `node scripts/prop-perf.mjs --quality low --repeat 3 --cams spawn` on one build. Each set of 3 runs gave the same calls and triangles in each run:
+  - The #284 build (NPC skaters on by default): 50 calls and 143,680 triangles.
+  - `main` after the city-look merge (#304), default (NPC skaters off): 85 calls and 252,910 triangles.
+  - The same build with `--extra '&skaters=1'`: 91 calls and 270,892 triangles (`reports/prop-perf/skaters-settled-spawn-low.json`).
+  - A before/after run with `&skaters=1` and a `before` build with no `settled` (`53784e1`) sampled both builds, with no timeout.
+
 ## 2026-11-23 — Intro and title screen before the first ride (#301)
 
 Code: `src/ui/intro.js` (pure: the plan, the phases intro → title → play, the camera flight and the title camera; Vitest `src/ui/intro.test.js`), `src/ui/front-screen.js` (DOM), and the wiring in `src/main.js`. Playwright: `e2e/intro.spec.js`.

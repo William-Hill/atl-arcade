@@ -199,8 +199,14 @@ function touchEvents(r, p, ctx, intended) {
 function outcome(sim, ctx) {
   const after = sim.log.filter((e) => e.t >= TP - 1e-9);
   if (ctx === "grind") {
-    const s = after.find((e) => e.type === "snap");
-    return s ? { dir: s.dir, at: s.t } : null;
+    const i = after.findIndex((e) => e.type === "snap");
+    if (i < 0) return null;
+    const s = after[i];
+    // Phone: a flick that resolves after the snap changes the stance once (R6).
+    const next = after.slice(i + 1);
+    const end = next.findIndex((e) => e.type === "snap");
+    const change = (end < 0 ? next : next.slice(0, end)).find((e) => e.type === "stance-change");
+    return change ? { dir: change.dir, at: change.t } : { dir: s.dir, at: s.t };
   }
   const kind = ctx === "air" ? "grab" : "dance";
   const e = after.find((x) => x.type === "trick" && x.kind === kind);

@@ -19,6 +19,11 @@ describe("playtest bots", () => {
       expect(metrics(runSession({ profile: perfect, device, trials: 30, seed: 2 })).wantedShare).toBe(1);
     }
   });
+  it("on touch, a grind flick that resolves after the snap counts the changed stance", () => {
+    const clean = { ...PROFILES[3], id: "clean", pushProb: 0, carveProb: 0, touch: { flickPx: [30, 0], angleSdDeg: 0, tapJitterPx: 0, flickMs: [110, 110] } };
+    const t = runTrial({ device: "touch", ctx: "grind", intended: "u", profile: clean, seed: 1 });
+    expect(t).toMatchObject({ result: "u", wanted: true });
+  });
   it("on touch, the stick (push and carve) never gives a trick direction", () => {
     const m = metrics(runSession({ profile: PROFILES[4], device: "touch", trials: 60, seed: 3 }));
     expect(m.unwantedUpFromPush).toBe(0);

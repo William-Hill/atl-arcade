@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TRICK } from "./constants.js";
-import { createInput, rebind } from "./input.js";
+import { createInput, frameInput, padDisconnect, padSample, rebind } from "./input.js";
 import { key, run, T, tap } from "./harness.js";
 import { createSim, place } from "./sim.js";
 
@@ -426,6 +426,26 @@ describe("touch (R11)", () => {
     expect(s.grind.dir).toBe("u");
     expect(ofType(s, "stance-change")).toHaveLength(1);
     expect(ofType(s, "stance-change")[0].frame).toBe(49);
+  });
+  it("GRIND held away from a rail with a 30 px up flick 50 ms after the touch-down: Toe Roll", () => {
+    const { s, inp } = setup();
+    rolling(s, 6);
+    run(s, inp, [{ kind: "touchDown", id: 2, button: "grind", x: 500, y: 300, t: T(1) }, { kind: "touchMove", id: 2, x: 500, y: 270, t: T(1) + 0.05 }], 20);
+    expect(s.mode).toBe("manual");
+    expect(s.manual.toe).toBe(true);
+  });
+});
+
+describe("gamepad disconnect", () => {
+  it("a controller that disconnects with the stick left and GRIND held stops the steer and the hold", () => {
+    const inp = createInput();
+    const buttons = Array.from({ length: 16 }, (_, i) => (i === 7 ? 1 : 0));
+    padSample(inp, [-0.9, 0], buttons, 1);
+    expect(frameInput(inp, 1)).toMatchObject({ steer: -0.9, grind: true });
+    padDisconnect(inp, 1.1);
+    const f = frameInput(inp, 1.1);
+    expect(f).toMatchObject({ steer: 0, grind: false, dir: "n" });
+    expect(inp.padState).toBeNull();
   });
 });
 

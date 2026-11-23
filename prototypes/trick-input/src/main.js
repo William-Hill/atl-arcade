@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import { CARVE_GUARD, DT, SHORT_FLICK, TRICK, withRelaxed } from "./constants.js";
-import { activeFlicks, createInput, frameInput, keyDown, keyUp, padSample, touchDown, touchMove, touchUp, touchStick } from "./input.js";
+import { activeFlicks, createInput, frameInput, keyDown, keyUp, padDisconnect, padSample, touchDown, touchMove, touchUp, touchStick } from "./input.js";
 import { isFresh } from "./direction.js";
 import { applyEvent, run } from "./harness.js";
 import { createSim, LEVEL, place, stepSim } from "./sim.js";
@@ -239,7 +239,7 @@ addEventListener("blur", () => [...inp.down].forEach((c) => keyUp(inp, c)));
 function pollPad(t) {
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
   const p = pads && [...pads].find((x) => x && x.connected);
-  if (!p) return;
+  if (!p) return padDisconnect(inp, t);
   padSample(inp, [...p.axes], p.buttons.map((b) => (typeof b === "number" ? b : b.value)), t);
 }
 

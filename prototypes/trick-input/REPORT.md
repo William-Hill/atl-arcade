@@ -61,7 +61,7 @@ Mean over the 5 synthetic players, 150 trials each (full table in `playtest/resu
 
 | Metric | Target | Keyboard | Phone | Gamepad |
 |---|---|---|---|---|
-| Tricks as wanted | 90% or more | **88.8%** (82.0 to 97.3) | **82.8%** (66.0 to 98.0) | **92.1%** (86.7 to 98.7) |
+| Tricks as wanted | 90% or more | **88.8%** (82.0 to 97.3) | **90.3%** (78.7 to 98.7) | **92.1%** (86.7 to 98.7) |
 | Unwanted Up from push | under 5% | **2.9%** (0.0 to 5.6) | 0.0% | 0.0% (push is a button) |
 | Unwanted Left/Right from carves | under 5% | **11.3%** (5.9 to 14.3) | 0.0% | **6.4%** (0.0 to 10.8) |
 | Time to the first 3-link combo with a manual | under 3 min (human) | 6.1 s (bot, the shortest route) | not measured | not measured |
@@ -80,7 +80,7 @@ The route bot banks "Long Rail Grind + Manual + Japan Grab" (about 2360 points) 
    | 0.10 s | 41.5% | 31.0% | 21.0% |
    | 0.15 s (typical) | 57.5% | 37.5% | 26.5% |
    | 0.25 s | 80.0% | 50.5% | 31.0% |
-3. **`flickMin` 24 px is too long for slow or short flicks in the model.** The phone misses are flicks under 24 px that resolve as taps. `flickMin` 16 gives 92.9% as wanted (1.8% of taps then jitter into a direction). `flickMin` 40 gives 52.5%. The owner chose (2026-11-23) to keep 24 px as the default and to add 16 px as a toggle (key 5), so testers try both on a real phone.
+3. **`flickMin` 24 px is too long for slow or short flicks in the model.** The phone misses are flicks under 24 px that resolve as taps. `flickMin` 16 gives 95.9% as wanted (1.8% of taps then jitter into a direction). `flickMin` 40 gives 61.5%. (Correction from the PR review: the first run read only the grind snap and missed the stance change of a flick that resolves after the snap. The phone numbers here count that change: 90.3% in place of 82.8%.) The owner chose (2026-11-23) to keep 24 px as the default and to add 16 px as a toggle (key 5), so testers try both on a real phone.
 4. **`dirBefore` trades aim for leaks.** On the keyboard: 0.10 s gives 77.6% as wanted, 0.15 s gives 88.8%, 0.25 s gives 92.8% but 14.2% carve leak. `dirAfter` 0 drops the keyboard to 82.7%: the 60 ms after the press catches the late directions.
 5. **A GRIND held early before a rail gives a short manual first.** At 8.6 m/s, 0.15 s (`manualDelay`) is about 1.3 m. A player who holds GRIND more than about 1.3 m before the rail gets "Manual + Rail Grind". The GDD allows this (Edge Cases), but a player can see it as a surprise. The first route bot did this. Watch for it in the human playtest.
 6. **Frame rate.** Headless SwiftShader: 44 FPS on the desktop viewport and 26 FPS on the Pixel 7 viewport (software render at 2x pixel ratio). This is not a device number. At a low frame rate, CDP touch events arrive late; the playtest uses one-step flicks for this reason.

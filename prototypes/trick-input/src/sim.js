@@ -407,7 +407,8 @@ export function stepSim(s, input, dt = DT) {
     if (s.mode === "ground" && (grindDown || buffered || (s.oneButton && s.ob.grind && input.trick)) && t >= s.resnapAt && railInRange(s)) snap(s, input);
     else if (s.mode === "ground" && grindDown && !s.oneButton && !s.grindNeedsRepress && s.grindPress && t - s.grindPress.t + EPS >= s.k.manualDelay && v0 + EPS >= s.k.manualMinSpeed && !railInRange(s)) {
       s.dance = null;
-      startManual(s, s.grindPress.res.dir || "n", s.grindPress.t);
+      // Phone: the flick resolve gives the direction (R8, R11).
+      startManual(s, s.touchGrindDir || s.grindPress.res.dir || "n", s.grindPress.t);
     }
 
     if (s.mode === "ground" && press("jump")) {

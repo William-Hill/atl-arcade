@@ -97,6 +97,14 @@ export function padSample(inp, axes, buttons, t) {
   if (buttons.some((v) => v > 0.5) || Math.abs(axes[0] ?? 0) > 0.3 || Math.abs(axes[1] ?? 0) > 0.3) inp.lastDevice = "gamepad";
 }
 
+// The controller disconnects: clear the cached sample and the held stick
+// direction, so a lost controller does not steer or hold a button.
+export function padDisconnect(inp, t) {
+  if (!inp.padState) return;
+  inp.padState = null;
+  inp.pad = padUpdate(inp.pad, "n", t);
+}
+
 // --- Touch --------------------------------------------------------------
 
 // `button` is one of jump, grind, trick, spin, switch. Coordinates in px.

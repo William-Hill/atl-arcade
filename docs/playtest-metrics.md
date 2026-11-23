@@ -58,7 +58,7 @@ The prototype is `prototypes/trick-input/`. Its automated playtest runs with `no
 
 | Metric | Target | Automated result (2026-11-23, mean of 5 synthetic players) |
 |---|---|---|
-| Tricks as wanted | 90% or more | Keyboard 88.8%, phone 82.8%, gamepad 92.1% |
+| Tricks as wanted | 90% or more | Keyboard 88.8%, phone 90.3%, gamepad 92.1% |
 | Unwanted Up from push taps | under 5% | Keyboard 2.9% (0% on the phone and the gamepad) |
 | Unwanted Left/Right from carves | under 5% | Keyboard 11.3%, gamepad 6.4%, phone 0% |
 | Time to the first 3-link combo with a manual | under 3 minutes | 6.1 s for the route bot (the shortest route, not a human) |

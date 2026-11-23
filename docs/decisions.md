@@ -2875,4 +2875,6 @@ The automated playtest 1 of `prototypes/trick-input/` found two risks (`prototyp
 - **Carve guard as a toggle, then test.** Key 6 (or `?carveGuard`): a left or right that is still held and started more than 100 ms before the press does not count. It is off by default; the GDD rule (R3) does not change. In the synthetic model it lowers the keyboard leak only to 9.5% and drops the tricks as wanted to 82.5%. The human playtest tries both settings and the data decides.
 - **Keep `flickMin` 24 px, add 16 px as a toggle.** Key 5 (or `?shortFlick`). In the model, 16 px gives 92.9% tricks as wanted on the phone. The human playtest tries both on a real phone.
 
+Correction (PR 351 review): the bots counted a phone grind flick that resolves after the snap as a miss. With the fix, the phone gives 90.3% tricks as wanted at 24 px and 95.9% at 16 px. The two toggles stay as the owner chose.
+
 Neither toggle goes into `src/` before the playtest verdict.

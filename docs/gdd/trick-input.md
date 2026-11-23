@@ -149,7 +149,7 @@ The phone keeps 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH), so this system add
 
 **R12. Accessibility.**
 
-1. **One-button mode (owner choice 8).** The settings menu has a "One-button tricks" switch. TRICK then picks from the context with this order of precedence. The player can reach all goals and landmark challenges in this mode.
+1. **One-button mode (owner choice 8).** The settings menu has a "One-button tricks" switch. TRICK then picks from the context with this order of precedence. The player can reach all goals and landmark challenges in this mode with the movement inputs (steer, push, brake, JUMP) and TRICK only.
 
    | State | TRICK press | TRICK hold |
    |---|---|---|
@@ -167,7 +167,7 @@ The phone keeps 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH), so this system add
    - Ground, Marcus (all 10 slots, then 3 more): Swag Surf, Walk It Out, The Prep, Drumline Count, Jam Step, Cross Step, Toe Spin, Smooth Quad, ATL Rydin, Sit Spin, Jam Groove, Bankhead Bounce, Snap Lean.
 
    In one-button mode, SPIN, GRIND, and the directions still work, but the player does not need them. SPIN plays its neutral slot (Cross Step). GRIND works as in R6 and R8 with the neutral stance.
-2. **Remapping.** Every action in `ACTIONS` is rebindable now (`rebind()` in `src/input/bindings.js`). The settings menu gets a remap screen for the keyboard and the gamepad. The game blocks two actions on one key. The direction source (WASD, arrows, stick, d-pad) is a choice.
+2. **Remapping.** Every action in `ACTIONS` is rebindable now (`rebind()` in `src/input/bindings.js`). The settings menu gets a remap screen for the keyboard and the gamepad. The actions are in 2 groups. The movement and button group is `left`, `right`, `push`, `brake`, `jump`, `grind`, `style1`, `style2`, and `switch`. The direction group is `dirLeft`, `dirRight`, `dirUp`, and `dirDown`. The game blocks two actions of one group on one key. One key can hold one action of each group: the default W is `push` and `dirUp`, S is `brake` and `dirDown`, A is `left` and `dirLeft`, and D is `right` and `dirRight`. A reset to the defaults is always possible. The direction source (WASD, arrows, stick, d-pad) is a choice.
 3. **Longer windows.** A "Relaxed timing" switch sets `dirBefore` to 250 ms, `dirAfter` to 100 ms, `flickMaxMs` to 250 ms, and `landingGrace` to 0.2 s.
 4. **No color-only signal.** The trick name and the direction arrow show as text and shape.
 
@@ -204,7 +204,7 @@ The phone keeps 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH), so this system add
 
 | System | Data in | Data out | Owner |
 |---|---|---|---|
-| Input (`src/input/`) | Device events | Per frame, the present fields plus `dir` (the held direction: `"n"`, `"l"`, `"r"`, `"u"`, `"d"`; the newest key wins), `lastDir` (the newest direction start event, kept after the key is let go), and `lastDirAt` (the time of that event, in s on the sim clock). The sim applies R3 with `lastDir` and `lastDirAt`. A gamepad start event is a stick crossing 0.5 on a new axis side, or a d-pad press. Touch: the TRICK and SPIN press come at the flick resolve frame (R11), with `lastDir` the flick direction and `lastDirAt` that frame. The GRIND press comes at the touch-down, and its stance at the resolve (R6). | Input |
+| Input (`src/input/`) | Device events | Per frame, the present fields plus `dir` (the held direction: `"n"`, `"l"`, `"r"`, `"u"`, `"d"`; the newest key wins), `lastDir` (the newest direction start event, kept after the key is let go), and `lastDirAt` (the time of that event, in s on the sim clock). The sim applies R3 with `lastDir` and `lastDirAt`. A gamepad start event is a stick crossing 0.5 on a new axis side, or a d-pad press. Touch: the TRICK and SPIN press come at the flick resolve frame (R11), with `lastDir` the flick direction and `lastDirAt` that frame. The GRIND press comes at the touch-down, and its stance at the resolve (R6). Also `balance`: a float from -1 to 1, +1 is up, the input s of F1. Keyboard: +1 while a `dirUp` key is down, -1 while a `dirDown` key is down, the newest key wins, else 0. Gamepad: the left stick y with the sign changed (the browser gives up as negative), after the stick deadzone, not snapped to 0.5; the d-pad up or down gives +1 or -1. Touch: the steer stick y with the sign changed (`stickVector()` y in `src/input/touch-map.js`), not the boolean push and brake. The input sends `balance` on every frame; the sim reads it only in the manual. | Input |
 | Skater sim (`src/sim/skate/skater.js`, `controller.js`) | The input per frame | `state.trick` (`{ kind, id, name, clip, dir, held }`), `state.manual` (`{ balance, meters }`), the landing result | Sim |
 | Grind (`grind.js`) | The stance id at the snap | The grind meters and the balance, as now | Sim |
 | Combo (`combo.js`, `run.js`) | The trick name, the points, the beat offset at the judged moment, the landing result | The links, the multiplier, the bank | Sim |
@@ -225,7 +225,7 @@ Source: `systems-designer` proposal, adjusted to the owner choices. The present 
 |---|---|---|---|---|
 | lean | m | float | -1 to 1 | Pitch lean. 0 is balanced. |
 | drift side | side | int | -1 or +1 | Set at the manual start. It changes sign on each manual. |
-| balance input | s | float | -1 to 1 | W/S, stick y, or touch stick y. +1 is up (W). |
+| balance input | s | float | -1 to 1 | The `balance` field of the input (Interactions): W/S, stick y, or touch stick y. +1 is up (W). |
 | drift | d | float | 0.2 to 0.8 | `manualDrift`, typical 0.4. |
 | gravity | g | float | 0.5 to 2 | `manualGravity`, typical 1.0. |
 | correct | c | float | 1 to 4 | `manualCorrect`, typical 2.2. |
@@ -501,7 +501,7 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 - **GIVEN** a manual, **WHEN** F is let go, or JUMP is pressed, or the speed drops under 3 m/s, **THEN** the manual ends clean with no speed loss.
 - **GIVEN** a manual, **WHEN** a rail comes in snap range, **THEN** the manual ends clean and the grind snaps.
 - **GIVEN** F1 with m = 0.3, side = +1, s = 0.2, dt = 1/60, **THEN** m becomes 0.3043.
-- **GIVEN** a manual on a gamepad, **WHEN** the left stick y is held up at 0.64 with m = 0.9, **THEN** m goes down, and the X button does not push.
+- **GIVEN** a manual on a gamepad with drift side +1 and m = 0.9, **WHEN** the left stick is held up at a raw axis value of -0.70 (the browser gives up as negative; after the 0.15 deadzone of `mapGamepad()`, `balance` = (0.70 - 0.15) / 0.85 = 0.647), **THEN** m goes down (dm/dt = 0.4 + 0.9 - 2.2 * 0.647 = -0.12 per s), and the X button does not push.
 - **GIVEN** a manual, **WHEN** the skater hits a wall head-on and the speed drops under 3 m/s, **THEN** the manual ends clean and the link is added.
 - **GIVEN** GRIND pressed in the air with no rail, **WHEN** the skater lands and GRIND is still held, **THEN** no manual starts; **WHEN** GRIND is let go and pressed again for 0.2 s, **THEN** a manual starts.
 - **GIVEN** a manual with no balance input, **WHEN** |m| reaches 1 (about 1.25 s), **THEN** the state is rolling, the landing result is a stumble, and the speed is 0.7 times the speed of the step before.
@@ -531,7 +531,7 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 - **GIVEN** one-button mode on the ground with no rail, **WHEN** TRICK is tapped, **THEN** the next dance of the one-button set starts at the release; **WHEN** TRICK is held 0.5 s, **THEN** a manual starts and no dance.
 - **GIVEN** one-button mode in the air with no rail, **WHEN** TRICK is pressed in 3 airs and held at each touchdown, **THEN** the grabs are Mute Grab, Japan Grab, and Side Grab, and every landing is clean.
 - **GIVEN** one-button mode and Nia on the ground, **WHEN** TRICK is tapped 11 times, **THEN** the dances are the 10 slots of the Nia set in order, then Bankhead Bounce again.
-- **GIVEN** one-button mode, **WHEN** a scripted run of each goal in `src/sim/skate/goals.js` and each landmark challenge uses TRICK and steer only, **THEN** each goal completes.
+- **GIVEN** one-button mode, **WHEN** a scripted run of each goal in `src/sim/skate/goals.js` and each landmark challenge uses only the movement inputs (steer, `push`, `brake`, and JUMP) and TRICK, with no SPIN, GRIND, or SWITCH, **THEN** each goal completes. A key that is bound to a movement action and a direction action (the default W, S, A, and D) is permitted: in one-button mode the sim does not read `dir`, `lastDir`, or `lastDirAt` for a trick (Edge Cases), so the direction signal has no effect.
 - **GIVEN** one-button mode in the air with no rail, **WHEN** TRICK is pressed in 6 airs, **THEN** the 6th grab is the Mute Grab again (the set starts again after Tuck Knee).
 - **GIVEN** one-button mode, **WHEN** the next item of the set is a name already used 3 times in this combo, **THEN** its link pays 0 and adds no multiplier (the repeat decay still applies).
 - **GIVEN** grayscale screenshots of the HUD trick line, the manual balance bar, the flick ring, and the 4 landing tiers, **WHEN** a person reviews them, **THEN** each state reads from shape and text alone (R12.4).
@@ -626,3 +626,9 @@ Nice-to-have: put Q4 before Q5; write the criterion times as frames at 60 Hz; R1
 - Nice-to-have: Q4 before Q5; criterion times as frames; R1 label count; the real F3 maximum (450); the SPIN move reason.
 
 A third review did not run.
+
+**Pass 6, 2026-11-23: 3 Codex findings on PR #325 fixed.**
+- R12.2: the remap rule blocked the default layout, because W, S, A, and D each hold a movement action and a direction action. Fix: 2 action groups; one key can hold one action of each group.
+- R12.1 and its criterion: TRICK and steer only cannot leave the spawn, because the speed starts at 0 and only `push` moves the skater. Fix: the mode and the criterion allow steer, push, brake, and JUMP.
+- Interactions and F1: the input contract had no analog balance, so a stick y of 0.64 could not reach the sim. Fix: a `balance` field from -1 to 1, with its keyboard, gamepad, and touch sources.
+- CodeRabbit on PR #349: the gamepad manual criterion now gives the raw stick value (0.70), the `balance` value after the deadzone (0.647), and the drift side (+1). The one-button goal criterion permits a key that also sends a direction, because one-button mode does not read the direction.

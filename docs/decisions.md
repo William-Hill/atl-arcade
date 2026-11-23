@@ -2869,3 +2869,15 @@ Decision: a Tour mode with no timer, not a longer demo round. A longer round kee
 - **The held key after "Skate again" (audit E1):** not reproduced. A Playwright test holds W from before the end, through the results, and after a replay with Enter and with a click: the skater pushes at once both times. The input keeps held keys through the results screen (only photo mode, the full map and the settings menu clear them). The 20 s stop of run 1 was most likely the Autopilot hold (its lease or its pause), not the game. The test stays as a guard.
 
 Rejected: a longer demo round (it moves the cut, it does not remove it); a timer that pauses near a spot (hard to read); a compass arrow on the screen (a new HUD element in a full phone layout; the minimap already shows the icons).
+## 2026-11-14: prop-perf waits for the NPC skater models (#281 follow-up)
+
+`window.__atl.ready` is `true` at module load, so `scripts/prop-perf.mjs` could start a sample before the NPC skater models loaded. In `reports/prop-perf/281-far-trees-low.json`, one spawn run had 52 calls and 179,472 triangles, and the other runs had 50 or 51 calls and about 144k triangles. The prop count was the same.
+
+- `__atl.skaters.settled` is `true` when each NPC skater model has loaded or failed (`loaded + failed === count`). The NPC skater view does not change.
+- `scripts/prop-perf.mjs` waits for the NPC skaters before a sample. When `__atl.skaters` is `null`, the script does not wait. An old build has no `settled`, so for that build the script compares `loaded + failed` with `count`. (`?npcs=0` removes only the crowd, which loads no models.)
+- Since `757d07c`, the NPC skaters are off by default and `?skaters=1` turns them on. Thus a default run has no NPC skaters, and the wait applies only with `--extra '&skaters=1'`.
+- Check, with `node scripts/prop-perf.mjs --quality low --repeat 3 --cams spawn` on one build. Each set of 3 runs gave the same calls and triangles in each run:
+  - The #284 build (NPC skaters on by default): 50 calls and 143,680 triangles.
+  - `main` after the city-look merge (#304), default (NPC skaters off): 85 calls and 252,910 triangles.
+  - The same build with `--extra '&skaters=1'`: 91 calls and 270,892 triangles (`reports/prop-perf/skaters-settled-spawn-low.json`).
+  - A before/after run with `&skaters=1` and a `before` build with no `settled` (`53784e1`) sampled both builds, with no timeout.

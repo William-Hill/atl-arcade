@@ -192,6 +192,7 @@ export function frameInput(inp, t) {
     inp.touchFlickDir,
   ];
   const newest = cands.reduce((a, b) => (b.lastDirAt > a.lastDirAt ? b : a));
+  const lastDirHeld = newest === cands[0] ? inp.dirs.held.includes(newest.lastDir) : newest === cands[1] ? inp.pad.dir === newest.lastDir : false;
   const kd = heldDir(inp.dirs);
   const dir = kd !== "n" ? kd : inp.pad.dir;
   const balance = Math.max(-1, Math.min(1, (inp.dirs.held.includes("u") ? 1 : 0) - (inp.dirs.held.includes("d") ? 1 : 0) + dz(ay) + inp.stick.y));
@@ -208,6 +209,7 @@ export function frameInput(inp, t) {
     dir,
     lastDir: newest.lastDir,
     lastDirAt: newest.lastDirAt,
+    lastDirHeld,
     balance,
     flick,
     touchGrind: inp.touchHeld.grind && !kb("grind") && !pb(PAD.grind),
@@ -216,5 +218,5 @@ export function frameInput(inp, t) {
 
 // A neutral frame, for tests.
 export function blankFrame(t = 0) {
-  return { t, steer: 0, push: false, brake: false, jump: false, grind: false, trick: false, spin: false, dir: "n", lastDir: "n", lastDirAt: -Infinity, balance: 0, flick: { trick: null, spin: null, grind: null }, touchGrind: false };
+  return { t, steer: 0, push: false, brake: false, jump: false, grind: false, trick: false, spin: false, dir: "n", lastDir: "n", lastDirAt: -Infinity, lastDirHeld: false, balance: 0, flick: { trick: null, spin: null, grind: null }, touchGrind: false };
 }

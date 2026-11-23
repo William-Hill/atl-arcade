@@ -519,3 +519,25 @@ describe("rebind (R12.2)", () => {
     expect(inp.keys.jump).toEqual(["Space"]);
   });
 });
+
+describe("playtest toggles", () => {
+  it("carve guard: D held from 8 frames before Q gives the neutral grab; off, it gives Side Grab", () => {
+    for (const [carveGuard, id] of [[0.1, "mute"], [null, "side"]]) {
+      const s = createSim({ beat: false, k: { ...TRICK, carveGuard } });
+      const inp = createInput({ k: { ...TRICK, carveGuard } });
+      rampAir(s);
+      run(s, inp, [key("KeyD", true, T(10)), key("KeyQ", true, T(18))], 24);
+      expect(s.air.grab.id).toBe(id);
+    }
+  });
+  it("short flick: an 18 px drag is a flick at 16 px and a tap-timeout at 24 px", () => {
+    for (const [flickMin, id] of [[16, "side"], [24, "mute"]]) {
+      const kk = { ...TRICK, flickMin };
+      const s = createSim({ beat: false, k: kk });
+      const inp = createInput({ k: kk });
+      rampAir(s);
+      run(s, inp, [{ kind: "touchDown", id: 1, button: "trick", x: 300, y: 300, t: T(20) }, { kind: "touchMove", id: 1, x: 318, y: 300, t: T(21) }], 30);
+      expect(s.air.grab.id).toBe(id);
+    }
+  });
+});

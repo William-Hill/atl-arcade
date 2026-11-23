@@ -29,6 +29,13 @@
       }
     },
     {
+      "name": "keyboard, carve guard on (key 6): D held 200 ms before Q gives the neutral Mute Grab",
+      "ok": true,
+      "detail": {
+        "id": "mute"
+      }
+    },
+    {
       "name": "gamepad: stick left, then Y gives Japan Grab",
       "ok": true,
       "detail": {
@@ -1200,7 +1207,209 @@
         "medianLatencyMs": 0
       }
     ],
-    "flickMin 16": [
+    "carveGuard 0.10 (toggle 6)": [
+      {
+        "device": "keyboard",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.7466666666666667,
+        "unwantedUpFromPush": 0.04477611940298507,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.08695652173913043,
+        "carveTrials": 46,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8235294117647058,
+          "l": 0.5909090909090909,
+          "r": 0.65,
+          "u": 0.8333333333333334,
+          "d": 0.8333333333333334
+        },
+        "medianLatencyMs": 17
+      },
+      {
+        "device": "keyboard",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.78,
+        "unwantedUpFromPush": 0.029850746268656716,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.10638297872340426,
+        "carveTrials": 47,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8529411764705882,
+          "l": 0.5909090909090909,
+          "r": 0.675,
+          "u": 0.9666666666666667,
+          "d": 0.7916666666666666
+        },
+        "medianLatencyMs": 17
+      },
+      {
+        "device": "keyboard",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.8933333333333333,
+        "unwantedUpFromPush": 0.014925373134328358,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.11904761904761904,
+        "carveTrials": 42,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8823529411764706,
+          "l": 0.8636363636363636,
+          "r": 0.85,
+          "u": 1,
+          "d": 0.875
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.9533333333333334,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 62,
+        "unwantedLRFromCarve": 0.058823529411764705,
+        "carveTrials": 34,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.9090909090909091,
+          "r": 0.925,
+          "u": 1,
+          "d": 0.9583333333333334
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.7533333333333333,
+        "unwantedUpFromPush": 0.056338028169014086,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0.10416666666666667,
+        "carveTrials": 48,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8235294117647058,
+          "l": 0.6818181818181818,
+          "r": 0.625,
+          "u": 0.9,
+          "d": 0.75
+        },
+        "medianLatencyMs": 17
+      },
+      {
+        "device": "gamepad",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.74,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.10810810810810811,
+        "carveTrials": 37,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.5909090909090909,
+          "r": 0.525,
+          "u": 0.8666666666666667,
+          "d": 0.7916666666666666
+        },
+        "medianLatencyMs": 33
+      },
+      {
+        "device": "gamepad",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.82,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.08571428571428572,
+        "carveTrials": 35,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.7272727272727273,
+          "r": 0.65,
+          "u": 0.9,
+          "d": 0.9166666666666666
+        },
+        "medianLatencyMs": 17
+      },
+      {
+        "device": "gamepad",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.9333333333333333,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.03225806451612903,
+        "carveTrials": 31,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.8636363636363636,
+          "r": 0.875,
+          "u": 0.9666666666666667,
+          "d": 1
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.9733333333333334,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 25,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.9090909090909091,
+          "r": 0.95,
+          "u": 1,
+          "d": 1
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.78,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.09302325581395349,
+        "carveTrials": 43,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.6818181818181818,
+          "r": 0.6,
+          "u": 0.8666666666666667,
+          "d": 0.8333333333333334
+        },
+        "medianLatencyMs": 33
+      }
+    ],
+    "flickMin 16 (toggle 5)": [
       {
         "device": "touch",
         "profile": "P1",
@@ -1405,7 +1614,7 @@
       }
     ]
   },
-  "botSeconds": 1.261,
-  "desktopFps": 44,
-  "phoneFps": 25.57293203501525
+  "botSeconds": 1.386,
+  "desktopFps": 37.74315300493567,
+  "phoneFps": 25.575447570332493
 }

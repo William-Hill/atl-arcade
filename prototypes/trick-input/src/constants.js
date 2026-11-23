@@ -37,7 +37,15 @@ export const TRICK = {
   bailBank: 0.25, // F7. 0 / 0.25 / 0.5
   beatPerfectBonus: 1.75, // F6. 1.5 / 1.75 / 2
   oneButtonHold: 0.5, // s (R12). 0.3 / 0.5 / 0.8
+  // Prototype toggle, not in the GDD (owner choice 2026-11-23, for playtest 1):
+  // a left or right direction that is still held and started more than this
+  // before the press is a carve, not a fresh direction. null = off (the GDD rule).
+  carveGuard: null,
 };
+
+// Prototype toggles for playtest 1 (owner choice 2026-11-23). Off by default.
+export const CARVE_GUARD = 0.1; // s
+export const SHORT_FLICK = 16; // px
 
 // R12.3 "Relaxed timing" overrides.
 export const RELAXED = { dirBefore: 0.25, dirAfter: 0.1, flickMaxMs: 250, landingGrace: 0.2 };

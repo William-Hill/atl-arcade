@@ -92,3 +92,18 @@ describe("gamepad (R2)", () => {
     expect(tr.lastDirAt).toBe(1.4);
   });
 });
+
+describe("carve guard toggle (prototype, off by default)", () => {
+  const guard = { ...TRICK, carveGuard: 0.1 };
+  it("is off by default: a held left 140 ms before the press counts", () => {
+    expect(isFresh("l", 1 - 0.14, 1, TRICK, true)).toBe(true);
+  });
+  it("on: a held left that started 140 ms before is a carve; 80 ms before still counts", () => {
+    expect(isFresh("l", 1 - 0.14, 1, guard, true)).toBe(false);
+    expect(isFresh("l", 1 - 0.08, 1, guard, true)).toBe(true);
+  });
+  it("on: a tap (let go) 140 ms before still counts, and up/down are not guarded", () => {
+    expect(isFresh("l", 1 - 0.14, 1, guard, false)).toBe(true);
+    expect(isFresh("u", 1 - 0.14, 1, guard, true)).toBe(true);
+  });
+});

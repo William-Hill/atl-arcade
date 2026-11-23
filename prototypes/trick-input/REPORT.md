@@ -20,11 +20,12 @@ The capsule skater, one rail, one kicker, and a flat pad. Text labels show the t
 | R10 landings | Clean, stumble (grab held at the touchdown), late grab void (`landingGrace`) | sim tests |
 | R11 phone flick | Tap = neutral, 24 px drag = direction, 120 ms timeout, GRIND press at the touch-down and the stance at the resolve (one change only), flick ring with short names | `src/flick.js`, 7 unit tests, 4 sim tests, 3 Pixel 7 checks |
 | R12 accessibility | One-button mode (key 1), Relaxed timing (key 2), rebind with clash block | sim tests |
+| Playtest toggles (owner choice 2026-11-23, not in the GDD) | Key 5: `flickMin` 16 px in place of 24 px. Key 6: carve guard (a left or right still held that started more than 100 ms before the press does not count). Both are off by default. URL flags `?shortFlick` and `?carveGuard` turn them on at load. | 5 unit and sim tests, 1 real-browser check |
 | F3 to F7 scoring | Air, grind, link, beat tiers (PERFECT 1.75, GOOD 1.5), multiplier, bank, bail bank | `src/scoring.js`, 17 unit tests (the GDD examples: 268, 408, 3894, 3492, 325) |
 
 Not in the prototype: the grind balance and the grind bail (the bail bank is tested in `scoring.test.js`), vert ramps, drops, switch, sound, and clips.
 
-**Tests:** 116 Vitest tests in 7 files, all pass (`npx vitest run --config prototypes/trick-input/vitest.config.js`).
+**Tests:** 121 Vitest tests in 7 files, all pass (`npx vitest run --config prototypes/trick-input/vitest.config.js`).
 
 ## How to run it
 
@@ -50,9 +51,9 @@ This runs the automated playtest and writes `playtest/results.md`, `playtest/res
 
 ## Results
 
-### Real-browser checks: 14 of 14 pass
+### Real-browser checks: 15 of 15 pass
 
-Keyboard A then Q (60 ms) in the air gives the Japan Grab (5 of 5). W held 1 s then Q gives the neutral dance. A W tap 80 ms before Q gives Up. The gamepad stick left then Y gives the Japan Grab; the stick at 0.49 gives the neutral grab. On the Pixel 7 viewport: a 30 px flick right gives the Side Grab, a tap gives the Mute Grab, a flick up on SPIN gives ATL Rydin, and the layout has 5 buttons with TRICK in place of GROOVE. No console errors.
+Keyboard A then Q (60 ms) in the air gives the Japan Grab (5 of 5). With the carve guard on (key 6), D held 200 ms before Q gives the neutral grab. W held 1 s then Q gives the neutral dance. A W tap 80 ms before Q gives Up. The gamepad stick left then Y gives the Japan Grab; the stick at 0.49 gives the neutral grab. On the Pixel 7 viewport: a 30 px flick right gives the Side Grab, a tap gives the Mute Grab, a flick up on SPIN gives ATL Rydin, and the layout has 5 buttons with TRICK in place of GROOVE. No console errors.
 
 ### Measured against the targets of the issue
 
@@ -69,7 +70,9 @@ The route bot banks "Long Rail Grind + Manual + Japan Grab" (about 2360 points) 
 
 ### Findings
 
-1. **Carves are the main risk on the keyboard and the gamepad.** A and D steer and also give left and right (R2). A carve that starts in the 210 ms window around a neutral trick press turns it into Left or Right. With carves at random times near the press, 11.3% of the neutral and up/down tricks with a carve came out Left or Right on the keyboard. This is over the 5% target. On the phone the steer stick is not a direction source, so the leak is 0%. The human playtest must measure whether real players carve in the window. If they do, the owner can try: separate direction keys (arrows only), a shorter `dirBefore`, or a rule that a steer key held more than about 100 ms before the press does not count.
+1. **Carves are the main risk on the keyboard and the gamepad.** A and D steer and also give left and right (R2). A carve that starts in the 210 ms window around a neutral trick press turns it into Left or Right. With carves at random times near the press, 11.3% of the neutral and up/down tricks with a carve came out Left or Right on the keyboard. This is over the 5% target. On the phone the steer stick is not a direction source, so the leak is 0%. The human playtest must measure whether real players carve in the window.
+
+   The owner chose (2026-11-23) to add the carve guard as a toggle (key 6) and let the human data decide. In the model the guard helps little: on the keyboard the carve leak goes from 11.3% to 9.5%, and the tricks as wanted go from 88.8% to 82.5%, because the guard also blocks intended directions that a player holds early. On the gamepad the leak stays at 6.4% and the tricks as wanted go from 92.1% to 84.9%. Most modeled carves start inside the last 100 ms or after the press, where the guard does not act. Humans can differ, so the playtest tries both settings.
 2. **Push taps are safe only if players pause before a trick.** The profiles stop most push taps 200 to 250 ms before the press, and the unwanted Up stays at 2.9%. With no pause, the share of neutral tricks that come out Up is about (`dirBefore` + `dirAfter`) / tap period: 37.5% at a tap every 0.6 s, 26.5% at 1.0 s. Shift gives no direction, so a player who pushes with Shift has no leak.
 
    | `dirBefore` | Tap every 0.4 s | 0.6 s | 1.0 s |
@@ -77,7 +80,7 @@ The route bot banks "Long Rail Grind + Manual + Japan Grab" (about 2360 points) 
    | 0.10 s | 41.5% | 31.0% | 21.0% |
    | 0.15 s (typical) | 57.5% | 37.5% | 26.5% |
    | 0.25 s | 80.0% | 50.5% | 31.0% |
-3. **`flickMin` 24 px is too long for slow or short flicks in the model.** The phone misses are flicks under 24 px that resolve as taps. `flickMin` 16 gives 92.9% as wanted (1.8% of taps then jitter into a direction). `flickMin` 40 gives 52.5%. Measure the real flick length of human players before a change.
+3. **`flickMin` 24 px is too long for slow or short flicks in the model.** The phone misses are flicks under 24 px that resolve as taps. `flickMin` 16 gives 92.9% as wanted (1.8% of taps then jitter into a direction). `flickMin` 40 gives 52.5%. The owner chose (2026-11-23) to keep 24 px as the default and to add 16 px as a toggle (key 5), so testers try both on a real phone.
 4. **`dirBefore` trades aim for leaks.** On the keyboard: 0.10 s gives 77.6% as wanted, 0.15 s gives 88.8%, 0.25 s gives 92.8% but 14.2% carve leak. `dirAfter` 0 drops the keyboard to 82.7%: the 60 ms after the press catches the late directions.
 5. **A GRIND held early before a rail gives a short manual first.** At 8.6 m/s, 0.15 s (`manualDelay`) is about 1.3 m. A player who holds GRIND more than about 1.3 m before the rail gets "Manual + Rail Grind". The GDD allows this (Edge Cases), but a player can see it as a surprise. The first route bot did this. Watch for it in the human playtest.
 6. **Frame rate.** Headless SwiftShader: 44 FPS on the desktop viewport and 26 FPS on the Pixel 7 viewport (software render at 2x pixel ratio). This is not a device number. At a low frame rate, CDP touch events arrive late; the playtest uses one-step flicks for this reason.
@@ -105,12 +108,13 @@ The automated run cannot close these items. Do them, then record the verdict.
 - [ ] For each trick press, ask or log the intended trick. Count the tricks as wanted (target 90% or more). The log panel (bottom right) and the R3 panel (top right) help.
 - [ ] Count unwanted Up from push taps and unwanted Left/Right from carves (target under 5% each). Check finding 1 first: it is the largest risk.
 - [ ] Time each player to the first banked 3-link combo with a manual (target under 3 minutes).
-- [ ] On the phone, note flicks that came out as taps (finding 3) and the comfort of the flick ring.
+- [ ] On the phone, note flicks that came out as taps (finding 3) and the comfort of the flick ring. Each phone player plays half the time with the 16 px toggle (key 5, or open the page with `?touch&shortFlick`).
+- [ ] Each keyboard player plays half the time with the carve guard (key 6, or `?carveGuard`). Count the carve leaks and the missed directions for both settings (finding 1).
 - [ ] Ask each player to try one-button mode (key 1) and Relaxed timing (key 2) once.
 - [ ] Watch for the early-GRIND manual before the rail (finding 5).
 - [ ] Write the numbers in the table below and the verdict in `docs/playtest-metrics.md`.
 
-| Player | Device | Tricks as wanted | Unwanted Up | Unwanted L/R | Time to 3-link + manual | Notes |
+| Player | Device and toggle | Tricks as wanted | Unwanted Up | Unwanted L/R | Time to 3-link + manual | Notes |
 |---|---|---|---|---|---|---|
 | 1 | | | | | | |
 | 2 | | | | | | |
@@ -118,4 +122,4 @@ The automated run cannot close these items. Do them, then record the verdict.
 | 4 | | | | | | |
 | 5 | | | | | | |
 
-**Verdict (owner):** ______ (PROCEED / PIVOT / KILL)
+The verdict (PROCEED, PIVOT, or KILL) goes in `docs/playtest-metrics.md` after the human playtest.

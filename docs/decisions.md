@@ -2867,3 +2867,12 @@ Not decided here, and not changed:
   - `main` after the city-look merge (#304), default (NPC skaters off): 85 calls and 252,910 triangles.
   - The same build with `--extra '&skaters=1'`: 91 calls and 270,892 triangles (`reports/prop-perf/skaters-settled-spawn-low.json`).
   - A before/after run with `&skaters=1` and a `before` build with no `settled` (`53784e1`) sampled both builds, with no timeout.
+
+## 2026-11-23: Two playtest toggles in the trick input prototype (#326)
+
+The automated playtest 1 of `prototypes/trick-input/` found two risks (`prototypes/trick-input/REPORT.md`): carves on A/D leak into Left/Right tricks (11.3% on the keyboard, target under 5%), and short phone flicks under 24 px resolve as taps (82.8% tricks as wanted on the phone). The owner chose:
+
+- **Carve guard as a toggle, then test.** Key 6 (or `?carveGuard`): a left or right that is still held and started more than 100 ms before the press does not count. It is off by default; the GDD rule (R3) does not change. In the synthetic model it lowers the keyboard leak only to 9.5% and drops the tricks as wanted to 82.5%. The human playtest tries both settings and the data decides.
+- **Keep `flickMin` 24 px, add 16 px as a toggle.** Key 5 (or `?shortFlick`). In the model, 16 px gives 92.9% tricks as wanted on the phone. The human playtest tries both on a real phone.
+
+Neither toggle goes into `src/` before the playtest verdict.

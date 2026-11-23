@@ -58,15 +58,19 @@ export function padUpdate(tr, dir, t) {
 // --- R3: the fresh-direction rule ---------------------------------------
 
 // Is the newest direction event fresh for a press at `pressT`?
-export function isFresh(lastDir, lastDirAt, pressT, k = TRICK) {
+// `held` is true when the key (or stick) of lastDir is still down. With the
+// carveGuard toggle on, a held left or right that started more than
+// carveGuard before the press is a carve, so it does not count.
+export function isFresh(lastDir, lastDirAt, pressT, k = TRICK, held = false) {
   if (!lastDir || lastDir === "n") return false;
+  if (k.carveGuard != null && held && (lastDir === "l" || lastDir === "r") && pressT - lastDirAt > k.carveGuard + EPS) return false;
   return lastDirAt >= pressT - k.dirBefore - EPS && lastDirAt <= pressT + EPS;
 }
 
 // Call at the press frame. Returns { dir } when the trick starts now, or
 // { pending: pressT } when the game must wait up to dirAfter.
-export function resolvePress(pressT, lastDir, lastDirAt, k = TRICK) {
-  if (isFresh(lastDir, lastDirAt, pressT, k)) return { dir: lastDir, at: pressT };
+export function resolvePress(pressT, lastDir, lastDirAt, k = TRICK, held = false) {
+  if (isFresh(lastDir, lastDirAt, pressT, k, held)) return { dir: lastDir, at: pressT };
   if (k.dirAfter <= EPS) return { dir: "n", at: pressT };
   return { pending: pressT };
 }

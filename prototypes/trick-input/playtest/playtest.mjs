@@ -129,6 +129,23 @@ try {
     await sleep(1500);
   }
 
+  // 1c2. Key 6 turns on the carve guard: D held 200 ms before Q is a carve, so the grab is neutral.
+  {
+    await page.keyboard.press("Digit6");
+    await airReset(page);
+    await sleep(250);
+    await page.keyboard.down("KeyD");
+    await sleep(200);
+    await page.keyboard.down("KeyQ");
+    await sleep(150);
+    const id = await page.evaluate(() => window.__ti.sim.air && window.__ti.sim.air.grab && window.__ti.sim.air.grab.id);
+    await page.keyboard.up("KeyQ");
+    await page.keyboard.up("KeyD");
+    await page.keyboard.press("Digit6");
+    check("keyboard, carve guard on (key 6): D held 200 ms before Q gives the neutral Mute Grab", id === "mute", { id });
+    await sleep(1200);
+  }
+
   // 1d. Fake gamepad: stick left, then Y.
   {
     await page.evaluate(() => (window.__fakePad.connected = true));
@@ -199,7 +216,8 @@ try {
     ["dirBefore 0.10", { dirBefore: 0.1 }, ["keyboard", "gamepad"]],
     ["dirBefore 0.25", { dirBefore: 0.25 }, ["keyboard", "gamepad"]],
     ["dirAfter 0", { dirAfter: 0 }, ["keyboard", "gamepad"]],
-    ["flickMin 16", { flickMin: 16 }, ["touch"]],
+    ["carveGuard 0.10 (toggle 6)", { carveGuard: 0.1 }, ["keyboard", "gamepad"]],
+    ["flickMin 16 (toggle 5)", { flickMin: 16 }, ["touch"]],
     ["flickMin 40", { flickMin: 40 }, ["touch"]],
   ]) {
     results.knobs[name] = await page.evaluate(([oo, dd]) => window.__ti.bots({ trials: 150, seed: 11, devices: dd, kOverride: oo }), [o, devs]);

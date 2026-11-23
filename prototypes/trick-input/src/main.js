@@ -3,7 +3,7 @@
 // feeds them events and draws the state. It does not import src/ (AGENTS.md).
 
 import * as THREE from "three";
-import { DT, TRICK, withRelaxed } from "./constants.js";
+import { CARVE_GUARD, DT, SHORT_FLICK, TRICK, withRelaxed } from "./constants.js";
 import { activeFlicks, createInput, frameInput, keyDown, keyUp, padSample, touchDown, touchMove, touchUp, touchStick } from "./input.js";
 import { isFresh } from "./direction.js";
 import { applyEvent, run } from "./harness.js";
@@ -13,7 +13,7 @@ import { ARROWS, DANCES, GRABS, STANCES, hudShort } from "./tricks.js";
 import { metrics, PROFILES, pushTapSweep, routeBot, runSession, runTrial } from "./bots.js";
 
 const params = new URLSearchParams(location.search);
-const opts = { oneButton: false, relaxed: false, skater: "nia", touch: params.has("touch") || matchMedia("(pointer: coarse)").matches };
+const opts = { oneButton: false, relaxed: false, carveGuard: params.has("carveGuard"), shortFlick: params.has("shortFlick"), skater: "nia", touch: params.has("touch") || matchMedia("(pointer: coarse)").matches };
 let k = TRICK;
 let sim = createSim({ k, skater: opts.skater });
 let inp = createInput({ k });
@@ -108,7 +108,7 @@ const logLines = [];
 
 function hud() {
   const s = sim;
-  $("status").innerHTML = `<b>${s.mode.toUpperCase()}</b> · ${s.speed.toFixed(1)} m/s · ${s.skater === "nia" ? "Nia" : "Marcus"}<br/>device: ${inp.lastDevice}${opts.oneButton ? " · <b>one-button</b>" : ""}${opts.relaxed ? " · <b>relaxed</b>" : ""}<br/>score ${s.combo.score}`;
+  $("status").innerHTML = `<b>${s.mode.toUpperCase()}</b> · ${s.speed.toFixed(1)} m/s · ${s.skater === "nia" ? "Nia" : "Marcus"}<br/>device: ${inp.lastDevice}${opts.oneButton ? " · <b>one-button</b>" : ""}${opts.relaxed ? " · <b>relaxed</b>" : ""}${opts.shortFlick ? " · <b>flick 16 px</b>" : ""}${opts.carveGuard ? " · <b>carve guard</b>" : ""}<br/>score ${s.combo.score}`;
   const tr = s.trick || lastTrickShown;
   if (s.trick) lastTrickShown = { ...s.trick, until: s.t + 1.2 };
   const show = tr && (s.trick || s.t < tr.until);
@@ -129,7 +129,7 @@ function hud() {
   const span = k.dirBefore + k.dirAfter + 0.25;
   const x = (dt) => ((dt + k.dirBefore + 0.25) / span) * 100;
   const age = fr.lastDirAt > -1e9 ? s.t - fr.lastDirAt : null;
-  const fresh = fr.lastDir && isFresh(fr.lastDir, fr.lastDirAt, s.t, k);
+  const fresh = fr.lastDir && isFresh(fr.lastDir, fr.lastDirAt, s.t, k, fr.lastDirHeld);
   $("dirs").innerHTML = `dir <b>${ARROWS[fr.dir || "n"]}</b> · lastDir <b>${ARROWS[fr.lastDir || "n"]}</b> ${age != null ? `${Math.round(age * 1000)} ms ago` : ""}<br/>fresh now: <b>${fresh ? "YES" : "no"}</b> · balance ${(fr.balance ?? 0).toFixed(2)}
     <div class="win"><div class="fresh" style="left:${x(-k.dirBefore)}%;width:${x(k.dirAfter) - x(-k.dirBefore)}%"></div><div class="now" style="left:${x(0)}%"></div>${age != null && age < k.dirBefore + 0.25 ? `<div class="ev" style="left:${x(-age)}%">${ARROWS[fr.lastDir]}</div>` : ""}</div>`;
   $("log").innerHTML = logLines.slice(-7).join("<br/>");
@@ -227,6 +227,8 @@ addEventListener("keydown", (e) => {
   if (e.code === "Digit2") return toggle("relaxed");
   if (e.code === "Digit3") return toggle("skater");
   if (e.code === "Digit4") return toggle("touch");
+  if (e.code === "Digit5") return toggle("shortFlick");
+  if (e.code === "Digit6") return toggle("carveGuard");
   if (e.code === "Digit0") return reset();
   if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
   keyDown(inp, e.code, simTimeAt(performance.now()));
@@ -287,12 +289,14 @@ function toggle(what) {
   if (what === "relaxed") opts.relaxed = !opts.relaxed;
   if (what === "skater") opts.skater = opts.skater === "nia" ? "marcus" : "nia";
   if (what === "touch") opts.touch = !opts.touch;
+  if (what === "shortFlick") opts.shortFlick = !opts.shortFlick;
+  if (what === "carveGuard") opts.carveGuard = !opts.carveGuard;
   applyTouchLayout();
   reset({ keepPos: true });
 }
 
 function reset({ keepPos = false, ...placeOpts } = {}) {
-  k = opts.relaxed ? withRelaxed() : TRICK;
+  k = { ...(opts.relaxed ? withRelaxed() : TRICK), ...(opts.shortFlick ? { flickMin: SHORT_FLICK } : {}), ...(opts.carveGuard ? { carveGuard: CARVE_GUARD } : {}) };
   const old = sim;
   sim = createSim({ k, skater: opts.skater, oneButton: opts.oneButton });
   inp = createInput({ k });
@@ -323,13 +327,15 @@ window.__ti = {
   reset(o = {}) {
     if (o.oneButton !== undefined) opts.oneButton = o.oneButton;
     if (o.relaxed !== undefined) opts.relaxed = o.relaxed;
+    if (o.shortFlick !== undefined) opts.shortFlick = o.shortFlick;
+    if (o.carveGuard !== undefined) opts.carveGuard = o.carveGuard;
     if (o.skater) opts.skater = o.skater;
     if (o.touch !== undefined) {
       opts.touch = o.touch;
       applyTouchLayout();
     }
-    const { oneButton, relaxed, skater: _s, touch, ...rest } = o;
-    void oneButton, relaxed, _s, touch;
+    const { oneButton, relaxed, shortFlick, carveGuard, skater: _s, touch, ...rest } = o;
+    void oneButton, relaxed, shortFlick, carveGuard, _s, touch;
     reset(rest);
     return true;
   },

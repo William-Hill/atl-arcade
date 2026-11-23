@@ -107,7 +107,7 @@ function snap(s, input) {
     if (s.touchGrindDir) dir = s.touchGrindDir;
     else pendingFlick = true;
   } else if (s.grindPress && s.grindPress.res.dir && s.grindPress.res.dir !== "n") dir = s.grindPress.res.dir;
-  else if (isFresh(input.lastDir, input.lastDirAt, s.t, s.k)) dir = input.lastDir;
+  else if (isFresh(input.lastDir, input.lastDirAt, s.t, s.k, input.lastDirHeld)) dir = input.lastDir;
   s.mode = "grind";
   s.y = r.h;
   s.vy = 0;
@@ -293,7 +293,7 @@ function launch(s) {
 function pressRes(s, button, input) {
   const f = input.flick && input.flick[button];
   if (f) return { dir: f, at: s.t };
-  return resolvePress(s.t, input.lastDir, input.lastDirAt, s.k);
+  return resolvePress(s.t, input.lastDir, input.lastDirAt, s.k, input.lastDirHeld);
 }
 
 export function stepSim(s, input, dt = DT) {

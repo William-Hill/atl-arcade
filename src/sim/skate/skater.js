@@ -2,7 +2,7 @@
 // the grind system. Pure. `stepSkater` is what the game loop and the tests
 // call. Stats count snaps, exits, and falls for the playtest metrics.
 
-import { GRIND, SKATE, STYLE, styleDuration } from "./constants.js";
+import { GRIND, SKATE, STYLE, dancesFor, styleDuration } from "./constants.js";
 import { FLAT_GROUND, createSkateState, stepSkate } from "./controller.js";
 import { findSnap, prepareGrindables, startGrind, stepGrind } from "./grind.js";
 
@@ -15,6 +15,7 @@ export function createSkater(level, { position, yaw } = {}) {
     grindCooldown: 0,
     grindHeld: false,
     grindBuffer: 0, // s left on a buffered grind press
+    bonkCatch: null, // { speed, left }: the speed before a bonk, for a ledge catch (#262)
     justSnapped: false,
     justFell: false,
     justExited: false,
@@ -35,7 +36,20 @@ export function createSkaterEnv(level, extra = []) {
   return { grindables: [...(level ? prepareGrindables(level) : []), ...extra] };
 }
 
-export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, k = { skate: SKATE, grind: GRIND }) {
+// The constants with a body's skate constants, made once per body (not on
+// every tick).
+const bodyKs = new WeakMap();
+function bodyK(kIn, skate) {
+  const cached = bodyKs.get(skate);
+  if (cached && cached.grind === kIn.grind) return cached;
+  const k = { ...kIn, skate };
+  bodyKs.set(skate, k);
+  return k;
+}
+
+export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, kIn = { skate: SKATE, grind: GRIND }) {
+  // skaterEnv.skate: the skate constants of this skater's body (body.js).
+  const k = skaterEnv.skate ? bodyK(kIn, skaterEnv.skate) : kIn;
   const grindables = skaterEnv.grindables ?? [];
   const wantsGrind = Boolean(input.grind);
   const grindEdge = wantsGrind && !prev.grindHeld;
@@ -60,14 +74,25 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     s.justFell = false;
     s.justExited = false;
     s.exitReason = null;
+    s.endedGrind = null;
     const lean = input.steer ? Math.sign(input.steer) : stats.snaps % 2 === 0 ? 1 : -1;
     // Input buffer: a grind tap stays live for GRIND.buffer s, so a tap just
     // before the rail comes in range still snaps.
     s.grindBuffer = grindEdge ? k.grind.buffer : Math.max(0, (prev.grindBuffer ?? 0) - dt);
+    // Ledge catch (#262): a bonk keeps the speed from before the hit for
+    // catchWindow s. A grind in that window snaps at a wider angle with that
+    // speed, so a ledge hit does not end in a slow grind that tips over.
+    let caught = prev.bonkCatch && prev.bonkCatch.left > dt ? { ...prev.bonkCatch, left: prev.bonkCatch.left - dt } : null;
+    const before = prev.state === "air" ? Math.hypot(prev.velocity[0], prev.velocity[2]) : Math.abs(prev.speed);
+    if (s.bonked && before > (caught?.speed ?? 0)) caught = { speed: before, left: k.grind.catchWindow };
+    s.bonkCatch = caught;
     if ((wantsGrind || s.grindBuffer > 0) && s.grindCooldown <= 0 && grindables.length) {
-      const snap = findSnap(grindables, s, k.grind);
+      let snap = findSnap(grindables, s, k.grind);
+      if (!snap && caught) snap = findSnap(grindables, s, { ...k.grind, minAlongDot: k.grind.catchAlongDot });
       if (snap) {
-        s = startGrind(s, snap, lean, k.grind);
+        s = startGrind(caught ? { ...s, speed: Math.max(Math.abs(s.speed), caught.speed) } : s, snap, lean, k.grind);
+        s.bonked = false;
+        s.bonkCatch = null;
         s.grindBuffer = 0;
         s.jumpBuffer = 0;
         s.tick = prev.tick + 1;
@@ -76,8 +101,9 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     }
   }
   s.grindHeld = wantsGrind;
-  // The grind steps copy the previous state, so set the push flag here too.
+  // The grind steps copy the previous state, so set the push and brake flags here too.
   s.pushing = s.state === "rolling" && Boolean(input.push);
+  s.braking = s.state === "rolling" && Boolean(input.brake);
 
   // Style moves: a button press starts the next dance in that button's list,
   // while rolling at speed. A dance runs for its beats, and a held button
@@ -104,9 +130,10 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
       const index = held.findIndex((h, i) => h && !prev.styleHeld[i]);
       const m = STYLE.moves[index];
       if (m) {
-        const dance = m.dances[counts[index] % m.dances.length];
+        const dances = dancesFor(m, skaterEnv.skater);
+        const dance = dances[counts[index] % dances.length];
         counts[index] += 1;
-        style = { id: m.id, button: index, name: dance.name, clip: dance.clip, time: 0, duration: styleDuration(m), points: m.points, anim: m.anim };
+        style = { id: m.id, button: index, name: dance.name, clip: dance.clip, time: 0, duration: styleDuration(m, skaterEnv.bpm), points: m.points, anim: m.anim };
       }
     }
   }

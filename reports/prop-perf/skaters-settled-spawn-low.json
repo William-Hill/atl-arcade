@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-14T16:17:32.586Z",
+  "date": "2026-11-23T19:01:46.697Z",
   "gpu": "swiftshader",
   "quality": "low",
   "seconds": 6,
@@ -12,13 +12,13 @@
       "quality": "low",
       "gpu": "swiftshader",
       "load": 1.5,
-      "calls": 50,
-      "triangles": 143680,
-      "propCount": 8131,
-      "frames": 31,
-      "medianFps": 6.7,
-      "p90Ms": 283.3,
-      "p99Ms": 333.3
+      "calls": 85,
+      "triangles": 252910,
+      "propCount": 8231,
+      "frames": 16,
+      "medianFps": 3.5,
+      "p90Ms": 483.3,
+      "p99Ms": 500
     },
     {
       "run": 2,
@@ -26,14 +26,14 @@
       "cam": "spawn",
       "quality": "low",
       "gpu": "swiftshader",
-      "load": 2.4,
-      "calls": 50,
-      "triangles": 143680,
-      "propCount": 8131,
-      "frames": 36,
-      "medianFps": 6.7,
-      "p90Ms": 249.9,
-      "p99Ms": 299.9
+      "load": 2.5,
+      "calls": 85,
+      "triangles": 252910,
+      "propCount": 8231,
+      "frames": 16,
+      "medianFps": 3.8,
+      "p90Ms": 533.3,
+      "p99Ms": 550
     },
     {
       "run": 3,
@@ -41,33 +41,33 @@
       "cam": "spawn",
       "quality": "low",
       "gpu": "swiftshader",
-      "load": 3.2,
-      "calls": 50,
-      "triangles": 143680,
-      "propCount": 8131,
-      "frames": 35,
-      "medianFps": 6,
-      "p90Ms": 249.9,
-      "p99Ms": 266.7
+      "load": 3,
+      "calls": 85,
+      "triangles": 252910,
+      "propCount": 8231,
+      "frames": 14,
+      "medianFps": 3.2,
+      "p90Ms": 366.6,
+      "p99Ms": 433.2
     }
   ],
   "table": [
     {
       "build": "after",
       "cam": "spawn",
-      "calls": "50",
-      "triangles": "143680",
-      "medianFps": 6.7,
-      "p90Ms": 249.9,
+      "calls": "85",
+      "triangles": "252910",
+      "medianFps": 3.5,
+      "p90Ms": 483.3,
       "runsP90Ms": [
-        283.3,
-        249.9,
-        249.9
+        483.3,
+        533.3,
+        366.6
       ],
       "load": [
         1.5,
-        2.4,
-        3.2
+        2.5,
+        3
       ]
     }
   ],

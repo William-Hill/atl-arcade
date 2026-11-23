@@ -1,0 +1,2444 @@
+{
+  "date": "2026-11-07T17:32:23.345Z",
+  "level": "beltline-eastside",
+  "gpu": "swiftshader (software, CPU)",
+  "machine": {
+    "cpus": 4,
+    "model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "platform": "linux"
+  },
+  "viewport": "1280x720 @1",
+  "rideSeconds": 15,
+  "maxWallSeconds": 150,
+  "extra": "",
+  "runs": [
+    {
+      "quality": "low",
+      "look": "pbr",
+      "run": 1,
+      "load": 3.5,
+      "finished": false,
+      "wallSeconds": 150.1,
+      "frame": {
+        "frames": 37,
+        "meanMs": 3664.7,
+        "p95Ms": 7166.3,
+        "medianFps": 0.3
+      },
+      "calls": 115,
+      "triangles": 245909,
+      "geometries": 112,
+      "textures": 145,
+      "heapMB": 41.5,
+      "firstFrameMs": 8210,
+      "settledMs": 40005,
+      "requests": 249,
+      "downloadMB": {
+        "js": 0.8,
+        "glb": 12.52,
+        "textures": 1.7,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 16.21
+      },
+      "stepsPerFrame": 4.619,
+      "systems": {
+        "skater": {
+          "meanMs": 0.393,
+          "p95Ms": 0.6,
+          "perStepMs": 0.085
+        },
+        "walkers": {
+          "meanMs": 2.498,
+          "p95Ms": 5.1,
+          "perStepMs": 0.541
+        },
+        "walkersView": {
+          "meanMs": 0.04,
+          "p95Ms": 0.1
+        },
+        "crowd": {
+          "meanMs": 0.483,
+          "p95Ms": 0.8,
+          "perStepMs": 0.105
+        },
+        "crowdView": {
+          "meanMs": 0.021,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 1.569,
+          "p95Ms": 4.2,
+          "perStepMs": 0.34
+        },
+        "trafficView": {
+          "meanMs": 0.481,
+          "p95Ms": 0.9
+        },
+        "npcSkaters": {
+          "meanMs": 3.514,
+          "p95Ms": 10.3,
+          "perStepMs": 0.761
+        },
+        "npcSkatersView": {
+          "meanMs": 0.276,
+          "p95Ms": 0.3
+        },
+        "views": {
+          "meanMs": 2.048,
+          "p95Ms": 4.5
+        },
+        "render": {
+          "meanMs": 7.279,
+          "p95Ms": 12.3
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-BSO5ec1e.glb",
+          "kB": 3108
+        },
+        {
+          "file": "/assets/skater-B_jE0GB_.glb",
+          "kB": 2152
+        },
+        {
+          "file": "/assets/vehicles_lod-CklJUZoL.glb",
+          "kB": 1735
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863
+        },
+        {
+          "file": "/assets/ponce-city-market-DqBRVczI.glb",
+          "kB": 700
+        },
+        {
+          "file": "/assets/telephone-factory-lofts-Bgmn9E1F.glb",
+          "kB": 487
+        },
+        {
+          "file": "/assets/studioplex-DWbhSNQo.glb",
+          "kB": 432
+        }
+      ],
+      "perfFrames": 42,
+      "drawSplit": {
+        "total": {
+          "calls": 115,
+          "triangles": 245909
+        },
+        "byPass": {
+          "main": {
+            "calls": 115,
+            "triangles": 245909
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 44,
+            "triangles": 46944
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface-far",
+            "calls": 21,
+            "triangles": 40524
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 10,
+            "triangles": 8633
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 7,
+            "triangles": 44124
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:telephone-factory-lofts_lod",
+            "calls": 5,
+            "triangles": 1059
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-ralph-mcgill_lod",
+            "calls": 3,
+            "triangles": 260
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 3,
+            "triangles": 6
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-freedom-parkway_lod",
+            "calls": 2,
+            "triangles": 7592
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 76628
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-backpack",
+            "calls": 1,
+            "triangles": 5104
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-walker",
+            "calls": 1,
+            "triangles": 3800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-tote",
+            "calls": 1,
+            "triangles": 3008
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1242
+          },
+          {
+            "pass": "main",
+            "kind": "batched:car-lods",
+            "calls": 1,
+            "triangles": 1062
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 1000
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 892
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 504
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 242
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "main",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "main",
+            "kind": "mesh",
+            "calls": 1,
+            "triangles": 16
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-beams",
+            "calls": 1,
+            "triangles": 8
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": null,
+      "errors": []
+    },
+    {
+      "quality": "low",
+      "look": "toon",
+      "run": 1,
+      "load": 4.5,
+      "finished": true,
+      "wallSeconds": 54.5,
+      "frame": {
+        "frames": 189,
+        "meanMs": 278.6,
+        "p95Ms": 549.9,
+        "medianFps": 4
+      },
+      "calls": 118,
+      "triangles": 251888,
+      "geometries": 147,
+      "textures": 211,
+      "heapMB": 46.6,
+      "firstFrameMs": 5153,
+      "settledMs": 12980,
+      "requests": 212,
+      "downloadMB": {
+        "js": 0.86,
+        "glb": 7.44,
+        "textures": 0.51,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 10
+      },
+      "stepsPerFrame": 4.644,
+      "systems": {
+        "skater": {
+          "meanMs": 0.244,
+          "p95Ms": 0.4,
+          "perStepMs": 0.052
+        },
+        "walkers": {
+          "meanMs": 1.588,
+          "p95Ms": 3.9,
+          "perStepMs": 0.342
+        },
+        "walkersView": {
+          "meanMs": 0.139,
+          "p95Ms": 0.2
+        },
+        "crowd": {
+          "meanMs": 0.42,
+          "p95Ms": 1.2,
+          "perStepMs": 0.09
+        },
+        "crowdView": {
+          "meanMs": 0.063,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 0.953,
+          "p95Ms": 2.1,
+          "perStepMs": 0.205
+        },
+        "trafficView": {
+          "meanMs": 0.346,
+          "p95Ms": 0.4
+        },
+        "npcSkaters": {
+          "meanMs": 1.035,
+          "p95Ms": 2.6,
+          "perStepMs": 0.223
+        },
+        "npcSkatersView": {
+          "meanMs": 0.269,
+          "p95Ms": 0.6
+        },
+        "views": {
+          "meanMs": 1.817,
+          "p95Ms": 5.2
+        },
+        "render": {
+          "meanMs": 16.89,
+          "p95Ms": 9.6
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-BSO5ec1e.glb",
+          "kB": 3108
+        },
+        {
+          "file": "/assets/skater-B_jE0GB_.glb",
+          "kB": 2152
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/city_bike-fyZbZLlq.glb",
+          "kB": 400
+        },
+        {
+          "file": "/assets/food_cart-DVPWBUWf.glb",
+          "kB": 277
+        },
+        {
+          "file": "/assets/drinking_fountain-DRCuSKtW.glb",
+          "kB": 273
+        },
+        {
+          "file": "/assets/e_scooter-oY71MfIU.glb",
+          "kB": 268
+        },
+        {
+          "file": "/assets/sculpture_ribbon-mkx2_452.glb",
+          "kB": 267
+        }
+      ],
+      "perfFrames": 194,
+      "drawSplit": {
+        "total": {
+          "calls": 118,
+          "triangles": 251888
+        },
+        "byPass": {
+          "main": {
+            "calls": 118,
+            "triangles": 251888
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "skinned:meshes",
+            "calls": 26,
+            "triangles": 39074
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface-far",
+            "calls": 25,
+            "triangles": 64229
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 22,
+            "triangles": 23472
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 9,
+            "triangles": 2784
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 6,
+            "triangles": 19832
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 4,
+            "triangles": 12
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:skater-outline",
+            "calls": 2,
+            "triangles": 62546
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 2,
+            "triangles": 1530
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 2,
+            "triangles": 695
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 14028
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-backpack",
+            "calls": 1,
+            "triangles": 5808
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 4162
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-walker",
+            "calls": 1,
+            "triangles": 3496
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 3072
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-tote",
+            "calls": 1,
+            "triangles": 2632
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-city_bike_lod",
+            "calls": 1,
+            "triangles": 754
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-e_scooter_lod",
+            "calls": 1,
+            "triangles": 567
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 552
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 484
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 446
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-bike_dock_lod",
+            "calls": 1,
+            "triangles": 389
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 126
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:street-signs",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "main",
+            "kind": "mesh",
+            "calls": 1,
+            "triangles": 16
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-beams",
+            "calls": 1,
+            "triangles": 4
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": null,
+      "errors": []
+    },
+    {
+      "quality": "phone",
+      "look": "pbr",
+      "run": 1,
+      "load": 4.8,
+      "finished": false,
+      "wallSeconds": 150,
+      "frame": {
+        "frames": 46,
+        "meanMs": 2870.9,
+        "p95Ms": 5749.9,
+        "medianFps": 0.3
+      },
+      "calls": 140,
+      "triangles": 344095,
+      "geometries": 114,
+      "textures": 177,
+      "heapMB": 43.4,
+      "firstFrameMs": 8045,
+      "settledMs": 26582,
+      "requests": 277,
+      "downloadMB": {
+        "js": 0.8,
+        "glb": 16.14,
+        "textures": 1.7,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 19.83
+      },
+      "stepsPerFrame": 4.588,
+      "systems": {
+        "skater": {
+          "meanMs": 0.384,
+          "p95Ms": 2.3,
+          "perStepMs": 0.084
+        },
+        "walkers": {
+          "meanMs": 2.2,
+          "p95Ms": 6.5,
+          "perStepMs": 0.479
+        },
+        "walkersView": {
+          "meanMs": 0.286,
+          "p95Ms": 0.8
+        },
+        "crowd": {
+          "meanMs": 0.841,
+          "p95Ms": 2.4,
+          "perStepMs": 0.183
+        },
+        "crowdView": {
+          "meanMs": 0.039,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 2.092,
+          "p95Ms": 6.8,
+          "perStepMs": 0.456
+        },
+        "trafficView": {
+          "meanMs": 0.267,
+          "p95Ms": 0.4
+        },
+        "npcSkaters": {
+          "meanMs": 2.912,
+          "p95Ms": 6.9,
+          "perStepMs": 0.635
+        },
+        "npcSkatersView": {
+          "meanMs": 0.267,
+          "p95Ms": 0.5
+        },
+        "views": {
+          "meanMs": 2.059,
+          "p95Ms": 4.5
+        },
+        "render": {
+          "meanMs": 167.284,
+          "p95Ms": 15.6
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-1024-8j3oaqJY.glb",
+          "kB": 2256
+        },
+        {
+          "file": "/assets/vehicles_lod-CklJUZoL.glb",
+          "kB": 1735
+        },
+        {
+          "file": "/assets/skater-1024-BY6xyNZ_.glb",
+          "kB": 1713
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/dog_walker-Bm6RdTSv.glb",
+          "kB": 960
+        },
+        {
+          "file": "/assets/jogger-DQr7_kDJ.glb",
+          "kB": 944
+        },
+        {
+          "file": "/assets/elder_polo-8aDq2Tyj.glb",
+          "kB": 889
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863
+        }
+      ],
+      "perfFrames": 51,
+      "drawSplit": {
+        "total": {
+          "calls": 140,
+          "triangles": 344095
+        },
+        "byPass": {
+          "main": {
+            "calls": 140,
+            "triangles": 344095
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 66,
+            "triangles": 70416
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 28,
+            "triangles": 127415
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 10,
+            "triangles": 6198
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:telephone-factory-lofts_lod",
+            "calls": 5,
+            "triangles": 1059
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-ralph-mcgill_lod",
+            "calls": 3,
+            "triangles": 260
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 3,
+            "triangles": 6
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-freedom-parkway_lod",
+            "calls": 2,
+            "triangles": 7592
+          },
+          {
+            "pass": "main",
+            "kind": "mesh",
+            "calls": 2,
+            "triangles": 18
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 80766
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:walker_sundress_lod",
+            "calls": 1,
+            "triangles": 15624
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:elder_polo_lod",
+            "calls": 1,
+            "triangles": 15570
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 4162
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-backpack",
+            "calls": 1,
+            "triangles": 3344
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-walker",
+            "calls": 1,
+            "triangles": 2888
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-tote",
+            "calls": 1,
+            "triangles": 1692
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1242
+          },
+          {
+            "pass": "main",
+            "kind": "batched:car-lods",
+            "calls": 1,
+            "triangles": 1062
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 892
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 378
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 242
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "main",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-beams",
+            "calls": 1,
+            "triangles": 8
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": "lite",
+      "errors": []
+    },
+    {
+      "quality": "phone",
+      "look": "toon",
+      "run": 1,
+      "load": 4,
+      "finished": true,
+      "wallSeconds": 36.4,
+      "frame": {
+        "frames": 190,
+        "meanMs": 188.2,
+        "p95Ms": 350,
+        "medianFps": 5.5
+      },
+      "calls": 119,
+      "triangles": 311850,
+      "geometries": 140,
+      "textures": 213,
+      "heapMB": 62.4,
+      "firstFrameMs": 5350,
+      "settledMs": 15014,
+      "requests": 212,
+      "downloadMB": {
+        "js": 0.86,
+        "glb": 6.18,
+        "textures": 0.51,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 8.74
+      },
+      "stepsPerFrame": 4.641,
+      "systems": {
+        "skater": {
+          "meanMs": 0.193,
+          "p95Ms": 0.4,
+          "perStepMs": 0.042
+        },
+        "walkers": {
+          "meanMs": 1.153,
+          "p95Ms": 2.3,
+          "perStepMs": 0.248
+        },
+        "walkersView": {
+          "meanMs": 0.078,
+          "p95Ms": 0.1
+        },
+        "crowd": {
+          "meanMs": 0.438,
+          "p95Ms": 1,
+          "perStepMs": 0.094
+        },
+        "crowdView": {
+          "meanMs": 0.053,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 0.935,
+          "p95Ms": 1.9,
+          "perStepMs": 0.202
+        },
+        "trafficView": {
+          "meanMs": 0.129,
+          "p95Ms": 0.2
+        },
+        "npcSkaters": {
+          "meanMs": 0.982,
+          "p95Ms": 2.3,
+          "perStepMs": 0.212
+        },
+        "npcSkatersView": {
+          "meanMs": 0.319,
+          "p95Ms": 0.6
+        },
+        "views": {
+          "meanMs": 1.352,
+          "p95Ms": 2.9
+        },
+        "render": {
+          "meanMs": 13.169,
+          "p95Ms": 9.8
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-1024-8j3oaqJY.glb",
+          "kB": 2256
+        },
+        {
+          "file": "/assets/skater-1024-BY6xyNZ_.glb",
+          "kB": 1713
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/city_bike-fyZbZLlq.glb",
+          "kB": 400
+        },
+        {
+          "file": "/assets/food_cart-DVPWBUWf.glb",
+          "kB": 277
+        },
+        {
+          "file": "/assets/drinking_fountain-DRCuSKtW.glb",
+          "kB": 273
+        },
+        {
+          "file": "/assets/e_scooter-oY71MfIU.glb",
+          "kB": 268
+        },
+        {
+          "file": "/assets/sculpture_ribbon-mkx2_452.glb",
+          "kB": 267
+        }
+      ],
+      "perfFrames": 195,
+      "drawSplit": {
+        "total": {
+          "calls": 119,
+          "triangles": 311850
+        },
+        "byPass": {
+          "main": {
+            "calls": 119,
+            "triangles": 311850
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 31,
+            "triangles": 147913
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:meshes",
+            "calls": 26,
+            "triangles": 39074
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 22,
+            "triangles": 23472
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 9,
+            "triangles": 2784
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 4,
+            "triangles": 12
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:skater-outline",
+            "calls": 2,
+            "triangles": 62546
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 2,
+            "triangles": 1530
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 2,
+            "triangles": 695
+          },
+          {
+            "pass": "main",
+            "kind": "mesh",
+            "calls": 2,
+            "triangles": 18
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 13592
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 4162
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 3072
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-walker",
+            "calls": 1,
+            "triangles": 3040
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-backpack",
+            "calls": 1,
+            "triangles": 2816
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-tote",
+            "calls": 1,
+            "triangles": 2632
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-city_bike_lod",
+            "calls": 1,
+            "triangles": 754
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-e_scooter_lod",
+            "calls": 1,
+            "triangles": 567
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 552
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 484
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 446
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-bike_dock_lod",
+            "calls": 1,
+            "triangles": 389
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 126
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 56
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:street-signs",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-beams",
+            "calls": 1,
+            "triangles": 4
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": "lite",
+      "errors": []
+    },
+    {
+      "quality": "high",
+      "look": "pbr",
+      "run": 1,
+      "load": 4.4,
+      "finished": false,
+      "wallSeconds": 150.1,
+      "frame": {
+        "frames": 14,
+        "meanMs": 8606.8,
+        "p95Ms": 18432.5,
+        "medianFps": 0.1
+      },
+      "calls": 369,
+      "triangles": 1042272,
+      "geometries": 205,
+      "textures": 336,
+      "heapMB": 56.8,
+      "firstFrameMs": 13906,
+      "settledMs": 124986,
+      "requests": 310,
+      "downloadMB": {
+        "js": 0.8,
+        "glb": 21.94,
+        "textures": 3.32,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 27.25
+      },
+      "stepsPerFrame": 4.632,
+      "systems": {
+        "skater": {
+          "meanMs": 0.247,
+          "p95Ms": 0.5,
+          "perStepMs": 0.053
+        },
+        "walkers": {
+          "meanMs": 3.016,
+          "p95Ms": 7.4,
+          "perStepMs": 0.651
+        },
+        "walkersView": {
+          "meanMs": 0.321,
+          "p95Ms": 0.6
+        },
+        "crowd": {
+          "meanMs": 0.963,
+          "p95Ms": 4.5,
+          "perStepMs": 0.208
+        },
+        "crowdView": {
+          "meanMs": 0.021,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 1.868,
+          "p95Ms": 5.8,
+          "perStepMs": 0.403
+        },
+        "trafficView": {
+          "meanMs": 0.337,
+          "p95Ms": 0.5
+        },
+        "npcSkaters": {
+          "meanMs": 3.011,
+          "p95Ms": 10.6,
+          "perStepMs": 0.65
+        },
+        "npcSkatersView": {
+          "meanMs": 0.279,
+          "p95Ms": 0.5
+        },
+        "views": {
+          "meanMs": 534.674,
+          "p95Ms": 5.4
+        },
+        "render": {
+          "meanMs": 22.142,
+          "p95Ms": 38.1
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-BSO5ec1e.glb",
+          "kB": 3108
+        },
+        {
+          "file": "/assets/skater-B_jE0GB_.glb",
+          "kB": 2152
+        },
+        {
+          "file": "/assets/vehicles_lod-CklJUZoL.glb",
+          "kB": 1735
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/normal-1024-B1R5BzzO.webp",
+          "kB": 1049
+        },
+        {
+          "file": "/assets/dog_walker-Bm6RdTSv.glb",
+          "kB": 960
+        },
+        {
+          "file": "/assets/jogger-DQr7_kDJ.glb",
+          "kB": 944
+        },
+        {
+          "file": "/assets/elder_polo-8aDq2Tyj.glb",
+          "kB": 889
+        }
+      ],
+      "perfFrames": 19,
+      "drawSplit": {
+        "total": {
+          "calls": 369,
+          "triangles": 1042272
+        },
+        "byPass": {
+          "main": {
+            "calls": 214,
+            "triangles": 477056
+          },
+          "gtao": {
+            "calls": 121,
+            "triangles": 304538
+          },
+          "bloom": {
+            "calls": 13,
+            "triangles": 13
+          },
+          "shadow": {
+            "calls": 19,
+            "triangles": 260663
+          },
+          "grade": {
+            "calls": 1,
+            "triangles": 1
+          },
+          "post": {
+            "calls": 1,
+            "triangles": 1
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 66,
+            "triangles": 70416
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:meshes",
+            "calls": 26,
+            "triangles": 39074
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface-far",
+            "calls": 25,
+            "triangles": 49094
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:surface-far",
+            "calls": 25,
+            "triangles": 49094
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 22,
+            "triangles": 20560
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:building",
+            "calls": 22,
+            "triangles": 20560
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 21,
+            "triangles": 115541
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:surface",
+            "calls": 21,
+            "triangles": 115541
+          },
+          {
+            "pass": "bloom",
+            "kind": "mesh",
+            "calls": 13,
+            "triangles": 13
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:telephone-factory-lofts_lod",
+            "calls": 7,
+            "triangles": 1101
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:telephone-factory-lofts_lod",
+            "calls": 7,
+            "triangles": 1101
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:new-realm-brewing_lod",
+            "calls": 7,
+            "triangles": 529
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:new-realm-brewing_lod",
+            "calls": 7,
+            "triangles": 529
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 6,
+            "triangles": 14
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:mural",
+            "calls": 6,
+            "triangles": 14
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:skater-shadow",
+            "calls": 4,
+            "triangles": 109490
+          },
+          {
+            "pass": "shadow",
+            "kind": "mesh:building",
+            "calls": 4,
+            "triangles": 6320
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh",
+            "calls": 4,
+            "triangles": 4
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-ralph-mcgill_lod",
+            "calls": 3,
+            "triangles": 260
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:bridge-ralph-mcgill_lod",
+            "calls": 3,
+            "triangles": 260
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:elder_polo_lod",
+            "calls": 2,
+            "triangles": 31140
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:elder_polo_lod",
+            "calls": 2,
+            "triangles": 31140
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-freedom-parkway_lod",
+            "calls": 2,
+            "triangles": 7592
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:bridge-freedom-parkway_lod",
+            "calls": 2,
+            "triangles": 7592
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:shop-names",
+            "calls": 2,
+            "triangles": 1316
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-north-ave_lod",
+            "calls": 2,
+            "triangles": 392
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:bridge-north-ave_lod",
+            "calls": 2,
+            "triangles": 392
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 76986
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 61436
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 61436
+          },
+          {
+            "pass": "main",
+            "kind": "batched:facade-kit-glb",
+            "calls": 1,
+            "triangles": 18406
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:facade-kit-glb",
+            "calls": 1,
+            "triangles": 18406
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:walker_sundress_lod",
+            "calls": 1,
+            "triangles": 15624
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:walker_sundress_lod",
+            "calls": 1,
+            "triangles": 15624
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:jogger_lod",
+            "calls": 1,
+            "triangles": 15610
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:jogger_lod",
+            "calls": 1,
+            "triangles": 15610
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-tote",
+            "calls": 1,
+            "triangles": 7144
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:peds-tote",
+            "calls": 1,
+            "triangles": 7144
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-backpack",
+            "calls": 1,
+            "triangles": 6512
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:peds-backpack",
+            "calls": 1,
+            "triangles": 6512
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-walker",
+            "calls": 1,
+            "triangles": 5624
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:peds-walker",
+            "calls": 1,
+            "triangles": 5624
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:car-lods",
+            "calls": 1,
+            "triangles": 2010
+          },
+          {
+            "pass": "main",
+            "kind": "batched:car-lods",
+            "calls": 1,
+            "triangles": 2010
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:car-lods",
+            "calls": 1,
+            "triangles": 2010
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1242
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1242
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 1000
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 1000
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 1000
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:sky",
+            "calls": 1,
+            "triangles": 960
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:sky",
+            "calls": 1,
+            "triangles": 960
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:shop-names",
+            "calls": 1,
+            "triangles": 658
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 504
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 504
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 446
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 446
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 242
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 242
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "main",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-beams",
+            "calls": 1,
+            "triangles": 6
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:car-beams",
+            "calls": 1,
+            "triangles": 6
+          },
+          {
+            "pass": "grade",
+            "kind": "mesh",
+            "calls": 1,
+            "triangles": 1
+          },
+          {
+            "pass": "post",
+            "kind": "mesh",
+            "calls": 1,
+            "triangles": 1
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": "full",
+      "errors": []
+    },
+    {
+      "quality": "high",
+      "look": "toon",
+      "run": 1,
+      "load": 3.6,
+      "finished": false,
+      "wallSeconds": 150.1,
+      "frame": {
+        "frames": 38,
+        "meanMs": 3449,
+        "p95Ms": 7166.4,
+        "medianFps": 0.3
+      },
+      "calls": 322,
+      "triangles": 965542,
+      "geometries": 178,
+      "textures": 230,
+      "heapMB": 48.6,
+      "firstFrameMs": 8677,
+      "settledMs": 63425,
+      "requests": 216,
+      "downloadMB": {
+        "js": 0.86,
+        "glb": 7.44,
+        "textures": 1.8,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 11.3
+      },
+      "stepsPerFrame": 4.488,
+      "systems": {
+        "skater": {
+          "meanMs": 0.321,
+          "p95Ms": 0.6,
+          "perStepMs": 0.072
+        },
+        "walkers": {
+          "meanMs": 2.44,
+          "p95Ms": 4.7,
+          "perStepMs": 0.544
+        },
+        "walkersView": {
+          "meanMs": 0.07,
+          "p95Ms": 0.2
+        },
+        "crowd": {
+          "meanMs": 0.719,
+          "p95Ms": 1.8,
+          "perStepMs": 0.16
+        },
+        "crowdView": {
+          "meanMs": 0.053,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 1.321,
+          "p95Ms": 2.5,
+          "perStepMs": 0.294
+        },
+        "trafficView": {
+          "meanMs": 0.156,
+          "p95Ms": 0.3
+        },
+        "npcSkaters": {
+          "meanMs": 2.014,
+          "p95Ms": 4,
+          "perStepMs": 0.449
+        },
+        "npcSkatersView": {
+          "meanMs": 0.384,
+          "p95Ms": 0.7
+        },
+        "views": {
+          "meanMs": 2.181,
+          "p95Ms": 4.5
+        },
+        "render": {
+          "meanMs": 10.96,
+          "p95Ms": 18.5
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-BSO5ec1e.glb",
+          "kB": 3108
+        },
+        {
+          "file": "/assets/skater-B_jE0GB_.glb",
+          "kB": 2152
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/color-D3UcKDw3.jpg",
+          "kB": 422
+        },
+        {
+          "file": "/assets/city_bike-fyZbZLlq.glb",
+          "kB": 400
+        },
+        {
+          "file": "/assets/color-Cdbt2_I1.jpg",
+          "kB": 392
+        },
+        {
+          "file": "/assets/color-BdcKY0pu.jpg",
+          "kB": 280
+        },
+        {
+          "file": "/assets/food_cart-DVPWBUWf.glb",
+          "kB": 277
+        }
+      ],
+      "perfFrames": 43,
+      "drawSplit": {
+        "total": {
+          "calls": 322,
+          "triangles": 965542
+        },
+        "byPass": {
+          "main": {
+            "calls": 191,
+            "triangles": 467989
+          },
+          "gtao": {
+            "calls": 102,
+            "triangles": 356221
+          },
+          "bloom": {
+            "calls": 13,
+            "triangles": 13
+          },
+          "shadow": {
+            "calls": 14,
+            "triangles": 141317
+          },
+          "ink": {
+            "calls": 1,
+            "triangles": 1
+          },
+          "post": {
+            "calls": 1,
+            "triangles": 1
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 66,
+            "triangles": 70416
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:meshes",
+            "calls": 26,
+            "triangles": 39074
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 23,
+            "triangles": 25283
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:building",
+            "calls": 23,
+            "triangles": 25283
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface-far",
+            "calls": 22,
+            "triangles": 45112
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:surface-far",
+            "calls": 22,
+            "triangles": 45112
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 21,
+            "triangles": 115541
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:surface",
+            "calls": 21,
+            "triangles": 115541
+          },
+          {
+            "pass": "bloom",
+            "kind": "mesh",
+            "calls": 13,
+            "triangles": 13
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 7,
+            "triangles": 18
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:mural",
+            "calls": 7,
+            "triangles": 18
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:skater-shadow",
+            "calls": 4,
+            "triangles": 109490
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:skater-outline",
+            "calls": 4,
+            "triangles": 109490
+          },
+          {
+            "pass": "gtao",
+            "kind": "skinned:skater-outline",
+            "calls": 4,
+            "triangles": 109490
+          },
+          {
+            "pass": "shadow",
+            "kind": "mesh:building",
+            "calls": 4,
+            "triangles": 6362
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh",
+            "calls": 4,
+            "triangles": 4
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:shop-names",
+            "calls": 2,
+            "triangles": 4564
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 21982
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 21950
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 21950
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:depth",
+            "calls": 1,
+            "triangles": 7880
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:depth",
+            "calls": 1,
+            "triangles": 7880
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-backpack",
+            "calls": 1,
+            "triangles": 7040
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:peds-backpack",
+            "calls": 1,
+            "triangles": 7040
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-tote",
+            "calls": 1,
+            "triangles": 6956
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:peds-tote",
+            "calls": 1,
+            "triangles": 6956
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds-walker",
+            "calls": 1,
+            "triangles": 6536
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:peds-walker",
+            "calls": 1,
+            "triangles": 6536
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:shop-names",
+            "calls": 1,
+            "triangles": 2282
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1242
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1242
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 1000
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 1000
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 1000
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:sky",
+            "calls": 1,
+            "triangles": 960
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:sky",
+            "calls": 1,
+            "triangles": 960
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 892
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 892
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 504
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 504
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 242
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 242
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "main",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 60
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 60
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-beams",
+            "calls": 1,
+            "triangles": 8
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:car-beams",
+            "calls": 1,
+            "triangles": 8
+          },
+          {
+            "pass": "ink",
+            "kind": "mesh",
+            "calls": 1,
+            "triangles": 1
+          },
+          {
+            "pass": "post",
+            "kind": "mesh",
+            "calls": 1,
+            "triangles": 1
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": "full",
+      "errors": []
+    }
+  ]
+}

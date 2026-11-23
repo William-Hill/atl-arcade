@@ -60,14 +60,21 @@ async function aimAtTraffic(page) {
   });
 }
 
-test("parked cars and calm traffic show on a street, in one draw call", async ({ page }) => {
+// The kit car bodies are one draw call. The lamp layer (#173: lamp quads and
+// headlight pools) adds at most 2, and the GLB cars of the pbr look add
+// their own.
+test("parked cars and calm traffic show on a street, the bodies in one draw call", async ({ page }) => {
   const errors = collectErrors(page);
   await open(page, "view=fixed&skater=capsule&quality=low");
-  const info = await page.evaluate(() => ({ parked: window.__atl.cars.parked, moving: window.__atl.cars.moving, lanes: window.__atl.cars.lanes, drawCalls: window.__atl.cars.drawCalls }));
+  const info = await page.evaluate(() => {
+    const c = window.__atl.cars;
+    return { parked: c.parked, moving: c.moving, lanes: c.lanes, drawCalls: c.drawCalls, lampCalls: c.lampCalls, modelCalls: c.modelCalls };
+  });
   expect(info.parked).toBeGreaterThan(200);
   expect(info.moving).toBeGreaterThan(30);
   expect(info.lanes).toBeGreaterThanOrEqual(8);
-  expect(info.drawCalls).toBe(1);
+  expect(info.lampCalls).toBeLessThanOrEqual(2);
+  expect(info.drawCalls - info.lampCalls - info.modelCalls).toBe(1);
   // The cars drive: after 2 s each car has moved or waits at a stop.
   const speeds = await page.evaluate(() => window.__atl.cars.list.map((c) => c.speed));
   expect(Math.max(...speeds)).toBeLessThanOrEqual(TRAFFIC.cruise.trunk + 1e-6);

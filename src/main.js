@@ -6,7 +6,7 @@ import { createDebugColliders } from "./render/debug-colliders.js";
 import { createSkaterView } from "./render/skater-view.js";
 import { cloneSkaterModel, fetchSkaterModel, loadSkaterModel } from "./render/skater-model.js";
 import { createLoader } from "./ui/loader.js";
-import { toonSkater } from "./render/toon.js";
+import { pbrSkater, toonSkater } from "./render/toon.js";
 import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { createScreenFlash } from "./ui/screen-flash.js";
@@ -16,32 +16,54 @@ import { createRun, stepRun, teleportRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
 import { createMinimap } from "./ui/minimap.js";
 import { createFullMap } from "./ui/fullmap.js";
+import { travelMode } from "./ui/travel-rule.js";
 import { isoTilesFor } from "./ui/iso-tiles.js";
-import { travelSpot } from "./level/geo/travel.js";
+import { travelSpot, landingProbe } from "./level/geo/travel.js";
 import { ISO, isoBasis, isoCameraPose, levelIsoGrid, tileCenter } from "./level/geo/iso-map.js";
-import { mapLandmarks } from "./ui/minimap-math.js";
-import { createSkaterSelect, resolveSkater } from "./ui/skater-select.js";
+import { createIconSource } from "./ui/landmark-icons.js";
+import { createScreenControls } from "./ui/screen-controls.js";
+import { createSkaterSelect, createSkaterSwitch, resolveSkater, skaterUrl } from "./ui/skater-select.js";
 import { shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
-import { loadLevel, resolveLevelName } from "./level/levels.js";
+import { beatClockOptions, trackChoices, writeChoice } from "./audio/music-tracks.js";
+import { createSfx } from "./audio/sfx.js";
+import { loadLandmarks, loadLevel, resolveLevelName } from "./level/levels.js";
+import { createLandmarkTracker, landmarkTestHook } from "./sim/landmarks.js";
 import { goalsFor } from "./level/goals.js";
 import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
 import { createResults } from "./ui/results.js";
 import { createLevelEnv } from "./level/ground.js";
-import { buildGeoMeshes } from "./level/geo/geo-mesh.js";
+import { createSkateparkView } from "./render/skatepark-view.js";
+import { meshWorkerCount, startGeoMeshBuild, startLevelProps } from "./level/geo/geo-mesh-async.js";
 import { terrainOf } from "./level/geo/terrain.js";
-import { createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
-import { FAR_TREE_DISTANCE } from "./render/tree-impostors.js";
+import { FAR_TERRAIN_BUILD, createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
+import { FAR_TREE_DISTANCE } from "./render/far-trees.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
-import { QUALITY, isPhone, pixelRatioFor, qualityFor, rendererName } from "./render/quality.js";
-import { GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
+import { createLandmarkModels } from "./render/landmark-models.js";
+import { claimLandmarkModels } from "./level/geo/landmarks.js";
+import { QUALITY, isPhone, pixelRatioFor, qualityFor, readDevice, rendererName } from "./render/quality.js";
+import { leafCutFor } from "./render/leaf-cut.js";
+import { setPostToggles } from "./render/post-toggles.js";
+import { choiceFrom, paramFor, readSettings, reloadHref, safeStorage, sourcesOf, writeSettings } from "./ui/settings.js";
+import { createSettingsMenu } from "./ui/settings-menu.js";
+import { GOVERNOR, LITE_GOVERNOR, createGovernor, currentRung, governorStep, ladderFor } from "./render/governor.js";
+import { LOOK_DOWN_NOTICE_MS, isLookDown, lookDownNotice, lookDownPlan } from "./render/look-down.js";
+import { PBR_LITE, isPbrLite } from "./render/pbr-lite.js";
+import { createFrameReadout, readoutDue, readoutPush, readoutStats, readoutText } from "./perf/frame-readout.js";
+import { sceneTextureMemory } from "./perf/texture-memory.js";
 import { createSky } from "./render/sky.js";
 import { LOOKS, createSkyEnvironment, lookFor, toneMappingOf } from "./render/look.js";
 import { labBuildings, labCamera } from "./level/geo/lab.js";
+import { loadFacadeKit } from "./render/facade-kit-view.js";
 import { createLitePost, createPost } from "./render/post.js";
+import { createWeatherView, weatherClock } from "./render/weather-view.js";
+import { createRain } from "./render/rain.js";
+import { ATLANTA } from "./sim/weather.js";
 import { addTiltShift } from "./render/tilt-shift.js";
 import { createPhotoPanel } from "./ui/photo-panel.js";
 import { createStreetSigns } from "./render/street-signs.js";
+import { createEdgeFenceView } from "./render/edge-fence-view.js";
+import { EDGE_FENCE_ID } from "./level/edge-fence.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
 import { createTouchInput } from "./input/touch.js";
@@ -50,19 +72,53 @@ import { createLookInput } from "./input/look.js";
 import { mapLook } from "./sim/camera.js";
 import { createScriptPlayer } from "./input/scripted.js";
 import { createCrowd, minGap, stepCrowd } from "./sim/npc/crowd.js";
-import { createNpcView } from "./render/npc-view.js";
-import { carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSampler, streetsOnly } from "./sim/traffic/traffic.js";
+import { createNpcView, NPC_DRAW_DISTANCE } from "./render/npc-view.js";
+import { PED_RADIUS, createPeds, pedActivities, pedCount, pedMinGap, stepPeds } from "./sim/peds.js";
+import { createPedsView } from "./render/peds-view.js";
+import { createPedModels, PED_MODEL_COUNT } from "./render/ped-models.js";
+import { createMeshyPropsView } from "./render/people-props-view.js";
+import { cachedPitch, carGroundSampler, carPitch, createTraffic, stepTraffic, streetHeightSampler, streetsOnly } from "./sim/traffic/traffic.js";
 import { createGeoGroundSampler } from "./level/geo/geo-ground.js";
 import { parkedCars } from "./sim/traffic/parking.js";
 import { createCarView } from "./render/car-view.js";
+import { createCarModelView, loadCarModels } from "./render/car-models.js";
+import { bodyFor, skateFor } from "./sim/skate/body.js";
 import { createNpcSkaters, skaterObstacles, stepNpcSkaters } from "./sim/npc/skaters.js";
 import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
+import { createPbrLook, installHeightFog, installSkySh, setSkySh, validSkySh } from "./render/pbr-look.js";
+import { materialAudit } from "./render/pbr-palette.js";
+import { districtAnchors } from "./level/geo/styles.js";
 import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
 import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
 import { createFactCardsView } from "./render/fact-cards-view.js";
 import { createFactPopup } from "./ui/fact-popup.js";
+import { NO_PERF, createFrameCost } from "./perf/frame-cost.js";
+import { createDrawSplit } from "./perf/draw-split.js";
+import { createShadowPass } from "./render/shadow-pass.js";
+import { createViewCull } from "./render/view-cull.js";
+import { createEffects } from "./render/effects/effects-view.js";
+import { createLateLoads, lateLoadPlan, propTimeoutFor } from "./render/late-load.js";
+import { medalScore } from "./sim/landmarks.js";
+import { goalLine, landmarkStepArgs, withClaimMedal, withGapGoal } from "./landmarks/play.js";
+import { createLandmarkRings } from "./render/landmark-rings.js";
+import { ringCapacity } from "./render/landmark-rings-math.js";
+import { createLandmarkBanner, districtAccent } from "./ui/landmark-banner.js";
+import { createChimes } from "./audio/chimes.js";
+import { createTeachPrompts } from "./ui/teach-prompt.js";
+import { createCallouts } from "./ui/callouts.js";
 
 const params = new URLSearchParams(window.location.search);
+// ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
+// reads __atl.perf). Off by default: NO_PERF does nothing.
+const perf = params.get("perf") === "1" ? createFrameCost(() => performance.now()) : NO_PERF;
+// The player settings (#94, src/ui/settings.js): a URL flag wins, then the
+// saved choice, then the device default.
+const settingsStorage = safeStorage();
+const savedSettings = readSettings(settingsStorage);
+const qualityParam = paramFor("quality", params, savedSettings);
+const deviceFacts = readDevice();
+// A number URL parameter, or undefined.
+const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
 // Start the slow downloads at once, in parallel with the level (#74): the
 // physics WASM and the skater GLB. A test that started the GLB after the
 // physics gave the same first frame (the WASM compile, not the link, is the
@@ -73,32 +129,38 @@ const loader = createLoader(document.getElementById("loader"), { skater: skaterN
 // A phone gets the skater with a 1024 px base color (#74). The tier is not
 // known yet (it needs the WebGL renderer), so this uses the same device test
 // as the phone tier. ?quality=phone forces it, and ?quality=high keeps 2048 px.
-const smallSkater = params.get("quality") === "phone" || (params.get("quality") !== "high" && isPhone({ touch: (navigator.maxTouchPoints ?? 0) > 0 || (window.matchMedia?.("(pointer: coarse)").matches ?? false), width: window.screen?.width ?? window.innerWidth, height: window.screen?.height ?? window.innerHeight }));
+const smallSkater = qualityParam === "phone" || (qualityParam !== "high" && isPhone(deviceFacts));
 const skaterBytes = skaterName !== "capsule" ? fetchSkaterModel(skaterName, (n, total) => loader.progress("skater", n, total), { small: smallSkater }) : null;
 // A failed download is reported where the model loads, not here.
 skaterBytes?.catch(() => {});
-// ?level=greybox (default) or ?level=beltline-eastside (alias: beltline).
+// What is not near the spawn loads after the first frame (#187, #190): the
+// NPC-only skater model, the car GLBs, the Meshy people and props, the
+// landmark GLBs, and the GLB tree batch (its impostor bake takes 1 to 2 s
+// on a software GPU).
+let firstFrameDone;
+const firstFrame = new Promise((resolve) => (firstFrameDone = resolve));
+// ?level=beltline-eastside (default, alias: beltline) or ?level=greybox (the debug level).
 const level = await loadLevel(params.get("level"));
 performance.mark("atl:level");
+// The fact card text loads now, so main.js does not wait on it later (#190):
+// while it waited, the late loads ran first and held the first frame.
+const factsModeNow = factsMode(params.get("facts"), { webdriver: Boolean(navigator.webdriver) });
+const factDataLoad = factsModeNow !== "off" && Object.hasOwn(LEVEL_FACTS, level.name) ? LEVEL_FACTS[level.name]() : null;
+factDataLoad?.catch(() => {});
 loader.step("level");
 const geo = isGeoLevel(level);
-const env = createLevelEnv(level, { props: params.get("props") !== "0" });
-const skaterEnv = createSkaterEnv(level, env.grindables);
 
 const canvas = document.getElementById("stage");
 const renderer = createRenderer(canvas);
 const scene = new THREE.Scene();
 // The render tier (src/render/quality.js): low for a software GPU, phone
-// for a touch device with a small screen, high for every other GPU.
-// ?quality=low|phone|high sets it.
+// for a phone or a 2-core CPU, high for every other GPU.
+// ?quality=low|phone|high or the settings menu sets it.
 const gpuName = rendererName(renderer);
-const device = {
-  touch: (navigator.maxTouchPoints ?? 0) > 0 || (window.matchMedia?.("(pointer: coarse)").matches ?? false),
-  width: window.screen?.width ?? window.innerWidth,
-  height: window.screen?.height ?? window.innerHeight,
-};
-const quality = geo ? qualityFor(params.get("quality"), gpuName, device) : "low";
-const tier = QUALITY[quality];
+const autoQuality = geo ? qualityFor(null, gpuName, deviceFacts) : "low";
+const quality = geo ? qualityFor(qualityParam, gpuName, deviceFacts) : "low";
+// The settings menu can turn the shadow map on or off for any tier.
+const tier = { ...QUALITY[quality], shadows: typeof savedSettings.shadows === "boolean" ? savedSettings.shadows : QUALITY[quality].shadows };
 renderer.setPixelRatio(pixelRatioFor(window.devicePixelRatio, tier.pixelRatio));
 // Count the draw calls of the whole frame (all post passes), not only the
 // last pass. The frame loop resets the counters.
@@ -110,19 +172,69 @@ const GEO_FAR = tier.far;
 const GEO_FOG_NEAR = tier.fogNear;
 // The city look (src/render/look.js): pbr on the high tier, toon on the
 // others. ?look=toon|pbr sets it.
-const look = geo ? lookFor(params.get("look"), quality) : "toon";
+const look = geo ? lookFor(paramFor("look", params, savedSettings), quality) : "toon";
+// Pbr lite (#246, src/render/pbr-lite.js): the pbr look on the phone tier,
+// with the costly parts cut. ?pbrlite=0 keeps the phone pbr look as it was
+// (for a before/after check in one build).
+const pbrLite = isPbrLite({ look, quality, param: params.get("pbrlite") });
+const lite = pbrLite ? PBR_LITE : null;
+// A pbr lite value, or its URL override (to tune one cut at a time).
+const liteNum = (name, value) => numParam(name) ?? value;
+// The pbr street kit, GLB trees, mural atlas and ground maps load after the
+// first frame (#190, src/render/late-load.js). ?lateload=0 loads them at once.
+const lateLoads = createLateLoads(lateLoadPlan({ look, lateload: params.get("lateload") }), firstFrame, { now: () => Math.round(performance.now()) });
+// The pbr look draws the Blender landmark GLBs (src/render/landmark-models.js)
+// in place of the buildings on their footprints, so the footprints are claimed
+// before the meshes build. ?landmarkglb=0 keeps the generic buildings.
+const landmarkGlbs = look === "pbr" && params.get("landmarks") !== "0" && params.get("landmarkglb") !== "0";
+if (landmarkGlbs) claimLandmarkModels();
+// The pbr look's Blender facade kit (src/render/facade-kit-view.js) loads while
+// the meshes build. ?kitglb=0, a failed load or a slow one keeps the full procedural kit.
+// One BatchedMesh: one draw call with WEBGL_multi_draw (as the prop batch), one per instance without.
+const facadeKitNodes = look === "pbr" && tier.detail && renderer.extensions.has("WEBGL_multi_draw") && params.get("kit") !== "0" && params.get("kitglb") !== "0" && params.get("depth") !== "0"
+  ? loadFacadeKit().catch((err) => { console.warn("facade kit GLB failed to load; the procedural kit stays", err); return null; })
+  : null;
+
+// The level builds in Web Workers (#98), while this thread makes the lights
+// and the sky, and the physics WASM compiles: the meshes (built once and
+// shared with the physics, split over up to 2 workers), the low tier's far
+// surface tiles, and the street prop placements, one more worker each. One
+// core stays for this thread. ?meshworker=0 builds them all here, as before;
+// ?meshshards=<n> sets the mesh worker count (for perf checks).
+const meshWorkers = params.get("meshworker") !== "0" ? undefined : null;
+const meshFallback = (why) => why && console.warn("level worker failed; building on the main thread", why);
+// The coarse far ground: past 60 m on low, past 350 m on high (#188).
+// ?farterrain=0 keeps the exact ground everywhere; ?farterrain=<m> sets the distance.
+const farTerrainParam = params.get("farterrain");
+const farTerrainDistance = farTerrainParam !== null && Number(farTerrainParam) > 0 ? Number(farTerrainParam) : tier.farTerrain;
+// The isometric map bake (view=iso) stands 600 m back: it keeps the exact ground.
+const farTerrain = geo && farTerrainParam !== "0" && farTerrainDistance > 0 && params.get("view") !== "iso";
+const levelPropsOn = params.get("props") !== "0";
+const meshShards = numParam("meshshards") ?? meshWorkerCount(navigator.hardwareConcurrency - (farTerrain ? 1 : 0) - (geo && levelPropsOn ? 1 : 0));
+const meshBuild = geo ? startGeoMeshBuild(level, {}, { workers: meshShards, claimLandmarks: landmarkGlbs, createWorker: meshWorkers, onFallback: meshFallback }) : null;
+const farBuild = farTerrain ? startGeoMeshBuild(level, FAR_TERRAIN_BUILD, { claimLandmarks: landmarkGlbs, createWorker: meshWorkers, onFallback: meshFallback }) : null;
+const propsBuild = geo && levelPropsOn ? startLevelProps(level, { createWorker: meshWorkers, onFallback: meshFallback }) : null;
+// A worker boots only while this thread is free, so the next long step
+// waits until the workers have loaded (at most 2 s).
+await Promise.all([meshBuild?.ready, farBuild?.ready, propsBuild?.ready]);
 
 // A geodata level gets a day sky, a far fog, and a sun that follows the
-// skater. Its meshes are built once and shared with the physics.
-const geoMeshes = geo ? buildGeoMeshes(level) : null;
-performance.mark("atl:meshes");
+// skater.
 let geoLights = null;
+let shadowPass = null;
 let sky = null;
+let bakeEnvironment = null;
+// The pbr look on a tier with no cloud sky lights with sky SH (#191).
+const skySh = look === "pbr" && !tier.clouds && params.get("skysh") !== "0";
 if (geo) {
   // The low tier has no shadow map: in headless SwiftShader it halved the
   // frame rate. The kit trees carry a shadow disc and the skater a blob.
   renderer.shadowMap.enabled = tier.shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // The skater shadow stand-ins and the cull of the casters whose shadow is
+  // off screen (src/render/shadow-pass.js, #188). ?shadowcull=0 keeps every
+  // caster (for a before/after check).
+  shadowPass = createShadowPass(renderer, { cull: params.get("shadowcull") !== "0" });
   if (tier.post || look === "pbr") {
     // Toon: neutral tone mapping keeps the art colors and rolls off the
     // bright sun. Pbr uses the same curve (see src/render/look.js).
@@ -136,18 +248,32 @@ if (geo) {
   scene.add(geoLights.group);
   // The low tier has no sky dome (a flat horizon color), to keep the
   // headless frame budget. ?sky=0 leaves it out on the high tier too.
-  sky = tier.post !== "full" || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds });
+  sky = tier.post !== "full" || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds, pbr: look === "pbr" });
   if (sky) scene.add(sky.mesh);
   if (look === "pbr") {
+    // The height fog (src/render/pbr-look.js): before the first material compiles.
+    if (params.get("heightfog") !== "0") installHeightFog();
     // The sky environment map: ambient light and reflections. A tier with
-    // no sky dome gets one made only for the map.
-    const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection });
-    scene.environment = createSkyEnvironment(renderer, envSky);
-    scene.environmentIntensity = LOOKS.pbr.environment;
-    if (!sky) {
-      envSky.mesh.geometry.dispose();
-      envSky.mesh.material.dispose();
-    }
+    // no sky dome gets one made only for the map. It bakes once the level
+    // workers are done (#190): with a software GPU the bake runs on the same
+    // CPUs and held the workers back by about 1.2 s. It still runs before
+    // any material compiles (before createGeoView), as the sky SH needs.
+    bakeEnvironment = () => {
+      const envSky = sky ?? createSky({ radius: 400, sunDirection: geoLights.sunDirection, pbr: true });
+      scene.environment = createSkyEnvironment(renderer, envSky, { sh: skySh });
+      // A tier with no cloud sky lights with 9 spherical harmonics of the
+      // same sky, not the env map lookup (#191). ?skysh=0 keeps the lookup,
+      // and so does a failed SH read. No standard material has compiled yet.
+      if (skySh && validSkySh(scene.environment.userData.sh)) {
+        installSkySh();
+        setSkySh(scene.environment.userData.sh);
+      }
+      scene.environmentIntensity = LOOKS.pbr.environment;
+      if (!sky) {
+        envSky.mesh.geometry.dispose();
+        envSky.mesh.material.dispose();
+      }
+    };
   }
   const horizon = sky ? sky.fogColor : new THREE.Color(0xbfe4ff);
   scene.background = horizon.clone();
@@ -182,33 +308,127 @@ if (attribution && level.attribution) {
 if (params.get("dev") === "1" || params.get("debug") === "1") document.body.classList.add("dev");
 
 // ?lod0=<m> and ?propdist=<m> tune the prop distances (for perf checks).
+// The level does not wait on a slow facade GLB: past ?kitwait=<ms> (3 s) after
+// the meshes are built, the full procedural kit goes in instead.
+const facadeKitReady = (nodes, ms = numParam("kitwait") ?? 3000) => nodes && Promise.race([nodes, new Promise((done) => setTimeout(() => { console.warn(`facade kit GLB not loaded in ${ms} ms; the procedural kit stays`); done(null); }, ms))]);
+// The skate env: the ground sampler, the props, the grindables.
+const env = createLevelEnv(level, { props: levelPropsOn, placed: propsBuild && (await propsBuild.props) });
+const skaterEnv = createSkaterEnv(level, env.grindables);
+// The style moves pick from this skater's dances (STYLE dances with `skaters`).
+skaterEnv.skater = skaterName;
+// The skate constants follow the skater's body (src/sim/skate/body.js and the
+// dossiers in docs/characters/). The capsule keeps SKATE.
+skaterEnv.skate = skateFor(bodyFor(skaterName));
+const geoMeshes = geo ? await meshBuild.meshes : null;
+performance.mark("atl:meshes");
+// Before the level view: its main-thread build leaves the other CPUs free.
+bakeEnvironment?.();
 // ?farTrees=0 leaves out the far tree cards (#281). The cards end at the
 // far plane of the tier, and the iso map bake does not show them. The low
 // tier has no cards (they cost about 10% of the SwiftShader frame, in thick
 // fog); ?farTrees=1 turns them on there.
-const numParam = (name) => (params.has(name) && Number.isFinite(Number(params.get(name))) ? Number(params.get(name)) : undefined);
-const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain: quality === "low" && params.get("farterrain") !== "0", trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", look, season: params.get("season") ?? "summer", farTrees: (params.get("farTrees") ?? (quality === "low" ? "0" : "1")) !== "0" && params.get("view") !== "iso", farTreeDistance: Math.min(FAR_TREE_DISTANCE, GEO_FAR) }) : createLevelView(level);
+const levelView = geo ? createGeoView(level, geoMeshes, { lod0Distance: numParam("lod0"), drawDistance: numParam("propdist"), groundDetail: tier.detail, markings: tier.detail && params.get("markings") !== "0", aprons: tier.detail && params.get("aprons") !== "0", kit: tier.detail && params.get("kit") !== "0", kitGlb: await facadeKitReady(facadeKitNodes), depth: params.get("depth") !== "0", interiors: tier.detail && params.get("interiors") !== "0", farTerrain, farTerrainDistance, farMeshes: farBuild && (await farBuild.meshes), trees: params.get("trees") !== "kit", wind: params.get("wind") !== "0", season: params.get("season") ?? "summer", look, leafCoverage: tier.post === "full", leafCut: leafCutFor(quality, params.get("leafcut")), leafCards: liteNum("leafcards", lite?.leafCards) ?? true, smallMurals: (liteNum("muralsize", lite?.muralSize) ?? 2048) <= 1024, groundAnisotropy: numParam("groundaniso") ?? null, groundCuts: params.has("groundcuts") ? params.get("groundcuts").split(",").filter(Boolean) : (lite?.groundCuts ?? []), defer: { ground: (load) => lateLoads.run("ground", load), murals: (load) => lateLoads.run("murals", load) } , farTrees: (params.get("farTrees") ?? (quality === "low" ? "0" : "1")) !== "0" && params.get("view") !== "iso", farTreeDistance: Math.min(FAR_TREE_DISTANCE, GEO_FAR) }) : createLevelView(level);
 scene.add(levelView.root);
 performance.mark("atl:view");
 
+// The day and season weather (src/sim/weather.js, render/weather-view.js):
+// the sun, the sky, the fog, the windows, and the wet streets follow the
+// date and the time of day at the level's own latitude. ?date=MM-DD and
+// ?time=HH.HH set the clock, ?weather=clear|clouds|rain|storm picks the
+// weather, ?timescale=<s clock / s real> speeds the clock, and ?weather=0
+// turns the system off.
+let weatherView = null;
+let rain = null;
+if (geo && params.get("weather") !== "0") {
+  rain = createRain({ count: quality === "high" ? 1800 : 600 });
+  scene.add(rain.mesh);
+  weatherView = createWeatherView({
+    scene,
+    renderer,
+    geoLights,
+    sky,
+    levelView,
+    fog: { near: GEO_FOG_NEAR, far: GEO_FAR },
+    place: level.origin ?? ATLANTA,
+    clock: weatherClock(params),
+    exposureBase: 1.05,
+  });
+}
+
 // Street name signs at the real intersections (src/level/geo/signs.js).
 // ?signs=0 leaves them out.
-const streetSigns = geo && params.get("signs") !== "0" ? createStreetSigns(env.props.filter((p) => p.kind === "street_sign")) : null;
+const streetSigns = geo && params.get("signs") !== "0" ? createStreetSigns(env.props.filter((p) => p.kind === "street_sign"), { look }) : null;
 if (streetSigns) scene.add(streetSigns.group);
+
+// The construction fence at the level edge (#229, src/level/edge-fence.js).
+// The controller wall is in env.sampleGround; this is its picture. On a
+// building or a street prop the fence stands on the terrain.
+const buildingIds = geo ? new Set((level.buildings ?? []).map((b) => b.id)) : null;
+const edgeFence = geo && env.fence
+  ? createEdgeFenceView(env.fence, {
+      sample: env.sampleGroundNoFence,
+      floor: (x, z) => terrainOf(level).height(x, z) + (level.surfaces?.ground ?? 0),
+      isSolid: (id) => buildingIds.has(id) || String(id).startsWith("prop:"),
+      look,
+    })
+  : null;
+if (edgeFence) scene.add(edgeFence.group);
 
 // Landmark models on the real roofs (img2threejs towers, rooftop signs).
 // ?landmarks=0 leaves them out.
-const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(level, { renderer }) : null;
+const landmarks = geo && params.get("landmarks") !== "0" ? createLandmarksView(level, { renderer, look }) : null;
 if (landmarks) {
   scene.add(landmarks.root);
   landmarks.ready.catch((err) => console.error(err));
 }
+// The skatepark features (#222): the models of level.skatepark, one draw
+// call. ?skatepark=0 hides the models (the ground and the rails stay).
+const skateparkView = geo && level.skatepark && params.get("skatepark") !== "0" ? createSkateparkView(level.skatepark, { look, after: firstFrame, low: quality !== "high", shadows: tier.shadows }) : null;
+if (skateparkView) {
+  scene.add(skateparkView.group);
+  skateparkView.ready.catch((err) => console.error(err));
+}
+// Landmark discovery (#217): the spot states of this level, with the save
+// under `atl.landmarks`. It takes the loaded level: the skatepark pad that
+// a spot names is an area of the loaded level only (#222).
+const landmarkData = geo ? await loadLandmarks(level.name) : null;
+const landmarkTracker = landmarkData ? createLandmarkTracker({ data: landmarkData, level, storage: settingsStorage }) : null;
+// The challenge rings (#219, src/render/landmark-rings.js): 1 draw call for
+// all rings, and none when no spot is Found. ?rings=0 leaves them out.
+const landmarkGround = env.sampleGroundNoFence ?? env.sampleGround;
+const landmarkRings = landmarkTracker && params.get("rings") !== "0"
+  ? createLandmarkRings({
+      capacity: ringCapacity(landmarkTracker.state.spots),
+      look,
+      tier: quality,
+      // The ground near the height y: a roof or a bridge deck high over it is left out.
+      groundAt: (x, z, y) => landmarkGround(x, z, y)?.height ?? null,
+      // The ground of a zone center: the deck when the zone is on a bridge,
+      // the trail under it otherwise (as fast travel lands).
+      centerAt: (x, z) => {
+        const terrain = terrainOf(level).height(x, z);
+        const spot = travelSpot(level, x, z);
+        const strip = spot && Math.hypot(spot.x - x, spot.z - z) < 4 ? spot : null;
+        return landmarkGround(x, z, strip ? landingProbe(level, strip, terrain) : terrain + 2)?.height ?? terrain;
+      },
+      reducedMotion: () => effects.reducedMotion,
+    })
+  : null;
+if (landmarkRings) scene.add(landmarkRings.group);
+const landmarkModels = landmarkGlbs ? createLandmarkModels(level.name, { after: firstFrame }) : null;
+if (landmarkModels) {
+  scene.add(landmarkModels.root);
+  landmarkModels.ready.catch((err) => console.error(err));
+}
 
 // The street kit (trees, lamps, benches, roof units) loads after the level
-// shows. ?props=0 leaves it out.
+// shows. ?props=0 leaves it out. With the GLB trees (pbr), the batch goes in
+// after the first frame: the impostor bake is long (#190).
 if (geo && params.get("props") !== "0") {
-  loadPropTemplates()
-    .then((templates) => levelView.addProps(env.props, templates))
+  // Pbr lite draws the procedural trees: no Blender tree GLBs to download.
+  const glbTrees = look === "pbr" && params.get("glbtrees") !== "0" && typeof liteNum("leafcards", lite?.leafCards) !== "number";
+  Promise.all([lateLoads.run("props", () => loadPropTemplates({ glbTrees, timeoutMs: propTimeoutFor(lateLoads.plan) })), glbTrees ? firstFrame : null])
+    .then(([templates]) => levelView.addProps(env.props, templates, { renderer, impostors: params.get("impostors") !== "0" }))
     .catch((err) => {
       levelView.props.error = String(err);
       console.error(err);
@@ -220,7 +440,7 @@ if (geo && params.get("props") !== "0") {
 const npcSeed = Number(params.get("npcseed") ?? 1) || 1;
 const npcsOn = geo && params.get("npcs") !== "0";
 let crowd = npcsOn ? createCrowd(level, { seed: npcSeed }) : null;
-const npcView = crowd ? createNpcView(crowd) : null;
+const npcView = crowd ? createNpcView(crowd, { look }) : null;
 if (npcView) {
   npcView.sync(crowd);
   scene.add(npcView.group);
@@ -240,19 +460,68 @@ const parked = carsOn
   ? parkedCars(level, levelSample, { heightAt: (x, z) => carHeight(x, z, -Infinity) }).map((c) => ({ ...c, pitch: carPitch(c, (x, z) => carHeight(x, z, c.y)) }))
   : [];
 const makeTraffic = () => createTraffic(level, { seed: carSeed, heightAt: carHeight });
+// Walkers on the trail, the sidewalks and the street edges, more of them
+// near the shops and the landmarks (src/sim/peds.js). ?peds=0 leaves them
+// out, and ?peds=<n> sets the count.
+const pedTotal = pedCount(quality, paramFor("peds", params, savedSettings));
+const pedsOn = geo && pedTotal > 0;
+// The walker heights come from the level less the buildings, so a walker
+// at a footprint edge stays on the sidewalk, not on the roof.
+const pedHeight = pedsOn ? streetHeightSampler(createGeoGroundSampler({ ...level, buildings: [] }), (x, z) => (levelTerrain && !levelTerrain.flat ? levelTerrain.height(x, z) : 0)) : null;
+const makePeds = () => createPeds(level, { seed: npcSeed, count: pedTotal, radius: PED_RADIUS[quality], heightAt: pedHeight, props: env.props });
+let peds = pedsOn ? makePeds() : null;
+// Combo points for the walker cheer on the next step, from __atl.peds.cheer().
+let pedCheer = 0;
+const pedsView = peds ? createPedsView(peds, { look }) : null;
+if (pedsView) scene.add(pedsView.group);
+// The Meshy people (assets/people/) for the walkers, pbr look only: rigged
+// for the nearest, baked poses for the rest (src/render/ped-crowd.js), so
+// no walker turns from a blocky figure into a person as the camera comes
+// near. The figures stay hidden while the GLBs load. ?pedglb=0 leaves the
+// people out, ?pedcrowd=0 keeps the figures for the far walkers, and
+// ?pedrigs=<n> sets how many walkers get a rigged person
+// (src/render/ped-models.js).
+const pedModels = pedsView && look === "pbr" && params.get("pedglb") !== "0" && PED_MODEL_COUNT[quality] > 0 ? createPedModels({ count: numParam("pedrigs") ?? PED_MODEL_COUNT[quality], after: firstFrame, ...(params.get("pedvariants") === "0" ? { variants: {}, variantUrls: {} } : {}), crowd: params.get("pedcrowd") !== "0" && renderer.extensions.has("WEBGL_multi_draw") ? peds.peds.length : 0 }) : null;
+if (pedModels) {
+  scene.add(pedModels.group);
+  pedModels.ready.catch((err) => console.error(err));
+}
+// The Meshy fountains, bollards and BeltLine props at their placements in
+// env.props (src/render/people-props-view.js); ?meshyprops=0 hides them.
+const meshyProps = geo && params.get("props") !== "0" && params.get("meshyprops") !== "0" ? createMeshyPropsView(env.props, { after: firstFrame }) : null;
+if (meshyProps) {
+  scene.add(meshyProps.group);
+  meshyProps.ready.catch((err) => console.error(err));
+}
 let traffic = carsOn && params.get("traffic") !== "0" ? makeTraffic() : null;
-const carView = carsOn ? createCarView(parked, traffic ? traffic.cars : [], { pitchAt: (c) => carPitch(c, (x, z) => carHeight(x, z, c.y)) }) : null;
+const carView = carsOn ? createCarView(parked, traffic ? traffic.cars : [], { pitchAt: cachedPitch((c) => (x, z) => carHeight(x, z, c.y)), look }) : null;
 if (carView) {
   carView.update({ x: level.spawn.position[0], z: level.spawn.position[2] }, traffic?.cars);
   scene.add(carView.mesh);
   env.sampleGround = carGroundSampler(levelSample, parked, () => (traffic ? traffic.cars : []));
+  // The pbr look swaps the near cars for the rigged GLB vehicles
+  // (src/render/car-models.js). ?carglb=0 keeps the kit cars.
+  if (look === "pbr" && params.get("carglb") !== "0") {
+    const cars = [...parked, ...(traffic ? traffic.cars : [])];
+    firstFrame
+      .then(() => loadCarModels([...new Set(cars.map((c) => c.kind))]))
+      .then((models) => {
+        const view = createCarModelView(models, cars);
+        scene.add(view.group);
+        carView.setModels(view);
+      })
+      .catch((err) => {
+        carView.info.modelError = String(err);
+        console.error(err);
+      });
+  }
 }
 
 // Fact cards (M1-07): 3 cards on the trail, from the open-data-atl site.
 // The cards show at once with the fixture text; a live text replaces it when
 // the call returns. ?facts=fixture|live|0 sets the mode (src/facts/client.js).
-const facts = { mode: factsMode(params.get("facts"), { webdriver: Boolean(navigator.webdriver) }), cards: [], live: "none" };
-const factData = facts.mode !== "off" && Object.hasOwn(LEVEL_FACTS, level.name) ? await LEVEL_FACTS[level.name]() : null;
+const facts = { mode: factsModeNow, cards: [], live: "none" };
+const factData = factDataLoad ? await factDataLoad : null;
 if (factData) {
   facts.cards = fixtureFacts(factData.specs, factData.fixture).map((card, i) => {
     const [x, z] = factData.specs[i].at;
@@ -272,7 +541,11 @@ if (factCardsView) scene.add(factCardsView.group);
 const factPopup = facts.cards.length ? createFactPopup(document.body) : null;
 const factCardSpots = () => facts.cards.map((c) => ({ id: c.id, position: c.position }));
 
-const skaterView = createSkaterView();
+// Foot IK (#107): the skates touch stairs and ramps. Off on the phone tier
+// and on a phone (the same check as the small skater model), to keep the
+// frame time; ?footik=1 turns it on and ?footik=0 turns it off.
+const footIkOn = params.get("footik") === "1" || (params.get("footik") !== "0" && quality !== "phone" && !smallSkater);
+const skaterView = createSkaterView({ footIk: footIkOn, sampleGround: (x, z, y) => env.sampleGround(x, z, y), lean: params.get("lean") !== "0" });
 scene.add(skaterView.group);
 // The isometric map bake shows the city only.
 if (params.get("view") === "iso") skaterView.group.visible = false;
@@ -281,21 +554,32 @@ if (params.get("view") === "iso") skaterView.group.visible = false;
 // the player. On by default on a geodata level; ?skaters=0 turns them off,
 // and ?skaters=1 turns them on for the greybox. Each skater GLB is parsed
 // once: the player and the NPCs share the parse.
-const skatersOn = params.get("skaters") === "1" || (geo && params.get("skaters") !== "0");
+// The NPC skaters reuse the Nia and Marcus models, so they are off by default:
+// other copies of the playable skaters must not ride the trail. ?skaters=1
+// turns them on (for the NPC tests and later NPC work).
+const skatersOn = params.get("skaters") === "1";
 let npcSkaters = skatersOn ? createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] }) : null;
 // One download for each model: the NPCs of one model share the bytes.
 const npcByteCache = new Map();
+// A model that only the NPCs use downloads after the first frame (#187), so
+// it does not slow the player's skater and the level. It is the 1024 px
+// file on every tier (#190): an NPC is never as near as the player.
 const npcBytes = (model) => {
   if (model === skaterName) return skaterBytes;
   if (!npcByteCache.has(model)) {
-    const bytes = fetchSkaterModel(model, null, { small: smallSkater });
+    const bytes = firstFrame.then(() => fetchSkaterModel(model, null, { small: true }));
     // A failed download is reported where the model loads, not here.
     bytes.catch(() => {});
     npcByteCache.set(model, bytes);
   }
   return npcByteCache.get(model);
 };
-const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model) => cloneSkaterModel(model, npcBytes(model)), toon: params.get("toon") !== "0", draw: NPC_DRAW[quality] ?? NPC_DRAW.low }) : null;
+const viewCull = createViewCull();
+// Far NPC skaters use the LOD1 model (#280); ?npclod=0 keeps the full model.
+// ?npcmax=, ?npcdist=, ?npclod1=, and ?npcfull= change the draw limits of the tier.
+const npcDraw = { ...(NPC_DRAW[quality] ?? NPC_DRAW.low) };
+for (const [param, key] of [["npcmax", "max"], ["npcdist", "distance"], ["npclod1", "lod1From"], ["npcfull", "full"]]) if (numParam(param) !== undefined) npcDraw[key] = numParam(param);
+const npcSkatersView = npcSkaters ? createNpcSkatersView(npcSkaters, { load: (model, opts) => cloneSkaterModel(model, npcBytes(model), opts), toon: params.get("toon") !== "0", draw: npcDraw, lod: params.get("npclod") !== "0", look }) : null;
 if (npcSkatersView) scene.add(npcSkatersView.group);
 
 // A blob shadow under the skater for a level with no shadow map.
@@ -305,6 +589,7 @@ if (geo && !tier.shadows) {
     new THREE.CircleGeometry(0.55, 16).rotateX(-Math.PI / 2),
     new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }),
   );
+  blob.name = "skater-blob";
   blob.renderOrder = 1;
   scene.add(blob);
 }
@@ -313,13 +598,55 @@ if (geo && !tier.shadows) {
 // skater (src/ui/skater-select.js), and ?skater=capsule keeps the capsule.
 // The skater gets the toon look (src/render/toon.js); ?toon=0 keeps the GLB
 // materials.
-createSkaterSelect(document.body, skaterName);
-const skaterModel = { name: skaterName, loaded: false, error: null };
+const skaterModel = { name: skaterName, loaded: false, error: null, swaps: 0 };
+// One load for each skater, with its look applied. A switch back reuses it.
+const skaterLoads = new Map();
+function skaterLoad(name) {
+  if (!skaterLoads.has(name)) {
+    // A phone keeps the 1024 px skater after a switch too (#74).
+    const bytes = name === skaterName ? skaterBytes : fetchSkaterModel(name, null, { small: smallSkater });
+    const p = loadSkaterModel(name, bytes).then((loaded) => {
+      // The look picks the skater's materials: toon swap + ink hull, or the
+      // pbr env-lit standard materials. ?toon=0 keeps the raw GLB shading.
+      if (params.get("toon") !== "0") (look === "pbr" ? pbrSkater : toonSkater)(loaded);
+      return loaded;
+    });
+    p.catch(() => skaterLoads.delete(name));
+    skaterLoads.set(name, p);
+  }
+  return skaterLoads.get(name);
+}
+// True when the run state exists (below), so a switch can pose the new model.
+let runReady = false;
+// The skater select switches the skater in place (#97, MOB-13): the run,
+// the score and the place stay. The skate constants and the dances follow
+// the new skater, as after a reload.
+const skaterSwitch = createSkaterSwitch({
+  current: skaterName,
+  load: skaterLoad,
+  apply: (name, loaded) => {
+    skaterView.attachModel(loaded);
+    skaterEnv.skater = name;
+    skaterEnv.skate = skateFor(bodyFor(name));
+    if (runReady) skaterView.respawn(skater);
+    skaterModel.name = name;
+    skaterModel.loaded = true;
+    skaterModel.error = null;
+    skaterModel.swaps += 1;
+    history.replaceState(history.state, "", skaterUrl(window.location.href, name));
+  },
+  onError: (name, err) => {
+    skaterModel.error = String(err);
+    console.error(err);
+  },
+});
+createSkaterSelect(document.body, skaterName, { onSelect: (name) => skaterSwitch.select(name) });
 if (skaterName !== "capsule") {
-  loadSkaterModel(skaterName, skaterBytes)
+  skaterLoad(skaterName)
     .then((loaded) => {
       loader.step("skater");
-      if (params.get("toon") !== "0") toonSkater(loaded);
+      // A switch that applied first keeps its skater.
+      if (skaterModel.swaps > 0) return;
       skaterView.attachModel(loaded);
       skaterModel.loaded = true;
     })
@@ -408,15 +735,40 @@ if (view === "orbit") {
 // the lite ink pass on the phone tier, none on the low tier.
 // The pbr look has no halftone dots: on glass and in shade they read as speckle
 // (docs/art-loop/reports/brick-loft-r0-judge.md).
-const postOptions = { fadeNear: iso ? ISO_BACK * 4 : GEO_FOG_NEAR * 0.5, fadeFar: iso ? ISO_BACK * 5 : GEO_FAR * 0.8, halftone: look !== "pbr" && params.get("halftone") !== "0", ink: LOOKS[look].ink, grade: LOOKS[look].grade };
+const postOptions = { fadeNear: iso ? ISO_BACK * 4 : GEO_FOG_NEAR * 0.5, fadeFar: iso ? ISO_BACK * 5 : GEO_FAR * 0.8, halftone: look !== "pbr" && params.get("halftone") !== "0", ink: LOOKS[look].ink, grade: LOOKS[look].grade, look };
 let post = tier.post === "full" ? createPost(renderer, scene, camera, postOptions) : tier.post === "lite" ? createLitePost(renderer, scene, camera, postOptions) : null;
 // Photo mode's tilt-shift blur (src/render/tilt-shift.js): on the full
 // chain only, and off in play.
 let tiltShift = post && post.kind === "full" ? addTiltShift(post, camera, renderer) : null;
+// The ink and bloom switches of the settings menu.
+setPostToggles(post, savedSettings);
+// The pbr look's per-frame light (src/render/pbr-look.js): the grade by
+// time of day and district, the fog tint, the env map bake, the skater rim.
+// ?pbrgrade=0 keeps the fixed day values (for a before/after check).
+const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: districtAnchors(level), getPost: () => post, skySh }) : null;
+// Comic effects (#113, src/render/effects/): speed lines, impact frames and
+// bursts from the controller flags. Emissive overlays: no material or grade
+// change. Off on the low tier, with prefers-reduced-motion, and with ?fx=0.
+const effects = createEffects({ scene, camera, renderer, tier: quality, anchors: geo ? districtAnchors(level) : [], off: params.get("fx") === "0" });
+// The reduced-motion choice of the settings menu (#97) wins over the media query.
+const motionChoice = (s) => (typeof s.reduceMotion === "boolean" ? s.reduceMotion : null);
+effects.setReducedMotion(motionChoice(savedSettings));
+// ?perf=1: the draw calls of each frame by pass and object kind (#188).
+const drawSplit = perf.enabled ? createDrawSplit(renderer) : null;
+function labelPostPasses() {
+  if (!drawSplit || !post?.composer) return;
+  for (const p of post.composer.passes) {
+    const label = p === post.gtao ? "gtao" : p === post.ink ? "ink" : p === post.grade ? "grade" : p === post.bloom ? "bloom" : p.isRenderPass ? "main" : "post";
+    drawSplit.wrapPass(p, label);
+  }
+}
+labelPostPasses();
 function draw() {
   renderer.info.reset();
+  drawSplit?.begin();
   if (post) post.render();
   else renderer.render(scene, camera);
+  drawSplit?.end();
 }
 
 // The frame-time governor (src/render/governor.js) steps the phone and high
@@ -424,9 +776,31 @@ function draw() {
 // the headless playtest gate, so it has no governor. ?governor=0 turns it off,
 // and ?govbudget=<ms> sets the frame budget (for tests and tuning).
 const govBudget = Number(params.get("govbudget"));
-const govConfig = Number.isFinite(govBudget) && govBudget > 0 ? { ...GOVERNOR, budgetMs: govBudget } : GOVERNOR;
-let governor = geo && quality !== "low" && params.get("governor") !== "0" ? createGovernor(ladderFor(tier), govConfig) : null;
+// Pbr lite (#246) has one more step at the end: the toon look
+// (src/render/look-down.js). ?lookdown=0 leaves that step out.
+const lookDownOn = pbrLite && params.get("lookdown") !== "0";
+const govBase = lookDownOn ? LITE_GOVERNOR : GOVERNOR;
+const govConfig = Number.isFinite(govBudget) && govBudget > 0 ? { ...govBase, budgetMs: govBudget } : govBase;
+let governor = geo && quality !== "low" && params.get("governor") !== "0" ? createGovernor(ladderFor(tier, { lookDown: lookDownOn }), govConfig) : null;
+// The step from pbr lite to toon. The look builds the scene, so it is a
+// reload: the saved look and the ?look flag go to toon, and the next page
+// shows one HUD line.
+let lookDownDone = null;
+function stepLookDown(to) {
+  if (lookDownDone) return;
+  let plan = lookDownPlan(window.location.href, settingsStorage ? readSettings(settingsStorage) : null, to);
+  // The save can fail (full or blocked storage). Then the address carries the
+  // look: with neither, the next page starts in pbr again and steps down
+  // again, in a loop.
+  if (plan.saved && !writeSettings(settingsStorage, plan.saved)) plan = lookDownPlan(window.location.href, null, to);
+  lookDownDone = { to, href: plan.href, medianMs: governor?.last ?? null };
+  governor = null;
+  // replace(), not assign(): the Back button must not go to the slow page,
+  // which would step down and come here again.
+  window.location.replace(plan.href);
+}
 function applyRung(rung) {
+  if (isLookDown(rung, look)) return stepLookDown(rung.look);
   renderer.setPixelRatio(pixelRatioFor(window.devicePixelRatio, rung.pixelRatio));
   if (!rung.post && post) {
     post.dispose();
@@ -463,13 +837,32 @@ const touch = wantsTouch(params.get("touch"), { maxTouchPoints: navigator.maxTou
   ? createTouchInput({ parent: document.body })
   : null;
 if (touch) document.body.classList.add("touch");
+// The fullscreen button and the "turn your phone" hint (#97), touch only.
+createScreenControls({ touch: Boolean(touch), after: firstFrame });
 const input = createInput({ target: window, touch });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
-const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch) });
+runReady = true;
+// The goals of the run (M1-05), or null with ?run=free. The HUD shows them (#268).
+const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef });
+// Teach the moves in the world (#76): one prompt at a time, ?teach=1 or 0.
+const teach = createTeachPrompts({ levelName: level.name, geo, param: params.get("teach"), storage: safeStorage(), grindables: skaterEnv.grindables, touch: Boolean(touch), gamepad: () => input.gamepadId !== null, reducedMotion: () => effects.reducedMotion });
+// After the step from pbr lite to toon (#246): one line, one time. The flag
+// leaves the address, so a refresh does not show the line again.
+const lookNotice = lookDownNotice(window.location.href);
+if (lookNotice.text) {
+  // After the first frame: before it, the loader covers the HUD.
+  // ?noticems=<ms> sets how long it stays (for a screenshot on a slow machine).
+  firstFrame.then(() => hud.notice(lookNotice.text, numParam("noticems") ?? LOOK_DOWN_NOTICE_MS));
+  window.history.replaceState(window.history.state, "", lookNotice.href);
+}
+// ?fps=1: the median frame time of the last 2 minutes on the screen (#246),
+// to read on a real phone (src/perf/frame-readout.js).
+const frameReadout = params.get("fps") === "1" ? createFrameReadout() : null;
+const frameReadoutEl = frameReadout ? document.body.appendChild(Object.assign(document.createElement("div"), { id: "fps-readout" })) : null;
 // Goals, the run timer, and the results screen (M1-05). The goal list is
 // data per level (src/level/goals.js). ?run=free turns the timer off.
-const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
 let goals = goalDef ? createGoals(goalDef) : null;
 // The fact cards for the goal list. The run collects the cards on the trail
 // (run.cards, #17). collectFactCard(id) also adds a card, for the tests. A
@@ -482,16 +875,59 @@ function collectFactCard(id) {
   events.push({ tick: run.tick, type: "card", id, count: cardCount() });
   return true;
 }
-const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: () => resetSkater() }) : null;
+// Music (#110): the beat clock plays a track from assets/music/tracks.json;
+// the results screen picks it and localStorage keeps the choice.
+const beat = new BeatClock(beatClockOptions(params, settingsStorage));
+beat.muted = params.get("mute") === "1";
+beat.preload();
+// Game-feel sounds (#105): bonk, landing and wall scrape on the beat clock's context.
+const sfx = createSfx(beat);
+// The landmark banner and chimes (#219). The banner is its own element: it is
+// not the HUD notice line. A timed run has a goal list; a free run finds
+// spots and claims none.
+const landmarkTimed = Boolean(goalDef);
+const landmarkBanner = landmarkTracker ? createLandmarkBanner(document.body, { reducedMotion: () => effects.reducedMotion }) : null;
+const landmarkAnchors = geo ? districtAnchors(level) : [];
+const chimes = createChimes(beat);
+// True for the first tick after "Travel here": a challenge ignores that tick.
+let landmarkTravel = false;
+// The landmark view of the last frame, and the state it was made from.
+let landmarkViewOf = null;
+let landmarkViewNow = null;
+const musicChoices = beat.tracks.length ? trackChoices(beat.tracks) : [];
+const onTrack = (id) => {
+  writeChoice(settingsStorage, id);
+  beat.setTrack(id).catch(() => {});
+};
+// The text callouts (#305): 3, 2, 1, SKATE!, SPOT CLAIMED, the combo name,
+// ROUND OVER and the medal, on the music beat. ?callouts=0 turns them off.
+const callouts = params.get("callouts") === "0" ? null : createCallouts(document.body, { reducedMotion: () => effects.reducedMotion, beat: () => ({ phase: beat.running && beat.musicState !== "loading" && beat.now() >= 0 ? beat.phase() : null, bpm: beat.bpm }) });
+// The count-in plays at the first key or tap of a timed run, and after a replay. It waits
+// while the track loads (no phase), so the first card does not slow the music start.
+let calloutStart = Boolean(goalDef);
+const replayRun = () => {
+  resetSkater();
+  callouts?.start();
+};
+const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: replayRun, tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack }) : null;
 // The minimap (#86) on a geodata level. ?minimap=0 leaves it out, and
 // ?minimap=north or ?minimap=heading sets the mode.
 const minimapParam = params.get("minimap");
 // The full map (src/ui/fullmap.js) is made after photo mode, below; the
 // minimap expand button opens it.
 let fullmap = null;
+const fastTravelMode = travelMode(params.get("travel"), { dev: import.meta.env.DEV });
+// The map icons (#218): the landmark spots with their states, read from the
+// tracker, and the parks that no spot stands for.
+const mapIconSource = geo ? createIconSource({ tracker: landmarkTracker, level, data: landmarkData }) : null;
 const minimap =
   geo && minimapParam !== "0"
-    ? createMinimap(document.body, level, { mode: ["north", "heading"].includes(minimapParam) ? minimapParam : undefined, onExpand: () => fullmap?.open() })
+    ? createMinimap(document.body, level, {
+        mode: ["north", "heading"].includes(minimapParam) ? minimapParam : undefined,
+        onExpand: () => fullmap?.open(),
+        source: mapIconSource,
+        reducedMotion: () => effects.reducedMotion,
+      })
     : null;
 // Simulation events for the tests and the playtest harness.
 const events = [];
@@ -501,12 +937,14 @@ let camFxEvent = 0;
 // Beat clock: starts on the first key or pointer press (browser audio
 // policy). The beat never gates input; moves that land near a beat earn
 // the on-beat bonus and a PERFECT / GOOD tag.
-const beat = new BeatClock();
-beat.muted = params.get("mute") === "1";
 // Call start() on every gesture: a context made too early stays suspended
 // until a gesture resumes it.
 function startBeat() {
   if (!beat.running) beat.start().catch(() => {});
+  if (calloutStart && goals && !goals.ended) {
+    calloutStart = false;
+    callouts?.start();
+  }
 }
 window.addEventListener("keydown", startBeat, { once: false });
 window.addEventListener("pointerdown", startBeat);
@@ -528,23 +966,47 @@ function sampleInput() {
 function simulate(dt) {
   // After the run ends the skater gets no input and rolls to a stop.
   const sampled = sampleInput();
-  run = stepRun(run, goals && goals.ended ? {} : sampled, dt, env, skaterEnv, beat.running ? beat : null);
+  const before = run.skater;
+  const comboBefore = run.combo;
+  perf.begin("skater");
+  const applied = goals && goals.ended ? {} : sampled;
+  run = stepRun(run, applied, dt, env, skaterEnv, beat.running ? beat : null);
+  perf.end("skater");
   skater = run.skater;
+  teach.observe(before, skater, applied, run.combo, dt);
+  effects.observe(before, skater, run.moves);
+  sfx.observe(before, skater);
+  follow?.observe(before, skater);
   if (goals && !goals.ended) {
     goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
     if (goals.ended) events.push({ tick: run.tick, type: "run-end", ...goalsJson(goals, goalDef) });
   }
-  if (crowd) crowd = stepCrowd(crowd, dt, skater.position, npcSkaters ? skaterObstacles(npcSkaters) : []);
-  if (traffic) traffic = stepTraffic(traffic, dt, skater.position);
-  if (npcSkaters) npcSkaters = stepNpcSkaters(npcSkaters, dt, env, skaterEnv, { player: skater.position, crowd: crowd ? crowd.npcs : [], beat: beat.running ? { time: beat.now(), bpm: beat.bpm } : null });
+  perf.begin("crowd");
+  if (crowd) crowd = stepCrowd(crowd, dt, skater.position, npcSkaters ? skaterObstacles(npcSkaters) : [], { focus: [camera.position.x, camera.position.z] });
+  perf.end("crowd");
+  perf.begin("traffic");
+  if (traffic) traffic = stepTraffic(traffic, dt, skater.position, { focus: [camera.position.x, camera.position.z] });
+  perf.end("traffic");
+  perf.begin("walkers");
+  if (peds) stepPeds(peds, dt, { focus: [camera.position.x, camera.position.z], nia: skater.position, others: [...(crowd ? crowd.npcs : []), ...(npcSkaters ? skaterObstacles(npcSkaters) : [])], banked: run.banked + pedCheer });
+  pedCheer = 0;
+  perf.end("walkers");
+  perf.begin("npcSkaters");
+  if (npcSkaters) npcSkaters = stepNpcSkaters(npcSkaters, dt, env, skaterEnv, { player: skater.position, crowd: crowd ? crowd.npcs : [], focus: [camera.position.x, camera.position.z], beat: beat.running ? { time: beat.now(), bpm: beat.bpm } : null });
+  perf.end("npcSkaters");
   for (const m of run.moves) events.push({ tick: run.tick, type: "move", ...m });
   if (run.banked) {
     events.push({ tick: run.tick, type: "bank", points: run.banked, score: run.combo.score });
+    callouts?.combo(run.banked, comboBefore);
     skaterView.cheer();
   }
   if (skater.justFell || skater.respawned) events.push({ tick: run.tick, type: "bail" });
-  if (skater.respawned) events.push({ tick: run.tick, type: "respawn" });
+  if (skater.respawned) {
+    events.push({ tick: run.tick, type: "respawn" });
+    // An out-of-bounds respawn in the sim: the view goes to the spawn at once, as after a reset (#231).
+    skaterView.respawn(skater);
+  }
   for (const id of run.factsCollected) {
     events.push({ tick: run.tick, type: "fact", id, count: run.cards.count });
     const card = facts.cards.find((c) => c.id === id);
@@ -555,6 +1017,28 @@ function simulate(dt) {
   if (skater.justFell) events.push({ tick: skater.tick, type: "fall", position: [...skater.position] });
   if (skater.justLanded) events.push({ tick: skater.tick, type: "land", groundId: skater.groundId, speed: skater.speed, fall: skater.landFall ?? 0 });
   if (skater.justJumped) events.push({ tick: skater.tick, type: "jump" });
+  // Landmark discovery, after the goals and the fact cards of this tick. A
+  // banner waits while the fact pop-up shows. Play never pauses for it.
+  if (landmarkTracker) {
+    const step = landmarkStepArgs(run, { timed: landmarkTimed, goals, teleported: landmarkTravel });
+    landmarkTravel = false;
+    const changed = landmarkTracker.step(step.obs, dt, { active: step.active, hold: Boolean(factPopup?.state.visible) });
+    for (const id of changed.found) {
+      events.push({ tick: run.tick, type: "landmark-found", id });
+      chimes.play("found");
+    }
+    for (const c of changed.claimed) {
+      events.push({ tick: run.tick, type: "landmark-claimed", id: c.id, points: c.points, first: c.first });
+      chimes.play("claimed");
+      callouts?.claim(c.points);
+      // A gap claim at the zone of a gap goal marks that goal in this run.
+      const marked = withGapGoal(goals, c.goal, goalDef);
+      if (marked !== goals) {
+        goals = marked;
+        events.push({ tick: run.tick, type: "gap", id: c.goal });
+      }
+    }
+  }
 }
 
 let follow = null;
@@ -565,13 +1049,16 @@ function fastTravel(x, z) {
   const spot = travelSpot(level, x, z);
   if (!spot) return null;
   const ground = terrainOf(level).height(spot.x, spot.z);
-  // The top surface over the spot: a bridge deck when the strip is a deck
-  // (the spot is on a strip, so never on a roof).
-  const y = env.sampleGround(spot.x, spot.z, ground + 40)?.height ?? ground;
+  // The top surface of the spot's own strip: the deck when the strip is a
+  // bridge, the road under it otherwise (the spot is on a strip, so never on
+  // a roof).
+  const y = env.sampleGround(spot.x, spot.z, landingProbe(level, spot, ground))?.height ?? ground;
   run = teleportRun(run, level, { position: [spot.x, y, spot.z], yaw: spot.yaw });
   skater = run.skater;
+  skaterView.respawn(skater);
   if (follow) follow.reset(skater);
   events.push({ type: "travel", x: spot.x, z: spot.z });
+  landmarkTravel = true;
   return { ...spot, y };
 }
 
@@ -585,9 +1072,18 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   }
   if (crowd) crowd = createCrowd(level, { seed: npcSeed });
   if (traffic) traffic = makeTraffic();
+  if (peds) peds = makePeds();
   if (npcSkaters) npcSkaters = createNpcSkaters(level, { env, avoid: crowd ? crowd.npcs : [] });
+  // A new run: the spot states stay, the run record and the attempts start again.
+  landmarkTracker?.startRun();
+  landmarkRings?.reset();
+  landmarkTravel = false;
+  callouts?.clear();
   events.length = 0;
   camFxEvent = 0;
+  // The model faces the new heading at once, also while the render is
+  // paused (#231).
+  skaterView.respawn(skater);
   if (follow) follow.reset(skater);
 }
 
@@ -609,7 +1105,7 @@ function runScript(entries, { position, yaw } = {}) {
 // Mouse drag on the canvas and the right stick turn the follow camera.
 let lookInput = null;
 if (view === "follow") {
-  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater });
+  follow = createFollowCamera(camera, { RAPIER, world: physics.world, skater, props: env.props, canopy: params.get("canopycam") !== "0", fence: env.fence, motion: () => ({ reducedMotion: effects.reducedMotion, off: params.get("fx") === "0" || camFxOff }) });
   lookInput = createLookInput({ element: renderer.domElement });
 }
 
@@ -630,11 +1126,34 @@ const photo = createPhotoPanel({
   render: draw,
   sampleLook: (dt) => mapLook(photoLook.sample(), dt),
   // The camera height selects the floor below the camera, not a bridge deck above it.
-  floor: (x, z, y) => env.sampleGround(x, z, y)?.height ?? null,
+  // The edge fence wall is for the skater only: the camera has no floor there.
+  floor: (x, z, y) => {
+    const g = env.sampleGround(x, z, y);
+    return g && g.id !== EDGE_FENCE_ID ? g.height : null;
+  },
   onChange: (open) => {
     if (controls) controls.enabled = !open;
     input.reset();
   },
+});
+
+// The settings menu (#94, src/ui/settings-menu.js): O or the SETTINGS
+// button. The game stops while it is open. The ink and the bloom switch at
+// once; the tier, the look, the walkers and the shadows apply on a reload.
+const runningSettings = { quality, look, peds: pedTotal, shadows: tier.shadows, ink: savedSettings.ink, bloom: savedSettings.bloom };
+const settingsMenu = createSettingsMenu({
+  running: runningSettings,
+  choice: choiceFrom(params, savedSettings),
+  sources: sourcesOf(params, savedSettings),
+  autoQuality,
+  post: () => ({ kind: post ? post.kind : null, look }),
+  onSave: (s) => writeSettings(settingsStorage, s),
+  onLive: (s) => setPostToggles(post, s),
+  onMotion: (s) => effects.setReducedMotion(motionChoice(s)),
+  deviceMotion: () => effects.deviceReducedMotion,
+  reload: (keys, carry) => window.location.assign(reloadHref(window.location.href, keys, carry)),
+  canOpen: () => !photo.isOpen && !fullmap?.isOpen,
+  onChange: () => input.reset(),
 });
 
 // The full map of the level (M key, or the minimap expand button). The game
@@ -642,17 +1161,29 @@ const photo = createPhotoPanel({
 fullmap =
   geo && params.get("fullmap") !== "0"
     ? createFullMap(document.body, level, {
-        icons: minimap?.icons ?? mapLandmarks(level),
-        canOpen: () => !photo.isOpen,
+        source: mapIconSource,
+        // A free run has no timer, so no spot can be claimed in it.
+        freeRun: !goalDef,
+        reducedMotion: () => effects.reducedMotion,
+        canOpen: () => !photo.isOpen && !settingsMenu.isOpen,
         onChange: () => input.reset(),
         // The baked isometric map of the level (scripts/bake-iso-map.mjs).
         iso: params.get("isomap") === "0" ? null : isoTilesFor(level.name),
         groundAt: (x, z) => terrainOf(level).height(x, z),
         // Fast travel: on in the dev server, off in a production build.
-        // ?travel=1 or ?travel=0 sets it either way.
-        onTravel: (params.get("travel") ?? (import.meta.env.DEV ? "1" : "0")) === "1" ? (x, z) => fastTravel(x, z) : null,
+        // ?travel=1 or ?travel=0 sets it either way. ?travel=found allows
+        // only Found and Claimed spots (opt-in, #271; src/ui/travel-rule.js).
+        onTravel: fastTravelMode !== "off" ? (x, z) => fastTravel(x, z) : null,
+        travelMode: fastTravelMode,
       })
     : null;
+
+// The results of the run. Claim points count toward the medal only: the
+// score and the score goal keep the banked score (GDD, Claim points).
+function runResults() {
+  const base = computeResults(goalsJson(goals, goalDef), goalDef);
+  return landmarkTracker ? withClaimMedal(base, goalDef.medals, medalScore(base.score, landmarkTracker.state) - base.score) : base;
+}
 
 let stepper = createStepper();
 let ticks = 0;
@@ -688,15 +1219,23 @@ let renderPaused = false;
 let npcWarm = false;
 
 function frame(now) {
-  const elapsed = (now - last) / 1000;
+  // The frame time of requestAnimationFrame can be before `last` (set with
+  // performance.now() at the start or by the pause hook). A negative step
+  // sends the follow camera smoothing far away and plays the clips backward
+  // (#231), so the step is never below 0.
+  const elapsed = Math.max(0, (now - last) / 1000);
   last = now;
   if (fps.active) fps.frameMs.push(elapsed * 1000);
+  if (frameReadout) {
+    readoutPush(frameReadout, elapsed * 1000);
+    if (readoutDue(frameReadout)) frameReadoutEl.textContent = readoutText(readoutStats(frameReadout), { look, lite: pbrLite, quality, pixelRatio: renderer.getPixelRatio(), rung: governor ? governor.rung : null }).join("\n");
+  }
   if (renderPaused) {
     requestAnimationFrame(frame);
     return;
   }
   // Photo mode and the full map stop the game.
-  const paused = photo.isOpen || Boolean(fullmap?.isOpen);
+  const paused = photo.isOpen || Boolean(fullmap?.isOpen) || settingsMenu.isOpen;
   // Photo mode pauses the governor: the blur is slow and the game is stopped.
   if (governor && !paused) {
     governor = governorStep(governor, elapsed * 1000);
@@ -710,9 +1249,11 @@ function frame(now) {
     const stepped = advance(stepper, elapsed);
     stepper = stepped.stepper;
     for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
+    perf.steps(stepped.steps);
     ticks += stepped.steps;
   }
 
+  perf.begin("views");
   skaterView.sync(skater, paused ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
   if (photo.isOpen) {
     photo.update(Math.min(elapsed, 0.1));
@@ -727,8 +1268,32 @@ function frame(now) {
     follow.update(skater, dt, lookInput ? mapLook(lookInput.sample(), dt) : null, fresh, { reduced: camFxReduced() });
   }
   if (screenFlash) screenFlash.set(paused || !follow ? 0 : follow.fx.flash);
-  hud.update(run, now, beat.running ? beat.phase() : null, goals);
-  if (results && goals.ended && !results.shown) results.show(computeResults(goalsJson(goals, goalDef), goalDef));
+  // Landmark discovery (#219): the goal line, the banner, the rings and the
+  // chimes read the landmark state. While the game is paused nothing moves.
+  // The view is made again only when the landmark state changes.
+  if (landmarkTracker && landmarkTracker.state !== landmarkViewOf) {
+    landmarkViewOf = landmarkTracker.state;
+    landmarkViewNow = landmarkTracker.view();
+  }
+  const landmarkNow = landmarkViewNow;
+  hud.update(run, now, beat.running ? beat.phase() : null, goals, landmarkNow ? (goalLine(landmarkNow, skater.position, { timed: landmarkTimed })?.text ?? null) : null);
+  teach.update({ nowMs: now, camera, source: input.source, bindings: input.bindings, position: skater.position, hidden: paused || Boolean(results?.shown) });
+  if (landmarkNow) {
+    // The banner hides while the fact pop-up shows, while the game is paused
+    // (its time stops too), and under the results screen.
+    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown), accent: () => districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
+    landmarkRings?.update(landmarkNow.spots, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed, night: weatherView?.state.night ?? 0 });
+  }
+  if (paused) chimes.clear();
+  else chimes.update();
+  if (results && goals.ended && !results.shown) {
+    const end = runResults();
+    results.show(end);
+    callouts?.end(end);
+  }
+  // Real time, not the 0.1 s step cap of the views: the music does not slow
+  // down in a slow frame. Each card finds the beat again (callout-math.js).
+  callouts?.update(paused ? 0 : Math.min(elapsed, 1), { held: paused });
   if (minimap) minimap.update(skater);
   if (fullmap) fullmap.update(skater);
   if (factCardsView) factCardsView.update(run.cards.collected, now / 1000);
@@ -746,22 +1311,46 @@ function frame(now) {
   }
   if (levelView.update) levelView.update(isoFocus ?? camera.position);
   if (sky) sky.update(camera, now / 1000);
+  if (weatherView) weatherView.update(elapsed, camera);
+  // The pbr light pass (#160): grade, fog tint, env map, rim. After the weather.
+  if (pbrLook) pbrLook.update(camera.position, weatherView?.state ?? null, elapsed);
+  if (rain) rain.update(camera, now / 1000, weatherView?.state, renderer.domElement.height);
   if (streetSigns) streetSigns.update(isoFocus ?? camera.position);
+  if (meshyProps) meshyProps.update(camera.position);
+  perf.end("views");
+  // The view test for the people and NPC skater syncs (#189), from the
+  // camera of this frame.
+  viewCull.update(camera);
+  perf.begin("crowdView");
   if (npcView) npcView.sync(crowd, camera.position);
-  if (carView) carView.update(camera.position, traffic?.cars);
+  perf.end("crowdView");
+  perf.begin("walkersView");
+  if (pedModels) pedModels.update(peds, camera.position, paused ? 0 : Math.min(elapsed, 0.1), viewCull);
+  if (pedsView) pedsView.sync(peds, pedModels?.figureSkip);
+  perf.end("walkersView");
+  perf.begin("trafficView");
+  if (carView) carView.update(camera.position, traffic?.cars, { lit: weatherView?.state.windowLit ?? 0, time: now / 1000 });
+  perf.end("trafficView");
   if (npcSkatersView && !npcWarm && npcSkatersView.loaded + npcSkatersView.failed === npcSkaters.npcs.length) {
     npcWarm = true;
     npcSkatersView.warm(renderer, camera, scene).catch(() => {});
   }
-  if (npcSkatersView) npcSkatersView.sync(npcSkaters, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null, camera.position);
+  perf.begin("npcSkatersView");
+  if (npcSkatersView) npcSkatersView.sync(npcSkaters, photo.isOpen ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null, camera.position, viewCull);
+  perf.end("npcSkatersView");
+  effects.update(Math.min(elapsed, 0.1), { skater, active: !paused });
+  perf.begin("render");
   draw();
+  perf.end("render");
+  perf.frame();
   frames += 1;
   if (frames === 1) {
     loader.hide();
     performance.mark("atl:first-frame");
+    firstFrameDone();
   }
   if (recorder.active && frames % recorder.every === 0) {
-    recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
+    recorder.samples.push({ frame: frames, tick: ticks, ...projectSkater(), wallHit: follow ? follow.lastHit : null, canopyHit: follow ? follow.lastCanopyHit : null, camera: [camera.position.x, camera.position.y, camera.position.z], skater: [...skater.position] });
   }
   requestAnimationFrame(frame);
 }
@@ -770,6 +1359,31 @@ requestAnimationFrame(frame);
 
 // Read by the Playwright tests.
 window.__atl = {
+  // The text callouts (#305), or null with ?callouts=0. state: what shows now.
+  callouts: callouts
+    ? {
+        get state() {
+          return callouts.state;
+        },
+        start: () => callouts.start(),
+        claim: (points) => callouts.claim(points),
+        combo: (points, links, multiplier) => callouts.combo(points, { links: { length: links }, multiplier }),
+        end: (results) => callouts.end(results),
+        // Stops the callout clock when the card `text` holds still (null: run again).
+        stopOn: (text) => callouts.stopOn(text),
+        // Steps of at most `s` seconds (null: real time), for a slow test browser.
+        maxStep: (s) => callouts.setMaxStep(s),
+      }
+    : null,
+  // The late downloads (#190): the plan, and when each group started and
+  // finished, in ms from the navigation.
+  get lateLoads() {
+    return lateLoads.info();
+  },
+  // The far tree impostors (tree-impostors.js): atlas bytes, bake time, kinds.
+  get trees() {
+    return geo && levelView.treeCost ? { ...levelView.treeCost } : null;
+  },
   shell: "skate-atl",
   ready: true,
   quality,
@@ -791,9 +1405,49 @@ window.__atl = {
   get post() {
     return post;
   },
+  // Debug handles for the sky dome and the scene (weather tuning).
+  get scene() {
+    return scene;
+  },
+  get sky() {
+    return sky;
+  },
   // The render settings now, after any governor step.
   get render() {
-    return { quality, pixelRatio: renderer.getPixelRatio(), post: post ? post.kind : null, rung: governor ? governor.rung : null, lastMedianMs: governor ? governor.last : null };
+    return { quality, look, lite: pbrLite, pixelRatio: renderer.getPixelRatio(), post: post ? post.kind : null, rung: governor ? governor.rung : null, ladder: governor ? governor.ladder : null, lastMedianMs: governor ? governor.last : null, lookDown: lookDownDone };
+  },
+  // Pbr lite (#246): the pbr look on the phone tier, and what it cuts.
+  pbrLite: pbrLite ? { ...PBR_LITE } : null,
+  // The frame-time readout (?fps=1), or null.
+  get frameReadout() {
+    return frameReadout ? readoutStats(frameReadout) : null;
+  },
+  // An estimate of the GPU memory of the scene's textures (src/perf/texture-memory.js).
+  get textureMemory() {
+    return sceneTextureMemory(scene, [], renderer);
+  },
+  // The day/season weather (src/render/weather-view.js): the kind, the
+  // clock, the sun elevation, and the window/wet/rain factors. Null on the
+  // greybox level or with ?weather=0.
+  get weather() {
+    return weatherView ? weatherView.info() : null;
+  },
+  // The settings menu (#94): open, close, the menu choice, the keys that
+  // wait for a reload, and what this page runs.
+  settings: {
+    get isOpen() {
+      return settingsMenu.isOpen;
+    },
+    get choice() {
+      return settingsMenu.state;
+    },
+    get pending() {
+      return settingsMenu.pending;
+    },
+    running: runningSettings,
+    autoQuality,
+    open: () => settingsMenu.open(),
+    close: () => settingsMenu.close(),
   },
   // Photo mode (#90): open, close, toggle, set({ center, strength }), save().
   photo: {
@@ -823,11 +1477,18 @@ window.__atl = {
     stats: level.stats ?? null,
     bounds: level.bounds,
     spawn: level.spawn,
+    // The edge fence (#229): its rectangle and its panel count, or null.
+    fence: env.fence ? { ...env.fence, panels: edgeFence ? edgeFence.panels : 0 } : null,
     get meshCount() {
       return geo ? levelView.meshCount : level.objects.length;
     },
     get props() {
       return geo ? { ...levelView.props } : null;
+    },
+    // The timed LOD fade of the props (#279): { fading, copiesUsed, ... }.
+    get propFade() {
+      const info = geo ? levelView.byId.get("props")?.userData.lodFade : null;
+      return info ? { ...info } : null;
     },
     signs: streetSigns ? { count: streetSigns.count, names: streetSigns.names } : null,
     kit: geo ? levelView.kit : null,
@@ -837,8 +1498,17 @@ window.__atl = {
     get facadeDepth() {
       return geo && levelView.facadeDepth ? { ...levelView.facadeDepth } : null;
     },
+    // The Blender facade kit of the pbr look (?kitglb=0 leaves it out).
+    get facadeGlb() {
+      return geo && levelView.facadeGlb ? { ...levelView.facadeGlb } : null;
+    },
     get landmarks() {
-      return landmarks ? { ...landmarks.info } : null;
+      return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null } : null;
+    },
+    // The skatepark (#222): the pad, the placements and the model stats.
+    get skatepark() {
+      const sp = level.skatepark;
+      return sp ? { id: sp.id, name: sp.name, center: sp.center, yaw: sp.yaw, size: sp.size, top: sp.top, placements: sp.placements.map((p) => ({ id: p.id, name: p.name, position: p.position, yaw: p.yaw })), view: skateparkView ? { ...skateparkView.stats } : null } : null;
     },
     // The ground under (x, z), from the pure sampler. With `y`, a bridge
     // high over y is left out (the skater is under it).
@@ -864,13 +1534,20 @@ window.__atl = {
   get skater() {
     return skater;
   },
+  // The landmark test hook (#217): the spot states, and find / claim / reset.
+  // In the dev server or a debug build (`vite build --mode debug`) only; a
+  // release build has no way to set a spot.
+  landmarks: landmarkTracker ? landmarkTestHook(landmarkTracker, { dev: import.meta.env.DEV || import.meta.env.MODE === "debug" }) : null,
   // The minimap (#86), or null on the greybox and with ?minimap=0.
   minimap: minimap
     ? {
         get state() {
           return { ...minimap.state };
         },
-        icons: minimap.icons,
+        get icons() {
+          return minimap.icons;
+        },
+        iconsOnScreen: () => minimap.iconsOnScreen(),
         setMode: minimap.setMode,
         setHidden: minimap.setHidden,
       }
@@ -897,6 +1574,10 @@ window.__atl = {
         setLayer: (l) => fullmap.setLayer(l),
         select: (icon, target) => fullmap.select(icon, target),
         travel: () => fullmap.travel(),
+        setTab: (tab) => fullmap.setTab(tab),
+        openSpot: (id) => fullmap.openSpot(id),
+        closeCard: () => fullmap.closeCard(),
+        iconsOnScreen: () => fullmap.iconsOnScreen(),
       }
     : null,
   // The crowd (M1-09), or null on the greybox and with ?npcs=0.
@@ -936,6 +1617,70 @@ window.__atl = {
         },
       }
     : null,
+  // The Meshy people and props (ped-models.js, people-props-view.js), or null.
+  pedModels: pedModels ? pedModels.stats : null,
+  meshyProps: meshyProps ? meshyProps.stats : null,
+  // The walkers (src/sim/peds.js), or null on the greybox and with ?peds=0.
+  peds: pedsView
+    ? {
+        get count() {
+          return peds.peds.filter((p) => p.live).length;
+        },
+        get minGap() {
+          return pedMinGap(peds);
+        },
+        drawCalls: pedsView.drawCalls,
+        get triangles() {
+          return pedsView.triangles;
+        },
+        get list() {
+          return peds.peds.filter((p) => p.live).map((p) => ({ id: p.id, kind: peds.routes[p.route].kind, x: p.x, y: p.y, z: p.z, speed: p.speed, phase: p.phase, pose: p.pose, role: p.role, goal: p.goal?.kind ?? null, leg: p.leg, fx: p.fx, fz: p.fz }));
+        },
+        // What the walkers do (#133): counts by activity, the cheers so far,
+        // and the places (bench seats, bus stop and shop door slots).
+        get activities() {
+          return pedActivities(peds);
+        },
+        get cheers() {
+          return peds.cheers;
+        },
+        // A banked combo of `points` for the walker cheer, as if Nia banked it.
+        cheer(points) {
+          pedCheer = points;
+        },
+        get places() {
+          return peds.places.list.map((p) => ({ id: p.id, kind: p.kind, x: p.x, z: p.z, user: p.user }));
+        },
+      }
+    : null,
+  // Every person on screen (the crowd, the walkers, the GLB people), for
+  // the variety check: { src, id, key, d }. `key` names the look; two
+  // people with the same key look the same.
+  people: {
+    inView() {
+      const v = new THREE.Vector3();
+      const out = [];
+      const seen = (x, y, z) => {
+        v.set(x, y + 1, z);
+        const d = v.distanceTo(camera.position);
+        if (d > camera.far * 0.9) return -1;
+        v.project(camera);
+        return v.z < 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1 ? d : -1;
+      };
+      if (crowd) for (const n of crowd.npcs) {
+        const d = seen(n.x, n.y, n.z);
+        if (d >= 0 && d < NPC_DRAW_DISTANCE) out.push({ src: "crowd", id: n.id, d, key: npcView.lookKey(n) });
+      }
+      if (peds) for (const w of peds.peds) {
+        if (!w.live) continue;
+        const d = seen(w.x, w.y, w.z);
+        if (d < 0) continue;
+        const glb = pedModels?.figureSkip.has(w.id) ? pedModels.kindOf(w.id) : null;
+        out.push({ src: glb ? "glb" : "ped", id: w.id, d, key: glb ?? pedsView.lookKey(w.look), height: glb ? null : pedsView.heightOf(w.look) });
+      }
+      return out.sort((a, b) => a.d - b.d);
+    },
+  },
   // The cars (#132), or null on the greybox and with ?cars=0.
   cars: carView
     ? {
@@ -946,15 +1691,33 @@ window.__atl = {
         get lanes() {
           return traffic ? traffic.lanes.length : 0;
         },
-        drawCalls: carView.drawCalls,
+        get drawCalls() {
+          return carView.drawCalls;
+        },
+        // The draw calls of the lamp layer (lamp quads and headlight pools,
+        // 0 to 2) and of the GLB cars: drawCalls minus both is the kit body.
+        get lampCalls() {
+          return carView.lamps ? carView.lamps.drawCalls : 0;
+        },
+        get modelCalls() {
+          return carView.models ? carView.models.drawCalls : 0;
+        },
         get drawn() {
           return carView.info.drawn;
+        },
+        // The near cars drawn as rigged GLBs (pbr look), and the load error.
+        get models() {
+          return carView.models ? { kinds: carView.models.drawCalls, drawn: carView.info.models } : { error: carView.info.modelError ?? null };
         },
         get lod0() {
           return carView.info.lod0;
         },
         get triangles() {
           return carView.info.triangles;
+        },
+        // The timed LOD fade of the cars (#279).
+        get fade() {
+          return { ...carView.fade };
         },
         // The smallest distance from a car body to the skater in the last
         // step (m), and the count of yields to the skater.
@@ -969,7 +1732,14 @@ window.__atl = {
           return traffic ? traffic.yields : 0;
         },
         get list() {
-          return traffic ? traffic.cars.map((c) => ({ id: c.id, kind: c.kind, lane: c.lane, x: c.x, y: c.y, z: c.z, yaw: c.yaw, speed: c.speed, yielding: c.yielding })) : [];
+          return traffic ? traffic.cars.map((c) => ({ id: c.id, kind: c.kind, lane: c.lane, x: c.x, y: c.y, z: c.z, yaw: c.yaw, speed: c.speed, yielding: c.yielding, crossing: c.crossing, brake: c.brake, signal: c.signal })) : [];
+        },
+        // Yields at crosswalks, and the lamps drawn ({ lamps, beams, lit }).
+        get crossingYields() {
+          return traffic ? traffic.crossingYields : 0;
+        },
+        get lamps() {
+          return carView.lamps ? { ...carView.lamps.info } : null;
         },
         parkedList: parked.map((c) => ({ kind: c.kind, x: c.x, y: c.y, z: c.z, yaw: c.yaw })),
         // The ground sample at (x, z) with the cars, for the tests.
@@ -999,8 +1769,16 @@ window.__atl = {
         get drawCalls() {
           return npcSkatersView.drawCalls;
         },
+        // #280: the drawn NPCs on the LOD1 model, and the skinned vertices of the drawn NPCs.
+        get lod1Drawn() {
+          return npcSkatersView.lod1Drawn;
+        },
+        get skinnedVertices() {
+          return npcSkatersView.skinnedVertices;
+        },
+        draw: npcDraw,
         get list() {
-          return npcSkaters.npcs.map((n) => ({ id: n.id, model: n.spec.model, outfit: n.spec.outfit, position: [...n.skater.position], state: n.skater.state, speed: n.skater.speed, style: n.skater.style ? n.skater.style.name : null, groundId: n.skater.groundId, clip: npcSkatersView.clipOf(n.id), visible: npcSkatersView.visible(n.id), stats: { ...n.stats } }));
+          return npcSkaters.npcs.map((n) => ({ id: n.id, model: n.spec.model, outfit: n.spec.outfit, position: [...n.skater.position], state: n.skater.state, speed: n.skater.speed, style: n.skater.style ? n.skater.style.name : null, groundId: n.skater.groundId, clip: npcSkatersView.clipOf(n.id), visible: npcSkatersView.visible(n.id), lod: npcSkatersView.lodOf(n.id), stats: { ...n.stats } }));
         },
       }
     : null,
@@ -1045,7 +1823,7 @@ window.__atl = {
           return goalsJson(goals, goalDef);
         },
         get results() {
-          return computeResults(goalsJson(goals, goalDef), goalDef);
+          return runResults();
         },
         get shown() {
           return results.shown;
@@ -1056,10 +1834,48 @@ window.__atl = {
         setTimeLeft(seconds) {
           goals = { ...goals, time: Math.max(0, goalDef.time - seconds) };
         },
-        replay: () => resetSkater(),
+        replay: replayRun,
       }
     : null,
   beat,
+  // What #219 draws and plays, read only: the rings, the banner, the HUD
+  // goal line and the chimes. ringCost() draws 1 frame with no ring and 1
+  // with the rings and gives the draw calls of both (GDD P-1).
+  landmarkFx: landmarkTracker
+    ? {
+        get rings() {
+          return landmarkRings ? { ...landmarkRings.info, list: landmarkRings.rings } : null;
+        },
+        get banner() {
+          return landmarkBanner.state;
+        },
+        get goalLine() {
+          return hud.elements.goal.hidden ? null : hud.elements.goal.textContent;
+        },
+        get chimes() {
+          return chimes.info;
+        },
+        timed: landmarkTimed,
+        get saved() {
+          return landmarkTracker.saved;
+        },
+        // Draws 1 frame now, with the rings hidden or shown, and gives its
+        // draw calls. 2 calls in one task draw the same scene twice.
+        drawRings(hidden) {
+          if (!landmarkRings) return null;
+          landmarkRings.setHidden(hidden);
+          draw();
+          landmarkRings.setHidden(false);
+          return renderer.info.render.calls;
+        },
+        ringCost() {
+          if (!landmarkRings) return null;
+          const without = this.drawRings(true);
+          return { without, with: this.drawRings(false), rings: landmarkRings.info.rings };
+        },
+      }
+    : null,
+  teach: teach.hook,
   input: {
     get source() {
       return input.source;
@@ -1093,11 +1909,29 @@ window.__atl = {
     get error() {
       return skaterModel.error;
     },
+    // The skater that loads for a switch, or null; the count of switches.
+    get pending() {
+      return skaterSwitch.pending;
+    },
+    get swaps() {
+      return skaterModel.swaps;
+    },
+    // The skate constants that run now (they follow the skater).
+    get skate() {
+      return skaterEnv.skate;
+    },
     get clip() {
       return skaterView.clip;
     },
     get weights() {
       return skaterView.weights;
+    },
+    // The carve lean (rad) and the foot IK state { on, weight, ms } (#107).
+    get lean() {
+      return skaterView.lean;
+    },
+    get footIk() {
+      return skaterView.footIk;
     },
     // The face decal state: { eyes, mouth }.
     get face() {
@@ -1113,10 +1947,11 @@ window.__atl = {
       skaterView.freezePose(frozen);
     },
     // The shader program key of the skater material ("skater-face",
-    // "skater-toon-rim", or both).
+    // "skater-toon-rim", or both): the head material when the skater has
+    // face decals.
     get materialKey() {
       const m = skaterView.model;
-      return m ? m.skinnedMesh.material.customProgramCacheKey() : null;
+      return m ? (m.face?.meshes[0] ?? m.skinnedMesh).material.customProgramCacheKey() : null;
     },
     // The model yaw offset: PI when the skater rides backward.
     get facing() {
@@ -1125,14 +1960,30 @@ window.__atl = {
     // The skater mask from a camera in front of it (for the T-pose check).
     silhouette() {
       const m = skaterView.model;
-      return m ? Array.from(silhouette(skaterView.group, m.skinnedMesh)) : null;
+      return m ? Array.from(silhouette(skaterView.group, m.skinnedMeshes)) : null;
+    },
+    // The model height (m) in the bind pose, from the wheels to the top of
+    // the head: the dossier height plus the skate (src/sim/skate/body.js).
+    restHeight() {
+      const m = skaterView.model;
+      if (!m) return null;
+      m.skinnedMesh.skeleton.pose();
+      m.root.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(m.root, true);
+      skaterView.sync(skater, 0);
+      return box.max.y - box.min.y;
+    },
+    // The skate constants of this skater's body.
+    get skate() {
+      const k = skaterEnv.skate;
+      return { maxSpeed: k.maxSpeed, pushAccel: k.pushAccel, coastDrag: k.coastDrag, carveRate: k.carveRate, brakeDecel: k.brakeDecel, jumpSpeed: k.jumpSpeed, bodyRadius: k.bodyRadius };
     },
     // The same mask with the skeleton in the bind pose (the T-pose).
     tposeSilhouette() {
       const m = skaterView.model;
       if (!m) return null;
       m.skinnedMesh.skeleton.pose();
-      const mask = Array.from(silhouette(skaterView.group, m.skinnedMesh));
+      const mask = Array.from(silhouette(skaterView.group, m.skinnedMeshes));
       skaterView.sync(skater, 0);
       return mask;
     },
@@ -1154,6 +2005,19 @@ window.__atl = {
   },
   get cameraLook() {
     return follow ? { ...follow.look } : null;
+  },
+  // The tree canopy volumes of the follow camera (#230): their count, and
+  // whether a point is inside one. ?canopycam=0 turns the canopy test off.
+  canopy: {
+    get count() {
+      return follow ? follow.canopy.count : 0;
+    },
+    inside(x, y, z) {
+      return follow ? follow.canopy.inside([x, y, z]) : false;
+    },
+    near(x, z, r) {
+      return follow ? follow.canopy.near(x - r, z - r, x + r, z + r) : [];
+    },
   },
   // Moves the fixed camera (view=fixed only), for screenshots of things
   // that move, such as the crowd.
@@ -1186,6 +2050,10 @@ window.__atl = {
       recorder.active = false;
       return recorder.samples;
     },
+    // The samples so far, while it records.
+    get samples() {
+      return recorder.samples;
+    },
   },
   get ticks() {
     return ticks;
@@ -1199,10 +2067,54 @@ window.__atl = {
   },
   // Camera effects (#253): the offsets of the last frame and the gate.
   get cameraFx() {
-    return follow ? { ...follow.fx, reduced: camFxReduced(), baseFov: camera.userData.baseFov ?? camera.fov, flashShown: screenFlash ? screenFlash.amount : 0 } : null;
+    // `speedFov` is the #105 speed boost (the #257 merge keeps it in place of
+    // the #253 speed FOV); `fov` is the #253 zoom punch.
+    return follow ? { ...follow.fx, reduced: camFxReduced(), baseFov: camera.userData.baseFov ?? camera.fov, speedFov: follow.feel.fovBoost, flashShown: screenFlash ? screenFlash.amount : 0 } : null;
+  },
+  // The material types in the scene and any toon material left (#157).
+  get materials() {
+    return materialAudit(scene);
+  },
+  // The pbr light pass state: the district, the grade, the env bakes.
+  get pbrLook() {
+    return pbrLook ? JSON.parse(JSON.stringify(pbrLook.info)) : null;
+  },
+  // The per-system frame cost (?perf=1): reset(), then report() gives the
+  // mean and p95 ms per frame for each system. Null without ?perf=1.
+  perf: perf.enabled ? { reset: () => perf.reset(), report: () => perf.report() } : null,
+  // ?perf=1: the last frame's draw calls by pass and object kind.
+  get drawSplit() {
+    return drawSplit ? drawSplit.report() : null;
+  },
+  // The shadow pass: the casters, the culled ones, the stand-ins shown.
+  get shadowPass() {
+    return shadowPass ? { ...shadowPass.info } : null;
+  },
+  // The comic effects (#113): the state, and the screenshot hooks.
+  // trigger("speed" | "impact") or trigger("grind" | "beat", [x, y, z]);
+  // hold(true) stops the effect clock, so a picture catches the effect.
+  effects: {
+    get info() {
+      return effects.info;
+    },
+    trigger: (kind, position) => effects.trigger(kind, position ?? [...skater.position]),
+    hold: (on) => effects.hold(on),
+    clear: () => effects.clear(),
+  },
+  // Game feel (#105): the camera and sound state, and the screenshot hooks.
+  // trigger("shake" | "dust" | "sparks", { strength, hold }); holdFov(deg | null).
+  feel: {
+    get info() {
+      return { camera: follow ? follow.feel : null, sfx: sfx.info, effects: effects.info.triggers };
+    },
+    trigger(kind, { strength = 1, hold = null } = {}) {
+      if (kind === "shake") follow?.bump(strength, hold);
+      else effects.trigger(kind, [...skater.position], { strength, skater });
+    },
+    holdFov: (deg) => follow?.holdFov(deg),
   },
   get rendererInfo() {
-    return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
+    return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   },
 };
 

@@ -1,0 +1,370 @@
+{
+ "air_japan": {
+  "frames": 24,
+  "seconds": 0.8,
+  "penetration_m": 0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 24,
+  "lowest_skate_range_m": [
+   0.4021,
+   0.4021
+  ],
+  "jitter_rms_m_s2": 0.69,
+  "skid_mean_m_s": null,
+  "skid_p95_m_s": null,
+  "grounded_skate_frames": 0,
+  "loop_seam_m_s": 0.059
+ },
+ "air_liukang": {
+  "frames": 24,
+  "seconds": 0.8,
+  "penetration_m": 0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 24,
+  "lowest_skate_range_m": [
+   0.0706,
+   0.0847
+  ],
+  "jitter_rms_m_s2": 0.4,
+  "skid_mean_m_s": null,
+  "skid_p95_m_s": null,
+  "grounded_skate_frames": 0,
+  "loop_seam_m_s": 0.046
+ },
+ "air_mute": {
+  "frames": 24,
+  "seconds": 0.8,
+  "penetration_m": 0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 24,
+  "lowest_skate_range_m": [
+   0.4421,
+   0.4821
+  ],
+  "jitter_rms_m_s2": 0.77,
+  "skid_mean_m_s": null,
+  "skid_p95_m_s": null,
+  "grounded_skate_frames": 0,
+  "loop_seam_m_s": 0.071
+ },
+ "brake": {
+  "frames": 24,
+  "seconds": 0.8,
+  "penetration_m": -0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0,
+   0.0
+  ],
+  "jitter_rms_m_s2": 1.38,
+  "skid_mean_m_s": 1.9,
+  "skid_p95_m_s": 3.002,
+  "grounded_skate_frames": 48,
+  "loop_seam_m_s": 0.089
+ },
+ "carve_left": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0,
+   0.0
+  ],
+  "jitter_rms_m_s2": 25.24,
+  "skid_mean_m_s": 1.267,
+  "skid_p95_m_s": 2.084,
+  "grounded_skate_frames": 81,
+  "loop_seam_m_s": 0.312
+ },
+ "carve_right": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0022,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0022,
+   0.0006
+  ],
+  "jitter_rms_m_s2": 26.74,
+  "skid_mean_m_s": 1.26,
+  "skid_p95_m_s": 2.089,
+  "grounded_skate_frames": 81,
+  "loop_seam_m_s": 0.311
+ },
+ "coast": {
+  "frames": 96,
+  "seconds": 3.2,
+  "penetration_m": -0.0001,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0001,
+   0.0001
+  ],
+  "jitter_rms_m_s2": 2.89,
+  "skid_mean_m_s": 0.647,
+  "skid_p95_m_s": 0.652,
+  "grounded_skate_frames": 192,
+  "loop_seam_m_s": 0.172
+ },
+ "dance_bankhead": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0001,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0001,
+   -0.0
+  ],
+  "jitter_rms_m_s2": 6.61,
+  "skid_mean_m_s": 0.772,
+  "skid_p95_m_s": 1.521,
+  "grounded_skate_frames": 96,
+  "loop_seam_m_s": 0.452
+ },
+ "dance_crisscross": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0001,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0001,
+   -0.0001
+  ],
+  "jitter_rms_m_s2": 3.96,
+  "skid_mean_m_s": 0.898,
+  "skid_p95_m_s": 2.07,
+  "grounded_skate_frames": 96,
+  "loop_seam_m_s": 0.334
+ },
+ "dance_prep": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0002,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0002,
+   -0.0001
+  ],
+  "jitter_rms_m_s2": 5.8,
+  "skid_mean_m_s": 0.707,
+  "skid_p95_m_s": 1.41,
+  "grounded_skate_frames": 76,
+  "loop_seam_m_s": 0.231
+ },
+ "dance_sitspin": {
+  "frames": 24,
+  "seconds": 0.8,
+  "penetration_m": -0.0001,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0001,
+   -0.0001
+  ],
+  "jitter_rms_m_s2": 0.64,
+  "skid_mean_m_s": 0.29,
+  "skid_p95_m_s": 0.29,
+  "grounded_skate_frames": 24,
+  "loop_seam_m_s": 0.047
+ },
+ "dance_smoothquad": {
+  "frames": 149,
+  "seconds": 4.967,
+  "penetration_m": 0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   0.0,
+   0.0002
+  ],
+  "jitter_rms_m_s2": 8.19,
+  "skid_mean_m_s": 1.004,
+  "skid_p95_m_s": 1.781,
+  "grounded_skate_frames": 262,
+  "loop_seam_m_s": 0.151
+ },
+ "dance_snaplean": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0001,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0001,
+   -0.0
+  ],
+  "jitter_rms_m_s2": 4.54,
+  "skid_mean_m_s": 0.799,
+  "skid_p95_m_s": 0.846,
+  "grounded_skate_frames": 96,
+  "loop_seam_m_s": 0.375
+ },
+ "dance_spin": {
+  "frames": 24,
+  "seconds": 0.8,
+  "penetration_m": 0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 24,
+  "lowest_skate_range_m": [
+   0.0123,
+   0.0123
+  ],
+  "jitter_rms_m_s2": 0.99,
+  "skid_mean_m_s": null,
+  "skid_p95_m_s": null,
+  "grounded_skate_frames": 0,
+  "loop_seam_m_s": 0.118
+ },
+ "dance_swagsurf": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0001,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0001,
+   -0.0
+  ],
+  "jitter_rms_m_s2": 36.08,
+  "skid_mean_m_s": 0.878,
+  "skid_p95_m_s": 1.566,
+  "grounded_skate_frames": 96,
+  "loop_seam_m_s": 1.711
+ },
+ "dance_walkitout": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0001,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0001,
+   -0.0
+  ],
+  "jitter_rms_m_s2": 11.89,
+  "skid_mean_m_s": 1.284,
+  "skid_p95_m_s": 1.908,
+  "grounded_skate_frames": 96,
+  "loop_seam_m_s": 1.368
+ },
+ "grind_frontside": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0,
+   -0.0
+  ],
+  "jitter_rms_m_s2": 0.62,
+  "skid_mean_m_s": 2.948,
+  "skid_p95_m_s": 2.991,
+  "grounded_skate_frames": 96,
+  "loop_seam_m_s": 0.002
+ },
+ "grind_soul": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0157,
+  "frames_wheel_under_ground_1cm": 48,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0157,
+   -0.0157
+  ],
+  "jitter_rms_m_s2": 4.04,
+  "skid_mean_m_s": 1.572,
+  "skid_p95_m_s": 2.991,
+  "grounded_skate_frames": 96,
+  "loop_seam_m_s": 0.61
+ },
+ "grind_unity": {
+  "frames": 48,
+  "seconds": 1.6,
+  "penetration_m": -0.0227,
+  "frames_wheel_under_ground_1cm": 48,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0227,
+   -0.0227
+  ],
+  "jitter_rms_m_s2": 2.55,
+  "skid_mean_m_s": 2.891,
+  "skid_p95_m_s": 3.0,
+  "grounded_skate_frames": 96,
+  "loop_seam_m_s": 0.298
+ },
+ "idle": {
+  "frames": 96,
+  "seconds": 3.2,
+  "penetration_m": -0.0001,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0001,
+   0.0001
+  ],
+  "jitter_rms_m_s2": 0.58,
+  "skid_mean_m_s": 1.302,
+  "skid_p95_m_s": 1.655,
+  "grounded_skate_frames": 178,
+  "loop_seam_m_s": 0.042
+ },
+ "manual": {
+  "frames": 30,
+  "seconds": 1.0,
+  "penetration_m": -0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0,
+   -0.0
+  ],
+  "jitter_rms_m_s2": 0.18,
+  "skid_mean_m_s": 0.289,
+  "skid_p95_m_s": 0.289,
+  "grounded_skate_frames": 30,
+  "loop_seam_m_s": 0.022
+ },
+ "push": {
+  "frames": 52,
+  "seconds": 1.733,
+  "penetration_m": -0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0,
+   0.0001
+  ],
+  "jitter_rms_m_s2": 39.41,
+  "skid_mean_m_s": 0.467,
+  "skid_p95_m_s": 0.839,
+  "grounded_skate_frames": 68,
+  "loop_seam_m_s": 0.236
+ },
+ "ride_back": {
+  "frames": 96,
+  "seconds": 3.2,
+  "penetration_m": -0.0,
+  "frames_wheel_under_ground_1cm": 0,
+  "hover_frames_over_1cm": 0,
+  "lowest_skate_range_m": [
+   -0.0,
+   0.0001
+  ],
+  "jitter_rms_m_s2": 8.16,
+  "skid_mean_m_s": 0.402,
+  "skid_p95_m_s": 0.699,
+  "grounded_skate_frames": 192,
+  "loop_seam_m_s": 0.237
+ }
+}

@@ -1,14 +1,23 @@
-// The level list for the shell. `?level=<name>` picks one; the greybox is
-// the default. A geodata level loads on demand, so the greybox page does not
-// download it.
+// The level list for the shell. `?level=<name>` picks one. The BeltLine
+// Eastside is the default. The greybox is the debug level: open it with
+// `?level=greybox`. A geodata level loads on demand, so the greybox page does
+// not download it.
 
 import { GREYBOX } from "./greybox.js";
+import { withSkatepark } from "./skatepark.js";
 
 export const LEVELS = {
   greybox: async () => GREYBOX,
   "beltline-eastside": async () => {
-    const [level, canopy] = await Promise.all([import("../../levels/beltline-eastside/level.json"), import("../../levels/beltline-eastside/canopy.json")]);
-    return withCanopy(level.default, canopy.default);
+    const [level, canopy, skatepark, features] = await Promise.all([
+      import("../../levels/beltline-eastside/level.json"),
+      import("../../levels/beltline-eastside/canopy.json"),
+      import("../../levels/beltline-eastside/skatepark.json"),
+      import("../../assets/skate-features/features.json"),
+    ]);
+    // The skatepark (#222) grades the terrain under its pad, so it goes in
+    // before anything reads the ground.
+    return withSkatepark(withCanopy(level.default, canopy.default), skatepark.default, features.default);
   },
 };
 
@@ -23,10 +32,23 @@ export function withCanopy(level, canopy) {
   return { ...level, canopy, attribution };
 }
 
+// The landmark spots of a level (levels/<level>/landmarks.json, #216), by
+// level name. A level with no file has no spots.
+export const LANDMARK_FILES = {
+  "beltline-eastside": async () => (await import("../../levels/beltline-eastside/landmarks.json")).default,
+};
+
+// The landmark data of a loaded level, or null.
+export async function loadLandmarks(name) {
+  return Object.hasOwn(LANDMARK_FILES, name) ? LANDMARK_FILES[name]() : null;
+}
+
+export const DEFAULT_LEVEL = "beltline-eastside";
+
 export const LEVEL_ALIASES = { beltline: "beltline-eastside" };
 
 export function resolveLevelName(name) {
-  const n = name ?? "greybox";
+  const n = name || DEFAULT_LEVEL;
   const resolved = LEVEL_ALIASES[n] ?? n;
   // Own keys only: "constructor" or "toString" is not a level.
   if (!Object.hasOwn(LEVELS, resolved)) throw new Error(`unknown level "${n}". Known: ${Object.keys(LEVELS).join(", ")}`);

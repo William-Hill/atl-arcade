@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { AWNING_COLORS, awningsFor, boundsDistance, buildGeoMeshes, buildingColor, buildPropMeshes, GEO_MATERIALS, GEO_TILE, meshBounds, muralWalls, PROP_TILE, roofColorOf, streetTest, streetWalls } from "./geo-mesh.js";
+import { AWNING_COLORS, awningsFor, boundsDistance, buildGeoMeshes, buildingColor, buildPropMeshes, GEO_MATERIALS, GEO_TILE, meshBounds, MURAL_MAX_FLOORS, muralWalls, PROP_TILE, roofColorOf, streetTest, streetWalls } from "./geo-mesh.js";
 import { FACE, orientRing } from "./extrude.js";
 import { STYLES, STYLE_INDEX, chooseStyle } from "./styles.js";
 import { buildingSpan } from "./terrain.js";
@@ -59,7 +59,7 @@ describe("level detail", () => {
       for (let i = 3; i < mesh.facade.length; i += 4) kinds.add(mesh.facade[i]);
       for (let i = 0; i < mesh.facade.length; i += 4) expect(mesh.facade[i]).toBeLessThan(STYLES.length);
     }
-    expect([...kinds].sort()).toEqual([FACE.roof, FACE.wall, FACE.cornice]);
+    expect([...kinds].sort()).toEqual([FACE.roof, FACE.wall, FACE.cornice, FACE.blank, FACE.concrete]);
   });
 
   it("puts murals only on walls that face the trail, at most one per building", () => {
@@ -69,6 +69,37 @@ describe("level detail", () => {
     for (const m of murals) {
       expect(m.y1).toBeGreaterThan(m.y0);
       expect(Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1])).toBeGreaterThan(4);
+    }
+  });
+
+  // A mural is not pasted over windows: it goes on a low building that is
+  // not glass or an open deck, and its wall is FACE.blank (no windows) from
+  // the mural's first floor up.
+  it("puts murals on blank walls of low buildings, not over windows", () => {
+    const murals = muralWalls(LEVEL);
+    const byId = new Map(LEVEL.buildings.map((b) => [b.id, b]));
+    const blank = [];
+    for (const { material, mesh } of meshes) {
+      if (material !== "building") continue;
+      for (let i = 0; i < mesh.facade.length / 4; i += 1) {
+        if (mesh.facade[i * 4 + 3] === FACE.blank) blank.push([mesh.positions[i * 3], mesh.positions[i * 3 + 1], mesh.positions[i * 3 + 2]]);
+      }
+    }
+    for (const m of murals) {
+      const b = byId.get(m.id);
+      const style = STYLES[STYLE_INDEX[chooseStyle(b, LEVEL)]];
+      const span = buildingSpan(LEVEL, b);
+      expect(Math.round((span.top - span.base) / style.floorHeight)).toBeLessThanOrEqual(MURAL_MAX_FLOORS);
+      expect(["glass-office", "parking-deck"]).not.toContain(style.id);
+      expect(m.floor0).toBe(style.storefront ? 1 : 0);
+      // Blank wall vertices on the mural's wall line, up to the roof.
+      const len = Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]);
+      const tx = (m.b[0] - m.a[0]) / len;
+      const tz = (m.b[1] - m.a[1]) / len;
+      const onWall = blank.filter(([x, , z]) => Math.abs((x - m.a[0]) * tz - (z - m.a[1]) * tx) < 0.05);
+      expect(onWall.length, m.id).toBeGreaterThanOrEqual(4);
+      expect(Math.max(...onWall.map((v) => v[1]))).toBeGreaterThanOrEqual(m.y1);
+      expect(Math.min(...onWall.map((v) => v[1]))).toBeLessThanOrEqual(m.y0);
     }
   });
 
@@ -168,10 +199,32 @@ describe("the roofs and the street walls of the brick styles", () => {
   });
 
   it("keeps the street awnings of the BeltLine level as they were before streetWalls()", () => {
-    // 3,184 vertices: the count before the refactor to streetWalls().
+    // 3,184 vertices before the refactor to streetWalls(), now twice that:
+    // each side of an awning has its own vertices (no 0 normals).
     const isStreet = streetTest(LEVEL);
     let vertices = 0;
     for (const b of LEVEL.buildings) vertices += awningsFor(b, STYLES[STYLE_INDEX[chooseStyle(b)]], isStreet).positions.length / 3;
-    expect(vertices).toBe(3184);
+    expect(vertices).toBe(3184 * 2);
+  });
+});
+
+describe("awning normals", () => {
+  it("gives each side of an awning its own vertices, so no vertex normal is 0", async () => {
+    const THREE = await import("three");
+    const isStreet = streetTest(LEVEL);
+    let checked = 0;
+    for (const b of LEVEL.buildings) {
+      const m = awningsFor(b, STYLES[STYLE_INDEX[chooseStyle(b)]], isStreet);
+      if (!m.indices.length) continue;
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(m.positions, 3));
+      g.setIndex(m.indices);
+      g.computeVertexNormals();
+      const n = g.attributes.normal;
+      for (let i = 0; i < n.count; i += 1) expect(Math.hypot(n.getX(i), n.getY(i), n.getZ(i))).toBeGreaterThan(0.5);
+      checked += 1;
+      if (checked >= 20) break;
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });

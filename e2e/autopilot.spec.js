@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
 const CLOSED = "ws://127.0.0.1:9/v1/bridge";
 
 async function ready(page, query) {
-  await page.goto(`/?mute=1${query}`);
+  await page.goto(`/?level=greybox&mute=1${query}`);
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 20000 });
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extrudeFootprint, flatPolygon, mergeMeshes, placeTemplate, signedArea, stripMesh } from "./extrude.js";
+import { FACE, extrudeFootprint, flatPolygon, mergeMeshes, placeTemplate, signedArea, stripMesh } from "./extrude.js";
 
 const SQUARE = [
   [0, 0],
@@ -157,6 +157,22 @@ describe("flatPolygon and stripMesh", () => {
 });
 
 describe("facade attribute and parapet", () => {
+  it("makes one wall blank from a floor up, with its floors under it still walls", () => {
+    const m = extrudeFootprint({ outer: SQUARE, top: 9 }, { color: [1, 1, 1], facade: { style: 2, bay: 3, floorHeight: 3, parapet: 0, corniceColor: [0.5, 0.5, 0.5], blank: { edge: 0, from: 1 } } });
+    const blank = [];
+    for (let i = 0; i < m.facade.length / 4; i += 1) {
+      if (m.facade[i * 4 + 3] === FACE.blank) blank.push({ y: m.positions[i * 3 + 1], v: m.facade[i * 4 + 2], z: m.positions[i * 3 + 2], x: m.positions[i * 3] });
+    }
+    expect(blank).toHaveLength(4);
+    // One wall: all four corners on one side of the square, from 3 m (floor 1) to 9 m.
+    const xs = new Set(blank.map((b) => b.x));
+    const zs = new Set(blank.map((b) => b.z));
+    expect(Math.min(xs.size, zs.size)).toBe(1);
+    expect(Math.min(...blank.map((b) => b.y))).toBeCloseTo(3);
+    expect(Math.max(...blank.map((b) => b.y))).toBeCloseTo(9);
+    expect(Math.min(...blank.map((b) => b.v))).toBe(1);
+  });
+
   it("counts whole bays along each wall and floors up it, and adds a parapet ring", () => {
     const m = extrudeFootprint({ outer: SQUARE, top: 9 }, { color: [1, 1, 1], facade: { style: 2, bay: 3, floorHeight: 3, parapet: 0.6, corniceColor: [0.5, 0.5, 0.5] } });
     expect(m.facade.length / 4).toBe(m.positions.length / 3);

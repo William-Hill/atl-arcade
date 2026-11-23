@@ -1,7 +1,7 @@
 {
   "asset": "Marcus \"Tempo\" Reid, the second skater (M1-10, #42)",
-  "date": "2026-11-02",
-  "status": "shipped, animated with the M1-02 clip set (greybox clips in ATL and X Games style, not reviewed by skaters)",
+  "date": "2026-11-07",
+  "status": "shipped review candidate: corrected PBR body and forward motion, pending PR review",
   "credits": "The author generated this model with Tripo from original concept art. No third-party art is in it.",
   "source_image": "docs/characters/concept/marcus/marcus-tpose-front.png (see docs/characters/concept/marcus/provenance.json)",
   "pipeline": "A (Tripo Studio 3D Workspace, Blender cleanup, Draco glTF). Pipeline B (img2character) was not used; see docs/characters/pipeline-comparison-m1-10.md.",
@@ -61,22 +61,685 @@
         "No new generation and no credits. The mesh, the rig, the joint names, and the 24 clips are the same as skater.glb (src/render/skater-model.test.js checks them)."
       ],
       "result": "assets/skaters/marcus/skater-1024.glb, 1,493,828 bytes (skater.glb is 2,071,416 bytes), the same triangles, joints, and clips"
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_runtime.py with skater_hands.py and skater_seams.py",
+      "date": "2026-11-05",
+      "issue": "#168",
+      "prompt": "Give Marcus independent finger articulation. Close the wrist gap in air_japan and the knee pad separation in bail.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_runtime.py -- --name marcus; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_texture_variant.py -- --in assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend --out assets/skaters/marcus/skater-1024.glb",
+      "actions": [
+        "Moved the 40 finger joints onto the hand mesh. They were 0.13 m behind the wrist, inside the forearm. A geodesic merge tree finds the thumb and four finger regions on each hand.",
+        "Split the hand weight of 236 left-hand and 246 right-hand vertices between the hand joint and the three joints of each finger. The forearm weight at the wrist did not change.",
+        "Set one weight field on each knee pad: the cap and the lower strap follow the shin, and the thigh share starts 0.00 m and ends 0.06 m above the knee joint. Skin within 0.03 m of the pad takes the pad weights.",
+        "Smoothed the weights of each wristband. Skin within 0.018 m of the band takes the band weights.",
+        "Kept the 24 clips from raw/runtime-v1 without change. Removed the unused action coast.001."
+      ],
+      "result": "assets/skaters/marcus/skater.glb, 7,761,192 bytes; assets/skaters/marcus/skater-1024.glb, 5,310,536 bytes; 39,074 triangles, 65 joints, 24 clips",
+      "finger_fit": {
+        "Left": {
+          "cuts_m": {
+            "Thumb": 0.0839,
+            "Index": 0.1273,
+            "Middle": 0.1273,
+            "Ring": 0.1254,
+            "Pinky": 0.1095
+          },
+          "lengths_m": {
+            "Thumb": 0.0441,
+            "Index": 0.0854,
+            "Middle": 0.0948,
+            "Ring": 0.0823,
+            "Pinky": 0.0587
+          }
+        },
+        "Right": {
+          "cuts_m": {
+            "Thumb": 0.0797,
+            "Index": 0.1245,
+            "Middle": 0.1245,
+            "Ring": 0.1221,
+            "Pinky": 0.1112
+          },
+          "lengths_m": {
+            "Thumb": 0.0618,
+            "Index": 0.0773,
+            "Middle": 0.093,
+            "Ring": 0.0878,
+            "Pinky": 0.0562
+          }
+        }
+      },
+      "local_files_not_in_git": [
+        "assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend",
+        "assets/skaters/marcus/raw/runtime-v2/build.json",
+        "assets/skaters/marcus/raw/runtime-v2/rig-audit.json"
+      ],
+      "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_runtime.py (nia_clips.py with the forward IK), skater_motion_retarget.py, skater_texture_variant.py",
+      "date": "2026-11-05",
+      "issue": "#170",
+      "prompt": "Rebuild all clips on the v2 body. Drop the legacy clip transfer. Use the knee-pole and twist fixes of skater_forward_motion.py for every clip.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_runtime.py -- --name marcus; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_motion_retarget.py -- --name marcus --fbx assets/skaters/nia/raw/tripo-motion-v1/tripo_convert_8a663486-9228-4e65-abc7-9c14db3df2dd.fbx --out assets/skaters/marcus/raw/runtime-v2 --base assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend --preserve-actions --clip dance_smoothquad --glb assets/skaters/marcus/skater.glb --blend assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_texture_variant.py -- --in assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend --out assets/skaters/marcus/skater-1024.glb",
+      "actions": [
+        "Started from raw/forward-v2/marcus-forward.blend: the corrected v2 body with the reviewed push and coast clips. Applied the #168 hand and seam corrections.",
+        "Removed the 22 legacy clips that runtime v1 appended from the old review rig.",
+        "Keyed 22 clips of nia_clips.py on the v2 rig: calibrated knee pole angles {'L': 24, 'R': -10}, knee poles that turn with the foot yaw, quaternion foot targets, and at() foot x scaled by hip width (stance 1.642).",
+        "At each of 240 leg keys, turned the knee pole about the hip-ankle axis until the knee bend points over the skate (largest residual 0.5 degrees).",
+        "Fists curl each finger about its own axis (finger direction crossed with the palm normal).",
+        "Retargeted dance_smoothquad from the approved Tripo smooth quad dance (no new credits). Marcus did not have this clip before."
+      ],
+      "result": "assets/skaters/marcus/skater.glb, 7,813,640 bytes; skater-1024.glb, 5,362,980 bytes; 65 joints, 25 clips",
+      "local_files_not_in_git": [
+        "assets/skaters/marcus/raw/runtime-v2/marcus-runtime.blend",
+        "assets/skaters/marcus/raw/runtime-v2/build.json",
+        "assets/skaters/marcus/raw/runtime-v2/motion-audit.json",
+        "assets/skaters/marcus/raw/runtime-v2/rig-audit.json"
+      ],
+      "credits_spent": 0
+    },
+    {
+      "tool": "Tripo Studio 3D Workspace, Animate, text to motion (studio.tripo3d.ai, driven through Claude in Chrome); Blender 5.2.2 LTS, scripts/blender/skater_motion_retarget.py",
+      "date": "2026-11-05",
+      "issue": "#169",
+      "project": "Nia carrier task 72bfc452-df28-4e58-83bb-e89a35341a9a",
+      "settings": "Duration 5 s. Export FBX, Blender preset, 4k, Export Skeleton on, one animation per file.",
+      "motions": [
+        {
+          "clip": "dance_laffytaffy",
+          "tripo_name": "Dancing in Place",
+          "prompt": "A quad roller skater dances the Atlanta Laffy Taffy groove in place: a relaxed knee bounce on each beat, smooth shoulder rolls, and loose arm swings, upbeat and friendly.",
+          "source_fbx": "assets/skaters/nia/raw/tripo-motion-v2/laffy-taffy/tripo_convert_75c21621-6a1b-4741-9de3-6eb7bf639922.fbx",
+          "review_glb": "assets/skaters/marcus/raw/tripo-motion-v2/laffy-taffy/marcus-dance_laffytaffy.glb"
+        },
+        {
+          "clip": "skate_crossover",
+          "tripo_name": "Skating Turn",
+          "prompt": "A quad roller skater glides forward with bent knees, then does smooth crossover steps to turn left, the right skate crossing over the left, arms out for balance, then glides out of the turn.",
+          "source_fbx": "assets/skaters/nia/raw/tripo-motion-v2/skating-turn/tripo_convert_44bafd1e-08fc-42b5-891d-8ac490e55891.fbx",
+          "review_glb": "assets/skaters/marcus/raw/tripo-motion-v2/skating-turn/marcus-skate_crossover.glb"
+        }
+      ],
+      "result": "Two review clips on the v2 body. Not in the runtime GLB. Owner and real-skater review open.",
+      "credits_spent": 0,
+      "credits_note": "The Tripo credits are recorded in the Nia provenance."
+    },
+    {
+      "tool": "scripts/assets/compress-skaters.mjs on Node 24 with @gltf-transform/core, extensions, and functions 4.5.1, draco3dgltf 1.5.9, sharp 0.35.5 (installed with npm i --no-save, not in package.json)",
+      "date": "2026-11-06",
+      "issue": "#187",
+      "prompt": "Cut the skater download: the two skater GLBs were 75% of the low/toon download and 69% of the phone/toon download.",
+      "command": "node scripts/assets/compress-skaters.mjs assets/skaters/marcus/skater.glb assets/skaters/marcus/skater.glb --quality 85 --normal-quality 90 && node scripts/assets/compress-skaters.mjs assets/skaters/marcus/skater-1024.glb assets/skaters/marcus/skater-1024.glb --quality 80 --normal-quality 85",
+      "actions": [
+        "Textures: JPEG to WebP (EXT_texture_webp, required), the same pixel sizes. skater.glb: quality 85, normal maps 90. skater-1024.glb: quality 80, normal maps 85.",
+        "Clips: resampled with tolerance 1e-4 (keys on a straight line removed), rotation keys stored as normalized int16. The largest change from the old clips, sampled at the old key times: 0.18 degrees of rotation and 0.45 mm of translation. The 25 clip names and all channels are the same.",
+        "Meshes: Draco again (edgebreaker; quantization position 14, normal 10, texcoord 12, generic 12). The same triangles; Draco merged a few duplicate vertices.",
+        "No new generation and no credits. The mesh, the rig, the joint names, and the clips are the same (src/render/skater-model.test.js). The before and after five views and face close-up match (PSNR 45 dB or more)."
+      ],
+      "result": "skater.glb 7,813,640 to 3,182,416 bytes; skater-1024.glb 5,362,980 to 2,309,792 bytes",
+      "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3)",
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_anim_v3.py with nia_clips.py and the leg IK of skater_runtime.py; scripts/assets/graft-clips.mjs on Node 24 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9 (npm i --no-save)",
+      "prompt": "Give Marcus his own animation set, different from Nia's in posture, rhythm, and style: idle, push and coast, turns, dances, a brake, and every other clip. Add dances from Meshy text to motion and the paid Tripo jam groove test.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_anim_v3.py -- --name marcus --source assets/skaters/marcus/raw/forward-v2/marcus-forward.blend --out assets/skaters/marcus/raw/anim-v3; blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_motion_retarget.py -- --name marcus --fbx <fbx> --out <dir> --base assets/skaters/marcus/raw/anim-v3/marcus-anim-v3.blend --clip <clip> [--map smplh]; node scripts/assets/graft-clips.mjs assets/skaters/marcus/<glb> assets/skaters/marcus/raw/anim-v3/marcus-clips-v3.glb assets/skaters/marcus/<glb> (once for each clip GLB)",
+      "actions": [
+        "The finger fit and seams of skater_runtime.correct_marcus() first, so the rest pose matches the shipped GLB (checked on all nodes within 1e-3).",
+        "push and coast: his own stride on the forward-v2 legs (48 frames, outward 0.145 m, back 0.20 m), a lower stance (87% leg reach), 18 degree forward lean, a sharp accent curve, the left arm swings 40 degrees while the right arm stays bent at 84 degrees like a drum stick, and the head nods on each stroke. The coast leads with the right skate (Nia leads with the left).",
+        "idle: a drum count, one bar. Wide square stance, the forearms tap a cadence at the hips (right, left, right, right-right), the right toe stop taps on beats 2 and 4, the head nods on each beat.",
+        "carve_left and carve_right: jam crossovers (the outside skate crosses over in front), the chest turns 18 degrees into the curve. Nia keeps the ATL Ryde corner step.",
+        "brake: a toe-stop drag on the left skate, one beat. Nia's brake is a T-stop with the right skate.",
+        "All other nia_clips.py clips (jump, land, three air tricks, three grinds, manual, bail, ride_back, eight dances) go through marcus_style(): the other lead foot (a mirror), a 25 mm lower and 40 mm wider stance, 5 degrees more chest lean, a head nod on each beat, and staccato timing on the loops (each pose holds for 45% of the gap, then hits the next).",
+        "New Marcus-only dances: dance_jamgroove (the Tripo 'Compact Jam-Skating Groove' test of 2026-11-05, export task cae85bcc-f987-4f34-b3ba-9db478c12f72, credits already spent), dance_drumline and dance_jamstep (Meshy text to motion, below). skater_motion_retarget.py got --map smplh for the SMPL-H skeleton of Meshy (52 bones to the Mixamo names; a Mixamo bone with no source bone follows its parent).",
+        "dance_smoothquad (the shared, retargeted Tripo dance) stays.",
+        "Knee pole angles L 14, R -16 degrees; largest knee residual 0.47 degrees over 546 keys."
+      ],
+      "meshy": {
+        "tool": "Meshy text to motion (MCP meshy_text_to_motion), mode prime, 4 s, FBX",
+        "approval": "The owner chose 'Free groove + Meshy' on 2026-11-07 (20 credits). Balance before 5,742.",
+        "motions": [
+          {
+            "clip": "dance_drumline",
+            "task_id": "01a1b6ec-e7d5-711a-8e40-90f25bebc00f",
+            "prompt": "A tall male quad roller skater dances in place on his skates to a marching drum cadence: sharp knee bounces on each beat, alternating heel-toe taps, crisp arm hits like a drum major counting time, chest pops on the accents. Knees stay apart and point over the toes. Upbeat, friendly, confident.",
+            "source_fbx": "assets/skaters/marcus/raw/meshy-motion-v1/drumline.fbx (not in git)",
+            "credits": 10
+          },
+          {
+            "clip": "dance_jamstep",
+            "task_id": "01a1b6ec-edbe-72a0-8e3c-1b7547893b4f",
+            "prompt": "A tall male quad roller skater does a jam-skating footwork groove in place: a quick crossover step to the left, a toe-stop pivot, a crossover back to the right, then a smooth shoulder shimmy with loose arms. Knees softly bent and apart. Rhythmic, smooth, and joyful.",
+            "source_fbx": "assets/skaters/marcus/raw/meshy-motion-v1/jamstep.fbx (not in git)",
+            "credits": 10
+          }
+        ]
+      },
+      "result": "skater.glb 3,182,416 to 3,456,220 bytes; skater-1024.glb 2,309,792 to 2,583,608 bytes; 29 clips",
+      "local_files_not_in_git": [
+        "assets/skaters/marcus/raw/anim-v3/marcus-anim-v3.blend",
+        "assets/skaters/marcus/raw/anim-v3/marcus-clips-v3.glb",
+        "assets/skaters/marcus/raw/anim-v3/dances/",
+        "assets/skaters/marcus/raw/meshy-motion-v1/"
+      ],
+      "credits_spent": 20,
+      "credits_note": "20 Meshy credits (two prime text to motion clips). The Tripo groove cost 20 Tripo credits on 2026-11-05 (already in this file's history). Blender and the graft cost 0.",
+      "review": "Real Atlanta skaters must review the move set before release."
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3, second pass)",
+      "tool": "Blender 5.2.2 LTS, scripts/blender/skater_anim_v3.py; scripts/assets/graft-clips.mjs",
+      "prompt": "The skating is not natural: no knee bend in the push off and in the turns. Marcus' idle stance is too wide.",
+      "actions": [
+        "Owner playtest feedback: no knee bend in the push and in the turns. Lowered the hips: the hip-to-ankle distance is now 77% of the leg length in the push and 84% in the coast (was 87% and 92%), and the chest leans 28 degrees (was 18).",
+        "The carves drop the hips 9 cm more and lean the chest 8 degrees more.",
+        "The idle stance is narrower: the skates are under the hips (x 0.10 and -0.10 before the stance scale, was 0.17 and -0.18).",
+        "Rebuilt and grafted: push, coast, idle, carve_left, carve_right, and the 20 restyled clips. The rest pose check passed."
+      ],
+      "result": "skater.glb 3,456,220 to 3,456,820 bytes; skater-1024.glb 2,583,608 to 2,584,208 bytes",
+      "credits_spent": 0
+    },
+    {
+      "date": "2026-11-07",
+      "issue": "#107 follow-up (skater animation v3, third pass)",
+      "tool": "Blender 5.2.2 LTS, scripts/blender/skater_anim_v3.py --clips push,coast; scripts/assets/graft-clips.mjs",
+      "prompt": "There is still no step, no knee drive, and no ankle push-off when the skater moves forward.",
+      "actions": [
+        "Fault: the v3 push and coast poses had no foot targets (L, R), so the feet stayed at their rest targets and only the hips and the upper body moved. The v3 push turned the thigh 13.6 degrees; the v2 push turned it 38.4 degrees. The foot targets are now in the poses.",
+        "New push stroke for each leg: push out and back (0 to 0.36 of the cycle) with an ankle push-off from 0.24 (the heel comes up 34 degrees), a step (0.36 to 0.58: the skate lifts 18 cm and the knee drives forward), and a glide (0.58 to 1). The hips shift over the gliding skate.",
+        "Cycle: 44 frames for two strokes (was 48).",
+        "Rebuilt and grafted push and coast. The rest pose check passed."
+      ],
+      "result": "skater.glb 3,456,120 bytes; skater-1024.glb 2,583,504 bytes",
+      "evidence": "docs/characters/anim-v3/push-side-front.jpg (12 frames of each push, side and front)",
+      "credits_spent": 0
+    },
+    {
+      "tool": "scripts/skater-lod.mjs (meshoptimizer 1.3.0 simplifyWithAttributes, @gltf-transform/core, functions, and extensions 4.5.1, draco3dgltf 1.5.9)",
+      "date": "2026-11-20",
+      "issue": "#280, rebuilt in the merge of #257",
+      "command": "node scripts/skater-lod.mjs --model marcus",
+      "source": "assets/skaters/marcus/skater.glb",
+      "settings": "mode color; target 3000 triangles; target error 0.05; attribute weights normal 0.25, color 1; flags Prune; vertex color = mean of the 9 x 9 texels around the UV, in linear color; Draco sequential, quantization position 14, normal 10, color 8, generic 12",
+      "actions": [
+        "The source is the v2 body of epic/city-look (one primitive for each material, #167). scripts/skater-lod.mjs now bakes the base color of each primitive into COLOR_0 and joins the primitives into one before the weld.",
+        "Welded the identical vertices. Baked the base color texture into vertex colors (COLOR_0) and removed the UVs.",
+        "Welded the vertices at one position into one vertex (mean normal, mean color, the skin of the first vertex). All vertices at one position had the same skin.",
+        "Simplified the mesh with meshoptimizer. The simplifier only removes vertices, so each vertex keeps its position and its JOINTS_0 and WEIGHTS_0 from the source.",
+        "Kept the skin: the 65 mixamorig: joints, in the same order, with the same inverse bind matrices. Removed the clips and the textures (the game uses the clips of skater.glb)."
+      ],
+      "result": "assets/skaters/marcus/skater-lod1.glb, 59,304 bytes, 2,991 triangles, 1,728 vertices, 65 joints, no animations, no textures (source: 39,074 triangles, 55,601 vertices)",
+      "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.3 LTS (background mode, in the cloud container), scripts/blender/skater_physics_pass.py and skater_joint_limits.py; scripts/assets/graft-clips.mjs on Node 22 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
+      "date": "2026-11-21",
+      "prompt": "Make push, coast, and carve_left more physically plausible as a quality test. Keep the wheels on the ground, the clip length, the beat timing, and no root travel. Mirror carve_left to carve_right. (Cascadeur was the first choice; it did not run in the cloud container: see docs/decisions.md, 2026-11-21.) Then add the Crossroads joint-limit gate and the attacker recoil rule (owner request). Then make the push drive faster with the Crossroads recipe (owner request). Then give the coast and the push an athletic stance (owner feedback: the coast looked upright). Then fix Marcus's bent right arm and the clipping (owner feedback). Then add arm IK with hand targets (owner request).",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in assets/skaters/marcus/skater.glb --out assets/skaters/marcus/raw/physics && node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater.glb assets/skaters/marcus/raw/physics/marcus-physics.glb assets/skaters/marcus/skater.glb && node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater-1024.glb assets/skaters/marcus/raw/physics/marcus-physics.glb assets/skaters/marcus/skater-1024.glb",
+      "settings": {
+        "still": {
+          "push": 0.5,
+          "coast": 0.8,
+          "carve_left": 0.7
+        },
+        "sigma_frames": 1.2,
+        "follow": [
+          [
+            "LeftForeArm",
+            2,
+            0.45
+          ],
+          [
+            "RightForeArm",
+            2,
+            0.45
+          ],
+          [
+            "LeftHand",
+            3,
+            0.55
+          ],
+          [
+            "RightHand",
+            3,
+            0.55
+          ],
+          [
+            "Head",
+            2,
+            0.35
+          ]
+        ],
+        "max_shift_m": {
+          "push": [
+            0.12,
+            0.06,
+            0.03
+          ],
+          "default": [
+            0.06,
+            0.06,
+            0.03
+          ]
+        },
+        "contact_m": 0.015,
+        "support_margin_m": 0.02,
+        "body_kg": 60.0,
+        "skate_kg": 1.2,
+        "recoil": {
+          "push": {
+            "event": "lift",
+            "pelvis": 0.025,
+            "chest": 5.0,
+            "arms": 6.0,
+            "head": 3.0,
+            "fwd": 1.0,
+            "side": 0.5,
+            "drop": 0.4
+          },
+          "carve_left": {
+            "event": "land",
+            "pelvis": 0.02,
+            "chest": 4.0,
+            "arms": 4.0,
+            "head": 2.5,
+            "fwd": 0.3,
+            "side": 0.6,
+            "drop": 0.25
+          },
+          "coast": {
+            "event": "beat",
+            "pelvis": 0.012,
+            "chest": 2.5,
+            "arms": 3.0,
+            "head": 1.5,
+            "fwd": 0.0,
+            "side": 1.0,
+            "drop": 0.5
+          }
+        },
+        "recoil_skater": {
+          "nia": {
+            "carve_left": {
+              "pelvis": 0.0
+            }
+          }
+        },
+        "stance": {
+          "coast": {
+            "hip_ankle": 0.78,
+            "max_hinge_deg": 35.0,
+            "head_keep": 0.8,
+            "arms_fwd_deg": 12.0
+          },
+          "push": {
+            "hip_ankle": 0.78,
+            "max_hinge_deg": 35.0,
+            "head_keep": 0.8,
+            "arms_fwd_deg": 0.0
+          }
+        },
+        "arm_mirror": {
+          "marcus": {
+            "push": "Left",
+            "coast": "Left"
+          }
+        },
+        "support": {
+          "nia": {
+            "carve_left": {
+              "core": 0.3,
+              "dilate_frames": 4,
+              "sigma_frames": 2.5
+            }
+          }
+        },
+        "clip_clear_m": 0.005,
+        "recoil_lead_back_frames": [
+          3,
+          4
+        ],
+        "recoil_delay_frames": {
+          "pelvis": 0,
+          "chest": 1,
+          "arms": 2,
+          "head": 3
+        },
+        "recoil_rule": {
+          "push": {
+            "event": "lift",
+            "pelvis": 0.025,
+            "chest": 5.0,
+            "arms": 6.0,
+            "head": 3.0,
+            "fwd": 1.0,
+            "side": 0.5,
+            "drop": 0.4
+          },
+          "carve_left": {
+            "event": "land",
+            "pelvis": 0.02,
+            "chest": 4.0,
+            "arms": 4.0,
+            "head": 2.5,
+            "fwd": 0.3,
+            "side": 0.6,
+            "drop": 0.25
+          },
+          "coast": {
+            "event": "beat",
+            "pelvis": 0.012,
+            "chest": 2.5,
+            "arms": 3.0,
+            "head": 1.5,
+            "fwd": 0.0,
+            "side": 1.0,
+            "drop": 0.5
+          }
+        },
+        "drive": {
+          "rule": "Crossroads recipe (docs/animation/attacker-recoil-rule.md, proof section): swing length times 10/18, deeper load",
+          "push_ratio": 0.5555555555555556,
+          "load_m": 0.01,
+          "load_sigma_frames": 2.5
+        }
+      },
+      "actions": [
+        "Imported the shipped GLB (Draco decoded by the Blender importer) at 30 fps. Put every bone at rest before each clip sample.",
+        "Arm mirror (push, coast): the right arm chain is the mirror of the left arm half a clip later, in the frame of the chest.",
+        "Athletic stance (coast, push): hinge forward at the hips until the shoulders are over the knees, coast hips to 0.78 of the leg length, 80% of the hinge back in the neck and head, coast arms 12 degrees forward; the leg IK keeps the skates.",
+        "Centre of mass from Winter segment masses (60 kg body, 1.2 kg for each skate). Zero moment point (cart-table model) checked against the support polygon of the skates on the ground.",
+        "Inertia on rollers: removed part of the fore-aft CoM oscillation (push 50%, coast 80%, carve 70%). Balance: solved (I - K D2) C = ZMP* so that the ZMP goes into the support polygon. Vertical: a symmetric Gaussian filter, widened until the CoM vertical acceleration is in -0.45 g to +0.6 g. All by a periodic shift of the hips (largest 6 cm horizontal, 3 cm vertical).",
+        "Upper body: symmetric Gaussian (sigma 1.2 frames, no time shift) on the spine, neck, head, shoulder, and arm rotations; follow-through lag on the forearms (2 frames), hands (3 frames), and head (2 frames).",
+        "Wheels: a skate that never lifts more than 4 cm stays on the ground all clip long; a step skate gets only the penetration fix. A two-bone IK solve puts each ankle at its target with the old foot rotation and knee bend direction. The foot and toe keep their old armature-space matrices.",
+        "Faster push drive: each push drive (both skates down, from the touch-down of the other skate to the lift-off) is retimed to 10/18 of its frames by a monotone cubic time warp; the lift-off frames and the clip length stay, the other skate lands later, and the glide on one skate gets the saved frames. A 1 cm deeper CoM dip at the start of each drive. The hips may move 12 cm to the side in the push (6 cm in the other clips: 12 cm put the Nia carve knee 35 degrees off its hinge, a joint-limit WARN).",
+        "Recoil (Crossroads attacker recoil rule): at the end of each push stroke (the drive skate lifts), at each step that lands in the carve, and on each coast downbeat, one bounce along the momentum: 3 frames up to the stop frame, 4 frames back, the pelvis bounce on the target CoM path before the balance solve, then the chest, upper arms, and head 1, 2, and 3 frames later.",
+        "Joint limits (Crossroads gate #465, ported to the Mixamo rig in skater_joint_limits.py): every new clip PASS; the gate self-test catches a knee bent to the side, a hyperextended knee and elbow, and a spine bent 130 degrees.",
+        "carve_right: the mirror of the new carve_left across X = 0 (D' = S D S on the rest-relative matrices), with the same IK solve for the feet.",
+        "Clipping fix: limb capsules, knee spheres, and skate boxes (skater_clip_probe.py); a leg in the other leg moves its skate in the ground plane; a hand or forearm more than 2 cm in a thigh or knee swings the upper arm away; then the hips rebalance to the old CoM path. The mirrored carve gets the same fix.",
+        "Exported the 8 clips (push, coast, carve_left, carve_right, air_mute, air_japan, air_liukang, dance_prep) and the rig without Draco, then grafted them into skater.glb and skater-1024.glb (the #187 encoding; Draco on the mesh as before). The mesh, the textures, the rig, and the other clips do not change.",
+        "Landing recoil starts at the touch-down; carve landing drop weight 0.25; Nia's carve has no pelvis bounce at the landing.",
+        "Arm IK with hand targets (air_mute, air_japan, air_liukang, dance_prep): two-bone arm IK; grabs put the palm on the grabbed skate (the skate comes toward the hand inside the leg LIMITS, then the chest bends inside the spine LIMITS); claps meet once per beat."
+      ],
+      "result": {
+        "push": {
+          "zmp_outside_mean_m": [
+            0.1293,
+            0.0004
+          ],
+          "com_jerk_rms_ms3": [
+            68.79,
+            39.25
+          ],
+          "wheel_z_min_m": [
+            {
+              "Left": -0.0,
+              "Right": -0.0001
+            },
+            {
+              "Left": -0.0,
+              "Right": -0.0
+            }
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "recoil_events": [
+            16,
+            38
+          ],
+          "stance": {
+            "hinge_deg": 3,
+            "hips_drop_m": 0.0,
+            "trunk_lean_deg": [
+              21.3,
+              24.3
+            ],
+            "hip_ankle_over_leg": [
+              0.685,
+              0.686
+            ],
+            "shoulders_ahead_of_knees_m": [
+              -0.026,
+              -0.002
+            ]
+          },
+          "drive": {
+            "frames": [
+              13,
+              7
+            ],
+            "drive_skate_peak_speed_ms": [
+              1.403,
+              2.757
+            ]
+          },
+          "clipping_overlap_max_m": {
+            "l_hand>l_thigh": 0.0177,
+            "r_hand>r_thigh": 0.0187
+          }
+        },
+        "coast": {
+          "zmp_outside_mean_m": [
+            0.0,
+            0.0
+          ],
+          "com_jerk_rms_ms3": [
+            16.09,
+            24.83
+          ],
+          "wheel_z_min_m": [
+            {
+              "Left": -0.0001,
+              "Right": -0.0001
+            },
+            {
+              "Left": -0.0,
+              "Right": -0.0
+            }
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "recoil_events": [
+            0,
+            24
+          ],
+          "stance": {
+            "hinge_deg": 12,
+            "hips_drop_m": 0.0324,
+            "trunk_lean_deg": [
+              12.1,
+              24.1
+            ],
+            "hip_ankle_over_leg": [
+              0.831,
+              0.785
+            ],
+            "shoulders_ahead_of_knees_m": [
+              -0.101,
+              0.001
+            ]
+          },
+          "clipping_overlap_max_m": {}
+        },
+        "carve_left": {
+          "zmp_outside_mean_m": [
+            0.1326,
+            0.0009
+          ],
+          "com_jerk_rms_ms3": [
+            85.1,
+            62.46
+          ],
+          "wheel_z_min_m": [
+            {
+              "Left": -0.0,
+              "Right": -0.0001
+            },
+            {
+              "Left": -0.0,
+              "Right": -0.0
+            }
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "recoil_events": [
+            2,
+            16,
+            26,
+            40
+          ],
+          "clipping_overlap_max_m": {}
+        },
+        "carve_right": {
+          "zmp_outside_mean_m": [
+            0.125,
+            0.011
+          ],
+          "com_jerk_rms_ms3": [
+            85.36,
+            65.31
+          ],
+          "wheel_z_min_m": [
+            {
+              "Left": -0.0,
+              "Right": -0.0001
+            },
+            {
+              "Left": 0.0,
+              "Right": -0.0001
+            }
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "recoil_events": [],
+          "clipping_overlap_max_m": {}
+        },
+        "air_mute": {
+          "palm_to_target_max_m": [
+            0.2773,
+            0.0102
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "skate_moved_to_hand_max_m": 0.156,
+          "chest_bend_to_skate_max_deg": 27.9,
+          "clap_frames": []
+        },
+        "air_japan": {
+          "palm_to_target_max_m": [
+            0.3154,
+            0.0076
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "skate_moved_to_hand_max_m": 0.19,
+          "chest_bend_to_skate_max_deg": 30.0,
+          "clap_frames": []
+        },
+        "air_liukang": {
+          "palm_to_target_max_m": [
+            0.0279,
+            0.0
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "skate_moved_to_hand_max_m": 0.031,
+          "chest_bend_to_skate_max_deg": 2.8,
+          "clap_frames": []
+        },
+        "dance_prep": {
+          "palm_to_target_max_m": [
+            0.0781,
+            0.0008
+          ],
+          "joint_limits": [
+            "PASS",
+            "PASS"
+          ],
+          "clap_frames": [
+            0,
+            24
+          ]
+        }
+      },
+      "files": {
+        "skater.glb": 3904676,
+        "skater-1024.glb": 3032068
+      },
+      "evidence": "docs/characters/physics-pass/ (videos/marcus-before-after*.mp4, videos/marcus-hands-before-after*.mp4, compare/, marcus-metrics.json, marcus-joint-limits.json, marcus-clip-probe-*.json, before.json, after.json)",
+      "local_files_not_in_git": [
+        "assets/skaters/marcus/raw/physics/marcus-physics.glb",
+        "assets/skaters/marcus/raw/physics/marcus-physics.json"
+      ],
+      "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.2 LTS (background mode), scripts/blender/skater_physics_pass.py, skater_clip_probe.py, and skater_joint_limits.py; scripts/assets/graft-clips.mjs on Node 26 with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
+      "date": "2026-11-22",
+      "issue": "#323",
+      "prompt": "Marcus's arms look stiff too (owner feedback after the Nia arm pass).",
+      "command": "git show 5b1d2412^:assets/skaters/marcus/skater.glb > marcus-pre313.glb && blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in marcus-pre313.glb --out assets/skaters/marcus/raw/arms && node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater.glb assets/skaters/marcus/raw/arms/marcus-physics.glb assets/skaters/marcus/skater.glb && node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater-1024.glb assets/skaters/marcus/raw/arms/marcus-physics.glb assets/skaters/marcus/skater-1024.glb",
+      "actions": [
+        "ARM_LOOSE for Marcus push and coast (the same settings as Nia), after the arm mirror of #313: more elbow bend, a 2-frame forearm follow-through on the backswing, a 1-frame wrist lag, and the upper arm out from the body at the back of the swing.",
+        "Re-ran the full pass of #313 on the clips before #313, and grafted push, coast, carve_left, carve_right, air_mute, air_japan, air_liukang, and dance_prep. The carve and IK clips have the same measures as in #313.",
+        "Rebuilt after the #332 review fixes (2026-11-23): the wrist lag uses the right-handed order (fwd, side, up) of the chest frame, and ARM_OUT_MAX bounds the total swing-out of all clip-fix rounds."
+      ],
+      "result": "skater.glb 3,905,492 bytes; skater-1024.glb 3,032,884 bytes. Elbow range: push 26.6 to 46.6 degrees, coast 9.7 to 23.9 degrees. No arm capsule more than 1 cm in the torso. Joint-limit gate: PASS, with the dance_drumline WARN that was already on main.",
+      "evidence": "docs/characters/arm-pass/README.md",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 115,
   "tripo_credits_before": 3085,
   "tripo_credits_after": 2970,
   "file": "assets/skaters/marcus/skater.glb",
-  "triangles": 17006,
-  "file_size_bytes": 2071416,
+  "triangles": 39074,
+  "file_size_bytes": 3904676,
   "five_views": "assets/skaters/marcus/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "contact_sheets": "assets/skaters/marcus/clips/<clip>.png, made by e2e/skater-anim.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/marcus/provenance.json)",
-  "animations": 24,
+  "animations": 25,
   "phone_variant": {
     "file": "assets/skaters/marcus/skater-1024.glb",
-    "file_size_bytes": 1493828,
-    "base_color": "1024x1024 JPEG",
+    "file_size_bytes": 2309792,
+    "base_color": "1024x1024 WebP",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
+  },
+  "current_build": {
+    "date": "2026-11-05",
+    "triangles": 39074,
+    "joints": 65,
+    "clips": 25,
+    "source": "assets/skaters/marcus/raw/forward-v2 + raw/runtime-v2 (ignored build sources)",
+    "method": "Keep the forward push and coast. Key the other 22 clips on the v2 rig with the forward IK. Retarget dance_smoothquad from the approved Tripo dance.",
+    "corrections": "#168: finger joints and weights, knee pad and wristband weights",
+    "added_clips": [
+      "dance_smoothquad"
+    ]
+  },
+  "lod1_variant": {
+    "file": "assets/skaters/marcus/skater-lod1.glb",
+    "file_size_bytes": 59264,
+    "triangles": 2991,
+    "used_by": "the far NPC skaters (src/render/npc-skaters-view.js, NPC_DRAW lod1From), bound to the skeleton of skater.glb or skater-1024.glb",
+    "screenshots": "e2e/__screenshots__/skater-lod-marcus-*.png, made by e2e/skater-lod.spec.js"
   }
 }

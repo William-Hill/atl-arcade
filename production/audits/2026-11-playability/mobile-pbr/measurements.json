@@ -1,0 +1,341 @@
+{
+  "note": "Chromium headless with SwiftShader (software GPU on the CPU), 4 cores, no GPU. Phone tier forced with ?quality=phone (SwiftShader alone gets the low tier), governor off. Device descriptors emulate viewport, DPR, touch, UA. The frame times compare runs with each other only; they are NOT phone GPU numbers. drawCalls and triangles count every WebGL draw in all passes (a multi-draw counts each sub-draw).",
+  "runs": [
+    {
+      "profile": "iPhone15-port",
+      "device": "iPhone 15",
+      "look": "toon",
+      "tier": "phone",
+      "tag": "iPhone15-port-toon",
+      "cpuThrottle": 1,
+      "readyMs": 9781,
+      "frames": 51,
+      "medianMs": 150.1,
+      "medianFps": 6.7,
+      "p95FrameMs": 183.4,
+      "maxMs": 233.3,
+      "drawCalls": 142,
+      "triangles": 247634,
+      "multiDrawBatches": 1,
+      "rendererInfoLastPass": {
+        "calls": 69,
+        "triangles": 242582,
+        "textures": 91,
+        "geometries": 84
+      },
+      "render": {
+        "quality": "phone",
+        "pixelRatio": 1.5,
+        "post": "lite",
+        "rung": null,
+        "lastMedianMs": null
+      },
+      "dpr": 3,
+      "canvasPx": [
+        589,
+        988
+      ],
+      "speedWhilePushing": 11.68,
+      "inputSource": "touch",
+      "jsHeapUsedMB": 54.6,
+      "loadBefore": "1.74, 0.54, 0.19",
+      "loadAfter": "2.32, 0.73, 0.26",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": []
+    },
+    {
+      "profile": "iPhone15-port",
+      "device": "iPhone 15",
+      "look": "pbr",
+      "tier": "phone",
+      "tag": "iPhone15-port-pbr",
+      "cpuThrottle": 1,
+      "readyMs": 12512,
+      "frames": 6,
+      "medianMs": 1333.3,
+      "medianFps": 0.8,
+      "p95FrameMs": 2316.6,
+      "maxMs": 2316.6,
+      "drawCalls": 206,
+      "triangles": 311468,
+      "multiDrawBatches": 8,
+      "rendererInfoLastPass": {
+        "calls": 88,
+        "triangles": 317080,
+        "textures": 173,
+        "geometries": 95
+      },
+      "render": {
+        "quality": "phone",
+        "pixelRatio": 1.5,
+        "post": "lite",
+        "rung": null,
+        "lastMedianMs": null
+      },
+      "dpr": 3,
+      "canvasPx": [
+        589,
+        988
+      ],
+      "speedWhilePushing": 9.81,
+      "inputSource": "touch",
+      "jsHeapUsedMB": 49.3,
+      "loadBefore": "2.76, 0.96, 0.35",
+      "loadAfter": "3.25, 1.31, 0.49",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": []
+    },
+    {
+      "profile": "iPhone15-land",
+      "device": "iPhone 15 landscape",
+      "look": "toon",
+      "tier": "phone",
+      "tag": "iPhone15-land-toon",
+      "cpuThrottle": 1,
+      "readyMs": 11708,
+      "frames": 51,
+      "medianMs": 150,
+      "medianFps": 6.7,
+      "p95FrameMs": 200,
+      "maxMs": 216.7,
+      "drawCalls": 222,
+      "triangles": 283433,
+      "multiDrawBatches": 2,
+      "rendererInfoLastPass": {
+        "calls": 85,
+        "triangles": 270510,
+        "textures": 91,
+        "geometries": 103
+      },
+      "render": {
+        "quality": "phone",
+        "pixelRatio": 1.5,
+        "post": "lite",
+        "rung": null,
+        "lastMedianMs": null
+      },
+      "dpr": 3,
+      "canvasPx": [
+        1101,
+        514
+      ],
+      "speedWhilePushing": 11.68,
+      "inputSource": "touch",
+      "jsHeapUsedMB": 63,
+      "loadBefore": "3.53, 1.47, 0.56",
+      "loadAfter": "3.42, 1.55, 0.60",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": []
+    },
+    {
+      "profile": "iPhone15-land",
+      "device": "iPhone 15 landscape",
+      "look": "pbr",
+      "tier": "phone",
+      "tag": "iPhone15-land-pbr",
+      "cpuThrottle": 1,
+      "readyMs": 12785,
+      "frames": 9,
+      "medianMs": 850,
+      "medianFps": 1.2,
+      "p95FrameMs": 1716.6,
+      "maxMs": 1716.6,
+      "drawCalls": 255,
+      "triangles": 382992,
+      "multiDrawBatches": 10,
+      "rendererInfoLastPass": {
+        "calls": 102,
+        "triangles": 374217,
+        "textures": 175,
+        "geometries": 106
+      },
+      "render": {
+        "quality": "phone",
+        "pixelRatio": 1.5,
+        "post": "lite",
+        "rung": null,
+        "lastMedianMs": null
+      },
+      "dpr": 3,
+      "canvasPx": [
+        1101,
+        514
+      ],
+      "speedWhilePushing": 11.37,
+      "inputSource": "touch",
+      "jsHeapUsedMB": 67.6,
+      "loadBefore": "3.41, 1.70, 0.68",
+      "loadAfter": "3.70, 1.96, 0.80",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": []
+    },
+    {
+      "profile": "Pixel7-port",
+      "device": "Pixel 7",
+      "look": "toon",
+      "tier": "phone",
+      "tag": "Pixel7-port-toon",
+      "cpuThrottle": 1,
+      "readyMs": 10937,
+      "frames": 47,
+      "medianMs": 166.7,
+      "medianFps": 6,
+      "p95FrameMs": 200,
+      "maxMs": 216.7,
+      "drawCalls": 138,
+      "triangles": 249287,
+      "multiDrawBatches": 1,
+      "rendererInfoLastPass": {
+        "calls": 69,
+        "triangles": 248215,
+        "textures": 91,
+        "geometries": 78
+      },
+      "render": {
+        "quality": "phone",
+        "pixelRatio": 1.5,
+        "post": "lite",
+        "rung": null,
+        "lastMedianMs": null
+      },
+      "dpr": 2.625,
+      "canvasPx": [
+        618,
+        1258
+      ],
+      "speedWhilePushing": 11.67,
+      "inputSource": "touch",
+      "jsHeapUsedMB": 56.8,
+      "loadBefore": "3.57, 2.01, 0.84",
+      "loadAfter": "3.71, 2.09, 0.88",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": []
+    },
+    {
+      "profile": "Pixel7-port",
+      "device": "Pixel 7",
+      "look": "pbr",
+      "tier": "phone",
+      "tag": "Pixel7-port-pbr",
+      "cpuThrottle": 1,
+      "readyMs": 11245,
+      "frames": 5,
+      "medianMs": 1583.3,
+      "medianFps": 0.6,
+      "p95FrameMs": 2483.2,
+      "maxMs": 2483.2,
+      "drawCalls": 198,
+      "triangles": 308762,
+      "multiDrawBatches": 8,
+      "rendererInfoLastPass": {
+        "calls": 86,
+        "triangles": 315828,
+        "textures": 173,
+        "geometries": 93
+      },
+      "render": {
+        "quality": "phone",
+        "pixelRatio": 1.5,
+        "post": "lite",
+        "rung": null,
+        "lastMedianMs": null
+      },
+      "dpr": 2.625,
+      "canvasPx": [
+        618,
+        1258
+      ],
+      "speedWhilePushing": 9.64,
+      "inputSource": "touch",
+      "jsHeapUsedMB": 59,
+      "loadBefore": "3.95, 2.31, 0.99",
+      "loadAfter": "3.87, 2.51, 1.12",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": []
+    },
+    {
+      "profile": "small-360x640",
+      "device": "Galaxy S5",
+      "look": "toon",
+      "tier": "phone",
+      "tag": "small-360x640-toon",
+      "cpuThrottle": 1,
+      "readyMs": 10826,
+      "frames": 55,
+      "medianMs": 149.9,
+      "medianFps": 6.7,
+      "p95FrameMs": 183.4,
+      "maxMs": 216.7,
+      "drawCalls": 127,
+      "triangles": 241692,
+      "multiDrawBatches": 1,
+      "rendererInfoLastPass": {
+        "calls": 64,
+        "triangles": 238915,
+        "textures": 91,
+        "geometries": 85
+      },
+      "render": {
+        "quality": "phone",
+        "pixelRatio": 1.5,
+        "post": "lite",
+        "rung": null,
+        "lastMedianMs": null
+      },
+      "dpr": 3,
+      "canvasPx": [
+        540,
+        960
+      ],
+      "speedWhilePushing": 8.33,
+      "inputSource": "touch",
+      "jsHeapUsedMB": 66.5,
+      "loadBefore": "3.73, 2.55, 1.16",
+      "loadAfter": "3.60, 2.57, 1.18",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": []
+    },
+    {
+      "profile": "small-360x640",
+      "device": "Galaxy S5",
+      "look": "pbr",
+      "tier": "phone",
+      "tag": "small-360x640-pbr",
+      "cpuThrottle": 1,
+      "readyMs": 11483,
+      "frames": 7,
+      "medianMs": 1083.4,
+      "medianFps": 0.9,
+      "p95FrameMs": 2066.5,
+      "maxMs": 2066.5,
+      "drawCalls": 210,
+      "triangles": 352982,
+      "multiDrawBatches": 8,
+      "rendererInfoLastPass": {
+        "calls": 84,
+        "triangles": 348850,
+        "textures": 174,
+        "geometries": 90
+      },
+      "render": {
+        "quality": "phone",
+        "pixelRatio": 1.5,
+        "post": "lite",
+        "rung": null,
+        "lastMedianMs": null
+      },
+      "dpr": 3,
+      "canvasPx": [
+        540,
+        960
+      ],
+      "speedWhilePushing": 10.14,
+      "inputSource": "touch",
+      "jsHeapUsedMB": 45.5,
+      "loadBefore": "3.42, 2.61, 1.24",
+      "loadAfter": "3.68, 2.77, 1.34",
+      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "errors": []
+    }
+  ]
+}

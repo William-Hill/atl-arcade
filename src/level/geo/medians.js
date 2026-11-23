@@ -54,10 +54,13 @@ function laneEdge(s, side) {
 // median, so a median is not made twice. A run stops where the median is
 // narrower than MEDIAN.minWidth, 6 m before a junction node, and at a
 // bridge.
+// Cached by the strips array (the only part of the level it reads), so a
+// copy of the level with other buildings reuses it (#190).
 const MEDIANS = new WeakMap();
 export function medianStrips(level) {
-  if (!MEDIANS.has(level)) MEDIANS.set(level, buildMedians(level));
-  return MEDIANS.get(level);
+  const key = level.strips ?? level;
+  if (!MEDIANS.has(key)) MEDIANS.set(key, buildMedians(level));
+  return MEDIANS.get(key);
 }
 
 function buildMedians(level) {

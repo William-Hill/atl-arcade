@@ -141,6 +141,8 @@ const spans = new WeakMap();
 export const PLINTH_DEPTH = 0.5;
 // The step (m) of the ground samples along the walls and under the footprint.
 const SPAN_STEP = 2;
+// The walls at 1 m: the graded ground near a way bends more between samples.
+const WALL_STEP = 1;
 
 function insideRing(x, z, ring) {
   let inside = false;
@@ -172,7 +174,7 @@ export function buildingSpan(level, b) {
     for (let i = 0; i < ring.length; i += 1) {
       const [px, pz] = ring[i];
       const [qx, qz] = ring[(i + 1) % ring.length];
-      const n = Math.max(1, Math.ceil(Math.hypot(qx - px, qz - pz) / SPAN_STEP));
+      const n = Math.max(1, Math.ceil(Math.hypot(qx - px, qz - pz) / WALL_STEP));
       for (let k = 0; k < n; k += 1) {
         const h = t.height(px + ((qx - px) * k) / n, pz + ((qz - pz) * k) / n);
         lo = Math.min(lo, h);
@@ -219,22 +221,28 @@ const raws = new WeakMap();
 
 // The straight deck line of a bridge layout on terrain t: line(x, z).
 // `heights` can give the end heights; the default is the ground at J.
-function deckLine(L, t, heights = null) {
+// `lands` are level landings (m) at the ends: the line holds the end height
+// over each one, and slopes between them.
+function deckLine(L, t, heights = null, lands = [0, 0]) {
   const [J0, J1] = [L.points[0], L.points[L.points.length - 1]];
   const h0 = heights?.[0] ?? t.height(J0[0], J0[1]);
   const h1 = heights?.[1] ?? t.height(J1[0], J1[1]);
   const total = L.total || 1;
-  const at = (s) => h0 + (h1 - h0) * (s / total);
+  const run = total - lands[0] - lands[1];
+  const [l0, span] = run >= 1 ? [lands[0], run] : [0, total];
+  const at = (s) => h0 + (h1 - h0) * Math.max(0, Math.min(1, (s - l0) / span));
   const line = (x, z) => at(project(L.points, L.cum, x, z).s);
   line.at = at;
   line.ends = [h0, h1];
-  line.slope = (h1 - h0) / total;
+  line.slope = (h1 - h0) / span;
   return line;
 }
 
 // The line and the arch of a host layout (no run-ons): raw(x, z). An end
 // with no approach road that is on another deck (a footway spur off a
-// footway bridge) starts at the height of that deck, not of the ground.
+// footway bridge) starts at the height of that deck, not of the ground, and
+// holds it level to just past the edge of that deck, so the spur meets the
+// deck with no step (w1118177210 had a 0.68 m step, a wall to the skater).
 function rawDeck(level, L, seen = new Set()) {
   let m = raws.get(level);
   if (!m) raws.set(level, (m = new Map()));
@@ -245,6 +253,7 @@ function rawDeck(level, L, seen = new Set()) {
   const cum = L.cum;
   const [a0, a1] = L.span;
   const layouts = bridgeLayouts(level.strips);
+  const lands = [0, 0];
   const heights = L.ends.map((e, k) => {
     if (e.approach) return null;
     const J = k ? pts[pts.length - 1] : pts[0];
@@ -252,11 +261,14 @@ function rawDeck(level, L, seen = new Set()) {
       const root = O.host ?? O.id;
       if (root === L.id || seen.has(root)) continue;
       const { s, d } = project(O.points, O.cum, J[0], J[1]);
-      if (s >= 0 && s <= O.total && d <= O.width / 2) return rawDeck(level, layouts.get(root), seen)(J[0], J[1]);
+      if (s >= 0 && s <= O.total && d <= O.width / 2) {
+        lands[k] = O.width / 2 - d + 0.5;
+        return rawDeck(level, layouts.get(root), seen)(J[0], J[1]);
+      }
     }
     return null;
   });
-  const line = deckLine(L, t, heights);
+  const line = deckLine(L, t, heights, lands);
   // The arch: the largest lift that a crossing needs, at its distance along.
   // A way that meets the OSM end is the approach, not a way under the deck.
   let lift = 0;
@@ -831,6 +843,264 @@ export function gradeBridgeEnds(grid, strips) {
   return { heights, changed };
 }
 
+// Grades the ground on the playable ways to a skating grade. The DEM under
+// a street, a sidewalk, or a path has the cuts and fills of the lots next
+// to it, so short ramps of 30% to 50% stay after gradeTrail(), and a skater
+// cannot push up them. The trail (`fixed` kinds) has its rail grade from
+// gradeTrail() in its cut under the Freedom Parkway bridges: it is pinned,
+// so the clearance under the decks stays.
+//
+// Each grid node within `margin` m of the edge of an at-grade way (by
+// default the nodes of every terrain triangle under the way) is in the way
+// network. Two next nodes of the network (along x or along z) may differ by
+// at most L = `max` / sqrt(2) per meter, so both legs of each terrain
+// triangle under a way, and so its grade in any direction, stay at `max` or
+// less. The new height of a node is the mean of two exact envelopes on the
+// network graph (Dijkstra, a fixed order, so the result is deterministic):
+// the highest L-limited ground under the old ground (it cuts the humps)
+// and the lowest one over it (it fills the dips). The mean of two L-limited
+// functions is L-limited, and the cut and the fill balance. A `pinned` node
+// (a bridge joint, the ground under a deck) keeps its height, and the
+// others stay within L of it along the network. Then each node from
+// `margin` to `margin + blend` m off the network takes the mean change of
+// the network nodes near it, fading to 0 (smoothstep), so the grade has no
+// step at the edge of the network. Pure: returns new heights, the network
+// node count, and the largest change.
+export const WAY_GRADE = { max: 0.1, blend: 32, kinds: ["street", "sidewalk", "path"], fixed: ["trail"] };
+
+// One envelope of the heights on the network graph, by Dijkstra from every
+// node at once: sign 1 gives min over j of (h_j + step * hops), sign -1 gives
+// max over j of (h_j - step * hops). The heap holds [key, node] pairs (ties
+// by node index), so the order is deterministic.
+function envelope(heights, inNet, cols, rows, step, sign) {
+  const n = heights.length;
+  const key = new Float64Array(n).fill(Infinity);
+  const heap = [];
+  const less = (a, b) => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
+  const push = (e) => {
+    heap.push(e);
+    let i = heap.length - 1;
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (!less(heap[i], heap[p])) break;
+      [heap[i], heap[p]] = [heap[p], heap[i]];
+      i = p;
+    }
+  };
+  const pop = () => {
+    const top = heap[0];
+    const last = heap.pop();
+    if (heap.length) {
+      heap[0] = last;
+      let i = 0;
+      for (;;) {
+        const l = i * 2 + 1;
+        const r = l + 1;
+        let m = i;
+        if (l < heap.length && less(heap[l], heap[m])) m = l;
+        if (r < heap.length && less(heap[r], heap[m])) m = r;
+        if (m === i) break;
+        [heap[i], heap[m]] = [heap[m], heap[i]];
+        i = m;
+      }
+    }
+    return top;
+  };
+  for (let k = 0; k < n; k += 1) {
+    if (!inNet[k] || !Number.isFinite(heights[k])) continue;
+    key[k] = sign * heights[k];
+    push([key[k], k]);
+  }
+  const done = new Uint8Array(n);
+  while (heap.length) {
+    const [kv, v] = pop();
+    if (done[v] || kv > key[v]) continue;
+    done[v] = 1;
+    const i = v % cols;
+    const j = (v - i) / cols;
+    for (const w of [i > 0 ? v - 1 : -1, i + 1 < cols ? v + 1 : -1, j > 0 ? v - cols : -1, j + 1 < rows ? v + cols : -1]) {
+      if (w < 0 || !inNet[w] || done[w]) continue;
+      const kw = kv + step;
+      if (kw < key[w]) {
+        key[w] = kw;
+        push([kw, w]);
+      }
+    }
+  }
+  const out = new Float64Array(n);
+  for (let k = 0; k < n; k += 1) out[k] = sign * key[k];
+  return out;
+}
+
+export function gradeWays(grid, strips, { pinned: given = null, ...opts } = {}) {
+  const g = { ...WAY_GRADE, ...opts };
+  const { cell, cols, rows } = grid;
+  const margin = g.margin ?? cell * Math.SQRT2 + 0.01;
+  const ways = strips.filter((s) => !s.bridge && g.kinds.includes(s.kind));
+  const inNet = wayNodes(grid, ways, margin);
+  // The trail keeps its rail grade (gradeTrail()): its nodes are in the
+  // network, pinned, so the ways meet the trail and not the other way.
+  const fixed = wayNodes(grid, strips.filter((s) => !s.bridge && g.fixed.includes(s.kind)), margin);
+  let pinned = given;
+  if (fixed.some((v) => v)) {
+    pinned = Uint8Array.from(fixed, (v, k) => (v || given?.[k] ? 1 : 0));
+    for (let k = 0; k < inNet.length; k += 1) inNet[k] ||= fixed[k];
+  }
+  const step = (g.max / Math.SQRT2) * cell;
+  const base = grid.heights;
+  const heights = Float32Array.from(base);
+  const upper = envelope(base, inNet, cols, rows, step, 1);
+  const lower = envelope(base, inNet, cols, rows, step, -1);
+  // The cones of the pinned nodes: every network node stays within L of
+  // each pinned node along the network.
+  let hi = null;
+  let lo = null;
+  if (pinned) {
+    const pins = Uint8Array.from(inNet, (v, k) => (v && pinned[k] ? 1 : 0));
+    if (pins.some((v) => v)) {
+      const sources = Float64Array.from(base, (h, k) => (pins[k] ? h : NaN));
+      hi = envelope(sources, inNet, cols, rows, step, 1);
+      lo = envelope(sources, inNet, cols, rows, step, -1);
+    }
+  }
+  for (let k = 0; k < heights.length; k += 1) {
+    if (!inNet[k]) continue;
+    let h = (upper[k] + lower[k]) / 2;
+    if (hi) {
+      const a = lo[k];
+      const b = hi[k];
+      h = a <= b ? Math.max(a, Math.min(b, h)) : (a + b) / 2;
+      if (pinned[k]) h = base[k];
+    }
+    heights[k] = h;
+  }
+  // The blend band off the network.
+  const R = Math.ceil(g.blend / cell);
+  const out = Float32Array.from(heights);
+  for (let j = 0; j < rows; j += 1) {
+    for (let i = 0; i < cols; i += 1) {
+      const at = j * cols + i;
+      if (inNet[at] || pinned?.[at]) continue;
+      let sw = 0;
+      let swd = 0;
+      let near = Infinity;
+      for (let dj = -R; dj <= R; dj += 1) {
+        const jj = j + dj;
+        if (jj < 0 || jj >= rows) continue;
+        for (let di = -R; di <= R; di += 1) {
+          const ii = i + di;
+          if (ii < 0 || ii >= cols) continue;
+          const k = jj * cols + ii;
+          if (!inNet[k]) continue;
+          const d = Math.hypot(di, dj) * cell;
+          if (d > g.blend) continue;
+          const w = 1 / (d * d);
+          sw += w;
+          swd += w * (heights[k] - base[k]);
+          near = Math.min(near, d);
+        }
+      }
+      if (!(sw > 0)) continue;
+      const k = 1 - near / g.blend;
+      out[at] = base[at] + (swd / sw) * k * k * (3 - 2 * k);
+    }
+  }
+  let moved = 0;
+  let count = 0;
+  for (let k = 0; k < out.length; k += 1) {
+    moved = Math.max(moved, Math.abs(out[k] - base[k]));
+    count += inNet[k];
+  }
+  return { heights: out, nodes: count, moved };
+}
+
+// The grade limit of the skating ground. gradeWays() grades the ground under
+// the ways to WAY_GRADE.max, but a few short ramps stay: where a deck meets
+// a road or the ground (bridge stairs, w1118177210 drops 2 to 5 m in 10 m),
+// at the bridge ends, and off the ways (lawns, embankments). At 47% gravity
+// on the slope (20 m/s^2 x 0.42) is more than the push (8 m/s^2), so the
+// skater cannot climb, and she rolls back. The ground sampler bends each
+// terrain and deck normal to at most `GRADE_LIMIT` (the height stays the
+// real one), so the slope pull on the skater is at most 20 x 0.29 = 5.7
+// m/s^2, under the push, and she can push up anything that is not a wall (a
+// rise over SKATE.maxStep in one step). The trail and the ways (10% or less)
+// are under the limit, so it changes nothing on them.
+// Near-cliffs: with the bent normal the controller's wall probe (a rise
+// over SKATE.maxStep within the body ring, about 77% or more) now reads a
+// cliff face as a wall, so the skater bonks off it instead of rolling back.
+export const GRADE_LIMIT = 0.3;
+
+export function limitGrade(n, max = GRADE_LIMIT) {
+  const h = Math.hypot(n[0], n[2]);
+  if (!(n[1] > 0) || h <= max * n[1]) return n;
+  const ny = 1 / Math.sqrt(1 + max * max);
+  const k = (max * ny) / h;
+  return [n[0] * k, ny, n[2] * k];
+}
+
+// The grid nodes that the bridge grades own: each node within one cell
+// diagonal of a deck (bridges.js layout, joint to joint, plus one cell
+// diagonal past each joint and each side). gradeWays() pins them after
+// gradeBridgeEnds(), so each deck end still meets its road and the ground
+// under each deck keeps its clearance.
+export function bridgeNodes(grid, strips) {
+  const { cell, x0, z0, cols, rows } = grid;
+  const CRITICAL = cell * Math.SQRT2 + 0.01;
+  const out = new Uint8Array(cols * rows);
+  for (const L of bridgeLayouts(strips).values()) {
+    const r = L.width / 2 + CRITICAL;
+    const xs = L.points.map((p) => p[0]);
+    const zs = L.points.map((p) => p[1]);
+    const i0 = Math.max(0, Math.floor((Math.min(...xs) - r - x0) / cell));
+    const i1 = Math.min(cols - 1, Math.ceil((Math.max(...xs) + r - x0) / cell));
+    const j0 = Math.max(0, Math.floor((Math.min(...zs) - r - z0) / cell));
+    const j1 = Math.min(rows - 1, Math.ceil((Math.max(...zs) + r - z0) / cell));
+    for (let j = j0; j <= j1; j += 1) {
+      for (let i = i0; i <= i1; i += 1) {
+        const { s, d } = project(L.points, L.cum, x0 + i * cell, z0 + j * cell);
+        if (s >= -CRITICAL && s <= L.total + CRITICAL && d <= r) out[j * cols + i] = 1;
+      }
+    }
+  }
+  return out;
+}
+
+// The steepest grade (rise over run) of the terrain triangles under the
+// at-grade ways, sampled every `step` m along each center line and each
+// edge. For the build report and the tests.
+export function wayGrades(terrain, strips, { step = 1, kinds = WAY_GRADE.kinds } = {}) {
+  const out = [];
+  for (const s of strips) {
+    if (s.bridge || !kinds.includes(s.kind)) continue;
+    let worst = 0;
+    let at = null;
+    const half = (s.width ?? 0) / 2;
+    for (let i = 0; i < s.points.length - 1; i += 1) {
+      const [ax, az] = s.points[i];
+      const [bx, bz] = s.points[i + 1];
+      const len = Math.hypot(bx - ax, bz - az);
+      if (!(len > 0)) continue;
+      const nx = -(bz - az) / len;
+      const nz = (bx - ax) / len;
+      const n = Math.max(1, Math.ceil(len / step));
+      for (let k = 0; k <= n; k += 1) {
+        for (const o of [-half * 0.9, 0, half * 0.9]) {
+          const x = ax + ((bx - ax) * k) / n + nx * o;
+          const z = az + ((bz - az) * k) / n + nz * o;
+          const [gx, gy, gz] = terrain.normal(x, z);
+          const grade = Math.hypot(gx, gz) / gy;
+          if (grade > worst) {
+            worst = grade;
+            at = [x, z];
+          }
+        }
+      }
+    }
+    out.push({ id: s.id, kind: s.kind, grade: worst, at });
+  }
+  return out;
+}
+
 // --- Draping a mesh on the terrain ---
 
 const ATTRS = [
@@ -839,23 +1109,41 @@ const ATTRS = [
   ["uvs", 2],
 ];
 
-// Clips a polygon (a list of vertices { p: [x, y, z], a: { attr: [] } }) to
-// the half-plane f(x, z) >= 0, where f is linear.
-function clip(poly, f) {
+// A draped vertex: { p: [x, y, z], a: [the attributes, in ATTRS order] }.
+// Clips a polygon of them to the half-plane f >= 0 of one cell side (`side`):
+// 0 u >= 0, 1 u <= 1, 2 v >= 0, 3 v <= 1, 4 u + v <= 1, 5 u + v >= 1, with
+// u = (x - cx) / cell and v = (z - cz) / cell. The math is the same as the
+// first version (closures for f, #98), in the same order, so the result is
+// the same to the bit.
+function sideValue(side, x, z, cx, cz, cell) {
+  if (side === 0) return (x - cx) / cell;
+  if (side === 1) return 1 - (x - cx) / cell;
+  if (side === 2) return (z - cz) / cell;
+  if (side === 3) return 1 - (z - cz) / cell;
+  if (side === 4) return 1 - (x - cx) / cell - (z - cz) / cell;
+  return (x - cx) / cell + (z - cz) / cell - 1;
+}
+
+function clip(poly, side, cx, cz, cell) {
   const out = [];
-  for (let i = 0; i < poly.length; i += 1) {
+  const n = poly.length;
+  if (n === 0) return out;
+  // The edges (0, 1), (1, 2), ..., (n - 1, 0); each f value is found once.
+  const f0 = sideValue(side, poly[0].p[0], poly[0].p[2], cx, cz, cell);
+  let fa = f0;
+  for (let i = 0; i < n; i += 1) {
     const A = poly[i];
-    const B = poly[(i + 1) % poly.length];
-    const fa = f(A.p[0], A.p[2]);
-    const fb = f(B.p[0], B.p[2]);
+    const B = poly[(i + 1) % n];
+    const fb = i + 1 < n ? sideValue(side, B.p[0], B.p[2], cx, cz, cell) : f0;
     if (fa >= 0) out.push(A);
     if ((fa >= 0) !== (fb >= 0)) {
       const k = fa / (fa - fb);
       const p = [A.p[0] + (B.p[0] - A.p[0]) * k, A.p[1] + (B.p[1] - A.p[1]) * k, A.p[2] + (B.p[2] - A.p[2]) * k];
-      const a = {};
-      for (const name in A.a) a[name] = A.a[name].map((v, n) => v + (B.a[name][n] - v) * k);
+      const a = new Array(A.a.length);
+      for (let m = 0; m < a.length; m += 1) a[m] = A.a[m] + (B.a[m] - A.a[m]) * k;
       out.push({ p, a });
     }
+    fa = fb;
   }
   return out;
 }
@@ -870,6 +1158,10 @@ function area3(a, b, c) {
   return Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2;
 }
 
+// Two rounded key values are the same weld value. NaN equals NaN here, as
+// in the first version's text keys.
+const sameKey = (a, b) => a === b || (a !== a && b !== b);
+
 // Returns a new mesh: each triangle cut on the terrain triangles, and each
 // vertex moved up by the terrain height under it. The colors, the facade
 // attribute, and the uvs are kept (interpolated on the cut edges).
@@ -878,36 +1170,72 @@ export function drapeMesh(mesh, terrain) {
   const { cell, x0, z0 } = terrain;
   const P = mesh.positions;
   const names = ATTRS.filter(([n]) => mesh[n]);
-  const out = { positions: [], indices: [] };
-  for (const [n] of names) out[n] = [];
+  const attrSize = names.reduce((acc, [, size]) => acc + size, 0);
+  const positions = [];
+  const attrs = [];
+  const indices = [];
+  // One source vertex object per index, shared by its triangles (nothing
+  // changes a vertex object after it is made).
+  const verts = new Array(P.length / 3);
   const vert = (k) => {
-    const a = {};
-    for (const [n, size] of names) a[n] = Array.from(mesh[n].slice(k * size, k * size + size));
-    return { p: [P[k * 3], P[k * 3 + 1], P[k * 3 + 2]], a };
+    let V = verts[k];
+    if (V) return V;
+    const a = new Array(attrSize);
+    let o = 0;
+    for (const [n, size] of names) {
+      const src = mesh[n];
+      for (let m = 0; m < size; m += 1) a[o++] = src[k * size + m];
+    }
+    V = { p: [P[k * 3], P[k * 3 + 1], P[k * 3 + 2]], a };
+    verts[k] = V;
+    return V;
   };
   // Shared vertices are welded (same position and attributes, to 0.1 mm),
   // so a draped mesh keeps about one vertex per corner. Only the faces of one
   // orientation weld (`facing`, from the flat triangle): the terrain gets
   // smooth normals, and a curb keeps a hard edge between its top and side.
-  const welded = new Map();
-  let facing = "";
+  // The weld key is the facing, the rounded position, and the rounded
+  // attributes, kept as numbers (`keys`, `stride` per vertex) and found by a
+  // hash chain. It welds the same vertices as a text key.
+  const stride = 6 + attrSize;
+  const keys = [];
+  const next = [];
+  const heads = new Map();
+  const key = new Array(stride);
+  let fx = 0;
+  let fy = 0;
+  let fz = 0;
   const vertexIndex = (V) => {
-    let key = `${facing}:${Math.round(V.p[0] * 1e4)},${Math.round(V.p[1] * 1e4)},${Math.round(V.p[2] * 1e4)}`;
-    for (const [n] of names) key += `|${V.a[n].map((v) => Math.round(v * 1e4)).join(",")}`;
-    let k = welded.get(key);
-    if (k === undefined) {
-      k = out.positions.length / 3;
-      welded.set(key, k);
-      out.positions.push(V.p[0], V.p[1], V.p[2]);
-      for (const [n] of names) out[n].push(...V.a[n]);
+    key[0] = fx;
+    key[1] = fy;
+    key[2] = fz;
+    key[3] = Math.round(V.p[0] * 1e4);
+    key[4] = Math.round(V.p[1] * 1e4);
+    key[5] = Math.round(V.p[2] * 1e4);
+    for (let m = 0; m < attrSize; m += 1) key[6 + m] = Math.round(V.a[m] * 1e4);
+    let h = 0;
+    for (let m = 0; m < stride; m += 1) h = (Math.imul(h, 31) + (key[m] | 0)) | 0;
+    const head = heads.get(h);
+    for (let k = head ?? -1; k >= 0; k = next[k]) {
+      let same = true;
+      for (let m = 0; m < stride && same; m += 1) same = sameKey(keys[k * stride + m], key[m]);
+      if (same) return k;
     }
+    const k = positions.length / 3;
+    for (let m = 0; m < stride; m += 1) keys.push(key[m]);
+    next.push(head ?? -1);
+    heads.set(h, k);
+    positions.push(V.p[0], V.p[1], V.p[2]);
+    for (let m = 0; m < attrSize; m += 1) attrs.push(V.a[m]);
     return k;
   };
   const I = mesh.indices;
   for (let t = 0; t < I.length; t += 3) {
     const tri = [vert(I[t]), vert(I[t + 1]), vert(I[t + 2])];
     {
-      const [a, b, c] = tri.map((v) => v.p);
+      const a = tri[0].p;
+      const b = tri[1].p;
+      const c = tri[2].p;
       const ux = b[0] - a[0];
       const uy = b[1] - a[1];
       const uz = b[2] - a[2];
@@ -918,27 +1246,32 @@ export function drapeMesh(mesh, terrain) {
       const ny = uz * vx - ux * vz;
       const nz = ux * vy - uy * vx;
       const l = Math.hypot(nx, ny, nz) || 1;
-      facing = `${Math.round((nx / l) * 4)},${Math.round((ny / l) * 4)},${Math.round((nz / l) * 4)}`;
+      // + 0 turns -0 into 0, as the text key did.
+      fx = Math.round((nx / l) * 4) + 0;
+      fy = Math.round((ny / l) * 4) + 0;
+      fz = Math.round((nz / l) * 4) + 0;
     }
-    const xs = tri.map((v) => v.p[0]);
-    const zs = tri.map((v) => v.p[2]);
-    const i0 = Math.floor((Math.min(...xs) - x0) / cell);
-    const i1 = Math.floor((Math.max(...xs) - x0) / cell);
-    const j0 = Math.floor((Math.min(...zs) - z0) / cell);
-    const j1 = Math.floor((Math.max(...zs) - z0) / cell);
+    const ax = tri[0].p[0];
+    const bx = tri[1].p[0];
+    const cx3 = tri[2].p[0];
+    const az = tri[0].p[2];
+    const bz = tri[1].p[2];
+    const cz3 = tri[2].p[2];
+    const i0 = Math.floor((Math.min(ax, bx, cx3) - x0) / cell);
+    const i1 = Math.floor((Math.max(ax, bx, cx3) - x0) / cell);
+    const j0 = Math.floor((Math.min(az, bz, cz3) - z0) / cell);
+    const j1 = Math.floor((Math.max(az, bz, cz3) - z0) / cell);
     // A triangle with a position that is not finite has no cells. Without
     // this check an infinite range makes the cell loop run without end.
-    if (![i0, i1, j0, j1].every(Number.isFinite)) continue;
+    if (!(Number.isFinite(i0) && Number.isFinite(i1) && Number.isFinite(j0) && Number.isFinite(j1))) continue;
     for (let i = i0; i <= i1; i += 1) {
       for (let j = j0; j <= j1; j += 1) {
         const cx = x0 + i * cell;
         const cz = z0 + j * cell;
-        const u = (x) => (x - cx) / cell;
-        const v = (z) => (z - cz) / cell;
-        let cellPoly = clip(clip(clip(clip(tri, (x) => u(x)), (x) => 1 - u(x)), (x, z) => v(z)), (x, z) => 1 - v(z));
+        const cellPoly = clip(clip(clip(clip(tri, 0, cx, cz, cell), 1, cx, cz, cell), 2, cx, cz, cell), 3, cx, cz, cell);
         if (cellPoly.length < 3) continue;
-        for (const half of [(x, z) => 1 - u(x) - v(z), (x, z) => u(x) + v(z) - 1]) {
-          const poly = clip(cellPoly, half);
+        for (let side = 4; side <= 5; side += 1) {
+          const poly = clip(cellPoly, side, cx, cz, cell);
           if (poly.length < 3) continue;
           const moved = poly.map(({ p, a }) => ({ p: [p[0], p[1] + terrain.height(p[0], p[2]), p[2]], a }));
           for (let k = 1; k < moved.length - 1; k += 1) {
@@ -946,15 +1279,21 @@ export function drapeMesh(mesh, terrain) {
             const B = moved[k];
             const C = moved[k + 1];
             if (area3(A.p, B.p, C.p) < 1e-6) continue;
-            for (const V of [A, B, C]) out.indices.push(vertexIndex(V));
+            indices.push(vertexIndex(A), vertexIndex(B), vertexIndex(C));
           }
         }
-        cellPoly = null;
       }
     }
   }
-  const res = { positions: Float32Array.from(out.positions), indices: Uint32Array.from(out.indices) };
-  for (const [n] of names) res[n] = Float32Array.from(out[n]);
+  const res = { positions: Float32Array.from(positions), indices: Uint32Array.from(indices) };
+  const count = positions.length / 3;
+  let o = 0;
+  for (const [n, size] of names) {
+    const arr = new Float32Array(count * size);
+    for (let k = 0; k < count; k += 1) for (let m = 0; m < size; m += 1) arr[k * size + m] = attrs[k * attrSize + o + m];
+    res[n] = arr;
+    o += size;
+  }
   return res;
 }
 

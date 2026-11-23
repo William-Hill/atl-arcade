@@ -1,8 +1,11 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createRenderer, fitToWindow } from "../render/renderer.js";
-import { loadSkaterModel } from "../render/skater-model.js";
+import { fetchSkaterModel, loadSkaterModel } from "../render/skater-model.js";
 import { EYES, MOUTHS } from "../render/face-anim.js";
+import { pbrSkater } from "../render/toon.js";
+import { bodyFor, modelScale } from "../sim/skate/body.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 // Test page for a skater model: skater.html?skater=nia&view=front.
 // The model faces +x, as in the game. +z is the skater's right.
@@ -16,7 +19,9 @@ const VIEWS = {
 // Until the model loads: a 1.7 m skater centered at hip height.
 const TARGET = new THREE.Vector3(0, 0.85, 0);
 // The face close-up: ?view=face. The face center is about 1.44 m up.
-const FACE_TARGET = new THREE.Vector3(0, 1.44, 0);
+// The face of the 1.70 m GLB, before the dossier scale (body.js).
+const FACE_Y = 1.44;
+const FACE_TARGET = new THREE.Vector3(0, FACE_Y, 0);
 let radius = 0.95;
 let currentView = "three-quarter";
 // True once the user rotates or zooms: a resize then keeps their camera.
@@ -95,16 +100,17 @@ function setFace(eyes, mouth) {
   return { eyes: face.eyes, mouth: face.mouth };
 }
 
-// Draws one clip as a row of frames from the three-quarter view: a contact
-// sheet. The first frame is t = 0 and the last frame is the clip end.
-function sheet(name, cols = 6) {
+// Draws one clip as a row of frames from the three-quarter view (or another
+// VIEWS key): a contact sheet. The first frame is t = 0 and the last frame
+// is the clip end. `times` (s), when given, sets the frame times instead.
+function sheet(name, cols = 6, view = "three-quarter", times = null) {
   const clip = clips.find((c) => c.name === name);
   if (!clip) throw new Error(`Unknown clip: ${name}`);
   paused = true;
   mixer.stopAllAction();
   const action = mixer.clipAction(clip);
   action.reset().play();
-  const dir = VIEWS["three-quarter"];
+  const dir = VIEWS[view] ?? VIEWS["three-quarter"];
   camera.position.set(TARGET.x + dir[0] * 4.2, TARGET.y + 0.3, TARGET.z + dir[1] * 4.2);
   camera.lookAt(TARGET);
   const size = renderer.getSize(new THREE.Vector2());
@@ -117,7 +123,7 @@ function sheet(name, cols = 6) {
   renderer.setScissor(0, 0, size.x, size.y);
   renderer.clear();
   for (let i = 0; i < cols; i += 1) {
-    action.time = (clip.duration * i) / (cols - 1);
+    action.time = times ? times[i] : (clip.duration * i) / (cols - 1);
     mixer.update(0);
     renderer.setViewport(i * w, 0, w, size.y);
     renderer.setScissor(i * w, 0, w, size.y);
@@ -128,6 +134,37 @@ function sheet(name, cols = 6) {
   return { name, duration: clip.duration, tracks: clip.tracks.length };
 }
 
+// The lowest point of the skinned mesh (m, the ground is y = 0) at each time
+// (s) of one clip. On the ground clips, this is the lowest wheel: a value
+// below 0 goes through the ground, a value above 0 floats.
+let modelRoot = null;
+function lowest(name, times) {
+  const clip = clips.find((c) => c.name === name);
+  if (!clip) throw new Error(`Unknown clip: ${name}`);
+  mixer.stopAllAction();
+  const action = mixer.clipAction(clip);
+  action.reset().play();
+  const meshes = [];
+  modelRoot.traverse((o) => o.isSkinnedMesh && meshes.push(o));
+  const v = new THREE.Vector3();
+  return times.map((t) => {
+    action.time = t;
+    mixer.update(0);
+    modelRoot.updateMatrixWorld(true);
+    let min = Infinity;
+    for (const mesh of meshes) {
+      mesh.skeleton.update();
+      const pos = mesh.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i += 1) {
+        mesh.getVertexPosition(i, v);
+        v.applyMatrix4(mesh.matrixWorld);
+        if (v.y < min) min = v.y;
+      }
+    }
+    return min;
+  });
+}
+
 const state = {
   ready: false,
   error: null,
@@ -135,6 +172,7 @@ const state = {
   setView,
   setFace,
   sheet,
+  lowest,
   get clips() {
     return clips.map((c) => c.name);
   },
@@ -142,9 +180,21 @@ const state = {
 window.__skater = state;
 
 try {
-  const model = await loadSkaterModel(params.get("skater") ?? "nia");
+  // ?small=1 shows the phone GLB (skater-1024.glb).
+  const name = params.get("skater") ?? "nia";
+  const small = params.get("small") === "1";
+  const model = await loadSkaterModel(name, small ? fetchSkaterModel(name, null, { small }) : null);
+  // ?look=pbr: the materials of the game's pbr look, lit by a room
+  // environment map. Without it, the viewer shows the GLB materials.
+  if (params.get("look") === "pbr") {
+    scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+    pbrSkater(model);
+  }
   scene.add(model.root);
+  // The model stands at the dossier height: the face moves with the scale.
+  FACE_TARGET.y = FACE_Y * modelScale(bodyFor(name));
   clips = model.animations;
+  modelRoot = model.root;
   face = model.face;
   if (face && params.get("face")) {
     const [eyes, mouth] = params.get("face").split(",");

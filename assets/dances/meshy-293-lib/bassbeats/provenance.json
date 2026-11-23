@@ -1,0 +1,52 @@
+{
+  "asset": "Meshy animation library clip 'Bass Beats' (action_id 65) as test clip dance_bassbeats_meshy for Nia (#293)",
+  "status": "test only. Not used by the game. Not reviewed by skaters or dancers.",
+  "date": "2026-11-15",
+  "credits": "Preset animation from the Meshy animation library, applied with the Meshy API to a Meshy rig of the Nia mesh. Check the Meshy terms for the license of library animations before any release use.",
+  "steps": [
+    {
+      "tool": "Meshy API, POST https://api.meshy.ai/openapi/v1/rigging",
+      "task_id": "01a1e071-bcc2-750d-874a-05b1a9ee5df5",
+      "input": "The Nia mesh from assets/skaters/nia/skater-1024.glb, rest T-pose, no rig, no Draco, height_meters 1.7",
+      "credits_spent": 5,
+      "note": "One rig task is shared by the 6 library clips."
+    },
+    {
+      "tool": "Meshy API, POST https://api.meshy.ai/openapi/v1/animations",
+      "task_id": "01a1e072-2897-764d-93da-fefd65b47096",
+      "action_id": 65,
+      "library_name": "Bass Beats",
+      "library_category": "Dancing",
+      "result": "GLB with the rigged Nia mesh and the animation (Meshy rig: Hips, Spine02, Spine01, Spine, LeftUpLeg, LeftLeg = shin)",
+      "source_glb_sha256": "0cb013e5862d0ee5fcbfc7b6713ba25c7c2c209017febe2d2c29abb1fea3ee96",
+      "credits_spent": 3
+    },
+    {
+      "tool": "Blender 5.2.4 LTS, headless, scripts/blender/meshy_retarget.py",
+      "actions": [
+        "Picked the source window that loops best between 24 and 64 frames: start frame 103, 24 frames (150.0 BPM for 2 beats), seam cost 0.5185 m.",
+        "Mapped the source joints onto the Mixamo bones of the shipped assets/skaters/nia/skater.glb by the change of world rotation from the rest pose. The toe bone stays at rest (rigid skate boot).",
+        "Closed the loop seam and retimed the window to 48 frames at 30 fps (2 clip beats).",
+        "Leg IK holds the wheels on the ground. The hips go down by up to 0.049 m where the leg cannot reach the ground. Baked to plain bone keys."
+      ],
+      "outputs": {
+        "nia": {
+          "file": "assets/dances/meshy-293-lib/bassbeats/nia.glb",
+          "bytes": 39476,
+          "sha256": "63dad6dbd1ed605e6e4e1f5546c46a069a6975b82012048def02263c92c5615c",
+          "leg_ratio": 1.0167,
+          "baked_ankle_lift_m": [
+            -0.0,
+            0.0
+          ]
+        }
+      },
+      "source_copy": {
+        "file": "assets/dances/meshy-293-lib/bassbeats/source-rig.glb",
+        "sha256": "baafeccaa99eada0d44b77c29ea6f3858ee5c879aa16212edc67d0e1884791e6"
+      }
+    }
+  ],
+  "credits_spent_total": 3,
+  "evidence": "docs/characters/reviews/293-meshy-dances/"
+}

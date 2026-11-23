@@ -1,0 +1,70 @@
+{
+  "date": "2026-11-09T06:59:34.587Z",
+  "device": "Pixel 7",
+  "cpuThrottle": 1,
+  "gpu": "swiftshader",
+  "network": "1.6 Mbps / 1.5 Mbps / 150 ms",
+  "firstContentfulPaintMs": 436,
+  "loadScreen": true,
+  "firstGameFrameMs": 21671,
+  "skaterReadyMs": 74583,
+  "quality": "phone",
+  "marks": {
+    "level": 5693,
+    "meshes": 9209,
+    "view": 11838,
+    "scene": 12540,
+    "physics": 18914,
+    "world": 19611,
+    "first-frame": 20182
+  },
+  "longTasks": {
+    "count": 4,
+    "totalMs": 6644,
+    "maxMs": 3791,
+    "list": [
+      {
+        "start": 8748,
+        "ms": 3791
+      },
+      {
+        "start": 12583,
+        "ms": 104
+      },
+      {
+        "start": 18889,
+        "ms": 749
+      },
+      {
+        "start": 19662,
+        "ms": 2000
+      }
+    ]
+  },
+  "requests": 213,
+  "transferMB": 13.82,
+  "beforeFirstFrameMB": 4,
+  "top5": [
+    {
+      "file": "/assets/skater-1024-BCRCEH1M.glb",
+      "kB": 1764
+    },
+    {
+      "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+      "kB": 1149
+    },
+    {
+      "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+      "kB": 863
+    },
+    {
+      "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+      "kB": 760
+    },
+    {
+      "file": "/assets/jogger-BpMCrg1O.glb",
+      "kB": 598
+    }
+  ],
+  "loadAverage": "4.17 3.63 3.64"
+}

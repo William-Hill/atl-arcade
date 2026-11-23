@@ -1,0 +1,11 @@
+{
+  "asset": "assets/skate-features/*.glb: 18 procedural skateable features (rails, ledges, ramps, benches) for the pbr look, one node per LOD (<id>_lod0, <id>_lod1 when LOD0 is over 1500 triangles), all on one shared material and trim sheet (textures/skate_trim_*.jpg). features.json is the grind/collision manifest.",
+  "date": "2026-11-05",
+  "tool": "Blender 5.2.3 LTS, headless (blender -b -P), glTF 2.0 exporter with Draco (level 7, position 14 bit, normal 10 bit, uv 14 bit)",
+  "command": "blender -b -P scripts/blender/skate_features.py [-- <out dir>]",
+  "source": "scripts/blender/skate_features.py: every mesh, the trim sheet (color, normal, ORM), and the manifest are built from code (numpy value noise, scratch lines, sheet seams). No photos, scans, generated images, brands, or logos.",
+  "prompt": "None. The script is the full recipe.",
+  "credits": "No paid generation credits: Meshy and Tripo not used (session cap 0).",
+  "textures": "textures/skate_trim_color.jpg (1024x1024), textures/skate_trim_normal.jpg (1024x1024), textures/skate_trim_orm.jpg (512x512): horizontal strips (concrete, waxed concrete edge, granite, painted wood, ramp skin, galvanized, powder black, powder green, bare steel, soil, leaf), tiling in U. The strip table is in features.json.",
+  "license": "Original work for this repository."
+}

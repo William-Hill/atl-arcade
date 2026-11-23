@@ -1,0 +1,74 @@
+{
+ "outcome": "explored",
+ "summary": "The agent played 6 episodes on beltline-eastside, about 370 s of game time (longer than the 3 minutes asked, to get cars and the horizon in view). Jev made 144, 59, 74, 55, 69 and 53 decisions, choosing among 4\u20139 options: trail north or south, look back down the trail, stop and pan the horizon, jump, watch traffic, skate toward traffic, skate to the parked cars, and watch the street at the trail's south end.\n\n**Start check:** the tier was high (atl.quality = \"high\"). The GPU was the real machine GPU (\"ANGLE Metal Renderer: Apple M4 Max\"). The page ran at about 57 fps. **The far plane is 650 m, not 450 m:** fog runs from 260 to 650 m. 450 m is only where the far tree cards end (level.props.farTrees: near 200, far 450, 5455 trees). The governor never stepped the tier down (rung 0).\n\n**1. Far tree cards (#281): INCONCLUSIVE.**\n- The tree line along the trail looked continuous into the distance, looking ahead in both directions and looking back.\n- In a full pan from about 29 m height, there are wide treeless bands on bare grassy hills and behind buildings. By design there are also no trees between 450 and 650 m.\n- Screen-door stipple fades were seen on many tree crowns. No tree was seen to pop, flicker, float, face the wrong way or show a hard edge.\n- At 720p, the cards at 180\u2013200 m could not be told apart from the 3D trees in frames. So whether the cards fade or pop is not settled.\n- Some far crowns looked pale whitish-grey or beige.\n\n**2. Car LOD fade (#279): INCONCLUSIVE, the counters consistent with a fade.**\n- A car fade started at every logged crossing (about 23 \u2192 486 fades over the run), and car_hard_switches stayed 0.\n- Only one car crossed 70 m clearly in view (ep5 t=302.4, a pickup at street level). It changed from a flat slab-like shape to a boxy car over about 0.15 s (302.45\u2013302.60). The car was about 20 px wide, so no dither was visible. No car flickered.\n\n**Clipping:** the skater's legs went into a car's side panel (ep2), she overlapped tree trunks in frames (ep5), and she pressed against a building wall and window when stuck (ep5).\n\nNo errors were logged by the game in any episode.",
+ "evidence": [
+  "Start (ep1-6 start_info, probe before ep1): quality 'high', gpu 'ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max)', /Scene fog near 260 far 650 (camera far = GEO_FAR = 650 per quality.js high tier), farTrees {trees 5455, picked 1042, near 200, far 450}. Frames ~57/s, ticks ~58/s in a 5 s probe. governor_rung 0.",
+  "#281 ahead along the trail: ep1 game t 10.7-22.0 and ep5 t 264-294 show a continuous avenue of trees shrinking to the vanishing point, with no bare band. Stippled crowns at ep1 14.27, 18.10, 20.63 and ep5 269.53.",
+  "#281 look back (camera turned 177 deg, ep6 t 344.5-350): the rows run back to the far end of the view, and faceted trees run continuously along the ridge to the left horizon. Stipple (screen-door dither) at 345.17, 345.73, 346.42, 347.00, 349.98. No pop seen, but the camera was turning.",
+  "#281 from height: the skater stood at y 29.0 near (420,-170) in ep6; the highest point reached in the run was 31.4 at (454,-262) in ep1. A 360 deg pan (ep6 t 352-362) shows trees continuing toward the horizon over flat ground and along the road (360-362). Wide treeless bands on bare grassy hills (356.47, 357.45, 358.35) and buildings filling the view (352.00, 354.70). The far trees looked 3D low-poly; no floating, tilted or hard-edged card was seen. The camera stays within ~6.5-9.7 m of the skater, so this is not a raised viewpoint.",
+  "#281 colours: pale whitish-grey or beige crowns at ep5 274.95 (x 755-890, y 110-165), 310.00, 312.32 and 328.65 (pale silver-grey round shapes among far trees). It could not be told whether these are cards, a flowering species or the pbr haze. Earlier at ep1 22.00, a row of pale-green faceted crowns appeared to sit on a wall's top edge with no bases visible.",
+  "#279 counters: cars.fade.started 23 (ep1 start) -> 486 (ep6 end), dropped 0 throughout. Each logged 240 m crossing had a fade start in the same tick.",
+  "#279 frames: ep5 t 302.40, a pickup crosses 70 m in (67.6 m, 4.7 deg from centre, 0.3 m above the skater). Frames at 302.22-302.38 show a flat orange slab; 302.45-302.53 an ambiguous raised shape, maybe two overlapping; boxy yellow car from 302.60. About 20 px wide; no stipple visible; nothing vanished or flickered. The other 70 m crossings (ep3 167.03, 176.02; ep5 280.98) were cars on roads above or below the trail, hidden in frames by bridge decks.",
+  "#279 parked cars: no parked car crossed 70 m in view. The skater could not reach the parked cluster (226,216): it got stuck at (316,202)/(310,214) and at (217,145). Parked cars were seen crossing 240 m in view (ep3 181-195, ep4 246-261), where they are a few pixels wide.",
+  "Clipping: ep2 t 70.88-82.27, the skater (pinned at the north end near (454,-262)) has legs and lower body overlapping a green car's side panel. ep5 314.67, two trunks overlap her head and shoulder on screen (maybe the camera angle); 321.72-330.97, she presses against a building base or window while stuck (bonk flags at (217-231,145-150)). Bonks are logged at (347,-84) on the trail's east side every lap.",
+  "Direct changes: none in episodes; probes only read state (plus a 5 s W hold and right-stick tests before ep1). Game error log: no errors in episodes 1-6."
+ ],
+ "findings": [
+  "The request's 'high-tier far plane 450 m' does not match the build. The high tier's camera far plane and fog end are 650 m (fog 260-650); the far tree cards end at 450 m. By design no trees are drawn between 450 and 650 m.",
+  "Possible: the car LOD1 shape (beyond 70 m) reads as a flat, low slab. At ep5 t 302.4 the switch to LOD0 showed as a slab turning into a boxy car within about 0.15 s, with no visible dither at about 20 px wide. Worth a closer look: the shape change is noticeable even if it fades.",
+  "Pale whitish-grey or beige far crowns (ep5 274.95, 310.0, 312.3, 328.65). Their cause (card colour, species or haze) is unconfirmed.",
+  "Skater clipping: legs inside a car's side panel when pinned against a stopped car (ep2 70.9-82.3); overlaps with tree trunks in frames (ep5 314.67); pressed into a building wall or window base (ep5 321.7-331).",
+  "Cars at the north end of the trail near (454,-262) stopped against the skater and pinned it for over 60 s (ep1 33-ep2 end)."
+ ],
+ "visual": true,
+ "run": "20261114-135744",
+ "project": "atl-arcade",
+ "prompt": "Playtest the BeltLine Eastside level on the high quality tier, with the machine GPU, for about 3 minutes of play. Check two render changes that an earlier low-tier run could not see.\n1. Far tree cards (#281): past 200 m, trees show as flat camera-facing cards out to about 450 m (the high-tier far plane). Look down the long trail in both directions, and from the highest place you can reach. Report: does the tree line look complete to the horizon; do the cards fade in between 180 m and 200 m, or pop; does any card look wrong (wrong color, pale or whitish-grey, faces the wrong way, floats, flickers, shows a hard edge).\n2. Car LOD fade (#279): cars change to a simpler shape at 70 m and hide at 240 m, with a fade of about 0.3 s, not a hard pop. Skate along a street with parked cars and toward traffic, with the camera facing the cars, so cars cross 70 m in view. Report each pop or flicker, with the game time and a frame.\nAlso note if the skater clips into tree trunks, lamp posts, or walls.\nReport the facts you saw, with game times and frames. Mark each claim CONFIRMED, DENIED, or INCONCLUSIVE. Confirm the quality tier and the far plane at the start.",
+ "seconds": 919.1,
+ "episodes": 6,
+ "tool_seconds": 547.5,
+ "stopped": null,
+ "level_modified": [],
+ "research_modified": [],
+ "agent": "claude",
+ "model": "claude-opus-5-5",
+ "fast": false,
+ "cost_usd": 2.6019808,
+ "turns": 69,
+ "background_findings": 26,
+ "reading_usage": {
+  "claude-sonnet-5-5": {
+   "calls": 114,
+   "input": 248,
+   "output": 67261,
+   "cache_read": 4806554,
+   "cache_write": 569698
+  }
+ },
+ "episode_stats": [
+  {
+   "decisions": 144,
+   "play_seconds": 60.0
+  },
+  {
+   "decisions": 59,
+   "play_seconds": 60.2
+  },
+  {
+   "decisions": 74,
+   "play_seconds": 75.0
+  },
+  {
+   "decisions": 55,
+   "play_seconds": 55.1
+  },
+  {
+   "decisions": 69,
+   "play_seconds": 70.0
+  },
+  {
+   "decisions": 53,
+   "play_seconds": 50.2
+  }
+ ]
+}

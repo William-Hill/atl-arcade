@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-09T06:50:17.615Z",
+  "slide": {
+    "camera": {
+      "fovBoost": 0,
+      "fov": 60,
+      "shake": {
+        "t": 0,
+        "amp": 0,
+        "seq": 0,
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "sfx": {
+      "bonk": 0,
+      "land": 0,
+      "scrapeTicks": 57,
+      "played": 0,
+      "last": null,
+      "running": false,
+      "muted": true
+    },
+    "effects": {
+      "bonk": 0,
+      "land": 0,
+      "grind": 0,
+      "beat": 0,
+      "dust": 0,
+      "sparks": 57
+    }
+  },
+  "drop": {
+    "camera": {
+      "fovBoost": 0,
+      "fov": 60,
+      "shake": {
+        "t": 0,
+        "amp": 0,
+        "seq": 0,
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      }
+    },
+    "sfx": {
+      "bonk": 0,
+      "land": 1,
+      "scrapeTicks": 57,
+      "played": 0,
+      "last": {
+        "kind": "land",
+        "height": 2.844444444444445,
+        "gain": 0.55,
+        "freq": 70,
+        "length": 0.26,
+        "noise": 0.18
+      },
+      "running": false,
+      "muted": true
+    },
+    "effects": {
+      "bonk": 0,
+      "land": 1,
+      "grind": 0,
+      "beat": 0,
+      "dust": 1,
+      "sparks": 57
+    }
+  }
+}

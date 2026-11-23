@@ -1,0 +1,316 @@
+{
+  "nia": {
+    "width": 1320,
+    "height": 880,
+    "cols": [
+      "dance_bankhead fx",
+      "dance_bankhead off",
+      "dance_spin fx",
+      "dance_spin off",
+      "dance_swagsurf fx",
+      "dance_swagsurf off"
+    ],
+    "rows": [
+      2,
+      2.25,
+      2.5,
+      2.75
+    ],
+    "diff": [
+      {
+        "beats": 2,
+        "clip": "dance_bankhead",
+        "hipDropCm": 3,
+        "headDeg": 2.1,
+        "armDeg": 2.4,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2,
+        "clip": "dance_spin",
+        "hipDropCm": 3,
+        "headDeg": 13.5,
+        "armDeg": 14.8,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2,
+        "clip": "dance_swagsurf",
+        "hipDropCm": 3,
+        "headDeg": 17.2,
+        "armDeg": 18.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.25,
+        "clip": "dance_bankhead",
+        "hipDropCm": 0.75,
+        "headDeg": 2.1,
+        "armDeg": 2.4,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.25,
+        "clip": "dance_spin",
+        "hipDropCm": 0.75,
+        "headDeg": 13.5,
+        "armDeg": 14.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.25,
+        "clip": "dance_swagsurf",
+        "hipDropCm": 0.75,
+        "headDeg": 17.2,
+        "armDeg": 18.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.5,
+        "clip": "dance_bankhead",
+        "hipDropCm": 0,
+        "headDeg": 2.1,
+        "armDeg": 2.4,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.5,
+        "clip": "dance_spin",
+        "hipDropCm": 0,
+        "headDeg": 13.5,
+        "armDeg": 14.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.5,
+        "clip": "dance_swagsurf",
+        "hipDropCm": 0,
+        "headDeg": 16.5,
+        "armDeg": 18.2,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.75,
+        "clip": "dance_bankhead",
+        "hipDropCm": 0.75,
+        "headDeg": 2.1,
+        "armDeg": 2.4,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.75,
+        "clip": "dance_spin",
+        "hipDropCm": 0.75,
+        "headDeg": 13.5,
+        "armDeg": 14.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.75,
+        "clip": "dance_swagsurf",
+        "hipDropCm": 0.75,
+        "headDeg": 15.5,
+        "armDeg": 17,
+        "chestDeg": 0
+      }
+    ]
+  },
+  "marcus": {
+    "width": 1320,
+    "height": 880,
+    "cols": [
+      "dance_bankhead fx",
+      "dance_bankhead off",
+      "dance_spin fx",
+      "dance_spin off",
+      "dance_swagsurf fx",
+      "dance_swagsurf off"
+    ],
+    "rows": [
+      2,
+      2.25,
+      2.5,
+      2.75
+    ],
+    "diff": [
+      {
+        "beats": 2,
+        "clip": "dance_bankhead",
+        "hipDropCm": 3,
+        "headDeg": 2.1,
+        "armDeg": 2.4,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2,
+        "clip": "dance_spin",
+        "hipDropCm": 3,
+        "headDeg": 13.5,
+        "armDeg": 14.8,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2,
+        "clip": "dance_swagsurf",
+        "hipDropCm": 3,
+        "headDeg": 17.2,
+        "armDeg": 18.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.25,
+        "clip": "dance_bankhead",
+        "hipDropCm": 0.75,
+        "headDeg": 2.1,
+        "armDeg": 2.4,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.25,
+        "clip": "dance_spin",
+        "hipDropCm": 0.75,
+        "headDeg": 13.5,
+        "armDeg": 14.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.25,
+        "clip": "dance_swagsurf",
+        "hipDropCm": 0.75,
+        "headDeg": 17.2,
+        "armDeg": 18.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.5,
+        "clip": "dance_bankhead",
+        "hipDropCm": 0,
+        "headDeg": 2.1,
+        "armDeg": 2.4,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.5,
+        "clip": "dance_spin",
+        "hipDropCm": 0,
+        "headDeg": 13.5,
+        "armDeg": 14.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.5,
+        "clip": "dance_swagsurf",
+        "hipDropCm": 0,
+        "headDeg": 16.5,
+        "armDeg": 18.2,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.75,
+        "clip": "dance_bankhead",
+        "hipDropCm": 0.75,
+        "headDeg": 2.1,
+        "armDeg": 2.4,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.75,
+        "clip": "dance_spin",
+        "hipDropCm": 0.75,
+        "headDeg": 13.5,
+        "armDeg": 14.9,
+        "chestDeg": 0
+      },
+      {
+        "beats": 2.75,
+        "clip": "dance_swagsurf",
+        "hipDropCm": 0.75,
+        "headDeg": 15.8,
+        "armDeg": 17.3,
+        "chestDeg": 0
+      }
+    ]
+  },
+  "nia-carve": {
+    "width": 880,
+    "height": 880,
+    "cols": [
+      "carve_left fx",
+      "carve_left off",
+      "carve_right fx",
+      "carve_right off"
+    ],
+    "rows": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "diff": [
+      {
+        "beats": 1,
+        "clip": "carve_left",
+        "hipDropCm": 3,
+        "headDeg": 4.8,
+        "armDeg": 4.2,
+        "chestDeg": 11
+      },
+      {
+        "beats": 1,
+        "clip": "carve_right",
+        "hipDropCm": 3,
+        "headDeg": 4.8,
+        "armDeg": 4.2,
+        "chestDeg": 11
+      },
+      {
+        "beats": 2,
+        "clip": "carve_left",
+        "hipDropCm": 3,
+        "headDeg": 4.8,
+        "armDeg": 4.2,
+        "chestDeg": 11
+      },
+      {
+        "beats": 2,
+        "clip": "carve_right",
+        "hipDropCm": 3,
+        "headDeg": 4.8,
+        "armDeg": 4.2,
+        "chestDeg": 11
+      },
+      {
+        "beats": 3,
+        "clip": "carve_left",
+        "hipDropCm": 3,
+        "headDeg": 4.8,
+        "armDeg": 4.2,
+        "chestDeg": 11
+      },
+      {
+        "beats": 3,
+        "clip": "carve_right",
+        "hipDropCm": 3,
+        "headDeg": 4.8,
+        "armDeg": 4.2,
+        "chestDeg": 11
+      },
+      {
+        "beats": 4,
+        "clip": "carve_left",
+        "hipDropCm": 3,
+        "headDeg": 4.8,
+        "armDeg": 4.2,
+        "chestDeg": 11
+      },
+      {
+        "beats": 4,
+        "clip": "carve_right",
+        "hipDropCm": 3,
+        "headDeg": 4.8,
+        "armDeg": 4.2,
+        "chestDeg": 11
+      }
+    ]
+  }
+}

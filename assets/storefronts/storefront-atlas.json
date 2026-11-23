@@ -1,0 +1,356 @@
+{
+ "size": 1024,
+ "image": "storefront-atlas.jpg",
+ "regions": {
+  "board_taqueria": [
+   0,
+   0,
+   384,
+   96
+  ],
+  "blade_taqueria": [
+   768,
+   0,
+   128,
+   96
+  ],
+  "board_bbq": [
+   384,
+   0,
+   384,
+   96
+  ],
+  "blade_bbq": [
+   896,
+   0,
+   128,
+   96
+  ],
+  "board_pizza": [
+   0,
+   96,
+   384,
+   96
+  ],
+  "blade_pizza": [
+   768,
+   96,
+   128,
+   96
+  ],
+  "board_coffee": [
+   384,
+   96,
+   384,
+   96
+  ],
+  "blade_coffee": [
+   896,
+   96,
+   128,
+   96
+  ],
+  "board_brewery": [
+   0,
+   192,
+   384,
+   96
+  ],
+  "blade_brewery": [
+   768,
+   192,
+   128,
+   96
+  ],
+  "board_creamery": [
+   384,
+   192,
+   384,
+   96
+  ],
+  "blade_creamery": [
+   896,
+   192,
+   128,
+   96
+  ],
+  "board_books": [
+   0,
+   288,
+   384,
+   96
+  ],
+  "blade_books": [
+   768,
+   288,
+   128,
+   96
+  ],
+  "board_records": [
+   384,
+   288,
+   384,
+   96
+  ],
+  "blade_records": [
+   896,
+   288,
+   128,
+   96
+  ],
+  "board_skate": [
+   0,
+   384,
+   384,
+   96
+  ],
+  "blade_skate": [
+   768,
+   384,
+   128,
+   96
+  ],
+  "board_bakery": [
+   384,
+   384,
+   384,
+   96
+  ],
+  "blade_bakery": [
+   896,
+   384,
+   128,
+   96
+  ],
+  "neon_taqueria": [
+   0,
+   480,
+   256,
+   128
+  ],
+  "neon_bbq": [
+   256,
+   480,
+   256,
+   128
+  ],
+  "neon_pizza": [
+   512,
+   480,
+   256,
+   128
+  ],
+  "neon_coffee": [
+   768,
+   480,
+   256,
+   128
+  ],
+  "neon_brewery": [
+   0,
+   608,
+   256,
+   128
+  ],
+  "neon_creamery": [
+   256,
+   608,
+   256,
+   128
+  ],
+  "neon_records": [
+   512,
+   608,
+   256,
+   128
+  ],
+  "neon_open": [
+   768,
+   608,
+   256,
+   128
+  ],
+  "menu_taqueria": [
+   0,
+   736,
+   128,
+   208
+  ],
+  "menu_bbq": [
+   128,
+   736,
+   128,
+   208
+  ],
+  "menu_pizza": [
+   256,
+   736,
+   128,
+   208
+  ],
+  "menu_coffee": [
+   384,
+   736,
+   128,
+   208
+  ],
+  "menu_creamery": [
+   512,
+   736,
+   128,
+   208
+  ],
+  "menu_bakery": [
+   640,
+   736,
+   128,
+   208
+  ],
+  "sandwich_coffee": [
+   768,
+   736,
+   128,
+   144
+  ],
+  "sandwich_books": [
+   896,
+   736,
+   128,
+   144
+  ],
+  "sandwich_records": [
+   768,
+   880,
+   128,
+   144
+  ],
+  "sandwich_skate": [
+   896,
+   880,
+   128,
+   144
+  ]
+ },
+ "swatches": {
+  "white": {
+   "rect": [
+    0,
+    944,
+    64,
+    80
+   ],
+   "color": "#ffffff"
+  },
+  "warm": {
+   "rect": [
+    64,
+    944,
+    64,
+    80
+   ],
+   "color": "#ffd9a0"
+  },
+  "bulb": {
+   "rect": [
+    128,
+    944,
+    64,
+    80
+   ],
+   "color": "#ffc477"
+  },
+  "pink": {
+   "rect": [
+    192,
+    944,
+    64,
+    80
+   ],
+   "color": "#ff4fa3"
+  },
+  "orange": {
+   "rect": [
+    256,
+    944,
+    64,
+    80
+   ],
+   "color": "#ff7a1f"
+  },
+  "red": {
+   "rect": [
+    320,
+    944,
+    64,
+    80
+   ],
+   "color": "#ff3b30"
+  },
+  "teal": {
+   "rect": [
+    384,
+    944,
+    64,
+    80
+   ],
+   "color": "#3fe0d0"
+  },
+  "gold": {
+   "rect": [
+    448,
+    944,
+    64,
+    80
+   ],
+   "color": "#ffc23a"
+  },
+  "purple": {
+   "rect": [
+    512,
+    944,
+    64,
+    80
+   ],
+   "color": "#c56bff"
+  },
+  "blue": {
+   "rect": [
+    576,
+    944,
+    64,
+    80
+   ],
+   "color": "#3fb7ff"
+  },
+  "green": {
+   "rect": [
+    640,
+    944,
+    64,
+    80
+   ],
+   "color": "#6dff8a"
+  },
+  "cream": {
+   "rect": [
+    704,
+    944,
+    64,
+    80
+   ],
+   "color": "#fff1d6"
+  }
+ },
+ "businesses": [
+  "taqueria",
+  "bbq",
+  "pizza",
+  "coffee",
+  "brewery",
+  "creamery",
+  "books",
+  "records",
+  "skate",
+  "bakery"
+ ]
+}

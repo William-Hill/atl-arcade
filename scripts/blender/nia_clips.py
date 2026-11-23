@@ -21,6 +21,12 @@ CFG = globals().get("SKATER_CFG") or {}
 ARM = CFG.get("arm", "NiaRig")
 MESH = CFG.get("mesh", "Nia")
 LEFT, FWD, UP = (1, 0, 0), (0, -1, 0), (0, 0, 1)
+# CURL is a per-bone axis: the finger direction crossed with the palm normal
+# (down in the rest pose). A positive angle curls a finger toward the palm on
+# both hands, also for a splayed finger.
+CURL = "curl"
+# STANCE scales the absolute foot x of at() for a skater with wider hips.
+STANCE = CFG.get("stance", 1.0)
 
 
 def bone(name):
@@ -43,6 +49,8 @@ def rot(axis, deg):
 #   "hips": (dx, dy, dz) offset in metres, armature space
 #   "hipsRot": [(axis, deg), ...] armature-space rotations of the hips
 #   "L" / "R": {"pos": (dx, dy, dz), "rot": [(axis, deg), ...]} foot target offset
+#   "pole": the turn of both knee directions about the hips (degrees)
+#   "knees": the knee pole targets move out to the sides by this much (metres)
 #   any other key: a bone name -> [(axis, deg), ...] armature-space rotations
 def mirror_pose(pose):
     out = {}
@@ -57,6 +65,8 @@ def mirror_pose(pose):
             }
         elif key == "pole":
             out[key] = -value
+        elif key == "knees":
+            out[key] = value
         elif key == "hipsRot":
             out[key] = [mirror_rot(r) for r in value]
         else:
@@ -67,6 +77,8 @@ def mirror_pose(pose):
 def mirror_rot(r):
     # A mirror across the YZ plane maps a rotation axis (x, y, z) to (x, -y, -z).
     axis, deg = r
+    if axis == CURL:
+        return r
     return ((axis[0], -axis[1], -axis[2]), deg)
 
 
@@ -88,7 +100,7 @@ LX, RX, FY = CFG.get("feet", (0.242, -0.236, 0.03))
 def at(x, y=0.0, z=0.0, side="L", rot=None):
     # A foot target at an absolute x, y (armature space) instead of an offset.
     rest_x = LX if side == "L" else RX
-    out = {"pos": (x - rest_x, y - FY, z)}
+    out = {"pos": (x * STANCE - rest_x, y - FY, z)}
     if rot:
         out["rot"] = rot
     return out
@@ -110,20 +122,32 @@ def merge(*poses):
     return out
 
 
+# The base stance (#290). The skates are about shoulder width apart (0.33 m
+# between the ankles), so that the knees point over the toes and do not touch.
+# Before #290 the skates were 0.18 m apart, and the leg IK turned the knees in.
+STANCE_X = 0.165
+# The hips go down by this much in the base stance, for soft, bouncy knees.
+RIDE_Z = -0.14
+# The knee pole targets move out by this much, so the knees point over the
+# toes (the skates turn out a small amount).
+KNEES_OUT = 0.10
+
+
 def ride(side=0.0, down=0.0, lean=4.0):
-    # The ATL ride stance: upright chest, soft knees, skates under the hips.
+    # The ATL ride stance: upright chest, soft knees, skates at shoulder width.
     # side: +1 puts the weight on the left skate, -1 on the right skate.
     # down: the bounce depth in metres. The head nods with the bounce.
     # The arms swing against the legs, and the shoulders turn against the hips.
     return {
-        "hips": (0.05 * side, 0.02, -0.11 - down),
+        "hips": (0.05 * side, 0.02, RIDE_Z - down),
+        "knees": KNEES_OUT,
         "hipsRot": [rot(UP, 9 * side), rot(FWD, -4 * side)],
         "Spine": [rot(LEFT, lean), rot(FWD, -6 * side)],
         "Spine1": [rot(UP, -16 * side), rot(FWD, 3 * side)],
         "Neck": [rot(LEFT, -4)],
         "Head": [rot(LEFT, 140 * down), rot(UP, 8 * side), rot(FWD, 5 * side)],
-        "L": at(0.09 + 0.02 * side, -0.02, 0, "L", [rot(UP, 8)]),
-        "R": at(-0.09 + 0.02 * side, 0.06, 0, "R", [rot(UP, -8)]),
+        "L": at(STANCE_X + 0.02 * side, -0.02, 0, "L", [rot(UP, 8)]),
+        "R": at(-STANCE_X + 0.02 * side, 0.06, 0, "R", [rot(UP, -8)]),
         # A hanging arm swings about LEFT: a negative angle swings it forward.
         "LeftArm": [rot(FWD, -78), rot(LEFT, 32 * side)],
         "RightArm": [rot(FWD, 78), rot(LEFT, -32 * side)],
@@ -217,6 +241,7 @@ def _ryde(phase):
     if phase == "out":
         return merge(_relaxed_hands(), {
             "hips": (0.02, 0.0, -0.19),
+            "knees": KNEES_OUT,
             "hipsRot": [rot(UP, 6)],
             "Spine": [rot(LEFT, 26), rot(FWD, -3)],
             "Spine1": [rot(LEFT, 6), rot(UP, -10)],
@@ -233,6 +258,7 @@ def _ryde(phase):
         })
     return merge(FISTS, {
         "hips": (-0.01, 0.0, -0.12),
+        "knees": KNEES_OUT,
         "hipsRot": [rot(UP, -4)],
         "Spine": [rot(LEFT, 22), rot(FWD, 2)],
         "Spine1": [rot(LEFT, 8), rot(UP, 8)],
@@ -569,22 +595,22 @@ def bail():
 # The skates stay in a glide under the hips unless the spec moves them.
 
 def glide(down=0.0, side=0.0, lean=4.0):
-    # The base for a dance: the ride stance with the feet under the hips.
+    # The base for a dance: the ride stance with the skates side by side.
     return merge(ride(side, down, lean), {
-        "L": at(0.12, -0.01, 0, "L", [rot(UP, 6)]),
-        "R": at(-0.12, 0.03, 0, "R", [rot(UP, -6)]),
+        "L": at(STANCE_X, -0.01, 0, "L", [rot(UP, 6)]),
+        "R": at(-STANCE_X, 0.03, 0, "R", [rot(UP, -6)]),
     })
 
 
 def _fist(side, curl=85):
     # Closes the fingers of one hand. A finger curls toward the palm about
-    # the forward axis (the rest pose has the palms down).
+    # its own CURL axis (the rest pose has the palms down).
     out = {}
     sign = -1 if side == "Left" else 1
     for finger in ("Index", "Middle", "Ring", "Pinky"):
-        out[f"{side}Hand{finger}1"] = [rot(FWD, sign * curl * 0.8)]
-        out[f"{side}Hand{finger}2"] = [rot(FWD, sign * curl)]
-        out[f"{side}Hand{finger}3"] = [rot(FWD, sign * curl * 0.7)]
+        out[f"{side}Hand{finger}1"] = [rot(CURL, curl * 0.8)]
+        out[f"{side}Hand{finger}2"] = [rot(CURL, curl)]
+        out[f"{side}Hand{finger}3"] = [rot(CURL, curl * 0.7)]
     out[f"{side}HandThumb1"] = [rot(FWD, sign * 20)]
     out[f"{side}HandThumb2"] = [rot(UP, -sign * 30)]
     return out
@@ -593,43 +619,65 @@ def _fist(side, curl=85):
 FISTS = merge(_fist("Left"), _fist("Right"))
 
 
-def fists_up(cross):
-    # Bankhead Bounce arms: the forearms point up, the fists are at shoulder
-    # height. cross = 1: the forearms cross in front of the face. cross = 0:
-    # the forearms open to the sides.
-    fwd = -30 - 42 * cross
-    down = -64 + 14 * cross
+def fists_up(cross, lift=0.0):
+    # Bankhead Bounce arms, with closed fists. cross = 1: the forearms cross
+    # in an X in front of the face, the elbows low and in. cross = 0: a
+    # "goalpost": the upper arms go out to the sides at shoulder height and the
+    # forearms point up. Values between blend the two. lift raises the elbows
+    # more (for the follow-through after the arms open).
+    # The upper arm turns 90 degrees about its length, so the elbow bends up.
+    down = -12 - 46 * cross + 10 * lift
+    fwd = -8 - 70 * cross
+    bend = -92 - 40 * cross
     return merge(FISTS, {
         "LeftArm": [rot(LEFT, -90), rot(FWD, down), rot(UP, fwd)],
         "RightArm": [rot(LEFT, -90), rot(FWD, -down), rot(UP, -fwd)],
-        "LeftForeArm": [rot(UP, -124 - 6 * cross)],
-        "RightForeArm": [rot(UP, 124 + 6 * cross)],
+        "LeftForeArm": [rot(UP, bend)],
+        "RightForeArm": [rot(UP, -bend)],
         "LeftHand": [rot(FWD, -10)],
         "RightHand": [rot(FWD, 10)],
     })
 
 
 def shrug(up):
-    # Both shoulders go up (up = 1) or down (up = 0).
-    return {"LeftShoulder": [rot(FWD, 14 * up)], "RightShoulder": [rot(FWD, -14 * up)]}
+    # Both shoulders go up (up = 1) or down (up = 0). up < 0 pushes them down.
+    return {"LeftShoulder": [rot(FWD, 24 * up)], "RightShoulder": [rot(FWD, -24 * up)]}
+
+
+def _bankhead(cross, up, down, side, lift=0.0, nod=0.0):
+    # One key of the Bankhead Bounce. up: the shrug. down: the knee bounce in
+    # metres. side: the weight shift (+1 on the left skate). nod: the head
+    # nods down (1) or up (-1). The chest pops forward on the down bounce.
+    return merge(glide(down, side, lean=8 + 60 * down), fists_up(cross, lift), shrug(up), {
+        "Spine1": [rot(LEFT, 10 * nod - 4 * up), rot(UP, -10 * side)],
+        "Neck": [rot(LEFT, -4)],
+        "Head": [rot(LEFT, 14 * nod), rot(UP, 6 * side)],
+    })
 
 
 def dance_bankhead():
-    # Bankhead Bounce (Bankhead, west Atlanta, 1995). Two shoulder shrugs per
-    # beat, a knee bounce on each beat. Beat 1: the forearms cross in front of
-    # the face. Beat 2: the forearms open to the sides.
-    keys = []
-    for i in range(8):
-        f = i * 6
-        beat = f // BEAT
-        on = f % BEAT == 0
-        up = 1 if i % 2 == 1 else 0
-        cross = 1 if beat == 0 else 0
-        down = 0.06 if on else (0.02 if up else 0.04)
-        pose = merge(glide(down, 0, lean=6), fists_up(cross), shrug(up),
-                     {"Head": [rot(LEFT, 6 + 6 * (1 - up))], "Spine1": [rot(LEFT, 3 * (1 - up))]})
-        keys.append((f, pose))
-    return True, keys + [(48, keys[0][1])]
+    # Bankhead Bounce (Bankhead, west Atlanta, 1995). The shoulders shrug up
+    # on each "&" and drop on each beat, two shrugs per beat. The knees bounce
+    # down on each beat. Beat 1: the forearms cross in front of the face and
+    # the weight goes onto the left skate. Beat 2: the arms open to a goalpost
+    # and the weight goes onto the right skate.
+    # Anticipation: the arms start to move 6 frames before the beat (f18,
+    # f42). Follow-through: the elbows overshoot up 3 frames after the arms
+    # open (f27), and the fists close in more after the cross (f3).
+    B = _bankhead
+    return True, [
+        (0, B(1.0, -0.4, 0.09, 0.5, nod=1)),
+        (3, B(1.1, -0.2, 0.07, 0.5, nod=0.6)),
+        (6, B(1.0, 1.0, 0.0, 0.4, nod=-0.6)),
+        (12, B(1.0, -0.3, 0.06, 0.5, nod=0.8)),
+        (18, B(0.75, 1.0, 0.0, 0.1, nod=-0.6)),
+        (24, B(0.0, -0.4, 0.09, -0.5, nod=1)),
+        (27, B(-0.05, -0.2, 0.07, -0.5, lift=1.0, nod=0.6)),
+        (30, B(0.0, 1.0, 0.0, -0.4, lift=0.5, nod=-0.6)),
+        (36, B(0.0, -0.3, 0.06, -0.5, nod=0.8)),
+        (42, B(0.3, 1.0, 0.0, -0.1, nod=-0.6)),
+        (48, B(1.0, -0.4, 0.09, 0.5, nod=1)),
+    ]
 
 
 def _walk_it_out_right(down, push):
@@ -669,17 +717,84 @@ def dance_walkitout():
     ]
 
 
+# The arms open wide to the sides at chest height, before a clap.
+CLAP_WIDE = {
+    "LeftArm": [rot(LEFT, 30), rot(FWD, -30), rot(UP, 10)],
+    "RightArm": [rot(LEFT, 30), rot(FWD, 30), rot(UP, -10)],
+    "LeftForeArm": [rot(UP, -40)],
+    "RightForeArm": [rot(UP, 40)],
+    "LeftHand": [rot(LEFT, -30)],
+    "RightHand": [rot(LEFT, -30)],
+}
+
+# A high clap: the hands meet in front of the chest, the elbows out.
+CLAP_HIGH = {
+    "LeftArm": [rot(FWD, -32), rot(UP, -62)],
+    "RightArm": [rot(FWD, 32), rot(UP, 62)],
+    "LeftForeArm": [rot(UP, -98)],
+    "RightForeArm": [rot(UP, 98)],
+    "LeftHand": [rot(LEFT, -80)],
+    "RightHand": [rot(LEFT, -80)],
+}
+
+
+def _prep(phase):
+    # One key of The Prep. The left skate always crosses behind.
+    #   step (beat 1): the right skate steps short and forward, the knees bend,
+    #     the arms are low and open.
+    #   lift: the left skate lifts to go behind.
+    #   behind (&): the left toe stop touches behind and to the right of the
+    #     right heel. The hips turn a small amount to the right. The arms open
+    #     wide: the anticipation for the clap.
+    #   clap (beat 2): the hands clap in front of the chest, the hips dip 3 cm,
+    #     and the head nods.
+    #   bounce: the follow-through after the clap. The hands bounce up and
+    #     apart, and the knees come up.
+    #   out (&): the left skate uncrosses and steps forward.
+    step = {"L": at(STANCE_X, 0.08, 0, "L", [rot(UP, 8)]), "R": at(-0.13, -0.14, 0, "R", [rot(UP, -4)])}
+    behind = {"knees": 0.0, "L": at(-0.24, 0.16, 0.05, "L", [rot(UP, -14), rot(LEFT, 26)]), "R": at(-0.12, -0.10, 0, "R", [rot(UP, -6)])}
+    if phase == "step":
+        return merge(ride(-0.6, 0.07, lean=10), step, {"Head": [rot(LEFT, 4)]})
+    if phase == "lift":
+        return merge(ride(-0.8, 0.04, lean=8), step, {
+            "L": at(0.02, 0.18, 0.09, "L", [rot(UP, -6), rot(LEFT, 18)]), "knees": 0.04,
+        })
+    if phase == "behind":
+        return merge(ride(-0.7, 0.05, lean=6), CLAP_WIDE, behind, {
+            "hipsRot": [rot(UP, -12), rot(FWD, 4)],
+            "Spine1": [rot(UP, 10), rot(LEFT, -4)],
+            "Head": [rot(LEFT, -6), rot(UP, 6)],
+        })
+    if phase == "clap":
+        return merge(ride(-0.6, 0.10, lean=12), CLAP_HIGH, behind, {
+            "hipsRot": [rot(UP, -8)],
+            "Spine1": [rot(UP, 6), rot(LEFT, 6)],
+            "Head": [rot(LEFT, 16)],
+        })
+    if phase == "bounce":
+        return merge(ride(-0.5, 0.05, lean=8), CLAP_HIGH, behind, {
+            "LeftForeArm": [rot(UP, -80)], "RightForeArm": [rot(UP, 80)],
+            "LeftArm": [rot(FWD, -22), rot(UP, -48)],
+            "RightArm": [rot(FWD, 22), rot(UP, 48)],
+            "hipsRot": [rot(UP, -6)],
+            "Head": [rot(LEFT, 2)],
+        })
+    # out
+    return merge(ride(0.6, 0.03, lean=8), {
+        "L": at(0.15, -0.12, 0.03, "L", [rot(UP, 6)]), "R": at(-0.15, 0.04, 0, "R", [rot(UP, -6)]),
+    })
+
+
 def dance_prep():
     # The Prep (USA Roller Sports): a stutter step forward. The left skate
     # crosses behind the right skate, and a clap on each beat keeps it going.
-    keys = []
-    for beat in range(2):
-        f = beat * BEAT
-        base = merge(glide(0.02, 0), CLAP_UP)
-        behind = merge(ride(-0.6, 0.08), {"L": at(-0.10, 0.18, 0.02, "L", [rot(UP, -10)]), "R": at(-0.08, 0.0, side="R")}, CLAP_UP)
-        clap = merge(ride(-0.3, 0.1), {"L": at(-0.06, 0.14), "R": at(-0.08, 0.0, side="R")}, CLAP, {"Head": [rot(LEFT, 10)]})
-        keys += [(f, clap), (f + 8, behind), (f + 16, base)]
-    return True, keys + [(48, keys[0][1])]
+    # Spec: docs/characters/atl-dance-references.md, "The Prep". The clip is
+    # beats 1 and 2 of the spec; the game repeats it for beats 3 and 4.
+    P = _prep
+    return True, [
+        (0, P("step")), (6, P("lift")), (12, P("behind")), (20, P("behind")),
+        (24, P("clap")), (29, P("bounce")), (36, P("out")), (44, P("step")), (48, P("step")),
+    ]
 
 
 def _swag(phase):
@@ -771,39 +886,172 @@ def dance_snaplean():
     return True, [(0, L(False)), (8, L(True)), (18, rock), (24, R(False)), (32, R(True)), (42, rock), (48, L(False))]
 
 
+# The arms out to the sides at about 45 degrees, hands open, for balance.
+ARMS_WIDE = {
+    "LeftArm": [rot(FWD, -38), rot(UP, -12)],
+    "RightArm": [rot(FWD, 38), rot(UP, 12)],
+    "LeftForeArm": [rot(UP, -14)],
+    "RightForeArm": [rot(UP, 14)],
+    "LeftHand": [rot(FWD, 10)],
+    "RightHand": [rot(FWD, -10)],
+}
+
+
+def _criss(phase):
+    # One key of the Crisscross, with the left skate in front. The other
+    # side is the mirror. Spec: "Cross Step" in
+    # docs/characters/atl-dance-references.md.
+    #   cross (on the beat): the skates cross, the left skate in front and to
+    #     the right, the right skate behind and to the left. The knees bend,
+    #     the hips turn toward the front skate, and the hands clap.
+    #   rebound: the follow-through. The hands bounce apart and the knees
+    #     come up.
+    #   open: the skates slide out wide, the arms open to the sides, the chest
+    #     comes up.
+    #   load: the anticipation for the next cross. The knees dip and the arms
+    #     start to come in.
+    if phase in ("cross", "rebound"):
+        feet = {
+            "knees": 0.0,
+            "L": at(-0.08, -0.14, 0, "L", [rot(UP, -6)]),
+            "R": at(0.06, 0.13, 0, "R", [rot(UP, 10)]),
+        }
+        if phase == "cross":
+            return merge(ride(0.2, 0.10, lean=12), CLAP_HIGH, feet, {
+                "hipsRot": [rot(UP, -14)],
+                "Spine1": [rot(UP, 8), rot(LEFT, 6)],
+                "Head": [rot(LEFT, 12), rot(UP, -4)],
+            })
+        return merge(ride(0.2, 0.05, lean=8), CLAP_HIGH, feet, {
+            "LeftForeArm": [rot(UP, -70)], "RightForeArm": [rot(UP, 70)],
+            "LeftArm": [rot(FWD, -28), rot(UP, -40)],
+            "RightArm": [rot(FWD, 28), rot(UP, 40)],
+            "hipsRot": [rot(UP, -8)],
+            "Head": [rot(LEFT, 2)],
+        })
+    if phase == "open":
+        return merge(ride(0, 0.0, lean=2), ARMS_WIDE, {
+            "L": at(0.27, -0.02, 0, "L", [rot(UP, 14)]),
+            "R": at(-0.27, 0.02, 0, "R", [rot(UP, -14)]),
+            "Head": [rot(LEFT, -6)],
+        })
+    # load
+    return merge(ride(-0.1, 0.06, lean=8), CLAP_WIDE, {
+        "L": at(0.20, -0.06, 0, "L", [rot(UP, 4)]),
+        "R": at(-0.20, 0.06, 0, "R", [rot(UP, -4)]),
+        "Head": [rot(LEFT, 4)],
+    })
+
+
 def dance_crisscross():
-    # Crisscross: the skates cross on each beat, the left skate in front, then
-    # open again. The hands clap at the cross.
-    open_ = merge(ride(0, 0.02), {"L": at(0.2, 0.0), "R": at(-0.2, 0.0, side="R")}, CLAP_UP)
-    cross = merge(ride(0, 0.09), {"L": at(-0.07, -0.07, 0, "L", [rot(UP, -8)]), "R": at(0.07, 0.08, 0, "R", [rot(UP, 8)])}, CLAP)
-    return True, [(0, cross), (12, open_), (24, cross), (36, open_), (48, cross)]
+    # Crisscross: the skates cross on each beat and open between the beats.
+    # Beat 1: the left skate crosses in front. Beat 2: the right skate. The
+    # hands clap at each cross.
+    C = _criss
+    M = lambda p: mirror_pose(_criss(p))
+    return True, [
+        (0, C("cross")), (5, C("rebound")), (12, C("open")), (19, C("load")),
+        (24, M("cross")), (29, M("rebound")), (36, M("open")), (43, M("load")),
+        (48, C("cross")),
+    ]
 
 
-def dance_spin():
-    # Toe-stop spin (1 beat): the skates come together on the toe stops, the
-    # left arm goes up, the right arm wraps the chest. The renderer turns the body.
-    a = merge(ride(0, -0.02, lean=-2), {
+# The spins are 1 beat (24 frames). The renderer turns the body one full turn
+# to the left over the beat, at a constant rate (src/render/skater-view.js).
+# The clip gives the turn its body: the wind-up at the start, a tight middle,
+# and an open finish at the end.
+
+def _wind_up(down):
+    # The wind-up before a spin to the left: the knees bend, the shoulders
+    # turn to the right against the turn, the left arm crosses the chest, and
+    # the right arm reaches back. The head looks into the turn.
+    return merge(glide(down, -0.4, lean=10), {
+        "hipsRot": [rot(UP, -14)],
+        "Spine": [rot(LEFT, 10), rot(UP, -14)],
+        "Spine1": [rot(UP, -22)],
+        "Neck": [rot(UP, 16)],
+        "Head": [rot(UP, 20), rot(LEFT, 4)],
+        "LeftArm": [rot(FWD, -30), rot(UP, -78)],
+        "LeftForeArm": [rot(UP, -60)],
+        "RightArm": [rot(FWD, 30), rot(UP, -40)],
+        "RightForeArm": [rot(UP, 10)],
+    })
+
+
+def _finish(down):
+    # The finish after a spin: the skates are flat and apart, the knees take
+    # the stop, the arms open out and up, the chest lifts.
+    return merge(glide(down, 0.0, lean=0), {
+        "LeftArm": [rot(FWD, 34), rot(UP, -30)],
+        "RightArm": [rot(FWD, -34), rot(UP, 30)],
+        "LeftForeArm": [rot(UP, -10)],
+        "RightForeArm": [rot(UP, 10)],
+        "LeftHand": [rot(FWD, 14)],
+        "RightHand": [rot(FWD, -14)],
+        "Neck": [rot(LEFT, -6)],
+        "Head": [rot(LEFT, -8)],
+    })
+
+
+def _toe_spin(arm_up):
+    # The tight part of the toe-stop spin: the skates together on the toe
+    # stops, the left arm up, the right arm wraps the chest. arm_up = 1: the
+    # left arm is straight up; 0: it is still coming up.
+    return merge(ride(0, -0.03, lean=-2), {
+        "knees": 0.0,
         "L": at(0.07, 0.0, 0.05, "L", [rot(LEFT, 25)]), "R": at(-0.07, 0.0, 0.05, "R", [rot(LEFT, 25)]),
-        "LeftArm": [rot(FWD, 75), rot(UP, -10)], "LeftForeArm": [rot(UP, -20)],
+        "Spine1": [rot(UP, 8)],
+        "LeftArm": [rot(FWD, 40 + 45 * arm_up), rot(UP, -10)], "LeftForeArm": [rot(UP, -50 + 30 * arm_up)],
         "RightArm": [rot(FWD, 65), rot(UP, 80)], "RightForeArm": [rot(UP, 100)],
         "Head": [rot(LEFT, -12)],
     })
-    b = merge(a, {"LeftArm": [rot(FWD, 85), rot(UP, -5)], "hips": (0, 0.02, -0.06)})
-    return True, [(0, a), (12, b), (24, a)]
+
+
+def dance_spin():
+    # Toe-stop spin (1 beat). f0: the wind-up. f4: the skater rises onto the
+    # toe stops and pulls the arms in, so the turn speeds up. f8 to f15: the
+    # tight spin, the left arm straight up. f19: the skates come down and the
+    # arms open (the turn slows). f24: the finish, the knees take the stop.
+    return True, [
+        (0, _wind_up(0.08)),
+        (4, _toe_spin(0.0)),
+        (8, _toe_spin(1.0)),
+        (15, merge(_toe_spin(1.0), {"hips": (0, 0.02, RIDE_Z + 0.07)})),
+        (19, merge(_finish(0.03), {"LeftArm": [rot(FWD, 40), rot(UP, -10)], "RightArm": [rot(FWD, -20), rot(UP, 30)]})),
+        (24, _finish(0.07)),
+    ]
+
+
+def _sit(depth, reach):
+    # The sit part of the sit spin: low on the right skate, the left leg out
+    # in front. depth: 0 to 1 for the drop. reach: the arms reach forward
+    # (1) or are still swinging through (0).
+    return merge(ride(0, 0.36 * depth, lean=10 + 18 * depth), {
+        "knees": 0.0,
+        "hips": (0, 0.06 * depth, RIDE_Z - 0.33 * depth),
+        "R": at(-0.08, 0.06, 0, "R"),
+        "L": at(0.08, -0.12 - 0.36 * depth, 0.03 + 0.09 * depth, "L", [rot(LEFT, -15 * depth)]),
+        "LeftArm": [rot(FWD, -40 + 30 * reach), rot(UP, -30 - 40 * reach)],
+        "RightArm": [rot(FWD, 40 - 30 * reach), rot(UP, 10 + 60 * reach)],
+        "LeftForeArm": [rot(UP, -30 + 20 * reach)],
+        "RightForeArm": [rot(UP, 30 - 20 * reach)],
+        "Head": [rot(LEFT, -14 * depth)],
+    })
 
 
 def dance_sitspin():
-    # Sit spin (1 beat): the skater drops low on the right skate, the left leg
-    # goes out in front, the arms reach forward. The renderer turns the body.
-    a = merge(ride(0, 0.36, lean=26), {
-        "hips": (0, 0.06, -0.43),
-        "R": at(-0.08, 0.06, 0, "R"),
-        "L": at(0.08, -0.48, 0.12, "L", [rot(LEFT, -15)]),
-        "LeftArm": [rot(FWD, -10), rot(UP, -70)], "RightArm": [rot(FWD, 10), rot(UP, 70)],
-        "Head": [rot(LEFT, -14)],
-    })
-    b = merge(a, {"hips": (0, 0.06, -0.47)})
-    return True, [(0, a), (12, b), (24, a)]
+    # Sit spin (1 beat). f0: the wind-up. f5: the drop, the left leg starts
+    # to go out in front. f9 to f15: the sit, low on the right skate, the
+    # arms reach forward. f20: the rise, the left leg comes back. f24: the
+    # finish, standing with the arms open.
+    return True, [
+        (0, _wind_up(0.05)),
+        (5, _sit(0.55, 0.3)),
+        (9, _sit(1.0, 1.0)),
+        (15, merge(_sit(1.0, 1.0), {"hips": (0, 0.06, RIDE_Z - 0.37)})),
+        (20, merge(_sit(0.45, 0.4), {"LeftArm": [rot(FWD, -10), rot(UP, -40)], "RightArm": [rot(FWD, 10), rot(UP, 40)]})),
+        (24, _finish(0.04)),
+    ]
 
 
 CLIPS = {
@@ -829,8 +1077,55 @@ def local_quat(pb, rotations):
     r = rest_rot(pb)
     rinv = r.inverted()
     for axis, deg in rotations:
+        if axis == CURL:
+            axis = (pb.bone.tail_local - pb.bone.head_local).normalized().cross(Vector((0, 0, -1)))
         q = Quaternion(rinv @ Vector(axis), math.radians(deg)) @ q
     return q
+
+
+def knee_off_plane(arm, side, pole):
+    # The signed distance of the knee from the plane through the hip joint,
+    # the ankle, and the pole target (metres, positive to the skater's left).
+    full = "Left" if side == "L" else "Right"
+    bpy.context.view_layer.update()
+    m = arm.matrix_world
+    hip = m @ arm.pose.bones[bone(full + "UpLeg")].head
+    knee = m @ arm.pose.bones[bone(full + "Leg")].head
+    ankle = m @ arm.pose.bones[bone(full + "Foot")].head
+    normal = (ankle - hip).cross(pole.location - hip).normalized()
+    if normal.x < 0:
+        normal = -normal
+    return (knee - hip).dot(normal)
+
+
+def calibrate_pole(arm, side, ik, tgt, pole):
+    # Finds the IK pole angle that puts the knee in the plane through the hip,
+    # the ankle, and the pole target, so the knee points at the pole (#290).
+    # Each rig has its own bone roll, so a fixed angle does not work for all
+    # rigs: with the old angle 0, the knees of Nia turned in and the knees of
+    # Marcus turned out. The test pose lifts the ankle 0.15 m to bend the knee.
+    rest = tgt.matrix_world.copy()
+    tgt.location = tgt.location + Vector((0, 0, 0.15))
+
+    def err(angle):
+        ik.pole_angle = angle
+        return knee_off_plane(arm, side, pole)
+
+    a, b = math.radians(-60), math.radians(60)
+    fa, fb = err(a), err(b)
+    if fa * fb > 0:
+        raise RuntimeError(f"pole calibration: no sign change for {side} ({fa:.3f}, {fb:.3f})")
+    for _ in range(40):
+        mid = (a + b) / 2
+        fm = err(mid)
+        if fa * fm <= 0:
+            b, fb = mid, fm
+        else:
+            a, fa = mid, fm
+    ik.pole_angle = (a + b) / 2
+    tgt.matrix_world = rest
+    bpy.context.view_layer.update()
+    return ik.pole_angle
 
 
 def setup_ik(arm):
@@ -845,6 +1140,8 @@ def setup_ik(arm):
             if o.name not in bpy.context.scene.collection.objects:
                 bpy.context.scene.collection.objects.link(o)
         tgt.matrix_world = arm.matrix_world @ foot.bone.matrix_local
+        if CFG.get("continuous_foot_rotation"):
+            tgt.rotation_mode = "QUATERNION"
         pole.location = arm.matrix_world @ (knee.head_local + Vector((0, -0.6, 0)))
         leg = arm.pose.bones[bone(full + "Leg")]
         for c in list(leg.constraints):
@@ -854,10 +1151,11 @@ def setup_ik(arm):
         ik = leg.constraints.new("IK")
         ik.target = tgt
         ik.pole_target = pole
-        ik.pole_angle = 0.0  # measured: 0 points both knees forward (-Y)
         ik.chain_count = 2
         cr = foot.constraints.new("COPY_ROTATION")
         cr.target = tgt
+        angle = calibrate_pole(arm, side, ik, tgt, pole)
+        print(f"[clips] {side} pole angle {math.degrees(angle):.1f} deg")
         objs[side] = (tgt, pole, tgt.matrix_world.copy(), pole.location.copy())
     return objs
 
@@ -873,7 +1171,7 @@ def apply_pose(arm, ik, pose, frame):
     if "hipsRot" in pose:
         hips.rotation_quaternion = local_quat(hips, pose["hipsRot"])
     for key, value in pose.items():
-        if key in ("hips", "hipsRot", "L", "R", "pole"):
+        if key in ("hips", "hipsRot", "L", "R", "pole", "knees"):
             continue
         pb = arm.pose.bones[bone(key)]
         pb.rotation_quaternion = local_quat(pb, value)
@@ -882,16 +1180,23 @@ def apply_pose(arm, ik, pose, frame):
         # "pole" turns the knee direction about the hips with the body (degrees).
         pivot = hips.bone.head_local.copy()
         turn = Matrix.Rotation(math.radians(pose.get("pole", 0)), 3, "Z")
-        pole.location = pivot + turn @ (pole_rest - pivot) + Vector(pose.get("hips", (0, 0, 0)))
+        out = Vector((pose.get("knees", 0.0) * (1 if side == "L" else -1), 0, 0))
+        pole.location = pivot + turn @ (pole_rest + out - pivot) + Vector(pose.get("hips", (0, 0, 0)))
         pole.keyframe_insert("location", frame=frame)
         spec = pose.get(side, {"pos": (0, 0, 0)})
         rq = Quaternion()
         for axis, deg in spec.get("rot", []):
             rq = Quaternion(Vector(axis), math.radians(deg)) @ rq
         m = Matrix.Translation(rest.to_translation() + Vector(spec["pos"])) @ (rq.to_matrix().to_4x4() @ rest.to_3x3().to_4x4())
+        previous_rotation = tgt.rotation_quaternion.copy()
         tgt.matrix_world = m
+        if CFG.get("continuous_foot_rotation"):
+            tgt.rotation_quaternion.make_compatible(previous_rotation)
         tgt.keyframe_insert("location", frame=frame)
-        tgt.keyframe_insert("rotation_euler", frame=frame)
+        tgt.keyframe_insert(
+            "rotation_quaternion" if CFG.get("continuous_foot_rotation") else "rotation_euler",
+            frame=frame,
+        )
     for pb in arm.pose.bones:
         pb.keyframe_insert("rotation_quaternion", frame=frame)
         if pb.name == bone("Hips"):
@@ -998,7 +1303,7 @@ def prune_static_channels(eps=1e-4):
     removed = 0
     for action in bpy.data.actions:
         for bag in action_fcurves(action):
-            for fc in list(bag.fcurves):
+            for fc in list(getattr(bag, "fcurves", [])):
                 values = [k.co[1] for k in fc.keyframe_points]
                 prop = fc.data_path.rsplit(".", 1)[-1]
                 if prop == "rotation_quaternion":
@@ -1011,7 +1316,7 @@ def prune_static_channels(eps=1e-4):
                     bag.fcurves.remove(fc)
                     removed += 1
             # The bake writes one key per frame, so linear keys are exact.
-            for fc in bag.fcurves:
+            for fc in getattr(bag, "fcurves", []):
                 for k in fc.keyframe_points:
                     k.interpolation = "LINEAR"
     return removed

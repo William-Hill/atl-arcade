@@ -3,7 +3,8 @@
 // (src/sim/skate/goals.js); it does not compute anything.
 //
 // The panel keeps clear of the minimap and the safe areas (src/shell.css).
-// Enter or the replay button starts a new run.
+// Enter or the replay button starts a new run. The music select (#20) lists
+// `tracks` ({ id, title }) and calls `onTrack(id)` on a change.
 
 const MEDAL_NAMES = { gold: "Gold", silver: "Silver", bronze: "Bronze" };
 
@@ -17,7 +18,7 @@ function el(tag, className, parent, text) {
 
 const fmt = (n) => Math.round(n).toLocaleString("en-US");
 
-export function createResults(parent, { title = "", onReplay = () => {} } = {}) {
+export function createResults(parent, { title = "", onReplay = () => {}, tracks = [], trackId = null, onTrack = () => {} } = {}) {
   const root = el("div", "results", parent);
   root.id = "results";
   root.hidden = true;
@@ -45,6 +46,22 @@ export function createResults(parent, { title = "", onReplay = () => {} } = {}) 
   list.id = "results-goals";
   list.setAttribute("aria-label", "Goals");
 
+  let music = null;
+  if (tracks.length) {
+    const row = el("label", "results-music", card);
+    el("span", "results-music-label", row, "Music");
+    music = el("select", "results-music-select", row);
+    music.id = "results-track";
+    for (const t of tracks) {
+      const opt = el("option", "", music, t.title);
+      opt.value = t.id;
+    }
+    if (trackId && tracks.some((t) => t.id === trackId)) music.value = trackId;
+    music.addEventListener("change", () => onTrack(music.value));
+    // The game's keys must not change the track or start a run from the select.
+    music.addEventListener("keydown", (e) => e.stopPropagation());
+  }
+
   const replay = el("button", "results-replay", card, "Skate again");
   replay.id = "results-replay";
   replay.type = "button";
@@ -60,7 +77,7 @@ export function createResults(parent, { title = "", onReplay = () => {} } = {}) 
   });
   // Enter replays. The keys of the game (Space, R) keep their own meaning.
   window.addEventListener("keydown", (e) => {
-    if (shown && e.code === "Enter" && document.activeElement !== replay) {
+    if (shown && e.code === "Enter" && document.activeElement !== replay && document.activeElement !== music) {
       e.preventDefault();
       doReplay();
     }
@@ -100,6 +117,12 @@ export function createResults(parent, { title = "", onReplay = () => {} } = {}) 
     },
     get shown() {
       return shown;
+    },
+    get track() {
+      return music ? music.value : null;
+    },
+    setTrack(id) {
+      if (music) music.value = id;
     },
     root,
   };

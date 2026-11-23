@@ -12,7 +12,7 @@
 // are strips: a point is on a strip when it is within width / 2 of the
 // center line. A uniform grid keeps each query to a few candidates.
 
-import { BRIDGE, bridgeDeck, buildingSpan, parapetBlocked, terrainOf } from "./terrain.js";
+import { BRIDGE, bridgeDeck, buildingSpan, limitGrade, parapetBlocked, terrainOf } from "./terrain.js";
 import { bridgeLayout, parapetRuns } from "./bridges.js";
 import { streetJunctions } from "./junctions.js";
 import { medianStrips } from "./medians.js";
@@ -159,14 +159,17 @@ function contains(s, x, z) {
 export function createGeoGroundSampler(level, cell = GEO_CELL, { obstacles = [] } = {}) {
   const shapes = [...geoShapes(level), ...obstacles];
   const grid = new Map();
+  // Each grid entry keeps its shape box: a point outside the box skips the
+  // shape test (the ring test, the deck height) at once (#189).
   for (const s of shapes) {
     const box = shapeBox(s);
+    const entry = { s, ...box };
     for (let ix = Math.floor(box.minX / cell); ix <= Math.floor(box.maxX / cell); ix += 1) {
       for (let iz = Math.floor(box.minZ / cell); iz <= Math.floor(box.maxZ / cell); iz += 1) {
         const k = cellKey(ix, iz);
         let list = grid.get(k);
         if (!list) grid.set(k, (list = []));
-        list.push(s);
+        list.push(entry);
       }
     }
   }
@@ -179,30 +182,32 @@ export function createGeoGroundSampler(level, cell = GEO_CELL, { obstacles = [] 
     if (x < minX || x > maxX || z < minZ || z > maxZ) return null;
     const flat = terrain.flat;
     const t = flat ? 0 : terrain.height(x, z);
-    const n = flat ? UP : terrain.normal(x, z);
+    const n = flat ? UP : limitGrade(terrain.normal(x, z));
     let best = { height: groundTop + t, normal: n, id: "ground" };
     const list = grid.get(cellKey(Math.floor(x / cell), Math.floor(z / cell)));
     let ramp = null;
     if (list) {
-      for (const s of list) {
+      for (const e of list) {
+        const s = e.s;
         if (s.ramp) {
           // A curb ramp (curbs.js): it wins over the sidewalk it cuts.
           const r = ramp ? null : rampAt(s.ramp, x, z);
           if (r) ramp = { height: r.height + t, normal: r.normal, id: s.id, top: s.ramp.h0 + t };
           continue;
         }
-        let h;
-        let normal = n;
-        if (s.abs) {
-          h = s.top;
-          normal = UP;
-        } else if (s.deck) {
-          h = s.top + s.deck(x, z);
-          if (h > y + BRIDGE_HEADROOM) continue;
-          normal = deckNormal(s, x, z);
-        } else h = s.top + t;
+        if (x < e.minX || x > e.maxX || z < e.minZ || z > e.maxZ) continue;
+        if (s.deck) {
+          // The deck height walks the whole bridge line: test the segment
+          // first, and the normal only for a deck that wins.
+          if (!contains(s, x, z)) continue;
+          const h = s.top + s.deck(x, z);
+          if (h > y + BRIDGE_HEADROOM || h <= best.height) continue;
+          best = { height: h, normal: limitGrade(deckNormal(s, x, z)), id: s.id };
+          continue;
+        }
+        const h = s.abs ? s.top : s.top + t;
         if (h <= best.height) continue;
-        if (contains(s, x, z)) best = { height: h, normal, id: s.id };
+        if (contains(s, x, z)) best = { height: h, normal: s.abs ? UP : n, id: s.id };
       }
     }
     // Over a ramp, nothing higher than the sidewalk (a prop, a building)

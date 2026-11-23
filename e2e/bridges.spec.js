@@ -11,6 +11,11 @@ import { expect, test } from "@playwright/test";
 // terrain under the decks, skater rolls) are in src/level/geo/bridges.test.js.
 //
 // The views are fixed coordinates, so the same views work on an older build.
+//
+// The page pins the toon look and a clear afternoon. Since #182 the high tier
+// draws the pbr look, and a pbr frame on the software GPU takes 4 to 10 s,
+// so 17 views did not fit in the time limit. The look does not change the
+// deck joints. Without ?time= the game uses the clock of the computer.
 
 const SET = process.env.BRIDGE_SHOTS ?? "after";
 const DIR = `reports/bridges/${SET}`;
@@ -46,10 +51,12 @@ function collectErrors(page) {
 }
 
 test("high tier: a picture of each bridge end", async ({ page }) => {
-  test.setTimeout(180000);
+  // About 2 minutes on a quiet 14-CPU Mac with the toon look; the margin is
+  // for a loaded machine.
+  test.setTimeout(360000);
   mkdirSync(DIR, { recursive: true });
   const errors = collectErrors(page);
-  await page.goto("/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&minimap=0");
+  await page.goto("/?level=beltline-eastside&mute=1&quality=high&look=toon&time=14&weather=clear&governor=0&view=fixed&minimap=0");
   await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 90000 });
   expect(await page.evaluate(() => window.__atl.render.quality)).toBe("high");
 

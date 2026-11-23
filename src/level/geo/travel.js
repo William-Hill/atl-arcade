@@ -73,3 +73,12 @@ export function travelSpot(level, x, z, { kinds = TRAVEL.kinds, prefer = TRAVEL.
   if (!best) return null;
   return { x: best.x, z: best.z, yaw: best.yaw, strip: best.strip };
 }
+
+// Pure: the height to sample the ground at for a travel spot (geo-ground.js
+// sampleGround(x, z, y)). On a bridge strip, high enough to find the deck;
+// on any other strip, the terrain height, so a bridge overhead (more than
+// BRIDGE_HEADROOM up) is left out and the skater lands on the lower road.
+export function landingProbe(level, spot, ground) {
+  const strip = spot.strip ? (level.strips ?? []).find((s) => s.id === spot.strip) : null;
+  return strip?.bridge ? ground + 40 : ground;
+}

@@ -1,0 +1,91 @@
+{
+  "note": "Shots for the #300 key art. cam is the first fixed camera (eye x, eye height over the ground, eye z, target x, target height, target z; src/main.js). Each view then places the camera from the skater's real place and facing: dist (m), angle (deg; 0 = in front, looking back at the skater; + = to the skater's right), height and lookHeight (m over the skater position), shift (m; moves the skater right of center). hold = a key held for some frames before the views. final = the view that becomes the key art.",
+  "shots": [
+    {
+      "name": "trail-idle",
+      "cam": [
+        337.5,
+        0.9,
+        5.4,
+        337.07,
+        1.2,
+        -1.3
+      ],
+      "params": {
+        "rings": "0"
+      },
+      "views": [
+        {
+          "name": "r30",
+          "dist": 4.0,
+          "angle": 30,
+          "height": 0.6,
+          "lookHeight": 1.0,
+          "shift": 1.3
+        },
+        {
+          "name": "l30",
+          "dist": 4.0,
+          "angle": -30,
+          "height": 0.6,
+          "lookHeight": 1.0,
+          "shift": 1.3
+        },
+        {
+          "name": "r15-high",
+          "dist": 5.0,
+          "angle": 15,
+          "height": 1.6,
+          "lookHeight": 0.9,
+          "shift": 1.5
+        }
+      ]
+    },
+    {
+      "name": "trail-roll",
+      "cam": [
+        337.5,
+        0.9,
+        5.4,
+        337.07,
+        1.2,
+        -1.3
+      ],
+      "params": {
+        "rings": "0"
+      },
+      "hold": {
+        "key": "w",
+        "frames": 12,
+        "freeze": true
+      },
+      "views": [
+        {
+          "name": "r30",
+          "dist": 4.0,
+          "angle": 30,
+          "height": 0.6,
+          "lookHeight": 1.0,
+          "shift": 1.3
+        },
+        {
+          "name": "r45-low",
+          "dist": 3.6,
+          "angle": 45,
+          "height": 0.35,
+          "lookHeight": 1.1,
+          "shift": 1.2
+        },
+        {
+          "name": "r15-high",
+          "dist": 5.0,
+          "angle": 15,
+          "height": 1.6,
+          "lookHeight": 0.9,
+          "shift": 1.5
+        }
+      ],
+      "final": "r30"
+    }
+  ]
+}

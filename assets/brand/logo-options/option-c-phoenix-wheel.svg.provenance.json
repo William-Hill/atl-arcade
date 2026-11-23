@@ -1,0 +1,28 @@
+{
+  "file": "option-c-phoenix-wheel.svg",
+  "generated": "2026-11-20",
+  "issue": "William-Hill/atl-arcade#300",
+  "tool": {
+    "script": "scripts/brand/logo-options.mjs",
+    "method": "Hand-written SVG shapes. Letters are glyph outlines from an OFL font, converted to <path> data with opentype.js 2.0.0. The PNG files are Chromium renders via Playwright 1.63.0.",
+    "designGuidance": "op7418/logo-generator-skill @ bf4e9ac4d4428bda261afcfe981871ceb92d94e6 (design principles only; its Gemini showcase script was not run)."
+  },
+  "command": "node scripts/brand/logo-options.mjs --deps <folder with opentype.js@2.0.0 and the 3 @fontsource packages>",
+  "prompt": "none (no generative model)",
+  "credits": {
+    "meshy": 0,
+    "tripo": 0,
+    "imageGeneration": 0,
+    "total": 0
+  },
+  "originality": "Original work for ATL Arcade. It does not copy or imitate any existing game logo (Jet Set Radio included), team logo, or the official City of Atlanta seal. The phoenix in option C is a new drawing of a generic rising bird.",
+  "license": "Original work for ATL Arcade. Font outlines remain under the SIL OFL 1.1 (embedding in artwork is allowed).",
+  "bytes": 12473,
+  "sha256": "51ace40041590eb44b7ae889c3c024ca99a2f9dbf7a7cfc18013a73abb8ad896",
+  "font": {
+    "family": "Bowlby One",
+    "package": "@fontsource/bowlby-one@5.3.0",
+    "license": "SIL Open Font License 1.1",
+    "author": "Vernon Adams"
+  }
+}

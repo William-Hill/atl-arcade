@@ -1,0 +1,183 @@
+{
+  "_doc": "Second cleanup pass for scripts/blender/vehicle_lods.py: fictional badges and lettering left after vehicle_paint.json. Boxes are glTF meters (x right, y up, z forward); facing keeps faces whose normal points that way; sample (with optional sample_facing) is a box whose texels give the fill color (default: the median of the region).",
+  "taxi": [
+    {
+      "note": "chevron badge above the front grille",
+      "box": {
+        "x": [-0.18, 0.15],
+        "y": [0.795, 0.93],
+        "z": [0.5, 3]
+      },
+      "facing": "+z",
+      "sample": {
+        "x": [-0.35, 0.35],
+        "y": [0.95, 1.1],
+        "z": [0.5, 3]
+      }
+    },
+    {
+      "note": "small emblem on the rear bumper",
+      "box": {
+        "x": [0.38, 0.48],
+        "y": [0.25, 0.37],
+        "z": [-3, -0.5]
+      },
+      "sample": {
+        "x": [-0.3, 0.3],
+        "y": [0.3, 0.5],
+        "z": [-3, -0.5]
+      },
+      "sample_facing": "-z"
+    },
+    {
+      "note": "triangle mark on the trunk lid",
+      "box": {
+        "x": [-0.18, 0.26],
+        "y": [1.02, 1.2],
+        "z": [-3, -0.5]
+      },
+      "facing": "-z",
+      "sample": {
+        "x": [-0.3, 0.3],
+        "y": [1.25, 1.38],
+        "z": [-3, -0.5]
+      }
+    }
+  ],
+  "hatchback": [
+    {
+      "note": "chevron badge above the front grille",
+      "box": {
+        "x": [-0.2, 0.17],
+        "y": [0.715, 0.8],
+        "z": [0.5, 3]
+      },
+      "facing": "+z",
+      "sample": {
+        "x": [-0.35, 0.35],
+        "y": [0.82, 0.95],
+        "z": [0.5, 3]
+      }
+    }
+  ],
+  "pickup": [
+    {
+      "note": "emblem in the front grille",
+      "box": {
+        "x": [-0.09, 0.08],
+        "y": [1.0, 1.13],
+        "z": [0.5, 4]
+      },
+      "facing": "+z",
+      "sample": {
+        "x": [0.12, 0.4],
+        "y": [1.0, 1.12],
+        "z": [0.5, 4]
+      }
+    },
+    {
+      "note": "badge on the tailgate handle",
+      "box": {
+        "x": [-0.08, 0.18],
+        "y": [1.08, 1.18],
+        "z": [-4, -0.5]
+      },
+      "facing": "-z"
+    }
+  ],
+  "sedan": [
+    {
+      "note": "emblem in the front grille",
+      "box": {
+        "x": [-0.12, 0.06],
+        "y": [0.52, 0.66],
+        "z": [0.5, 3]
+      },
+      "facing": "+z",
+      "sample": {
+        "x": [0.15, 0.4],
+        "y": [0.52, 0.66],
+        "z": [0.5, 3]
+      }
+    },
+    {
+      "note": "round emblem on the trunk",
+      "box": {
+        "x": [-0.12, 0.12],
+        "y": [0.85, 1.0],
+        "z": [-3, -0.5]
+      },
+      "facing": "-z"
+    },
+    {
+      "note": "model lettering on the trunk",
+      "box": {
+        "x": [0.36, 0.58],
+        "y": [0.6, 0.7],
+        "z": [-3, -0.5]
+      },
+      "facing": "-z"
+    },
+    {
+      "note": "lettering on the rear bumper",
+      "box": {
+        "x": [0.46, 0.64],
+        "y": [0.33, 0.43],
+        "z": [-3, -0.5]
+      },
+      "facing": "-z"
+    }
+  ],
+  "bus": [
+    {
+      "note": "left sign under the windshield",
+      "box": {
+        "x": [-1.07, -0.83],
+        "y": [0.96, 1.18],
+        "z": [3, 8]
+      },
+      "facing": "+z",
+      "sample": {
+        "x": [-0.7, -0.3],
+        "y": [0.98, 1.15],
+        "z": [3, 8]
+      }
+    },
+    {
+      "note": "center sign under the windshield",
+      "box": {
+        "x": [-0.17, 0.19],
+        "y": [0.96, 1.18],
+        "z": [3, 8]
+      },
+      "facing": "+z",
+      "sample": {
+        "x": [-0.7, -0.3],
+        "y": [0.98, 1.15],
+        "z": [3, 8]
+      }
+    },
+    {
+      "note": "right sign under the windshield",
+      "box": {
+        "x": [0.83, 1.07],
+        "y": [0.96, 1.18],
+        "z": [3, 8]
+      },
+      "facing": "+z",
+      "sample": {
+        "x": [0.3, 0.7],
+        "y": [0.98, 1.15],
+        "z": [3, 8]
+      }
+    },
+    {
+      "note": "lettering on the roof box",
+      "box": {
+        "x": [-1.6, 1.6],
+        "y": [2.95, 3.45],
+        "z": [0.6, 2.5]
+      }
+    }
+  ]
+}

@@ -2788,3 +2788,32 @@ Review fixes (#332): the wrist lag used the left-handed order (side, fwd, up) of
 ## 2026-11-22: Marcus gets the loose-arm layer (#323)
 
 Owner feedback after the Nia arm pass: Marcus's arms look stiff too. He had no arm in the torso, so only the loose-arm layer applies. `ARM_LOOSE` has a `marcus` entry with Nia's settings. It runs after the #313 arm mirror, so his arms stay in opposition. Result: elbow range push 26.6 to 46.6 degrees, coast 9.7 to 23.9 degrees; no arm capsule over 1 cm in the torso; the balance, the drive, and the recoil of #313 stay; the joint-limit gate passes (with the `dance_drumline` WARN that was already on `main`). The hand angular jerk goes up (push 494 and 357 to 749 and 539; coast 148 and 147 to 332 and 324), because the hands now move more and the wrist trails the forearm (the clips are built with the wrist sign fix of the #332 review). A check in the game and the owner approval are still to do. Evidence: `docs/characters/arm-pass/README.md`.
+
+## 2026-11-22: Trick input with a direction plus a button (#324)
+
+Owner feedback: the tricks must feel like Tony Hawk's Pro Skater. The player chooses a trick with a direction plus a button. Before this, the game chose: Q/E started the next dance in a list, air grabs and grind stances cycled by themselves, and the manual had no input.
+
+Design: `docs/gdd/trick-input.md` (the `design-system` skill, with the `game-designer` and `systems-designer` agents; lean review mode). No gameplay code changed.
+
+Owner choices (all the recommended option):
+1. Up and down: a fresh direction. A direction counts only if it starts 150 ms before to 60 ms after the press, so a held W (push) or S (brake) gives the neutral trick.
+2. Manual: hold GRIND on the ground with no rail in snap range. A rail in range wins.
+3. Phone: a tap on a trick button gives the neutral trick; a flick from the button gives the direction. No new button (#245).
+4. Bail: the combo banks 25% of the pending points at multiplier 1.
+5. A grab held at the touchdown: a stumble (speed 0.7 times, the link pays half, the combo continues).
+6. Beat bonus for air: judged at the touchdown. A new PERFECT tier pays 1.75 times.
+7. Clips: 5 new per skater (2 grabs, 2 grind stances, 1 toe roll), 10 in total. The present clips are reused.
+8. One-button mode: TRICK picks from the context.
+
+Rejected: a modifier hold (it stops the push), push off W (the phone needs a new button), the THPS up-down tap for the manual (it collides with push and brake), a full loss of the combo on a bail (against Pillar 1).
+
+Design review (independent agent, lean depth): NEEDS REVISION, with 4 blockers (spins could not happen at `SKATE.airTurnRate` 3 rad/s, the manual cap against the link window, the one-button precedence, the phone flick timing). The revision of the same day fixes all 4 and 9 smaller findings; see "Review log" in the GDD. A second review did not run.
+
+Specialist pass on the trick input GDD (#324, the same day): `creative-director` (CD-GDD-ALIGN), `art-director`, and `qa-lead` each gave CONCERNS. The owner chose (the recommended option each time):
+- Add an ATL Rydin clip in the SPIN up slot. This changes choice 7 above: 6 new clips per skater, 12 in total.
+- Put Swag Surf in Marcus's neutral TRICK slot, in place of Jam Groove (no source).
+- Use the placeholder name "Side Grab" for the `air_liukang` grab now (trademark risk). The skater review picks the final name.
+
+Other fixes: "Crisscross" becomes "Cross Step" (its sourced name); the moves with no source say "rink move (no source yet)"; `manual_toe` rolls on the front wheels with the toe stops clear of the ground; the sim input gets `dir` and `dirAge`; the manual gets `manualFriction`; 62 acceptance criteria. See "Review log, pass 2" in `docs/gdd/trick-input.md`.
+
+Second design review of the trick input GDD (#324, the same day): NEEDS REVISION (3 blocking, 9 recommended, 5 nice-to-have). Pass 5 fixes all 17. The main rule changes: a GRIND held from a grind exit starts a manual at the touchdown (the THPS 2 link); a stumble is a grab still held at the touchdown, and `landingGrace` voids a late grab, so a larger value is more lenient; the input gives `dir`, `lastDir`, and `lastDirAt` from 4 new direction actions, and the newest key wins; ATL Rydin has 8 beats and 600 points. A third review did not run.

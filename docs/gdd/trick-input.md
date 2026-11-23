@@ -501,7 +501,7 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 - **GIVEN** a manual, **WHEN** F is let go, or JUMP is pressed, or the speed drops under 3 m/s, **THEN** the manual ends clean with no speed loss.
 - **GIVEN** a manual, **WHEN** a rail comes in snap range, **THEN** the manual ends clean and the grind snaps.
 - **GIVEN** F1 with m = 0.3, side = +1, s = 0.2, dt = 1/60, **THEN** m becomes 0.3043.
-- **GIVEN** a manual on a gamepad, **WHEN** the left stick y is held up at 0.64 with m = 0.9, **THEN** m goes down, and the X button does not push.
+- **GIVEN** a manual on a gamepad with drift side +1 and m = 0.9, **WHEN** the left stick is held up at a raw axis value of -0.70 (the browser gives up as negative; after the 0.15 deadzone of `mapGamepad()`, `balance` = (0.70 - 0.15) / 0.85 = 0.647), **THEN** m goes down (dm/dt = 0.4 + 0.9 - 2.2 * 0.647 = -0.12 per s), and the X button does not push.
 - **GIVEN** a manual, **WHEN** the skater hits a wall head-on and the speed drops under 3 m/s, **THEN** the manual ends clean and the link is added.
 - **GIVEN** GRIND pressed in the air with no rail, **WHEN** the skater lands and GRIND is still held, **THEN** no manual starts; **WHEN** GRIND is let go and pressed again for 0.2 s, **THEN** a manual starts.
 - **GIVEN** a manual with no balance input, **WHEN** |m| reaches 1 (about 1.25 s), **THEN** the state is rolling, the landing result is a stumble, and the speed is 0.7 times the speed of the step before.
@@ -531,7 +531,7 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 - **GIVEN** one-button mode on the ground with no rail, **WHEN** TRICK is tapped, **THEN** the next dance of the one-button set starts at the release; **WHEN** TRICK is held 0.5 s, **THEN** a manual starts and no dance.
 - **GIVEN** one-button mode in the air with no rail, **WHEN** TRICK is pressed in 3 airs and held at each touchdown, **THEN** the grabs are Mute Grab, Japan Grab, and Side Grab, and every landing is clean.
 - **GIVEN** one-button mode and Nia on the ground, **WHEN** TRICK is tapped 11 times, **THEN** the dances are the 10 slots of the Nia set in order, then Bankhead Bounce again.
-- **GIVEN** one-button mode, **WHEN** a scripted run of each goal in `src/sim/skate/goals.js` and each landmark challenge uses only the movement inputs (steer, `push`, `brake`, and JUMP) and TRICK, with no SPIN, GRIND, SWITCH, or direction input, **THEN** each goal completes.
+- **GIVEN** one-button mode, **WHEN** a scripted run of each goal in `src/sim/skate/goals.js` and each landmark challenge uses only the movement inputs (steer, `push`, `brake`, and JUMP) and TRICK, with no SPIN, GRIND, or SWITCH, **THEN** each goal completes. A key that is bound to a movement action and a direction action (the default W, S, A, and D) is permitted: in one-button mode the sim does not read `dir`, `lastDir`, or `lastDirAt` for a trick (Edge Cases), so the direction signal has no effect.
 - **GIVEN** one-button mode in the air with no rail, **WHEN** TRICK is pressed in 6 airs, **THEN** the 6th grab is the Mute Grab again (the set starts again after Tuck Knee).
 - **GIVEN** one-button mode, **WHEN** the next item of the set is a name already used 3 times in this combo, **THEN** its link pays 0 and adds no multiplier (the repeat decay still applies).
 - **GIVEN** grayscale screenshots of the HUD trick line, the manual balance bar, the flick ring, and the 4 landing tiers, **WHEN** a person reviews them, **THEN** each state reads from shape and text alone (R12.4).
@@ -631,3 +631,4 @@ A third review did not run.
 - R12.2: the remap rule blocked the default layout, because W, S, A, and D each hold a movement action and a direction action. Fix: 2 action groups; one key can hold one action of each group.
 - R12.1 and its criterion: TRICK and steer only cannot leave the spawn, because the speed starts at 0 and only `push` moves the skater. Fix: the mode and the criterion allow steer, push, brake, and JUMP.
 - Interactions and F1: the input contract had no analog balance, so a stick y of 0.64 could not reach the sim. Fix: a `balance` field from -1 to 1, with its keyboard, gamepad, and touch sources.
+- CodeRabbit on PR #349: the gamepad manual criterion now gives the raw stick value (0.70), the `balance` value after the deadzone (0.647), and the drift side (+1). The one-button goal criterion permits a key that also sends a direction, because one-button mode does not read the direction.

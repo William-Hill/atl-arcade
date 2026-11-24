@@ -2,7 +2,7 @@ import { expect, test, devices } from "@playwright/test";
 import { planRide } from "./landmark-rides.js";
 import { GUIDE, NEARBY_DONE, REACH, TOO_FAR } from "../src/landmarks/guide.js";
 import { OVERTIME_TEXT, ROUND_END, STOPPING_TEXT } from "../src/sim/skate/round-end.js";
-import { TOUR_BUTTON } from "../src/ui/results.js";
+import { TOUR_BUTTON } from "../src/ui/results-text.js";
 import { GRIND } from "../src/sim/skate/constants.js";
 
 // #260: the landmark loop with no timer (?run=tour), the reach warning, the

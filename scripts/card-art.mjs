@@ -40,8 +40,11 @@ const commit = execSync("git rev-parse HEAD", { cwd: root }).toString().trim();
 // The renders themselves do not count as a local change.
 const dirty = execSync(`git status --porcelain -- . ":(exclude)public/${CARD_ART.dir}"`, { cwd: root }).toString().trim() !== "";
 const commitText = dirty ? `${commit} (with local changes)` : commit;
-if (only && (old.commit !== commitText || old.query !== query || old.level !== levelName)) {
-  console.error(`--only needs the commit, the query and the level of the last full run (${old.commit ?? "none"}). Run without --only.`);
+// Two runs with local changes can have the same commit text and different
+// changes, so a partial run needs a clean tree and a clean last full run.
+const oldDirty = typeof old.commit !== "string" || old.commit.includes("local changes");
+if (only && (dirty || oldDirty || old.commit !== commitText || old.query !== query || old.level !== levelName)) {
+  console.error(`--only needs no local changes, and the commit, the query and the level of the last full run (${old.commit ?? "none"}). Run without --only.`);
   process.exit(2);
 }
 
@@ -66,6 +69,13 @@ await page.waitForFunction(
   null,
   { timeout: 300000 },
 );
+// A landmark that did not load would be missing from its card: stop.
+const failed = await page.evaluate(() => window.__atl.level.landmarks?.failed ?? 0);
+if (failed) {
+  console.error(`${failed} landmark load(s) failed; no card art was written.`);
+  await browser.close();
+  process.exit(1);
+}
 await page.evaluate(() => {
   window.__cardArt = true;
 });

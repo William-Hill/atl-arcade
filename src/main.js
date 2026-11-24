@@ -434,8 +434,11 @@ if (landmarkModels) {
 }
 // True when the roof models and the landmark GLBs are placed (or failed),
 // for scripts/card-art.mjs (#220).
+// `landmarksFailed` counts the loads that failed: the card art stops then.
 let landmarksLoaded = false;
-Promise.allSettled([landmarks?.ready, landmarkModels?.ready]).then(() => {
+let landmarksFailed = 0;
+Promise.allSettled([landmarks?.ready, landmarkModels?.ready]).then((all) => {
+  landmarksFailed = all.filter((r) => r.status === "rejected").length;
   landmarksLoaded = true;
 });
 
@@ -1637,7 +1640,7 @@ window.__atl = {
       return geo && levelView.facadeGlb ? { ...levelView.facadeGlb } : null;
     },
     get landmarks() {
-      return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null, loaded: landmarksLoaded } : null;
+      return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null, loaded: landmarksLoaded, failed: landmarksFailed } : null;
     },
     // The skatepark (#222): the pad, the placements and the model stats.
     get skatepark() {

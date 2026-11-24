@@ -2971,3 +2971,16 @@ Neither toggle goes into `src/` before the playtest verdict.
 **Decision (owner, 2026-11-23).** A PR runs the full Vitest suite and only the Playwright specs that it adds or touches. The full Playwright suite (about 290 tests) runs once on `main` after a group of merges, before an Autopilot playtest. Two full Playwright suites never run at the same time.
 
 **Why.** On 2026-11-23, 4 ship-it agents each started the full suite at the same time. The load average went to 100 and more, the runs did not finish in 2 hours, and most failures were timeouts from the load. The Playwright suite is the regression gate. The Autopilot playtest is an AI agent that plays the game and finds play problems that no test predicts. The two checks do not replace each other.
+
+## 2026-11-24: Coast to push fade is 0.15 s; the Autopilot can open the intro (#363, #364)
+
+**#363.** The coast -> push fade changes from 0.12 s to 0.15 s (`src/render/skater-anim.js`, `FADES`).
+
+- Cause. Marcus's push clip starts at a pose far from his coast pose. At push time 0, his left knee (`mixamorigLeftLeg`) is 0.56 to 0.68 rad from every coast pose. Nia's left knee is 0.11 to 0.13 rad from hers. The fade is a smoothstep: its largest weight step in one frame is 1.5 x (1/60) / fade. With a 0.12 s fade that step is 0.21, so the fade turns Marcus's knee 0.12 to 0.14 rad in one frame, and the push clip adds its own knee turn. The measured worst frame was 0.151 to 0.170 rad. Marcus's push clip by itself turns 0.148 rad per frame.
+- The coast plays in phase with the beat clock, so the turn depends on the time of the press. The contact sheets before `popCheck()` set that time, so `e2e/skater-blend.spec.js` failed on each run (0.1653 rad), while `popCheck()` alone passed (0.1518 rad).
+- The limit of the test (0.1601 rad) was not the cause. It comes from Marcus's idle clip (a right forearm turn of 0.1525 rad x 1.05). The pop is real: the fade turned the knee faster than the push clip does.
+- Other fixes that were tried: a later push start time (0.27 s to 1.13 s) makes the arms pop more (to 0.23 rad). A rebuild of Marcus's push clip needs Blender and an art review; this session has no Blender.
+- Result with 0.15 s, at all coast phases: Marcus 0.135 rad, Nia 0.101 rad (was 0.126 rad). Both are less than the push clip by itself. The push shows 30 ms later. The game sim (speed, push impulse) does not change.
+- `popCheck()` in `src/viewer/anim-lab.js` now runs its script at 8 phases of the coast loop, so the result does not depend on the earlier sheets.
+
+**#364.** `introPlan()` (`src/ui/intro.js`) reads `?intro=1` and `?intro=title` before `?autopilot=1`. `?autopilot=1` alone still starts in play. `?intro=0`, reduced motion, a non-geodata level, and a non-follow view still apply.

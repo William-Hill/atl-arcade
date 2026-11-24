@@ -45,15 +45,17 @@ export const INTRO = {
 // first visit plays the intro. Reduced motion never plays the flight: the
 // intro becomes the title screen with a still camera. A level that is not a
 // geodata level, or a camera view that is not "follow", goes to the game.
-// The autopilot (?autopilot=1) goes to the game, as with ?intro=0.
+// The autopilot (?autopilot=1) goes to the game, as with ?intro=0, but an
+// ?intro=1 or ?intro=title flag wins: then an Autopilot run can test the
+// intro and the title screen (#364).
 export function introPlan({ param = null, webdriver = false, seen = false, reducedMotion = false, geo = true, view = "follow", autopilot = false } = {}) {
   const p = (param ?? "").trim().toLowerCase();
   if (p === "0" || p === "off" || p === "false") return { start: "play", reason: "flag" };
-  if (autopilot) return { start: "play", reason: "autopilot" };
   if (!geo) return { start: "play", reason: "level" };
   if (view !== "follow") return { start: "play", reason: "view" };
   if (p === "title") return { start: "title", reason: "flag" };
   if (p === "1" || p === "on" || p === "true") return { start: reducedMotion ? "title" : "intro", reason: reducedMotion ? "reduced-motion" : "flag" };
+  if (autopilot) return { start: "play", reason: "autopilot" };
   if (webdriver) return { start: "play", reason: "webdriver" };
   if (seen) return { start: "title", reason: "return-visit" };
   if (reducedMotion) return { start: "title", reason: "reduced-motion" };

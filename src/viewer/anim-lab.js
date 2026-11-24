@@ -168,17 +168,19 @@ function blendRows() {
         return { text: fmtWeights(view.weights), weights: view.weights };
       },
     }));
+  // The push lasts 7 frames: past the middle of the 0.15 s coast -> push
+  // fade (skater-anim.js FADES).
   const cut = [0, 0.05, 0.1, 0.2, 0.35].map((t) => ({
-    label: `push 0.06 s, then coast +${t.toFixed(2)} s`,
+    label: `push 0.12 s, then coast +${t.toFixed(2)} s`,
     cam: front,
     setup() {
       run(120, () => stateAt(spot));
-      run(4, () => stateAt(spot, { pushing: true, speed: 4 }));
+      run(7, () => stateAt(spot, { pushing: true, speed: 4 }));
       run(Math.round(t / DT), () => stateAt(spot));
       return { text: fmtWeights(view.weights), weights: view.weights };
     },
   }));
-  return [fade("coast", "push", [0, 0.03, 0.06, 0.09, 0.12], side), fade("push", "coast", [0, 0.06, 0.12, 0.19, 0.25], side), cut];
+  return [fade("coast", "push", [0, 0.04, 0.075, 0.11, 0.15], side), fade("push", "coast", [0, 0.06, 0.12, 0.19, 0.25], side), cut];
 }
 
 // The lean sheet: a carve at 6 m/s at five yaw rates, from behind and from
@@ -223,8 +225,9 @@ function contactRows() {
 
 // A frame by frame pose jump check: the largest bone turn (rad) between
 // two frames. "steady" is each clip alone after its fade. "change" is the
-// 30 frames after each clip change, some in the middle of a fade. A pop is
-// a change frame with a larger turn than the clips have alone.
+// 30 frames after each clip change, some in the middle of a fade, at
+// several phases of the coast loop. A pop is a change frame with a larger
+// turn than the clips have alone.
 function popCheck() {
   view.setFootIk(false);
   const bones = view.model.skinnedMesh.skeleton.bones;
@@ -266,27 +269,37 @@ function popCheck() {
     [5, {}],
     [40, {}],
   ];
-  run(120, () => stateAt(spot));
-  turn();
+  // The coast plays in phase with the beat clock, so the coast pose at the
+  // first push depends on the time of the press (#363). The script runs
+  // after PHASES lead-ins of coast, which sample the coast loop.
+  const PHASES = 8;
+  const coastFrames = Math.round((view.model.animations.find((c) => c.name === "coast")?.duration ?? 1.6) / DT);
   let change = 0;
   let changeAt = null;
-  let frame = 0;
   const changes = [];
-  let last = view.clip;
-  for (const [n, extra] of script) {
-    for (let i = 0; i < n; i += 1) {
-      view.sync(stateAt(spot, extra), DT);
-      const t = turn();
-      frame += 1;
-      if (view.clip !== last) {
-        changes.push({ frame, from: last, to: view.clip });
-        last = view.clip;
-      }
-      if (changes.some((c) => frame - c.frame < 30) && t > change) {
-        change = t;
-        changeAt = { frame, bone: worstBone, clip: view.clip };
+  for (let k = 0; k < PHASES; k += 1) {
+    run(60, () => stateAt(spot, { speed: 0 }));
+    run(120 + Math.round((k * coastFrames) / PHASES), () => stateAt(spot));
+    turn();
+    let frame = 0;
+    const local = [];
+    let last = view.clip;
+    for (const [n, extra] of script) {
+      for (let i = 0; i < n; i += 1) {
+        view.sync(stateAt(spot, extra), DT);
+        const t = turn();
+        frame += 1;
+        if (view.clip !== last) {
+          local.push({ frame, from: last, to: view.clip });
+          last = view.clip;
+        }
+        if (local.some((c) => frame - c.frame < 30) && t > change) {
+          change = t;
+          changeAt = { phase: k, frame, bone: worstBone, clip: view.clip };
+        }
       }
     }
+    if (k === 0) changes.push(...local);
   }
   view.setFootIk(true);
   return { steady, change, changeAt, changes };

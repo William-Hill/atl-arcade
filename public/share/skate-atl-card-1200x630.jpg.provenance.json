@@ -1,0 +1,29 @@
+{
+  "file": "skate-atl-card-1200x630.jpg",
+  "generated": "2026-11-23",
+  "issue": "William-Hill/atl-arcade#303",
+  "role": "Open Graph and X (summary_large_image) card for the game link.",
+  "sizePx": [
+    1200,
+    630
+  ],
+  "method": "Scale of the key art to 1200 x 675, crop of 15 px at the top and 30 px at the bottom. JPEG quality 88.",
+  "tool": {
+    "script": "scripts/brand/share-assets.mjs",
+    "render": "Chromium via @playwright/test 1.63.0"
+  },
+  "sources": [
+    "assets/brand/key-art/skate-atl-key-art-1920x1080.png (sha256 b8ee7688e3ffbdd63a8b8e6b3dc585af78b4a57a91adf26591b8e6f69d74335f); see its provenance: an in-game capture, no image model."
+  ],
+  "command": "node scripts/brand/share-assets.mjs",
+  "prompt": "none (no generative model)",
+  "credits": {
+    "meshy": 0,
+    "tripo": 0,
+    "imageGeneration": 0,
+    "total": 0
+  },
+  "license": "Original work for ATL Arcade. Font outlines in the logo remain under the SIL OFL 1.1 (Anton).",
+  "bytes": 170321,
+  "sha256": "7471f362eb7c5e61aec41087db995c561149b0c8ae34c780a6a7fbf484cb185e"
+}

@@ -1,0 +1,517 @@
+# Pitch: Skate ATL, the official game of the City of Atlanta
+
+**Date:** 2026-11-01. Updated 2026-11-24 for release v0.9.0 (#258).
+**Status:** Draft for the owner. Nobody was contacted for this draft. Do not contact a City office until the owner approves.
+**Method:** Web research on 2026-11-01. Each fact has a source URL. A claim with the tag **UNVERIFIED** has no confirmed source. The 2026-11-24 update adds the state of the game on `main` (commit `b432849`) and the production URL.
+**Legal note:** This document is not legal advice. A lawyer must review section 7 before the pitch makes a legal claim.
+**First reader (owner decision, 2026-11-24):** the Mayor's Office of Technology and Innovation (OTI).
+
+Read with: `AGENTS.md`, `docs/games/2026-10-30-skate-atl-concept.md`, `docs/decisions.md`, and the two short documents for the meeting: `docs/pitch/one-pager.md` and `docs/pitch/demo-script.md`.
+
+---
+
+## 1. Summary
+
+Skate ATL is a free browser game. The player skates real Atlanta neighborhoods on roller skates, with Tony Hawk's Pro Skater movement and Jet Set Radio style. The game builds each block from open map data and city data. When the player skates near a real landmark, the game finds it, shows one short line about it, and gives a skate challenge. A player who lands the challenge claims the spot, and the full map shows the story card of the spot with a source for each fact. The skate stays first: no card stops the play. We ask the City to name Skate ATL its official game, through a City Council resolution and a partner agreement with the Mayor's Office of Technology and Innovation. For the tourism office, the game is a free way for visitors and young people to see Atlanta at its best before they arrive. For schools, the game maps to the Georgia Standards of Excellence for grade 8 Georgia Studies. A teacher can use it with no student accounts and no personal data.
+
+The game is live now at **https://skate-atl.vercel.app** (release v0.9.0). Section 1.1 tells what a person can play today.
+
+### 1.1 What a person can play today (v0.9.0, 2026-11-24)
+
+| Feature | What it does | Where it is recorded |
+|---|---|---|
+| The BeltLine Eastside level | About 1.9 km of the Eastside Trail, from Ponce City Market to Krog Street Market. The buildings, streets, sidewalks, curbs and trees come from OpenStreetMap and City of Atlanta data. | `levels/beltline-eastside/`, `docs/decisions.md` 2026-11-01 (M1-03) |
+| Intro and title screen | A 9 s camera flight along the real trail under the Skate ATL logo, then a title screen with the skater select (Nia or Marcus). | `docs/decisions.md` 2026-11-23 (#301) |
+| Skate moves | Push, carve, jump, grind on rails, ledges and curbs, ramp air, and Atlanta dance moves on the roll (for example Walk It Out, Swag Surf, The Prep). Combos and a style meter. A fall ends a combo, never the run. | `docs/review/content-checklist.md` 1.8, 4.5 |
+| Moves taught in the world | The first ride teaches push, steer, jump, dance and grind, one short prompt at a time, for the keyboard, a gamepad or touch. | `docs/decisions.md` 2026-11-21 (#76) |
+| 13 landmark spots and 2 edge markers | Each spot has a skate challenge (a gap, a grind, a ring line, or a combo). Found and Claimed banners, chimes, map icons, and a Guide tab. 65 facts, each with a source. | `levels/beltline-eastside/landmarks.json`, `docs/decisions.md` 2026-11-10 to 2026-11-12 (#216 to #219) |
+| Thomas Taylor Memorial Skatepark | The real public skatepark in Historic Fourth Ward Park, as a skate spot: a pyramid, a quarter pipe, a kicker, a bank, rails and a ledge. | `docs/decisions.md` 2026-11-10 (#222) |
+| Open data fact cards | 3 cards from the City of Atlanta GIS services, through the open-data-atl catalog: the neighborhoods on the trail, the acres of Freedom Park, and the nearest MARTA rail station. | `levels/beltline-eastside/facts.json`, `src/facts/` |
+| Tour mode | `?run=tour`: no timer, no score goal. A visitor rides the whole trail at their own speed. The HUD names the next spot and its direction. | `docs/decisions.md` 2026-11-23 (#260) |
+| Timed round | A 150 s score round with goals, medals and a results screen. | `docs/decisions.md` 2026-11-13 (#268) |
+| Calm traffic | Cars move on the main streets. They slow and stop for the skater. A moving car never knocks her down and never stops her. | `docs/decisions.md` 2026-11-23 (#261) |
+| Two looks | A painted "pbr" look on laptops and a lighter look on phones ("pbr lite"). | `docs/decisions.md` 2026-11-10 (#246) |
+| Phones | Touch controls (stick and buttons), a phone quality tier, and layouts for portrait and landscape. | `docs/decisions.md` 2026-11-14 (#277), 2026-11-23 (#347) |
+| Photo mode and share card | Photo mode with a tilt-shift blur saves a PNG. A social card and favicons for link previews. | `docs/decisions.md` 2026-11-03 (#90), 2026-11-23 (#303) |
+| Content review | An agent checked the content against the 5 political rules: 24 checks, 20 pass, 3 flagged, 1 open (the real skater review, for Version 1). | `docs/review/content-checklist.md` (#22) |
+
+Screenshots from the production URL: `docs/pitch/screenshots/` (section 11).
+
+**Not in v0.9.0:** the city passport, guided routes with arrows, quiet zones, teacher mode, the full accessible text page, and the levels outside the Eastside Trail. Sections 3 and 8 describe them as plans. No person outside the project has played the game yet. Real skaters have not reviewed the move set.
+
+---
+
+## 2. Audience and partners
+
+### 2.1 Audiences
+
+| Audience | What they get | Where they play |
+|---|---|---|
+| Visitors before a trip | A tour of the city that is also a game. Each stamp in the passport is a place to visit. | The open-data-atl site, on a phone or a laptop |
+| Atlanta youth | A game about their own neighborhoods and rink culture | Home, the youth esports labs, recreation centers |
+| Grade 8 teachers and students | A 20-minute route per standard, a fact passport, and a teacher guide | Class computers (Chromebooks), no login |
+| Families and the general public | A free game that shows Atlanta at its best | Any browser |
+
+### 2.2 What "official" can mean
+
+We found no US state or city with an "official video game" in law or by resolution. The state "official game" bills are for table games: Texas named "42" dominoes in 2011 ([HCR 84](https://legiscan.com/TX/bill/HCR84/2011)), and a Michigan bill names euchre ([HB 6308, 2026](https://www.michiganvotes.org/legislation/2026/house/bill-6308)). The negative result is not proof (UNVERIFIED as a full negative). Thus, Skate ATL can possibly be the first official city video game in the US. Use the soft wording in public text: "We found no other US city with an official video game" (owner decision, 2026-11-24). "Official" can come in four forms:
+
+1. **A City Council resolution or proclamation.** A councilmember or the Council President must sponsor it. The body is 150 words or fewer, with 5 "whereas" sections. The request is due 30 days before the date. Source: [Council proclamation request](https://citycouncil.atlantaga.gov/how-do-i/request-a-proclamation) and the [request form](https://citycouncil.atlantaga.gov/home/showpublisheddocument/254/637801215664630000). The page blocked the fetch tool, so these details come from a search snippet. Read the page before you quote it.
+2. **A ceremonial document from the Mayor.** The Mayor's Office of Communications issues letters and proclamations on a written request. Source: [Obtain ceremonial documents](https://www.atlantaga.gov/i-want-to/obtain-ceremonial-documents) (search snippet only).
+3. **A partner or license agreement with a city agency.** This form is the strongest. It can give the right to use the city name, the BeltLine marks, or MARTA marks (section 7).
+4. **A city contract** with the Office of Technology and Innovation or the Office of Cultural Affairs.
+
+**Recommendation:** Ask for form 3 with the Office of Technology and Innovation first. Then ask a councilmember to sponsor a resolution of support (form 1). A resolution alone gives a title but no rights to the marks.
+
+### 2.3 Partners
+
+| Partner | Role for Skate ATL | Evidence |
+|---|---|---|
+| Mayor's Office of Technology and Innovation (OTI) | Lead city sponsor. Playtest group. A game-design lesson in the labs. | OTI runs youth esports labs at the Thomasville Recreation Center and the MLK Jr. Recreation and Aquatics Center (opened January 2025, about $95,000). The labs teach game design. [OTI esports](https://atlantaga.gov/government/mayor-s-office/executive-offices/office-of-technology-and-innovation/esports-and-workforce), [GovTech](https://govtech.com/education/k-12/atlanta-invests-in-new-esports-lab-for-students) |
+| Atlanta City Council | The resolution of support | See 2.2. The committee for the resolution is UNVERIFIED. Ask the sponsor's office. [Council committees](https://citycouncil.atlantaga.gov/home/showpublisheddocument/14288/638464499128600000) |
+| Mayor's Office of Cultural Affairs (OCA) | Mural artists, music, an arts contract | OCA runs the Public Art Program, Contracts for Arts Services, and the ELEVATE mural program. [OCA](https://atlantaga.gov/government/mayor-s-office/executive-offices/office-of-cultural-affairs), [ArtsATL on ELEVATE](https://www.artsatl.org/?p=134415). A game as an eligible art form is UNVERIFIED. |
+| Discover Atlanta (Atlanta Convention and Visitors Bureau) | Promotion to visitors and to convention groups | The bureau is the official sales and marketing organization for Atlanta tourism (since 1913). [Google Arts and Culture](https://artsandculture.google.com/partner/discover-atlanta). It has a paid membership with listings in visitor guides. [Become a member](https://discoveratlanta.com/acvb/become-a-member/). No "official partner" program for games was found (UNVERIFIED). |
+| Atlanta Public Schools (APS) | A pilot class for grade 8 | APS has a COPPA notice for web tools. [APS COPPA](https://www.atlantapublicschools.us/about/departments/teaching-learning/instructional-technology/coppa). A study of learning results needs an APS research request. [APS research guidelines](https://www.atlantapublicschools.us/about/departments/office-of-strategy/prospective-research-partners/research-guidelines). No APS app-approval process was found (UNVERIFIED). |
+| Atlanta BeltLine Inc. (ABI) | The first level (the Eastside Trail). The license for the BeltLine name. | The BeltLine marks are registered. ABI licenses them through the Atlanta BeltLine Partnership. [BeltLine FAQ](https://beltline.org/?p=40034) |
+| MARTA | Stations as level starts. In-station ads. | Any use of the MARTA logo needs written approval. [MARTA film and photo policy](https://itsmarta.com/photography-and-film.aspx). MARTA signs sponsor deals, for example with Atlanta United in 2024. [MARTA board minutes](https://apm.itsmarta.com/uploadedFiles/More/Board_of_Directors/Approved%20minutes%20ER%2003282024.pdf) |
+| Atlanta History Center (AHC) | Fact review. Teacher resources. | AHC has educator resources aligned to the GSE, and the Kenan Research Center archive. [AHC for educators](https://www.atlantahistorycenter.com/learning-and-research/for-educators/), [AHC research](https://www.atlantahistorycenter.com/learning-and-research/) |
+| National Park Service, MLK Jr. National Historical Park | Review of the Sweet Auburn cards | The park lists partners, including Georgia State University for curriculum. [Park partners](https://www.nps.gov/malu/getinvolved/partners.htm), [Curriculum materials](https://www.nps.gov/malu/forteachers/curriculummaterials.htm) |
+| Real skaters (Cascade, the wider rink community) | Move-set review, already a project rule | `AGENTS.md`, issue M2-05 |
+
+### 2.4 Precedents
+
+| Who | What they did | Source |
+|---|---|---|
+| Benidorm city council and tourism foundation, Spain | "Benidorm Fun Town Tycoon" on Roblox (May 2026) | [Olive Press](https://www.theolivepress.es/spain-news/2026/05/08/benidorm-is-europes-first-city-to-launch-game-on-video-platform-used-daily-by-150-million-players/) |
+| Singapore Tourism Board | Paid for "Singapore Wanderland" on Roblox (2023), built over five months | [Travel Trade Journal](https://traveltradejournal.com/stb-launches-one-of-a-kind-interactive-game-singapore-wanderland-on-roblox/) |
+| Wesgro, Western Cape tourism agency, South Africa | Two Roblox games (2022, 2023). They used 3D scans, local guides, and cultural experts. Fuel-station sponsors gave out booklets. | [Wesgro](https://wesgro.co.za/corporate/news/2022/wesgro-launches-eco-themed-game-and-builds-the-western-cape-in-the-metaverse-enabling-the-youth-market-to-learn-about-cape-towns-biodiversity-and-encourage-their-friends-to-join-me-in-cape-town-the-western-cape), [Travel News](https://www.travelnews.co.za/article/roblox-adds-youth-appeal-karoo) |
+| City of Helsinki | An official Minecraft model of the city from open data (2020 to 2021). The code is open source. | [Helsinki Region Infoshare](https://hri.fi/en_gb/a-new-minecraft-city-model-introduces-helsinki-in-more-detail/) |
+| Danish Geodata Agency | All of Denmark at 1:1 in Minecraft for schools (2014). Players damaged it soon after launch. | [Engadget](https://www.engadget.com/2014/04/26/denmark-mapped-in-minecraft/), [The Register](https://www.theregister.co.uk/2014/05/01/denmark_dynamited_by_cunning_american_minecraft_vandals) |
+| Mission US (WNET) | Free browser history games for schools. CPB and NEH paid for them. | [Mission US](https://www.mission-us.org/about/), [NEH](https://www.neh.gov/divisions/public/featured-project/more-prizes-mission-us) |
+| National Park Service | A free Junior Ranger app at Independence NHP | [NPS](https://home.nps.gov/inde/learn/kidsyouth/digitaljuniorranger.htm) |
+| New York City | "Battle of the Boroughs", a Minecraft Education contest run by the mayor's office with public schools | [NYC MOME](https://www.nyc.gov/site/mome/news/04242025-nyc-video-game-festival.page) |
+
+Lessons from the precedents:
+
+- Tourism boards pay for games, but on platforms that they do not own (Roblox). Skate ATL runs on a city-friendly site that the city can link to and keep.
+- Wesgro used local experts. Skate ATL uses historians and real skaters.
+- Denmark shows a risk: open building tools get damaged. Skate ATL has no building tools and no chat.
+- Mission US shows that hard history in a school game draws complaints. Skate ATL keeps the cards positive or neutral and leaves the hard history to the teacher guide (section 3.6).
+
+---
+
+## 3. Educational design
+
+The design follows pillar 3 of the concept: "The city teaches, the game never lectures." Each feature has a design test. Sections 3.1 and 3.2 are in the game now (v0.9.0). Sections 3.3 to 3.7 are plans.
+
+### 3.1 Discoveries (in the game)
+
+- Each landmark has a find zone in the level data, at its real position (`levels/beltline-eastside/landmarks.json`).
+- When the skater enters the zone, a chime plays on the beat and a "Found" banner shows the name and one short line. Play does not stop.
+- Each spot has a skate challenge: a gap, a grind, a ring line, or a combo, in 3 tiers (easy, typical, hard). A ring on the ground marks it. When the skater lands it, a "Spot claimed" banner shows and the spot pays points. This rewards skate skill, not reading.
+- The minimap, the full map (key M) and its Guide tab (key G) show each spot as Unknown, Found or Claimed.
+- Design test: if a discovery slows the skater, move the text to the full map or the results screen.
+
+### 3.2 Fact cards and story cards (in the game)
+
+Now in v0.9.0:
+
+- **Open data fact cards.** 3 cards on the Eastside level. The game asks the open-data-atl API for the data; if the call fails, it uses a recorded copy. Each card names its source: the City of Atlanta Department of City Planning GIS. The client blocks the crime, crash and traffic count datasets, and drops text with crime, police, crash or decline words (`src/facts/client.js`).
+- **Story cards.** Each landmark spot has 3 to 5 facts. Each fact has a source name and URL (National Register of Historic Places, Atlanta BeltLine Inc., the park conservancies, the Carter Library). The full map shows them when the player opens the icon of a spot. A validator blocks a fact with no source and a list of banned words (`npm run validate:landmarks`).
+
+The plan for the cards:
+
+- One line, 20 words or fewer, positive or neutral, with a source link.
+- The source comes from the open-data-atl API or from a named source in the card data.
+- Each card holds: `id`, `landmark`, `text`, `year`, `sourceUrl`, `reviewer`, `reviewedOn`, `gseCodes`.
+- The results screen lists the cards from the run. A "read more" link opens the source.
+- Each card has a "report an error" link.
+
+### 3.3 The city passport
+
+- The passport has one page per neighborhood and one stamp per landmark.
+- A full page unlocks a cosmetic item: a skate color, a jacket patch with neighborhood art, or a rink song.
+- The passport saves in the browser only (local storage). No account is needed.
+- A "share" button makes an image of the passport page. It holds no name and no location.
+- For visitors, each stamp links to the official visitor page of the place.
+
+### 3.4 Guided routes
+
+- Each neighborhood has one guided route: a line of arrows on the ground through 4 to 6 landmarks.
+- The route is also a timed skate challenge, with combo goals on the way.
+- A free skate mode stays open. The route is a choice, not a rule.
+- Example route on the BeltLine Eastside block: Ponce City Market, Historic Fourth Ward Park and its skatepark (Thomas Taylor Memorial Skatepark), the Eastside Trail, and Krog Street Market. Tour mode (v0.9.0) is the first step: it has no timer, and the HUD names the next spot and its direction.
+
+### 3.5 Quiet zones
+
+- At sacred sites and burial grounds, the game turns off the score, the trick sounds, and the music. The card shows. The skater rolls slowly.
+- Quiet zones: the MLK Jr. Birth Home, Historic Ebenezer Baptist Church, and Oakland Cemetery.
+- Design test: if a player can score a trick on a grave or a church step, remove the rail.
+
+### 3.6 Teacher mode
+
+Teacher mode is a URL parameter and a printed guide. It is not an account.
+
+- The teacher opens a link such as `/skate?route=sweet-auburn&class=1`.
+- The link loads one route, a 20-minute timer, and a list of the cards on that route.
+- At the end, the student sees a "passport code": a short text code that lists the stamps. The code holds no name. The student writes it on a worksheet.
+- The teacher guide is a PDF. It holds the GSE codes, three discussion questions per route, and the hard history that the cards do not show.
+- No login, no student data, no chat, no ads. Section 7.4 tells why.
+
+### 3.7 Accessibility
+
+- A full text version of every route and every card, on one HTML page. This page is the accessible equivalent of the 3D content.
+- Keyboard-only play. Gamepad play. Touch play on phones. Rebindable keys (already in `src/input/bindings.js`). A reduced motion setting (already in the game: the intro flight does not play and the title camera does not turn).
+- Options: reduced motion, a slower game speed, high-contrast cards, a larger card text, and a "cards stay on screen" mode.
+- Captions for every sound that has meaning (the stamp sound, the route arrow sound).
+- Card text at a reading level that grade 8 students can read.
+- WCAG 2.1 AA for every menu, card, and text page. Section 7.5 tells why.
+
+### 3.8 Map to the Georgia Standards of Excellence
+
+The current document is "Social Studies Georgia Standards of Excellence, Kindergarten to Grade 12", approved June 9, 2016, updated July 1, 2026. Source: [GaDOE GSE Social Studies PDF](https://lor2.gadoe.org/gadoe/file/c0c0ad9a-d88e-4864-b49b-1302099da16a/1/Social-Studies-K-12-Georgia-Standards.pdf). The old site georgiastandards.org is closed ([GaDOE sunset page](https://gadoe.org/georgiastandards-sunset/)). A new full revision is UNVERIFIED. Ask the GaDOE Social Studies office before the pitch.
+
+| Code | Standard (short) | Game link |
+|---|---|---|
+| SS8H11 | Georgia in the modern civil rights movement; b. Martin Luther King Jr., John Lewis, SNCC, SCLC | Sweet Auburn route, the National Center for Civil and Human Rights. [NGE SS8H11](https://www.georgiaencyclopedia.org/standards/ss8h11/) |
+| SS8H12 | Georgia since the late 20th century; a. mayors Maynard Jackson and Andrew Young; c. the 1996 Olympics; d. tourism and film | Centennial Olympic Park, the tourism theme of the whole game. [NGE SS8H12](https://www.georgiaencyclopedia.org/standards/ss8h12/) |
+| SS8H10 | Post-war Georgia; b. Atlanta under mayors Hartsfield and Ivan Allen Jr. | Downtown route. [NGE SS8H10](https://www.georgiaencyclopedia.org/standards/ss8h10/) |
+| SS8E1 | The four transportation systems, including Hartsfield-Jackson and railroads | Zero Mile Post, the BeltLine rail corridor, MARTA stations. MARTA is not named in the standard. [NGE SS8E1](https://www.georgiaencyclopedia.org/standards/ss8e1/) |
+| SS8H4 c | Technology, including railroads | Zero Mile Post: Atlanta began as a railroad end point. [NGE SS8H4](https://www.georgiaencyclopedia.org/standards/ss8h4/) |
+| SS8H7 a, c | The New South; a. Henry Grady and the cotton expositions; c. Alonzo Herndon | Piedmont Park (1895 exposition), Herndon Home (reserve list). Elements b and d (Jim Crow, the 1906 Atlanta Race Massacre) go in the teacher guide only. [NGE SS8H7](https://www.georgiaencyclopedia.org/standards/ss8h7/) |
+| SS8G1 c, d | Physical features and the importance of water | Historic Fourth Ward Park (stormwater lake), Shirley Clarke Franklin Park (quarry reservoir). [NGE SS8G1](https://www.georgiaencyclopedia.org/standards/ss8g1/) |
+| SS2H1 d | Grade 2: Martin Luther King Jr. | A short Sweet Auburn route for young players |
+| SSUSH21 d | High school US History: civil rights groups and Martin Luther King Jr. | Sweet Auburn route |
+
+The 2016 GSE has a full implementation from school year 2017-2018 ([GPB](https://www.gpb.org/blogs/education-matters/2016/07/06/the-launch-of-the-georgia-standards-of-excellence-for-social)).
+
+---
+
+## 4. Landmark list
+
+### 4.0 In the game now: the BeltLine Eastside level (v0.9.0)
+
+The level has 13 claim spots and 2 edge markers (an edge marker is a place outside the level that the map shows). Each spot has 3 to 5 facts with a source for each fact; the table gives the short line and its first source. The full list and the quote behind each fact are in `levels/beltline-eastside/landmarks.json` and `docs/research/2026-11-10-landmark-facts.md`. The content review (`docs/review/content-checklist.md`, 4.2) found that 65 of 65 facts have a source name and URL.
+
+| # | Spot | Short line in the game | Source | Skate challenge |
+|---|---|---|---|---|
+| 1 | Ponce City Market | Opened in 1926 as a nine-story Sears, Roebuck and Co. store and warehouse. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/GetAsset/e6ea8468-be89-4793-905c-317118b0e59e) | combo, hard: Land a 2,000 point combo on the trail |
+| 2 | Ford Factory Lofts | Ford built Model T's here from 1915 in a plant with rail cars rolling inside. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/GetAsset/89e18d7b-3b58-4434-9d83-bce98f805556) | grind, easy: Grind the Ponce curb for 9 m |
+| 3 | New Realm Brewing | A favorite on the Eastside Trail since 2018, with a rooftop view of the city. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/the-beltline-from-above/) | combo, easy: Land a 600 point combo on the trail |
+| 4 | Telephone Factory Lofts | Built 1939-1941 for Western Electric, maker of Bell telephones. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/GetAsset/d8095a36-1aa1-4e20-8b0c-ff521bb7cf30) | line, typical: Ride the 3 rings in order in 14 s |
+| 5 | Krog Street Market | A dining hall and shops on the former Atlanta Stove Works factory site. | [Atlanta BeltLine, Inc.](https://beltline.org/things-to-do/shopping-dining/) | grind, typical: Grind the Krog Street curb for 15 m |
+| 6 | Studioplex | A 1905 cotton warehouse on Auburn Avenue, now loft apartments. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/NRHP/GetAsset/aed2eed0-43c2-4073-b83b-1277caacc2c9) | gap, easy: Hop on the Auburn Avenue sidewalk |
+| 7 | Ponce de Leon Avenue Bridge | A ramp joins Ponce de Leon Avenue to the trail at the bridge by Ponce City Market. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/eastside-ponce-streetscape-project/) | gap, typical: Hop on the bridge over Ponce |
+| 8 | North Avenue Bridge | North Avenue Bridge crosses the street with the Atlanta skyline behind it. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/10-must-visit-photo-spots-on-the-beltline/) | line, hard: Ride the 3 rings in order in 14 s |
+| 9 | Ralph McGill Boulevard Bridge | A tower for chimney swifts stands on the trail just north of Ralph McGill Blvd. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/chimney-swift-towers-installed-on-westside-and-eastside-trails/) | grind, typical: Grind the curb below the bridge for 15 m |
+| 10 | Freedom Parkway Bridge | A BeltLine Marketplace sits under the John Lewis Freedom Parkway Bridge. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/celebrate-small-business-saturday-at-atlanta-beltline-marketplace/) | gap, easy: Hop under the Freedom Parkway bridge |
+| 11 | Historic Fourth Ward Park | The park's lake doubles as a stormwater basin; the park opened in 2011. | [Atlanta BeltLine, Inc.](https://beltline.org/about-us/history/) | combo, typical: Land a 1,000 point combo by the pond |
+| 12 | Freedom Park | Freedom Park links 7 neighborhoods with 8 miles of paths on 130+ acres. | [Freedom Park Conservancy](https://www.freedompark.org/about-us) | line, easy: Ride the 3 rings in order in 24 s |
+| 13 | Thomas Taylor Memorial Skatepark | Atlanta's first public skatepark, open since spring 2011. | [Atlanta BeltLine, Inc.](https://beltline.org/parks-trails/thomas-taylor-memorial-skatepark/) | combo, hard: Land a 2,000 point combo in the skatepark |
+| 14 | Inman Park Historic District | Atlanta's first planned suburb, laid out from 1889 by Joel Hurt. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/NRHP/GetAsset/NRHP/73000621_text) | None (edge marker) |
+| 15 | Jimmy Carter Presidential Library and Museum | Dedicated October 1, 1986; home to a life-size replica of the Oval Office. | [Jimmy Carter Presidential Library and Museum](https://www.jimmycarterlibrary.gov/about_us) | None (edge marker) |
+
+Notes:
+
+- Spot 3, New Realm Brewing: one story card fact names beer and spirits (#354, flagged by the content review). Do not open this card in a demo until #354 merges.
+- Spot 12, Freedom Park: the conservancy gives "130+ acres". The open data fact card gives 124 acres of city park land (City of Atlanta GIS). Both have a source; they measure different things.
+- Spot 13: the 2026-11-01 pitch called it the Historic Fourth Ward skatepark. Its name since 2024 is Thomas Taylor Memorial Skatepark ([H4W Park Conservancy](https://www.h4wpc.org/skate-park/)). The Tony Hawk fact now has a source: "Tony Hawk appeared at the grand opening, and his foundation gave $25,000 toward construction" (same source).
+
+### 4.0.1 Open data fact cards on the Eastside level
+
+| Card | Text in the game | Dataset (open-data-atl catalog) | Source |
+|---|---|---|---|
+| Neighborhoods | The Eastside Trail links 3 neighborhoods here: Inman Park, Old Fourth Ward and Poncey-Highland. | `atl-neighborhoods` | City of Atlanta Department of City Planning GIS, fetched 2026-11-04 |
+| Freedom Park | Freedom Park covers 124 acres of city park land. | `atl-parks` | City of Atlanta Department of City Planning GIS, fetched 2026-11-04 |
+| MARTA | Inman Park-Reynoldstown MARTA rail station is within a mile of the trail. | `marta-rail-stations` | City of Atlanta Department of City Planning GIS, fetched 2026-11-04 |
+
+### 4.1 Plan for later levels
+
+25 recommended landmarks in 11 neighborhoods. Each card is positive or neutral. "Status" tells if a source confirms the fact. Before release, a named historian must review each card (section 7.6).
+
+| # | Neighborhood | Landmark | Fact card | Source | Owner or manager | Note | Status |
+|---|---|---|---|---|---|---|---|
+| 1 | Sweet Auburn | MLK Jr. Birth Home | Martin Luther King Jr. was born in this house on January 15, 1929. | [NPS](https://www.nps.gov/places/birth-home.htm) | National Park Service | Quiet zone | Confirmed |
+| 2 | Sweet Auburn | Historic Ebenezer Baptist Church | Dr. King shared this pulpit with his father. The sanctuary was finished in the early 1920s. | [NPS](https://www.nps.gov/places/birth-home.htm), [NPS travel](https://www.nps.gov/NR/travel/atlanta/kin.htm) | NPS (Heritage Sanctuary); the congregation meets across the street | Quiet zone. Ask the church and NPS first. The ownership split is UNVERIFIED. | Confirmed (date) |
+| 3 | Sweet Auburn | Auburn Avenue Research Library | Opened in 1994, it was the Southeast's first public research library on African American culture and history. | [Fulton County Library](https://www.fulcolibrary.org/aarl/aarl-history/) | Fulton County Library System | None | Confirmed |
+| 4 | Sweet Auburn | APEX Museum | Founded in 1978 by Dan Moore Sr., APEX is Atlanta's oldest Black history museum. | [APEX](https://www.apexmuseum.org/about-us) | APEX Museum (nonprofit) | None | Confirmed |
+| 5 | Sweet Auburn | Sweet Auburn Curb Market | Atlanta's Municipal Market started in a tent in 1918. Its building opened in 1924. | [Wikipedia](https://en.wikipedia.org/wiki/Sweet_Auburn_Curb_Market) | City of Atlanta; Municipal Market Co. | Replace the Wikipedia source with an official source. | Secondary source |
+| 6 | Old Fourth Ward | BeltLine Eastside Trail | The BeltLine began as a 1999 Georgia Tech master's thesis. It plans a 22-mile loop on old rail lines. | [BeltLine history](https://beltline.org/about-us/history) | Atlanta BeltLine Inc. | The name needs a license. | Confirmed |
+| 7 | Old Fourth Ward | Ponce City Market | This building opened in 1926 as a Sears, Roebuck store and warehouse. | [NRHP nomination](https://npgallery.nps.gov/GetAsset/e6ea8468-be89-4793-905c-317118b0e59e) | Jamestown (private) | Registered name. Ask Jamestown. | Confirmed |
+| 8 | Old Fourth Ward | Historic Fourth Ward Park | The park's lake holds stormwater. It cost about $15 million less than a planned storm tunnel. | [HDR](https://hdrinc.com/ca/portfolio/historic-fourth-ward-park) | City of Atlanta Parks; ABI | The park has a public skatepark. The Tony Hawk funding story is UNVERIFIED. | Confirmed (designer's page) |
+| 9 | Inman Park | Inman Park | Joel Hurt planned Atlanta's first planned suburb. Electric streetcars on Edgewood Avenue reached it in 1889. | [New Georgia Encyclopedia](https://www.georgiaencyclopedia.org/articles/counties-cities-neighborhoods/inman-park/) | Public streets | The page did not load (TLS error). The fact is from a search snippet. | UNVERIFIED |
+| 10 | Inman Park / Cabbagetown | Krog Street Tunnel | Built about 1912 under the rail yard, this tunnel links Inman Park and Cabbagetown. | [GSU Library](https://exhibits.library.gsu.edu/the-art-behind-the-archives/krog-street-tunnel/) | CSX Transportation (UNVERIFIED) | Sources give 1912 or 1913. Use commissioned murals, not copies of the wall (section 7.3). | Confirmed (year varies) |
+| 11 | Downtown | Centennial Olympic Park | Built for the 1996 Olympic Games, this 21-acre park is the Games' legacy downtown. | [Olympics.com](https://www.olympics.com/ioc/news/centennial-olympic-park) | Georgia World Congress Center Authority | No Olympic rings in the art (section 7.2). | Confirmed |
+| 12 | Downtown | Georgia Aquarium | Opened in 2005, it was the first aquarium outside Asia to keep whale sharks. | [Wikipedia](https://en.wikipedia.org/wiki/Georgia_Aquarium) | Georgia Aquarium Inc. | Registered name. Replace the Wikipedia source. | Secondary source |
+| 13 | Downtown | National Center for Civil and Human Rights | Opened in 2014, the Center shows papers and objects of Dr. Martin Luther King Jr. | [New Georgia Encyclopedia](https://www.georgiaencyclopedia.org/articles/education/national-center-for-civil-and-human-rights/) | The Center (nonprofit) | None | Confirmed |
+| 14 | Downtown | Georgia State Capitol | In 1958, Dahlonega sent gold by wagon train to cover the Capitol dome. | [Wikipedia](https://en.wikipedia.org/wiki/Georgia_State_Capitol) | State of Georgia | Do not show the statues on the grounds. Sources give 1958 or 1959. Replace the source. | Secondary source |
+| 15 | Downtown | Zero Mile Post | Atlanta began here, at the end of the Western and Atlantic Railroad. The town was called Terminus. | [Georgia Historical Society marker](https://georgiahistory.com/ghmi_marker_updated/zero-mile-post/) | GHS marker; the post is at the Atlanta History Center | Do not name Underground Atlanta. | Confirmed |
+| 16 | Midtown | Fox Theatre | Opened on Christmas Day 1929. In the 1970s, Atlantans raised money to save it. | [Fox Theatre](https://www.foxtheatre.org/about-us/fox-history) | Atlanta Landmarks Inc. | Registered name. Ask first. | Confirmed |
+| 17 | Midtown | Piedmont Park | Piedmont Park held the 1895 Cotton States Exposition: 100 days and about 800,000 visitors. | [Piedmont Park Conservancy](https://piedmontpark.org/park-history/) | City of Atlanta; Piedmont Park Conservancy | The fair was segregated. The teacher guide covers this, not the card. | Confirmed |
+| 18 | Midtown | High Museum of Art | The High began in 1905. Its white Richard Meier building opened in 1983. | [High Museum](https://high.org/history-of-the-high-museum) | Woodruff Arts Center | Registered name. Ask first. | Confirmed |
+| 19 | West End | Atlanta University Center | Started in 1929, the AUC is the world's largest group of private Black colleges. | [New Georgia Encyclopedia](https://www.georgiaencyclopedia.org/articles/education/atlanta-university-center/) | AUC Consortium and each school | Ask each school about its name and logo. | Confirmed |
+| 20 | West End | BeltLine Westside Trail | The Westside Trail opened in 2017. It was the second big BeltLine trail. | [WABE](https://www.wabe.org/?p=51026), [Rough Draft](https://roughdraftatlanta.com/2017/09/29/atlanta-beltline-westside-trail-officially-opens-public/) | Atlanta BeltLine Inc. | The name needs a license. | Confirmed |
+| 21 | Castleberry Hill | Castleberry Hill Historic District | This rail-side warehouse district joined the National Register in 1985. Galleries open for a monthly Art Stroll. | [NPS](https://www.nps.gov/NR/travel/atlanta/cas.htm) | Private owners | None | Confirmed |
+| 22 | Westside | Shirley Clarke Franklin Park | Atlanta's largest park, 280 acres, opened in 2021 around a quarry reservoir. | [BeltLine](https://beltline.org/parks-trails/westside-park/) | City of Atlanta | The City renamed Westside Park in 2025. Use the new name. [Axios](https://www.axios.com/local/atlanta/2025/02/06/former-mayor-shirley-franklin-park-street-renaming) | Confirmed |
+| 23 | Grant Park | Zoo Atlanta | The city's zoo began in 1889 with animals from a circus. | [New Georgia Encyclopedia](https://www.georgiaencyclopedia.org/articles/geography-environment/zoo-atlanta) | Zoo Atlanta (nonprofit) | Registered name. No panda card unless checked first. | Confirmed |
+| 24 | Grant Park | Oakland Cemetery | Founded in 1850, this 48-acre garden cemetery is the resting place of golfer Bobby Jones. | [GHS marker](https://www.georgiahistory.com/ghmi_marker_updated/oakland-cemetery/) | City of Atlanta; Historic Oakland Foundation (UNVERIFIED) | Quiet zone. Do not show the Confederate section or monument. | Confirmed |
+| 25 | Cascade / Southwest | Cascade Family Skating | Since 2000, this rink has been a home of Atlanta's skate style. The movie ATL (2006) was filmed here. | [Atlanta Magazine](https://www.atlantamagazine.com/50bestthingstodo/roll-soul-cascade-skating-rink/) | Private business | Ask the owner. Keep the card on skate culture. Some sources give 1998. The page blocked the fetch tool. | UNVERIFIED (year) |
+
+Card 24 differs from the research note: it names Bobby Jones only. Margaret Mitchell is also buried there, but her name links the card to *Gone With the Wind* (see 4.3).
+
+### 4.2 Reserve list
+
+| Neighborhood | Landmark | Why reserve | Source |
+|---|---|---|---|
+| West End | Herndon Home | Strong fit for SS8H7 c. The museum is closed for preservation. The reopen date is UNVERIFIED. | [NPS](https://www.nps.gov/nr/Travel/atlanta/her.htm) |
+| West End | Hammonds House Museum | Sources disagree on the build year. Use 1988 (museum open) only. | [Hammonds House](https://hammondshouse.org/about-us) |
+| Buckhead | Swan House (Atlanta History Center) | Far from the other levels | [AHC](https://www.atlantahistorycenter.com/buildings-and-grounds/swan-house) |
+| Inman Park | Inman Park Festival | An event card for a later version | [Festival](https://festival.inmanpark.org/events/tour-of-homes) |
+| Decatur (outside the city) | Golden Glide rink | Opened in 1974. Not in the City of Atlanta. | [AJC](https://www.ajc.com/arts-entertainment/2026/09/atlanta-roller-derby-tries-to-save-decaturs-legendary-golden-glide/) |
+
+### 4.3 Landmarks to leave out
+
+| Landmark | Reason |
+|---|---|
+| Margaret Mitchell House | *Gone With the Wind* shows slavery and the Confederacy in a good light. This conflicts with the political rules. |
+| The Wren's Nest | The Joel Chandler Harris stories are in dispute because of race. |
+| World of Coca-Cola | A brand museum. A city game must not look like an advertisement. |
+| Underground Atlanta, by name | Its redevelopment status changes. Use the Zero Mile Post card. |
+| Stone Mountain | Not in the city. It has a Confederate carving. |
+| Confederate statues and monuments at the Capitol and Oakland Cemetery | Political rule. Leave them out of the art and the text. |
+| Jackson Street Bridge, as a card | Its fame comes from *The Walking Dead* (a zombie show). Use it as a view point with no card. |
+
+---
+
+## 5. Partner and funding paths
+
+### 5.1 Partners and the next contact
+
+Do not contact any partner before the maker approves this pitch. The "next contact" column names a public office, not a person.
+
+| Partner | The ask | Next contact (public path) | When |
+|---|---|---|---|
+| Mayor's Office of Technology and Innovation | Lead sponsor, playtests in the esports labs, a partner agreement | OTI, through the [Esports and Workforce page](https://atlantaga.gov/government/mayor-s-office/executive-offices/office-of-technology-and-innovation/esports-and-workforce) | After the M1 playtest build |
+| Atlanta City Council | A resolution of support | The office of the councilmember for the district of the first level (Old Fourth Ward). Then the Office of Council Communications for a proclamation. | After the OTI agreement |
+| Mayor's Office | A ceremonial letter for the launch | Mayor's Office of Communications, [ceremonial documents](https://www.atlantaga.gov/i-want-to/obtain-ceremonial-documents) | 30 days before the launch |
+| Atlanta BeltLine Inc. | A license for the BeltLine name in the first level | The "request logo and name usage" link on the [BeltLine FAQ](https://beltline.org/?p=40034) | Before M2-06 (deploy) |
+| Discover Atlanta | A listing for visitors, a link from the visitor site | The ACVB [membership page](https://discoveratlanta.com/acvb/become-a-member/), then the marketing team | After version 1 is live |
+| Atlanta History Center | Fact review, a link from the educator pages | AHC [for educators](https://www.atlantahistorycenter.com/learning-and-research/for-educators/) | Before M2-05 (review gate) |
+| NPS, MLK Jr. National Historical Park | Review of cards 1 and 2. No arrowhead. | The park, through [nps.gov/malu](https://www.nps.gov/malu/getinvolved/partners.htm) | Before the Sweet Auburn level |
+| Atlanta Public Schools | A grade 8 pilot class | APS Instructional Technology. For a learning study, the [Office of Research and Evaluation](https://www.atlantapublicschools.us/about/departments/office-of-strategy/prospective-research-partners/research-guidelines). | After the teacher mode exists |
+| MARTA | Station starts, in-station ads | MARTA [photography and film](https://itsmarta.com/photography-and-film.aspx) for the logo; the ad partner Intersection for ads ([MARTA](https://itsmarta.com/marta-selects-new-transit-digital-advertising-partner.aspx)) | Version 2 |
+| Real skaters | Move-set review | Cascade and the rink community (M2-05) | M2 |
+
+### 5.2 Funding
+
+Most grants require a nonprofit or a public applicant. The maker needs a fiscal sponsor or an institutional partner, for example the Atlanta History Center, a university, or the Cxmmunity Foundation, which already works with OTI on the labs ([GovTech](https://govtech.com/education/k-12/atlanta-invests-in-new-esports-lab-for-students)).
+
+| Source | What it funds | Size | Next cycle | Fit |
+|---|---|---|---|---|
+| NEH Digital Projects for the Public | Digital humanities for the public. Games are a listed format. | Discovery up to $30k; Prototyping up to $100k; Production up to $400k | Likely February 2027 (UNVERIFIED) | **Best fit.** Apply with AHC or a university for Prototyping. [NEH](https://www.neh.gov/grants/public/digital-projects-the-public), [Thompson Grants](https://www.thompsongrants.com/digital-projects-for-the-public) |
+| Georgia Council for the Arts | Project grants, arts education | $1k to $5k, 50% match | 2027-02-01 | Small. [GCA](https://georgia.org/industries/arts/grants), [FY27 guidelines](https://gaarts.org/wp-content/uploads/2025/12/FY27-Project-Grant-Guidelines-FINAL.pdf) |
+| Mayor's Office of Cultural Affairs | Contracts for Arts Services (artists), mural commissions | FY21 total more than $1.7M (may be out of date) | Annual (UNVERIFIED) | Murals and music for the game. [OCA news](https://www.atlantaga.gov/Home/Components/News/News/15648/1338) |
+| Atlanta Beltline Art | Installations and murals | Not stated | The 2026 call closed 2026-03-06. Watch for the 2027 call. | Commission the tunnel murals. [BeltLine press release](https://beltline.org/press-release/atlanta-beltline-art-opens-2026-exhibition-year-with-new-programs-funding-news-and-calls-for-art/) |
+| Georgia Humanities | Public humanities programs | $1k to $7.5k | Both 2026 cycles are closed. The next cycle is UNVERIFIED. | Small. [Georgia Cities](https://www.gacities.com/resources/grants/georgia-humanities-spring-2026-grant-cycle) |
+| IMLS (through AHC or a library) | Museum and library projects | Varies | The FY2027 deadline was 2026-11-13 | The agency's future is not certain. [CRS](https://www.everycrsreport.com/files/2026-05-27_R48958_6ead37cb994df92872d65d1504746904bebaf1e1.html) |
+| Delta Air Lines Foundation | Arts, culture, education | Not stated | UNVERIFIED | Delta funded the MLK park reopening in 2019. [NPS](https://www.nps.gov/malu/learn/news/deltagrant.htm) |
+| Truist Foundation | Youth, economic mobility; open applications | UNVERIFIED | UNVERIFIED | [Aggregator](https://grantedai.com/grants/youth-and-community-funding-for-atlanta-nonprofits-via-truist-foundation-truist-foundation-5794aaa8) |
+| Goizueta Foundation | Education; rolling applications | Not stated | Rolling | Fit UNVERIFIED. [Aggregator](https://grantedai.com/grants/the-goizueta-foundation-grants-the-goizueta-foundation-f2fcd27b) |
+| Discover Atlanta | Visitor marketing | Not a grant | — | Promotion, not money |
+
+Weak or closed paths:
+
+- **FIFA World Cup 2026 legacy.** The Atlanta legacy programs are for youth soccer: mini-pitches and a street soccer park ([Atlanta Magazine](https://www.atlantamagazine.com/news-culture-articles/how-world-cup-2026-is-investing-in-atlantas-youth/), [Rough Draft](https://roughdraftatlanta.com/2026/07/18/atlanta-visa-street-soccer-park/)). No fund for media or games was found. A World Cup landmark card at Centennial Olympic Park or Mercedes-Benz Stadium can link the game to the legacy story, but it does not bring money.
+- **America250 / Georgia US250.** The commission runs to 2026-12-31. The grants are closed ([GDEcD](https://georgia.org/press-release/georgia-commission-promote-250th-anniversary-us-founding)).
+- **Explore Georgia Tourism Product Development grant.** Only for communities in its Resource Team program ([GDEcD](https://georgia.org/he/node/47591)). It may be out of date.
+- **Coca-Cola Foundation.** Invitation only (secondary source, [Opportunities Feed](https://opportunitiesfeed.com/2026/10/01/coca-cola-foundation-grants/)).
+- **Google.org, Microsoft, Invest Atlanta.** Not researched.
+
+---
+
+## 6. Why the City says yes
+
+- **First of its kind.** We found no other US city with an official video game.
+- **Playable today.** The game is live at https://skate-atl.vercel.app. A City reader can play it in a browser before the meeting.
+- **Free and on the open web.** No app store, no account, no ads. The City can link to it from any page.
+- **Made in Atlanta from Atlanta data.** The game uses OpenStreetMap, Overture, and the open-data-atl catalog ([open-data-atl](https://github.com/William-Hill/open-data-atl)). The fact cards on the Eastside level come from City of Atlanta Department of City Planning GIS services..
+- **Every neighborhood at its best.** The political rules in `AGENTS.md` are part of the build. An agent checked the v0.9.0 content against them (`docs/review/content-checklist.md`), and code filters block crime, crash and decline data and words.
+- **Rink culture.** Roller skating is a living Atlanta tradition across generations ([WABE](https://www.wabe.org/atlanta-has-many-places-to-roll-indoors-or-out-in-its-popular-multi-genre-skating-culture/)). No other city can claim the film *ATL* and Cascade.
+- **A school tool with no data risk.** Teacher mode needs no login.
+- **Youth workforce.** The OTI labs teach game design. Lab students can playtest the game and see how it is made.
+
+---
+
+## 7. Risks
+
+### 7.1 The city seal and the city name
+
+- The Municipal Clerk is the custodian of the city seal (Charter, Sec. 2-307). [Municode](https://library.municode.com/ga/atlanta/codes/code_of_ordinances?nodeId=PTICHRELA_SPACH_ART2LE_CH3ORRUOFEM_S2-306COEXELOF), [Municipal Clerk](https://citycouncil.atlantaga.gov/council-divisions/municipal-clerk)
+- No ordinance on third-party use of the seal or the city logo was found (UNVERIFIED).
+- Georgia law O.C.G.A. 50-3-8 controls state symbols in ads, not the city seal. [Onecle](https://law.onecle.com/georgia/title-50/50-3-8.html)
+- **Mitigation:** Use the seal, the city logo, and the words "official game" only after a written agreement. Ask the Municipal Clerk and the Law Department for the policy. Keep the seal off merchandise.
+
+### 7.2 Landmark names and likenesses
+
+- US copyright law allows pictures of buildings that the public can see ([17 U.S.C. 120(a)](https://www.law.cornell.edu/uscode/text/17/120)). No court has applied this rule to a 3D game model (UNVERIFIED). A lawyer must give an opinion.
+- Trademarks are a separate risk. *Jack Daniel's v. VIP Products* (2023) limits the free-speech defense when a mark is used as a brand ([Proskauer](https://www.proskauer.com/blog/in-jack-daniels-case-supreme-court-rejects-ninth-circuits-expansive-view-of-first-amendment-rogers-test)). An "official" city game also has a higher risk of a false-endorsement claim (analysis, not a cited source).
+- Registered marks: the BeltLine names ([BeltLine](https://beltline.org/?p=40034)); Fox Theatre Atlanta ([Justia](https://trademarks.justia.com/778/81/fox-theatre-atlanta-77881065.html)); Ponce City Market ([Justia](https://trademark.justia.com/867/07/ponce-city-86707894.html)); Georgia Aquarium ([Justia](https://trademarks.justia.com/owners/georgia-aquarium-inc-1723878)); MARTA filings ([Justia](https://trademark.justia.com/owners/metropolitan-atlanta-rapid-transit-authority-154156)). These records come from third-party sites. Check each one in USPTO TSDR (UNVERIFIED).
+- The word "Olympic" and the rings belong to the USOPC by law ([36 U.S.C. 220506](https://www.law.cornell.edu/uscode/text/36/220506)).
+- The NPS arrowhead needs approval from the NPS Director, for education or conservation use only. Only NPS employees can use the ranger uniform. [NPS arrowhead requests](https://www.nps.gov/subjects/partnerships/arrowhead-requests.htm)
+- **Mitigation:**
+  1. Keep every landmark mark out of the game title, the logo, the store pages, and merchandise.
+  2. Get a written license from each private owner before the name shows in the game. Until then, use a generic label ("the old Sears building").
+  3. Show no Olympic rings. Name no mode, medal, or event "Olympic".
+  4. Show no NPS arrowhead and no ranger uniform.
+  5. Add a "no affiliation" notice for each place that has no license.
+
+### 7.3 Murals
+
+- Artists hold the copyright in their murals. The 5Pointz case gave artists $6.75 million for the destruction of their works ([Loeb](https://www.loeb.com/en/insights/publications/2020/02/castillo-v-gm-realty)). Mercedes-Benz used Detroit murals in ads and got a court fight; the court did not decide the merits ([court opinion](https://www.mied.uscourts.gov/PDFFIles/19-10948BenzOpn.pdf)).
+- Atlanta has more than 2,000 murals ([AJC, 2026](https://www.ajc.com/arts-entertainment/2026/04/atlanta-now-has-more-than-2000-murals-how-did-we-get-here/)).
+- The Krog Street Tunnel has art from many artists, most of them unknown. One license for all of it is not possible ([GSU Library](https://exhibits.library.gsu.edu/the-art-behind-the-archives/krog-street-tunnel/)).
+- **Mitigation:**
+  1. Commission new murals from Atlanta artists for the game, with a written license, credit, and a fee.
+  2. Ask OCA (ELEVATE) and Living Walls about artists ([ArtsATL](https://www.artsatl.org/nonprofit-living-walls-the-city-speaks-has-made-art-sustainable-in-atlanta-for-10-years/)).
+  3. Record each license in `provenance.json`, as `AGENTS.md` requires for generated art.
+  4. Do not copy the tags in the Krog Street Tunnel. This also obeys the "murals, not graffiti" rule.
+
+### 7.4 Student data privacy
+
+- **COPPA.** The amended FTC rule took effect June 23, 2025. The compliance date was April 22, 2026. The FTC did not finalize the ed-tech provisions. [Federal Register](https://www.federalregister.gov/documents/2025/04/22/2025-05904/childrens-online-privacy-protection-rule)
+- **FERPA.** A school can share education records with a vendor only under the "school official" exception, with direct school control of the data. [studentprivacy.ed.gov](https://studentprivacy.ed.gov/faq/are-there-any-limitations-what-education-records-may-be-disclosed-community-based-organization)
+- **Georgia.** The Student Data Privacy, Accessibility, and Transparency Act (O.C.G.A. 20-2-660 and the sections after it) forbids targeted ads, student profiles, and the sale of student data ([20-2-666](https://law.onecle.com/georgia/title-20/20-2-666.html), [GaDOE](https://georgiainsights.gadoe.org/?p=1876)). Georgia districts also approve free tools ([K12 Cyber Forward](https://k12cyberforward.com/resources/vendor-data-privacy-agreements-for-georgia-districts)).
+- **Mitigation (the design in 3.6):**
+  1. No accounts, no names, no email, no chat, no free text.
+  2. No ads and no third-party trackers in teacher mode.
+  3. The passport saves in the browser only.
+  4. The passport code holds stamps only.
+  5. If the leaderboard (M2-04) needs a name, turn it off in teacher mode.
+  6. Offer APS a signed data privacy agreement anyway. A lawyer must confirm that this design reduces the COPPA and Georgia duties.
+
+### 7.5 Accessibility
+
+- The DOJ ADA Title II rule requires WCAG 2.1 AA for state and local government web content. An interim final rule (April 20, 2026) moved the date for large entities to April 26, 2027. [Federal Register](https://www.federalregister.gov/documents/2026/04/20/2026-07663/extension-of-compliance-dates-for-nondiscrimination-on-the-basis-of-disability-accessibility-of-web). A later final rule is UNVERIFIED.
+- The City (population over 50,000) and APS are Title II public entities. An official city game can count as city web content (analysis; a lawyer must confirm).
+- **Mitigation:** The accessible text page (3.7) holds all the educational content. Test every menu and card page for WCAG 2.1 AA before the launch.
+
+### 7.6 Accuracy of the facts
+
+- Sources disagree on some numbers: the Krog Street Tunnel year, the Capitol gold year, and the Cascade opening year. The cards leave out numbers that conflict.
+- Cards 5, 12, and 14 use Wikipedia now. Replace them with official sources.
+- **Mitigation:**
+  1. Take each card from a cited source. Prefer Georgia Historical Society marker text ([GHS markers](https://www.georgiahistory.com/learn-and-explore/historical-markers/faqs/)), NPS pages, and the New Georgia Encyclopedia.
+  2. Get a review from a named historian (AHC, NPS park staff, or GHS).
+  3. Record the reviewer and the date in the card data.
+  4. Put a "report an error" link on each card.
+  5. Check the facts again each year. Places change names (Shirley Clarke Franklin Park, 2025) and animals move (the Zoo Atlanta pandas).
+
+### 7.7 Other risks
+
+| Risk | Mitigation |
+|---|---|
+| A change of administration drops the sponsor | Get a written agreement, not only a resolution. Keep the game useful with no city brand. |
+| The game looks like an ad for private places | No paid placements in the landmark list. Sponsors get credits, not cards. |
+| Hard history at the landmarks | The cards stay positive or neutral. The teacher guide holds the hard history, with a historian review. |
+| Sacred sites | Quiet zones. Ask Ebenezer and NPS before the cards go live. |
+| Cascade news coverage | The card talks about skate culture only. |
+| Moderation (the Denmark lesson) | No building tools, no chat, no user content. |
+| Traffic shown as danger | Calm traffic (owner decision 2026-11-23, #261): cars slow and stop for the skater, and a moving car never knocks her down or stops her. |
+| A first load at night in rain looks gloomy | #353 (P1, in progress): the game clock uses the device time zone. Until it merges, a demo sets `weather=clear&time=14` in the URL. |
+
+---
+
+## 8. Phased plan
+
+The plan follows the GitHub milestones. M1 and M2 do not change. The pitch adds small items to them and puts the large items after version 1.
+
+**Status on 2026-11-24.** M0 is done (the playtest verdict is PROCEED). M1 is done in v0.9.0: the BeltLine Eastside block, fact cards from the open-data-atl API, goals and a results screen, landmark find zones at real positions, and the level detail. From M2, the landmark models, the content review (#22, agent pass) and the phone tier are in. The city passport, the guided route arrows, the style stamp, teacher mode, the accessible text page and the real skater review are not done. The pitch to OTI can use v0.9.0 as a demo; Version 1 stays the proof.
+
+### Phase 1: M1 Playable block (the M1 features are in v0.9.0; the pitch additions in this table are not done)
+
+| Item | Issue | Pitch addition |
+|---|---|---|
+| Fact cards from the open-data-atl API | M1-07 | Add the card fields from 3.2 (`sourceUrl`, `reviewer`, `gseCodes`). Use cards 6, 7, 8, and 10 on the BeltLine Eastside block. |
+| Goals, run timer, results screen | M1-05 | The results screen lists the cards from the run. |
+| Geodata pipeline | M1-03 | Put landmark trigger zones in the level data at real positions. |
+| Level detail | M1-08 | Use a generic label for Ponce City Market until a license exists. |
+
+Exit: the first M1 playtest also checks that a discovery does not stop the skate.
+
+### Phase 2: M2 Version 1 (in progress)
+
+| Item | Issue | Pitch addition |
+|---|---|---|
+| Full neighborhood and landmark models | M2-01 | Add the city passport for one neighborhood, one guided route, and the style stamp. |
+| Cultural and political review gate | M2-05 | Add the fact review by a named historian. Add the landmark license list. Add the mural license list. |
+| Leaderboard | M2-04 | No names in teacher mode. |
+| Deploy | M2-06 | Add the accessible text page. Add the "no affiliation" notices. |
+
+The pitch to OTI happens with the M2 build. Version 1 is the proof.
+
+### Phase 3: After version 1 (proposal, not yet a milestone)
+
+1. Sign the partner agreement with OTI. Run playtests in the esports labs.
+2. Ask a councilmember to sponsor the resolution of support.
+3. Build the Sweet Auburn level with quiet zones, after review by NPS and Ebenezer.
+4. Build teacher mode and the teacher guide for SS8H11 and SS8H12.
+5. Run one APS grade 8 pilot class.
+6. Apply for NEH Digital Projects for the Public (Prototyping) with an institutional partner.
+7. Add Downtown, Midtown, and West End levels.
+8. Ask Discover Atlanta for a visitor listing.
+
+---
+
+## 9. Open questions for the maker
+
+1. Who is the fiscal sponsor or the institutional partner for grants?
+2. ~~Does the first pitch go to OTI, as section 2.2 recommends?~~ Decided 2026-11-24: OTI is the first reader of the one-pager and the demo.
+3. Does the game use real place names before the licenses exist, or generic labels? v0.9.0 uses real names (for example Ponce City Market, Krog Street Market, New Realm Brewing). Section 7.2 still applies before a public launch.
+4. Is Sweet Auburn the second level, after the BeltLine Eastside block?
+5. When does the owner approve the first contact with OTI? Nobody was contacted.
+
+---
+
+## 10. Not verified
+
+- An "official video game" designation anywhere in the US. The search found none. Public text uses the soft wording: "We found no other US city with an official video game."
+- The Council committee for a resolution of support.
+- A Discover Atlanta partner program for games, and the membership dues.
+- An APS app-approval process and an APS data privacy agreement.
+- A new full revision of the GSE Social Studies after July 1, 2026.
+- An Atlanta ordinance on third-party use of the seal.
+- The USPTO status of each mark.
+- That 17 U.S.C. 120(a) covers 3D game models.
+- A DOJ final rule after the April 2026 interim rule.
+- The owner of the Krog Street Tunnel.
+- The ownership split at Ebenezer and the owner role at Oakland Cemetery.
+- The Cascade opening year. (The Inman Park fact now has an NRHP source, and the Tony Hawk fact has an H4W Park Conservancy source; see 4.0.)
+- The Ponce City Market history page (`https://poncecitymarket.com/history/`) returned HTTP 403 to `curl`. A person must open it in a browser before the pitch (content checklist, note N3).
+- The game on a real phone and a real GPU. Every frame time in this project comes from SwiftShader in a cloud container (no GPU). The 55 fps gate is not verified on real hardware.
+- A playtest by a person outside the project, and the real skater review of the move set.
+- The link preview of the share card on the production URL with a card validator (#303).
+- The NEH February 2027 deadline and the OCA FY27 cycle.
+- Several official pages (atlantaga.gov, citycouncil.atlantaga.gov, discoveratlanta.com, neh.gov) blocked the fetch tool. Facts from these pages come from search snippets. Read each page before you quote it.
+
+---
+
+## 11. Screenshots from the production URL
+
+Taken on 2026-11-24 from https://skate-atl.vercel.app (the build of `main` at `b432849`) with headless Chromium (Playwright). The URL had `weather=clear&time=14` (see #353) and `teach=0` (no move prompts). The renderer is SwiftShader (no GPU), so the frame rate is not real; the pictures show the content only.
+
+| File | Tier | What it shows |
+|---|---|---|
+| `screenshots/high-01-title.jpg` | High, pbr look, 1280 x 720 | The title screen: the logo, "PRESS ANY KEY", the skater select (Nia, Marcus), SETTINGS |
+| `screenshots/high-02-spawn-skatepark.jpg` | High | Tour mode at the start, by the Freedom Parkway bridge |
+| `screenshots/high-03-skatepark.jpg` | High | The skatepark ledge and rail next to the trail; HUD "Claim it: land a 2,000 point combo in the skatepark" |
+| `screenshots/high-04-fourth-ward-park.jpg` | High | Historic Fourth Ward Park |
+| `screenshots/high-05-ponce-city-market.jpg` | High | The trail by Ponce City Market |
+| `screenshots/high-06-krog-street-market.jpg` | High | The sidewalk at Krog Street Market |
+| `screenshots/high-07-freedom-park-fact.jpg` | High | Tour mode guide line: "Nearby spots done / Next: Freedom Parkway Bridge, 220 m ahead" |
+| `screenshots/phone-01-title.jpg` | Phone, Pixel 7 landscape | The title screen with "TAP TO START" |
+| `screenshots/phone-02-spawn-skatepark.jpg` | Phone | Tour mode at the start, with the touch stick and the JUMP, GRIND, GROOVE, SPIN and SWITCH buttons |
+| `screenshots/phone-03-skatepark.jpg` | Phone | The skatepark from the trail |
+| `screenshots/phone-05-ponce-city-market.jpg` | Phone | The trail by Ponce City Market |
+| `screenshots/phone-fact-neighborhoods.jpg` | Phone | Fast travel to the neighborhoods fact card (demo stop B) |
+
+The screenshots use fast travel. A Found banner shows for about 3 s and the banners wait in a queue, so a picture can show the banner of the spot before the travel (for example, `high-06` shows the Ponce City Market banner at Krog Street Market). In normal play the banner shows at its spot. The script is `docs/pitch/screenshots/capture.cjs` (`node capture.cjs <out-dir> high|phone`).

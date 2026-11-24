@@ -2972,6 +2972,86 @@ Neither toggle goes into `src/` before the playtest verdict.
 
 **Why.** On 2026-11-23, 4 ship-it agents each started the full suite at the same time. The load average went to 100 and more, the runs did not finish in 2 hours, and most failures were timeouts from the load. The Playwright suite is the regression gate. The Autopilot playtest is an AI agent that plays the game and finds play problems that no test predicts. The two checks do not replace each other.
 
+## 2026-11-24: The first load is a clear afternoon in Atlanta (#353)
+
+**Decision (owner, 2026-11-24).** With no `?time` and no `?weather` in the URL, the level loads in clear weather at 14:00, on today's date in Atlanta. Every first load at the City pitch shows the city at its best, with the same look on each computer.
+
+- The rule is in `weatherClock()` (`src/render/weather-view.js`, `FIRST_LOAD = { hour: 14, weather: "clear" }`).
+- The real clock stays as an option: `?time=now` uses the Atlanta time (America/New_York, `atlantaTime()` in `src/sim/weather.js`), not the time zone of the device. The date is the Atlanta date too.
+- The seasonal weather draw stays as an option: `?weather=auto`.
+- `?date`, `?time=HH.HH`, `?weather=clear|clouds|rain|storm` and `?timescale` do not change.
+- At 14:00 the sun is more than 20 degrees up on every day of the year in Atlanta (Vitest).
+
+**Tests.** Vitest `src/render/weather-view.test.js`: the Atlanta date and hour for the #353 case (19:50 UTC is 14:50 in Atlanta), daylight saving, the first load on 3 dates, the sun, rain and wet street on 53 days of the year, `?time=now&weather=auto`, and a bad `?time`. Playwright `e2e/first-load.spec.js`: a load of `/` with no parameters gives `clear`, hour 14, sun elevation more than 20 degrees, no rain, a dry street. Screenshot: `e2e/__screenshots__/first-load-default.png`.
+
+**Rejected.** The real Atlanta time with clear weather and only daylight hours (a night demo still needs a clamp, and the look changes with the hour of the pitch); the real Atlanta time with night allowed (the toon look reads near-black at night, 2026-11-04).
+
+## 2026-11-24: Story cards name no alcohol (#354)
+
+**Decision (owner, 2026-11-24).** A landmark story card does not name alcohol. This is the same rule as the shop signs (`NAME_DENY` in `src/level/geo/shop-signs.js`), for the all-ages audience of an official City game.
+
+- New Realm Brewing, fact 3, is now: "New Realm has a full food menu and hosts trivia, vintage market pop-ups and live music four days a week." The source does not change (Atlanta BeltLine, Inc., https://beltline.org/blog/the-beltline-from-above/). The quote in `docs/research/2026-11-10-landmark-facts.md` leaves out the first clause, which names alcohol.
+- The landmark name "New Realm Brewing" stays. It is the real name of the place.
+- Only the card text and data change. The card component does not change (#220 changes it).
+
+**Tests.** `npm run validate:landmarks` passes. Playwright `e2e/first-load.spec.js` claims the spot, opens its card on the full map, and checks the new text and that no fact of the spot names beer, spirits, wine, liquor or a cocktail. Screenshot: `e2e/__screenshots__/first-load-new-realm-card.png`.
+
+**Rejected.** The shorter text "New Realm hosts trivia, vintage market pop-ups and live music." (it drops the food menu, a neutral fact from the same quote); keeping "beer and spirits".
+
+## 2026-11-24 — Claim targets: the grind curb, the goal line, the skatepark pad (#264, #365)
+
+**#365, owner decision (AskUserQuestion, 2026-11-24): the skatepark combo zone is the whole pad plus 2 m, and the game draws it.** Before, the zone was a 10 m circle at (272.3, -1.5), the east half of the pad, and nothing showed it. A 5,034 point combo that ended at the west end of the rail lane banked but did not claim (Autopilot run 20261124-094156). Options that the owner did not choose: keep the 10 m circle and show it; one 17 m circle over the pad (it runs off the pad onto the paths).
+
+- Data: a combo zone can name an area of the spot's footprint: `"zone": { "x", "z", "r", "area": "skatepark:h4w-skatepark", "margin": 2 }`. The zone is the area outline plus `margin` m (`inZone` in `src/sim/landmarks.js`). `x`, `z` stay the target point of the guide line (the pad center), and `r` (19) the reach of the zone. The validator accepts an area zone for a skate spot only, the area must be in its footprint, the margin 0 to 4 m, and `r` must reach every corner plus the margin.
+- Render: the ring of an area zone is a rounded rectangle on the zone edge (the corner radius is the margin), with the inner line 1 m inside: the double ring of a combo, in the same instanced mesh and draw call (`src/render/landmark-rings.js`, `rectPoint`).
+
+**#264: the grind target.** Near a Found grind claim (in a mode with claims, within zone r + 30 m of its zone), a gold tube with an ink shell lies on the part of the named rail or curb that counts (within zone r + meters of the zone center), with a 1.4 m post at each end. It is brighter and does not pulse while the skater grinds that feature. 2 draw calls while it shows (1 in the pbr look, no ink), 0 otherwise. `src/render/claim-target-math.js` (pure), `src/render/claim-target.js`.
+
+**#264: the goal line follows the challenge in progress.** `landmarkView` gives each spot `active` (a line attempt, a grind on its feature, the air of a gap from its zone, an open combo with its last link in its zone) and `grindMeters`. `goalLine` puts an active spot before the nearer ones, and a grind adds "Grind 6 of 15 m".
+
+**#264: a dance that does not count says why.** A new dance press that starts no dance sets `skater.refused = { reason, seq }` (`air`, `grind`, `slow`). The HUD shows a short line in the move name place for 1.4 s: "Dance on the ground, not in the air", "Dance after the grind", "Roll faster to dance".
+
+## 2026-11-24: Landmark story cards, results row and Reset progress (#220)
+
+The story card of a landmark is one markup for the full map and the results screen: the full map panel of `src/ui/landmark-guide.js` with the class `is-story`. The model is `storyCardModel()` in `src/landmarks/story-card.js` (pure, Vitest). The look is `src/ui/story-card.css`.
+
+- **Card art.** Each spot has an in-game render, 640 x 360 JPEG, in `public/landmark-cards/`. The cameras are data in `src/landmarks/card-art.js` (a rule for each kind, and tuned changes for some spots). `scripts/card-art.mjs` makes all the renders again from a running dev server, in the day pbr look (June 21, 13:30, clear, high tier, no challenge rings, no governor). It writes `provenance.json` with the commit, the cameras and the date. A Vitest test fails when the cameras in the provenance are not the cameras of the module, so the shipped renders always come from the script. The `/ux-design` skill was not available to this session; the layout follows the GDD "Story card" section.
+- **"NEW" stamp.** A card has the stamp when this run claimed the spot for the first time in the save (the run record, `run.claimed[].first`). This is true on the results screen and on the full map. After the next run starts, the stamp goes.
+- **Results row.** The row lists only the spots that this run claimed, in claim order. An edge marker that this run found is not in the row, because a find is not a claim. A tap, a click, Enter or Space opens the card in a view over the results. Escape, the close button or a tap outside closes it. Enter does not start a new run while the card is open.
+- **Foil edge.** A hard spot gets a moving gradient border. It stops with `prefers-reduced-motion` and with the "Reduce motion" choice of the settings menu.
+- **Short screens.** At a height of 500 px or less (a phone in landscape), the card turns on its side: the art at the left and the facts at the right. A 3:4 card in that height is too small to read.
+- **Reset progress.** The settings menu has a "Progress" group with "Reset progress". A second modal dialog asks first, with the focus on Cancel. Cancel or Escape changes nothing. Reset clears the found and claimed spots of every level in the save and keeps the unlocked outfits (the existing `resetLandmarkSave()`). When the storage does not keep the progress, the group shows "Progress is not saved in this browser."
+
+## 2026-11-24: Coast to push fade is 0.15 s; the Autopilot can open the intro (#363, #364)
+
+**#363.** The coast -> push fade changes from 0.12 s to 0.15 s (`src/render/skater-anim.js`, `FADES`).
+
+- Cause. Marcus's push clip starts at a pose far from his coast pose. At push time 0, his left knee (`mixamorigLeftLeg`) is 0.56 to 0.68 rad from every coast pose. Nia's left knee is 0.11 to 0.13 rad from hers. The fade is a smoothstep: its largest weight step in one frame is 1.5 x (1/60) / fade. With a 0.12 s fade that step is 0.21, so the fade turns Marcus's knee 0.12 to 0.14 rad in one frame, and the push clip adds its own knee turn. The measured worst frame was 0.151 to 0.170 rad. Marcus's push clip by itself turns 0.148 rad per frame.
+- The coast plays in phase with the beat clock, so the turn depends on the time of the press. The contact sheets before `popCheck()` set that time, so `e2e/skater-blend.spec.js` failed on each run (0.1653 rad), while `popCheck()` alone passed (0.1518 rad).
+- The limit of the test (0.1601 rad) was not the cause. It comes from Marcus's idle clip (a right forearm turn of 0.1525 rad x 1.05). The pop is real: the fade turned the knee faster than the push clip does.
+- Other fixes that were tried: a later push start time (0.27 s to 1.13 s) makes the arms pop more (to 0.23 rad). A rebuild of Marcus's push clip needs Blender and an art review; this session has no Blender.
+- Result with 0.15 s, at all coast phases: Marcus 0.135 rad, Nia 0.101 rad (was 0.126 rad). Both are less than the push clip by itself. The push shows 30 ms later. The game sim (speed, push impulse) does not change.
+- `popCheck()` in `src/viewer/anim-lab.js` now checks the coast -> push changes at 8 phases of the coast loop, so the result does not depend on the earlier sheets. With the fix the spec measures Marcus 0.137 rad and Nia 0.110 rad.
+- The 8-phase sweep also found an older pop: Marcus's idle clip has a fast right forearm turn, and at some phases the idle -> coast fade gives 0.170 rad. Owner decision (2026-11-24): `popCheck()` checks idle -> coast at one phase, as before, and #369 rebuilds Marcus's idle clip.
+
+**#364.** `introPlan()` (`src/ui/intro.js`) reads `?intro=1` and `?intro=title` before `?autopilot=1`. `?autopilot=1` alone still starts in play. `?intro=0`, reduced motion, a non-geodata level, and a non-follow view still apply.
+
+## 2026-11-24: City pitch update, one-pager and demo script (#258)
+
+Owner decisions on 2026-11-24 (AskUserQuestion):
+
+- **PR 45.** A new PR to `main` adds the pitch document of PR 45 in `docs/pitch/` and updates it. The PR 45 branch has no merge base with `main`. After the merge, the owner closes PR 45 as superseded. The first commit adds the PR 45 text without changes, so the diff of the update is easy to read.
+- **First reader.** The Mayor's Office of Technology and Innovation (OTI). The one-pager and the demo script have the OTI tone: youth esports labs, open data, no data risk.
+- **The "first" claim.** Public text says "We found no other US city with an official video game." The claim stays in the "Not verified" list.
+- **Demo device.** A laptop on the projector, and a phone for a 30 s touch demo at the end.
+
+Files: `docs/pitch/2026-11-01-official-game-of-atlanta.md` (new section 1.1 "What a person can play today", section 4.0 with the 13 spots and the 3 open data cards of the Eastside level, updated sections 6 to 10, new section 11 with the screenshots), `docs/pitch/one-pager.md`, `docs/pitch/demo-script.md`, `docs/pitch/screenshots/`.
+
+- The screenshots come from the production URL with headless Chromium on SwiftShader, with `weather=clear&time=14` (until #353 merges) and `teach=0`.
+- The demo URL uses `travel=1` for one fast travel from the full map. Fast travel is off in a normal production visit.
+- The demo does not open the New Realm Brewing story card until #354 merges.
+- Nobody was contacted. Contact with a City office waits for the owner's approval.
+
 ## 2026-11-24: Deploy smoke test, and no route from agenticatl.ai (#23)
 
 **Decision (owner, 2026-11-24).** Skate ATL and agenticatl.ai (the open-data-atl site) are separate products. The site does not host the game at a route, and the game and the site do not link to each other. The "link from the site" item of #23 is cancelled.

@@ -77,3 +77,40 @@ test("the bridge refuses an agent service on another host", async ({ page }) => 
   await page.waitForFunction(() => window.__autopilot, null, { timeout: 10000 });
   expect(await page.evaluate(() => window.__autopilot.state)).toBe("refused");
 });
+
+// #364: ?autopilot=1 alone starts in play, but ?autopilot=1&intro=1 opens
+// the intro, so an Autopilot run can test the intro and the title screen.
+// The intro needs a geodata level: the greybox always starts in play.
+test("with ?autopilot=1&intro=1 the intro opens, and bridge keys start a ride from the title screen", async ({ page }) => {
+  test.setTimeout(600000);
+  const geo = `/?level=beltline-eastside&mute=1&governor=0&weather=clear&time=14&cars=0&npcs=0&peds=0&autopilot=1&autopilot_url=${encodeURIComponent(CLOSED)}`;
+  const open = async (extra) => {
+    await page.goto(`${geo}${extra}`);
+    await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 3 && window.__autopilot, null, { timeout: 240000 });
+  };
+  await open("");
+  expect(await page.evaluate(() => window.__atl.front.plan)).toEqual({ start: "play", reason: "autopilot" });
+  expect(await page.evaluate(() => window.__atl.front.phase)).toBe("play");
+
+  await open("&intro=1");
+  expect(await page.evaluate(() => window.__atl.front.plan)).toEqual({ start: "intro", reason: "flag" });
+  expect(await page.evaluate(() => window.__atl.front.phase)).toBe("intro");
+  await expect(page.locator("#front")).toHaveAttribute("data-phase", "intro");
+  // A key from the bridge skips the intro; a second key starts the ride.
+  await page.evaluate(() => window.__autopilot.handle("key", { key: "W" }));
+  await expect.poll(() => page.evaluate(() => window.__atl.front.phase), { timeout: 20000 }).toBe("title");
+  await page.evaluate(() => window.__autopilot.handle("key", { key: "W" }));
+  await expect.poll(() => page.evaluate(() => window.__atl.front.phase), { timeout: 20000 }).toBe("play");
+  await expect(page.locator("#front")).toHaveCount(0);
+  // The ride: a held key moves the skater.
+  const start = await page.evaluate(() => [...window.__atl.skater.position]);
+  await page.evaluate(() => window.__autopilot.handle("key", { key: "W", mode: "hold", lease: 10 }));
+  try {
+    await expect
+      .poll(() => page.evaluate((s) => Math.hypot(window.__atl.skater.position[0] - s[0], window.__atl.skater.position[2] - s[2]), start), { timeout: 20000 })
+      .toBeGreaterThan(1);
+  } finally {
+    await page.evaluate(() => window.__autopilot.handle("key", { mode: "release_all" }));
+  }
+  await page.screenshot({ path: "e2e/.output/autopilot-intro-ride.png" });
+});

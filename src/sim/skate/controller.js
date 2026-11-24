@@ -442,6 +442,68 @@ function slideVelocity(vx, vz, n, k) {
   return [ax * scrub, az * scrub];
 }
 
+// A soft wall (#261): a sample with `soft: true`, which carGroundSampler
+// gives for a moving car. A contact with it is never a bonk: the skater
+// glances off along its face. `side` picks the direction along the face on
+// a hit that is exactly head-on (+1 left of the normal, -1 right). The
+// speed kept goes from all of it on a graze to softWallKeep head-on.
+function softSlideVelocity(vx, vz, n, k, side = 1) {
+  const sp = Math.hypot(vx, vz);
+  if (sp < 1e-9) return null;
+  const into = -(vx * n[0] + vz * n[1]) / sp;
+  if (into <= 0) return [vx, vz];
+  let ax = vx + into * sp * n[0];
+  let az = vz + into * sp * n[1];
+  let len = Math.hypot(ax, az);
+  if (len < 1e-3 * sp) {
+    ax = -n[1] * side;
+    az = n[0] * side;
+    len = 1;
+  } else if (side < 0) {
+    // The other way along the face (the first way is blocked).
+    ax = -ax;
+    az = -az;
+  }
+  const keep = sp * (1 - (1 - k.softWallKeep) * into);
+  return [(ax / len) * keep, (az / len) * keep];
+}
+
+// The velocities a soft-wall contact tries, in order (#261 review): the two
+// ways along the face, then directions turned away from the wall (30 and 60
+// degrees off the face, on both sides), then straight back off the wall.
+// The turned directions and the retreat keep softWallKeep of the speed.
+// With them, a car corner or a passage that the car closes does not stop
+// the skater while a way out is clear.
+const SOFT_TURNS = [Math.PI / 6, Math.PI / 3];
+function softCandidates(vx, vz, n, k) {
+  const out = [];
+  for (const side of [1, -1]) {
+    const v = softSlideVelocity(vx, vz, n, k, side);
+    if (v) out.push(v);
+  }
+  const sp = Math.hypot(vx, vz);
+  if (sp < 1e-9) return out;
+  const keep = sp * k.softWallKeep;
+  // The along-face direction nearest the travel, and the other one.
+  const along = -vx * n[1] + vz * n[0] >= 0 ? 1 : -1;
+  for (const a of SOFT_TURNS) {
+    for (const side of [along, -along]) {
+      const dx = -n[1] * side * Math.cos(a) + n[0] * Math.sin(a);
+      const dz = n[0] * side * Math.cos(a) + n[1] * Math.sin(a);
+      out.push([dx * keep, dz * keep]);
+    }
+  }
+  out.push([n[0] * keep, n[1] * keep]);
+  return out;
+}
+
+// Is the wall found by findWall a soft wall? The sample just inside the
+// edge line tells.
+function isSoft(env, wall, y) {
+  const p = env.sampleGround(wall.point[0] - wall.normal[0] * 0.05, wall.point[1] - wall.normal[1] * 0.05, y);
+  return Boolean(p && p.soft);
+}
+
 // Move (x, z) by (vx, vz) dt, then push it out to the ring radius (plus a
 // margin) from the wall edge line.
 function slideTo(x, z, v, dt, wall, k) {
@@ -464,18 +526,48 @@ function slideTo(x, z, v, dt, wall, k) {
 function slideRolling(s, env, t, ref, dt, k) {
   const [x, y, z] = s.position;
   const isWall = rollWall(ref, k);
-  const wall = findWall(env, x, z, k.bodyRadius * WALL_REACH + Math.abs(s.speed) * dt + 0.05, isWall, ref);
+  const reach = k.bodyRadius * WALL_REACH + Math.abs(s.speed) * dt + 0.05;
+  const wall = findWall(env, x, z, reach, isWall, ref);
   if (!wall) return false;
   const hx = t[0] * s.speed;
   const hz = t[2] * s.speed;
-  const v = slideVelocity(hx, hz, wall.normal, k);
+  // The first slide that is clear, or null.
+  const clear = (w, tries) => {
+    for (const tryV of tries) {
+      if (!tryV) continue;
+      const [tx, tz] = slideTo(x, z, tryV, dt, w, k);
+      const tg = env.sampleGround(tx, tz, ref);
+      const trise = tg ? tg.height - y : -Infinity;
+      if (trise > k.maxStep) continue;
+      const top = tg ? Math.max(y, tg.height) : y;
+      if (ringHits(env, tx, tz, k.bodyRadius * RING_SCALE, rollWall(top, k), top)) continue;
+      return { v: tryV, px: tx, pz: tz, g: tg, rise: trise };
+    }
+    return null;
+  };
+  // A soft wall (a moving car, #261) tries both ways along its face, then
+  // ways out away from it (softCandidates), so a contact never stops the
+  // skater while a way out is clear. When the nearest wall is a hard one
+  // and its slide is blocked, a moving car in reach is the soft wall: the
+  // car, not the wall beside her, closes the way (#261 review).
+  let soft = isSoft(env, wall, ref);
+  let hit = clear(wall, soft ? softCandidates(hx, hz, wall.normal, k) : [slideVelocity(hx, hz, wall.normal, k)]);
+  if (!hit && !soft) {
+    const car = findWall(env, x, z, reach, (p, ox, oz) => Boolean(p.soft) && isWall(p, ox, oz), ref);
+    if (car) {
+      soft = true;
+      hit = clear(car, softCandidates(hx, hz, car.normal, k));
+    }
+  }
+  const { v = null, px = 0, pz = 0, g = null, rise = 0 } = hit ?? {};
+  if (!v && soft) {
+    // No way out is clear this tick (a car and walls all round her). She
+    // holds her place and her speed with no bonk; the car moves on (#285).
+    s.wallSlide = true;
+    s.velocity = [0, 0, 0];
+    return true;
+  }
   if (!v) return false;
-  const [px, pz] = slideTo(x, z, v, dt, wall, k);
-  const g = env.sampleGround(px, pz, ref);
-  const rise = g ? g.height - y : -Infinity;
-  if (rise > k.maxStep) return false;
-  const top = g ? Math.max(y, g.height) : y;
-  if (ringHits(env, px, pz, k.bodyRadius * RING_SCALE, rollWall(top, k), top)) return false;
   const h = Math.hypot(hx, hz);
   const sp = Math.hypot(v[0], v[1]);
   const speed = h > 1e-9 ? s.speed * (sp / h) : 0;
@@ -508,15 +600,36 @@ function slideAir(s, env, ny, prevY, dt, k) {
   const reach = k.bodyRadius * WALL_REACH + Math.hypot(s.velocity[0], s.velocity[2]) * dt + 0.05;
   const wall = findWall(env, x, z, reach, isWall, prevY);
   if (!wall) return null;
-  const v = slideVelocity(s.velocity[0], s.velocity[2], wall.normal, k);
-  if (!v) return null;
-  const [px, pz] = slideTo(x, z, v, dt, wall, k);
-  const g = env.sampleGround(px, pz, prevY);
-  if (g && isWall(g)) return null;
-  if (ringHits(env, px, pz, k.bodyRadius * RING_SCALE, isWall, prevY)) return null;
-  s.velocity[0] = v[0];
-  s.velocity[2] = v[1];
-  return { nx: px, nz: pz, g };
+  const [vx, , vz] = s.velocity;
+  const clear = (w, tries) => {
+    for (const v of tries) {
+      if (!v) continue;
+      const [px, pz] = slideTo(x, z, v, dt, w, k);
+      const g = env.sampleGround(px, pz, prevY);
+      if (g && isWall(g)) continue;
+      if (ringHits(env, px, pz, k.bodyRadius * RING_SCALE, isWall, prevY)) continue;
+      s.velocity[0] = v[0];
+      s.velocity[2] = v[1];
+      return { nx: px, nz: pz, g };
+    }
+    return null;
+  };
+  // As on the ground (slideRolling): a soft wall tries the ways out, and a
+  // moving car in reach is the soft wall when the hard wall slide is blocked.
+  let soft = isSoft(env, wall, prevY);
+  let hit = clear(wall, soft ? softCandidates(vx, vz, wall.normal, k) : [slideVelocity(vx, vz, wall.normal, k)]);
+  if (!hit && !soft) {
+    const car = findWall(env, x, z, reach, (p, ox, oz) => Boolean(p.soft) && isWall(p, ox, oz), prevY);
+    if (car) {
+      soft = true;
+      hit = clear(car, softCandidates(vx, vz, car.normal, k));
+    }
+  }
+  if (hit) return hit;
+  // A soft wall with no way out clear this tick: she keeps her column with
+  // no bonk, as on the ground.
+  if (soft) return { nx: x, nz: z, g: env.sampleGround(x, z, prevY) };
+  return null;
 }
 
 // (x, z) moved out of the walls near it: the shortest move, in one of the

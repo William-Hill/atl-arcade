@@ -35,6 +35,7 @@ export const SKATE = {
   bonkSpeedKeep: 0, // fraction of speed kept after a head-on wall hit (a bonk). min 0 / typical 0 / max 0.3.
   wallBonkAngle: 1.05, // rad between the travel direction and a wall face above which a hit is head-on and the skater bonks. Under it the skater slides. min 0.7 / typical 1.05 / max 1.4.
   wallSlideKeep: 0.8, // fraction of the along-wall speed kept on a slide just under wallBonkAngle. A shallower hit keeps more; a graze keeps all. min 0.5 / typical 0.8 / max 1.
+  softWallKeep: 0.5, // fraction of the speed kept on a head-on hit of a soft wall (a moving car, #261): the skater glances off along its side and never stops. A shallower hit keeps more. min 0.3 / typical 0.5 / max 0.8.
   fallFloor: -3, // m height under which a falling skater respawns. min -10 / typical -3 / max -1.
   boundsMargin: 1, // m past the level bounds at which a skater respawns. min 0.5 / typical 1 / max 5.
   sideSlope: 0.0, // reserved.

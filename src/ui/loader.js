@@ -2,6 +2,8 @@
 // first paint, before any JS. This module moves the bar as the parts arrive
 // and hides the screen after the first game frame. The skater can arrive
 // after the first frame; the game shows the capsule until then.
+// The art in the screen is public/brand/loader-art.svg (#303), made by
+// scripts/brand/share-assets.mjs.
 
 // The parts and their share of the bar. The skater GLB is the biggest file.
 export const LOAD_PARTS = { level: 0.3, physics: 0.3, skater: 0.4 };

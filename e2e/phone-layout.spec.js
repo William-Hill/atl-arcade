@@ -270,6 +270,69 @@ for (const size of SIZES) {
   });
 }
 
+// #245: the PHOTO, SETTINGS and FULL SCREEN buttons on a touch screen. In
+// portrait they are a column under the minimap; in a short landscape they
+// are a pair at the top middle. They must not cover the skater buttons, the
+// minimap, the HUD column, the beat pulse, the goals or the touch controls.
+// Each one is 44 px or more, and shows no key letter (a touch player has no
+// keyboard). The sizes are the ones of the audit (MOB2-1): a 360 x 640
+// phone, iPhone 15 and Pixel 7 in portrait, and iPhone 15 in landscape,
+// and 844 x 390 landscape.
+const COLUMN_SIZES = [
+  { name: "portrait-360", device: "Pixel 7", viewport: { width: 360, height: 640 } },
+  { name: "iPhone 15", device: "iPhone 15" },
+  { name: "Pixel 7", device: "Pixel 7" },
+  { name: "iPhone 15 landscape", device: "iPhone 15 landscape" },
+  // A wider landscape phone: the pair is the same as at 734 px.
+  { name: "landscape", device: "Pixel 7", viewport: { width: 844, height: 390 } },
+];
+for (const size of COLUMN_SIZES) {
+  test.describe(`phone buttons, ${size.name}`, () => {
+    const { defaultBrowserType, ...dev } = devices[size.device]; // eslint-disable-line no-unused-vars
+    test.use({ ...dev, ...(size.viewport ? { viewport: size.viewport } : {}) });
+
+    test("PHOTO, SETTINGS and FULL SCREEN are 44 px, show no key letter, and cover no other item", async ({ page }) => {
+      test.setTimeout(180000);
+      await ready(page);
+      await fillHud(page);
+      await page.evaluate(() => {
+        // No landmark banner: in portrait it draws over the column by design
+        // (see the banner test above).
+        document.getElementById("landmark-banner").hidden = true;
+        document.querySelectorAll("#hud-goals .hud-goal-chip").forEach((c, i) => (c.textContent = ["✓ Score 6K/6K", "✓ Combo 1K/1K", "Cards 0/3", "Gaps 0/2"][i] ?? c.textContent));
+        document.getElementById("hud-hint").style.display = "none";
+        // ready() loads mute=1, so the HUD hides the beat pulse. Show it.
+        document.getElementById("hud-pulse").style.display = "";
+      });
+      const { items, w, h } = await bannerBoxes(page);
+      // The beat animation scales the pulse up to 1.6 times (pulseLook).
+      const pulse = await page.evaluate(() => {
+        const r = document.getElementById("hud-pulse").getBoundingClientRect();
+        const g = r.width * 0.3;
+        return { x: r.left - g, y: r.top - g, w: r.width + 2 * g, h: r.height + 2 * g };
+      });
+      items.pulse = pulse;
+      await page.screenshot({ path: `e2e/__screenshots__/phone-buttons-${size.name.replace(/ /g, "-").toLowerCase()}.png` });
+      const mine = ["photo", "settings", "fullscreen"];
+      for (const name of mine) {
+        const a = items[name];
+        expect(a, name).toBeTruthy();
+        expect(a.x, `${name} left`).toBeGreaterThanOrEqual(0);
+        expect(a.y, `${name} top`).toBeGreaterThanOrEqual(0);
+        expect(a.x + a.w, `${name} right`).toBeLessThanOrEqual(w + 0.5);
+        expect(a.y + a.h, `${name} bottom`).toBeLessThanOrEqual(h + 0.5);
+        expect(Math.min(a.w, a.h), `${name} size`).toBeGreaterThanOrEqual(44);
+      }
+      expect(hitsOf(items, mine)).toEqual([]);
+      // No key letter (P, O) shows on a touch screen.
+      const keys = await page.evaluate(() =>
+        [...document.querySelectorAll("#photo-toggle kbd, #settings-toggle kbd")].filter((k) => getComputedStyle(k).display !== "none").length,
+      );
+      expect(keys).toBe(0);
+    });
+  });
+}
+
 test.describe("phone landscape camera", () => {
   test.use({ ...pixel, viewport: { width: 844, height: 390 } });
 

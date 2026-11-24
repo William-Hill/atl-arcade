@@ -432,6 +432,12 @@ if (landmarkModels) {
   scene.add(landmarkModels.root);
   landmarkModels.ready.catch((err) => console.error(err));
 }
+// True when the roof models and the landmark GLBs are placed (or failed),
+// for scripts/card-art.mjs (#220).
+let landmarksLoaded = false;
+Promise.allSettled([landmarks?.ready, landmarkModels?.ready]).then(() => {
+  landmarksLoaded = true;
+});
 
 // The street kit (trees, lamps, benches, roof units) loads after the level
 // shows. ?props=0 leaves it out. With the GLB trees (pbr), the batch goes in
@@ -1630,7 +1636,7 @@ window.__atl = {
       return geo && levelView.facadeGlb ? { ...levelView.facadeGlb } : null;
     },
     get landmarks() {
-      return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null } : null;
+      return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null, loaded: landmarksLoaded } : null;
     },
     // The skatepark (#222): the pad, the placements and the model stats.
     get skatepark() {

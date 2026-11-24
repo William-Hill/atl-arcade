@@ -52,6 +52,20 @@ page.on("pageerror", (e) => errors.push(String(e)));
 // No intro, a capsule skater at the spawn, no sound, the fixed camera.
 await page.goto(`${base}/?${query}`);
 await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 8, null, { timeout: 300000 });
+// Every landmark model is placed, and every late load that started is
+// done or failed. A fixed wait alone could capture a landmark before its
+// GLB is in.
+await page.waitForFunction(
+  () => {
+    const a = window.__atl;
+    const lm = a.level.landmarks;
+    const late = a.lateLoads;
+    const lateDone = !late || Object.keys(late.started).every((g) => g in late.done || g in late.failed);
+    return (!lm || lm.loaded) && lateDone;
+  },
+  null,
+  { timeout: 300000 },
+);
 await page.evaluate(() => {
   window.__cardArt = true;
 });

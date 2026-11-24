@@ -1,0 +1,25 @@
+{
+  "file": "loader-art.svg",
+  "generated": "2026-11-23",
+  "issue": "William-Hill/atl-arcade#303",
+  "role": "Load screen art (index.html #loader, driven by src/ui/loader.js): the logo over a flat skyline and the three trail stripes.",
+  "sizePx": null,
+  "method": "Hand-written SVG shapes in the logo style (navy outline, the brand colors), plus the logo art unchanged. Generic towers; no copy of any real building, game, or seal.",
+  "tool": {
+    "script": "scripts/brand/share-assets.mjs"
+  },
+  "sources": [
+    "assets/brand/logo/skate-atl-logo.svg (sha256 1d3460ffd259f35d2fec1980823256fbde4e64e9054edcfc952dcb855b06c177)"
+  ],
+  "command": "node scripts/brand/share-assets.mjs",
+  "prompt": "none (no generative model)",
+  "credits": {
+    "meshy": 0,
+    "tripo": 0,
+    "imageGeneration": 0,
+    "total": 0
+  },
+  "license": "Original work for ATL Arcade. Font outlines in the logo remain under the SIL OFL 1.1 (Anton).",
+  "bytes": 19890,
+  "sha256": "f4ceda443fa3781400dd7da07707ad07021c106b987f3f1d2055c18ec9375904"
+}

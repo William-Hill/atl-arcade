@@ -1,0 +1,29 @@
+{
+  "file": "favicon-32.png",
+  "generated": "2026-11-23",
+  "issue": "William-Hill/atl-arcade#303",
+  "method": "The logo SVG with a clip in its skewed group (x < 247): the three trail stripes and the S. The underline is left out. Square view box around the ink, 6 % margin.",
+  "tool": {
+    "script": "scripts/brand/share-assets.mjs",
+    "render": "Chromium via @playwright/test 1.63.0"
+  },
+  "sources": [
+    "assets/brand/logo/skate-atl-logo.svg (sha256 1d3460ffd259f35d2fec1980823256fbde4e64e9054edcfc952dcb855b06c177)"
+  ],
+  "role": "Favicon, 32 x 32 PNG (transparent).",
+  "sizePx": [
+    32,
+    32
+  ],
+  "command": "node scripts/brand/share-assets.mjs",
+  "prompt": "none (no generative model)",
+  "credits": {
+    "meshy": 0,
+    "tripo": 0,
+    "imageGeneration": 0,
+    "total": 0
+  },
+  "license": "Original work for ATL Arcade. Font outlines in the logo remain under the SIL OFL 1.1 (Anton).",
+  "bytes": 1270,
+  "sha256": "dc5a0687f78494c6da0cdf5cd6c07e25a88d417fb5fc314c12c303503f2eaf70"
+}

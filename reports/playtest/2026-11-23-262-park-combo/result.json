@@ -1,0 +1,130 @@
+{
+  "date": "2026-11-23T19:54:19.174Z",
+  "kind": "scripted Playwright ride (not Autopilot)",
+  "commit": "0d7fdfc",
+  "rides": {
+    "kicker": {
+      "start": {
+        "position": [
+          251.14100553812162,
+          24.309999847412108,
+          7.794337087922865
+        ],
+        "yaw": 0.32681059976185667
+      },
+      "ticks": 231,
+      "page": {
+        "moves": [
+          "Ramp Air:100",
+          "Hop:50"
+        ],
+        "banks": [
+          300
+        ],
+        "grounds": [
+          "skatepark:h4w-skatepark",
+          "skatepark:h4w-skatepark"
+        ],
+        "falls": 0
+      },
+      "sim": {
+        "moves": [
+          "Ramp Air:100",
+          "Hop:50"
+        ],
+        "banks": [
+          300
+        ],
+        "grounds": [
+          "skatepark:h4w-skatepark",
+          "skatepark:h4w-skatepark:kicker:face"
+        ],
+        "bonks": 0
+      },
+      "shots": [
+        "reports/playtest/2026-11-23-262-park-combo/kicker-air.jpg",
+        "reports/playtest/2026-11-23-262-park-combo/kicker-bank.jpg"
+      ]
+    },
+    "quarter": {
+      "start": {
+        "position": [
+          254.94529087022187,
+          24.309999847412108,
+          9.672477953770471
+        ],
+        "yaw": 0.32681059976185667
+      },
+      "ticks": 331,
+      "page": {
+        "moves": [
+          "Vert Air:200",
+          "Hop:50"
+        ],
+        "banks": [
+          500
+        ],
+        "grounds": [
+          "skatepark:h4w-skatepark:quarter:face",
+          "skatepark:h4w-skatepark:quarter:face"
+        ],
+        "falls": 0
+      },
+      "sim": {
+        "moves": [
+          "Vert Air:200",
+          "Hop:50"
+        ],
+        "banks": [
+          500
+        ],
+        "grounds": [
+          "skatepark:h4w-skatepark",
+          "skatepark:h4w-skatepark:pyramid:bank3",
+          "skatepark:h4w-skatepark:pyramid:top",
+          "skatepark:h4w-skatepark:pyramid:bank1",
+          "skatepark:h4w-skatepark:manual-pad:body",
+          "skatepark:h4w-skatepark:quarter:face"
+        ],
+        "bonks": 0
+      },
+      "shots": [
+        "reports/playtest/2026-11-23-262-park-combo/quarter-air.jpg",
+        "reports/playtest/2026-11-23-262-park-combo/quarter-bank.jpg"
+      ]
+    },
+    "ledge": {
+      "start": {
+        "position": [
+          267.033688811783,
+          24.309999847412108,
+          3.936684642597979
+        ],
+        "yaw": 1.5485410761578866
+      },
+      "page": {
+        "snaps": [
+          "ledge:skatepark:h4w-skatepark:line-ledge:front"
+        ],
+        "exits": [
+          "end"
+        ],
+        "moves": [
+          "Ledge Grind:210",
+          "Hop:50"
+        ],
+        "banks": [],
+        "falls": 0
+      },
+      "sim": {
+        "bonks": 0,
+        "falls": 0,
+        "snapSpeed": 7.553102330624114
+      },
+      "shots": [
+        "reports/playtest/2026-11-23-262-park-combo/ledge-air.jpg"
+      ]
+    }
+  },
+  "consoleErrors": []
+}

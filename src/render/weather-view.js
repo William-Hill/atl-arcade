@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { ATLANTA, civilHour, dayOfYear, skyState, sunState, weatherFor, weatherOverride, wetAt } from "../sim/weather.js";
+import { ATLANTA, atlantaTime, skyState, sunState, weatherFor, weatherOverride, wetAt } from "../sim/weather.js";
 
 // The day and season weather of a geodata level (src/sim/weather.js for the
 // pure model). This module samples the model and applies the result to the
@@ -16,21 +16,32 @@ import { ATLANTA, civilHour, dayOfYear, skyState, sunState, weatherFor, weatherO
 // - the ground: the uWet uniform darkens and shines a soaked street
 //
 // The state re-samples on a slow timer and lerps toward the new state, so
-// an afternoon storm moves in over seconds, not in a cut. URL parameters:
-// ?date=MM-DD, ?time=HH[.HH], ?weather=auto|clear|clouds|rain|storm, and
-// ?timescale=<seconds of clock per real second> for tests and screenshots.
+// an afternoon storm moves in over seconds, not in a cut.
+//
+// The first load (no URL parameters) shows the city at its best: a clear
+// afternoon at FIRST_LOAD.hour, today's date in Atlanta (#353, owner
+// decision 2026-11-24). The real clock and the seasonal weather draw stay
+// as options. URL parameters:
+// ?date=MM-DD, ?time=HH[.HH]|now (now: the real Atlanta time, not the
+// device time zone), ?weather=auto|clear|clouds|rain|storm (auto: the
+// seasonal draw), and ?timescale=<seconds of clock per real second> for
+// tests and screenshots.
+export const FIRST_LOAD = Object.freeze({ hour: 14, weather: "clear" });
 
 // Pure: the clock for a URLSearchParams and a Date.
 export function weatherClock(params, now = new Date()) {
+  const atl = atlantaTime(now);
   const date = /^(\d{1,2})-(\d{1,2})$/.exec(params.get("date") ?? "");
-  let day = dayOfYear(now);
+  let day = atl.day;
   if (date) {
-    day = Math.floor((Date.UTC(now.getFullYear(), Number(date[1]) - 1, Number(date[2])) - Date.UTC(now.getFullYear(), 0, 1)) / 86400000) + 1;
+    day = Math.floor((Date.UTC(atl.year, Number(date[1]) - 1, Number(date[2])) - Date.UTC(atl.year, 0, 1)) / 86400000) + 1;
   }
   const time = params.get("time");
-  const hour = time !== null && Number.isFinite(Number(time)) ? Number(time) : civilHour(now);
+  let hour = FIRST_LOAD.hour;
+  if (time === "now") hour = atl.hour;
+  else if (time !== null && time !== "" && Number.isFinite(Number(time))) hour = Number(time);
   const ts = params.get("timescale");
-  return { day, hour, override: params.get("weather"), timescale: ts !== null && Number.isFinite(Number(ts)) ? Number(ts) : 0 };
+  return { day, hour, override: params.get("weather") ?? FIRST_LOAD.weather, timescale: ts !== null && Number.isFinite(Number(ts)) ? Number(ts) : 0 };
 }
 
 // Pure: the full render state for a clock at a place.

@@ -339,9 +339,10 @@ performance.mark("atl:view");
 
 // The day and season weather (src/sim/weather.js, render/weather-view.js):
 // the sun, the sky, the fog, the windows, and the wet streets follow the
-// date and the time of day at the level's own latitude. ?date=MM-DD and
-// ?time=HH.HH set the clock, ?weather=clear|clouds|rain|storm picks the
-// weather, ?timescale=<s clock / s real> speeds the clock, and ?weather=0
+// date and the time of day at the level's own latitude. The first load is
+// a clear afternoon in Atlanta (#353). ?date=MM-DD and ?time=HH.HH set the
+// clock (?time=now: the real Atlanta time), ?weather=clear|clouds|rain|storm
+// picks the weather (?weather=auto: the seasonal draw), ?timescale=<s clock / s real> speeds the clock, and ?weather=0
 // turns the system off.
 let weatherView = null;
 let rain = null;

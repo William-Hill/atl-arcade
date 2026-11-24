@@ -474,7 +474,7 @@
         "type": "combo",
         "tier": "hard",
         "hint": "Land a 2,000 point combo in the skatepark",
-        "zone": {"x": 272.3, "z": -1.5, "r": 10},
+        "zone": {"x": 264.4, "z": 3.3, "r": 19, "area": "skatepark:h4w-skatepark", "margin": 2},
         "points": 2000
       }
     },

@@ -104,6 +104,7 @@ import { createLateLoads, lateLoadPlan, propTimeoutFor } from "./render/late-loa
 import { medalScore } from "./sim/landmarks.js";
 import { landmarkStepArgs, withClaimMedal, withGapGoal } from "./landmarks/play.js";
 import { createLandmarkRings } from "./render/landmark-rings.js";
+import { createClaimTargets } from "./render/claim-target.js";
 import { ringCapacity } from "./render/landmark-rings-math.js";
 import { createLandmarkBanner, districtAccent } from "./ui/landmark-banner.js";
 import { createChimes } from "./audio/chimes.js";
@@ -424,6 +425,10 @@ const landmarkRings = landmarkTracker && params.get("rings") !== "0"
     })
   : null;
 if (landmarkRings) scene.add(landmarkRings.group);
+// The grind claim target (#264, src/render/claim-target.js): the curb or rail
+// of a Found grind claim, near its zone. ?rings=0 leaves it out too.
+const claimTargets = landmarkRings ? createClaimTargets({ look, reducedMotion: () => effects.reducedMotion }) : null;
+if (claimTargets) scene.add(claimTargets.group);
 const landmarkModels = landmarkGlbs ? createLandmarkModels(level.name, { after: firstFrame }) : null;
 if (landmarkModels) {
   scene.add(landmarkModels.root);
@@ -1370,6 +1375,7 @@ function frame(now) {
     // (its time stops too), and under the results screen.
     landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown) || Boolean(front?.active), accent: () => districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
     landmarkRings?.update(landmarkNow.spots, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed, night: weatherView?.state.night ?? 0 });
+    claimTargets?.update(landmarkNow.spots, skaterEnv.grindables, skater.position, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed });
   }
   if (paused) chimes.clear();
   else chimes.update();
@@ -1960,6 +1966,10 @@ window.__atl = {
         get banner() {
           return landmarkBanner.state;
         },
+        // The grind claim target (#264): { shown, active, gain, length, points, feature, visible }.
+        get target() {
+          return claimTargets ? claimTargets.info : null;
+        },
         get goalLine() {
           return hud.elements.goal.hidden ? null : hud.elements.goal.textContent;
         },
@@ -1983,6 +1993,14 @@ window.__atl = {
           landmarkRings.setHidden(hidden);
           draw();
           landmarkRings.setHidden(false);
+          return renderer.info.render.calls;
+        },
+        // Draws 1 frame now with the grind target (#264) hidden or shown.
+        drawTarget(hidden) {
+          if (!claimTargets) return null;
+          claimTargets.setHidden(hidden);
+          draw();
+          claimTargets.setHidden(false);
           return renderer.info.render.calls;
         },
         ringCost() {

@@ -44,6 +44,20 @@ export function bankedLine(lastBanked, bankedAt, nowMs, showMs = BANKED_SHOW_MS,
   return { text: `+${lastBanked.toLocaleString("en-US")}`, fade: age >= showMs };
 }
 
+// The short reason when a dance press does not count (#264). The keys are
+// the reasons of the skater (src/sim/skate/skater.js, `refused`).
+export const REFUSED_TEXT = {
+  air: "Dance on the ground, not in the air",
+  grind: "Dance after the grind",
+  slow: "Roll faster to dance",
+};
+export const REFUSED_SHOW_MS = 1400;
+
+// Pure: the reason text of a refusal, or null.
+export function refusedText(refused) {
+  return refused ? (REFUSED_TEXT[refused.reason] ?? null) : null;
+}
+
 function el(tag, className, parent) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -115,6 +129,7 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
 
   let tagUntil = 0;
   let seenSeq = 0;
+  let seenRefused = 0;
   // The time of the last bank: the combo was active, and now it is not.
   let wasActive = false;
   let bankedAt = null;
@@ -174,7 +189,17 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
       if (last) {
         tag.textContent = last.beatTag ? `${last.beatTag} ${last.name}` : last.name;
         tag.dataset.beat = last.beatTag ?? "";
+        tag.dataset.refused = "0";
         tagUntil = nowMs + 900;
+      }
+      // A dance press that did not count: the reason, in the same place (#264).
+      const refused = s.refused && s.refused.seq !== seenRefused ? refusedText(s.refused) : null;
+      seenRefused = s.refused?.seq ?? 0;
+      if (refused && !last) {
+        tag.textContent = refused;
+        tag.dataset.beat = "";
+        tag.dataset.refused = "1";
+        tagUntil = nowMs + REFUSED_SHOW_MS;
       }
       tag.style.opacity = nowMs < tagUntil ? "1" : "0";
 

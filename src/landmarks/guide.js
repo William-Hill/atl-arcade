@@ -90,7 +90,7 @@ export function guideLine(view, position, yaw = 0, { claims = true, timeLeft = n
   const claim = goalLine(view, position, { timed: claims });
   const claimSpot = claim ? view.spots.find((s) => s.id === claim.id) : null;
   const claimD = claimSpot ? away(claimSpot) : Infinity;
-  if (claim && (claimD <= g.near || claimSpot.attempt)) {
+  if (claim && (claimD <= g.near || claimSpot.attempt || claim.active)) {
     const warn = tooFar(claimSpot, claimD);
     return { id: claim.id, kind: "claim", text: warn ? `${claim.text}\n${TOO_FAR}` : claim.text, warn };
   }

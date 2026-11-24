@@ -61,7 +61,18 @@ export function mergedText(names, max = LANDMARKS.banner.mergedNamesMax) {
 }
 
 const dist2 = (ax, az, bx, bz) => Math.hypot(ax - bx, az - bz);
-const inCircle = (zone, x, z) => dist2(zone.x, zone.z, x, z) <= zone.r;
+
+// True when (x, z) is in a challenge zone. A zone is a circle { x, z, r },
+// or an area outline with a margin (#365): { shapes, margin, box }, from
+// `zone.area` of the file (prepareChallenge). The edge is inside the zone.
+export function inZone(zone, x, z) {
+  if (zone.shapes) {
+    const b = zone.box;
+    if (x < b.minX || x > b.maxX || z < b.minZ || z > b.maxZ) return false;
+    return zone.shapes.some((rings) => outlineDistance([x, z], rings) <= zone.margin + 1e-9);
+  }
+  return dist2(zone.x, zone.z, x, z) <= zone.r;
+}
 
 // ---------------------------------------------------------------- formulas
 
@@ -132,7 +143,20 @@ function boxOf(shapes, pad) {
   return box;
 }
 
-function prepareChallenge(c, k, R) {
+// A zone of the file. With `area` (#365), the zone is the outline of that
+// level area (a skatepark pad) plus `margin` m: { x, z, r, area, margin,
+// shapes, box }. `x`, `z` stay the target point of the guide line, and `r`
+// the reach of the zone from that point.
+function prepareZone(zone, level, spotId) {
+  if (typeof zone.area !== "string") return { ...zone };
+  const hit = (level.areas ?? []).find((a) => a.id === zone.area);
+  if (!hit) throw new Error(`landmarks: spot "${spotId}" names the zone area "${zone.area}", and the level does not have it`);
+  const shapes = [[hit.outer, ...(hit.holes ?? [])]];
+  const margin = zone.margin ?? 0;
+  return { ...zone, margin, shapes, box: boxOf(shapes, margin) };
+}
+
+function prepareChallenge(c, k, R, level = {}, spotId = "") {
   if (!c) return null;
   const base = { type: c.type, tier: c.tier, hint: c.hint ?? "" };
   if (c.type === "gap") {
@@ -143,7 +167,7 @@ function prepareChallenge(c, k, R) {
     const checkpoints = c.checkpoints.map((p) => [p[0], p[1]]);
     return { ...base, checkpoints, r: k.checkpointR, seconds: c.seconds ?? lineSeconds(c.tier, checkpoints.length, R) };
   }
-  if (c.type === "combo") return { ...base, zone: { ...c.zone, r: c.zone.r ?? R.comboR }, points: c.points ?? R.comboPoints[c.tier] };
+  if (c.type === "combo") return { ...base, zone: prepareZone({ ...c.zone, r: c.zone.r ?? R.comboR }, level, spotId), points: c.points ?? R.comboPoints[c.tier] };
   throw new Error(`landmarks: unknown challenge type "${c.type}"`);
 }
 
@@ -163,7 +187,7 @@ export function prepareLandmarks(data, level = {}, k = LANDMARKS, R = LANDMARK_R
       const at = s.find.at ?? s.at;
       find = { r: s.find.r, at: [at[0], at[1]] };
     }
-    const challenge = s.kind === "edge" ? null : prepareChallenge(s.challenge, k, R);
+    const challenge = s.kind === "edge" ? null : prepareChallenge(s.challenge, k, R, level, s.id);
     return { id: s.id, kind: s.kind, name: s.name, short: s.short ?? "", at: [s.at[0], s.at[1]], tier: challenge?.tier ?? null, find, challenge, card: s.card ?? [] };
   });
 }
@@ -241,6 +265,22 @@ export function spotState(state, id) {
   return state.found.includes(id) ? "found" : "unknown";
 }
 
+// The challenge of `spot` that the skater does now (#264), from the open
+// attempts: a line in progress, a grind on its feature, the air of a gap
+// that started in its zone, or an open combo with its last link in its zone.
+// `grindMeters` is the length of the grind on its feature, or null.
+export function activeOf(state, spot) {
+  const c = spot.challenge;
+  const t = state.track;
+  const none = { active: false, grindMeters: null };
+  if (!c || state.claimed.includes(spot.id)) return none;
+  if (c.type === "line") return { active: Boolean(t.lines[spot.id]), grindMeters: null };
+  if (c.type === "grind") return t.grind && t.grind.id === c.feature ? { active: true, grindMeters: t.grind.length ?? 0 } : none;
+  if (c.type === "gap") return { active: Boolean(t.air && t.air.zones.includes(spot.id)), grindMeters: null };
+  if (c.type === "combo") return { active: Boolean(t.link && inZone(c.zone, t.link[0], t.link[1])), grindMeters: null };
+  return none;
+}
+
 // What the maps, the HUD and the results screen read.
 export function landmarkView(state, k = LANDMARKS) {
   const spots = state.spots.map((s) => {
@@ -259,6 +299,7 @@ export function landmarkView(state, k = LANDMARKS) {
       hint: st === "found" && !edge ? s.challenge.hint : null,
       challenge: s.challenge,
       attempt: state.track.lines[s.id] ?? null, // a line in progress: { next, t, restarted }
+      ...activeOf(state, s), // the challenge the skater does now (#264): { active, grindMeters }
     };
   });
   return {
@@ -443,11 +484,11 @@ export function stepLandmarks(state, obs, dt, { active = true, hold = false } = 
     if (!obs.bailed) {
       if (obs.airborne) {
         const zones = air ? [...air.zones] : [];
-        for (const s of open) if (s.challenge.type === "gap" && !zones.includes(s.id) && inCircle(s.challenge.zone, x, z)) zones.push(s.id);
+        for (const s of open) if (s.challenge.type === "gap" && !zones.includes(s.id) && inZone(s.challenge.zone, x, z)) zones.push(s.id);
         air = { time: (air ? air.time : 0) + dt, zones };
       } else if (air && !obs.grind) {
         if (obs.landed && air.time >= k.minAirTime) {
-          for (const s of open) if (air.zones.includes(s.id) && (!s.challenge.landing || inCircle(s.challenge.landing, x, z))) claim(s);
+          for (const s of open) if (air.zones.includes(s.id) && (!s.challenge.landing || inZone(s.challenge.landing, x, z))) claim(s);
         }
         air = null;
       }
@@ -456,11 +497,12 @@ export function stepLandmarks(state, obs, dt, { active = true, hold = false } = 
     // Grind: one grind on the feature, `meters` or more, that touches the
     // zone. A grind that leaves the zone counts its full length.
     if (obs.grind && !obs.bailed) {
-      if (!grind || grind.id !== obs.grind.id) grind = { id: obs.grind.id, from: obs.grind.s, touched: [] };
+      if (!grind || grind.id !== obs.grind.id) grind = { id: obs.grind.id, from: obs.grind.s, touched: [], length: 0 };
       const length = Math.abs(obs.grind.s - grind.from);
+      grind = { ...grind, length };
       for (const s of open) {
         if (s.challenge.type !== "grind" || s.challenge.feature !== grind.id) continue;
-        if (!grind.touched.includes(s.id) && inCircle(s.challenge.zone, x, z)) grind = { ...grind, touched: [...grind.touched, s.id] };
+        if (!grind.touched.includes(s.id) && inZone(s.challenge.zone, x, z)) grind = { ...grind, touched: [...grind.touched, s.id] };
         if (grind.touched.includes(s.id) && length >= s.challenge.meters) claim(s);
       }
     } else grind = null;
@@ -500,7 +542,7 @@ export function stepLandmarks(state, obs, dt, { active = true, hold = false } = 
       // after the last link, so the bank position does not count.
       if (obs.linked) link = [x, z];
       if (obs.banked > 0) {
-        if (link) for (const s of open) if (s.challenge.type === "combo" && obs.banked >= s.challenge.points && inCircle(s.challenge.zone, link[0], link[1])) claim(s);
+        if (link) for (const s of open) if (s.challenge.type === "combo" && obs.banked >= s.challenge.points && inZone(s.challenge.zone, link[0], link[1])) claim(s);
         link = null;
       }
     }

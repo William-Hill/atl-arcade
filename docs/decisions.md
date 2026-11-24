@@ -2965,3 +2965,9 @@ Neither toggle goes into `src/` before the playtest verdict.
 - Owner decision on #22: for the City pitch, an agent fills `docs/review/content-checklist.md` against the 5 political rules in `AGENTS.md`, and the owner reviews it. The real skater review (`docs/review/skater-review.md`) stays open for v1.0.0.
 - Result on `main` at `82b84e1`: 24 checks, 20 pass, 3 flagged, 1 open. Flags: #353 (the first load can show a dark, rainy night; the clock uses the device time zone), #354 (the New Realm Brewing card names beer and spirits), #261 (traffic, open before; owner decision 2026-11-23: calm traffic with no collision, changed in another PR).
 - This review changes no code.
+
+## 2026-11-23: Test scope for a PR and for main
+
+**Decision (owner, 2026-11-23).** A PR runs the full Vitest suite and only the Playwright specs that it adds or touches. The full Playwright suite (about 290 tests) runs once on `main` after a group of merges, before an Autopilot playtest. Two full Playwright suites never run at the same time.
+
+**Why.** On 2026-11-23, 4 ship-it agents each started the full suite at the same time. The load average went to 100 and more, the runs did not finish in 2 hours, and most failures were timeouts from the load. The Playwright suite is the regression gate. The Autopilot playtest is an AI agent that plays the game and finds play problems that no test predicts. The two checks do not replace each other.

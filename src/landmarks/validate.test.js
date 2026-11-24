@@ -255,7 +255,8 @@ describe("levels/beltline-eastside/landmarks.json", () => {
     expect(spot.name).toBe("Thomas Taylor Memorial Skatepark");
     expect(spot.footprint).toEqual({ areas: ["skatepark:h4w-skatepark"] });
     expect(spot.challenge).toMatchObject({ type: "combo", tier: "hard", points: 2000 });
-    expect(spot.challenge.zone.r).toBe(LANDMARK_RULES.comboR);
+    // The combo zone is the whole pad plus 2 m (#365, owner decision 2026-11-24).
+    expect(spot.challenge.zone).toMatchObject({ area: "skatepark:h4w-skatepark", margin: 2 });
     // The sources say "spring 2011" and "2011", not a month.
     for (const text of [spot.short, ...spot.card.map((f) => f.text)]) expect(text).not.toMatch(/June/);
     for (const f of spot.card) expect(f.source.url).toMatch(/^https:\/\/(beltline\.org\/parks-trails\/thomas-taylor-memorial-skatepark\/|www\.h4wpc\.org\/skate-park\/)$/);

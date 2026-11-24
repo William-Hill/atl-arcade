@@ -6,6 +6,20 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## #264 and #365 Claim targets, 2026-11-24
+
+Branch `claude/lucid-fermat-zrlawv` from `main`. Design: `docs/decisions.md`, 2026-11-24. Owner decision (#365): the skatepark combo zone is the whole pad plus 2 m, drawn as a gold double outline.
+
+| Part | Where | Verified |
+|---|---|---|
+| Area zone (pad + margin), `inZone`, `activeOf`, grind meters | `src/sim/landmarks.js`, `levels/beltline-eastside/landmarks.json`, `src/landmarks/validate.js` | Vitest `src/sim/landmarks.test.js` (#365: west end of the rail lane claims; #264: active grind) |
+| Goal line follows the challenge in progress, "Grind 6 of 15 m" | `src/landmarks/play.js`, `src/landmarks/guide.js` | Vitest `src/landmarks/play.test.js` |
+| Rounded rectangle ring of an area zone | `src/render/landmark-rings-math.js`, `src/render/landmark-rings.js` | Vitest `src/render/landmark-rings-math.test.js`; Playwright `e2e/claim-targets.spec.js` |
+| Grind target line on the rail or curb | `src/render/claim-target-math.js`, `src/render/claim-target.js`, `src/main.js` | Vitest `src/render/claim-target-math.test.js`; Playwright `e2e/claim-targets.spec.js` |
+| Dance refusal reason | `src/sim/skate/skater.js` (`refused`), `src/ui/hud.js`, `src/shell.css` | Vitest `skater.test.js`, `hud.test.js`; Playwright `e2e/claim-targets.spec.js` |
+
+#264 and #365 NOT verified: no person played it; no real phone or GPU; no new Autopilot run.
+
 ## #301 Intro and title screen, 2026-11-23
 
 Branch `claude/elegant-ride-50px3u` from `main`. Design: `docs/decisions.md`, 2026-11-23.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BANKED_FADE_MS, BANKED_SHOW_MS, STYLE_LABEL, STYLE_READY_LABEL, bankedLine, pulseLook, styleLabel } from "./hud.js";
+import { BANKED_FADE_MS, BANKED_SHOW_MS, REFUSED_TEXT, STYLE_LABEL, STYLE_READY_LABEL, bankedLine, pulseLook, refusedText, styleLabel } from "./hud.js";
 
 describe("the style ready cue (#97, MOB-12)", () => {
   it("changes the text and adds a star shape, not only the color", () => {
@@ -37,5 +37,16 @@ describe("the +N of a banked combo (#269)", () => {
     expect(bankedLine(0, null, 5000)).toEqual({ text: "", fade: false });
     expect(bankedLine(1200, null, 5000)).toEqual({ text: "", fade: false });
     expect(bankedLine(0, 1000, 1000)).toEqual({ text: "", fade: false });
+  });
+});
+
+describe("the reason when a dance does not count (#264)", () => {
+  it("has a short line for each reason of the skater", () => {
+    expect(refusedText({ reason: "air", seq: 1 })).toBe("Dance on the ground, not in the air");
+    expect(refusedText({ reason: "grind", seq: 2 })).toBe("Dance after the grind");
+    expect(refusedText({ reason: "slow", seq: 3 })).toBe("Roll faster to dance");
+    expect(refusedText(null)).toBeNull();
+    expect(refusedText({ reason: "other", seq: 1 })).toBeNull();
+    for (const text of Object.values(REFUSED_TEXT)) expect(text.length).toBeLessThanOrEqual(40);
   });
 });

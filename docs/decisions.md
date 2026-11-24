@@ -2997,3 +2997,16 @@ Neither toggle goes into `src/` before the playtest verdict.
 **Tests.** `npm run validate:landmarks` passes. Playwright `e2e/first-load.spec.js` claims the spot, opens its card on the full map, and checks the new text and that no fact of the spot names beer, spirits, wine, liquor or a cocktail. Screenshot: `e2e/__screenshots__/first-load-new-realm-card.png`.
 
 **Rejected.** The shorter text "New Realm hosts trivia, vintage market pop-ups and live music." (it drops the food menu, a neutral fact from the same quote); keeping "beer and spirits".
+
+## 2026-11-24 — Claim targets: the grind curb, the goal line, the skatepark pad (#264, #365)
+
+**#365, owner decision (AskUserQuestion, 2026-11-24): the skatepark combo zone is the whole pad plus 2 m, and the game draws it.** Before, the zone was a 10 m circle at (272.3, -1.5), the east half of the pad, and nothing showed it. A 5,034 point combo that ended at the west end of the rail lane banked but did not claim (Autopilot run 20261124-094156). Options that the owner did not choose: keep the 10 m circle and show it; one 17 m circle over the pad (it runs off the pad onto the paths).
+
+- Data: a combo zone can name an area of the spot's footprint: `"zone": { "x", "z", "r", "area": "skatepark:h4w-skatepark", "margin": 2 }`. The zone is the area outline plus `margin` m (`inZone` in `src/sim/landmarks.js`). `x`, `z` stay the target point of the guide line (the pad center), and `r` (19) the reach of the zone. The validator accepts an area zone for a skate spot only, the area must be in its footprint, the margin 0 to 4 m, and `r` must reach every corner plus the margin.
+- Render: the ring of an area zone is a rounded rectangle on the zone edge (the corner radius is the margin), with the inner line 1 m inside: the double ring of a combo, in the same instanced mesh and draw call (`src/render/landmark-rings.js`, `rectPoint`).
+
+**#264: the grind target.** Near a Found grind claim (in a mode with claims, within zone r + 30 m of its zone), a gold tube with an ink shell lies on the part of the named rail or curb that counts (within zone r + meters of the zone center), with a 1.4 m post at each end. It is brighter and does not pulse while the skater grinds that feature. 2 draw calls while it shows (1 in the pbr look, no ink), 0 otherwise. `src/render/claim-target-math.js` (pure), `src/render/claim-target.js`.
+
+**#264: the goal line follows the challenge in progress.** `landmarkView` gives each spot `active` (a line attempt, a grind on its feature, the air of a gap from its zone, an open combo with its last link in its zone) and `grindMeters`. `goalLine` puts an active spot before the nearer ones, and a grind adds "Grind 6 of 15 m".
+
+**#264: a dance that does not count says why.** A new dance press that starts no dance sets `skater.refused = { reason, seq }` (`air`, `grind`, `slow`). The HUD shows a short line in the move name place for 1.4 s: "Dance on the ground, not in the air", "Dance after the grind", "Roll faster to dance".

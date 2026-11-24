@@ -64,27 +64,36 @@ export function targetOf(spot) {
 
 const lowerFirst = (s) => (s ? s[0].toLowerCase() + s.slice(1) : s);
 
-// The HUD goal line: the challenge of the nearest Found spot, or null when
-// no claim spot is Found. `view` is landmarkView(); `position` is the
-// skater's [x, y, z]. A line in progress shows the next ring and the time
-// left. Returns { id, text }.
+// The progress line of a grind on the feature of a grind claim (#264).
+export const grindProgress = (done, meters) => `Grind ${Math.min(Math.floor(done), meters)} of ${meters} m`;
+
+// The HUD goal line: the challenge the skater does now (#264), else the
+// challenge of the nearest Found spot, or null when no claim spot is Found.
+// `view` is landmarkView(); `position` is the skater's [x, y, z]. A line in
+// progress shows the next ring and the time left; a grind on the feature of
+// a grind claim shows its meters. Returns { id, text, active }.
 export function goalLine(view, position, { timed = true } = {}) {
   let best = null;
   for (const s of view.spots) {
     if (!s.ring) continue;
     const [x, z] = targetOf(s);
     const d = Math.hypot(x - position[0], z - position[2]);
-    if (!best || d < best.d) best = { s, d };
+    // A challenge in progress goes before every other one; then the nearer.
+    const doing = Boolean(timed && (s.active || s.attempt));
+    if (!best || (doing && !best.doing) || (doing === best.doing && d < best.d)) best = { s, d, doing };
   }
   if (!best) return null;
   const { s } = best;
-  if (!timed) return { id: s.id, text: FREE_RUN_HINT };
+  if (!timed) return { id: s.id, text: FREE_RUN_HINT, active: false };
   const c = s.challenge;
+  const active = best.doing;
   if (c.type === "line" && s.attempt) {
     const left = Math.max(0, Math.ceil(c.seconds - s.attempt.t - 1e-9));
     const ring = `Ring ${s.attempt.next + 1} of ${c.checkpoints.length}: ${left} s left`;
     const restarted = s.attempt.restarted && s.attempt.t < LANDMARKS.lineRestartShow;
-    return { id: s.id, text: restarted ? `${LINE_RESTART}\n${ring}` : ring };
+    return { id: s.id, text: restarted ? `${LINE_RESTART}\n${ring}` : ring, active };
   }
-  return { id: s.id, text: `${CLAIM_PREFIX}${lowerFirst(s.hint)}` };
+  const claim = `${CLAIM_PREFIX}${lowerFirst(s.hint)}`;
+  if (c.type === "grind" && s.active && s.grindMeters != null) return { id: s.id, text: `${claim}\n${grindProgress(s.grindMeters, c.meters)}`, active };
+  return { id: s.id, text: claim, active };
 }

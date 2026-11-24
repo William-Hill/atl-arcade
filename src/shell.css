@@ -1035,10 +1035,18 @@ body.photo-open #fullscreen-toggle, body.photo-open #turn-hint { visibility: hid
   #turn-hint { top: auto; bottom: calc(184px + env(safe-area-inset-bottom)); }
   body:has(#turn-hint:not([hidden])) .hud-goals { visibility: hidden; }
 }
-@media (orientation: landscape) and (max-height: 500px) and (max-width: 740px) {
+/* Every landscape phone (height 500 px or less) uses the pair, not only a
+   short one: at 844 x 390 the centered PHOTO was 36 px high, showed its key
+   letter and sat over the beat pulse (#245). */
+@media (orientation: landscape) and (max-height: 500px) {
   html body.touch #settings-toggle kbd, html body.touch #photo-toggle kbd { display: none; }
   html body.touch #photo-toggle { top: calc(8px + env(safe-area-inset-top)); left: calc(50% + 20px); right: auto; transform: translateX(-100%); min-height: 44px; }
   html body.touch #settings-toggle { top: calc(8px + env(safe-area-inset-top)); left: calc(50% + 28px); right: auto; }
+  /* The beat pulse was under PHOTO (#245). It goes to the left of the pair:
+     its center is 90 px left of the middle, so the pulse at its largest
+     (1.6 times, 29 px) ends 15 px or more before PHOTO (about 80 px wide,
+     it starts 60 px left of the middle), and right of the map credit. */
+  body.touch .hud-pulse { left: calc(50% - 90px); }
 }
 /* A portrait tablet (wider than 600 px) keeps the 160 px touch minimap at
    96 px from the top, so it ends at 256 px. The column and the hint go 64 px

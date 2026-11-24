@@ -2855,6 +2855,29 @@ Not decided here, and not changed:
 - The fact pop-up in landscape still uses 262 px on each side. At 667 x 375 it can touch a met chip ("✓ Combo 1K/1K"). It was not measured.
 - No person checked the layout on a real phone.
 
+## 2026-11-23: Share assets: social card, favicon set, and load screen art (#303)
+
+- **Files.** `scripts/brand/share-assets.mjs` makes all of them from the brand files of #300. No image model, 0 credits. Each file has a `<file>.provenance.json` next to it.
+  - `public/share/skate-atl-card-1200x630.jpg`: the key art, scaled to 1200 x 675 and cropped to 630 high (15 px off the top, 30 px off the bottom). JPEG quality 88, 170 KB.
+  - `public/favicon.svg`, `public/favicon-32.png`, `public/apple-touch-icon.png` (180 x 180): the mark. The mark is the three trail stripes and the S of the logo, cut from the logo SVG with a clip. The full word mark is not legible at 32 px. The Apple icon has a cream background, because iOS fills a transparent icon with black.
+  - `public/brand/loader-art.svg`: the logo over a flat skyline of generic towers and the three trail stripes, in the logo style (navy outline, brand colors). The towers do not copy any real building.
+- **Why `public/`.** Vite copies `public/` to the site root with no hash in the name. Link preview crawlers and browsers need a stable URL. Files under `assets/` get a hashed name in the build.
+- **Absolute URLs.** `og:image` and `twitter:image` use `https://skate-atl.vercel.app`, the production domain of the Vercel project `skate-atl`. If the production domain changes (for example, a city domain), change the URLs in `index.html` and `og:url`.
+- **Load screen.** The art replaces the pink "Skate ATL" text title in `#loader`. The bar fill uses the three stripe colors. `src/ui/loader.js` is unchanged: it moves the bar and removes the screen, as before.
+- **Not verified.** The link preview check with a card validator on the production URL: this cloud session cannot reach the production host, and the files are not on production before this change merges.
+
+## 2026-11-23: The phone teach card and the button column do not overlap (#347, #245)
+
+At 360 x 740 portrait, the "Dance while you roll" teach card was 208 px wide and covered FULL SCREEN by 1 px (#347). The button column is 10 px from the right edge, and FULL SCREEN is its widest button (about 127 px).
+
+Decision, for a phone in portrait (width 600 px or less):
+- The teach card starts 10 px from the left (was 16 px). It keeps 146 px on the right free for the column and an 8 px gap. At 360 px the card is 204 px wide or less.
+- At 380 px wide or less, the teach title is 16 px (was 17 px). "Dance while you roll" is then about 158 px wide, so it stays on one line with a margin for other system fonts.
+
+Decision, for a landscape phone (height 500 px or less): the beat pulse was under PHOTO (#245, MOB2-1 P2). It moves to 90 px left of the middle, to the left of the PHOTO and SETTINGS pair. The pair of #277 (no key letters, PHOTO 44 px high, 8 px from the top) was for a width of 740 px or less. At 844 x 390, PHOTO was centered, 36 px high, showed its key letter and sat over the pulse. Now every landscape phone uses the pair.
+
+Verification: a new test in `e2e/phone-layout.spec.js` checks PHOTO, SETTINGS and FULL SCREEN at 360 x 640, iPhone 15, Pixel 7, iPhone 15 landscape and 844 x 390. Each button is 44 px or more and shows no key letter. No button covers the skater buttons, the minimap, the full HUD column, the beat pulse (at 1.6 times its size), the goals or the touch controls. Screenshots: `e2e/__screenshots__/phone-buttons-*.png`.
+
 ## 2026-11-14: prop-perf waits for the NPC skater models (#281 follow-up)
 
 `window.__atl.ready` is `true` at module load, so `scripts/prop-perf.mjs` could start a sample before the NPC skater models loaded. In `reports/prop-perf/281-far-trees-low.json`, one spawn run had 52 calls and 179,472 triangles, and the other runs had 50 or 51 calls and about 144k triangles. The prop count was the same.

@@ -3,8 +3,10 @@ import { GREYBOX } from "../level/greybox.js";
 import { createGroundSampler } from "../level/ground.js";
 import { createLevelLights, createLevelView } from "../render/level-view.js";
 import { loadSkaterModel } from "../render/skater-model.js";
+import { grooveRate } from "../render/skater-anim.js";
 import { createSkaterView } from "../render/skater-view.js";
 import { toonSkater } from "../render/toon.js";
+import { BEAT } from "../sim/skate/constants.js";
 
 // Test page for the clip blends, the carve lean, and the foot IK (#107):
 // anim-lab.html?skater=nia. The skater stands on the greybox level, with
@@ -270,27 +272,46 @@ function popCheck() {
     [40, {}],
   ];
   // The coast plays in phase with the beat clock, so the coast pose at the
-  // first push depends on the time of the press (#363). Pass 0 runs the
-  // whole script. Passes 1 to PHASES - 1 run only its coast and push part,
-  // after lead-ins of coast that sample the coast loop. The idle -> coast
-  // change is checked at one phase only: Marcus's idle clip has a fast
-  // forearm turn that pops at some phases (a clip fix, not a fade fix).
+  // first push depends on the time of the press (#363). This check drives
+  // the beat clock itself: pass k sets the clock so that its first push
+  // comes at k / PHASES of the coast loop, in equal steps. The coast clip
+  // plays at grooveRate(), so its loop lasts duration / grooveRate() s.
+  // Pass 0 runs the whole script. The other passes run only its coast and
+  // push part. The idle -> coast change is checked at one phase only:
+  // Marcus's idle clip has a fast forearm turn that pops at some phases
+  // (#369, a clip fix, not a fade fix).
   const PHASES = 8;
   const PUSH_PART = 4;
-  const coastFrames = Math.round((view.model.animations.find((c) => c.name === "coast")?.duration ?? 1.6) / DT);
+  const bpm = BEAT.bpm;
+  const coastLoop = (view.model.animations.find((c) => c.name === "coast")?.duration ?? 1.6) / grooveRate(bpm);
+  let clock = 0;
+  const step = (state) => {
+    clock += DT;
+    view.sync(state, DT, { time: clock, bpm });
+  };
+  const LEAD_IDLE = 60;
+  const LEAD_COAST = 120;
   let change = 0;
   let changeAt = null;
   const changes = [];
+  const pushPhases = [];
   for (let k = 0; k < PHASES; k += 1) {
-    if (k > 0) run(60, () => stateAt(spot, { speed: 0 }));
-    run(120 + Math.round((k * coastFrames) / PHASES), () => stateAt(spot));
+    // The clock at the first push frame (the frame after the lead-ins): a
+    // whole number of loops plus k steps. 5 loops per pass are more than
+    // the frames of one pass, so the clock does not go back.
+    const lead = LEAD_IDLE + LEAD_COAST;
+    const atPush = (10 + 5 * k + k / PHASES) * coastLoop;
+    clock = atPush - (lead + 1) * DT;
+    for (let i = 0; i < LEAD_IDLE; i += 1) step(stateAt(spot, { speed: 0 }));
+    for (let i = 0; i < LEAD_COAST; i += 1) step(stateAt(spot));
+    pushPhases.push(Number(((((clock + DT) % coastLoop) / coastLoop) * PHASES).toFixed(3)) % PHASES);
     turn();
     let frame = 0;
     const local = [];
     let last = view.clip;
     for (const [n, extra] of k === 0 ? script : script.slice(0, PUSH_PART)) {
       for (let i = 0; i < n; i += 1) {
-        view.sync(stateAt(spot, extra), DT);
+        step(stateAt(spot, extra));
         const t = turn();
         frame += 1;
         if (view.clip !== last) {
@@ -306,7 +327,7 @@ function popCheck() {
     if (k === 0) changes.push(...local);
   }
   view.setFootIk(true);
-  return { steady, change, changeAt, changes };
+  return { steady, change, changeAt, changes, pushPhases };
 }
 
 // The cost of the foot IK: the mean ms per frame over 300 frames on the

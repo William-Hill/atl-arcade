@@ -1,17 +1,43 @@
 # Pitch: Skate ATL, the official game of the City of Atlanta
 
-**Date:** 2026-11-01
-**Status:** Draft for the maker. Nobody was contacted for this draft.
-**Method:** Web research on 2026-11-01. Each fact has a source URL. A claim with the tag **UNVERIFIED** has no confirmed source.
+**Date:** 2026-11-01. Updated 2026-11-24 for release v0.9.0 (#258).
+**Status:** Draft for the owner. Nobody was contacted for this draft. Do not contact a City office until the owner approves.
+**Method:** Web research on 2026-11-01. Each fact has a source URL. A claim with the tag **UNVERIFIED** has no confirmed source. The 2026-11-24 update adds the state of the game on `main` (commit `b432849`) and the production URL.
 **Legal note:** This document is not legal advice. A lawyer must review section 7 before the pitch makes a legal claim.
+**First reader (owner decision, 2026-11-24):** the Mayor's Office of Technology and Innovation (OTI).
 
-Read with: `AGENTS.md`, `docs/games/2026-10-30-skate-atl-concept.md`, `docs/decisions.md`.
+Read with: `AGENTS.md`, `docs/games/2026-10-30-skate-atl-concept.md`, `docs/decisions.md`, and the two short documents for the meeting: `docs/pitch/one-pager.md` and `docs/pitch/demo-script.md`.
 
 ---
 
 ## 1. Summary
 
-Skate ATL is a free browser game. The player skates real Atlanta neighborhoods on roller skates, with Tony Hawk's Pro Skater movement and Jet Set Radio style. The game builds each block from open map data and city data. When the player skates past a real landmark, the game gives a one-line fact card and a stamp in a "city passport". The skate stays first: no card stops the play. We ask the City to name Skate ATL its official game, through a City Council resolution and a partner agreement with the Mayor's Office of Technology and Innovation. For the tourism office, the game is a free way for visitors and young people to see Atlanta at its best before they arrive. For schools, the game maps to the Georgia Standards of Excellence for grade 8 Georgia Studies. A teacher can use it with no student accounts and no personal data.
+Skate ATL is a free browser game. The player skates real Atlanta neighborhoods on roller skates, with Tony Hawk's Pro Skater movement and Jet Set Radio style. The game builds each block from open map data and city data. When the player skates near a real landmark, the game finds it, shows one short line about it, and gives a skate challenge. A player who lands the challenge claims the spot, and the full map shows the story card of the spot with a source for each fact. The skate stays first: no card stops the play. We ask the City to name Skate ATL its official game, through a City Council resolution and a partner agreement with the Mayor's Office of Technology and Innovation. For the tourism office, the game is a free way for visitors and young people to see Atlanta at its best before they arrive. For schools, the game maps to the Georgia Standards of Excellence for grade 8 Georgia Studies. A teacher can use it with no student accounts and no personal data.
+
+The game is live now at **https://skate-atl.vercel.app** (release v0.9.0). Section 1.1 tells what a person can play today.
+
+### 1.1 What a person can play today (v0.9.0, 2026-11-24)
+
+| Feature | What it does | Where it is recorded |
+|---|---|---|
+| The BeltLine Eastside level | About 1.9 km of the Eastside Trail, from Ponce City Market to Krog Street Market. The buildings, streets, sidewalks, curbs and trees come from OpenStreetMap and City of Atlanta data. | `levels/beltline-eastside/`, `docs/decisions.md` 2026-11-01 (M1-03) |
+| Intro and title screen | A 9 s camera flight along the real trail under the Skate ATL logo, then a title screen with the skater select (Nia or Marcus). | `docs/decisions.md` 2026-11-23 (#301) |
+| Skate moves | Push, carve, jump, grind on rails, ledges and curbs, ramp air, and Atlanta dance moves on the roll (for example Walk It Out, Swag Surf, The Prep). Combos and a style meter. A fall ends a combo, never the run. | `docs/review/content-checklist.md` 1.8, 4.5 |
+| Moves taught in the world | The first ride teaches push, steer, jump, dance and grind, one short prompt at a time, for the keyboard, a gamepad or touch. | `docs/decisions.md` 2026-11-21 (#76) |
+| 13 landmark spots and 2 edge markers | Each spot has a skate challenge (a gap, a grind, a ring line, or a combo). Found and Claimed banners, chimes, map icons, and a Guide tab. 65 facts, each with a source. | `levels/beltline-eastside/landmarks.json`, `docs/decisions.md` 2026-11-10 to 2026-11-12 (#216 to #219) |
+| Thomas Taylor Memorial Skatepark | The real public skatepark in Historic Fourth Ward Park, as a skate spot: a pyramid, a quarter pipe, a kicker, a bank, rails and a ledge. | `docs/decisions.md` 2026-11-10 (#222) |
+| Open data fact cards | 3 cards from the City of Atlanta GIS services, through the open-data-atl catalog: the neighborhoods on the trail, the acres of Freedom Park, and the nearest MARTA rail station. | `levels/beltline-eastside/facts.json`, `src/facts/` |
+| Tour mode | `?run=tour`: no timer, no score goal. A visitor rides the whole trail at their own speed. The HUD names the next spot and its direction. | `docs/decisions.md` 2026-11-23 (#260) |
+| Timed round | A 150 s score round with goals, medals and a results screen. | `docs/decisions.md` 2026-11-13 (#268) |
+| Calm traffic | Cars move on the main streets. They slow and stop for the skater. A moving car never knocks her down and never stops her. | `docs/decisions.md` 2026-11-23 (#261) |
+| Two looks | A painted "pbr" look on laptops and a lighter look on phones ("pbr lite"). | `docs/decisions.md` 2026-11-10 (#246) |
+| Phones | Touch controls (stick and buttons), a phone quality tier, and layouts for portrait and landscape. | `docs/decisions.md` 2026-11-14 (#277), 2026-11-23 (#347) |
+| Photo mode and share card | Photo mode with a tilt-shift blur saves a PNG. A social card and favicons for link previews. | `docs/decisions.md` 2026-11-03 (#90), 2026-11-23 (#303) |
+| Content review | An agent checked the content against the 5 political rules: 24 checks, 20 pass, 3 flagged, 1 open (the real skater review, for Version 1). | `docs/review/content-checklist.md` (#22) |
+
+Screenshots from the production URL: `docs/pitch/screenshots/` (section 11).
+
+**Not in v0.9.0:** the city passport, guided routes with arrows, quiet zones, teacher mode, the full accessible text page, and the levels outside the Eastside Trail. Sections 3 and 8 describe them as plans. No person outside the project has played the game yet. Real skaters have not reviewed the move set.
 
 ---
 
@@ -28,7 +54,7 @@ Skate ATL is a free browser game. The player skates real Atlanta neighborhoods o
 
 ### 2.2 What "official" can mean
 
-No US state or city has an "official video game" in law or by resolution, as far as the research found. The state "official game" bills are for table games: Texas named "42" dominoes in 2011 ([HCR 84](https://legiscan.com/TX/bill/HCR84/2011)), and a Michigan bill names euchre ([HB 6308, 2026](https://www.michiganvotes.org/legislation/2026/house/bill-6308)). The negative result is not proof (UNVERIFIED as a full negative). Thus, Skate ATL can be the first official city video game in the US. "Official" can come in four forms:
+We found no US state or city with an "official video game" in law or by resolution. The state "official game" bills are for table games: Texas named "42" dominoes in 2011 ([HCR 84](https://legiscan.com/TX/bill/HCR84/2011)), and a Michigan bill names euchre ([HB 6308, 2026](https://www.michiganvotes.org/legislation/2026/house/bill-6308)). The negative result is not proof (UNVERIFIED as a full negative). Thus, Skate ATL can possibly be the first official city video game in the US. Use the soft wording in public text: "We found no other US city with an official video game" (owner decision, 2026-11-24). "Official" can come in four forms:
 
 1. **A City Council resolution or proclamation.** A councilmember or the Council President must sponsor it. The body is 150 words or fewer, with 5 "whereas" sections. The request is due 30 days before the date. Source: [Council proclamation request](https://citycouncil.atlantaga.gov/how-do-i/request-a-proclamation) and the [request form](https://citycouncil.atlantaga.gov/home/showpublisheddocument/254/637801215664630000). The page blocked the fetch tool, so these details come from a search snippet. Read the page before you quote it.
 2. **A ceremonial document from the Mayor.** The Mayor's Office of Communications issues letters and proclamations on a written request. Source: [Obtain ceremonial documents](https://www.atlantaga.gov/i-want-to/obtain-ceremonial-documents) (search snippet only).
@@ -76,16 +102,24 @@ Lessons from the precedents:
 
 ## 3. Educational design
 
-The design follows pillar 3 of the concept: "The city teaches, the game never lectures." Each feature has a design test.
+The design follows pillar 3 of the concept: "The city teaches, the game never lectures." Each feature has a design test. Sections 3.1 and 3.2 are in the game now (v0.9.0). Sections 3.3 to 3.7 are plans.
 
-### 3.1 Discoveries
+### 3.1 Discoveries (in the game)
 
-- Each landmark has a trigger zone in the level data, at its real position.
-- When the skater enters the zone, a stamp sound plays and a fact card shows for 2 seconds at the top of the screen. Play does not stop. Issue M1-07 already has this rule.
-- A trick inside the zone gives a "style stamp", a gold version of the stamp. This rewards skate skill, not reading.
-- Design test: if a discovery slows the skater, move the text to the results screen.
+- Each landmark has a find zone in the level data, at its real position (`levels/beltline-eastside/landmarks.json`).
+- When the skater enters the zone, a chime plays on the beat and a "Found" banner shows the name and one short line. Play does not stop.
+- Each spot has a skate challenge: a gap, a grind, a ring line, or a combo, in 3 tiers (easy, typical, hard). A ring on the ground marks it. When the skater lands it, a "Spot claimed" banner shows and the spot pays points. This rewards skate skill, not reading.
+- The minimap, the full map (key M) and its Guide tab (key G) show each spot as Unknown, Found or Claimed.
+- Design test: if a discovery slows the skater, move the text to the full map or the results screen.
 
-### 3.2 Fact cards
+### 3.2 Fact cards and story cards (in the game)
+
+Now in v0.9.0:
+
+- **Open data fact cards.** 3 cards on the Eastside level. The game asks the open-data-atl API for the data; if the call fails, it uses a recorded copy. Each card names its source: the City of Atlanta Department of City Planning GIS. The client blocks the crime, crash and traffic count datasets, and drops text with crime, police, crash or decline words (`src/facts/client.js`).
+- **Story cards.** Each landmark spot has 3 to 5 facts. Each fact has a source name and URL (National Register of Historic Places, Atlanta BeltLine Inc., the park conservancies, the Carter Library). The full map shows them when the player opens the icon of a spot. A validator blocks a fact with no source and a list of banned words (`npm run validate:landmarks`).
+
+The plan for the cards:
 
 - One line, 20 words or fewer, positive or neutral, with a source link.
 - The source comes from the open-data-atl API or from a named source in the card data.
@@ -106,7 +140,7 @@ The design follows pillar 3 of the concept: "The city teaches, the game never le
 - Each neighborhood has one guided route: a line of arrows on the ground through 4 to 6 landmarks.
 - The route is also a timed skate challenge, with combo goals on the way.
 - A free skate mode stays open. The route is a choice, not a rule.
-- Example route on the BeltLine Eastside block: Ponce City Market, Historic Fourth Ward Park and its skatepark, the Eastside Trail, and the Krog Street Tunnel.
+- Example route on the BeltLine Eastside block: Ponce City Market, Historic Fourth Ward Park and its skatepark (Thomas Taylor Memorial Skatepark), the Eastside Trail, and Krog Street Market. Tour mode (v0.9.0) is the first step: it has no timer, and the HUD names the next spot and its direction.
 
 ### 3.5 Quiet zones
 
@@ -127,7 +161,7 @@ Teacher mode is a URL parameter and a printed guide. It is not an account.
 ### 3.7 Accessibility
 
 - A full text version of every route and every card, on one HTML page. This page is the accessible equivalent of the 3D content.
-- Keyboard-only play. Gamepad play. Rebindable keys (already in `src/input/bindings.js`).
+- Keyboard-only play. Gamepad play. Touch play on phones. Rebindable keys (already in `src/input/bindings.js`). A reduced motion setting (already in the game: the intro flight does not play and the title camera does not turn).
 - Options: reduced motion, a slower game speed, high-contrast cards, a larger card text, and a "cards stay on screen" mode.
 - Captions for every sound that has meaning (the stamp sound, the route arrow sound).
 - Card text at a reading level that grade 8 students can read.
@@ -154,6 +188,44 @@ The 2016 GSE has a full implementation from school year 2017-2018 ([GPB](https:/
 ---
 
 ## 4. Landmark list
+
+### 4.0 In the game now: the BeltLine Eastside level (v0.9.0)
+
+The level has 13 claim spots and 2 edge markers (an edge marker is a place outside the level that the map shows). Each spot has 3 to 5 facts with a source for each fact; the table gives the short line and its first source. The full list and the quote behind each fact are in `levels/beltline-eastside/landmarks.json` and `docs/research/2026-11-10-landmark-facts.md`. The content review (`docs/review/content-checklist.md`, 4.2) found that 65 of 65 facts have a source name and URL.
+
+| # | Spot | Short line in the game | Source | Skate challenge |
+|---|---|---|---|---|
+| 1 | Ponce City Market | Opened in 1926 as a nine-story Sears, Roebuck and Co. store and warehouse. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/GetAsset/e6ea8468-be89-4793-905c-317118b0e59e) | combo, hard: Land a 2,000 point combo on the trail |
+| 2 | Ford Factory Lofts | Ford built Model T's here from 1915 in a plant with rail cars rolling inside. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/GetAsset/89e18d7b-3b58-4434-9d83-bce98f805556) | grind, easy: Grind the Ponce curb for 9 m |
+| 3 | New Realm Brewing | A favorite on the Eastside Trail since 2018, with a rooftop view of the city. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/the-beltline-from-above/) | combo, easy: Land a 600 point combo on the trail |
+| 4 | Telephone Factory Lofts | Built 1939-1941 for Western Electric, maker of Bell telephones. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/GetAsset/d8095a36-1aa1-4e20-8b0c-ff521bb7cf30) | line, typical: Ride the 3 rings in order in 14 s |
+| 5 | Krog Street Market | A dining hall and shops on the former Atlanta Stove Works factory site. | [Atlanta BeltLine, Inc.](https://beltline.org/things-to-do/shopping-dining/) | grind, typical: Grind the Krog Street curb for 15 m |
+| 6 | Studioplex | A 1905 cotton warehouse on Auburn Avenue, now loft apartments. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/NRHP/GetAsset/aed2eed0-43c2-4073-b83b-1277caacc2c9) | gap, easy: Hop on the Auburn Avenue sidewalk |
+| 7 | Ponce de Leon Avenue Bridge | A ramp joins Ponce de Leon Avenue to the trail at the bridge by Ponce City Market. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/eastside-ponce-streetscape-project/) | gap, typical: Hop on the bridge over Ponce |
+| 8 | North Avenue Bridge | North Avenue Bridge crosses the street with the Atlanta skyline behind it. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/10-must-visit-photo-spots-on-the-beltline/) | line, hard: Ride the 3 rings in order in 14 s |
+| 9 | Ralph McGill Boulevard Bridge | A tower for chimney swifts stands on the trail just north of Ralph McGill Blvd. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/chimney-swift-towers-installed-on-westside-and-eastside-trails/) | grind, typical: Grind the curb below the bridge for 15 m |
+| 10 | Freedom Parkway Bridge | A BeltLine Marketplace sits under the John Lewis Freedom Parkway Bridge. | [Atlanta BeltLine, Inc.](https://beltline.org/blog/celebrate-small-business-saturday-at-atlanta-beltline-marketplace/) | gap, easy: Hop under the Freedom Parkway bridge |
+| 11 | Historic Fourth Ward Park | The park's lake doubles as a stormwater basin; the park opened in 2011. | [Atlanta BeltLine, Inc.](https://beltline.org/about-us/history/) | combo, typical: Land a 1,000 point combo by the pond |
+| 12 | Freedom Park | Freedom Park links 7 neighborhoods with 8 miles of paths on 130+ acres. | [Freedom Park Conservancy](https://www.freedompark.org/about-us) | line, easy: Ride the 3 rings in order in 24 s |
+| 13 | Thomas Taylor Memorial Skatepark | Atlanta's first public skatepark, open since spring 2011. | [Atlanta BeltLine, Inc.](https://beltline.org/parks-trails/thomas-taylor-memorial-skatepark/) | combo, hard: Land a 2,000 point combo in the skatepark |
+| 14 | Inman Park Historic District | Atlanta's first planned suburb, laid out from 1889 by Joel Hurt. | [National Park Service, National Register of Historic Places](https://npgallery.nps.gov/NRHP/GetAsset/NRHP/73000621_text) | None (edge marker) |
+| 15 | Jimmy Carter Presidential Library and Museum | Dedicated October 1, 1986; home to a life-size replica of the Oval Office. | [Jimmy Carter Presidential Library and Museum](https://www.jimmycarterlibrary.gov/about_us) | None (edge marker) |
+
+Notes:
+
+- Spot 3, New Realm Brewing: one story card fact names beer and spirits (#354, flagged by the content review). Do not open this card in a demo until #354 merges.
+- Spot 12, Freedom Park: the conservancy gives "130+ acres". The open data fact card gives 124 acres of city park land (City of Atlanta GIS). Both have a source; they measure different things.
+- Spot 13: the 2026-11-01 pitch called it the Historic Fourth Ward skatepark. Its name since 2024 is Thomas Taylor Memorial Skatepark ([H4W Park Conservancy](https://www.h4wpc.org/skate-park/)). The Tony Hawk fact now has a source: "Tony Hawk appeared at the grand opening, and his foundation gave $25,000 toward construction" (same source).
+
+### 4.0.1 Open data fact cards on the Eastside level
+
+| Card | Text in the game | Dataset (open-data-atl catalog) | Source |
+|---|---|---|---|
+| Neighborhoods | The Eastside Trail links 3 neighborhoods here: Inman Park, Old Fourth Ward and Poncey-Highland. | `atl-neighborhoods` | City of Atlanta Department of City Planning GIS, fetched 2026-11-04 |
+| Freedom Park | Freedom Park covers 124 acres of city park land. | `atl-parks` | City of Atlanta Department of City Planning GIS, fetched 2026-11-04 |
+| MARTA | Inman Park-Reynoldstown MARTA rail station is within a mile of the trail. | `marta-rail-stations` | City of Atlanta Department of City Planning GIS, fetched 2026-11-04 |
+
+### 4.1 Plan for later levels
 
 25 recommended landmarks in 11 neighborhoods. Each card is positive or neutral. "Status" tells if a source confirms the fact. Before release, a named historian must review each card (section 7.6).
 
@@ -185,9 +257,9 @@ The 2016 GSE has a full implementation from school year 2017-2018 ([GPB](https:/
 | 24 | Grant Park | Oakland Cemetery | Founded in 1850, this 48-acre garden cemetery is the resting place of golfer Bobby Jones. | [GHS marker](https://www.georgiahistory.com/ghmi_marker_updated/oakland-cemetery/) | City of Atlanta; Historic Oakland Foundation (UNVERIFIED) | Quiet zone. Do not show the Confederate section or monument. | Confirmed |
 | 25 | Cascade / Southwest | Cascade Family Skating | Since 2000, this rink has been a home of Atlanta's skate style. The movie ATL (2006) was filmed here. | [Atlanta Magazine](https://www.atlantamagazine.com/50bestthingstodo/roll-soul-cascade-skating-rink/) | Private business | Ask the owner. Keep the card on skate culture. Some sources give 1998. The page blocked the fetch tool. | UNVERIFIED (year) |
 
-Card 24 differs from the research note: it names Bobby Jones only. Margaret Mitchell is also buried there, but her name links the card to *Gone With the Wind* (see 4.2).
+Card 24 differs from the research note: it names Bobby Jones only. Margaret Mitchell is also buried there, but her name links the card to *Gone With the Wind* (see 4.3).
 
-### 4.1 Reserve list
+### 4.2 Reserve list
 
 | Neighborhood | Landmark | Why reserve | Source |
 |---|---|---|---|
@@ -197,7 +269,7 @@ Card 24 differs from the research note: it names Bobby Jones only. Margaret Mitc
 | Inman Park | Inman Park Festival | An event card for a later version | [Festival](https://festival.inmanpark.org/events/tour-of-homes) |
 | Decatur (outside the city) | Golden Glide rink | Opened in 1974. Not in the City of Atlanta. | [AJC](https://www.ajc.com/arts-entertainment/2026/09/atlanta-roller-derby-tries-to-save-decaturs-legendary-golden-glide/) |
 
-### 4.2 Landmarks to leave out
+### 4.3 Landmarks to leave out
 
 | Landmark | Reason |
 |---|---|
@@ -259,10 +331,11 @@ Weak or closed paths:
 
 ## 6. Why the City says yes
 
-- **First of its kind.** No US city has an official video game (as far as the research found). Atlanta can be first.
+- **First of its kind.** We found no other US city with an official video game.
+- **Playable today.** The game is live at https://skate-atl.vercel.app. A City reader can play it in a browser before the meeting.
 - **Free and on the open web.** No app store, no account, no ads. The City can link to it from any page.
-- **Made in Atlanta from Atlanta data.** The game uses OpenStreetMap, Overture, and the open-data-atl catalog ([open-data-atl](https://github.com/Render-Atlanta/open-data-atl)).
-- **Every neighborhood at its best.** The political rules in `AGENTS.md` are part of the build, with a review gate (M2-05).
+- **Made in Atlanta from Atlanta data.** The game uses OpenStreetMap, Overture, and the open-data-atl catalog ([open-data-atl](https://github.com/William-Hill/open-data-atl)). The fact cards on the Eastside level come from City of Atlanta Department of City Planning GIS services..
+- **Every neighborhood at its best.** The political rules in `AGENTS.md` are part of the build. An agent checked the v0.9.0 content against them (`docs/review/content-checklist.md`), and code filters block crime, crash and decline data and words.
 - **Rink culture.** Roller skating is a living Atlanta tradition across generations ([WABE](https://www.wabe.org/atlanta-has-many-places-to-roll-indoors-or-out-in-its-popular-multi-genre-skating-culture/)). No other city can claim the film *ATL* and Cascade.
 - **A school tool with no data risk.** Teacher mode needs no login.
 - **Youth workforce.** The OTI labs teach game design. Lab students can playtest the game and see how it is made.
@@ -343,6 +416,8 @@ Weak or closed paths:
 | Sacred sites | Quiet zones. Ask Ebenezer and NPS before the cards go live. |
 | Cascade news coverage | The card talks about skate culture only. |
 | Moderation (the Denmark lesson) | No building tools, no chat, no user content. |
+| Traffic shown as danger | Calm traffic (owner decision 2026-11-23, #261): cars slow and stop for the skater, and a moving car never knocks her down or stops her. |
+| A first load at night in rain looks gloomy | #353 (P1, in progress): the game clock uses the device time zone. Until it merges, a demo sets `weather=clear&time=14` in the URL. |
 
 ---
 
@@ -350,7 +425,9 @@ Weak or closed paths:
 
 The plan follows the GitHub milestones. M1 and M2 do not change. The pitch adds small items to them and puts the large items after version 1.
 
-### Phase 1: M1 Playable block (now)
+**Status on 2026-11-24.** M0 is done (the playtest verdict is PROCEED). M1 is done in v0.9.0: the BeltLine Eastside block, fact cards from the open-data-atl API, goals and a results screen, landmark find zones at real positions, and the level detail. From M2, the landmark models, the content review (#22, agent pass) and the phone tier are in. The city passport, the guided route arrows, the style stamp, teacher mode, the accessible text page and the real skater review are not done. The pitch to OTI can use v0.9.0 as a demo; Version 1 stays the proof.
+
+### Phase 1: M1 Playable block (the M1 features are in v0.9.0; the pitch additions in this table are not done)
 
 | Item | Issue | Pitch addition |
 |---|---|---|
@@ -361,7 +438,7 @@ The plan follows the GitHub milestones. M1 and M2 do not change. The pitch adds 
 
 Exit: the first M1 playtest also checks that a discovery does not stop the skate.
 
-### Phase 2: M2 Version 1
+### Phase 2: M2 Version 1 (in progress)
 
 | Item | Issue | Pitch addition |
 |---|---|---|
@@ -388,15 +465,16 @@ The pitch to OTI happens with the M2 build. Version 1 is the proof.
 ## 9. Open questions for the maker
 
 1. Who is the fiscal sponsor or the institutional partner for grants?
-2. Does the first pitch go to OTI, as section 2.2 recommends?
-3. Does the game use real place names before the licenses exist, or generic labels?
+2. ~~Does the first pitch go to OTI, as section 2.2 recommends?~~ Decided 2026-11-24: OTI is the first reader of the one-pager and the demo.
+3. Does the game use real place names before the licenses exist, or generic labels? v0.9.0 uses real names (for example Ponce City Market, Krog Street Market, New Realm Brewing). Section 7.2 still applies before a public launch.
 4. Is Sweet Auburn the second level, after the BeltLine Eastside block?
+5. When does the owner approve the first contact with OTI? Nobody was contacted.
 
 ---
 
 ## 10. Not verified
 
-- An "official video game" designation anywhere in the US. The search found none.
+- An "official video game" designation anywhere in the US. The search found none. Public text uses the soft wording: "We found no other US city with an official video game."
 - The Council committee for a resolution of support.
 - A Discover Atlanta partner program for games, and the membership dues.
 - An APS app-approval process and an APS data privacy agreement.
@@ -407,7 +485,19 @@ The pitch to OTI happens with the M2 build. Version 1 is the proof.
 - A DOJ final rule after the April 2026 interim rule.
 - The owner of the Krog Street Tunnel.
 - The ownership split at Ebenezer and the owner role at Oakland Cemetery.
-- The Inman Park fact (the page did not load) and the Cascade opening year.
-- The Tony Hawk funding of the Historic Fourth Ward skatepark.
+- The Cascade opening year. (The Inman Park fact now has an NRHP source, and the Tony Hawk fact has an H4W Park Conservancy source; see 4.0.)
+- The Ponce City Market history page (`https://poncecitymarket.com/history/`) returned HTTP 403 to `curl`. A person must open it in a browser before the pitch (content checklist, note N3).
+- The game on a real phone and a real GPU. Every frame time in this project comes from SwiftShader in a cloud container (no GPU). The 55 fps gate is not verified on real hardware.
+- A playtest by a person outside the project, and the real skater review of the move set.
+- The link preview of the share card on the production URL with a card validator (#303).
 - The NEH February 2027 deadline and the OCA FY27 cycle.
 - Several official pages (atlantaga.gov, citycouncil.atlantaga.gov, discoveratlanta.com, neh.gov) blocked the fetch tool. Facts from these pages come from search snippets. Read each page before you quote it.
+
+---
+
+## 11. Screenshots from the production URL
+
+Taken on 2026-11-24 from https://skate-atl.vercel.app (the build of `main` at `b432849`) with headless Chromium (Playwright). The URL had `weather=clear&time=14` (see #353) and `teach=0` (no move prompts). The renderer is SwiftShader (no GPU), so the frame rate is not real; the pictures show the content only.
+
+| File | Tier | What it shows |
+|---|---|---|

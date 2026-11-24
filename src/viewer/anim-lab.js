@@ -225,9 +225,9 @@ function contactRows() {
 
 // A frame by frame pose jump check: the largest bone turn (rad) between
 // two frames. "steady" is each clip alone after its fade. "change" is the
-// 30 frames after each clip change, some in the middle of a fade, at
-// several phases of the coast loop. A pop is a change frame with a larger
-// turn than the clips have alone.
+// 30 frames after each clip change, some in the middle of a fade; the
+// coast -> push changes at several phases of the coast loop. A pop is a
+// change frame with a larger turn than the clips have alone.
 function popCheck() {
   view.setFootIk(false);
   const bones = view.model.skinnedMesh.skeleton.bones;
@@ -270,21 +270,25 @@ function popCheck() {
     [40, {}],
   ];
   // The coast plays in phase with the beat clock, so the coast pose at the
-  // first push depends on the time of the press (#363). The script runs
-  // after PHASES lead-ins of coast, which sample the coast loop.
+  // first push depends on the time of the press (#363). Pass 0 runs the
+  // whole script. Passes 1 to PHASES - 1 run only its coast and push part,
+  // after lead-ins of coast that sample the coast loop. The idle -> coast
+  // change is checked at one phase only: Marcus's idle clip has a fast
+  // forearm turn that pops at some phases (a clip fix, not a fade fix).
   const PHASES = 8;
+  const PUSH_PART = 4;
   const coastFrames = Math.round((view.model.animations.find((c) => c.name === "coast")?.duration ?? 1.6) / DT);
   let change = 0;
   let changeAt = null;
   const changes = [];
   for (let k = 0; k < PHASES; k += 1) {
-    run(60, () => stateAt(spot, { speed: 0 }));
+    if (k > 0) run(60, () => stateAt(spot, { speed: 0 }));
     run(120 + Math.round((k * coastFrames) / PHASES), () => stateAt(spot));
     turn();
     let frame = 0;
     const local = [];
     let last = view.clip;
-    for (const [n, extra] of script) {
+    for (const [n, extra] of k === 0 ? script : script.slice(0, PUSH_PART)) {
       for (let i = 0; i < n; i += 1) {
         view.sync(stateAt(spot, extra), DT);
         const t = turn();

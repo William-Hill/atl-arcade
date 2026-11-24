@@ -2981,6 +2981,7 @@ Neither toggle goes into `src/` before the playtest verdict.
 - The limit of the test (0.1601 rad) was not the cause. It comes from Marcus's idle clip (a right forearm turn of 0.1525 rad x 1.05). The pop is real: the fade turned the knee faster than the push clip does.
 - Other fixes that were tried: a later push start time (0.27 s to 1.13 s) makes the arms pop more (to 0.23 rad). A rebuild of Marcus's push clip needs Blender and an art review; this session has no Blender.
 - Result with 0.15 s, at all coast phases: Marcus 0.135 rad, Nia 0.101 rad (was 0.126 rad). Both are less than the push clip by itself. The push shows 30 ms later. The game sim (speed, push impulse) does not change.
-- `popCheck()` in `src/viewer/anim-lab.js` now runs its script at 8 phases of the coast loop, so the result does not depend on the earlier sheets.
+- `popCheck()` in `src/viewer/anim-lab.js` now checks the coast -> push changes at 8 phases of the coast loop, so the result does not depend on the earlier sheets. With the fix the spec measures Marcus 0.137 rad and Nia 0.110 rad.
+- The 8-phase sweep also found an older pop: Marcus's idle clip has a fast right forearm turn, and at some phases the idle -> coast fade gives 0.170 rad. Owner decision (2026-11-24): `popCheck()` checks idle -> coast at one phase, as before, and #369 rebuilds Marcus's idle clip.
 
 **#364.** `introPlan()` (`src/ui/intro.js`) reads `?intro=1` and `?intro=title` before `?autopilot=1`. `?autopilot=1` alone still starts in play. `?intro=0`, reduced motion, a non-geodata level, and a non-follow view still apply.

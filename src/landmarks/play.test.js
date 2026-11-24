@@ -149,3 +149,20 @@ describe("AC-3: the HUD goal line", () => {
     expect(goalLine(landmarkView(s), [300, 0, 0], { timed: false })).toEqual({ id: "bridge", text: FREE_RUN_HINT });
   });
 });
+
+describe("a tour step (#260)", () => {
+  it("is active with no goal list, and claims", () => {
+    const a = landmarkStepArgs(runAt(0, 0), { tour: true });
+    expect(a.active).toBe(true);
+    expect(a.obs.teleported).toBe(false);
+    expect(landmarkStepArgs(runAt(0, 0), { tour: true, teleported: true }).obs.teleported).toBe(true);
+    let s = fresh();
+    for (let i = 0; i < 30; i += 1) {
+      const step = landmarkStepArgs(runAt(300, 0, { state: "air" }), { tour: true });
+      s = stepLandmarks(s, step.obs, DT, { active: step.active });
+    }
+    const land = landmarkStepArgs(runAt(300, 0, { justLanded: true }), { tour: true });
+    s = stepLandmarks(s, land.obs, DT, { active: land.active });
+    expect(spotState(s, "bridge")).toBe("claimed");
+  });
+});

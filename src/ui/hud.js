@@ -55,7 +55,9 @@ function el(tag, className, parent) {
 // `fence` is the level edge fence (src/level/edge-fence.js), or null.
 // `reducedMotion()` is true when the beat pulse must not move (#97).
 // `goalDef` is the goal definition of the level, or null for free skate.
-export function createHud(root, { touch = false, fence = null, reducedMotion = () => false, goalDef = null } = {}) {
+// `tour` is true in a tour (#260): the timer place reads TOUR_LABEL.
+export const TOUR_LABEL = "TOUR";
+export function createHud(root, { touch = false, fence = null, reducedMotion = () => false, goalDef = null, tour = false } = {}) {
   root.innerHTML = "";
   // The score and the run timer (M1-05) share the top line.
   const top = el("div", "hud-top", root);
@@ -87,6 +89,9 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
   notice.setAttribute("role", "status");
   notice.hidden = true;
   let noticeTimer = null;
+  // The round line (#260): why the input stops at the end of a timed round.
+  // It uses the notice line, and stays until status(null).
+  let statusText = null;
   // The goal line of landmark discovery (#219): the challenge of the nearest
   // Found spot. The text is plain text from the data file (textContent).
   const goal = el("div", "hud-hint hud-goal", root);
@@ -121,7 +126,8 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
       if (goal.hidden !== !goalLine) goal.hidden = !goalLine;
       if (goalLine && goal.textContent !== goalLine) goal.textContent = goalLine;
       const c = run.combo;
-      timer.hidden = !goals;
+      timer.hidden = !goals && !tour;
+      if (!goals && tour && timer.textContent !== TOUR_LABEL) timer.textContent = TOUR_LABEL;
       roundGoals.update(goals ? goalDef : null, goals, nowMs);
       if (goals) {
         timer.textContent = formatClock(goals.timeLeft);
@@ -187,12 +193,22 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
     },
     // Shows one plain line for `ms`, then hides it.
     notice(text, ms = 6000) {
+      if (statusText) return;
       notice.textContent = text;
       notice.hidden = false;
       clearTimeout(noticeTimer);
       noticeTimer = setTimeout(() => {
         notice.hidden = true;
       }, ms);
+    },
+    // Shows the round line (#260) until the next call with null. While it
+    // shows, it takes the place of a notice.
+    status(text) {
+      statusText = text || null;
+      clearTimeout(noticeTimer);
+      notice.textContent = statusText ?? "";
+      notice.hidden = !statusText;
+      notice.dataset.round = statusText ? "1" : "0";
     },
     elements: { score, timer, roundGoals: roundGoals.elements.list, goalMet: roundGoals.elements.met, combo, pending, tag, pulse, edge, notice, goal, styleWrap, styleText, styleFill, balanceWrap, balanceDot },
   };

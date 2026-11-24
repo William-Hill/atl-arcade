@@ -109,6 +109,8 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
 .hud-tag[data-beat="PERFECT"] { color: #7ef0c2; }
 .hud-hint { font-size: 14px; color: #ffd166; margin-top: 4px; }
 .hud-notice { color: #fff; }
+/* The round line at the end of a timed round (#260): why the input stops. */
+.hud-notice[data-round="1"] { color: #ff80c4; font-weight: 800; font-size: 18px; }
 
 /* The frame-time readout (?fps=1, #246): large enough to read on a phone
    held in the hand. It sits at mid height on the left, clear of the HUD
@@ -615,6 +617,21 @@ body.results-open #touch-controls { display: none; }
   touch-action: manipulation;
 }
 .results-replay:focus-visible { outline: 3px solid #ffd166; outline-offset: 2px; }
+/* The second action (#260): a tour, the landmark loop with no timer. 44 px high. */
+.results-tour {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  background: transparent;
+  color: #f3f3f7;
+  font: 700 16px/1 system-ui, sans-serif;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.results-tour:focus-visible { outline: 3px solid #ffd166; outline-offset: 2px; }
 
 /* A compact screen: the minimap is in the top right corner, 120 px or
    smaller, at 76 px from the top. In landscape the panel leaves that column
@@ -630,6 +647,12 @@ body.results-open #touch-controls { display: none; }
   .results-goals { gap: 2px; margin-bottom: 10px; }
   .results-goals li { font-size: 14px; }
   .results-music { margin-bottom: 8px; }
+}
+/* A short landscape phone (#260): "Skate again" and the Tour button share
+   one row, so both show with no scroll. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .results-replay:has(+ .results-tour), .results-replay + .results-tour { display: inline-block; vertical-align: top; width: calc(50% - 4px); margin-top: 0; }
+  .results-replay + .results-tour { margin-left: 8px; }
 }
 @media (max-width: 600px) and (orientation: portrait) {
   #results {

@@ -140,10 +140,15 @@ test("the first key of a timed run plays the count-in; the round end plays ROUND
   expect(await page.evaluate(() => window.__atl.callouts.state.shown)).toBe(1);
 
   await page.evaluate(() => window.__atl.goals.setTimeLeft(0));
-  await page.waitForFunction(() => window.__atl.goals.shown, null, { timeout: 60000 });
-  const during = await page.evaluate(() => ({ state: window.__atl.callouts.state, card: getComputedStyle(document.querySelector(".results-card")).opacity, medal: window.__atl.goals.results.medal }));
+  // The soft round end (#260): ROUND OVER starts when the input stops, before the results show.
+  await page.waitForFunction(() => window.__atl.goals.phase === "stopping", null, { timeout: 60000 });
+  const during = await page.evaluate(() => ({ state: window.__atl.callouts.state, shown: window.__atl.goals.shown, medal: window.__atl.goals.results.medal }));
   expect(during.state.kind).toBe("end");
-  expect(during.card).toBe("0");
+  expect(during.shown).toBe(null);
+  await page.waitForFunction(() => window.__atl.goals.shown, null, { timeout: 60000 });
+  // While the callout still shows, the results card waits under it.
+  const under = await page.evaluate(() => ({ kind: window.__atl.callouts.state.kind, card: getComputedStyle(document.querySelector(".results-card")).opacity }));
+  if (under.kind === "end") expect(under.card).toBe("0");
   await page.waitForFunction(() => window.__atl.callouts.state.kind === null, null, { timeout: 120000 });
   const seenEnd = await page.evaluate(() => window.__atl.callouts.state.seen);
   expect(seenEnd).toContain("ROUND OVER");

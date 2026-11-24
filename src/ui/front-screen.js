@@ -101,7 +101,7 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
   settings.addEventListener("focus", () => settings.blur());
   settings.addEventListener("click", (e) => {
     e.stopPropagation();
-    onSettings();
+    openSettings();
   });
   row.appendChild(settings);
   title.appendChild(row);
@@ -128,6 +128,15 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
     onPhase(state.phase, from);
   }
 
+  // The frame loop does not call update() while the settings dialog is
+  // open. After the dialog closes, the first poll only sets the baseline of
+  // the pad: a button that is still held is not a new press.
+  let padResync = false;
+  function openSettings() {
+    padResync = true;
+    onSettings();
+  }
+
   function onKey(e) {
     if (state.phase === "play" || settingsOpen()) return;
     // A key in the skater select or on the Settings button: Enter and Space
@@ -138,7 +147,7 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
     onGesture();
     if (state.phase === "title" && e.code === settingsCode && !e.repeat) {
       e.preventDefault();
-      onSettings();
+      openSettings();
       return;
     }
     const digit = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
@@ -193,7 +202,11 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
     // One frame: the clock, the flight, the logo, and the pad.
     update(dt, { moving = true } = {}) {
       if (state.phase === "play") return state;
-      if (!settingsOpen() && pollPad()) {
+      if (settingsOpen()) padResync = true;
+      else if (padResync) {
+        pollPad();
+        padResync = false;
+      } else if (pollPad()) {
         // A pad press is a user gesture too: it starts the beat clock.
         onGesture();
         apply(frontPress(state));

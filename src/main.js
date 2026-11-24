@@ -35,6 +35,9 @@ import { modeHref, modeRules, runMode } from "./sim/skate/run-mode.js";
 import { roundPhase, roundStatus } from "./sim/skate/round-end.js";
 import { guideLine } from "./landmarks/guide.js";
 import { createResults } from "./ui/results.js";
+import { createStoryView } from "./ui/story-card-view.js";
+import { isFirstClaim, resultsCards, storyCardModel } from "./landmarks/story-card.js";
+import { cardArtUrl } from "./landmarks/card-art.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createSkateparkView } from "./render/skatepark-view.js";
 import { meshWorkerCount, startGeoMeshBuild, startLevelProps } from "./level/geo/geo-mesh-async.js";
@@ -435,6 +438,15 @@ if (landmarkModels) {
   scene.add(landmarkModels.root);
   landmarkModels.ready.catch((err) => console.error(err));
 }
+// True when the roof models and the landmark GLBs are placed (or failed),
+// for scripts/card-art.mjs (#220).
+// `landmarksFailed` counts the loads that failed: the card art stops then.
+let landmarksLoaded = false;
+let landmarksFailed = 0;
+Promise.allSettled([landmarks?.ready, landmarkModels?.ready]).then((all) => {
+  landmarksFailed = all.filter((r) => r.status === "rejected").length;
+  landmarksLoaded = true;
+});
 
 // The street kit (trees, lamps, benches, roof units) loads after the level
 // shows. ?props=0 leaves it out. With the GLB trees (pbr), the batch goes in
@@ -693,7 +705,7 @@ const camParam = labBuilding ? labCamera(labBuilding, params.get("labview") ?? "
 const terrainY = (x, z) => (geo ? terrainOf(level).height(x, z) : 0);
 // The place a fixed camera looks at, over the terrain: the shadow box goes
 // there (see the frame loop).
-const shadowFocus = view === "fixed" && camParam.length === 6 && camParam.every(Number.isFinite) ? [camParam[3], camParam[4] + terrainY(camParam[3], camParam[5]), camParam[5]] : null;
+let shadowFocus = view === "fixed" && camParam.length === 6 && camParam.every(Number.isFinite) ? [camParam[3], camParam[4] + terrainY(camParam[3], camParam[5]), camParam[5]] : null;
 if (camParam.length === 6 && camParam.every(Number.isFinite)) {
   camera.position.set(camParam[0], camParam[1] + terrainY(camParam[0], camParam[2]), camParam[2]);
   camera.lookAt(camParam[3], camParam[4] + terrainY(camParam[3], camParam[5]), camParam[5]);
@@ -929,7 +941,18 @@ const replayRun = () => {
 };
 // "Tour (no timer)" on the results screen (#260) loads the same level as a tour.
 const onTour = landmarkTracker ? () => window.location.assign(modeHref(window.location.href, "tour")) : null;
-const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: replayRun, tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack, onTour }) : null;
+// The landmark story cards (#220): the full map panel of an unlocked spot,
+// and the row of this run's claims on the results screen. A card shows
+// only there, never during play (GDD rule 7). The band is the district
+// accent at the spot; the art is the render of scripts/card-art.mjs.
+const storyView = landmarkTracker ? createStoryView(document.body, { reducedMotion: () => effects.reducedMotion }) : null;
+const storyParts = {
+  cardOf: (id) => landmarkTracker?.state.spots.find((s) => s.id === id)?.card ?? [],
+  accentOf: (spot) => (spot ? districtAccent(spot.at[0], spot.at[1], landmarkAnchors) : null),
+  artOf: (id) => (params.get("cardart") === "0" ? null : cardArtUrl(id, import.meta.env.BASE_URL)),
+};
+const storyOf = (spot) => storyCardModel(spot, storyParts.cardOf(spot.id), { first: isFirstClaim(landmarkTracker?.state.run, spot.id), accent: storyParts.accentOf(spot), art: storyParts.artOf(spot.id) });
+const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: replayRun, tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack, onTour, onCard: (model, from) => storyView?.open(model, from), busy: () => Boolean(storyView?.isOpen) }) : null;
 // The sim time since the run ended: the soft round end (#260) holds the
 // results screen for ROUND_END.hold s while the skater rolls on.
 let roundEndedFor = 0;
@@ -1101,6 +1124,7 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   if (goalDef) {
     goals = createGoals(goalDef);
     factCards.clear();
+    storyView?.close();
     results.hide();
     roundEndedFor = 0;
     roundEndCalled = false;
@@ -1189,6 +1213,8 @@ const settingsMenu = createSettingsMenu({
   reload: (keys, carry) => window.location.assign(reloadHref(window.location.href, keys, carry)),
   canOpen: () => !photo.isOpen && !fullmap?.isOpen,
   onChange: () => input.reset(),
+  // "Reset progress" and the notice when the storage fails (#220, E-5, E-8).
+  progress: landmarkTracker ? { saved: () => landmarkTracker.saved, onReset: () => landmarkTracker.reset() } : null,
 });
 
 // The full map of the level (M key, or the minimap expand button). The game
@@ -1200,7 +1226,8 @@ fullmap =
         // A free run claims no spot. A timed run and a tour (#260) claim.
         freeRun: !landmarkTimed,
         reducedMotion: () => effects.reducedMotion,
-        canOpen: () => !photo.isOpen && !settingsMenu.isOpen,
+        // Not while a story card of the results screen is open (#220).
+        canOpen: () => !photo.isOpen && !settingsMenu.isOpen && !storyView?.isOpen,
         onChange: () => input.reset(),
         // The baked isometric map of the level (scripts/bake-iso-map.mjs).
         iso: params.get("isomap") === "0" ? null : isoTilesFor(level.name),
@@ -1210,6 +1237,7 @@ fullmap =
         // only Found and Claimed spots (opt-in, #271; src/ui/travel-rule.js).
         onTravel: fastTravelMode !== "off" ? (x, z) => fastTravel(x, z) : null,
         travelMode: fastTravelMode,
+        storyOf,
       })
     : null;
 
@@ -1388,7 +1416,7 @@ function frame(now) {
   }
   if (results && phase === "results" && !results.shown) {
     const end = runResults();
-    results.show(end);
+    results.show(end, landmarkTracker ? resultsCards(landmarkTracker.view(), storyParts) : []);
     if (!roundEndCalled) callouts?.end(end);
     roundEndCalled = true;
   }
@@ -1591,6 +1619,8 @@ window.__atl = {
     stats: level.stats ?? null,
     bounds: level.bounds,
     spawn: level.spawn,
+    // The terrain height at (x, z), with no buildings or bridges.
+    terrainHeight: (x, z) => terrainY(x, z),
     // The edge fence (#229): its rectangle and its panel count, or null.
     fence: env.fence ? { ...env.fence, panels: edgeFence ? edgeFence.panels : 0 } : null,
     get meshCount() {
@@ -1617,7 +1647,7 @@ window.__atl = {
       return geo && levelView.facadeGlb ? { ...levelView.facadeGlb } : null;
     },
     get landmarks() {
-      return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null } : null;
+      return landmarks ? { ...landmarks.info, glb: landmarkModels ? { ...landmarkModels.info } : null, loaded: landmarksLoaded, failed: landmarksFailed } : null;
     },
     // The skatepark (#222): the pad, the placements and the model stats.
     get skatepark() {
@@ -1648,6 +1678,15 @@ window.__atl = {
   get skater() {
     return skater;
   },
+  // The story card view of the results screen (#220).
+  storyView: storyView
+    ? {
+        get state() {
+          return storyView.state;
+        },
+        close: () => storyView.close(),
+      }
+    : null,
   // The landmark test hook (#217): the spot states, and find / claim / reset.
   // In the dev server or a debug build (`vite build --mode debug`) only; a
   // release build has no way to set a spot.
@@ -1942,6 +1981,10 @@ window.__atl = {
         get shown() {
           return results.shown;
         },
+        // The ids of the landmark row (#220).
+        get spots() {
+          return results.spots;
+        },
         // The soft round end (#260): "play", "overtime", "stopping" or "results".
         get phase() {
           return roundPhase(goals, { endedFor: roundEndedFor });
@@ -2157,10 +2200,13 @@ window.__atl = {
   },
   // Moves the fixed camera (view=fixed only), for screenshots of things
   // that move, such as the crowd.
+  // The shadow box goes to the look point (the card art of #220 moves the
+  // camera from one landmark to the next).
   setFixedCamera(x, y, z, lookX, lookY, lookZ) {
     if (view !== "fixed") return false;
     camera.position.set(x, y, z);
     camera.lookAt(lookX, lookY, lookZ);
+    shadowFocus = [lookX, lookY, lookZ];
     return true;
   },
   get cameraPosition() {

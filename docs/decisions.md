@@ -3011,6 +3011,17 @@ Neither toggle goes into `src/` before the playtest verdict.
 
 **#264: a dance that does not count says why.** A new dance press that starts no dance sets `skater.refused = { reason, seq }` (`air`, `grind`, `slow`). The HUD shows a short line in the move name place for 1.4 s: "Dance on the ground, not in the air", "Dance after the grind", "Roll faster to dance".
 
+## 2026-11-24: Landmark story cards, results row and Reset progress (#220)
+
+The story card of a landmark is one markup for the full map and the results screen: the full map panel of `src/ui/landmark-guide.js` with the class `is-story`. The model is `storyCardModel()` in `src/landmarks/story-card.js` (pure, Vitest). The look is `src/ui/story-card.css`.
+
+- **Card art.** Each spot has an in-game render, 640 x 360 JPEG, in `public/landmark-cards/`. The cameras are data in `src/landmarks/card-art.js` (a rule for each kind, and tuned changes for some spots). `scripts/card-art.mjs` makes all the renders again from a running dev server, in the day pbr look (June 21, 13:30, clear, high tier, no challenge rings, no governor). It writes `provenance.json` with the commit, the cameras and the date. A Vitest test fails when the cameras in the provenance are not the cameras of the module, so the shipped renders always come from the script. The `/ux-design` skill was not available to this session; the layout follows the GDD "Story card" section.
+- **"NEW" stamp.** A card has the stamp when this run claimed the spot for the first time in the save (the run record, `run.claimed[].first`). This is true on the results screen and on the full map. After the next run starts, the stamp goes.
+- **Results row.** The row lists only the spots that this run claimed, in claim order. An edge marker that this run found is not in the row, because a find is not a claim. A tap, a click, Enter or Space opens the card in a view over the results. Escape, the close button or a tap outside closes it. Enter does not start a new run while the card is open.
+- **Foil edge.** A hard spot gets a moving gradient border. It stops with `prefers-reduced-motion` and with the "Reduce motion" choice of the settings menu.
+- **Short screens.** At a height of 500 px or less (a phone in landscape), the card turns on its side: the art at the left and the facts at the right. A 3:4 card in that height is too small to read.
+- **Reset progress.** The settings menu has a "Progress" group with "Reset progress". A second modal dialog asks first, with the focus on Cancel. Cancel or Escape changes nothing. Reset clears the found and claimed spots of every level in the save and keeps the unlocked outfits (the existing `resetLandmarkSave()`). When the storage does not keep the progress, the group shows "Progress is not saved in this browser."
+
 ## 2026-11-24: Coast to push fade is 0.15 s; the Autopilot can open the intro (#363, #364)
 
 **#363.** The coast -> push fade changes from 0.12 s to 0.15 s (`src/render/skater-anim.js`, `FADES`).

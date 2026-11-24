@@ -30,12 +30,26 @@ const outDir = resolve(root, "public", CARD_ART.dir);
 mkdirSync(outDir, { recursive: true });
 const spots = data.spots.filter((s) => !only || only.includes(s.id));
 
+// The provenance of all the renders has one commit and one query. A run
+// with --only keeps the other renders, so it must run at the same commit,
+// with the same query and no local changes; else make all the renders again.
+const query = `level=${levelName}&mute=1&intro=0&view=fixed&skater=capsule&${CARD_ART.query}`;
+const provPath = resolve(outDir, "provenance.json");
+const old = existsSync(provPath) ? JSON.parse(readFileSync(provPath, "utf8")) : {};
+const commit = execSync("git rev-parse HEAD", { cwd: root }).toString().trim();
+// The renders themselves do not count as a local change.
+const dirty = execSync(`git status --porcelain -- . ":(exclude)public/${CARD_ART.dir}"`, { cwd: root }).toString().trim() !== "";
+const commitText = dirty ? `${commit} (with local changes)` : commit;
+if (only && (old.commit !== commitText || old.query !== query || old.level !== levelName)) {
+  console.error(`--only needs the commit, the query and the level of the last full run (${old.commit ?? "none"}). Run without --only.`);
+  process.exit(2);
+}
+
 const browser = await chromium.launch({ args: ["--no-sandbox", "--enable-unsafe-swiftshader", "--disable-dev-shm-usage"] });
 const page = await browser.newPage({ viewport: { width: CARD_ART.width, height: CARD_ART.height } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 // No intro, a capsule skater at the spawn, no sound, the fixed camera.
-const query = `level=${levelName}&mute=1&intro=0&view=fixed&skater=capsule&${CARD_ART.query}`;
 await page.goto(`${base}/?${query}`);
 await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 8, null, { timeout: 300000 });
 await page.evaluate(() => {
@@ -64,20 +78,15 @@ for (const spot of spots) {
 }
 await browser.close();
 
-// The provenance of all the renders. A run with --only keeps the cameras of
-// the other spots from the last full run.
-const provPath = resolve(outDir, "provenance.json");
-const old = existsSync(provPath) ? JSON.parse(readFileSync(provPath, "utf8")) : {};
-const commit = execSync("git rev-parse HEAD", { cwd: root }).toString().trim();
-// The renders themselves do not count as a local change.
-const dirty = execSync(`git status --porcelain -- . ":(exclude)public/${CARD_ART.dir}"`, { cwd: root }).toString().trim() !== "";
 const prov = {
   tool: "Skate ATL in-game render (Three.js, headless Chromium), scripts/card-art.mjs",
   prompt: null,
   credits: "Original in-game renders of the Skate ATL level. Map data © OpenStreetMap contributors (ODbL).",
   license: "Project art",
-  date: new Date().toISOString().slice(0, 10),
-  commit: dirty ? `${commit} (with local changes)` : commit,
+  // The date of the last full run; `dates` has the date of each render.
+  date: only ? old.date : new Date().toISOString().slice(0, 10),
+  dates: { ...(old.dates ?? {}), ...Object.fromEntries(Object.keys(cameras).map((id) => [id, new Date().toISOString().slice(0, 10)])) },
+  commit: commitText,
   level: levelName,
   query,
   size: [CARD_ART.width, CARD_ART.height],

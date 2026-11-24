@@ -127,7 +127,8 @@
   :is(#fullmap, #story-view) .fullmap-card.is-story .story-card-art { grid-column: 1; grid-row: 2 / 4; aspect-ratio: auto; border-bottom: 0; border-right: 3px solid var(--story-ink); }
   :is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-body { grid-column: 2; grid-row: 2; }
   :is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-foot { grid-column: 2; grid-row: 3; }
-  .story-card-stamp { top: 58px; }
+  /* Over the art at the left, not over the facts. */
+  .story-card-stamp { top: 66px; right: auto; left: calc(42% - 96px); }
 }
 
 /* The card view of the results screen: over the results panel, with a dim
@@ -198,3 +199,7 @@
   .results-spots { margin-bottom: 8px; }
   .results-spot { width: 76px; font-size: 11px; }
 }
+
+/* A closed card stays hidden: the grid rule of a short screen above has the
+   same weight as the [hidden] rule of src/shell.css and comes later. */
+:is(#fullmap, #story-view) .fullmap-card.is-story[hidden] { display: none; }

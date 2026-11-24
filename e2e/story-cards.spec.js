@@ -306,3 +306,22 @@ test.describe("on a phone", () => {
     expect(await page.evaluate((id) => window.__atl.landmarks.states()[id], HARD)).toBe("unknown");
   });
 });
+
+test.describe("on a phone in landscape", () => {
+  test.use({ ...PHONE, viewport: { width: 844, height: 390 } });
+
+  test("the card turns on its side, and a closed card is hidden", async ({ page }) => {
+    test.setTimeout(240000);
+    await ready(page);
+    await page.evaluate((id) => window.__atl.landmarks.claim(id), HARD);
+    await page.evaluate(() => window.__atl.fullmap.open());
+    await page.evaluate((id) => window.__atl.fullmap.openSpot(id), HARD);
+    const card = page.locator("#fullmap .fullmap-card");
+    const look = await expectStoryCard(card, HARD, { stamp: true, foil: true });
+    expect(look.ratio).toBeGreaterThan(1);
+    await page.screenshot({ path: `${SHOTS}/story-card-fullmap-landscape.jpg`, type: "jpeg", quality: JPEG });
+    await card.locator(".fullmap-card-close").tap();
+    await expect(card).toBeHidden();
+    expect(await card.evaluate((n) => getComputedStyle(n).display)).toBe("none");
+  });
+});

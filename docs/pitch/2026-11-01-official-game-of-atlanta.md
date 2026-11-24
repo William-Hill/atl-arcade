@@ -501,3 +501,17 @@ Taken on 2026-11-24 from https://skate-atl.vercel.app (the build of `main` at `b
 
 | File | Tier | What it shows |
 |---|---|---|
+| `screenshots/high-01-title.jpg` | High, pbr look, 1280 x 720 | The title screen: the logo, "PRESS ANY KEY", the skater select (Nia, Marcus), SETTINGS |
+| `screenshots/high-02-spawn-skatepark.jpg` | High | Tour mode at the start, by the Freedom Parkway bridge |
+| `screenshots/high-03-skatepark.jpg` | High | The skatepark ledge and rail next to the trail; HUD "Claim it: land a 2,000 point combo in the skatepark" |
+| `screenshots/high-04-fourth-ward-park.jpg` | High | Historic Fourth Ward Park |
+| `screenshots/high-05-ponce-city-market.jpg` | High | The trail by Ponce City Market |
+| `screenshots/high-06-krog-street-market.jpg` | High | The sidewalk at Krog Street Market |
+| `screenshots/high-07-freedom-park-fact.jpg` | High | Tour mode guide line: "Nearby spots done / Next: Freedom Parkway Bridge, 220 m ahead" |
+| `screenshots/phone-01-title.jpg` | Phone, Pixel 7 landscape | The title screen with "TAP TO START" |
+| `screenshots/phone-02-spawn-skatepark.jpg` | Phone | Tour mode at the start, with the touch stick and the JUMP, GRIND, GROOVE, SPIN and SWITCH buttons |
+| `screenshots/phone-03-skatepark.jpg` | Phone | The skatepark from the trail |
+| `screenshots/phone-05-ponce-city-market.jpg` | Phone | The trail by Ponce City Market |
+| `screenshots/phone-fact-neighborhoods.jpg` | Phone | Fast travel to the neighborhoods fact card (demo stop B) |
+
+The screenshots use fast travel. A Found banner shows for about 3 s and the banners wait in a queue, so a picture can show the banner of the spot before the travel (for example, `high-06` shows the Ponce City Market banner at Krog Street Market). In normal play the banner shows at its spot. The script is `docs/pitch/screenshots/capture.cjs` (`node capture.cjs <out-dir> high|phone`).

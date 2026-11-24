@@ -3,7 +3,7 @@
 **For:** the Mayor's Office of Technology and Innovation (OTI). **Date:** 2026-11-24. **Status:** draft for the owner. Nobody was contacted.
 **Play it now:** https://skate-atl.vercel.app (a laptop or a phone browser, no install, no account).
 
-![Skate ATL on the BeltLine Eastside Trail](screenshots/high-03-skatepark.jpg)
+![The Skate ATL title screen on the BeltLine Eastside Trail (production, 2026-11-24)](screenshots/high-01-title.jpg)
 
 ## What the game is
 

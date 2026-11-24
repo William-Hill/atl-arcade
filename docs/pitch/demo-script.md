@@ -62,6 +62,7 @@ Checked on production on 2026-11-24 (headless Chromium, phone tier, Tour mode): 
 | The frame rate is low on the projector laptop | Add `&quality=phone` or `&look=toon`. On the phone tier, the game can also step down to the toon look by itself and shows one line on the HUD. |
 | No network at all | Run a local copy: in the repository, `npm ci`, `npm run build`, and `npx vite preview`, then open the local URL with the same parameters. Test this once offline before the meeting. If that also fails, show the screenshots in `docs/pitch/screenshots/` with the one-pager. |
 | The intro does not play | Add `&intro=title` for the title screen only. Then start. |
+| After the fast travel, the banner shows the skatepark, not Ponce City Market | The banners wait in a queue (about 3 s each). Wait 3 s; the Ponce City Market banner follows. |
 | The skater is in a wrong place after a fast travel | Press M and travel to the spot again, or reload the tab. |
 | The phone does not respond to touch | Skip the phone part. Say that the phone layout has tests on 5 screen sizes. |
 

@@ -2972,6 +2972,45 @@ Neither toggle goes into `src/` before the playtest verdict.
 
 **Why.** On 2026-11-23, 4 ship-it agents each started the full suite at the same time. The load average went to 100 and more, the runs did not finish in 2 hours, and most failures were timeouts from the load. The Playwright suite is the regression gate. The Autopilot playtest is an AI agent that plays the game and finds play problems that no test predicts. The two checks do not replace each other.
 
+## 2026-11-24: The first load is a clear afternoon in Atlanta (#353)
+
+**Decision (owner, 2026-11-24).** With no `?time` and no `?weather` in the URL, the level loads in clear weather at 14:00, on today's date in Atlanta. Every first load at the City pitch shows the city at its best, with the same look on each computer.
+
+- The rule is in `weatherClock()` (`src/render/weather-view.js`, `FIRST_LOAD = { hour: 14, weather: "clear" }`).
+- The real clock stays as an option: `?time=now` uses the Atlanta time (America/New_York, `atlantaTime()` in `src/sim/weather.js`), not the time zone of the device. The date is the Atlanta date too.
+- The seasonal weather draw stays as an option: `?weather=auto`.
+- `?date`, `?time=HH.HH`, `?weather=clear|clouds|rain|storm` and `?timescale` do not change.
+- At 14:00 the sun is more than 20 degrees up on every day of the year in Atlanta (Vitest).
+
+**Tests.** Vitest `src/render/weather-view.test.js`: the Atlanta date and hour for the #353 case (19:50 UTC is 14:50 in Atlanta), daylight saving, the first load on 3 dates, the sun, rain and wet street on 53 days of the year, `?time=now&weather=auto`, and a bad `?time`. Playwright `e2e/first-load.spec.js`: a load of `/` with no parameters gives `clear`, hour 14, sun elevation more than 20 degrees, no rain, a dry street. Screenshot: `e2e/__screenshots__/first-load-default.png`.
+
+**Rejected.** The real Atlanta time with clear weather and only daylight hours (a night demo still needs a clamp, and the look changes with the hour of the pitch); the real Atlanta time with night allowed (the toon look reads near-black at night, 2026-11-04).
+
+## 2026-11-24: Story cards name no alcohol (#354)
+
+**Decision (owner, 2026-11-24).** A landmark story card does not name alcohol. This is the same rule as the shop signs (`NAME_DENY` in `src/level/geo/shop-signs.js`), for the all-ages audience of an official City game.
+
+- New Realm Brewing, fact 3, is now: "New Realm has a full food menu and hosts trivia, vintage market pop-ups and live music four days a week." The source does not change (Atlanta BeltLine, Inc., https://beltline.org/blog/the-beltline-from-above/). The quote in `docs/research/2026-11-10-landmark-facts.md` leaves out the first clause, which names alcohol.
+- The landmark name "New Realm Brewing" stays. It is the real name of the place.
+- Only the card text and data change. The card component does not change (#220 changes it).
+
+**Tests.** `npm run validate:landmarks` passes. Playwright `e2e/first-load.spec.js` claims the spot, opens its card on the full map, and checks the new text and that no fact of the spot names beer, spirits, wine, liquor or a cocktail. Screenshot: `e2e/__screenshots__/first-load-new-realm-card.png`.
+
+**Rejected.** The shorter text "New Realm hosts trivia, vintage market pop-ups and live music." (it drops the food menu, a neutral fact from the same quote); keeping "beer and spirits".
+
+## 2026-11-24 — Claim targets: the grind curb, the goal line, the skatepark pad (#264, #365)
+
+**#365, owner decision (AskUserQuestion, 2026-11-24): the skatepark combo zone is the whole pad plus 2 m, and the game draws it.** Before, the zone was a 10 m circle at (272.3, -1.5), the east half of the pad, and nothing showed it. A 5,034 point combo that ended at the west end of the rail lane banked but did not claim (Autopilot run 20261124-094156). Options that the owner did not choose: keep the 10 m circle and show it; one 17 m circle over the pad (it runs off the pad onto the paths).
+
+- Data: a combo zone can name an area of the spot's footprint: `"zone": { "x", "z", "r", "area": "skatepark:h4w-skatepark", "margin": 2 }`. The zone is the area outline plus `margin` m (`inZone` in `src/sim/landmarks.js`). `x`, `z` stay the target point of the guide line (the pad center), and `r` (19) the reach of the zone. The validator accepts an area zone for a skate spot only, the area must be in its footprint, the margin 0 to 4 m, and `r` must reach every corner plus the margin.
+- Render: the ring of an area zone is a rounded rectangle on the zone edge (the corner radius is the margin), with the inner line 1 m inside: the double ring of a combo, in the same instanced mesh and draw call (`src/render/landmark-rings.js`, `rectPoint`).
+
+**#264: the grind target.** Near a Found grind claim (in a mode with claims, within zone r + 30 m of its zone), a gold tube with an ink shell lies on the part of the named rail or curb that counts (within zone r + meters of the zone center), with a 1.4 m post at each end. It is brighter and does not pulse while the skater grinds that feature. 2 draw calls while it shows (1 in the pbr look, no ink), 0 otherwise. `src/render/claim-target-math.js` (pure), `src/render/claim-target.js`.
+
+**#264: the goal line follows the challenge in progress.** `landmarkView` gives each spot `active` (a line attempt, a grind on its feature, the air of a gap from its zone, an open combo with its last link in its zone) and `grindMeters`. `goalLine` puts an active spot before the nearer ones, and a grind adds "Grind 6 of 15 m".
+
+**#264: a dance that does not count says why.** A new dance press that starts no dance sets `skater.refused = { reason, seq }` (`air`, `grind`, `slow`). The HUD shows a short line in the move name place for 1.4 s: "Dance on the ground, not in the air", "Dance after the grind", "Roll faster to dance".
+
 ## 2026-11-24: Landmark story cards, results row and Reset progress (#220)
 
 The story card of a landmark is one markup for the full map and the results screen: the full map panel of `src/ui/landmark-guide.js` with the class `is-story`. The model is `storyCardModel()` in `src/landmarks/story-card.js` (pure, Vitest). The look is `src/ui/story-card.css`.

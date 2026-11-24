@@ -99,3 +99,46 @@ describe("the dances of each skater", () => {
     expect(dancesFor(groove, "marcus").length).toBe(dancesFor(groove, "nia").length + 3);
   });
 });
+
+// #264: a dance press that starts no dance gives a reason for the HUD.
+describe("a dance that does not count", () => {
+  const roll = (frames = 60) => {
+    let s = createSkater();
+    for (let i = 0; i < frames; i += 1) s = stepSkater(s, { push: true }, 1 / 60, undefined, { grindables: [] });
+    return s;
+  };
+
+  it("gives no reason when the dance starts", () => {
+    const s = stepSkater(roll(), { style1: true }, 1 / 60, undefined, { grindables: [] });
+    expect(s.style).not.toBeNull();
+    expect(s.refused).toBeNull();
+  });
+
+  it("says 'air' for a press in the air, once per press", () => {
+    let s = stepSkater(roll(), { jump: true }, 1 / 60, undefined, { grindables: [] });
+    for (let i = 0; i < 3 && s.state !== "air"; i += 1) s = stepSkater(s, {}, 1 / 60, undefined, { grindables: [] });
+    expect(s.state).toBe("air");
+    s = stepSkater(s, { style2: true }, 1 / 60, undefined, { grindables: [] });
+    expect(s.style).toBeNull();
+    expect(s.refused).toEqual({ reason: "air", seq: 1 });
+    // A held button is not a new press.
+    s = stepSkater(s, { style2: true }, 1 / 60, undefined, { grindables: [] });
+    expect(s.refused.seq).toBe(1);
+  });
+
+  it("says 'slow' for a press under the dance speed", () => {
+    const s = stepSkater({ ...createSkater(), speed: STYLE.minSpeed / 2 }, { style1: true }, 1 / 60, undefined, { grindables: [] });
+    expect(s.refused).toEqual({ reason: "slow", seq: 1 });
+  });
+
+  it("says 'grind' for a press on a rail", () => {
+    const level = GREYBOX;
+    const env = { sampleGround: createGroundSampler(level) };
+    const skaterEnv = createSkaterEnv(level);
+    let s = createSkater(level, { position: [-26, 0, -2], yaw: 0 });
+    for (let i = 0; i < 400 && s.state !== "grind"; i += 1) s = stepSkater(s, { push: true, grind: true }, 1 / 60, env, skaterEnv);
+    expect(s.state).toBe("grind");
+    s = stepSkater(s, { grind: true, style1: true }, 1 / 60, env, skaterEnv);
+    expect(s.refused?.reason).toBe("grind");
+  });
+});

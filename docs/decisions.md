@@ -3035,3 +3035,19 @@ The story card of a landmark is one markup for the full map and the results scre
 - The 8-phase sweep also found an older pop: Marcus's idle clip has a fast right forearm turn, and at some phases the idle -> coast fade gives 0.170 rad. Owner decision (2026-11-24): `popCheck()` checks idle -> coast at one phase, as before, and #369 rebuilds Marcus's idle clip.
 
 **#364.** `introPlan()` (`src/ui/intro.js`) reads `?intro=1` and `?intro=title` before `?autopilot=1`. `?autopilot=1` alone still starts in play. `?intro=0`, reduced motion, a non-geodata level, and a non-follow view still apply.
+
+## 2026-11-24: City pitch update, one-pager and demo script (#258)
+
+Owner decisions on 2026-11-24 (AskUserQuestion):
+
+- **PR 45.** A new PR to `main` adds the pitch document of PR 45 in `docs/pitch/` and updates it. The PR 45 branch has no merge base with `main`. After the merge, the owner closes PR 45 as superseded. The first commit adds the PR 45 text without changes, so the diff of the update is easy to read.
+- **First reader.** The Mayor's Office of Technology and Innovation (OTI). The one-pager and the demo script have the OTI tone: youth esports labs, open data, no data risk.
+- **The "first" claim.** Public text says "We found no other US city with an official video game." The claim stays in the "Not verified" list.
+- **Demo device.** A laptop on the projector, and a phone for a 30 s touch demo at the end.
+
+Files: `docs/pitch/2026-11-01-official-game-of-atlanta.md` (new section 1.1 "What a person can play today", section 4.0 with the 13 spots and the 3 open data cards of the Eastside level, updated sections 6 to 10, new section 11 with the screenshots), `docs/pitch/one-pager.md`, `docs/pitch/demo-script.md`, `docs/pitch/screenshots/`.
+
+- The screenshots come from the production URL with headless Chromium on SwiftShader, with `weather=clear&time=14` (until #353 merges) and `teach=0`.
+- The demo URL uses `travel=1` for one fast travel from the full map. Fast travel is off in a normal production visit.
+- The demo does not open the New Realm Brewing story card until #354 merges.
+- Nobody was contacted. Contact with a City office waits for the owner's approval.

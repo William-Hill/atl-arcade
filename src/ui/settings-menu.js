@@ -18,6 +18,17 @@ const TIER_TEXT = {
   high: ["High", "Shadows, soft light, bloom, longer view."],
 };
 const LOOK_TEXT = { toon: "Toon (cel shading)", pbr: "PBR (realistic light)" };
+// "Reset progress" (#220, GDD Edge Cases E-5 and E-8).
+export const PROGRESS_TEXT = {
+  legend: "Progress",
+  reset: "Reset progress",
+  confirmTitle: "Reset progress?",
+  confirm: "Every landmark spot goes back to not found, and the claims clear. Unlocked outfits stay.",
+  yes: "Reset",
+  no: "Cancel",
+  done: "Progress reset.",
+  notSaved: "Progress is not saved in this browser.",
+};
 const KEY_TEXT = { quality: "the quality tier", look: "the look", peds: "the walkers", shadows: "the shadows" };
 
 // Colors: paper #f3f3f7 on #14141c is 17:1, the pink #ff5fb2 is 6.9:1,
@@ -57,6 +68,23 @@ const STYLE = `
 }
 #settings-menu #settings-reload { border-color: #ff5fb2; background: #ff5fb2; color: #14141c; }
 #settings-menu #settings-reload[hidden] { display: none; }
+#settings-menu #settings-progress-note { color: #ffd166; margin: 0 0 8px; }
+#settings-menu #settings-progress-note[hidden] { display: none; }
+#settings-menu #settings-reset, #settings-reset-dialog button {
+  min-height: 44px; padding: 8px 14px; border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 8px;
+  background: #22222e; color: #f3f3f7; font: 600 15px system-ui, sans-serif; cursor: pointer;
+}
+#settings-reset-dialog {
+  width: min(360px, calc(100vw - 32px)); box-sizing: border-box; padding: 16px 18px;
+  border: 2px solid #ffd166; border-radius: 12px; background: #14141c; color: #f3f3f7; font: 15px/1.4 system-ui, sans-serif;
+}
+#settings-reset-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+#settings-reset-dialog h2 { margin: 0 0 8px; font-size: 18px; color: #ffd166; }
+#settings-reset-dialog p { margin: 0 0 14px; }
+#settings-reset-dialog .settings-row { display: flex; gap: 8px; }
+#settings-reset-dialog .settings-row button { flex: 1; }
+#settings-reset-dialog #settings-reset-yes { border-color: #ffd166; background: #ffd166; color: #14141c; }
+#settings-reset-dialog :focus-visible { outline: 3px solid #ff5fb2; outline-offset: 2px; }
 /* Over the photo button, at the same right edge (src/shell.css moves that
    button left of the minimap). */
 body:not(.touch):has(#minimap) #settings-toggle { right: calc(16px + 180px + 10px + env(safe-area-inset-right)); }
@@ -95,8 +123,10 @@ function option(parent, { type, name, value, id, title, hint }) {
 // did not keep it, else null. canOpen(): false while photo mode or the
 // full map is open. onChange(open). deviceMotion(): the
 // prefers-reduced-motion media query now (#97). onMotion(settings) applies
-// the reduced-motion choice at once.
-export function createSettingsMenu({ root = document.body, running, choice, sources, autoQuality, post = () => ({ kind: null, look: running.look }), onSave = () => {}, onLive = () => {}, onMotion = () => {}, deviceMotion = () => false, reload = () => {}, canOpen = () => true, onChange = () => {} }) {
+// the reduced-motion choice at once. `progress` (#220), when given, adds
+// "Reset progress": { saved() is false when the landmark progress does not
+// reach the browser storage, onReset() clears it after the confirm }.
+export function createSettingsMenu({ root = document.body, running, choice, sources, autoQuality, post = () => ({ kind: null, look: running.look }), onSave = () => {}, onLive = () => {}, onMotion = () => {}, deviceMotion = () => false, reload = () => {}, canOpen = () => true, onChange = () => {}, progress = null }) {
   if (!document.getElementById("settings-menu-style")) el("style", document.head, { id: "settings-menu-style", textContent: STYLE });
 
   let state = normalizeSettings(choice);
@@ -151,6 +181,50 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
     reduceMotion: option(fxSet, { type: "checkbox", name: "reduce-motion", value: "on", id: "settings-reduce-motion", title: "Reduce motion", hint: "Applies at once." }),
   };
 
+  // Progress (#220): the notice when the storage fails, and "Reset progress"
+  // with its own confirm dialog. Cancel (or Escape) changes nothing.
+  let progressNote = null;
+  let resetButton = null;
+  let resetDialog = null;
+  if (progress) {
+    const progressSet = el("fieldset", dialog, { id: "settings-progress" });
+    el("legend", progressSet, { textContent: PROGRESS_TEXT.legend });
+    progressNote = el("p", progressSet, { className: "settings-note", id: "settings-progress-note", textContent: PROGRESS_TEXT.notSaved });
+    progressNote.setAttribute("role", "note");
+    resetButton = el("button", progressSet, { id: "settings-reset", type: "button", textContent: PROGRESS_TEXT.reset });
+    resetButton.setAttribute("aria-haspopup", "dialog");
+    resetDialog = el("dialog", root, { id: "settings-reset-dialog" });
+    resetDialog.setAttribute("role", "alertdialog");
+    resetDialog.setAttribute("aria-labelledby", "settings-reset-title");
+    resetDialog.setAttribute("aria-describedby", "settings-reset-text");
+    el("h2", resetDialog, { id: "settings-reset-title", textContent: PROGRESS_TEXT.confirmTitle });
+    el("p", resetDialog, { id: "settings-reset-text", textContent: PROGRESS_TEXT.confirm });
+    const confirmRow = el("div", resetDialog, { className: "settings-row" });
+    const yes = el("button", confirmRow, { id: "settings-reset-yes", type: "button", textContent: PROGRESS_TEXT.yes });
+    const no = el("button", confirmRow, { id: "settings-reset-no", type: "button", textContent: PROGRESS_TEXT.no });
+    resetButton.addEventListener("click", () => {
+      if (resetDialog.open) return;
+      resetDialog.returnValue = "";
+      resetDialog.showModal();
+      // Cancel has the focus first: a stray Enter changes nothing.
+      no.focus();
+    });
+    yes.addEventListener("click", () => resetDialog.close("reset"));
+    no.addEventListener("click", () => resetDialog.close("cancel"));
+    resetDialog.addEventListener("close", () => {
+      if (resetDialog.returnValue === "reset") {
+        progress.onReset();
+        say(PROGRESS_TEXT.done, false);
+      }
+      show();
+      if (dialog.open) resetButton.focus();
+    });
+    // Keys in the confirm stay in it (the menu, the game and the map do not
+    // see them). Escape cancels.
+    resetDialog.addEventListener("keydown", (e) => e.stopPropagation());
+    resetDialog.addEventListener("keyup", (e) => e.stopPropagation());
+  }
+
   const status = el("p", dialog, { className: "settings-status", id: "settings-status" });
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
@@ -199,6 +273,7 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
     pending = applicableKeys(wanted, stored);
     blocked = wanted.filter((k) => !pending.includes(k));
     reloadButton.hidden = pending.length === 0;
+    if (progressNote) progressNote.hidden = progress.saved() !== false;
     toggleButton.setAttribute("aria-expanded", String(dialog.open));
   }
 
@@ -231,6 +306,7 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
   }
   function close() {
     if (!dialog.open) return;
+    if (resetDialog?.open) resetDialog.close("cancel");
     dialog.close();
   }
   function toggle() {
@@ -285,6 +361,10 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
     },
     get pending() {
       return [...pending];
+    },
+    // The progress part (#220): the notice and the confirm dialog.
+    get progress() {
+      return progress ? { notSaved: !progressNote.hidden, confirmOpen: resetDialog.open } : null;
     },
     open,
     close,

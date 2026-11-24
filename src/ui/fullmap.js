@@ -59,7 +59,9 @@ function el(tag, className, parent, text) {
 // `travelMode` limits the picks (src/ui/travel-rule.js, #271): "any" (the
 // default) or "found" (only Found or Claimed spots).
 // Null turns it off.
-export function createFullMap(parent, level, { source = createIconSource({ level }), onChange = () => {}, canOpen = () => true, iso = null, groundAt = () => 0, onTravel = null, travelMode = "any", freeRun = false, reducedMotion = () => false } = {}) {
+// `storyOf(spot)` gives the story card model of an unlocked spot (#220,
+// src/landmarks/story-card.js storyCardModel()), or null for the plain panel.
+export function createFullMap(parent, level, { source = createIconSource({ level }), onChange = () => {}, canOpen = () => true, iso = null, groundAt = () => 0, onTravel = null, travelMode = "any", freeRun = false, reducedMotion = () => false, storyOf = () => null } = {}) {
   const bounds = level.bounds;
   const spots = streetLabelSpots(level.strips);
   // `card` is the id of the spot whose panel is open. `tab` is "map" or
@@ -152,7 +154,7 @@ export function createFullMap(parent, level, { source = createIconSource({ level
   const travelBtn = onTravel ? el("button", "fullmap-travel", info, "Travel here (T)") : null;
   if (travelBtn) travelBtn.type = "button";
   const guide = createGuide(root, { onPick: (id, e) => openSpot(id, { from: e.currentTarget, center: true }) });
-  const card = createSpotCard(root, { onClose: () => closeCard() });
+  const card = createSpotCard(root, { onClose: () => closeCard(), reducedMotion });
   const legend = el("div", "fullmap-legend", root);
   const legendRows = [["you", "You"]];
   if (hasSpots()) legendRows.push(["unknown", "Spot: not found yet"], ["found", "Spot: found"], ["claimed", "Spot: claimed"], ["edge", "Past the map edge"]);
@@ -190,7 +192,7 @@ export function createFullMap(parent, level, { source = createIconSource({ level
     if (travelBtn) travelBtn.hidden = !state.target;
     state.card = spot ? spot.id : null;
     if (spot) {
-      card.show(spotPanel(spot, source.card(spot.id), { freeRun }));
+      card.show(spotPanel(spot, source.card(spot.id), { freeRun }), spot.cardUnlocked ? storyOf(spot) : null);
       // The foot stays empty (and hidden by CSS) when the spot is no target.
       if (travelBtn) {
         if (state.target) card.foot.appendChild(travelBtn);

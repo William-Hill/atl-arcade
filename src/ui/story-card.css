@@ -1,0 +1,200 @@
+/* The landmark story card (#220, design/gdd/landmark-discovery.md "Story
+   card"). The full map panel (#fullmap) and the card view of the results
+   screen (#story-view) use the same markup: src/ui/landmark-guide.js
+   createSpotCard() with the class `is-story`.
+
+   A portrait 3:4 trading card: paper #f5ecd7 with an ink border, a header
+   band in the district accent (made light enough for the ink, 4.5:1 or
+   more), the art, the facts with their sources, a "NEW" stamp, and a foil
+   edge on a hard spot. Ink #0b0b12 on the paper is 16.8:1; the link blue
+   #1d4f91 on the paper is 7.3:1; the stamp pink #a3135f is 6.6:1. */
+
+#fullmap .fullmap-card.is-story,
+#story-view .fullmap-card.is-story {
+  --story-paper: #f5ecd7;
+  --story-ink: #0b0b12;
+  --story-band: #f0c060;
+  --story-w: min(340px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)), calc((100dvh - 120px) * 0.75));
+  width: var(--story-w);
+  height: auto;
+  aspect-ratio: 3 / 4;
+  max-height: none;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border: 3px solid var(--story-ink);
+  border-radius: 14px;
+  background: var(--story-paper);
+  color: var(--story-ink);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
+  font: 14px/1.35 system-ui, sans-serif;
+}
+#fullmap .fullmap-card.is-story { bottom: calc(12px + env(safe-area-inset-bottom)); }
+
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 10px;
+  background: var(--story-band);
+  border-bottom: 3px solid var(--story-ink);
+}
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-names { flex: 1; min-width: 0; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-icon { flex: none; display: flex; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-kind[hidden] { display: none; }
+/* The `short` line restates a fact, so the card shows only the facts. */
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-short { display: none; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.15; color: var(--story-ink); }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-kind { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 1; color: var(--story-ink); }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--story-ink);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--story-ink);
+  font: 800 20px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-close:focus-visible { outline: 3px solid var(--story-ink); outline-offset: 2px; }
+
+.story-card-art { margin: 0; flex: none; aspect-ratio: 16 / 9; overflow: hidden; border-bottom: 3px solid var(--story-ink); background: #b6dbf2; }
+.story-card-art[hidden], .story-card-stamp[hidden] { display: none; }
+.story-card-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* The plain panel (a Found or an Unknown spot) has no art and no stamp. */
+.fullmap-card:not(.is-story) .story-card-art, .fullmap-card:not(.is-story) .story-card-stamp { display: none; }
+
+.story-card-stamp {
+  position: absolute;
+  right: 12px;
+  top: 64px;
+  z-index: 1;
+  padding: 2px 10px;
+  border: 3px solid #a3135f;
+  border-radius: 6px;
+  background: rgba(245, 236, 215, 0.92);
+  color: #a3135f;
+  font: 900 20px/1.1 system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-body { flex: 1; min-height: 0; padding: 8px 12px 10px; overflow-y: auto; overscroll-behavior: contain; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-facts { margin: 0; padding-left: 20px; display: grid; gap: 7px; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-fact { font-weight: 600; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-source { display: block; font-size: 12px; opacity: 1; color: #3b3a36; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-source a { color: #1d4f91; text-decoration: underline; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-source a:focus-visible { outline: 2px solid var(--story-ink); outline-offset: 2px; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-foot { flex: none; padding: 6px 12px 10px; }
+:is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-foot:empty { display: none; }
+
+/* The foil edge of a hard spot: a moving shimmer in the border. It stops
+   with reduced motion (the device setting, or the game's own choice:
+   data-motion="reduced"). */
+:is(#fullmap, #story-view) .fullmap-card.is-story[data-foil="1"] {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--story-paper), var(--story-paper)) padding-box,
+    linear-gradient(115deg, #b8860b, #fff3b0 20%, #c9962e 35%, #e0f7ff 50%, #d4a5ff 65%, #fff3b0 80%, #b8860b) border-box;
+  background-size: 100% 100%, 300% 300%;
+  animation: story-foil 3.2s linear infinite;
+}
+@keyframes story-foil {
+  from { background-position: 0 0, 0% 50%; }
+  to { background-position: 0 0, 100% 50%; }
+}
+:is(#fullmap, #story-view) .fullmap-card.is-story[data-foil="1"][data-motion="reduced"] { animation: none; background-position: 0 0, 50% 50%; }
+@media (prefers-reduced-motion: reduce) {
+  :is(#fullmap, #story-view) .fullmap-card.is-story[data-foil="1"] { animation: none; background-position: 0 0, 50% 50%; }
+}
+
+/* A short screen (a phone in landscape): the card turns on its side. The
+   art goes to the left, and the facts scroll on the right. */
+@media (max-height: 500px) {
+  #fullmap .fullmap-card.is-story,
+  #story-view .fullmap-card.is-story {
+    aspect-ratio: auto;
+    width: min(560px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    height: min(300px, calc(100dvh - 90px));
+    display: grid;
+    grid-template-columns: 42% 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+  :is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-head { grid-column: 1 / -1; }
+  :is(#fullmap, #story-view) .fullmap-card.is-story .story-card-art { grid-column: 1; grid-row: 2 / 4; aspect-ratio: auto; border-bottom: 0; border-right: 3px solid var(--story-ink); }
+  :is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-body { grid-column: 2; grid-row: 2; }
+  :is(#fullmap, #story-view) .fullmap-card.is-story .fullmap-card-foot { grid-column: 2; grid-row: 3; }
+  .story-card-stamp { top: 58px; }
+}
+
+/* The card view of the results screen: over the results panel, with a dim
+   backdrop. A tap on the backdrop closes it. */
+#story-view {
+  position: fixed;
+  inset: 0;
+  /* Over the HUD buttons (settings, photo, full screen) and the minimap. */
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  background: rgba(11, 11, 18, 0.7);
+}
+#story-view[hidden] { display: none; }
+#story-view .fullmap-card { position: relative; display: flex; flex-direction: column; }
+@media (max-height: 500px) {
+  #story-view .fullmap-card.is-story { display: grid; }
+}
+
+/* The landmark row of the results screen (src/ui/results.js): one small
+   card for each spot that this run claimed. The row scrolls sideways when
+   it is long. Each card is a 44 px or larger touch target. */
+.results-spots { margin: 0 0 14px; }
+.results-spots[hidden] { display: none; }
+.results-spots-title { margin: 0 0 6px; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; }
+.results-spot-row { list-style: none; margin: 0; padding: 2px 2px 6px; display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
+.results-spot-row li { flex: none; scroll-snap-align: start; }
+.results-spot {
+  --story-band: #f0c060;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 96px;
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid #0b0b12;
+  border-radius: 8px;
+  background: #f5ecd7;
+  color: #0b0b12;
+  font: 700 12px/1.2 system-ui, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.results-spot::before { content: ""; flex: none; height: 8px; background: var(--story-band); border-bottom: 2px solid #0b0b12; }
+.results-spot[data-foil="1"] { border-color: #c9962e; box-shadow: 0 0 0 2px #fff3b0; }
+.results-spot:focus-visible { outline: 3px solid #ffd166; outline-offset: 2px; }
+.results-spot-art { flex: none; aspect-ratio: 16 / 9; background: #b6dbf2; border-bottom: 2px solid #0b0b12; }
+.results-spot-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.results-spot-name { flex: 1; padding: 4px 6px; overflow: hidden; }
+.results-spot-stamp {
+  position: absolute;
+  right: 4px;
+  top: 14px;
+  padding: 0 4px;
+  border: 2px solid #a3135f;
+  border-radius: 4px;
+  background: rgba(245, 236, 215, 0.92);
+  color: #a3135f;
+  font: 900 11px/1.2 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  transform: rotate(-8deg);
+}
+@media (max-width: 600px), (max-height: 500px) {
+  .results-spots { margin-bottom: 8px; }
+  .results-spot { width: 76px; font-size: 11px; }
+}

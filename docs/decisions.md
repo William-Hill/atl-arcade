@@ -2971,3 +2971,29 @@ Neither toggle goes into `src/` before the playtest verdict.
 **Decision (owner, 2026-11-23).** A PR runs the full Vitest suite and only the Playwright specs that it adds or touches. The full Playwright suite (about 290 tests) runs once on `main` after a group of merges, before an Autopilot playtest. Two full Playwright suites never run at the same time.
 
 **Why.** On 2026-11-23, 4 ship-it agents each started the full suite at the same time. The load average went to 100 and more, the runs did not finish in 2 hours, and most failures were timeouts from the load. The Playwright suite is the regression gate. The Autopilot playtest is an AI agent that plays the game and finds play problems that no test predicts. The two checks do not replace each other.
+
+## 2026-11-24: The first load is a clear afternoon in Atlanta (#353)
+
+**Decision (owner, 2026-11-24).** With no `?time` and no `?weather` in the URL, the level loads in clear weather at 14:00, on today's date in Atlanta. Every first load at the City pitch shows the city at its best, with the same look on each computer.
+
+- The rule is in `weatherClock()` (`src/render/weather-view.js`, `FIRST_LOAD = { hour: 14, weather: "clear" }`).
+- The real clock stays as an option: `?time=now` uses the Atlanta time (America/New_York, `atlantaTime()` in `src/sim/weather.js`), not the time zone of the device. The date is the Atlanta date too.
+- The seasonal weather draw stays as an option: `?weather=auto`.
+- `?date`, `?time=HH.HH`, `?weather=clear|clouds|rain|storm` and `?timescale` do not change.
+- At 14:00 the sun is more than 20 degrees up on every day of the year in Atlanta (Vitest).
+
+**Tests.** Vitest `src/render/weather-view.test.js`: the Atlanta date and hour for the #353 case (19:50 UTC is 14:50 in Atlanta), daylight saving, the first load on 3 dates, the sun, rain and wet street on 53 days of the year, `?time=now&weather=auto`, and a bad `?time`. Playwright `e2e/first-load.spec.js`: a load of `/` with no parameters gives `clear`, hour 14, sun elevation more than 20 degrees, no rain, a dry street. Screenshot: `e2e/__screenshots__/first-load-default.png`.
+
+**Rejected.** The real Atlanta time with clear weather and only daylight hours (a night demo still needs a clamp, and the look changes with the hour of the pitch); the real Atlanta time with night allowed (the toon look reads near-black at night, 2026-11-04).
+
+## 2026-11-24: Story cards name no alcohol (#354)
+
+**Decision (owner, 2026-11-24).** A landmark story card does not name alcohol. This is the same rule as the shop signs (`NAME_DENY` in `src/level/geo/shop-signs.js`), for the all-ages audience of an official City game.
+
+- New Realm Brewing, fact 3, is now: "New Realm has a full food menu and hosts trivia, vintage market pop-ups and live music four days a week." The source does not change (Atlanta BeltLine, Inc., https://beltline.org/blog/the-beltline-from-above/). The quote in `docs/research/2026-11-10-landmark-facts.md` leaves out the first clause, which names alcohol.
+- The landmark name "New Realm Brewing" stays. It is the real name of the place.
+- Only the card text and data change. The card component does not change (#220 changes it).
+
+**Tests.** `npm run validate:landmarks` passes. Playwright `e2e/first-load.spec.js` claims the spot, opens its card on the full map, and checks the new text and that no fact of the spot names beer, spirits, wine, liquor or a cocktail. Screenshot: `e2e/__screenshots__/first-load-new-realm-card.png`.
+
+**Rejected.** The shorter text "New Realm hosts trivia, vintage market pop-ups and live music." (it drops the food menu, a neutral fact from the same quote); keeping "beer and spirits".

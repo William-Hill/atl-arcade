@@ -28,9 +28,12 @@ import { BeatClock } from "./audio/beat-clock.js";
 import { beatClockOptions, trackChoices, writeChoice } from "./audio/music-tracks.js";
 import { createSfx } from "./audio/sfx.js";
 import { loadLandmarks, loadLevel, resolveLevelName } from "./level/levels.js";
-import { createLandmarkTracker, landmarkTestHook } from "./sim/landmarks.js";
+import { LANDMARKS, createLandmarkTracker, landmarkTestHook } from "./sim/landmarks.js";
 import { goalsFor } from "./level/goals.js";
 import { computeResults, createGoals, goalsJson, stepGoals } from "./sim/skate/goals.js";
+import { modeHref, modeRules, runMode } from "./sim/skate/run-mode.js";
+import { roundPhase, roundStatus } from "./sim/skate/round-end.js";
+import { guideLine } from "./landmarks/guide.js";
 import { createResults } from "./ui/results.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createSkateparkView } from "./render/skatepark-view.js";
@@ -99,13 +102,15 @@ import { createViewCull } from "./render/view-cull.js";
 import { createEffects } from "./render/effects/effects-view.js";
 import { createLateLoads, lateLoadPlan, propTimeoutFor } from "./render/late-load.js";
 import { medalScore } from "./sim/landmarks.js";
-import { goalLine, landmarkStepArgs, withClaimMedal, withGapGoal } from "./landmarks/play.js";
+import { landmarkStepArgs, withClaimMedal, withGapGoal } from "./landmarks/play.js";
 import { createLandmarkRings } from "./render/landmark-rings.js";
 import { ringCapacity } from "./render/landmark-rings-math.js";
 import { createLandmarkBanner, districtAccent } from "./ui/landmark-banner.js";
 import { createChimes } from "./audio/chimes.js";
 import { createTeachPrompts } from "./ui/teach-prompt.js";
 import { createCallouts } from "./ui/callouts.js";
+import { flightLine, flightPose, introPlan, introSeen, markIntroSeen, titlePose } from "./ui/intro.js";
+import { createFrontScreen } from "./ui/front-screen.js";
 
 const params = new URLSearchParams(window.location.search);
 // ?perf=1 times each system per frame with performance.now() (scripts/perf.mjs
@@ -391,8 +396,12 @@ if (skateparkView) {
 // Landmark discovery (#217): the spot states of this level, with the save
 // under `atl.landmarks`. It takes the loaded level: the skatepark pad that
 // a spot names is an area of the loaded level only (#222).
+// The run mode (#260, src/sim/skate/run-mode.js): ?run=tour plays the
+// landmark loop with no timer, ?run=free is free skate, and no `run` is a
+// timed round. A tour has no medal, so its claims have no run cap.
+const runRules = modeRules(runMode(params.get("run")), { hasGoals: Boolean(goalsFor(resolveLevelName(params.get("level")))) });
 const landmarkData = geo ? await loadLandmarks(level.name) : null;
-const landmarkTracker = landmarkData ? createLandmarkTracker({ data: landmarkData, level, storage: settingsStorage }) : null;
+const landmarkTracker = landmarkData ? createLandmarkTracker({ data: landmarkData, level, storage: settingsStorage, k: runRules.capped ? LANDMARKS : { ...LANDMARKS, runCap: Infinity } }) : null;
 // The challenge rings (#219, src/render/landmark-rings.js): 1 draw call for
 // all rings, and none when no spot is Found. ?rings=0 leaves them out.
 const landmarkGround = env.sampleGroundNoFence ?? env.sampleGround;
@@ -448,8 +457,9 @@ if (npcView) {
 
 // Parked cars and calm traffic on the main streets (#132). ?cars=0 leaves
 // them out, ?traffic=0 keeps only the parked cars, and ?carseed=<n> picks
-// another seeded traffic. A car is a solid box for the skater: the
-// controller bonks or slides on it as on a wall.
+// another seeded traffic. A parked car is a solid box for the skater: the
+// controller bonks or slides on it as on a wall. A moving car is a soft
+// wall (#261): she glances off it, with no bonk and no bail.
 const carsOn = geo && params.get("cars") !== "0";
 const carSeed = Number(params.get("carseed") ?? 1) || 1;
 const levelSample = env.sampleGround;
@@ -640,7 +650,7 @@ const skaterSwitch = createSkaterSwitch({
     console.error(err);
   },
 });
-createSkaterSelect(document.body, skaterName, { onSelect: (name) => skaterSwitch.select(name) });
+const skaterNav = createSkaterSelect(document.body, skaterName, { onSelect: (name) => skaterSwitch.select(name) });
 if (skaterName !== "capsule") {
   skaterLoad(skaterName)
     .then((loaded) => {
@@ -843,9 +853,9 @@ const input = createInput({ target: window, touch });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 runReady = true;
-// The goals of the run (M1-05), or null with ?run=free. The HUD shows them (#268).
-const goalDef = params.get("run") === "free" ? null : goalsFor(resolveLevelName(params.get("level")));
-const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef });
+// The goals of the run (M1-05), or null with ?run=free or ?run=tour. The HUD shows them (#268).
+const goalDef = runRules.timer ? goalsFor(resolveLevelName(params.get("level"))) : null;
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef, tour: runRules.mode === "tour" });
 // Teach the moves in the world (#76): one prompt at a time, ?teach=1 or 0.
 const teach = createTeachPrompts({ levelName: level.name, geo, param: params.get("teach"), storage: safeStorage(), grindables: skaterEnv.grindables, touch: Boolean(touch), gamepad: () => input.gamepadId !== null, reducedMotion: () => effects.reducedMotion });
 // After the step from pbr lite to toon (#246): one line, one time. The flag
@@ -883,9 +893,9 @@ beat.preload();
 // Game-feel sounds (#105): bonk, landing and wall scrape on the beat clock's context.
 const sfx = createSfx(beat);
 // The landmark banner and chimes (#219). The banner is its own element: it is
-// not the HUD notice line. A timed run has a goal list; a free run finds
-// spots and claims none.
-const landmarkTimed = Boolean(goalDef);
+// not the HUD notice line. A timed run and a tour (#260) claim spots; a free
+// run finds spots and claims none.
+const landmarkTimed = runRules.claims;
 const landmarkBanner = landmarkTracker ? createLandmarkBanner(document.body, { reducedMotion: () => effects.reducedMotion }) : null;
 const landmarkAnchors = geo ? districtAnchors(level) : [];
 const chimes = createChimes(beat);
@@ -894,6 +904,8 @@ let landmarkTravel = false;
 // The landmark view of the last frame, and the state it was made from.
 let landmarkViewOf = null;
 let landmarkViewNow = null;
+// The guide line of the last frame (src/landmarks/guide.js), for the tests.
+let landmarkGuide = null;
 const musicChoices = beat.tracks.length ? trackChoices(beat.tracks) : [];
 const onTrack = (id) => {
   writeChoice(settingsStorage, id);
@@ -909,7 +921,15 @@ const replayRun = () => {
   resetSkater();
   callouts?.start();
 };
-const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: replayRun, tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack }) : null;
+// "Tour (no timer)" on the results screen (#260) loads the same level as a tour.
+const onTour = landmarkTracker ? () => window.location.assign(modeHref(window.location.href, "tour")) : null;
+const results = goalDef ? createResults(document.body, { title: level.title ?? "", onReplay: replayRun, tracks: musicChoices, trackId: beat.track ? beat.track.id : "click", onTrack, onTour }) : null;
+// The sim time since the run ended: the soft round end (#260) holds the
+// results screen for ROUND_END.hold s while the skater rolls on.
+let roundEndedFor = 0;
+let roundStatusText = null;
+// True when the round end callout of this run has started.
+let roundEndCalled = false;
 // The minimap (#86) on a geodata level. ?minimap=0 leaves it out, and
 // ?minimap=north or ?minimap=heading sets the mode.
 const minimapParam = params.get("minimap");
@@ -939,9 +959,12 @@ let camFxEvent = 0;
 // the on-beat bonus and a PERFECT / GOOD tag.
 // Call start() on every gesture: a context made too early stays suspended
 // until a gesture resumes it.
+// The intro and the title screen (#301), made below, or null in the game.
+let front = null;
 function startBeat() {
   if (!beat.running) beat.start().catch(() => {});
-  if (calloutStart && goals && !goals.ended) {
+  // On the title screen the music starts, the count-in waits for the game.
+  if (calloutStart && goals && !goals.ended && !front?.active) {
     calloutStart = false;
     callouts?.start();
   }
@@ -964,20 +987,24 @@ function sampleInput() {
 }
 
 function simulate(dt) {
-  // After the run ends the skater gets no input and rolls to a stop.
-  const sampled = sampleInput();
+  // After the run ends the skater gets no input and rolls to a stop. In the
+  // intro and on the title screen (#301) the world moves, the skater stands,
+  // and the goals, the lessons and the landmarks wait for the game.
+  const attract = Boolean(front?.active);
+  const sampled = attract ? {} : sampleInput();
   const before = run.skater;
   const comboBefore = run.combo;
   perf.begin("skater");
-  const applied = goals && goals.ended ? {} : sampled;
+  const applied = attract || (goals && goals.ended) ? {} : sampled;
   run = stepRun(run, applied, dt, env, skaterEnv, beat.running ? beat : null);
   perf.end("skater");
   skater = run.skater;
-  teach.observe(before, skater, applied, run.combo, dt);
+  if (!attract) teach.observe(before, skater, applied, run.combo, dt);
   effects.observe(before, skater, run.moves);
   sfx.observe(before, skater);
   follow?.observe(before, skater);
-  if (goals && !goals.ended) {
+  if (goals && goals.ended) roundEndedFor += dt;
+  if (goals && !goals.ended && !attract) {
     goals = stepGoals(goals, run, goalDef, dt, { cards: cardCount() });
     for (const id of goals.justCleared) events.push({ tick: run.tick, type: "gap", id });
     if (goals.ended) events.push({ tick: run.tick, type: "run-end", ...goalsJson(goals, goalDef) });
@@ -1019,8 +1046,8 @@ function simulate(dt) {
   if (skater.justJumped) events.push({ tick: skater.tick, type: "jump" });
   // Landmark discovery, after the goals and the fact cards of this tick. A
   // banner waits while the fact pop-up shows. Play never pauses for it.
-  if (landmarkTracker) {
-    const step = landmarkStepArgs(run, { timed: landmarkTimed, goals, teleported: landmarkTravel });
+  if (landmarkTracker && !attract) {
+    const step = landmarkStepArgs(run, { timed: landmarkTimed, goals, teleported: landmarkTravel, tour: runRules.mode === "tour" });
     landmarkTravel = false;
     const changed = landmarkTracker.step(step.obs, dt, { active: step.active, hold: Boolean(factPopup?.state.visible) });
     for (const id of changed.found) {
@@ -1069,6 +1096,8 @@ function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
     goals = createGoals(goalDef);
     factCards.clear();
     results.hide();
+    roundEndedFor = 0;
+    roundEndCalled = false;
   }
   if (crowd) crowd = createCrowd(level, { seed: npcSeed });
   if (traffic) traffic = makeTraffic();
@@ -1162,8 +1191,8 @@ fullmap =
   geo && params.get("fullmap") !== "0"
     ? createFullMap(document.body, level, {
         source: mapIconSource,
-        // A free run has no timer, so no spot can be claimed in it.
-        freeRun: !goalDef,
+        // A free run claims no spot. A timed run and a tour (#260) claim.
+        freeRun: !landmarkTimed,
         reducedMotion: () => effects.reducedMotion,
         canOpen: () => !photo.isOpen && !settingsMenu.isOpen,
         onChange: () => input.reset(),
@@ -1177,6 +1206,50 @@ fullmap =
         travelMode: fastTravelMode,
       })
     : null;
+
+// The intro and the title screen (#301, src/ui/intro.js). The intro flies
+// the camera along the BeltLine trail under the logo; any key, click, tap or
+// pad button skips it. The title screen circles the skater and shows the
+// skater select and Settings. The level and the physics are ready before the
+// first frame; the skater GLB and the late loads (#187) arrive during the
+// intro. ?intro=0 goes straight to the game, ?intro=1 plays the intro, and
+// ?intro=title shows the title screen. A WebDriver browser (Playwright) goes
+// to the game unless the flag says otherwise. Reduced motion: no flight.
+const introStorage = safeStorage();
+const introLine = geo ? flightLine(level.strips) : null;
+const frontPlan = introPlan({ param: params.get("intro"), webdriver: Boolean(navigator.webdriver), seen: introSeen(introStorage), reducedMotion: effects.reducedMotion, geo: Boolean(introLine), view, autopilot: params.get("autopilot") === "1" });
+front = createFrontScreen({
+  plan: frontPlan,
+  touch: Boolean(touch),
+  skaterNav,
+  reducedMotion: () => effects.reducedMotion,
+  settingsOpen: () => settingsMenu.isOpen,
+  onSettings: () => settingsMenu.open(),
+  onGesture: startBeat,
+  onPhase: (phase) => {
+    if (phase === "title") markIntroSeen(introStorage);
+    if (phase === "play") {
+      // A clean run from the spawn: the timer, the goals, and the count-in start now.
+      resetSkater();
+      calloutStart = false;
+      if (goalDef) callouts?.start();
+      input.reset();
+      events.push({ tick: run.tick, type: "front-play" });
+    }
+  },
+});
+if (front && frontPlan.start === "title") markIntroSeen(introStorage);
+// The camera of the intro and the title screen, for one frame.
+// The point the intro camera looks at: the shadow box follows it, because
+// the flight goes far from the skater.
+let frontFocus = null;
+function frontCamera(state) {
+  const height = (x, z) => terrainOf(level).height(x, z);
+  const pose = state.phase === "intro" ? flightPose(introLine, state.flight, height) : titlePose(skater.position, skater.yaw, state.orbit);
+  camera.position.set(...pose.position);
+  camera.lookAt(...pose.target);
+  frontFocus = state.phase === "intro" ? pose.target : null;
+}
 
 // The results of the run. Claim points count toward the medal only: the
 // score and the score goal keep the banked score (GDD, Claim points).
@@ -1261,7 +1334,11 @@ function frame(now) {
     controls.target.set(skater.position[0], skater.position[1] + 1, skater.position[2]);
     controls.update();
   }
-  if (follow && !paused) {
+  if (front?.active && !paused) {
+    front.update(elapsed, { moving: !effects.reducedMotion });
+    if (front.active) frontCamera(front.state);
+  }
+  if (follow && !paused && !front?.active) {
     const dt = Math.min(elapsed, 0.1);
     const fresh = events.slice(camFxEvent);
     camFxEvent = events.length;
@@ -1276,20 +1353,37 @@ function frame(now) {
     landmarkViewNow = landmarkTracker.view();
   }
   const landmarkNow = landmarkViewNow;
-  hud.update(run, now, beat.running ? beat.phase() : null, goals, landmarkNow ? (goalLine(landmarkNow, skater.position, { timed: landmarkTimed })?.text ?? null) : null);
-  teach.update({ nowMs: now, camera, source: input.source, bindings: input.bindings, position: skater.position, hidden: paused || Boolean(results?.shown) });
+  // The guide line (#260): the claim line, the pointer to the next spot, and
+  // the reach warning of a timed round. No warning in the overtime.
+  const phase = roundPhase(goals, { endedFor: roundEndedFor });
+  landmarkGuide = landmarkNow ? guideLine(landmarkNow, skater.position, skater.yaw, { claims: landmarkTimed, timeLeft: phase === "play" ? goals.timeLeft : null }) : null;
+  hud.update(run, now, beat.running ? beat.phase() : null, goals, phase === "play" || phase === "none" ? (landmarkGuide?.text ?? null) : null);
+  // The soft round end (#260): the HUD says why the input stops.
+  const status = roundStatus(phase, goals, goalDef ?? {});
+  if (status !== roundStatusText) {
+    roundStatusText = status;
+    hud.status(status);
+  }
+  teach.update({ nowMs: now, camera, source: input.source, bindings: input.bindings, position: skater.position, hidden: paused || Boolean(results?.shown) || phase === "stopping" || Boolean(front?.active) });
   if (landmarkNow) {
     // The banner hides while the fact pop-up shows, while the game is paused
     // (its time stops too), and under the results screen.
-    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown), accent: () => districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
+    landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown) || Boolean(front?.active), accent: () => districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
     landmarkRings?.update(landmarkNow.spots, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed, night: weatherView?.state.night ?? 0 });
   }
   if (paused) chimes.clear();
   else chimes.update();
-  if (results && goals.ended && !results.shown) {
+  // ROUND OVER and the medal start when the input stops; the results card
+  // follows after the hold (#260) and waits under the callout.
+  if (results && phase === "stopping" && !roundEndCalled) {
+    roundEndCalled = true;
+    callouts?.end(runResults());
+  }
+  if (results && phase === "results" && !results.shown) {
     const end = runResults();
     results.show(end);
-    callouts?.end(end);
+    if (!roundEndCalled) callouts?.end(end);
+    roundEndCalled = true;
   }
   // Real time, not the 0.1 s step cap of the views: the music does not slow
   // down in a slow frame. Each card finds the beat again (callout-math.js).
@@ -1302,6 +1396,7 @@ function frame(now) {
   // it looks at; the skater can be far away.
   if (geoLights && isoFocus) geoLights.follow(isoFocus.x, isoFocus.z, isoFocus.y);
   else if (geoLights && shadowFocus) geoLights.follow(shadowFocus[0], shadowFocus[2], shadowFocus[1]);
+  else if (geoLights && front?.active && frontFocus) geoLights.follow(frontFocus[0], frontFocus[2], frontFocus[1]);
   else if (geoLights) geoLights.follow(skater.position[0], skater.position[2], skater.position[1]);
   if (blob) {
     // With the skater height, as the controller samples: under a bridge the
@@ -1359,6 +1454,18 @@ requestAnimationFrame(frame);
 
 // Read by the Playwright tests.
 window.__atl = {
+  // The intro and the title screen (#301): the phase ("intro", "title" or
+  // "play"), the plan, and press() (the same as a key).
+  front: {
+    get phase() {
+      return front ? front.phase : "play";
+    },
+    get state() {
+      return front ? front.state : { phase: "play" };
+    },
+    plan: frontPlan,
+    press: () => (front ? front.press() : "play"),
+  },
   // The text callouts (#305), or null with ?callouts=0. state: what shows now.
   callouts: callouts
     ? {
@@ -1828,6 +1935,10 @@ window.__atl = {
         get shown() {
           return results.shown;
         },
+        // The soft round end (#260): "play", "overtime", "stopping" or "results".
+        get phase() {
+          return roundPhase(goals, { endedFor: roundEndedFor });
+        },
         collectCard: collectFactCard,
         // Sets the time left (for tests): setTimeLeft(0) ends the run when
         // no combo is open.
@@ -1856,6 +1967,12 @@ window.__atl = {
           return chimes.info;
         },
         timed: landmarkTimed,
+        // The run mode (#260): "timed", "tour" or "free".
+        mode: runRules.mode,
+        // The guide line: { id, kind, text, warn } or null.
+        get guide() {
+          return landmarkGuide;
+        },
         get saved() {
           return landmarkTracker.saved;
         },

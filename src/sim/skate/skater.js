@@ -26,7 +26,7 @@ export function createSkater(level, { position, yaw } = {}) {
     backward: false, // the skater rides backward (ATL style). The travel does not change.
     switchHeld: false,
     justStyled: null, // the move that just completed
-    stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0, styles: 0, respawns: 0 },
+    stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0, styles: 0, respawns: 0, bonks: 0, slides: 0 },
   };
 }
 
@@ -69,6 +69,9 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
   } else {
     s = stepSkate(prev, input, dt, env, k.skate);
     if (s.respawned) stats.respawns += 1;
+    // Wall contacts (#261): a bonk stops the skater, a slide does not.
+    if (s.bonked) stats.bonks = (stats.bonks ?? 0) + 1;
+    if (s.wallSlide) stats.slides = (stats.slides ?? 0) + 1;
     s.grindCooldown = Math.max(0, (prev.grindCooldown ?? 0) - dt);
     s.justSnapped = false;
     s.justFell = false;

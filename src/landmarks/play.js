@@ -22,8 +22,11 @@ export const LINE_RESTART = "Ring line restarted";
 // - A free run finds spots from its first tick and never claims: its
 //   observation is a travel step on every tick, and the landmark module
 //   ignores a travel step in every challenge.
+// - A tour (?run=tour, #260) has no timer: it finds and claims from its
+//   first tick, and never stops.
 // - `teleported` is true on the first tick after "Travel here".
-export function landmarkStepArgs(run, { timed = true, goals = null, teleported = false } = {}) {
+export function landmarkStepArgs(run, { timed = true, goals = null, teleported = false, tour = false } = {}) {
+  if (tour) return { obs: landmarkObs(run, { teleported }), active: true };
   if (!timed) return { obs: landmarkObs(run, { teleported: true }), active: true };
   return { obs: landmarkObs(run, { teleported }), active: Boolean(goals) && !goals.ended };
 }
@@ -53,7 +56,7 @@ export function withClaimMedal(results, medals = {}, claimSum = 0) {
 
 // The point a player rides to for a challenge: the zone center, or the
 // first checkpoint of a line that has not started (the next one after that).
-function targetOf(spot) {
+export function targetOf(spot) {
   const c = spot.challenge;
   if (c.type === "line") return c.checkpoints[Math.min(spot.attempt ? spot.attempt.next : 0, c.checkpoints.length - 1)];
   return [c.zone.x, c.zone.z];

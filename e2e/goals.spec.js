@@ -145,6 +145,8 @@ test("?run=free has no timer and no results", async ({ page }) => {
 });
 
 test("desktop: the results screen on the Beltline keeps clear of the minimap", async ({ page }) => {
+  // The Beltline loads slowly in SwiftShader, and the soft round end (#260) holds the results 1.5 s of sim time.
+  test.setTimeout(90000);
   await ready(page, "&level=beltline-eastside");
   expect(await stoneMountainHop(page)).toEqual(["gap-stone-mountain"]);
   await page.evaluate(() => ["fact-1", "fact-2"].forEach((id) => window.__atl.goals.collectCard(id)));
@@ -177,6 +179,7 @@ for (const size of [
     test.use({ ...pixel, viewport: size.viewport });
 
     test("the results screen fits the screen, keeps clear of the minimap, and a tap replays", async ({ page }) => {
+      test.setTimeout(90000);
       await ready(page, "&level=beltline-eastside");
       expect(await stoneMountainHop(page)).toEqual(["gap-stone-mountain"]);
       await page.evaluate(() => ["fact-1", "fact-2", "fact-3"].forEach((id) => window.__atl.goals.collectCard(id)));

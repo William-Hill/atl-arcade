@@ -287,7 +287,7 @@ Not verified: no person played the new clips; real skaters did not review the mo
 - Known issue: shadow acne (a dot pattern) shows on some building walls that face away from the sun. A `normalBias` of 0.04 did not remove it, so the change is not in.
 - Shell: `?level=beltline-eastside` (alias `beltline`) loads the block. The greybox stays the default. The level JSON is a separate chunk, so the greybox page does not download it. `?cam=x,y,z,lookX,lookY,lookZ` sets the fixed camera and `?fog=0` removes the fog, for screenshots.
 - Playtest: `npm run playtest` still runs the three greybox sessions, so the M0 numbers stay comparable. `npm run playtest:beltline` runs a 40 s ride on the trail, planned with the pure controller and a trail follower (`src/playtest/trail-script.js`).
-- Political rules: the level has no traffic. Streets are skate surfaces only.
+- Political rules: the level has no traffic. Streets are skate surfaces only. **Replaced** on 2026-11-23 by "Calm traffic with no collision (#261)": the main streets have calm traffic.
 
 ## 2026-11-01: Level detail from a kit (M1-08, #40)
 
@@ -970,6 +970,8 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 
 ## 2026-11-03: Parked cars and calm traffic (#132)
 
+> **Replaced in part** on 2026-11-23 by "Calm traffic with no collision (#261)". The "Collision" rule below is now true only for parked cars. A moving car is a soft wall: a contact never stops the skater and never knocks her down.
+
 - Decision: cars make the streets read as a living neighborhood. A pure traffic module (`src/sim/traffic/traffic.js`) drives calm traffic on the main streets: John Lewis Freedom Parkway, Ponce de Leon Avenue, North Avenue, and Highland Avenue with North Highland Avenue. A pure parking module (`src/sim/traffic/parking.js`) parks cars along the curbs. `?cars=0` turns all cars off, `?traffic=0` keeps only the parked cars, and `?carseed=<n>` picks another seeded traffic.
 - Political rules: a car never hits, chases, or threatens the skater. A car slows and stops when the skater is in its lane ahead (30 m look-ahead), stops 2 m past the 2 m circle, waits 1.5 s after the skater leaves, and then goes on. A hard rule rejects any car move that brings the car body nearer than 2 m to the skater (when the skater is less than 3 m above or below the car, so a car on a bridge over the skater goes on). The kit has no police car, no emergency vehicle, no light bar, and no black and white two-tone.
 - Lanes: each main street is a chain of street strips. A chain with an opposite carriageway parallel to it (5 m to 50 m away, on at least 40% of the samples) is one-way, and the opposite carriageway is on the left of the driver (right-hand traffic). This finds the Freedom Parkway carriageways (all 24 ways have `oneway=yes` in OSM, but the level has no `oneway` field). A two-way chain gets one lane in each direction, a quarter of the width right of the center line. A lane end links to the lane back (two-way), into a lane of the same street through the end point (a junction), to the nearest lane start at the level edge, or to its own start.
@@ -1432,6 +1434,8 @@ Audit #65 found four problems: GEO-2, GEO-3, GFX-4, GFX-5, and EDU-2.
 - The olive pants of Nia now sit on a mid-green lawn; the rim and the value step keep her readable, but an outfit color review is a follow-up.
 
 ## 2026-11-05: epic/city-look — traffic lane following (IDM), lamps, signals, crosswalk yields
+
+> **Replaced** (the traffic policy) on 2026-11-23 by "Calm traffic with no collision (#261)". The lane following, the lamps, the signals and the crosswalk yields stay as they are.
 - Lanes: `trafficLanes()` (`src/sim/traffic/traffic.js`) now builds one lane per travel lane of `laneLayout()` (`src/level/geo/lanes.js`), at the lane centers between the painted lines (`runLaneOffsets()` in `src/sim/cars.js`), curb lane first. The BeltLine level goes from 9 to 15 lanes (54 to 68 moving cars) (Ponce de Leon 3 + 2, North Avenue and John Lewis 1 + 1 each, Freedom Parkway one-way). Cars stay in their lane: no lane changes yet.
 - Following: the Intelligent Driver Model (`idmAccel()`, a 1.5, b 2.5, s0 3 m, T 1.4 s, delta 4, hard limit 6 m/s²) replaces the target-speed rule. Stop lines, crosswalks, and the yield point before the skater are fixed points (`idmStopAccel()`): the IDM toward a virtual car at rest, plus a 1 m/s creep and a kinematic last half metre, because the plain IDM reaches a stop point only asymptotically. A car on a two-way street slows to 3 m/s for its U-turn, and spawns no faster than a calm stop before the next stop line allows.
 - Crosswalks: each lane keeps the `crosswalksOf()` crosswalks on its path. A car stops 1 m before a crosswalk with the skater on it (even on the far half, out of the car lane) and waits; the intersection stop also waits for a clear far crosswalk. The 2 m hard rule and the in-lane yield are unchanged. Calm traffic only (AGENTS.md): cars never threaten the skater.
@@ -2855,6 +2859,21 @@ Not decided here, and not changed:
 - The fact pop-up in landscape still uses 262 px on each side. At 667 x 375 it can touch a met chip ("✓ Combo 1K/1K"). It was not measured.
 - No person checked the layout on a real phone.
 
+## 2026-11-23: The landmark loop: a Tour mode, reach warnings, the next spot, and a soft round end (#260)
+
+The design audit of 2026-11-13 (`production/audits/2026-11-13-design-audit/REPORT.md`, B1 to B3, E1) found that the 150 s round cuts the landmark loop. The level is about 1.9 km long. The timer cut 2 routes with no warning, and the near spots are done after the first round.
+
+Decision: a Tour mode with no timer, not a longer demo round. A longer round keeps the cut, only later. A tour lets a player at the pitch ride the whole Beltline at their own speed, and the timed round stays as the score game.
+
+- **Tour mode** (`?run=tour`, `src/sim/skate/run-mode.js`): no round timer, no goal chips, no results screen and no medal. Spots are found and claimed, with the rings, the claim line and the banners, from the first tick. The HUD timer place reads `TOUR`. A tour has no medal, so its claims have no run cap (`LANDMARKS.runCap` applies to a timed round only): each first claim pays its full tier points.
+- **The way in:** the results screen has a second button, "Tour (no timer)". It loads the same address with `run=tour` (a reload). This is the only change to the results screen, so #220 can build on it. The title screen (#301) can offer the mode later with `modeHref()`.
+- **The next spot** (`src/landmarks/guide.js`): when no spot to do is within `GUIDE.near` (150 m), the HUD goal line reads "Nearby spots done" and "Next: <name>, 420 m ahead left". An Unknown spot shows as "a new spot" (its icon is already on the minimap). The direction is from the skater's heading, in 8 sectors. When an Unknown spot is near, the line stays empty, as before: the player finds it by riding on. When every spot is done, the line reads "All spots done. Free skate!". In a free run, only Unknown spots count as to do.
+- **The reach warning** (timed round only): the line adds "Too far for the time left" when `distance * REACH.detour / REACH.speed` plus the challenge time is more than the time left. `REACH.speed` 6.5 m/s and `REACH.detour` 1.25 are first guesses (at 150 s the reach is about 700 m); a playtest tunes them. A ring attempt in progress has its own timer, so it gets no warning. There is no warning in a tour or a free run.
+- **The soft round end** (`src/sim/skate/round-end.js`): in the overtime (the time is out, a combo is open), the HUD notice line reads "Time! Land the combo to bank it: N s". When the run ends, the input stops, the line reads "Time! The round is over", ROUND OVER starts, and the skater rolls on. The results screen shows `ROUND_END.hold` (1.5 s of sim time) later. The guide line and the teach card hide in that time.
+- **The held key after "Skate again" (audit E1):** not reproduced. A Playwright test holds W from before the end, through the results, and after a replay with Enter and with a click: the skater pushes at once both times. The input keeps held keys through the results screen (only photo mode, the full map and the settings menu clear them). The 20 s stop of run 1 was most likely the Autopilot hold (its lease or its pause), not the game. The test stays as a guard.
+
+Rejected: a longer demo round (it moves the cut, it does not remove it); a timer that pauses near a spot (hard to read); a compass arrow on the screen (a new HUD element in a full phone layout; the minimap already shows the icons).
+
 ## 2026-11-23: Share assets: social card, favicon set, and load screen art (#303)
 
 - **Files.** `scripts/brand/share-assets.mjs` makes all of them from the brand files of #300. No image model, 0 credits. Each file has a `<file>.provenance.json` next to it.
@@ -2890,6 +2909,56 @@ Verification: a new test in `e2e/phone-layout.spec.js` checks PHOTO, SETTINGS an
   - `main` after the city-look merge (#304), default (NPC skaters off): 85 calls and 252,910 triangles.
   - The same build with `--extra '&skaters=1'`: 91 calls and 270,892 triangles (`reports/prop-perf/skaters-settled-spawn-low.json`).
   - A before/after run with `&skaters=1` and a `before` build with no `settled` (`53784e1`) sampled both builds, with no timeout.
+
+## 2026-11-23 — Intro and title screen before the first ride (#301)
+
+Code: `src/ui/intro.js` (pure: the plan, the phases intro → title → play, the camera flight and the title camera; Vitest `src/ui/intro.test.js`), `src/ui/front-screen.js` (DOM), and the wiring in `src/main.js`. Playwright: `e2e/intro.spec.js`.
+
+- **Where the page starts.** `introPlan()` decides. `?intro=0` and `?autopilot=1` go to the game. `?intro=1` plays the intro. `?intro=title` shows the title screen. Without a flag: a first visit plays the intro; a return visit (`localStorage` key `atl.intro.v1` is `"1"`) shows the title screen. The key is set when the title screen shows.
+- **WebDriver goes to the game.** A browser with `navigator.webdriver` (Playwright: the e2e suite, the playtests, the autopilot, the perf runs) starts in the game without a flag, the same as `factsMode()` does for the fact cards. Reason: about 60 spec files and 5 scripts start a run at once; a flag in each is easy to forget, and a missed flag makes a test wait on a title screen. `?intro=0` still works and is the documented flag for a real browser. `?intro=1` turns the intro on under WebDriver (the intro spec uses it).
+- **No added load time.** The intro starts at the first game frame, when the loader hides. Before that frame the game loads the level and the physics, as before. The skater GLB, the cars, the people, the landmark GLBs and the other late loads (#187) arrive during the intro and the title screen. The first frame mark (`atl:first-frame`) does not move.
+- **The intro.** The logo (`assets/brand/logo/skate-atl-logo.svg`, PR #306) fades in over a 9 s camera flight along the longest trail strip of the level: on BeltLine Eastside, the Eastside Trail from the north end to the south, 16 m over the trail, 6 m to the side, at 14 m/s. The flight is the real level, not a video. Any key, click, tap or pad button skips to the title screen.
+- **The title screen.** The camera circles the skater at the spawn at 0.12 rad/s, so the skater select shows the choice. "Press any key" (keyboard) or "Tap to start" (touch screen), the existing skater select (`#skater-select` moves into the title screen and back to `body` at play), and a SETTINGS button that opens the settings menu. The O key opens the settings menu too; modifier keys, Tab, Escape and held keys do not start the game. A click on a button does not start the game. The digit keys 1 and 2 select a skater from the keyboard (`aria-keyshortcuts` on each skater button). During the intro every new key skips, but only the keys that start the game lose their browser action, so F5 and Ctrl+R still reload. The shadow box follows the target of the intro camera.
+- **The world during the front screens.** The crowd, the walkers and the traffic move. The skater gets no input. The goals, the timer, the lessons (#76) and the landmarks (#219) wait. The key handler takes the keys in the capture phase, so the game input, photo mode and the map do not see them. The music starts at the first gesture (browser audio rule); the count-in starts at play. At play the run resets (`resetSkater()`), so the timer starts at the first game frame.
+- **Reduced motion.** With `prefers-reduced-motion` (or the Reduce motion setting) the flight does not play: the plan starts on the title screen, the title camera does not turn, the logo shows at once and the prompt does not pulse.
+- **The game UI hides** under the front screens with one CSS rule on `body.front-open`. The ODbL attribution stays on screen.
+- **Not done:** no person played the intro; no real phone or GPU; the pad press is a poll of `navigator.getGamepads()` with no test (no pad in the container). The intro has no music cue of its own.
+
+## 2026-11-23: Calm traffic with no collision (#261)
+
+Owner decision (William, 2026-11-23, on #261): calm traffic with no collision. This entry replaces the traffic policy of two older entries: the "no traffic" rule of "The first real block from geodata (M1-03)" (2026-11-01), and "traffic lane following (IDM)" (2026-11-05). It also replaces the "Collision" rule of "Parked cars and calm traffic (#132)" for moving cars.
+
+**Rule.**
+- Cars still move on the main streets (the IDM traffic in `src/sim/cars.js` and `src/sim/traffic/traffic.js`).
+- A car slows and stops for the skater in its lane ahead or on a crosswalk ahead. It waits, and then goes on. No car move brings a car body nearer than 2 m to her (as before).
+- A contact with a moving car never knocks the skater down (no bail) and never stops her (no bonk). A car never pins her (#285, as before).
+- Parked cars do not change: they are solid, as a wall or a planter.
+- AGENTS.md states the rule.
+
+**How.**
+- `carGroundSampler()` marks a moving car sample `soft: true`. Parked car samples do not change.
+- The skater controller (`src/sim/skate/controller.js`) finds the wall as before. When the wall is soft, `softSlideVelocity()` replaces the bonk: she glances off along the car face. On a graze she keeps all her speed. On a head-on hit she keeps `SKATE.softWallKeep` (0.5) of it. If the first way along the face is blocked, she tries the other way. If both ways are blocked (a car corner, or a passage that the car closes), `softCandidates()` tries ways out away from the car: 30 and 60 degrees off the face on each side, then straight back, with `softWallKeep` of her speed. When the nearest wall is a hard wall and its slide is blocked, a moving car in reach is the soft wall. When no way out is clear in a tick, she holds her place with no bonk, and the car crawls away from her (#285). A moving car never gives a bonk. The same rule applies in the air (review fix, 2026-11-23).
+- `stepSkater()` counts `stats.bonks` and `stats.slides`, so a test can see each contact.
+- We did not make the cars "not solid". A skater who goes through a car body looks broken (#285).
+
+**Tests.**
+- Vitest, `src/sim/traffic/traffic.test.js`, "calm traffic with no collision (#261)": a car yields to (and stops for) a skater who rides into the street ahead of it, and she crosses with no bonk and no fall; head-on into the side of a sedan, a van and a bus: no bonk, no fall, at least `softWallKeep` of her speed kept, body out of the car; a jump into the side of a car: an air glance and a rolling landing; a moving car sample is soft, a parked one is not. "a moving car never stops the skater (#261 review)": a roll at a sedan corner from 12 angles (10 to 80 degrees) gives no bonk; a 0.64 m slot between two walls that ends at a car side gives no bonk, and she goes back up the slot; a parked car still bonks. The parked-car bonk test and the #285 pin tests still pass.
+- Playwright, `e2e/traffic-calm.spec.js` (BeltLine level, headless Chromium): the skater starts 45 m ahead of a sedan in its lane and pushes toward it for 14 s. Measured: the car yields and stops at tick 180, she touches its front at tick 190 (nearest gap 0.48 m) at 11.9 m/s, glances off at 6.3 m/s or more, and is out of the 2 m circle at tick 215. Bonks in the contact 0, falls 0, bails 0. Screenshots: `reports/traffic-calm-261/1-car-stops.png`, `2-contact.png` (the game paused on the contact tick), `3-after-contact.png`.
+
+**Limits.**
+- Past the car the skater can still bonk on a level wall (in the Playwright ride she glances to the sidewalk and stops at a tree trunk). Walls are not part of this rule.
+- A head-on glance halves her speed and turns her along the car face. Real skaters must review this feel before release (AGENTS.md).
+
+## 2026-11-23: Two playtest toggles in the trick input prototype (#326)
+
+The automated playtest 1 of `prototypes/trick-input/` found two risks (`prototypes/trick-input/REPORT.md`): carves on A/D leak into Left/Right tricks (11.3% on the keyboard, target under 5%), and short phone flicks under 24 px resolve as taps (82.8% tricks as wanted on the phone). The owner chose:
+
+- **Carve guard as a toggle, then test.** Key 6 (or `?carveGuard`): a left or right that is still held and started more than 100 ms before the press does not count. It is off by default; the GDD rule (R3) does not change. In the synthetic model it lowers the keyboard leak only to 9.5% and drops the tricks as wanted to 82.5%. The human playtest tries both settings and the data decides.
+- **Keep `flickMin` 24 px, add 16 px as a toggle.** Key 5 (or `?shortFlick`). In the model, 16 px gives 92.9% tricks as wanted on the phone. The human playtest tries both on a real phone.
+
+Correction (PR 351 review): the bots counted a phone grind flick that resolves after the snap as a miss. With the fix, the phone gives 90.3% tricks as wanted at 24 px and 95.9% at 16 px. The two toggles stay as the owner chose.
+
+Neither toggle goes into `src/` before the playtest verdict.
 
 ## 2026-11-23: Content checklist by an agent, real skater review for Version 1 (#22)
 

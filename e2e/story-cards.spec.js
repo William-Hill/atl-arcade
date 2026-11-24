@@ -149,9 +149,13 @@ test.describe("on a desktop", () => {
     await expect(view).toBeHidden();
     await expect(button).toBeFocused();
     expect(await page.evaluate(() => window.__atl.goals.shown !== null)).toBe(true);
-    // Enter or Space on a focused card opens it again; Escape closes it.
+    // Enter or Space on a focused card opens it again. M does not open the
+    // full map over it, and Escape closes the card.
     await page.keyboard.press("Space");
     await expect(view).toBeVisible();
+    await page.keyboard.press("KeyM");
+    expect(await page.evaluate(() => window.__atl.fullmap.isOpen)).toBe(false);
+    await expect(view.locator(".fullmap-card-close")).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(view).toBeHidden();
     // A click outside the card closes it.

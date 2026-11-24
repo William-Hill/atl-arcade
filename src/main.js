@@ -1217,7 +1217,8 @@ fullmap =
         // A free run claims no spot. A timed run and a tour (#260) claim.
         freeRun: !landmarkTimed,
         reducedMotion: () => effects.reducedMotion,
-        canOpen: () => !photo.isOpen && !settingsMenu.isOpen,
+        // Not while a story card of the results screen is open (#220).
+        canOpen: () => !photo.isOpen && !settingsMenu.isOpen && !storyView?.isOpen,
         onChange: () => input.reset(),
         // The baked isometric map of the level (scripts/bake-iso-map.mjs).
         iso: params.get("isomap") === "0" ? null : isoTilesFor(level.name),

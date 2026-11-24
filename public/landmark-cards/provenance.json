@@ -1,7 +1,7 @@
 {
   "tool": "Skate ATL in-game render (Three.js, headless Chromium), scripts/card-art.mjs",
   "prompt": null,
-  "credits": "Original in-game renders of the Skate ATL level. Map data \u00a9 OpenStreetMap contributors (ODbL).",
+  "credits": "Original in-game renders of the Skate ATL level. Map data © OpenStreetMap contributors (ODbL).",
   "license": "Project art",
   "date": "2026-11-24",
   "dates": {
@@ -21,7 +21,7 @@
     "freedom-park": "2026-11-24",
     "inman-park-historic-district": "2026-11-24"
   },
-  "commit": "628c4162cada1a64a053c65267f175f94c2c2321",
+  "commit": "c00c93ea4c8cd80199540d71c694d8927b6c5fb0",
   "level": "beltline-eastside",
   "query": "level=beltline-eastside&mute=1&intro=0&view=fixed&skater=capsule&look=pbr&quality=high&date=06-21&time=13.5&weather=clear&rings=0&governor=0&lookdown=0",
   "size": [

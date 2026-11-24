@@ -23,6 +23,7 @@ const UNLIT_OK = [
   /^skater-shadow</, // the shadow blob of a GLB skater (player and NPC skaters)
   /^skater-blob<Scene$/, // the shadow blob on a tier with no shadow map (phone, low)
   /^landmark-ring(s|-cones)</, // the challenge rings (#219): a shader ground decal with its own glow
+  /^claim-target(-ink)?<claim-targets</, // the grind target line (#264): a gold line and its ink edge, a UI mark
   // The patterns below test the mesh name (the path up to the first "<"),
   // not a parent name, so a new mesh under one of these groups is not
   // allowed by accident.

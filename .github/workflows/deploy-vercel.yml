@@ -118,7 +118,9 @@ jobs:
       - name: Check that the deploy is public
         id: reach
         env:
-          DEPLOY_URL: ${{ needs.deploy.outputs.url }}
+          # A production deploy URL has Deployment Protection, but the
+          # production domain is public. On main, test the production domain.
+          DEPLOY_URL: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'https://skate-atl.vercel.app' || needs.deploy.outputs.url }}
         run: |
           code=$(curl -s -o /dev/null -w '%{http_code}' "$DEPLOY_URL/")
           echo "HTTP $code from $DEPLOY_URL" >> "$GITHUB_STEP_SUMMARY"
@@ -143,7 +145,7 @@ jobs:
       - name: Run the smoke test
         if: steps.reach.outputs.run == 'true'
         env:
-          SMOKE_URL: ${{ needs.deploy.outputs.url }}
+          SMOKE_URL: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'https://skate-atl.vercel.app' || needs.deploy.outputs.url }}
         run: npx playwright test -c playwright.smoke.config.js
 
       - name: Keep the screenshots

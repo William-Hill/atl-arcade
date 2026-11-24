@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CLAIM_PREFIX, FREE_RUN_HINT, LINE_RESTART, goalLine, landmarkStepArgs, withClaimMedal, withGapGoal } from "./play.js";
+import { CLAIM_PREFIX, FREE_RUN_HINT, LINE_RESTART, goalLine, grindProgress, landmarkStepArgs, withClaimMedal, withGapGoal } from "./play.js";
 import { createLandmarks, landmarkView, markSpot, prepareLandmarks, spotState, stepLandmarks } from "../sim/landmarks.js";
 import { createGoals } from "../sim/skate/goals.js";
 
@@ -106,8 +106,8 @@ describe("AC-3: the HUD goal line", () => {
   it("shows the challenge of the nearest Found spot", () => {
     let s = markSpot(fresh(), "bridge", "found");
     s = markSpot(s, "art", "found");
-    expect(goalLine(landmarkView(s), [310, 0, 0])).toEqual({ id: "bridge", text: `${CLAIM_PREFIX}hop the bridge` });
-    expect(goalLine(landmarkView(s), [590, 0, 0])).toEqual({ id: "art", text: "Claim it: ride the 3 rings in order in 14 s" });
+    expect(goalLine(landmarkView(s), [310, 0, 0])).toEqual({ id: "bridge", text: `${CLAIM_PREFIX}hop the bridge`, active: false });
+    expect(goalLine(landmarkView(s), [590, 0, 0])).toEqual({ id: "art", text: "Claim it: ride the 3 rings in order in 14 s", active: false });
   });
 
   it("drops the line of a spot when it is Claimed", () => {
@@ -146,7 +146,7 @@ describe("AC-3: the HUD goal line", () => {
 
   it("asks for a timed run in a free run", () => {
     const s = markSpot(fresh(), "bridge", "found");
-    expect(goalLine(landmarkView(s), [300, 0, 0], { timed: false })).toEqual({ id: "bridge", text: FREE_RUN_HINT });
+    expect(goalLine(landmarkView(s), [300, 0, 0], { timed: false })).toEqual({ id: "bridge", text: FREE_RUN_HINT, active: false });
   });
 });
 
@@ -164,5 +164,49 @@ describe("a tour step (#260)", () => {
     const land = landmarkStepArgs(runAt(300, 0, { justLanded: true }), { tour: true });
     s = stepLandmarks(s, land.obs, DT, { active: land.active });
     expect(spotState(s, "bridge")).toBe("claimed");
+  });
+});
+
+// #264: the goal line follows the challenge the skater does now, not the
+// nearest Found spot.
+describe("#264: the goal line follows the challenge in progress", () => {
+  const CURB = "ledge:curb:test";
+  const data = {
+    ...DATA,
+    spots: [
+      ...DATA.spots,
+      { id: "curb", kind: "bridge", name: "Curb Bridge", at: [330, 40], find: { r: 20 }, short: "A curb.", challenge: { type: "grind", tier: "typical", hint: "Grind the curb below the bridge for 15 m", feature: CURB, zone: { x: 330, z: 40, r: 15 }, meters: 15 } },
+    ],
+  };
+  const start = () => {
+    let s = createLandmarks(prepareLandmarks(data), { level: data.level });
+    s = markSpot(s, "bridge", "found");
+    return markSpot(s, "curb", "found");
+  };
+  const obs = (x, z, grind = null) => ({ position: [x, 0, z], airborne: false, landed: false, bailed: false, teleported: false, grind, linked: false, banked: 0 });
+
+  it("shows the grind and its meters while the skater grinds the curb, even nearer to another spot", () => {
+    let s = start();
+    // At (305, 25) the bridge zone (300, 0) is nearer than the curb zone (330, 40).
+    expect(goalLine(landmarkView(s), [305, 0, 25]).id).toBe("bridge");
+    s = stepLandmarks(s, obs(318, 32, { id: CURB, s: 0 }), DT);
+    s = stepLandmarks(s, obs(305, 25, { id: CURB, s: 6.4 }), DT);
+    expect(goalLine(landmarkView(s), [305, 0, 25])).toEqual({ id: "curb", text: `${CLAIM_PREFIX}grind the curb below the bridge for 15 m\nGrind 6 of 15 m`, active: true });
+    // Off the curb, the line goes back to the nearest spot.
+    s = stepLandmarks(s, obs(305, 25), DT);
+    expect(goalLine(landmarkView(s), [305, 0, 25])).toMatchObject({ id: "bridge", active: false });
+  });
+
+  it("writes the meters as a whole number, at most the goal", () => {
+    expect(grindProgress(0, 15)).toBe("Grind 0 of 15 m");
+    expect(grindProgress(14.99, 15)).toBe("Grind 14 of 15 m");
+    expect(grindProgress(22, 15)).toBe("Grind 15 of 15 m");
+  });
+
+  it("does not show the meters in a free run", () => {
+    let s = start();
+    s = stepLandmarks(s, obs(330, 40, { id: CURB, s: 0 }), DT);
+    s = stepLandmarks(s, obs(330, 40, { id: CURB, s: 3 }), DT);
+    expect(goalLine(landmarkView(s), [330, 0, 40], { timed: false })).toEqual({ id: "curb", text: FREE_RUN_HINT, active: false });
   });
 });

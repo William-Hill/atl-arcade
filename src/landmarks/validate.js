@@ -43,6 +43,9 @@ export const LANDMARK_RULES = {
   lineCheckpoints: { min: 2, max: 3 },
   comboPoints: { easy: 600, typical: 1000, hard: 2000 },
   comboR: 10, // m, r_combo
+  // A skate spot can use its pad as the combo zone (#365): `zone.area` names
+  // the pad area of its footprint, and `zone.margin` adds this much around it.
+  areaMargin: { min: 0, max: 4 }, // m
   pavedReach: 1.5, // m past the half width of a strip that still counts as on it
   fenceInset: EDGE_FENCE.inset, // m
 };
@@ -204,9 +207,26 @@ function checkChallenge(spot, ctx, err, rings = null) {
     // A skate spot (#222) is paved itself: its footprint is the pad of the
     // skatepark, so a zone center on the pad is good.
     const onPad = spot.kind === "skate" && c.zone && Boolean(rings?.some((r) => pointInRings(c.zone.x, c.zone.z, r)));
-    if (checkZone("challenge.zone", c.zone, R.comboR, level, err) && !onPad && !onPaved([c.zone.x, c.zone.z], level)) err(spot.kind === "skate" ? "challenge.zone center is not on the skatepark pad, a trail, a path, or a sidewalk" : "challenge.zone center is not on a trail, a path, or a sidewalk");
+    const area = c.zone?.area != null;
+    if (area) checkAreaZone(spot, c.zone, rings, err);
+    if (checkZone("challenge.zone", c.zone, area ? null : R.comboR, level, err) && !onPad && !onPaved([c.zone.x, c.zone.z], level)) err(spot.kind === "skate" ? "challenge.zone center is not on the skatepark pad, a trail, a path, or a sidewalk" : "challenge.zone center is not on a trail, a path, or a sidewalk");
     if (c.points !== R.comboPoints[c.tier]) err(`challenge.points is ${c.points} (the tier gives ${R.comboPoints[c.tier]})`);
   }
+}
+
+// A combo zone that is a pad area (#365): only a skate spot, the area must be
+// in the footprint of the spot, the margin in range, and `r` must reach every
+// corner of the outline plus the margin (the guide and the planners read r).
+function checkAreaZone(spot, zone, rings, err) {
+  const R = LANDMARK_RULES;
+  if (spot.kind !== "skate") return err("challenge.zone.area is for a skate spot only");
+  if (!(spot.footprint?.areas ?? []).includes(zone.area)) return err(`challenge.zone.area "${zone.area}" is not an area of the footprint`);
+  if (!isNum(zone.margin) || zone.margin < R.areaMargin.min || zone.margin > R.areaMargin.max) err(`challenge.zone.margin needs a number from ${R.areaMargin.min} to ${R.areaMargin.max}`);
+  const at = spot.footprint.areas.indexOf(zone.area);
+  const outer = rings?.[at]?.[0];
+  if (!outer || !isNum(zone.x) || !isNum(zone.z) || !isNum(zone.r)) return;
+  const far = Math.max(...outer.map((p) => dist(p, [zone.x, zone.z]))) + (zone.margin ?? 0);
+  if (zone.r + 1e-9 < far) err(`challenge.zone.r is ${zone.r} (the area and its margin reach ${far.toFixed(1)} m)`);
 }
 
 // True when a rail ([[x, y, z]]) passes through a zone: a vertex or a part

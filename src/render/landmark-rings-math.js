@@ -32,6 +32,12 @@ export const RINGS = {
   // A claim: the ring turns all gold (no ink, no dashes), grows a little and
   // fades. With reduced motion it only fades, in 0.3 s.
   claim: { time: 0.5, grow: 0.12, reducedTime: 0.3 },
+  // An area zone (#365, the skatepark pad plus its margin) draws as a
+  // rounded rectangle: the zone edge itself (the corner radius is the margin,
+  // at least `rectCorner`). The inner line of the double outline is `rectInset`
+  // m inside it.
+  rectCorner: 0.5, // m
+  rectInset: 1.0, // m
   // The fade cone over a ring, high tier only (1 more draw call).
   cone: { height: 3, alpha: 0.2 },
   // The atlas: 6 square cells in a row.
@@ -70,6 +76,87 @@ export function dashCount(r, k = RINGS) {
   return Math.max(8, Math.round((2 * Math.PI * r) / (k.dash / 0.6)));
 }
 
+// The rectangle of an area zone (#365): the outline `outer` ([[x, z]], a
+// rectangle such as a skatepark pad) plus `margin` m. The long axis is the
+// direction of the longest edge. Returns { x, z, angle, hu, hv, corner }:
+// the center, the turn about +y (three.js makeRotationY: local +x goes to
+// (cos, -sin)), the half length and half width with the margin, and the
+// corner radius (the margin).
+export function areaRect(outer, margin = 0, k = RINGS) {
+  let best = null;
+  for (let i = 0; i < outer.length; i += 1) {
+    const [ax, az] = outer[i];
+    const [bx, bz] = outer[(i + 1) % outer.length];
+    const len = Math.hypot(bx - ax, bz - az);
+    if (!best || len > best.len + 1e-9) best = { len, ux: (bx - ax) / len, uz: (bz - az) / len };
+  }
+  const { ux, uz } = best;
+  // Local +z goes to (sin, cos) = (-uz, ux).
+  const vx = -uz;
+  const vz = ux;
+  let u0 = Infinity;
+  let u1 = -Infinity;
+  let v0 = Infinity;
+  let v1 = -Infinity;
+  for (const [x, z] of outer) {
+    const u = x * ux + z * uz;
+    const v = x * vx + z * vz;
+    u0 = Math.min(u0, u);
+    u1 = Math.max(u1, u);
+    v0 = Math.min(v0, v);
+    v1 = Math.max(v1, v);
+  }
+  const uc = (u0 + u1) / 2;
+  const vc = (v0 + v1) / 2;
+  return { x: uc * ux + vc * vx, z: uc * uz + vc * vz, angle: Math.atan2(-uz, ux), hu: (u1 - u0) / 2 + margin, hv: (v1 - v0) / 2 + margin, corner: Math.max(k.rectCorner, margin) };
+}
+
+// A point of a rounded rectangle (half size hu x hv, corner radius c) at
+// t (0 to 1) of its length, in local meters: [x, z, nx, nz] with the outward
+// normal. t = 0 is (hu, 0), and t grows toward +z, as the angle of a circle
+// ring. The shader has the same function (rectPoint in landmark-rings.js).
+export function rectPoint(hu, hv, c, t) {
+  const a = Math.max(0, hu - c);
+  const b = Math.max(0, hv - c);
+  const arc = (Math.PI * c) / 2;
+  const total = 4 * a + 4 * b + 4 * arc;
+  let d = (((t % 1) + 1) % 1) * total;
+  const corner = (cx, cz, from) => (s) => {
+    const ang = from + s / c;
+    return [cx + Math.cos(ang) * c, cz + Math.sin(ang) * c, Math.cos(ang), Math.sin(ang)];
+  };
+  const parts = [
+    [b, (s) => [hu, s, 1, 0]],
+    [arc, corner(a, b, 0)],
+    [2 * a, (s) => [a - s, hv, 0, 1]],
+    [arc, corner(-a, b, Math.PI / 2)],
+    [2 * b, (s) => [-hu, b - s, -1, 0]],
+    [arc, corner(-a, -b, Math.PI)],
+    [2 * a, (s) => [-a + s, -hv, 0, -1]],
+    [arc, corner(a, -b, (3 * Math.PI) / 2)],
+    [b, (s) => [hu, -b + s, 1, 0]],
+  ];
+  for (const [len, at] of parts) {
+    if (d <= len) return at(d);
+    d -= len;
+  }
+  return [hu, 0, 1, 0];
+}
+
+// A ring point in world [x, z] at t (0 to 1): the circle, or the rounded
+// rectangle of an area ring.
+export function ringPoint(ring, t) {
+  if (ring.rect) {
+    const { hu, hv, corner, angle } = ring.rect;
+    const [lx, lz] = rectPoint(hu, hv, corner, t);
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    return [ring.x + lx * c + lz * s, ring.z - lx * s + lz * c];
+  }
+  const a = t * 2 * Math.PI;
+  return [ring.x + Math.cos(a) * ring.r, ring.z + Math.sin(a) * ring.r];
+}
+
 // The rings to draw, from landmarkView().spots. A spot has rings when it is
 // Found and not Claimed (`ring`), in a timed run only: a free run has no
 // claims and shows no ring. Each ring is
@@ -88,7 +175,12 @@ export function ringList(spots, { timed = true } = {}, k = RINGS) {
         out.push({ key: `${s.id}:${i}`, id: s.id, shape, x, z, r: c.r, digit: i, dashes: 1, alpha: passed ? k.passed : 1 });
       });
     } else {
-      out.push({ key: s.id, id: s.id, shape, x: c.zone.x, z: c.zone.z, r: c.zone.r, digit: 0, dashes: c.type === "grind" ? dashCount(c.zone.r, k) : 1, alpha: 1 });
+      const ring = { key: s.id, id: s.id, shape, x: c.zone.x, z: c.zone.z, r: c.zone.r, digit: 0, dashes: c.type === "grind" ? dashCount(c.zone.r, k) : 1, alpha: 1 };
+      // An area zone (#365): the rounded rectangle of the area plus its margin.
+      if (c.zone.shapes) {
+        const rect = areaRect(c.zone.shapes[0][0], c.zone.margin ?? 0, k);
+        out.push({ ...ring, x: rect.x, z: rect.z, rect: { hu: rect.hu, hv: rect.hv, corner: rect.corner, angle: rect.angle } });
+      } else out.push(ring);
     }
   }
   return out;
@@ -105,12 +197,12 @@ export function ringCapacity(spots) {
 // zone (more than `reach` from the center height) or missing takes the mean
 // of its 2 nearest good neighbors, so the ring does not climb a wall or
 // drop off a bridge.
-export function ringGround({ x, z, r }, center, groundAt, k = RINGS) {
+export function ringGround(ring, center, groundAt, k = RINGS) {
   const n = k.samples;
   const raw = [];
   for (let i = 0; i < n; i += 1) {
-    const a = (i / n) * 2 * Math.PI;
-    const h = groundAt(x + Math.cos(a) * r, z + Math.sin(a) * r, center + k.reach);
+    const [px, pz] = ringPoint(ring, i / n);
+    const h = groundAt(px, pz, center + k.reach);
     raw.push(h != null && Number.isFinite(h) && Math.abs(h - center) <= k.reach ? h - center : null);
   }
   if (raw.every((h) => h === null)) return { y: center, heights: raw.map(() => 0) };

@@ -112,8 +112,37 @@ const VERTEX_PARS = /* glsl */ `
   attribute mat4 iGround; // 16 ground heights around the ring, relative to the center
   uniform vec4 uRing;     // band half width, inner ring share, number half size, number lift
   uniform float uFar;     // band half width per meter of distance, far from the camera
+  uniform vec2 uRect;     // area rings (#365): the least corner radius, the inset of the inner line
+  attribute vec4 iRect;   // area rings: half length, half width, corner radius, 1 (0 for a circle)
   varying vec4 vRing;
   varying vec3 vRing2;
+
+  // A point of a rounded rectangle at t (0 to 1) of its length:
+  // (x, z, nx, nz). The same as rectPoint in landmark-rings-math.js.
+  vec4 rectPoint(float hu, float hv, float c, float t) {
+    float a = max(0.0, hu - c);
+    float b = max(0.0, hv - c);
+    float arc = 1.5707963 * c;
+    float d = fract(t) * (4.0 * a + 4.0 * b + 4.0 * arc);
+    if (t >= 1.0) d = 0.0;
+    if (d <= b) return vec4(hu, d, 1.0, 0.0);
+    d -= b;
+    if (d <= arc) { float g = d / c; return vec4(a + cos(g) * c, b + sin(g) * c, cos(g), sin(g)); }
+    d -= arc;
+    if (d <= 2.0 * a) return vec4(a - d, hv, 0.0, 1.0);
+    d -= 2.0 * a;
+    if (d <= arc) { float g = 1.5707963 + d / c; return vec4(-a + cos(g) * c, b + sin(g) * c, cos(g), sin(g)); }
+    d -= arc;
+    if (d <= 2.0 * b) return vec4(-hu, b - d, -1.0, 0.0);
+    d -= 2.0 * b;
+    if (d <= arc) { float g = 3.1415927 + d / c; return vec4(-a + cos(g) * c, -b + sin(g) * c, cos(g), sin(g)); }
+    d -= arc;
+    if (d <= 2.0 * a) return vec4(-a + d, -hv, 0.0, -1.0);
+    d -= 2.0 * a;
+    if (d <= arc) { float g = 4.7123890 + d / c; return vec4(a + cos(g) * c, -b + sin(g) * c, cos(g), sin(g)); }
+    d -= arc;
+    return vec4(hu, -b + d, 1.0, 0.0);
+  }
 `;
 
 // Replaces <begin_vertex>.
@@ -128,12 +157,23 @@ const VERTEX_BEGIN = /* glsl */ `
     int i0 = int(mod(floor(f), 16.0));
     int i1 = int(mod(floor(f) + 1.0, 16.0));
     float h = mix(iGround[i0 / 4][i0 - 4 * (i0 / 4)], iGround[i1 / 4][i1 - 4 * (i1 / 4)], fract(f));
+    // A circle: the point on the radius, the normal out from the center. An
+    // area ring (#365): the rounded rectangle, scaled by iRing.x (the pulse
+    // and the claim growth), with the inner line uRect.y m inside.
+    vec2 p = position.xz * iRing.x * share;
+    vec2 n = position.xz;
+    if (iRect.w > 0.5) {
+      vec4 q = rectPoint(iRect.x * iRing.x, iRect.y * iRing.x, max(uRect.x, iRect.z), uv.x);
+      p = q.xy - q.zw * (inner ? uRect.y : 0.0);
+      n = q.zw;
+      share = 1.0;
+    }
     // The band is uRing.x wide near the camera. Far away it grows with the
     // distance (to 4 times at most), so a far ring is not thinner than a pixel.
-    vec3 onRing = (instanceMatrix * vec4(position.x * iRing.x * share, h * share, position.z * iRing.x * share, 1.0)).xyz;
+    vec3 onRing = (instanceMatrix * vec4(p.x, h * share, p.y, 1.0)).xyz;
     float halfWidth = clamp(uFar * distance(cameraPosition, onRing), uRing.x, uRing.x * 4.0);
-    float r = iRing.x * share + ringPart.y * halfWidth;
-    transformed = vec3(position.x * r, h * share, position.z * r) * ringOn;
+    vec2 e = p + n * ringPart.y * halfWidth;
+    transformed = vec3(e.x, h * share, e.y) * ringOn;
   } else if (abs(iRing.y - 2.0) > 0.5) ringOn = 0.0;
   vRing = vec4(iRing.y, iRing.z * ringOn, ringPart.x, iRing.w);
   vRing2 = vec3(iExtra.x, iExtra.y, 0.0);
@@ -182,6 +222,7 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
   const uniforms = {
     uRing: { value: new THREE.Vector4(k.width / 2 + k.ink, k.inner, k.digit.size, k.digit.lift) },
     uFar: { value: k.farWidth / 2 },
+    uRect: { value: new THREE.Vector2(k.rectCorner, k.rectInset) },
     uGold: { value: new THREE.Color(k.gold) },
     uGain: { value: new THREE.Vector2(1, 1) },
   };
@@ -202,7 +243,9 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
   const iRing = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4);
   const iExtra = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4);
   const iGround = new THREE.InstancedBufferAttribute(new Float32Array(max * 16), 16);
-  for (const a of [iRing, iExtra, iGround]) a.setUsage(THREE.DynamicDrawUsage);
+  const iRect = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4);
+  for (const a of [iRing, iExtra, iGround, iRect]) a.setUsage(THREE.DynamicDrawUsage);
+  geometry.setAttribute("iRect", iRect);
   geometry.setAttribute("iRing", iRing);
   geometry.setAttribute("iExtra", iExtra);
   geometry.setAttribute("iGround", iGround);
@@ -245,6 +288,7 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
   const info = { rings: 0, fading: 0, fade: null, shapes: [], ids: [], emissive: { rest: 1, core: 1 }, pulse: 1, cones: 0 };
   const m = new THREE.Matrix4();
   const quat = new THREE.Quaternion();
+  const up = new THREE.Vector3(0, 1, 0);
   const v = new THREE.Vector3();
   const s = new THREE.Vector3();
 
@@ -259,14 +303,19 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
 
   function write(i, ring, { scale = 1, alpha = 1, fill = 0 } = {}) {
     const g = groundOf(ring);
-    m.makeTranslation(ring.x, g.y + k.lift, ring.z);
+    const rect = ring.rect ?? null;
+    m.makeRotationY(rect ? rect.angle : 0).setPosition(ring.x, g.y + k.lift, ring.z);
     mesh.setMatrixAt(i, m);
-    iRing.setXYZW(i, ring.r * scale, ring.shape, ring.alpha * alpha, fill);
+    // An area ring (#365) keeps its size in iRect; iRing.x is then its scale.
+    iRing.setXYZW(i, rect ? scale : ring.r * scale, ring.shape, ring.alpha * alpha, fill);
     iExtra.setXYZW(i, ring.digit, ring.dashes, 0, 0);
+    iRect.setXYZW(i, rect ? rect.hu : 0, rect ? rect.hv : 0, rect ? rect.corner : 0, rect ? 1 : 0);
     iGround.array.set(g.heights, i * 16);
     if (cones && fill === 0) {
       v.set(ring.x, g.y + Math.min(0, ...g.heights), ring.z);
-      s.set(ring.r * scale, k.cone.height, ring.r * scale);
+      // The cone of an area ring is an oval over its rectangle.
+      quat.setFromAxisAngle(up, rect ? rect.angle : 0);
+      s.set((rect ? rect.hu : ring.r) * scale, k.cone.height, (rect ? rect.hv : ring.r) * scale);
       cones.setMatrixAt(i, m.compose(v, quat, s));
     }
   }
@@ -327,6 +376,7 @@ export function createLandmarkRings({ capacity, look = "toon", tier = "low", gro
         iRing.needsUpdate = true;
         iExtra.needsUpdate = true;
         iGround.needsUpdate = true;
+        iRect.needsUpdate = true;
       }
       const e = ringEmissive({ look, night, tier }, k);
       uniforms.uGain.value.set(e.rest, e.core);

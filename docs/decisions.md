@@ -3051,3 +3051,12 @@ Files: `docs/pitch/2026-11-01-official-game-of-atlanta.md` (new section 1.1 "Wha
 - The demo URL uses `travel=1` for one fast travel from the full map. Fast travel is off in a normal production visit.
 - The demo does not open the New Realm Brewing story card until #354 merges.
 - Nobody was contacted. Contact with a City office waits for the owner's approval.
+
+## 2026-11-24: Deploy smoke test, and no route from agenticatl.ai (#23)
+
+**Decision (owner, 2026-11-24).** Skate ATL and agenticatl.ai (the open-data-atl site) are separate products. The site does not host the game at a route, and the game and the site do not link to each other. The "link from the site" item of #23 is cancelled.
+
+- The fact cards still link to agenticatl.ai dataset pages and call its API. Issue #372 removes this.
+- The static Open Graph card (#303) closes the share card item of #23. The per-run card with the score and the neighborhood moves to #373.
+- `e2e-smoke/production.spec.js` checks a deployed build: the headers, the Open Graph card (the tags, the public 1200x630 image, a rendered preview), and that the game draws frames with no page error. It runs with `playwright.smoke.config.js` against `SMOKE_URL` (default `https://skate-atl.vercel.app`), not against the dev server, so the default Playwright suite does not include it.
+- The `smoke` job of the deploy workflow runs it after each deploy against the new URL. A preview with Vercel Deployment Protection (HTTP 401 or 403, or a 302 or 307 redirect to the Vercel login) skips the test with a note; production must answer 200.

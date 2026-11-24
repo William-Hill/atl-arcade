@@ -239,3 +239,31 @@ for (const look of ["toon", "pbr"]) {
     });
   }
 }
+
+// #365: the outline from above: a rounded rectangle 2 m around the pad.
+for (const look of ["toon", "pbr"]) {
+  test(`#365 in the ${look} look: from above, the skatepark outline lies 2 m around the pad`, async ({ page }) => {
+    test.setTimeout(900000);
+    const errors = collectErrors(page);
+    await open(page, `look=${look}&view=fixed`);
+    await page.evaluate((id) => {
+      window.__atl.landmarks.reset();
+      window.__atl.landmarks.find(id);
+    }, SKATEPARK);
+    await page.waitForFunction(() => window.__atl.landmarks.banner().current === null && window.__atl.landmarks.banner().waiting === 0, null, { timeout: 600000 });
+    const [cx, cz] = PARK.center;
+    const y = await page.evaluate(([x, z]) => window.__atl.level.sample(x, z).height, [cx, cz]);
+    await page.evaluate(([x, y, z]) => window.__atl.setFixedCamera(x, y + 45, z + 0.01, x, y, z), [cx, y, cz]);
+    await page.waitForTimeout(1500);
+    const rings = await page.evaluate(() => window.__atl.landmarkFx.rings);
+    const ring = rings.list.find((r) => r.id === SKATEPARK);
+    expect(ring.x).toBeCloseTo(cx, 1);
+    expect(ring.z).toBeCloseTo(cz, 1);
+    const px = await overlayPixels(page, "rings");
+    await page.screenshot({ path: `e2e/__screenshots__/claim-targets-${look}-skatepark-above.jpg`, type: "jpeg", quality: JPEG });
+    expect(px.changed).toBeGreaterThan(1000);
+    expect(px.gold / px.changed).toBeGreaterThan(0.3);
+    expect(px.red).toBe(0);
+    expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
+  });
+}

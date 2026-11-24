@@ -17,6 +17,8 @@ Branch `claude/dazzling-cray-15m01y` from `main`. Owner decision: 4 CC0 or royal
 | BPM and offset against the beat clock grid, 3 loops of each of the 8 tracks | `scripts/music/check_grid.py`, `reports/m2-music-grid.json` | Vitest `music-grid.test.js`: mean offset under 0.3 ms, drift under 0.1 ms per bar, every bar inside PERFECT |
 | Track select on the results screen shows the author | `src/audio/music-tracks.js` (`trackChoices`); `src/ui/results.js` not changed | Playwright `e2e/music.spec.js`: each CC0 track loads, the beat clock follows it; live audio check for each track |
 
+#20 tests, cloud container, branch merged with `main` at `37aa651`: `npm test` 2060 of 2061 pass (the known 5 s timeout in `facade-kit.test.js`, also on `main`). Playwright full suite, 295 tests: 267 pass, 18 fail, 10 skipped; all 7 `@beat-timing` tests pass. The 18 failures, run again with no other load: 9 fail on the branch, and the same 9 fail on `main`; 12 fail on `main`.
+
 #20 NOT verified: no person listened to the loop seams; for the 4 CC0 tracks the bar start (downbeat) can be 1 beat off; no real phone and no Safari check of the AAC files.
 
 ## #76 Teach the moves in the world, 2026-11-21

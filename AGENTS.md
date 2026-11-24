@@ -10,6 +10,7 @@ Skate ATL: a free-skate roller skate game in real Atlanta neighborhoods, Tony Ha
 - Prototype code under `prototypes/` never imports production code under `src/`, and production never imports prototypes.
 - Keep the skate controller and scoring as pure modules with Vitest tests. Rendering stays separate.
 - Verify in a real browser with Playwright (headless). Screenshots are evidence. Do not claim "it works" without a run.
+- Test scope: in a PR, run the full Vitest suite and only the Playwright specs that the PR adds or touches. Run the full Playwright suite once on `main` after a group of merges, before an Autopilot playtest. Never run two full Playwright suites at the same time.
 - Use dependency versions published at least 7 days ago.
 - Never commit secrets, GLB files over 10 MB, or generated art without a `provenance.json` next to it (tool, prompt, credits, date).
 - Record decisions in `docs/decisions.md`.

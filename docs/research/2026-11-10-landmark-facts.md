@@ -57,9 +57,10 @@ Limits:
 - **Its rooftop looks out over the city and one of the busiest parts of the BeltLine corridor.**
   - Source: Atlanta BeltLine, Inc., https://beltline.org/blog/the-beltline-from-above/
   - Quote: "A favorite along the Eastside Trail since 2018, New Realm Brewing Company’s rooftop offers unmatched views of the city and one of the busiest parts of the corridor (making it perfect for people watching)."
-- **New Realm makes its own beer and spirits and hosts trivia, vintage market pop-ups and live music.**
+- **New Realm has a full food menu and hosts trivia, vintage market pop-ups and live music four days a week.**
   - Source: Atlanta BeltLine, Inc., https://beltline.org/blog/the-beltline-from-above/
-  - Quote: "In addition to house-made beer and spirits, New Realm boasts an extensive food menu, regular trivia and vintage market pop-ups, and live music four days a week."
+  - Quote: "[...] New Realm boasts an extensive food menu, regular trivia and vintage market pop-ups, and live music four days a week."
+  - Note: the card leaves out the first clause of the quote, which names alcohol (#354, `docs/decisions.md` 2026-11-24).
 
 ### Telephone Factory Lofts
 

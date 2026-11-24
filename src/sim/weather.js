@@ -84,6 +84,19 @@ export function civilHour(date) {
   return date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
 }
 
+// The civil date and hour in Atlanta (America/New_York) for a Date, so the
+// clock does not follow the time zone of the device (#353). Returns
+// { year, month (1..12), date (1..31), day (day of the year), hour (0..24) }.
+export const ATLANTA_TZ = "America/New_York";
+export function atlantaTime(now) {
+  const parts = {};
+  const fmt = new Intl.DateTimeFormat("en-US", { timeZone: ATLANTA_TZ, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" });
+  for (const p of fmt.formatToParts(now)) parts[p.type] = Number(p.value);
+  const { year, month, day: date } = parts;
+  const day = Math.floor((Date.UTC(year, month - 1, date) - Date.UTC(year, 0, 1)) / 86400000) + 1;
+  return { year, month, date, day, hour: (parts.hour % 24) + parts.minute / 60 + parts.second / 3600 };
+}
+
 // Approximate US daylight saving: in effect from the second Sunday of
 // March (day 68..74) to the first Sunday of November (day 305..311).
 // The boundary days can be off by a day; the error is one hour once a year.

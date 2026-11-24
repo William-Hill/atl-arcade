@@ -152,7 +152,7 @@ Prototype gate: if free movement plus grind plus style does not feel good on a g
 - Repo `atl-arcade`. Three.js, Vite, Vitest, Playwright. The Phaser scaffold from v1 stays until the Three.js shell replaces it.
 - Pure simulation (skate controller, combo scoring) separate from rendering, so the controller is testable in node.
 - Modes: Skate (first), Tycoon (second), roguelike (later). Shared: data client, neighborhood geometry pipeline, fact cards, leaderboard, branding.
-- Deployed on Vercel. The open-data-atl site is the data API and hosts the game at a route.
+- Deployed on Vercel at `https://skate-atl.vercel.app`. The open-data-atl site (agenticatl.ai) is a separate product: it does not host or link to the game (decision 2026-11-24, #23).
 
 ## 13. Companion concepts in the same shell
 

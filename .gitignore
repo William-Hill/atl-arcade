@@ -4,6 +4,7 @@ dist
 .env
 .env.*
 e2e/.output
+e2e-smoke/.output
 playwright-report
 reports/*.webm
 assets/skaters/*/raw/

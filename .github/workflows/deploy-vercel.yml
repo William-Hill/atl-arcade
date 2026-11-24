@@ -2,6 +2,7 @@
 # - A push to main makes a production deploy.
 # - A pull request from this repository makes a preview deploy, and the
 #   workflow writes the preview URL in one comment on the pull request.
+# - After each deploy, the smoke job runs e2e-smoke/ against the new URL (#23).
 # The workflow needs one repository secret: VERCEL_TOKEN.
 name: Deploy to Vercel
 
@@ -30,6 +31,8 @@ jobs:
     # Pull requests from forks do not get the secret. Skip them.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -95,3 +98,57 @@ jobs:
             } else {
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
+
+  # Issue #23: open the deployed build in headless Chromium. The test checks
+  # the headers, the Open Graph share card, and that the game draws frames.
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # A preview URL can have Vercel Deployment Protection (HTTP 401).
+      # Then the smoke test cannot open it, and the job writes a note.
+      - name: Check that the deploy is public
+        id: reach
+        env:
+          DEPLOY_URL: ${{ needs.deploy.outputs.url }}
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$DEPLOY_URL/")
+          echo "HTTP $code from $DEPLOY_URL" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" = "200" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$code" = "401" ] && [ "${{ github.event_name }}" != "push" -o "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "The preview is protected. The smoke test did not run." >> "$GITHUB_STEP_SUMMARY"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::The deploy answered HTTP $code"
+            exit 1
+          fi
+
+      - name: Install the dependencies
+        if: steps.reach.outputs.run == 'true'
+        run: npm ci
+
+      - name: Install Chromium
+        if: steps.reach.outputs.run == 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Run the smoke test
+        if: steps.reach.outputs.run == 'true'
+        env:
+          SMOKE_URL: ${{ needs.deploy.outputs.url }}
+        run: npx playwright test -c playwright.smoke.config.js
+
+      - name: Keep the screenshots
+        if: always() && steps.reach.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-shots
+          path: e2e-smoke/.output/
+          retention-days: 14

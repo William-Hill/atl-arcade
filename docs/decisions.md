@@ -2971,3 +2971,12 @@ Neither toggle goes into `src/` before the playtest verdict.
 **Decision (owner, 2026-11-23).** A PR runs the full Vitest suite and only the Playwright specs that it adds or touches. The full Playwright suite (about 290 tests) runs once on `main` after a group of merges, before an Autopilot playtest. Two full Playwright suites never run at the same time.
 
 **Why.** On 2026-11-23, 4 ship-it agents each started the full suite at the same time. The load average went to 100 and more, the runs did not finish in 2 hours, and most failures were timeouts from the load. The Playwright suite is the regression gate. The Autopilot playtest is an AI agent that plays the game and finds play problems that no test predicts. The two checks do not replace each other.
+
+## 2026-11-24: Deploy smoke test, and no route from agenticatl.ai (#23)
+
+**Decision (owner, 2026-11-24).** Skate ATL and agenticatl.ai (the open-data-atl site) are separate products. The site does not host the game at a route, and the game and the site do not link to each other. The "link from the site" item of #23 is cancelled.
+
+- The fact cards still link to agenticatl.ai dataset pages and call its API. Issue #372 removes this.
+- The static Open Graph card (#303) closes the share card item of #23. The per-run card with the score and the neighborhood moves to #373.
+- `e2e-smoke/production.spec.js` checks a deployed build: the headers, the Open Graph card (the tags, the public 1200x630 image, a rendered preview), and that the game draws frames with no page error. It runs with `playwright.smoke.config.js` against `SMOKE_URL` (default `https://skate-atl.vercel.app`), not against the dev server, so the default Playwright suite does not include it.
+- The `smoke` job of the deploy workflow runs it after each deploy against the new URL. A preview with Vercel Deployment Protection (HTTP 401) skips the test with a note; production must answer 200.

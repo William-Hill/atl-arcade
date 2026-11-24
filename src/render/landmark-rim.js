@@ -49,7 +49,14 @@ const fragmentShader = /* glsl */ `
 // `level` has the buildings ({ id, outer, height }); `spots` are the
 // spots of levels/<level>/landmarks.json (with `footprint`); `groundAt(x, z)` is the
 // terrain height.
-export function createLandmarkRim({ level, spots, groundAt = () => 0, k = CLAIM_FX }) {
+// `spanOf(b)` gives { base, top }, the height span the building renderer
+// draws (src/level/geo/terrain.js buildingSpan()); by default the lowest
+// ground of the footprint and that plus the building height.
+export function createLandmarkRim({ level, spots, groundAt = () => 0, spanOf = null, k = CLAIM_FX }) {
+  spanOf ??= (b) => {
+    const base = Math.min(...b.outer.map(([x, z]) => groundAt(x, z)));
+    return { base, top: base + (b.height ?? 10) };
+  };
   const byId = new Map((level.buildings ?? []).map((b) => [b.id, b]));
   const outlines = new Map();
   for (const s of spots) {
@@ -91,11 +98,14 @@ export function createLandmarkRim({ level, spots, groundAt = () => 0, k = CLAIM_
     for (const id of ids) {
       const b = outlines.get(id);
       if (!b) continue;
-      const base = Math.min(...b.outer.map(([x, z]) => groundAt(x, z)));
-      const walls = rimWalls(b.outer, base, b.height ?? 10, k.rim.offset);
+      // The rendered span of the building: on a slope the walls start at
+      // the lowest ground and the roof sits over the highest ground.
+      const { base, top } = spanOf(b);
+      const height = Math.max(1e-3, top - base);
+      const walls = rimWalls(b.outer, base, height, k.rim.offset);
       positions.push(...walls.positions);
       normals.push(...walls.normals);
-      for (let i = 1; i < walls.positions.length; i += 3) along.push((walls.positions[i] - base) / Math.max(1e-3, b.height ?? 10));
+      for (let i = 1; i < walls.positions.length; i += 3) along.push((walls.positions[i] - base) / height);
     }
     mesh.geometry.dispose();
     const geo = new THREE.BufferGeometry();

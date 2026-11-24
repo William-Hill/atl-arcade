@@ -43,7 +43,7 @@ import { createLandmarkRim } from "./render/landmark-rim.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createSkateparkView } from "./render/skatepark-view.js";
 import { meshWorkerCount, startGeoMeshBuild, startLevelProps } from "./level/geo/geo-mesh-async.js";
-import { terrainOf } from "./level/geo/terrain.js";
+import { buildingSpan, terrainOf } from "./level/geo/terrain.js";
 import { FAR_TERRAIN_BUILD, createGeoLights, createGeoView, loadPropTemplates } from "./render/geo-view.js";
 import { FAR_TREE_DISTANCE } from "./render/far-trees.js";
 import { createLandmarksView } from "./render/landmarks-view.js";
@@ -433,7 +433,10 @@ const landmarkRings = landmarkTracker && params.get("rings") !== "0"
 if (landmarkRings) scene.add(landmarkRings.group);
 // The golden-hour rim of Found landmark buildings (#221): high tier only,
 // an emissive overlay band, 1 draw call while the sun is low.
-const landmarkRim = landmarkTracker && claimRim(quality, { off: params.get("fx") === "0" }) ? createLandmarkRim({ level, spots: landmarkData.spots, groundAt: (x, z) => terrainOf(level).height(x, z) }) : null;
+const landmarkRim = landmarkTracker && claimRim(quality, { off: params.get("fx") === "0" }) ? createLandmarkRim({ level, spots: landmarkData.spots, spanOf: (b) => {
+        const span = buildingSpan(level, b);
+        return { base: span.foot, top: span.top };
+      } }) : null;
 if (landmarkRim) scene.add(landmarkRim.mesh);
 // The grind claim target (#264, src/render/claim-target.js): the curb or rail
 // of a Found grind claim, near its zone. ?rings=0 leaves it out too.

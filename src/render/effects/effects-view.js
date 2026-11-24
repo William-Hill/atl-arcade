@@ -498,6 +498,11 @@ export function createEffects({ scene, camera, renderer, tier, anchors = [], off
         if (forceSpeed) fx = { ...fx, speed: 1 };
       }
     },
+    // Age the particles by `dt` s now (a screenshot of an effect at a
+    // given age, #221).
+    advance(dt) {
+      fx = stepFx(fx, dt, { speed: forceSpeed ?? 0 });
+    },
     hold(on) {
       hold = Boolean(on);
       if (!on) forceSpeed = null;

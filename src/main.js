@@ -38,6 +38,8 @@ import { createResults } from "./ui/results.js";
 import { createStoryView } from "./ui/story-card-view.js";
 import { isFirstClaim, resultsCards, storyCardModel } from "./landmarks/story-card.js";
 import { cardArtUrl } from "./landmarks/card-art.js";
+import { claimRim, claimSpecs, rimBuildings } from "./landmarks/claim-fx.js";
+import { createLandmarkRim } from "./render/landmark-rim.js";
 import { createLevelEnv } from "./level/ground.js";
 import { createSkateparkView } from "./render/skatepark-view.js";
 import { meshWorkerCount, startGeoMeshBuild, startLevelProps } from "./level/geo/geo-mesh-async.js";
@@ -429,6 +431,10 @@ const landmarkRings = landmarkTracker && params.get("rings") !== "0"
     })
   : null;
 if (landmarkRings) scene.add(landmarkRings.group);
+// The golden-hour rim of Found landmark buildings (#221): high tier only,
+// an emissive overlay band, 1 draw call while the sun is low.
+const landmarkRim = landmarkTracker && claimRim(quality, { off: params.get("fx") === "0" }) ? createLandmarkRim({ level, spots: landmarkData.spots, groundAt: (x, z) => terrainOf(level).height(x, z) }) : null;
+if (landmarkRim) scene.add(landmarkRim.mesh);
 // The grind claim target (#264, src/render/claim-target.js): the curb or rail
 // of a Found grind claim, near its zone. ?rings=0 leaves it out too.
 const claimTargets = landmarkRings ? createClaimTargets({ look, reducedMotion: () => effects.reducedMotion }) : null;
@@ -1087,6 +1093,7 @@ function simulate(dt) {
       events.push({ tick: run.tick, type: "landmark-claimed", id: c.id, points: c.points, first: c.first });
       chimes.play("claimed");
       callouts?.claim(c.points);
+      spawnClaimFx(run.skater.position, run.tick);
       // A gap claim at the zone of a gap goal marks that goal in this run.
       const marked = withGapGoal(goals, c.goal, goalDef);
       if (marked !== goals) {
@@ -1095,6 +1102,19 @@ function simulate(dt) {
       }
     }
   }
+}
+
+// The claim effects (#221, src/landmarks/claim-fx.js): the burst at the
+// feet and the dogwood petals, as particles of the effects layer. Its
+// policy gates them by tier, reduced motion and ?fx=0.
+const claimFxInfo = { claims: 0, particles: 0, last: [] };
+function spawnClaimFx(position, seed = 0) {
+  const specs = claimSpecs(position, effects.accentAt(position[0], position[2]).color, effects.policy, seed);
+  for (const spec of specs) effects.burst(spec);
+  claimFxInfo.claims += 1;
+  claimFxInfo.particles += specs.length;
+  claimFxInfo.last = specs.map((sp) => sp.shape);
+  return specs.length;
 }
 
 let follow = null;
@@ -1405,6 +1425,7 @@ function frame(now) {
     landmarkBanner.update(landmarkNow.banner, { held: Boolean(factPopup?.state.visible) || paused || Boolean(results?.shown) || Boolean(front?.active), accent: () => districtAccent(skater.position[0], skater.position[2], landmarkAnchors) });
     landmarkRings?.update(landmarkNow.spots, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed, night: weatherView?.state.night ?? 0 });
     claimTargets?.update(landmarkNow.spots, skaterEnv.grindables, skater.position, { dt: paused ? 0 : Math.min(elapsed, 0.1), timed: landmarkTimed });
+    landmarkRim?.update(rimBuildings(landmarkNow), weatherView ? weatherView.info().elevation : null);
   }
   if (paused) chimes.clear();
   else chimes.update();
@@ -2009,6 +2030,22 @@ window.__atl = {
         },
         get banner() {
           return landmarkBanner.state;
+        },
+        // The claim effects (#221): the claims and particles so far, the
+        // shapes of the last claim, and the policy rows. claimEffect(age)
+        // spawns the effect at the skater's feet now and ages it `age` s
+        // (for a screenshot; hold it with __atl.effects.hold(true)).
+        get claimFx() {
+          return { ...claimFxInfo, last: [...claimFxInfo.last], policy: { claim: effects.policy.claim ?? null, petals: effects.policy.petals ?? null } };
+        },
+        claimEffect(age = 0) {
+          const n = spawnClaimFx(skater.position, 1);
+          if (age > 0) effects.advance(age);
+          return n;
+        },
+        // The golden-hour rim (#221): { visible, alpha, buildings, draws, vertices } or null.
+        get rim() {
+          return landmarkRim ? landmarkRim.info : null;
         },
         // The grind claim target (#264): { shown, active, gain, length, points, feature, visible }.
         get target() {

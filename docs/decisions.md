@@ -3059,4 +3059,4 @@ Files: `docs/pitch/2026-11-01-official-game-of-atlanta.md` (new section 1.1 "Wha
 - The fact cards still link to agenticatl.ai dataset pages and call its API. Issue #372 removes this.
 - The static Open Graph card (#303) closes the share card item of #23. The per-run card with the score and the neighborhood moves to #373.
 - `e2e-smoke/production.spec.js` checks a deployed build: the headers, the Open Graph card (the tags, the public 1200x630 image, a rendered preview), and that the game draws frames with no page error. It runs with `playwright.smoke.config.js` against `SMOKE_URL` (default `https://skate-atl.vercel.app`), not against the dev server, so the default Playwright suite does not include it.
-- The `smoke` job of the deploy workflow runs it after each deploy against the new URL. A preview with Vercel Deployment Protection (HTTP 401) skips the test with a note; production must answer 200.
+- The `smoke` job of the deploy workflow runs it after each deploy against the new URL. A preview with Vercel Deployment Protection (HTTP 401 or 403, or a 302 or 307 redirect to the Vercel login) skips the test with a note; production must answer 200.

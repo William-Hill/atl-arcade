@@ -118,7 +118,10 @@ export const FADES = [
   ["dance", "*", 0.25],
   ["*", "brake", 0.12],
   ["brake", "*", 0.25],
-  ["coast", "push", 0.12],
+  // 0.15 s, not 0.12 s (#363): the push clips start at a pose far from the
+  // coast (Marcus's left knee: 0.56 to 0.68 rad). A shorter fade turns the
+  // knee faster than the push clip does by itself.
+  ["coast", "push", 0.15],
   ["push", "coast", 0.25],
   ["carve", "carve", 0.35],
   ["roll", "carve", 0.3],

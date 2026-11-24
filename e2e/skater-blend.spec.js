@@ -80,7 +80,7 @@ for (const name of SKATERS) {
     const ms = await page.evaluate(() => window.__lab.ikCost());
     expect(ms).toBeLessThan(1);
     test.info().annotations.push({ type: "result", description: JSON.stringify({ name, pop, ikMs: ms, ramp: [rampOff.gap, rampOn.gap], stairs: [stairsOff.gap, stairsOn.gap] }) });
-    console.log(`#107 ${name}`, JSON.stringify({ pop: { steady: pop.steady, change: pop.change }, ikMs: ms, ramp: [rampOff.gap, rampOn.gap], stairs: [stairsOff.gap, stairsOn.gap] }));
+    console.log(`#107 ${name}`, JSON.stringify({ pop: { steady: pop.steady, change: pop.change, changeAt: pop.changeAt, pushPhases: pop.pushPhases }, ikMs: ms, ramp: [rampOff.gap, rampOn.gap], stairs: [stairsOff.gap, stairsOn.gap] }));
     expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
   });
 }

@@ -3021,3 +3021,17 @@ The story card of a landmark is one markup for the full map and the results scre
 - **Foil edge.** A hard spot gets a moving gradient border. It stops with `prefers-reduced-motion` and with the "Reduce motion" choice of the settings menu.
 - **Short screens.** At a height of 500 px or less (a phone in landscape), the card turns on its side: the art at the left and the facts at the right. A 3:4 card in that height is too small to read.
 - **Reset progress.** The settings menu has a "Progress" group with "Reset progress". A second modal dialog asks first, with the focus on Cancel. Cancel or Escape changes nothing. Reset clears the found and claimed spots of every level in the save and keeps the unlocked outfits (the existing `resetLandmarkSave()`). When the storage does not keep the progress, the group shows "Progress is not saved in this browser."
+
+## 2026-11-24: Coast to push fade is 0.15 s; the Autopilot can open the intro (#363, #364)
+
+**#363.** The coast -> push fade changes from 0.12 s to 0.15 s (`src/render/skater-anim.js`, `FADES`).
+
+- Cause. Marcus's push clip starts at a pose far from his coast pose. At push time 0, his left knee (`mixamorigLeftLeg`) is 0.56 to 0.68 rad from every coast pose. Nia's left knee is 0.11 to 0.13 rad from hers. The fade is a smoothstep: its largest weight step in one frame is 1.5 x (1/60) / fade. With a 0.12 s fade that step is 0.21, so the fade turns Marcus's knee 0.12 to 0.14 rad in one frame, and the push clip adds its own knee turn. The measured worst frame was 0.151 to 0.170 rad. Marcus's push clip by itself turns 0.148 rad per frame.
+- The coast plays in phase with the beat clock, so the turn depends on the time of the press. The contact sheets before `popCheck()` set that time, so `e2e/skater-blend.spec.js` failed on each run (0.1653 rad), while `popCheck()` alone passed (0.1518 rad).
+- The limit of the test (0.1601 rad) was not the cause. It comes from Marcus's idle clip (a right forearm turn of 0.1525 rad x 1.05). The pop is real: the fade turned the knee faster than the push clip does.
+- Other fixes that were tried: a later push start time (0.27 s to 1.13 s) makes the arms pop more (to 0.23 rad). A rebuild of Marcus's push clip needs Blender and an art review; this session has no Blender.
+- Result with 0.15 s, at all coast phases: Marcus 0.135 rad, Nia 0.101 rad (was 0.126 rad). Both are less than the push clip by itself. The push shows 30 ms later. The game sim (speed, push impulse) does not change.
+- `popCheck()` in `src/viewer/anim-lab.js` now checks the coast -> push changes at 8 phases of the coast loop, so the result does not depend on the earlier sheets. With the fix the spec measures Marcus 0.137 rad and Nia 0.110 rad.
+- The 8-phase sweep also found an older pop: Marcus's idle clip has a fast right forearm turn, and at some phases the idle -> coast fade gives 0.170 rad. Owner decision (2026-11-24): `popCheck()` checks idle -> coast at one phase, as before, and #369 rebuilds Marcus's idle clip.
+
+**#364.** `introPlan()` (`src/ui/intro.js`) reads `?intro=1` and `?intro=title` before `?autopilot=1`. `?autopilot=1` alone still starts in play. `?intro=0`, reduced motion, a non-geodata level, and a non-follow view still apply.

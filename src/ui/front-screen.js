@@ -166,13 +166,15 @@ export function createFrontScreen({ plan, touch = false, root = document.body, s
   });
 
   // A gamepad button counts as a key: a press is a button that is down now
-  // and was up in the last poll.
-  let padDown = false;
+  // and was up in the last poll. Each button of each pad has its own state,
+  // so a held button does not block a press of a different button.
+  let padDown = new Set();
   function pollPad() {
     const pads = typeof navigator !== "undefined" && navigator.getGamepads ? navigator.getGamepads() : [];
-    let down = false;
-    for (const p of pads ?? []) if (p) for (const b of p.buttons) if (b.pressed) down = true;
-    const pressed = down && !padDown;
+    const down = new Set();
+    for (const p of pads ?? []) if (p) p.buttons.forEach((b, i) => b.pressed && down.add(`${p.index}:${i}`));
+    let pressed = false;
+    for (const k of down) if (!padDown.has(k)) pressed = true;
     padDown = down;
     return pressed;
   }

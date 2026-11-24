@@ -9,6 +9,8 @@
 //   The HUD says why, for ROUND_END.hold s of sim time.
 // - "results": the results screen shows.
 
+import { RUN_TIME } from "./goals.js";
+
 export const ROUND_END = {
   hold: 1.5, // s of sim time between the end of the run and the results screen. min 0.8 / typical 1.5 / max 2.5.
 };
@@ -29,7 +31,7 @@ export function roundPhase(goals, { endedFor = 0 } = {}, k = ROUND_END) {
 // `overtime` in s).
 export function roundStatus(phase, goals, def = {}) {
   if (phase === "overtime") {
-    const limit = (def.time ?? 0) + (def.overtime ?? 10);
+    const limit = (def.time ?? RUN_TIME) + (def.overtime ?? 10);
     const left = Math.max(0, Math.ceil(limit - goals.time - 1e-9));
     return `${OVERTIME_TEXT}: ${left} s`;
   }

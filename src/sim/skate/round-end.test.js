@@ -23,6 +23,11 @@ describe("the soft end of a timed round (#260)", () => {
     expect(roundStatus(roundPhase(g), g, DEF)).toBe(`${OVERTIME_TEXT}: 5 s`);
   });
 
+  it("uses RUN_TIME for the overtime limit when the definition has no time", () => {
+    const { time, ...noTime } = DEF;
+    expect(roundStatus("overtime", { time: 152.5 }, noTime)).toBe(`${OVERTIME_TEXT}: 8 s`);
+  });
+
   it("stops the input with a message for the hold time, then shows the results", () => {
     const g = stepGoals({ ...createGoals(DEF), time: 150 }, run(false), DEF, 1 / 60);
     expect(g.ended).toBe(true);

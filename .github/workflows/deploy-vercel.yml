@@ -112,8 +112,9 @@ jobs:
           node-version: 24
           cache: npm
 
-      # A preview URL can have Vercel Deployment Protection (HTTP 401).
-      # Then the smoke test cannot open it, and the job writes a note.
+      # A preview URL can have Vercel Deployment Protection. Then Vercel
+      # answers HTTP 401, 403, or a redirect (302 or 307) to its login page.
+      # The smoke test cannot open it, and the job writes a note.
       - name: Check that the deploy is public
         id: reach
         env:
@@ -123,7 +124,7 @@ jobs:
           echo "HTTP $code from $DEPLOY_URL" >> "$GITHUB_STEP_SUMMARY"
           if [ "$code" = "200" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
-          elif [ "$code" = "401" ] && [ "${{ github.event_name }}" != "push" -o "${{ github.ref }}" != "refs/heads/main" ]; then
+          elif echo "$code" | grep -qE '^(401|403|302|307)$' && [ "${{ github.event_name }}" != "push" -o "${{ github.ref }}" != "refs/heads/main" ]; then
             echo "The preview is protected. The smoke test did not run." >> "$GITHUB_STEP_SUMMARY"
             echo "run=false" >> "$GITHUB_OUTPUT"
           else

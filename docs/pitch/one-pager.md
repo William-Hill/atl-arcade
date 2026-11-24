@@ -11,7 +11,7 @@ Skate ATL is a free roller skate game in the browser. The player skates the real
 
 ## What it teaches
 
-- **13 real landmarks.** When the skater rolls near a landmark, the game finds it and shows one short line. Each spot has a skate challenge. When the player lands it, the spot is claimed, and the full map shows its story card.
+- **13 real landmarks.** When the skater rolls near a landmark, the game finds it and shows one short line. Each spot has a skate challenge. When the player lands it, the spot is claimed and its story card unlocks: a picture of the place and its facts.
 - **65 facts, each with a source.** Examples: Ponce City Market opened in 1926 as a Sears, Roebuck and Co. store and warehouse (National Register of Historic Places). Thomas Taylor Memorial Skatepark is Atlanta's first public skatepark, open since spring 2011 (Atlanta BeltLine, Inc.; Historic Fourth Ward Park Conservancy).
 - **City open data in play.** Fact cards come from City of Atlanta Department of City Planning GIS data: the trail links Inman Park, Old Fourth Ward and Poncey-Highland; Freedom Park covers 124 acres of city park land; Inman Park-Reynoldstown MARTA station is within a mile of the trail.
 - **Tour mode** has no timer. A visitor or a student rides the whole trail at their own speed, and the game names the next landmark and its direction.
@@ -37,7 +37,7 @@ Each fact in the game names its source. The full list is in `docs/pitch/2026-11-
 4. Facts are positive or neutral, and each fact has a source.
 5. Real skaters review the move set before Version 1.
 
-An agent checked the current game against these rules (24 checks: 20 pass, 3 flagged with fixes in progress, 1 open for Version 1). Code filters block crime, crash and decline data and words. The game has no chat, no accounts, no ads and no user content.
+An agent checked the current game against these rules (24 checks: 20 pass, 3 flagged and now fixed, 1 open for Version 1: the real skater review). Code filters block crime, crash and decline data and words. The game has no chat, no accounts, no ads and no user content.
 
 ## Why Atlanta, why now
 

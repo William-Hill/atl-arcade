@@ -3047,7 +3047,8 @@ Owner decisions on 2026-11-24 (AskUserQuestion):
 
 Files: `docs/pitch/2026-11-01-official-game-of-atlanta.md` (new section 1.1 "What a person can play today", section 4.0 with the 13 spots and the 3 open data cards of the Eastside level, updated sections 6 to 10, new section 11 with the screenshots), `docs/pitch/one-pager.md`, `docs/pitch/demo-script.md`, `docs/pitch/screenshots/`.
 
-- The screenshots come from the production URL with headless Chromium on SwiftShader, with `weather=clear&time=14` (until #353 merges) and `teach=0`.
+- The screenshots come from the production URL with headless Chromium on SwiftShader, with `weather=clear&time=14` (the #353 default now) and `teach=0`. They were taken before #220 merged, so they show no story card art.
 - The demo URL uses `travel=1` for one fast travel from the full map. Fast travel is off in a normal production visit.
-- The demo does not open the New Realm Brewing story card until #354 merges.
+- Before the demo, "Reset progress" in the settings menu (#220) clears the spots that a rehearsal found or claimed, so the Found and Claimed banners show again.
+- A story card shows only after a claim. If the skatepark combo does not land, the demo opens the Freedom Parkway Bridge card (claimed in the first stop).
 - Nobody was contacted. Contact with a City office waits for the owner's approval.

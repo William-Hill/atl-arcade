@@ -2891,6 +2891,17 @@ Verification: a new test in `e2e/phone-layout.spec.js` checks PHOTO, SETTINGS an
   - The same build with `--extra '&skaters=1'`: 91 calls and 270,892 triangles (`reports/prop-perf/skaters-settled-spawn-low.json`).
   - A before/after run with `&skaters=1` and a `before` build with no `settled` (`53784e1`) sampled both builds, with no timeout.
 
+## 2026-11-23: Two playtest toggles in the trick input prototype (#326)
+
+The automated playtest 1 of `prototypes/trick-input/` found two risks (`prototypes/trick-input/REPORT.md`): carves on A/D leak into Left/Right tricks (11.3% on the keyboard, target under 5%), and short phone flicks under 24 px resolve as taps (82.8% tricks as wanted on the phone). The owner chose:
+
+- **Carve guard as a toggle, then test.** Key 6 (or `?carveGuard`): a left or right that is still held and started more than 100 ms before the press does not count. It is off by default; the GDD rule (R3) does not change. In the synthetic model it lowers the keyboard leak only to 9.5% and drops the tricks as wanted to 82.5%. The human playtest tries both settings and the data decides.
+- **Keep `flickMin` 24 px, add 16 px as a toggle.** Key 5 (or `?shortFlick`). In the model, 16 px gives 92.9% tricks as wanted on the phone. The human playtest tries both on a real phone.
+
+Correction (PR 351 review): the bots counted a phone grind flick that resolves after the snap as a miss. With the fix, the phone gives 90.3% tricks as wanted at 24 px and 95.9% at 16 px. The two toggles stay as the owner chose.
+
+Neither toggle goes into `src/` before the playtest verdict.
+
 ## 2026-11-23: Content checklist by an agent, real skater review for Version 1 (#22)
 
 - Owner decision on #22: for the City pitch, an agent fills `docs/review/content-checklist.md` against the 5 political rules in `AGENTS.md`, and the owner reviews it. The real skater review (`docs/review/skater-review.md`) stays open for v1.0.0.

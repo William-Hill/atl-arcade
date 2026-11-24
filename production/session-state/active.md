@@ -6,6 +6,20 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## #301 Intro and title screen, 2026-11-23
+
+Branch `claude/elegant-ride-50px3u` from `main`. Design: `docs/decisions.md`, 2026-11-23.
+
+| Part | Where | Verified |
+|---|---|---|
+| Plan, phases intro → title → play, flight and title camera (pure) | `src/ui/intro.js` | Vitest `src/ui/intro.test.js`, 28 tests |
+| Logo, title screen, keys, taps, pad poll | `src/ui/front-screen.js` | Playwright `e2e/intro.spec.js` 5 of 5: high tier 1280 x 720 (key skip, settings, key start), intro ends by itself, phone tier Pixel 7 landscape (tap skip, tap start), reduced motion, `?intro=0` and WebDriver |
+| Wiring | `src/main.js` (`front`, attract mode in `simulate()`, `__atl.front`) | as above |
+
+#301 tests, cloud container: `npm test` 2050 of 2050 pass. `npm run build` passes. Regression e2e (intro, shell, settings, goals, callouts, touch, input, skater-model, teach): 40 of 42 pass; the 2 failures (`shell.spec.js` skater select, `teach.spec.js` touch portrait) fail the same way on `main`. `npm run playtest:beltline`: 4.3 fps on SwiftShader (`main`: 4.0 fps); the 55 fps gate needs a real GPU.
+
+#301 NOT verified: no person played the intro; no real phone, GPU, or gamepad; the 55 fps gate on real hardware.
+
 ## #76 Teach the moves in the world, 2026-11-21
 
 Branch `feat/76-teach-moves` from `epic/city-look`; draft PR, base `epic/city-look` (change the base to `main` after PR #304 merges). Design: `docs/decisions.md`, 2026-11-21.

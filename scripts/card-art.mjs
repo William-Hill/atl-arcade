@@ -69,7 +69,8 @@ await browser.close();
 const provPath = resolve(outDir, "provenance.json");
 const old = existsSync(provPath) ? JSON.parse(readFileSync(provPath, "utf8")) : {};
 const commit = execSync("git rev-parse HEAD", { cwd: root }).toString().trim();
-const dirty = execSync("git status --porcelain", { cwd: root }).toString().trim() !== "";
+// The renders themselves do not count as a local change.
+const dirty = execSync(`git status --porcelain -- . ":(exclude)public/${CARD_ART.dir}"`, { cwd: root }).toString().trim() !== "";
 const prov = {
   tool: "Skate ATL in-game render (Three.js, headless Chromium), scripts/card-art.mjs",
   prompt: null,

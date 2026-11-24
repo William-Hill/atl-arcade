@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { ALL_DONE, GUIDE, NEARBY_DONE, NEW_SPOT, REACH, TOO_FAR, directionText, distanceText, guideLine, isToDo, reachSeconds, reachable } from "./guide.js";
 import { CLAIM_PREFIX, FREE_RUN_HINT } from "./play.js";
+import { withSkatepark } from "../level/skatepark.js";
 import { createLandmarks, landmarkView, markSpot, prepareLandmarks, stepLandmarks } from "../sim/landmarks.js";
 
 const DATA = {
@@ -137,7 +138,9 @@ describe("the guide line (#260)", () => {
 
 describe("the guide on the Beltline (the audit case, B2)", () => {
   const data = JSON.parse(readFileSync(new URL("../../levels/beltline-eastside/landmarks.json", import.meta.url), "utf8"));
-  const level = JSON.parse(readFileSync(new URL("../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
+  const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
+  // The level as the game loads it: the skatepark adds its pad to the areas.
+  const level = withSkatepark(read("../../levels/beltline-eastside/level.json"), read("../../levels/beltline-eastside/skatepark.json"), read("../../assets/skate-features/features.json"));
   const spots = prepareLandmarks(data, level);
   const spawn = level.spawn;
 

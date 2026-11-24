@@ -7,7 +7,9 @@ import {
   claimPointsTotal,
   createLandmarkTracker,
   createLandmarks,
+  activeOf,
   findDistance,
+  inZone,
   gapGoalOf,
   landmarkObs,
   landmarkTestHook,
@@ -35,7 +37,7 @@ import { createRun, stepRun, teleportRun } from "./skate/run.js";
 import { createSkaterEnv } from "./skate/skater.js";
 import { createLevelEnv } from "../level/ground.js";
 import { goalsFor } from "../level/goals.js";
-import { withSkatepark } from "../level/skatepark.js";
+import { padOutline, padPoint, withSkatepark } from "../level/skatepark.js";
 import BELTLINE_FILE from "../../levels/beltline-eastside/level.json";
 import BELTLINE_SKATEPARK from "../../levels/beltline-eastside/skatepark.json";
 import SKATE_FEATURES from "../../assets/skate-features/features.json";
@@ -1037,5 +1039,95 @@ describe("with the real controller on the Beltline level", () => {
     // Far south of the bridge: a hop, and a travel step in the air.
     const { s } = ride(160, [{ frames: 30, input: { push: true } }, { frames: 1, input: { push: true, jump: true } }, { frames: 60, input: {} }], { travelAt: 40 });
     expect(spotState(s, "freedom-parkway-bridge")).toBe("found");
+  });
+});
+
+// #365: the skatepark combo zone is the whole pad plus 2 m (owner decision
+// 2026-11-24). Before, it was a 10 m circle at (272.3, -1.5), the east half
+// of the pad, and a 5,034 point combo that ended at the west end of the rail
+// lane banked but did not claim (Autopilot run 20261124-094156).
+describe("#365: the skatepark combo zone is the pad", () => {
+  const ID = "historic-fourth-ward-skatepark";
+  const spots = prepareLandmarks(BELTLINE_SPOTS, BELTLINE);
+  const spot = spots.find((x) => x.id === ID);
+  const zone = spot.challenge.zone;
+  const pad = (u, v) => padPoint(BELTLINE_SKATEPARK, u, v);
+  const start = () => createLandmarks(spots, { level: "beltline-eastside" });
+  // A combo: links at `links` ([x, z]), then the bank 0.8 s later at `bankAt`.
+  const combo = (links, banked, bankAt = links.at(-1)) => {
+    let s = start();
+    for (const [x, z] of links) s = step(s, obs(x, z, { linked: true }));
+    for (let i = 0; i < 48; i += 1) s = step(s, obs(bankAt[0], bankAt[1]));
+    return step(s, obs(bankAt[0], bankAt[1], { banked }));
+  };
+
+  it("reads the pad outline of the level, with a 2 m margin", () => {
+    expect(zone.area).toBe("skatepark:h4w-skatepark");
+    expect(zone.margin).toBe(2);
+    expect(zone.shapes[0][0]).toEqual(BELTLINE.areas.find((a) => a.id === zone.area).outer);
+    // r reaches every corner of the pad plus the margin.
+    for (const [x, z] of padOutline(BELTLINE_SKATEPARK)) expect(Math.hypot(x - zone.x, z - zone.z) + zone.margin).toBeLessThanOrEqual(zone.r);
+  });
+
+  it("holds every point of the pad, and the margin around it", () => {
+    for (const u of [-15, -13, -8.5, 0, 9, 15]) for (const v of [-7, -3.5, 0, 7]) expect(inZone(zone, ...pad(u, v)), `${u}, ${v}`).toBe(true);
+    // 1.9 m past each side is in; 2.1 m past is out.
+    for (const [u, v] of [[-16.9, 0], [16.9, 0], [0, -8.9], [0, 8.9]]) expect(inZone(zone, ...pad(u, v)), `${u}, ${v}`).toBe(true);
+    for (const [u, v] of [[-17.1, 0], [17.1, 0], [0, -9.1], [0, 9.1]]) expect(inZone(zone, ...pad(u, v)), `${u}, ${v}`).toBe(false);
+    expect(inZone(zone, 400, 0)).toBe(false);
+  });
+
+  it("claims a combo whose last link is at the west end of the rail lane", () => {
+    // The long rail runs from u = -13 to -4 on the rail lane (v = -3.5).
+    const west = pad(-13, -3.5);
+    // The old zone did not hold this point.
+    expect(Math.hypot(west[0] - 272.3, west[1] - -1.5)).toBeGreaterThan(10);
+    const s = combo([pad(-4, -3.5), pad(-8, -3.5), west], 5034);
+    expect(spotState(s, ID)).toBe("claimed");
+    expect(s.events.claimed).toEqual([{ id: ID, points: 500, first: true, goal: null }]);
+  });
+
+  it("claims with the last link on the pad when the bank is off the pad", () => {
+    expect(spotState(combo([pad(-14, 6)], 2000, pad(-30, 0)), ID)).toBe("claimed");
+  });
+
+  it("does not claim with the last link off the pad, or under 2,000 points", () => {
+    expect(spotState(combo([pad(0, 0), pad(-19, 0)], 5034), ID)).not.toBe("claimed");
+    expect(spotState(combo([pad(-13, -3.5)], 1999), ID)).not.toBe("claimed");
+  });
+
+  it("shows the combo as the challenge in progress while the last link is on the pad", () => {
+    let s = step(start(), obs(...pad(-13, -3.5), { linked: true }));
+    expect(activeOf(s, spot)).toEqual({ active: true, grindMeters: null });
+    s = step(s, obs(...pad(-19, 0), { linked: true }));
+    expect(activeOf(s, spot).active).toBe(false);
+  });
+});
+
+// #264: the HUD goal line follows the challenge the skater does now.
+describe("#264: the challenge in progress", () => {
+  const spots = prepareLandmarks(BELTLINE_SPOTS, BELTLINE);
+  const bridge = spots.find((x) => x.id === "ralph-mcgill-bridge");
+  const feature = bridge.challenge.feature;
+
+  it("marks a grind on the feature of a grind claim, with its meters", () => {
+    let s = createLandmarks(spots, { level: "beltline-eastside" });
+    s = markSpot(s, bridge.id, "found");
+    expect(activeOf(s, bridge)).toEqual({ active: false, grindMeters: null });
+    s = step(s, obs(215, -291.7, { grind: { id: feature, s: 2 } }));
+    s = step(s, obs(215, -291.7, { grind: { id: feature, s: 9.5 } }));
+    expect(activeOf(s, bridge)).toEqual({ active: true, grindMeters: 7.5 });
+    expect(landmarkView(s).spots.find((x) => x.id === bridge.id)).toMatchObject({ active: true, grindMeters: 7.5 });
+    // A grind on another feature is not this challenge.
+    s = step(s, obs(215, -291.7));
+    s = step(s, obs(215, -291.7, { grind: { id: "rail:other", s: 0 } }));
+    expect(activeOf(s, bridge).active).toBe(false);
+  });
+
+  it("marks no challenge of a Claimed spot", () => {
+    let s = createLandmarks(spots, { level: "beltline-eastside" });
+    s = markSpot(s, bridge.id, "claimed");
+    s = step(s, obs(215, -291.7, { grind: { id: feature, s: 0 } }));
+    expect(activeOf(s, bridge).active).toBe(false);
   });
 });

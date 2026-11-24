@@ -140,6 +140,16 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
       }
     }
   }
+  // A new press that starts no dance (#264): the HUD says why. `refused` is
+  // { reason, seq }; seq counts the refusals, so a refusal on any tick of a
+  // frame with many ticks still shows. A press while a dance runs is not a
+  // refusal (the dance goes on).
+  s.refused = prev.refused ?? null;
+  if (!style && !repeat && !prev.style) {
+    const pressed = held.some((h, i) => h && !prev.styleHeld?.[i]);
+    const reason = !pressed ? null : s.state === "air" ? "air" : s.state === "grind" ? "grind" : s.state === "rolling" && s.speed < STYLE.minSpeed ? "slow" : null;
+    if (reason) s.refused = { reason, seq: (prev.refused?.seq ?? 0) + 1 };
+  }
   s.styleCount = counts;
   s.style = style;
   s.styleHeld = held;

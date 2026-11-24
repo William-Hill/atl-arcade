@@ -6,11 +6,14 @@
 // name) goes in with textContent, never as HTML. A source link is an https
 // URL of the file (safeSourceUrl()), or the source shows as plain text.
 //
-// The panel here is plain. The trading card design, the "NEW" stamp and
-// the card art are #220.
+// An unlocked card (Claimed, or an edge marker that is Found) shows as the
+// story card of #220 (src/landmarks/story-card.js storyCardModel()): the
+// district band, the in-game art, the "NEW" stamp and the foil edge of a
+// hard spot. src/ui/story-card.css gives the look.
 
 import { guideModel } from "./landmark-icons.js";
 import { iconCanvas } from "./spot-icon.js";
+import "./story-card.css";
 
 function el(tag, className, parent, text) {
   const e = document.createElement(tag);
@@ -69,20 +72,32 @@ export function createGuide(parent, { onPick }) {
 }
 
 // The panel of one spot. `onClose()` is called by its close button.
-export function createSpotCard(parent, { onClose }) {
+// `titleId` is the id of its heading (one per page).
+// `reducedMotion()` is true when the foil edge must not move.
+export function createSpotCard(parent, { onClose, titleId = "fullmap-card-title", reducedMotion = () => false }) {
   const root = el("div", "fullmap-card", parent);
   root.hidden = true;
   root.setAttribute("role", "dialog");
-  root.setAttribute("aria-labelledby", "fullmap-card-title");
+  root.setAttribute("aria-labelledby", titleId);
   const head = el("div", "fullmap-card-head", root);
   const iconBox = el("span", "fullmap-card-icon", head);
   const names = el("div", "fullmap-card-names", head);
   const title = el("h2", "fullmap-card-title", names);
-  title.id = "fullmap-card-title";
+  title.id = titleId;
   const kind = el("div", "fullmap-card-kind", names);
   const closeBtn = el("button", "fullmap-card-close", head, "×");
   closeBtn.type = "button";
   closeBtn.setAttribute("aria-label", "Close (Escape)");
+  // The story card parts (#220): the art and the "NEW" stamp.
+  const art = el("figure", "story-card-art", root);
+  art.hidden = true;
+  const img = el("img", null, art);
+  img.decoding = "async";
+  img.addEventListener("error", () => {
+    art.hidden = true;
+  });
+  const stamp = el("span", "story-card-stamp", root);
+  stamp.hidden = true;
   const body = el("div", "fullmap-card-body", root);
   const foot = el("div", "fullmap-card-foot", root);
   closeBtn.addEventListener("click", (e) => {
@@ -94,11 +109,32 @@ export function createSpotCard(parent, { onClose }) {
     root,
     closeBtn,
     foot,
-    // `panel` is spotPanel() of landmark-icons.js.
-    show(panel) {
+    // `panel` is spotPanel() of landmark-icons.js. `story` is
+    // storyCardModel() of src/landmarks/story-card.js, or null for the
+    // plain panel (a Found or an Unknown spot).
+    show(panel, story = null) {
       root.hidden = false;
       root.dataset.look = panel.look;
       root.dataset.spot = panel.id;
+      root.classList.toggle("is-story", Boolean(story));
+      root.dataset.motion = reducedMotion() ? "reduced" : "full";
+      if (story) {
+        root.style.setProperty("--story-band", story.band);
+        root.dataset.tier = story.tier ?? "none";
+        root.dataset.foil = story.foil ? "1" : "0";
+      } else {
+        root.style.removeProperty("--story-band");
+        delete root.dataset.tier;
+        delete root.dataset.foil;
+      }
+      const artSrc = story?.art?.src ?? null;
+      art.hidden = !artSrc;
+      if (artSrc) {
+        if (img.getAttribute("src") !== artSrc) img.src = artSrc;
+        img.alt = story.art.alt;
+      } else img.removeAttribute("src");
+      stamp.textContent = story?.stamp ?? "";
+      stamp.hidden = !story?.stamp;
       iconBox.replaceChildren(iconCanvas({ kind: panel.kind ?? "building", look: panel.look }, 32));
       title.textContent = panel.title;
       kind.textContent = panel.kindLabel ?? "";
@@ -127,6 +163,9 @@ export function createSpotCard(parent, { onClose }) {
     hide() {
       root.hidden = true;
       delete root.dataset.spot;
+    },
+    get story() {
+      return root.classList.contains("is-story");
     },
   };
 }

@@ -21,6 +21,27 @@ describe("introPlan", () => {
   it("the autopilot goes to the game", () => {
     expect(introPlan({ autopilot: true })).toEqual({ start: "play", reason: "autopilot" });
   });
+  it("the autopilot goes to the game also on a first visit, a return visit, and under WebDriver", () => {
+    expect(introPlan({ autopilot: true, seen: true })).toEqual({ start: "play", reason: "autopilot" });
+    expect(introPlan({ autopilot: true, webdriver: true })).toEqual({ start: "play", reason: "autopilot" });
+    expect(introPlan({ autopilot: true, reducedMotion: true })).toEqual({ start: "play", reason: "autopilot" });
+    expect(introPlan({ autopilot: true, param: "" })).toEqual({ start: "play", reason: "autopilot" });
+    expect(introPlan({ autopilot: true, param: "maybe" })).toEqual({ start: "play", reason: "autopilot" });
+  });
+  it("#364: ?autopilot=1&intro=1 plays the intro, so an Autopilot run can test it", () => {
+    expect(introPlan({ autopilot: true, param: "1", webdriver: true })).toEqual({ start: "intro", reason: "flag" });
+    expect(introPlan({ autopilot: true, param: "on" }).start).toBe("intro");
+    expect(introPlan({ autopilot: true, param: " TRUE " }).start).toBe("intro");
+  });
+  it("#364: ?autopilot=1&intro=title goes to the title screen", () => {
+    expect(introPlan({ autopilot: true, param: "title", webdriver: true })).toEqual({ start: "title", reason: "flag" });
+  });
+  it("#364: with the autopilot, ?intro=0, reduced motion, the level, and the view still apply", () => {
+    expect(introPlan({ autopilot: true, param: "0" })).toEqual({ start: "play", reason: "flag" });
+    expect(introPlan({ autopilot: true, param: "1", reducedMotion: true })).toEqual({ start: "title", reason: "reduced-motion" });
+    expect(introPlan({ autopilot: true, param: "1", geo: false })).toEqual({ start: "play", reason: "level" });
+    expect(introPlan({ autopilot: true, param: "title", view: "orbit" })).toEqual({ start: "play", reason: "view" });
+  });
   it("goes to the game under WebDriver, so the e2e suite keeps its start", () => {
     expect(introPlan({ webdriver: true })).toEqual({ start: "play", reason: "webdriver" });
   });

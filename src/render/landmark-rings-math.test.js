@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { RINGS, RING_SHAPES, claimFade, dashCount, isRed, ringCapacity, ringEmissive, ringGround, ringList, ringPulse } from "./landmark-rings-math.js";
-import { createLandmarks, landmarkView, markSpot, prepareLandmarks, stepLandmarks } from "../sim/landmarks.js";
-import { withSkatepark } from "../level/skatepark.js";
+import { RINGS, RING_SHAPES, areaRect, claimFade, dashCount, isRed, ringCapacity, ringEmissive, ringGround, ringList, ringPoint, ringPulse, rectPoint } from "./landmark-rings-math.js";
+import { createLandmarks, inZone as inZoneOf, landmarkView, markSpot, prepareLandmarks, stepLandmarks } from "../sim/landmarks.js";
+import { padPoint, withSkatepark } from "../level/skatepark.js";
 import BELTLINE_FILE from "../../levels/beltline-eastside/level.json";
 import BELTLINE_SKATEPARK from "../../levels/beltline-eastside/skatepark.json";
 import SKATE_FEATURES from "../../assets/skate-features/features.json";
@@ -77,10 +77,10 @@ describe("the rings of the Beltline file", () => {
 
   it("draws 1 ring at the zone of a Found gap, grind or combo spot", () => {
     const list = rings(found("freedom-parkway-bridge", "krog-street-market", "historic-fourth-ward-skatepark"));
-    expect(list.map((r) => [r.id, r.shape, r.x, r.z, r.r])).toEqual([
+    expect(list.map((r) => [r.id, r.shape, Math.round(r.x * 10) / 10, Math.round(r.z * 10) / 10, r.r])).toEqual([
       ["krog-street-market", RING_SHAPES.grind, -98.3, 890, 20],
       ["freedom-parkway-bridge", RING_SHAPES.gap, 336, 18.6, 12],
-      ["historic-fourth-ward-skatepark", RING_SHAPES.combo, 272.3, -1.5, 10],
+      ["historic-fourth-ward-skatepark", RING_SHAPES.combo, 264.4, 3.3, 19],
     ]);
   });
 
@@ -162,5 +162,74 @@ describe("S-4: no red", () => {
     expect(isRed(201, 150, 46)).toBe(false); // #c9962e
     expect(isRed(111, 155, 191)).toBe(false); // #6f9bbf
     expect(isRed(255, 255, 255)).toBe(false);
+  });
+});
+
+// #365: the skatepark combo zone is the pad plus 2 m, drawn as a rounded
+// rectangle (the zone edge itself).
+describe("the area ring of the skatepark pad (#365)", () => {
+  const ring = () => rings(found("historic-fourth-ward-skatepark")).find((r) => r.id === "historic-fourth-ward-skatepark");
+  const pad = (u, v) => padPoint(BELTLINE_SKATEPARK, u, v);
+  const near = (a, b, e = 1e-6) => Math.abs(a - b) < e;
+
+  it("finds the rectangle of an outline: center, long axis, half sizes with the margin", () => {
+    const r = areaRect([[0, 0], [10, 0], [10, 4], [0, 4]], 2);
+    expect(r).toMatchObject({ x: 5, z: 2, hu: 7, hv: 4, corner: 2 });
+    expect(near(Math.cos(r.angle), 1)).toBe(true);
+    // A small margin keeps the least corner radius.
+    expect(areaRect([[0, 0], [10, 0], [10, 4], [0, 4]], 0).corner).toBe(RINGS.rectCorner);
+  });
+
+  it("walks the rounded rectangle at an even pace, with the normal out", () => {
+    expect(rectPoint(7, 4, 2, 0)).toEqual([7, 0, 1, 0]);
+    // The total length: 4 (5 + 2) straight + 2 pi 2 of corners.
+    const total = 4 * 5 + 4 * 2 + 4 * Math.PI;
+    const top = rectPoint(7, 4, 2, (2 + Math.PI + 5) / total);
+    expect(top.map((x) => Math.round(x * 1e6) / 1e6)).toEqual([0, 4, 0, 1]);
+    for (let i = 0; i <= 64; i += 1) {
+      const [x, z, nx, nz] = rectPoint(7, 4, 2, i / 64);
+      // Every point is 2 m (the corner radius) from the inner 5 x 2 box.
+      const dx = Math.max(0, Math.abs(x) - 5);
+      const dz = Math.max(0, Math.abs(z) - 2);
+      expect(Math.hypot(dx, dz)).toBeCloseTo(2, 6);
+      expect(Math.hypot(nx, nz)).toBeCloseTo(1, 6);
+    }
+    expect(rectPoint(7, 4, 2, 1)).toEqual(rectPoint(7, 4, 2, 0));
+  });
+
+  it("draws the zone of the Beltline skatepark as the pad plus 2 m, on its zone edge", () => {
+    const r = ring();
+    expect(r.rect).toMatchObject({ corner: 2 });
+    expect(r.rect.hu).toBeCloseTo(17, 2);
+    expect(r.rect.hv).toBeCloseTo(9, 2);
+    expect(r.x).toBeCloseTo(BELTLINE_SKATEPARK.center[0], 2);
+    expect(r.z).toBeCloseTo(BELTLINE_SKATEPARK.center[1], 2);
+    // Each drawn point is 2 m from the pad outline: on the edge of the zone.
+    const zone = prepareLandmarks(BELTLINE_SPOTS, BELTLINE).find((x) => x.id === "historic-fourth-ward-skatepark").challenge.zone;
+    for (let i = 0; i < 32; i += 1) {
+      const [x, z] = ringPoint(r, i / 32);
+      expect(x).not.toBeNaN();
+      // Just inside the drawn line is in the zone; just outside is not.
+      const dx = x - r.x;
+      const dz = z - r.z;
+      const len = Math.hypot(dx, dz);
+      expect(inZoneOf(zone, x - (dx / len) * 0.05, z - (dz / len) * 0.05)).toBe(true);
+      expect(inZoneOf(zone, x + (dx / len) * 0.05, z + (dz / len) * 0.05)).toBe(false);
+    }
+    // The west end of the rail lane is inside the drawn line.
+    const [wx, wz] = pad(-13, -3.5);
+    expect(inZoneOf(zone, wx, wz)).toBe(true);
+  });
+
+  it("samples the ground under the rectangle, not under a circle", () => {
+    const r = ring();
+    const asked = [];
+    ringGround(r, 1, (x, z) => {
+      asked.push([x, z]);
+      return 1;
+    });
+    expect(asked.length).toBe(RINGS.samples);
+    expect(asked[0][0]).toBeCloseTo(ringPoint(r, 0)[0], 6);
+    expect(asked[4][1]).toBeCloseTo(ringPoint(r, 4 / RINGS.samples)[1], 6);
   });
 });

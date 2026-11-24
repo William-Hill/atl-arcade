@@ -3060,3 +3060,12 @@ Files: `docs/pitch/2026-11-01-official-game-of-atlanta.md` (new section 1.1 "Wha
 - The static Open Graph card (#303) closes the share card item of #23. The per-run card with the score and the neighborhood moves to #373.
 - `e2e-smoke/production.spec.js` checks a deployed build: the headers, the Open Graph card (the tags, the public 1200x630 image, a rendered preview), and that the game draws frames with no page error. It runs with `playwright.smoke.config.js` against `SMOKE_URL` (default `https://skate-atl.vercel.app`), not against the dev server, so the default Playwright suite does not include it.
 - The `smoke` job of the deploy workflow runs it after each deploy against the new URL. A preview with Vercel Deployment Protection (HTTP 401 or 403, or a 302 or 307 redirect to the Vercel login) skips the test with a note; production must answer 200.
+
+## 2026-11-24: Marcus's idle drum hits are slower; the pop check samples all idle phases (#369)
+
+- Cause. Marcus's idle (the drum count in `scripts/blender/skater_anim_v3.py`) sprang back after each hit in 4 clip frames, and the second hit of beat 4 swung down in 4 clip frames. In the game the right forearm turned up to 0.153 rad in one frame. The idle -> coast fade added the pose gap on top: 0.170 to 0.174 rad at some beat phases, over the 0.160 rad limit of the pop check.
+- Fix. The spring back takes 7 frames, and the second hit of beat 4 comes at frame 20 of the beat (was 16), from a rest at 0.2 of a hit. The hits stay on the beat. The fastest bone turn is now 0.076 rad per frame. Only the idle clip of `skater.glb` and `skater-1024.glb` changed (rebuilt with Blender 5.2.3 in the cloud container from `assets/skaters/marcus/source/marcus-forward.blend`, then grafted).
+- A longer idle fade was not used: 0.6 s was necessary, and a start from a stop is slower for both skaters.
+- Owner art review (2026-11-24): approved. The other options were a 6-frame spring back (sharper) or an 8-frame spring back (softer, but the toe-stop tap lets go in 4 frames).
+- `popCheck()` (`src/viewer/anim-lab.js`) now runs the whole script in 48 passes, at equal steps of the idle loop (and 24 steps of the coast loop). With 16 passes (9-frame steps) the check missed the old pop. Before the fix, Marcus failed at 0.173 rad. After it, the worst change is the push at 0.137 rad.
+- Evidence: `docs/characters/idle-369/`. Tool: `scripts/assets/clip-speed.mjs` measures the fastest bone turns of a clip in rad per game frame.

@@ -705,6 +705,23 @@
       "result": "skater.glb 3,905,492 bytes; skater-1024.glb 3,032,884 bytes. Elbow range: push 26.6 to 46.6 degrees, coast 9.7 to 23.9 degrees. No arm capsule more than 1 cm in the torso. Joint-limit gate: PASS, with the dance_drumline WARN that was already on main.",
       "evidence": "docs/characters/arm-pass/README.md",
       "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.3 LTS (background mode, in the cloud container), scripts/blender/skater_anim_v3.py --clips idle; scripts/assets/graft-clips.mjs on Node with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
+      "date": "2026-11-24",
+      "issue": "#369",
+      "prompt": "Marcus's idle clip: the fast forearm turn pops at the idle to coast fade. Make the forearm turn slower.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_anim_v3.py -- --name marcus --source assets/skaters/marcus/source/marcus-forward.blend --out <dir> --clips idle && node scripts/assets/graft-clips.mjs assets/skaters/marcus/skater.glb <dir>/marcus-clips-v3.glb assets/skaters/marcus/skater.glb (the same for skater-1024.glb)",
+      "actions": [
+        "Check: the old script rebuilt the shipped idle within 0.0004 rad.",
+        "marcus_idle(): the spring back after a hit takes 7 frames (was 4). On beat 4 the right forearm rests at 0.2 of a hit, and the second hit comes at frame 20 of the beat (was 16).",
+        "Grafted the idle clip alone into skater.glb and skater-1024.glb. The mesh, the textures, the rig, and the other clips do not change (push: 0.0000 rad difference).",
+        "Fastest bone turn in one game frame: RightForeArm 0.153 to 0.076 rad, LeftForeArm 0.120 to 0.067 rad, RightLeg 0.033 to 0.054 rad.",
+        "Joint-limit gate PASS; clip probe: no clip over 1 cm. Owner art review: approved."
+      ],
+      "result": "skater.glb 3,905,492 to 3,905,108 bytes; skater-1024.glb 3,032,884 to 3,032,500 bytes",
+      "credits_spent": 0,
+      "evidence": "docs/characters/idle-369/"
     }
   ],
   "credits_spent_total": 115,

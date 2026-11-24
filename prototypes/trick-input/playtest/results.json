@@ -1,0 +1,1620 @@
+{
+  "date": "2026-11-23",
+  "checks": [
+    {
+      "name": "keyboard: A then Q (60 ms) in the air gives Japan Grab, 5 of 5",
+      "ok": true,
+      "detail": {
+        "got": [
+          "japan",
+          "japan",
+          "japan",
+          "japan",
+          "japan"
+        ]
+      }
+    },
+    {
+      "name": "keyboard: W held 1 s, then Q gives the neutral dance (Bankhead Bounce)",
+      "ok": true,
+      "detail": {
+        "name": "Bankhead Bounce"
+      }
+    },
+    {
+      "name": "keyboard: a W tap 80 ms before Q gives Up (Swag Surf)",
+      "ok": true,
+      "detail": {
+        "name": "Swag Surf"
+      }
+    },
+    {
+      "name": "keyboard, carve guard on (key 6): D held 200 ms before Q gives the neutral Mute Grab",
+      "ok": true,
+      "detail": {
+        "id": "mute"
+      }
+    },
+    {
+      "name": "gamepad: stick left, then Y gives Japan Grab",
+      "ok": true,
+      "detail": {
+        "id": "japan"
+      }
+    },
+    {
+      "name": "gamepad: stick at 0.49 gives the neutral Mute Grab",
+      "ok": true,
+      "detail": {
+        "id": "mute"
+      }
+    },
+    {
+      "name": "route bot reaches \"grind\"",
+      "ok": true,
+      "detail": {
+        "firstComboSec": null,
+        "attempts": 1,
+        "names": null,
+        "banked": null,
+        "mode": "grind",
+        "trick": "Rail Grind"
+      }
+    },
+    {
+      "name": "route bot reaches \"manual\"",
+      "ok": true,
+      "detail": {
+        "firstComboSec": null,
+        "attempts": 1,
+        "names": null,
+        "banked": null,
+        "mode": "manual",
+        "trick": "Manual"
+      }
+    },
+    {
+      "name": "route bot reaches \"grab\"",
+      "ok": true,
+      "detail": {
+        "firstComboSec": null,
+        "attempts": 1,
+        "names": null,
+        "banked": null,
+        "mode": "air",
+        "trick": "Japan Grab"
+      }
+    },
+    {
+      "name": "route bot banks a 3-link combo with a manual",
+      "ok": true,
+      "detail": {
+        "firstComboSec": 6.116666789,
+        "attempts": 1,
+        "names": [
+          "Long Rail Grind",
+          "Manual",
+          "Japan Grab"
+        ],
+        "banked": 2361,
+        "mode": "ground",
+        "trick": null
+      }
+    },
+    {
+      "name": "phone: a 30 px flick right on TRICK in the air gives Side Grab",
+      "ok": true,
+      "detail": {
+        "id": "side"
+      }
+    },
+    {
+      "name": "phone: a tap on TRICK in the air gives Mute Grab",
+      "ok": true,
+      "detail": {
+        "id": "mute"
+      }
+    },
+    {
+      "name": "phone: a flick up on SPIN on the ground gives ATL Rydin",
+      "ok": true,
+      "detail": {
+        "name": "ATL Rydin"
+      }
+    },
+    {
+      "name": "phone: 5 buttons, and the style1 button says TRICK",
+      "ok": true,
+      "detail": {
+        "labels": [
+          "SWITCH",
+          "GRIND",
+          "SPIN",
+          "TRICK",
+          "JUMP"
+        ]
+      }
+    },
+    {
+      "name": "no console errors",
+      "ok": true,
+      "detail": {
+        "errors": []
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "screenshots": [
+    {
+      "file": "screenshots/01-keyboard-japan-grab.png",
+      "caption": "Real keyboard input: A then Q in the air gives the Japan Grab. The text label stands in for the clip."
+    },
+    {
+      "file": "screenshots/02-keyboard-dance-up.png",
+      "caption": "A fresh W tap before Q on the ground: Swag Surf (Nia, Up). The panel at the top right shows the fresh window of R3."
+    },
+    {
+      "file": "screenshots/03-route-grind.png",
+      "caption": "Route bot: Rail Grind with GRIND held."
+    },
+    {
+      "file": "screenshots/04-route-manual-bar.png",
+      "caption": "The grind-to-manual link: GRIND held off the rail end. The balance bar (F1) shows beside the skater, with zone patterns and W/S arrows."
+    },
+    {
+      "file": "screenshots/05-route-japan-grab.png",
+      "caption": "Off the kicker: a left tap and TRICK give the Japan Grab; the combo line shows the links and the multiplier."
+    },
+    {
+      "file": "screenshots/06-route-combo-banked.png",
+      "caption": "The first 3-link combo with a manual banks."
+    },
+    {
+      "file": "screenshots/07-grayscale-manual-bar.png",
+      "caption": "Grayscale: the balance bar reads from the hatching, the marker shape, and the W/S labels (R12.4)."
+    },
+    {
+      "file": "screenshots/08-phone-flick-ring.png",
+      "caption": "Pixel 7: a flick right from TRICK in the air. The ring shows 4 arrows with the short trick names; the lit arrow is the resolved direction (Side Grab)."
+    },
+    {
+      "file": "screenshots/09-phone-atl-rydin.png",
+      "caption": "Pixel 7: a flick up from SPIN starts ATL Rydin (8 beats). The touch layout keeps 5 buttons: JUMP, GRIND, TRICK, SPIN, SWITCH."
+    }
+  ],
+  "route": {
+    "firstComboSec": 6.116666789,
+    "attempts": 1,
+    "names": [
+      "Long Rail Grind",
+      "Manual",
+      "Japan Grab"
+    ],
+    "banked": 2361,
+    "mode": "ground",
+    "trick": null
+  },
+  "sessions": [
+    {
+      "device": "keyboard",
+      "profile": "P1",
+      "label": "new, slow",
+      "trials": 150,
+      "wantedShare": 0.82,
+      "unwantedUpFromPush": 0.04477611940298507,
+      "pushTrials": 67,
+      "unwantedLRFromCarve": 0.10869565217391304,
+      "carveTrials": 46,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 0.8235294117647058,
+        "l": 0.8636363636363636,
+        "r": 0.775,
+        "u": 0.8333333333333334,
+        "d": 0.8333333333333334
+      },
+      "medianLatencyMs": 0
+    },
+    {
+      "device": "keyboard",
+      "profile": "P2",
+      "label": "casual",
+      "trials": 150,
+      "wantedShare": 0.8866666666666667,
+      "unwantedUpFromPush": 0.029850746268656716,
+      "pushTrials": 67,
+      "unwantedLRFromCarve": 0.1276595744680851,
+      "carveTrials": 47,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 0.8529411764705882,
+        "l": 0.9090909090909091,
+        "r": 0.9,
+        "u": 0.9666666666666667,
+        "d": 0.7916666666666666
+      },
+      "medianLatencyMs": 0
+    },
+    {
+      "device": "keyboard",
+      "profile": "P3",
+      "label": "gamer",
+      "trials": 150,
+      "wantedShare": 0.9266666666666666,
+      "unwantedUpFromPush": 0.014925373134328358,
+      "pushTrials": 67,
+      "unwantedLRFromCarve": 0.14285714285714285,
+      "carveTrials": 42,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 0.8823529411764706,
+        "l": 0.9090909090909091,
+        "r": 0.95,
+        "u": 1,
+        "d": 0.875
+      },
+      "medianLatencyMs": 0
+    },
+    {
+      "device": "keyboard",
+      "profile": "P4",
+      "label": "THPS veteran",
+      "trials": 150,
+      "wantedShare": 0.9733333333333334,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 62,
+      "unwantedLRFromCarve": 0.058823529411764705,
+      "carveTrials": 34,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 0.9705882352941176,
+        "l": 0.9545454545454546,
+        "r": 0.975,
+        "u": 1,
+        "d": 0.9583333333333334
+      },
+      "medianLatencyMs": 0
+    },
+    {
+      "device": "keyboard",
+      "profile": "P5",
+      "label": "rink skater, new to games",
+      "trials": 150,
+      "wantedShare": 0.8333333333333334,
+      "unwantedUpFromPush": 0.056338028169014086,
+      "pushTrials": 71,
+      "unwantedLRFromCarve": 0.125,
+      "carveTrials": 48,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 0.8235294117647058,
+        "l": 0.9090909090909091,
+        "r": 0.8,
+        "u": 0.9,
+        "d": 0.75
+      },
+      "medianLatencyMs": 0
+    },
+    {
+      "device": "touch",
+      "profile": "P1",
+      "label": "new, slow",
+      "trials": 150,
+      "wantedShare": 0.7866666666666666,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 71,
+      "unwantedLRFromCarve": 0,
+      "carveTrials": 44,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 1,
+        "l": 0.8181818181818182,
+        "r": 0.725,
+        "u": 0.7,
+        "d": 0.6666666666666666
+      },
+      "medianLatencyMs": 100
+    },
+    {
+      "device": "touch",
+      "profile": "P2",
+      "label": "casual",
+      "trials": 150,
+      "wantedShare": 0.8933333333333333,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 71,
+      "unwantedLRFromCarve": 0,
+      "carveTrials": 41,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 1,
+        "l": 0.8636363636363636,
+        "r": 0.9,
+        "u": 0.8333333333333334,
+        "d": 0.8333333333333334
+      },
+      "medianLatencyMs": 83
+    },
+    {
+      "device": "touch",
+      "profile": "P3",
+      "label": "gamer",
+      "trials": 150,
+      "wantedShare": 0.9866666666666667,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 71,
+      "unwantedLRFromCarve": 0,
+      "carveTrials": 38,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 1,
+        "l": 0.9090909090909091,
+        "r": 1,
+        "u": 1,
+        "d": 1
+      },
+      "medianLatencyMs": 67
+    },
+    {
+      "device": "touch",
+      "profile": "P4",
+      "label": "THPS veteran",
+      "trials": 150,
+      "wantedShare": 0.9866666666666667,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 66,
+      "unwantedLRFromCarve": 0,
+      "carveTrials": 32,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 1,
+        "l": 0.9090909090909091,
+        "r": 1,
+        "u": 1,
+        "d": 1
+      },
+      "medianLatencyMs": 67
+    },
+    {
+      "device": "touch",
+      "profile": "P5",
+      "label": "rink skater, new to games",
+      "trials": 150,
+      "wantedShare": 0.86,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 75,
+      "unwantedLRFromCarve": 0,
+      "carveTrials": 46,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 1,
+        "l": 0.8181818181818182,
+        "r": 0.9,
+        "u": 0.7333333333333333,
+        "d": 0.7916666666666666
+      },
+      "medianLatencyMs": 83
+    },
+    {
+      "device": "gamepad",
+      "profile": "P1",
+      "label": "new, slow",
+      "trials": 150,
+      "wantedShare": 0.8666666666666667,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 0,
+      "unwantedLRFromCarve": 0.10810810810810811,
+      "carveTrials": 37,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 0.9411764705882353,
+        "l": 0.8181818181818182,
+        "r": 0.875,
+        "u": 0.8666666666666667,
+        "d": 0.7916666666666666
+      },
+      "medianLatencyMs": 0
+    },
+    {
+      "device": "gamepad",
+      "profile": "P2",
+      "label": "casual",
+      "trials": 150,
+      "wantedShare": 0.9066666666666666,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 0,
+      "unwantedLRFromCarve": 0.08571428571428572,
+      "carveTrials": 35,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 0.9411764705882353,
+        "l": 0.8181818181818182,
+        "r": 0.925,
+        "u": 0.9,
+        "d": 0.9166666666666666
+      },
+      "medianLatencyMs": 0
+    },
+    {
+      "device": "gamepad",
+      "profile": "P3",
+      "label": "gamer",
+      "trials": 150,
+      "wantedShare": 0.9666666666666667,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 0,
+      "unwantedLRFromCarve": 0.03225806451612903,
+      "carveTrials": 31,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 0.9705882352941176,
+        "l": 0.9545454545454546,
+        "r": 0.95,
+        "u": 0.9666666666666667,
+        "d": 1
+      },
+      "medianLatencyMs": 0
+    },
+    {
+      "device": "gamepad",
+      "profile": "P4",
+      "label": "THPS veteran",
+      "trials": 150,
+      "wantedShare": 0.9866666666666667,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 0,
+      "unwantedLRFromCarve": 0,
+      "carveTrials": 25,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 1,
+        "l": 0.9545454545454546,
+        "r": 0.975,
+        "u": 1,
+        "d": 1
+      },
+      "medianLatencyMs": 0
+    },
+    {
+      "device": "gamepad",
+      "profile": "P5",
+      "label": "rink skater, new to games",
+      "trials": 150,
+      "wantedShare": 0.88,
+      "unwantedUpFromPush": 0,
+      "pushTrials": 0,
+      "unwantedLRFromCarve": 0.09302325581395349,
+      "carveTrials": 43,
+      "noTrick": 0,
+      "byIntent": {
+        "n": 0.9411764705882353,
+        "l": 0.8181818181818182,
+        "r": 0.9,
+        "u": 0.8666666666666667,
+        "d": 0.8333333333333334
+      },
+      "medianLatencyMs": 0
+    }
+  ],
+  "sweepPush": [
+    {
+      "dirBefore": 0.1,
+      "period": 0.4,
+      "upShare": 0.415
+    },
+    {
+      "dirBefore": 0.1,
+      "period": 0.6,
+      "upShare": 0.31
+    },
+    {
+      "dirBefore": 0.1,
+      "period": 1,
+      "upShare": 0.21
+    },
+    {
+      "dirBefore": 0.15,
+      "period": 0.4,
+      "upShare": 0.575
+    },
+    {
+      "dirBefore": 0.15,
+      "period": 0.6,
+      "upShare": 0.375
+    },
+    {
+      "dirBefore": 0.15,
+      "period": 1,
+      "upShare": 0.265
+    },
+    {
+      "dirBefore": 0.25,
+      "period": 0.4,
+      "upShare": 0.8
+    },
+    {
+      "dirBefore": 0.25,
+      "period": 0.6,
+      "upShare": 0.505
+    },
+    {
+      "dirBefore": 0.25,
+      "period": 1,
+      "upShare": 0.31
+    }
+  ],
+  "routes": [
+    {
+      "profile": "P1",
+      "firstComboSec": 6.116666789,
+      "attempts": 1,
+      "names": [
+        "Long Rail Grind",
+        "Manual",
+        "Japan Grab"
+      ],
+      "banked": 2367
+    },
+    {
+      "profile": "P2",
+      "firstComboSec": 6.116666789,
+      "attempts": 1,
+      "names": [
+        "Long Rail Grind",
+        "Manual",
+        "Japan Grab"
+      ],
+      "banked": 2361
+    },
+    {
+      "profile": "P3",
+      "firstComboSec": 6.116666789,
+      "attempts": 1,
+      "names": [
+        "Long Rail Grind",
+        "Manual",
+        "Japan Grab"
+      ],
+      "banked": 2361
+    },
+    {
+      "profile": "P4",
+      "firstComboSec": 6.116666789,
+      "attempts": 1,
+      "names": [
+        "Long Rail Grind",
+        "Manual",
+        "Japan Grab"
+      ],
+      "banked": 2346
+    },
+    {
+      "profile": "P5",
+      "firstComboSec": 6.116666789,
+      "attempts": 1,
+      "names": [
+        "Long Rail Grind",
+        "Manual",
+        "Japan Grab"
+      ],
+      "banked": 2370
+    }
+  ],
+  "knobs": {
+    "dirBefore 0.10": [
+      {
+        "device": "keyboard",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.6466666666666666,
+        "unwantedUpFromPush": 0.04477611940298507,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.08695652173913043,
+        "carveTrials": 46,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8235294117647058,
+          "l": 0.5909090909090909,
+          "r": 0.6,
+          "u": 0.6666666666666666,
+          "d": 0.5
+        },
+        "medianLatencyMs": 50
+      },
+      {
+        "device": "keyboard",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.74,
+        "unwantedUpFromPush": 0.029850746268656716,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.10638297872340426,
+        "carveTrials": 47,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8529411764705882,
+          "l": 0.5909090909090909,
+          "r": 0.675,
+          "u": 0.8,
+          "d": 0.75
+        },
+        "medianLatencyMs": 17
+      },
+      {
+        "device": "keyboard",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.8533333333333334,
+        "unwantedUpFromPush": 0.014925373134328358,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.11904761904761904,
+        "carveTrials": 42,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8823529411764706,
+          "l": 0.8636363636363636,
+          "r": 0.85,
+          "u": 0.8666666666666667,
+          "d": 0.7916666666666666
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.9466666666666667,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 62,
+        "unwantedLRFromCarve": 0.058823529411764705,
+        "carveTrials": 34,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.9090909090909091,
+          "r": 0.925,
+          "u": 1,
+          "d": 0.9166666666666666
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.6933333333333334,
+        "unwantedUpFromPush": 0.056338028169014086,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0.10416666666666667,
+        "carveTrials": 48,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8235294117647058,
+          "l": 0.6818181818181818,
+          "r": 0.625,
+          "u": 0.8,
+          "d": 0.5
+        },
+        "medianLatencyMs": 33
+      },
+      {
+        "device": "gamepad",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.68,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.13513513513513514,
+        "carveTrials": 37,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.5909090909090909,
+          "r": 0.525,
+          "u": 0.6666666666666666,
+          "d": 0.6666666666666666
+        },
+        "medianLatencyMs": 67
+      },
+      {
+        "device": "gamepad",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.76,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.14285714285714285,
+        "carveTrials": 35,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.7272727272727273,
+          "r": 0.625,
+          "u": 0.8333333333333334,
+          "d": 0.6666666666666666
+        },
+        "medianLatencyMs": 33
+      },
+      {
+        "device": "gamepad",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.8866666666666667,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.0967741935483871,
+        "carveTrials": 31,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.8636363636363636,
+          "r": 0.875,
+          "u": 0.8666666666666667,
+          "d": 0.8333333333333334
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.94,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 25,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.9090909090909091,
+          "r": 0.95,
+          "u": 0.9,
+          "d": 0.9166666666666666
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.72,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.13953488372093023,
+        "carveTrials": 43,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.6818181818181818,
+          "r": 0.6,
+          "u": 0.6666666666666666,
+          "d": 0.7083333333333334
+        },
+        "medianLatencyMs": 50
+      }
+    ],
+    "dirBefore 0.25": [
+      {
+        "device": "keyboard",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.9133333333333333,
+        "unwantedUpFromPush": 0.05970149253731343,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.10869565217391304,
+        "carveTrials": 46,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.7941176470588235,
+          "l": 0.9090909090909091,
+          "r": 0.975,
+          "u": 0.9666666666666667,
+          "d": 0.9166666666666666
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.9266666666666666,
+        "unwantedUpFromPush": 0.029850746268656716,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.1702127659574468,
+        "carveTrials": 47,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.7941176470588235,
+          "l": 0.9545454545454546,
+          "r": 1,
+          "u": 1,
+          "d": 0.875
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.9266666666666666,
+        "unwantedUpFromPush": 0.029850746268656716,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.19047619047619047,
+        "carveTrials": 42,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.7941176470588235,
+          "l": 0.9545454545454546,
+          "r": 1,
+          "u": 1,
+          "d": 0.875
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.96,
+        "unwantedUpFromPush": 0.016129032258064516,
+        "pushTrials": 62,
+        "unwantedLRFromCarve": 0.11764705882352941,
+        "carveTrials": 34,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8823529411764706,
+          "l": 0.9545454545454546,
+          "r": 1,
+          "u": 1,
+          "d": 0.9583333333333334
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.9133333333333333,
+        "unwantedUpFromPush": 0.07042253521126761,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0.125,
+        "carveTrials": 48,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.7941176470588235,
+          "l": 0.9545454545454546,
+          "r": 1,
+          "u": 0.9666666666666667,
+          "d": 0.8333333333333334
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.92,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.13513513513513514,
+        "carveTrials": 37,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8823529411764706,
+          "l": 0.8636363636363636,
+          "r": 0.95,
+          "u": 0.9333333333333333,
+          "d": 0.9583333333333334
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.94,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.14285714285714285,
+        "carveTrials": 35,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8823529411764706,
+          "l": 0.9090909090909091,
+          "r": 0.95,
+          "u": 0.9666666666666667,
+          "d": 1
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.9666666666666667,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.06451612903225806,
+        "carveTrials": 31,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.9545454545454546,
+          "r": 0.95,
+          "u": 1,
+          "d": 1
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.9866666666666667,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 25,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.9545454545454546,
+          "r": 0.975,
+          "u": 1,
+          "d": 1
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.9266666666666666,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.13953488372093023,
+        "carveTrials": 43,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8823529411764706,
+          "l": 0.8636363636363636,
+          "r": 0.95,
+          "u": 0.9333333333333333,
+          "d": 1
+        },
+        "medianLatencyMs": 0
+      }
+    ],
+    "dirAfter 0": [
+      {
+        "device": "keyboard",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.76,
+        "unwantedUpFromPush": 0.029850746268656716,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.08695652173913043,
+        "carveTrials": 46,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8823529411764706,
+          "l": 0.7272727272727273,
+          "r": 0.75,
+          "u": 0.6666666666666666,
+          "d": 0.75
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.82,
+        "unwantedUpFromPush": 0.014925373134328358,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.10638297872340426,
+        "carveTrials": 47,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9117647058823529,
+          "l": 0.7727272727272727,
+          "r": 0.85,
+          "u": 0.8,
+          "d": 0.7083333333333334
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.86,
+        "unwantedUpFromPush": 0.014925373134328358,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.11904761904761904,
+        "carveTrials": 42,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9117647058823529,
+          "l": 0.7727272727272727,
+          "r": 0.9,
+          "u": 0.8666666666666667,
+          "d": 0.7916666666666666
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.9266666666666666,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 62,
+        "unwantedLRFromCarve": 0.058823529411764705,
+        "carveTrials": 34,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.9090909090909091,
+          "r": 0.925,
+          "u": 0.9333333333333333,
+          "d": 0.875
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.7666666666666667,
+        "unwantedUpFromPush": 0.04225352112676056,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0.10416666666666667,
+        "carveTrials": 48,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8823529411764706,
+          "l": 0.7727272727272727,
+          "r": 0.75,
+          "u": 0.7333333333333333,
+          "d": 0.6666666666666666
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.8066666666666666,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.08108108108108109,
+        "carveTrials": 37,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.6363636363636364,
+          "r": 0.825,
+          "u": 0.7666666666666667,
+          "d": 0.75
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.84,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.05714285714285714,
+        "carveTrials": 35,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.6363636363636364,
+          "r": 0.9,
+          "u": 0.7666666666666667,
+          "d": 0.8333333333333334
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.8933333333333333,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 31,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.7272727272727273,
+          "r": 0.9,
+          "u": 0.8666666666666667,
+          "d": 0.9166666666666666
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.92,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 25,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.7727272727272727,
+          "r": 0.925,
+          "u": 0.9,
+          "d": 0.9583333333333334
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.82,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.046511627906976744,
+        "carveTrials": 43,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.6363636363636364,
+          "r": 0.875,
+          "u": 0.7666666666666667,
+          "d": 0.75
+        },
+        "medianLatencyMs": 0
+      }
+    ],
+    "carveGuard 0.10 (toggle 6)": [
+      {
+        "device": "keyboard",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.7466666666666667,
+        "unwantedUpFromPush": 0.04477611940298507,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.08695652173913043,
+        "carveTrials": 46,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8235294117647058,
+          "l": 0.5909090909090909,
+          "r": 0.65,
+          "u": 0.8333333333333334,
+          "d": 0.8333333333333334
+        },
+        "medianLatencyMs": 17
+      },
+      {
+        "device": "keyboard",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.78,
+        "unwantedUpFromPush": 0.029850746268656716,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.10638297872340426,
+        "carveTrials": 47,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8529411764705882,
+          "l": 0.5909090909090909,
+          "r": 0.675,
+          "u": 0.9666666666666667,
+          "d": 0.7916666666666666
+        },
+        "medianLatencyMs": 17
+      },
+      {
+        "device": "keyboard",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.8933333333333333,
+        "unwantedUpFromPush": 0.014925373134328358,
+        "pushTrials": 67,
+        "unwantedLRFromCarve": 0.11904761904761904,
+        "carveTrials": 42,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8823529411764706,
+          "l": 0.8636363636363636,
+          "r": 0.85,
+          "u": 1,
+          "d": 0.875
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.9533333333333334,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 62,
+        "unwantedLRFromCarve": 0.058823529411764705,
+        "carveTrials": 34,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.9090909090909091,
+          "r": 0.925,
+          "u": 1,
+          "d": 0.9583333333333334
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "keyboard",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.7533333333333333,
+        "unwantedUpFromPush": 0.056338028169014086,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0.10416666666666667,
+        "carveTrials": 48,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8235294117647058,
+          "l": 0.6818181818181818,
+          "r": 0.625,
+          "u": 0.9,
+          "d": 0.75
+        },
+        "medianLatencyMs": 17
+      },
+      {
+        "device": "gamepad",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.74,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.10810810810810811,
+        "carveTrials": 37,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.5909090909090909,
+          "r": 0.525,
+          "u": 0.8666666666666667,
+          "d": 0.7916666666666666
+        },
+        "medianLatencyMs": 33
+      },
+      {
+        "device": "gamepad",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.82,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.08571428571428572,
+        "carveTrials": 35,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.7272727272727273,
+          "r": 0.65,
+          "u": 0.9,
+          "d": 0.9166666666666666
+        },
+        "medianLatencyMs": 17
+      },
+      {
+        "device": "gamepad",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.9333333333333333,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.03225806451612903,
+        "carveTrials": 31,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9705882352941176,
+          "l": 0.8636363636363636,
+          "r": 0.875,
+          "u": 0.9666666666666667,
+          "d": 1
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.9733333333333334,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 25,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.9090909090909091,
+          "r": 0.95,
+          "u": 1,
+          "d": 1
+        },
+        "medianLatencyMs": 0
+      },
+      {
+        "device": "gamepad",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.78,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 0,
+        "unwantedLRFromCarve": 0.09302325581395349,
+        "carveTrials": 43,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.6818181818181818,
+          "r": 0.6,
+          "u": 0.8666666666666667,
+          "d": 0.8333333333333334
+        },
+        "medianLatencyMs": 33
+      }
+    ],
+    "flickMin 16 (toggle 5)": [
+      {
+        "device": "touch",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.8933333333333333,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0.045454545454545456,
+        "carveTrials": 44,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8235294117647058,
+          "l": 0.9090909090909091,
+          "r": 0.9,
+          "u": 0.9333333333333333,
+          "d": 0.9166666666666666
+        },
+        "medianLatencyMs": 83
+      },
+      {
+        "device": "touch",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.98,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 41,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.9411764705882353,
+          "l": 0.9545454545454546,
+          "r": 1,
+          "u": 1,
+          "d": 1
+        },
+        "medianLatencyMs": 67
+      },
+      {
+        "device": "touch",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.9933333333333333,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 38,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.9545454545454546,
+          "r": 1,
+          "u": 1,
+          "d": 1
+        },
+        "medianLatencyMs": 50
+      },
+      {
+        "device": "touch",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 1,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 66,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 32,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 1,
+          "r": 1,
+          "u": 1,
+          "d": 1
+        },
+        "medianLatencyMs": 50
+      },
+      {
+        "device": "touch",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.9266666666666666,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 75,
+        "unwantedLRFromCarve": 0.043478260869565216,
+        "carveTrials": 46,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 0.8235294117647058,
+          "l": 0.9090909090909091,
+          "r": 0.975,
+          "u": 1,
+          "d": 0.9166666666666666
+        },
+        "medianLatencyMs": 67
+      }
+    ],
+    "flickMin 40": [
+      {
+        "device": "touch",
+        "profile": "P1",
+        "label": "new, slow",
+        "trials": 150,
+        "wantedShare": 0.44,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 44,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.22727272727272727,
+          "r": 0.3,
+          "u": 0.3333333333333333,
+          "d": 0.20833333333333334
+        },
+        "medianLatencyMs": 133
+      },
+      {
+        "device": "touch",
+        "profile": "P2",
+        "label": "casual",
+        "trials": 150,
+        "wantedShare": 0.5933333333333334,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 41,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.4090909090909091,
+          "r": 0.55,
+          "u": 0.5,
+          "d": 0.375
+        },
+        "medianLatencyMs": 133
+      },
+      {
+        "device": "touch",
+        "profile": "P3",
+        "label": "gamer",
+        "trials": 150,
+        "wantedShare": 0.7133333333333334,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 71,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 38,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.6363636363636364,
+          "r": 0.65,
+          "u": 0.6,
+          "d": 0.625
+        },
+        "medianLatencyMs": 117
+      },
+      {
+        "device": "touch",
+        "profile": "P4",
+        "label": "THPS veteran",
+        "trials": 150,
+        "wantedShare": 0.76,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 66,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 32,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.7272727272727273,
+          "r": 0.7,
+          "u": 0.7,
+          "d": 0.625
+        },
+        "medianLatencyMs": 100
+      },
+      {
+        "device": "touch",
+        "profile": "P5",
+        "label": "rink skater, new to games",
+        "trials": 150,
+        "wantedShare": 0.5666666666666667,
+        "unwantedUpFromPush": 0,
+        "pushTrials": 75,
+        "unwantedLRFromCarve": 0,
+        "carveTrials": 46,
+        "noTrick": 0,
+        "byIntent": {
+          "n": 1,
+          "l": 0.3181818181818182,
+          "r": 0.575,
+          "u": 0.43333333333333335,
+          "d": 0.3333333333333333
+        },
+        "medianLatencyMs": 133
+      }
+    ]
+  },
+  "botSeconds": 0.93,
+  "desktopFps": 32.904287235072125,
+  "phoneFps": 14.545454545454545
+}

@@ -3,7 +3,9 @@
 //
 // Political rules (AGENTS.md): a car never hits, chases, or threatens the
 // skater. A car slows and stops when the skater is in its lane ahead, waits,
-// and then goes on. A move that would bring a car body nearer than
+// and then goes on. A contact with a moving car never knocks the skater down
+// and never stops her (#261, owner decision 2026-11-23): the car is a soft
+// wall for the skater controller (carGroundSampler). A move that would bring a car body nearer than
 // TRAFFIC.safeRadius to the skater does not happen. A car never holds the
 // skater (#285): when the skater is already inside safeRadius (she came to
 // the car), the car crawls away from her, back off her front or on past her
@@ -1025,10 +1027,13 @@ export function cachedPitch(heightFor) {
 }
 
 // A ground sampler with the cars as solid boxes. The controller treats a
-// rise over SKATE.maxStep as a wall, so the skater bonks or slides on a car
-// as on a wall. A car more than `headroom` over the skater height `y` (on a
-// bridge) is left out. `parked` is a fixed list; `moving()` gives the
-// moving cars now.
+// rise over SKATE.maxStep as a wall, so the skater bonks or slides on a
+// parked car as on a wall. A moving car (the traffic) is a soft wall
+// (`soft: true`, #261): a contact never stops the skater and never knocks
+// her down; she glances off along its side (softWallKeep in
+// src/sim/skate/constants.js). A car more than `headroom` over the skater
+// height `y` (on a bridge) is left out. `parked` is a fixed list;
+// `moving()` gives the moving cars now.
 export function carGroundSampler(
   sampleGround,
   parked = [],
@@ -1076,14 +1081,19 @@ export function carGroundSampler(
         hit = c;
       }
     }
+    let soft = false;
     for (const c of moving()) {
       const h = top(c, x, z, y);
       if (h > best) {
         best = h;
         hit = c;
+        soft = true;
       }
     }
-    return hit ? { height: best, normal: UP, id: `car:${hit.kind}` } : base;
+    if (!hit) return base;
+    return soft
+      ? { height: best, normal: UP, id: `car:${hit.kind}`, soft: true }
+      : { height: best, normal: UP, id: `car:${hit.kind}` };
   };
   sample.cellCount = sampleGround.cellCount;
   sample.shapeCount = sampleGround.shapeCount;

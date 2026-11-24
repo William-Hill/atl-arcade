@@ -450,8 +450,9 @@ if (npcView) {
 
 // Parked cars and calm traffic on the main streets (#132). ?cars=0 leaves
 // them out, ?traffic=0 keeps only the parked cars, and ?carseed=<n> picks
-// another seeded traffic. A car is a solid box for the skater: the
-// controller bonks or slides on it as on a wall.
+// another seeded traffic. A parked car is a solid box for the skater: the
+// controller bonks or slides on it as on a wall. A moving car is a soft
+// wall (#261): she glances off it, with no bonk and no bail.
 const carsOn = geo && params.get("cars") !== "0";
 const carSeed = Number(params.get("carseed") ?? 1) || 1;
 const levelSample = env.sampleGround;

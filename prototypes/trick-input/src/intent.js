@@ -34,7 +34,14 @@ const CARVE_BEFORE = 1.2;
 const CARVE_AFTER = 0.3;
 
 export function createIntentLog() {
-  return { run: 0, intents: [], pending: [], trials: [], dirs: [], seen: new Set(), prev: {}, startT: 0, firstCombo: null };
+  return { run: 0, config: "", intents: [], pending: [], trials: [], dirs: [], seen: new Set(), prev: {}, startT: 0, firstCombo: null, activeGrind: null };
+}
+
+// The rule setting of the presses from now on (for example "axis" or
+// "gdd+guard"). Each trial keeps the setting of its press, and the metrics
+// count one setting at a time.
+export function setConfig(log, config) {
+  log.config = String(config);
 }
 
 // The agent's intention at sim time t. Returns the stored entry, or an error.
@@ -56,6 +63,7 @@ export function restartClock(log, t) {
   log.prev = {};
   log.startT = t;
   log.firstCombo = null;
+  log.activeGrind = null;
 }
 
 // Feed one frame: `frame` is the sim input of the frame ({ t, trick, spin,
@@ -76,7 +84,7 @@ export function feed(log, frame, events) {
       if (open.length) {
         const i = open[open.length - 1];
         for (const o of open) o.paired = true;
-        log.pending.push({ intended: i.dir, note: i.note, intendAt: i.at, button: b, pressAt: t, run: log.run });
+        log.pending.push({ intended: i.dir, note: i.note, intendAt: i.at, button: b, pressAt: t, run: log.run, config: log.config });
       }
     }
     log.prev[b] = down;
@@ -84,12 +92,13 @@ export function feed(log, frame, events) {
   for (const e of events || []) {
     if (e.type === "bank" && log.firstCombo == null && e.links >= 3 && e.manual) log.firstCombo = { seconds: e.t - log.startT, names: e.names, banked: e.banked };
     if (e.type === "stance-change") {
-      // A touch flick after the snap changes the stance of the last grind trial.
-      const last = log.trials[log.trials.length - 1];
-      if (last && last.kind === "grind" && last.run === log.run) last.result = e.dir;
+      // A touch flick after the snap changes the stance of the grind now on
+      // the rail, if that grind is a trial.
+      if (log.activeGrind) log.activeGrind.result = e.dir;
       continue;
     }
     if (e.type !== "trick" || !PAIR_KINDS.has(e.kind)) continue;
+    if (e.kind === "grind") log.activeGrind = null;
     // The trick pairs with the newest press of its button (TRICK for a grab,
     // the dance button, GRIND for a grind) before it. An older press of the
     // same button with no trick fails at the end of its window.
@@ -100,7 +109,9 @@ export function feed(log, frame, events) {
     });
     if (i < 0) continue;
     const [p] = log.pending.splice(i, 1);
-    log.trials.push({ ...p, result: e.dir, resultAt: e.t, kind: e.kind, name: e.name });
+    const row = { ...p, result: e.dir, resultAt: e.t, kind: e.kind, name: e.name };
+    log.trials.push(row);
+    if (e.kind === "grind") log.activeGrind = row;
   }
   // A press with no trick inside OUTCOME_WINDOW is a failed trial.
   const late = log.pending.filter((p) => t - p.pressAt > OUTCOME_WINDOW + 1e-9);
@@ -117,13 +128,19 @@ function context(log, tr) {
   return { pushed, carve };
 }
 
-export function intentMetrics(log) {
-  const rows = log.trials.map((tr) => ({ ...tr, ...context(log, tr), wanted: tr.result === tr.intended }));
+// The metrics of one rule setting (default: the setting now), and the
+// trial count of each setting.
+export function intentMetrics(log, config = log.config) {
+  const byConfig = {};
+  for (const tr of log.trials) byConfig[tr.config] = (byConfig[tr.config] || 0) + 1;
+  const rows = log.trials.filter((tr) => tr.config === config).map((tr) => ({ ...tr, ...context(log, tr), wanted: tr.result === tr.intended }));
   const n = rows.length;
   const notUp = rows.filter((r) => r.intended !== "u" && r.pushed);
   const withCarve = rows.filter((r) => r.carve && r.intended !== "l" && r.intended !== "r");
   const share = (a, f) => (a.length ? a.filter(f).length / a.length : null);
   return {
+    config,
+    byConfig,
     trials: n,
     wantedShare: share(rows, (r) => r.wanted),
     unwantedUpFromPush: share(notUp, (r) => r.result === "u"),
@@ -131,7 +148,7 @@ export function intentMetrics(log) {
     unwantedLRFromCarve: share(withCarve, (r) => r.result === "l" || r.result === "r"),
     carveTrials: withCarve.length,
     noTrick: rows.filter((r) => r.result === null).length,
-    pendingPresses: log.pending.length,
+    pendingPresses: log.pending.filter((p) => p.config === config).length,
     unpairedIntents: log.intents.filter((i) => !i.paired).length,
     firstCombo: log.firstCombo,
     rows,

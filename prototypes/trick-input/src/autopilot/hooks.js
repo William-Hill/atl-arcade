@@ -18,7 +18,8 @@ export function playerFromSim(s, object = null) {
   const air = s.mode === "air";
   return {
     object,
-    position: [s.x, s.y + SKATER_HALF_HEIGHT, s.z],
+    // The feet: the bridge adds halfHeight for the body middle.
+    position: [s.x, s.y, s.z],
     velocity: [hx * s.speed, air ? s.vy ?? 0 : 0, hz * s.speed],
     forward: [hx, 0, hz],
     onGround: !air,
@@ -70,12 +71,22 @@ export function createTrickHooks(ctx) {
     gameTime: () => ti.sim.t,
     classOf: (o) => o?.userData?.class ?? null,
     render: ctx.render,
-    // The agent reads the state and calls the intent log by name:
+    // Only the intent log is reachable by name (the skater state comes
+    // through player()):
     //   game.call("playtest", "intend", "l")   before a trick press
     //   game.call("playtest", "metrics")       the 3 metrics so far
-    objects: { ti, playtest: ctx.intents },
-    // Skate toward a direction: hold push (or brake) and steer until the heading matches.
+    //   game.call("playtest", "rows", 0, 100)  the trials, one page
+    objects: { playtest: ctx.intents },
+    // Skate toward a direction: hold push (or brake) and steer until the
+    // heading matches. Scale 0 presses nothing. A reset (a new sim) ends the move.
     async move({ direction, seconds, scale, keys }) {
+      const sim0 = ti.sim;
+      const t0 = sim0.t;
+      const wall0 = now();
+      if (!scale) {
+        while (ti.sim === sim0 && ti.sim.t < t0 + seconds - DT / 2 && now() < wall0 + seconds * 1000 * MOVE_WALL_FACTOR) await keys.frame();
+        return;
+      }
       const k = ti.inp.keys;
       const push = scale < 0 ? k.brake[0] : k.push[0];
       const left = k.steerLeft[0];
@@ -85,7 +96,7 @@ export function createTrickHooks(ctx) {
       let steering = null;
       keys.hold(push);
       try {
-        while (ti.sim.t < until && now() < wallUntil) {
+        while (ti.sim === sim0 && ti.sim.t < until && now() < wallUntil) {
           const want = steerToward(ti.sim.yaw, direction);
           if (want !== steering) {
             if (steering) keys.release(steering === "left" ? left : right);
@@ -93,6 +104,7 @@ export function createTrickHooks(ctx) {
             steering = want;
           }
           await keys.frame();
+          if (ti.sim !== sim0) break;
         }
       } finally {
         if (steering) keys.release(steering === "left" ? left : right);

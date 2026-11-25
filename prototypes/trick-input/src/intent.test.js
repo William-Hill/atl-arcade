@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createIntentLog, feed, intend, intentMetrics, restartClock } from "./intent.js";
+import { createIntentLog, feed, intend, intentMetrics, restartClock, setConfig } from "./intent.js";
 import { createInput } from "./input.js";
 import { key, run, T, tap } from "./harness.js";
 import { createSim, place } from "./sim.js";
@@ -91,6 +91,34 @@ describe("intent log (agent playtest)", () => {
     feed(log, fr(1, { trick: true }), []);
     restartClock(log, 0);
     expect(intentMetrics(log)).toMatchObject({ trials: 1, noTrick: 1, pendingPresses: 0 });
+  });
+  it("keeps the rule setting of each press, and counts one setting at a time", () => {
+    const log = createIntentLog();
+    setConfig(log, "axis");
+    intend(log, "l", 1);
+    feed(log, fr(1, { trick: true }), [trick(1, "l")]);
+    restartClock(log, 0);
+    setConfig(log, "gdd");
+    intend(log, "l", 1);
+    feed(log, fr(1, { trick: true }), [trick(1, "n")]);
+    expect(intentMetrics(log)).toMatchObject({ config: "gdd", trials: 1, wantedShare: 0, byConfig: { axis: 1, gdd: 1 } });
+    expect(intentMetrics(log, "axis")).toMatchObject({ config: "axis", trials: 1, wantedShare: 1 });
+  });
+  it("a stance change updates only the grind on the rail, not an older grind trial", () => {
+    const log = createIntentLog();
+    intend(log, "l", 1);
+    feed(log, fr(1, { grind: true }), [trick(1.05, "l", "grind")]);
+    feed(log, fr(2), []);
+    // A later grind with no intention, then its stance change.
+    feed(log, fr(5, { grind: true }), [trick(5, "n", "grind")]);
+    feed(log, fr(5.1, { grind: true }), [{ type: "stance-change", dir: "u", t: 5.1 }]);
+    expect(intentMetrics(log).rows[0].result).toBe("l");
+    // A grind trial on the rail takes its own stance change.
+    feed(log, fr(6), []);
+    intend(log, "n", 7.9);
+    feed(log, fr(8, { grind: true }), [trick(8, "n", "grind")]);
+    feed(log, fr(8.1, { grind: true }), [{ type: "stance-change", dir: "d", t: 8.1 }]);
+    expect(intentMetrics(log).rows[1].result).toBe("d");
   });
   it("times the first 3-link combo with a manual from the last restart", () => {
     const log = createIntentLog();

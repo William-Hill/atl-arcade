@@ -3072,3 +3072,12 @@ The claim effects are in `src/landmarks/claim-fx.js` (pure, Vitest) and `src/ren
 - **Rim.** High tier only, and not with `?fx=0`. Reduced motion keeps it, because it does not move (GDD R-1 does not list it). It shows on a building spot that is Found and not yet Claimed: it points the player to a spot to claim, and it goes when the spot is claimed. It is an additive fresnel band 0.15 m outside the walls of the OSM footprint, opacity 0.35 at most, warm `#ffb36b` at the body emissive. It fades in from a sun elevation of -1 to 3 degrees and out from 10 to 16 degrees. One merged mesh: 1 draw call while it shows, 0 otherwise.
 - **Reduced motion.** No burst, no petals, no icon pulse. The challenge ring fades in 0.3 s in place of the burst (#219, `claimFade()`).
 - **Map pulse.** The pulse of a newly claimed icon on the minimap and the full map shipped with #218 (`pulseAt()`); this change does not touch it.
+
+## 2026-11-24: Marcus's idle drum hits are slower; the pop check samples all idle phases (#369)
+
+- Cause. Marcus's idle (the drum count in `scripts/blender/skater_anim_v3.py`) sprang back after each hit in 4 clip frames, and the second hit of beat 4 swung down in 4 clip frames. In the game the right forearm turned up to 0.153 rad in one frame. The idle -> coast fade added the pose gap on top: 0.170 to 0.174 rad at some beat phases, over the 0.160 rad limit of the pop check.
+- Fix. The spring back takes 7 frames, and the second hit of beat 4 comes at frame 20 of the beat (was 16), from a rest at 0.2 of a hit. The hits stay on the beat. The fastest bone turn is now 0.076 rad per frame. Only the idle clip of `skater.glb` and `skater-1024.glb` changed (rebuilt with Blender 5.2.3 in the cloud container from `assets/skaters/marcus/source/marcus-forward.blend`, then grafted).
+- A longer idle fade was not used: 0.6 s was necessary, and a start from a stop is slower for both skaters.
+- Owner art review (2026-11-24): approved. The other options were a 6-frame spring back (sharper) or an 8-frame spring back (softer, but the toe-stop tap lets go in 4 frames).
+- `popCheck()` (`src/viewer/anim-lab.js`) now runs the whole script in 48 passes, at equal steps of the idle loop (and 24 steps of the coast loop). With 16 passes (9-frame steps) the check missed the old pop. Before the fix, Marcus failed at 0.173 rad. After it, the worst change is the push at 0.137 rad.
+- Evidence: `docs/characters/idle-369/`. Tool: `scripts/assets/clip-speed.mjs` measures the fastest bone turns of a clip in rad per game frame.

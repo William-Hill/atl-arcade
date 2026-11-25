@@ -227,8 +227,8 @@ function contactRows() {
 
 // A frame by frame pose jump check: the largest bone turn (rad) between
 // two frames. "steady" is each clip alone after its fade. "change" is the
-// 30 frames after each clip change, some in the middle of a fade; the
-// coast -> push changes at several phases of the coast loop. A pop is a
+// 30 frames after each clip change, some in the middle of a fade, at 48
+// phases of the idle loop and 24 phases of the coast loop. A pop is a
 // change frame with a larger turn than the clips have alone.
 function popCheck() {
   view.setFootIk(false);
@@ -271,19 +271,20 @@ function popCheck() {
     [5, {}],
     [40, {}],
   ];
-  // The coast plays in phase with the beat clock, so the coast pose at the
-  // first push depends on the time of the press (#363). This check drives
-  // the beat clock itself: pass k sets the clock so that its first push
-  // comes at k / PHASES of the coast loop, in equal steps. The coast clip
-  // plays at grooveRate(), so its loop lasts duration / grooveRate() s.
-  // Pass 0 runs the whole script. The other passes run only its coast and
-  // push part. The idle -> coast change is checked at one phase only:
-  // Marcus's idle clip has a fast forearm turn that pops at some phases
-  // (#369, a clip fix, not a fade fix).
-  const PHASES = 8;
-  const PUSH_PART = 4;
+  // The coast and the idle play in phase with the beat clock, so the pose
+  // at a change depends on the time of the press (#363, #369). This check
+  // drives the beat clock itself. Pass k sets the clock so that its first
+  // push comes at k / PASSES of the idle loop, in equal steps. A clip plays
+  // at grooveRate(), so its loop lasts duration / grooveRate() s. The idle
+  // loop is 2 coast loops, so the passes also put the first push at
+  // PASSES / 2 equal steps of the coast loop, each two times. The script
+  // has a fixed length, so its idle -> coast change also comes at equal
+  // steps of the idle loop.
+  const PASSES = 48;
   const bpm = BEAT.bpm;
-  const coastLoop = (view.model.animations.find((c) => c.name === "coast")?.duration ?? 1.6) / grooveRate(bpm);
+  const loopOf = (name, fallback) => (view.model.animations.find((c) => c.name === name)?.duration ?? fallback) / grooveRate(bpm);
+  const coastLoop = loopOf("coast", 1.6);
+  const idleLoop = loopOf("idle", 3.2);
   let clock = 0;
   const step = (state) => {
     clock += DT;
@@ -295,27 +296,30 @@ function popCheck() {
   let changeAt = null;
   const changes = [];
   const pushPhases = [];
-  for (let k = 0; k < PHASES; k += 1) {
+  const idlePhases = [];
+  const phaseOf = (t, loop, n) => Number((((t % loop) / loop) * n).toFixed(3)) % n;
+  for (let k = 0; k < PASSES; k += 1) {
     // The clock at the first push frame (the frame after the lead-ins): a
-    // whole number of loops plus k steps. 5 loops per pass are more than
-    // the frames of one pass, so the clock does not go back.
+    // whole number of idle loops plus k steps. 4 idle loops per pass are
+    // more than the frames of one pass, so the clock does not go back.
     const lead = LEAD_IDLE + LEAD_COAST;
-    const atPush = (10 + 5 * k + k / PHASES) * coastLoop;
+    const atPush = (10 + 4 * k + k / PASSES) * idleLoop;
     clock = atPush - (lead + 1) * DT;
     for (let i = 0; i < LEAD_IDLE; i += 1) step(stateAt(spot, { speed: 0 }));
     for (let i = 0; i < LEAD_COAST; i += 1) step(stateAt(spot));
-    pushPhases.push(Number(((((clock + DT) % coastLoop) / coastLoop) * PHASES).toFixed(3)) % PHASES);
+    pushPhases.push(phaseOf(clock + DT, coastLoop, PASSES / 2));
     turn();
     let frame = 0;
     const local = [];
     let last = view.clip;
-    for (const [n, extra] of k === 0 ? script : script.slice(0, PUSH_PART)) {
+    for (const [n, extra] of script) {
       for (let i = 0; i < n; i += 1) {
         step(stateAt(spot, extra));
         const t = turn();
         frame += 1;
         if (view.clip !== last) {
           local.push({ frame, from: last, to: view.clip });
+          if (last === "idle" && view.clip === "coast") idlePhases.push(phaseOf(clock, idleLoop, PASSES));
           last = view.clip;
         }
         if (local.some((c) => frame - c.frame < 30) && t > change) {
@@ -327,7 +331,7 @@ function popCheck() {
     if (k === 0) changes.push(...local);
   }
   view.setFootIk(true);
-  return { steady, change, changeAt, changes, pushPhases };
+  return { steady, change, changeAt, changes, pushPhases, idlePhases };
 }
 
 // The cost of the foot IK: the mean ms per frame over 300 frames on the

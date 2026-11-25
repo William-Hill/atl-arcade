@@ -1,0 +1,32 @@
+{
+ "idle": {
+  "status": "PASS",
+  "warn": [],
+  "fail": [],
+  "peaks": {
+   "left_knee_flex:knee bend": 75.8,
+   "right_knee_flex:knee bend": 89.8,
+   "left_knee_flex:knee hyperextension": -69.8,
+   "right_knee_flex:knee hyperextension": -70.0,
+   "left_knee_off_hinge:knee off hinge": 0.0,
+   "right_knee_off_hinge:knee off hinge": 0.0,
+   "left_elbow_flex:elbow bend": 83.9,
+   "right_elbow_flex:elbow bend": 87.4,
+   "left_elbow_flex:elbow hyperextension": -45.9,
+   "right_elbow_flex:elbow hyperextension": -49.4,
+   "left_elbow_off_hinge:elbow off hinge": 2.0,
+   "right_elbow_off_hinge:elbow off hinge": 2.1,
+   "left_hip_flex:hip flexion": 49.1,
+   "right_hip_flex:hip flexion": 48.8,
+   "left_hip_flex:hip extension": -45.6,
+   "right_hip_flex:hip extension": -42.9,
+   "left_hip_abduction:hip abduction": 6.0,
+   "right_hip_abduction:hip abduction": 14.8,
+   "left_hip_abduction:hip adduction": -5.7,
+   "right_hip_abduction:hip adduction": -12.1,
+   "spine_bend:spine bend": 4.5,
+   "spine_twist:spine twist": 5.0,
+   "neck_bend:neck bend": 4.0
+  }
+ }
+}

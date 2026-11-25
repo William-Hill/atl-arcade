@@ -282,13 +282,23 @@ def marcus_idle(scope):
         })
     # (beat, left hit, right hit, toe tap)
     pattern = [(0, 0, 1, 0), (1, 1, 0, 1), (2, 0, 1, 0), (3, 0, 1, 1)]
+    # #369: a hit stays on the beat, but it is not a snap. The spring back
+    # after a hit takes RECOIL frames (was 4). On beat 4 the right forearm
+    # rests at 0.2 of a hit, and the second hit comes DOUBLE frames into the
+    # beat (was 16, 4 frames after the rest key), so it swings down over 8
+    # frames. The fastest bone turn in the game is now 0.076 rad per frame
+    # (was 0.153): the idle -> coast fade does not pop.
+    RECOIL = 7
+    DOUBLE = 20
     keys = []
     for beat, hl, hr, tap in pattern:
         f = beat * B
-        keys += [(f, key(beat, hl, hr, tap, 1)), (f + 4, key(beat, hl * .2, hr * .2, tap, .3)),
-                 (f + B // 2, key(beat, 0, 0, 0, 0))]
+        keys += [(f, key(beat, hl, hr, tap, 1)), (f + RECOIL, key(beat, hl * .2, hr * .2, tap, .3))]
         if beat == 3:  # the double hit: right-right
-            keys.append((f + B // 2 + 4, key(beat, 0, 1, 0, .4)))
+            keys.append((f + B // 2, key(beat, 0, .2, 0, 0)))
+            keys.append((f + DOUBLE, key(beat, 0, 1, 0, .4)))
+        else:
+            keys.append((f + B // 2, key(beat, 0, 0, 0, 0)))
     return True, keys + [(4 * B, keys[0][1])]
 
 

@@ -1,5 +1,6 @@
 // The fact card pop-up (M1-07, #17): one line of text and a source link to
-// the dataset page. It shows for FACT_CARDS.showSeconds and never pauses
+// the public City of Atlanta source of the dataset (#372). A card with no
+// source URL shows the source name with no link. It shows for FACT_CARDS.showSeconds and never pauses
 // play. Plain DOM; shell.css keeps it inside the safe areas and clear of
 // the HUD, the minimap, and the touch controls.
 
@@ -30,7 +31,8 @@ export function createFactPopup(parent, { showMs = FACT_CARDS.showSeconds * 1000
       label.textContent = count && total ? `ATL FACT ${count}/${total}` : "ATL FACT";
       text.textContent = card.text;
       source.textContent = `Source: ${card.title}${card.publisher ? `, ${card.publisher}` : ""}`;
-      source.href = card.sourceUrl;
+      if (card.sourceUrl) source.href = card.sourceUrl;
+      else source.removeAttribute("href");
       root.hidden = false;
       state.id = card.id;
       state.until = nowMs + showMs;

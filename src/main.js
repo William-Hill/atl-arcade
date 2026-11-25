@@ -96,8 +96,8 @@ import { NPC_DRAW, createNpcSkatersView } from "./render/npc-skaters-view.js";
 import { createPbrLook, installHeightFog, installSkySh, setSkySh, validSkySh } from "./render/pbr-look.js";
 import { materialAudit } from "./render/pbr-palette.js";
 import { districtAnchors } from "./level/geo/styles.js";
-import { factsMode, fixtureFacts, loadFacts } from "./facts/client.js";
-import { LEVEL_FACTS, factsBase } from "./facts/level-facts.js";
+import { factsMode, fixtureFacts } from "./facts/client.js";
+import { LEVEL_FACTS } from "./facts/level-facts.js";
 import { createFactCardsView } from "./render/fact-cards-view.js";
 import { createFactPopup } from "./ui/fact-popup.js";
 import { NO_PERF, createFrameCost } from "./perf/frame-cost.js";
@@ -155,7 +155,7 @@ const level = await loadLevel(params.get("level"));
 performance.mark("atl:level");
 // The fact card text loads now, so main.js does not wait on it later (#190):
 // while it waited, the late loads ran first and held the first frame.
-const factsModeNow = factsMode(params.get("facts"), { webdriver: Boolean(navigator.webdriver) });
+const factsModeNow = factsMode(params.get("facts"));
 const factDataLoad = factsModeNow !== "off" && Object.hasOwn(LEVEL_FACTS, level.name) ? LEVEL_FACTS[level.name]() : null;
 factDataLoad?.catch(() => {});
 loader.step("level");
@@ -554,10 +554,10 @@ if (carView) {
   }
 }
 
-// Fact cards (M1-07): 3 cards on the trail, from the open-data-atl site.
-// The cards show at once with the fixture text; a live text replaces it when
-// the call returns. ?facts=fixture|live|0 sets the mode (src/facts/client.js).
-const facts = { mode: factsModeNow, cards: [], live: "none" };
+// Fact cards (M1-07): 3 cards on the trail, from the recorded fixture. The
+// game sends no request for a card (#372). ?facts=0 removes the cards
+// (src/facts/client.js).
+const facts = { mode: factsModeNow, cards: [] };
 const factData = factDataLoad ? await factDataLoad : null;
 if (factData) {
   facts.cards = fixtureFacts(factData.specs, factData.fixture).map((card, i) => {
@@ -565,13 +565,6 @@ if (factData) {
     const g = env.sampleGround(x, z);
     return { ...card, position: [x, g ? g.height : 0, z] };
   });
-  if (facts.mode === "live") {
-    facts.live = "pending";
-    loadFacts(factData.specs, factData.fixture, { base: factsBase(import.meta.env.DEV) }).then((loaded) => {
-      facts.cards = facts.cards.map((c, i) => ({ ...loaded[i], position: c.position }));
-      facts.live = loaded.some((c) => c.origin === "live") ? "live" : "fixture";
-    });
-  }
 }
 const factCardsView = facts.cards.length ? createFactCardsView(facts.cards) : null;
 if (factCardsView) scene.add(factCardsView.group);
@@ -1966,9 +1959,6 @@ window.__atl = {
   // run.cards.count), for the goal list (#15) and the tests.
   facts: {
     mode: facts.mode,
-    get live() {
-      return facts.live;
-    },
     get collected() {
       return run.cards.count;
     },

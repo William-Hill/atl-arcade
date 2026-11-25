@@ -808,6 +808,13 @@ Not verified: no person played the new clips; real skaters did not review the mo
   | freedom-park | Freedom Park covers 124 acres of city park land. | atl-parks |
   | marta-rail | Inman Park-Reynoldstown MARTA rail station is within a mile of the trail. | marta-rail-stations |
 
+- **Update 2026-11-25 (#372).** Owner decision of 2026-11-24 (#23): Skate ATL and agenticatl.ai are separate products. The game has no link to agenticatl.ai and sends no request to it. This replaces the live call, the `/oda-api` dev proxy, and item 4 of the content review above:
+  - The game uses only the recorded fixture, in dev and in production. There is no live mode. `?facts=0` removes the cards; every other `?facts=` value (also the old `?facts=live`) uses the fixture.
+  - Item 4 now reads: each card links to the public City of Atlanta source of its dataset. `citySourceUrl()` in `src/facts/client.js` takes the source URL that the fixture recorded and removes the `/query` part, so the link is the ArcGIS layer on `gis.atlantaga.gov`. A source URL on another host gives no link: the pop-up then shows the source name only.
+  - The 3 BeltLine cards link to `https://gis.atlantaga.gov/dpcd/rest/services/OpenDataService1/FeatureServer/<n>`, with layer 3 (Neighborhoods), 26 (Parks), and 28 (MARTA rail stations).
+  - `scripts/fetch-facts.mjs` can still record the fixture again, offline from the game. The `query_dataset` call moved to `scripts/facts-query.mjs`, which the game does not import. `ODA_SITE=<origin>` sets the site origin.
+  - Guards: `scripts/no-agenticatl.test.js` (Vitest) fails when the string `agenticatl` is in a fact card, in `src/`, in `index.html`, or in `vite.config.js`. `e2e/fact-cards.spec.js` fails when a fact card or a network request names agenticatl, also with `?facts=live`.
+
 - Collection: the skater collects a card within 2.5 m in the ground plane and 4 m in height. A card adds 250 points to the banked score, outside the combo, so a bail does not lose them. The pop-up shows the text for 2 s and does not pause play. The values are in `FACT_CARDS` in `src/sim/fact-cards.js`.
 - Run state: `run.cards.count` is the number of cards collected in this run, and `window.__atl.facts.collected` gives the same number. The goal list (#15) reads it. A new run (`resetSkater`) starts at 0.
 - Layout: a desktop shows the pop-up at the top middle, between the HUD column and the skater select. A phone in portrait shows it under the minimap. A phone in landscape shows it narrow, between the touch stick and the buttons. The e2e test checks for no overlap at 1280x720, 390x844, and 844x390.
@@ -3057,7 +3064,7 @@ Files: `docs/pitch/2026-11-01-official-game-of-atlanta.md` (new section 1.1 "Wha
 
 **Decision (owner, 2026-11-24).** Skate ATL and agenticatl.ai (the open-data-atl site) are separate products. The site does not host the game at a route, and the game and the site do not link to each other. The "link from the site" item of #23 is cancelled.
 
-- The fact cards still link to agenticatl.ai dataset pages and call its API. Issue #372 removes this.
+- The fact cards linked to agenticatl.ai dataset pages and called its API. #372 removed this on 2026-11-25 (see the 2026-11-03 fact card entry).
 - The static Open Graph card (#303) closes the share card item of #23. The per-run card with the score and the neighborhood moves to #373.
 - `e2e-smoke/production.spec.js` checks a deployed build: the headers, the Open Graph card (the tags, the public 1200x630 image, a rendered preview), and that the game draws frames with no page error. It runs with `playwright.smoke.config.js` against `SMOKE_URL` (default `https://skate-atl.vercel.app`), not against the dev server, so the default Playwright suite does not include it.
 - The `smoke` job of the deploy workflow runs it after each deploy against the new URL. A preview with Vercel Deployment Protection (HTTP 401 or 403, or a 302 or 307 redirect to the Vercel login) skips the test with a note; production must answer 200.

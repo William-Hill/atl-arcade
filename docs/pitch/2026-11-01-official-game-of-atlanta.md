@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-01. Updated 2026-11-24 for release v0.9.0 (#258).
 **Status:** Draft for the owner. Nobody was contacted for this draft. Do not contact a City office until the owner approves.
-**Method:** Web research on 2026-11-01. Each fact has a source URL. A claim with the tag **UNVERIFIED** has no confirmed source. The 2026-11-24 update adds the state of the game on `main` (commit `b432849`) and the production URL.
+**Method:** Web research on 2026-11-01. Each fact has a source URL. A claim with the tag **UNVERIFIED** has no confirmed source. The 2026-11-24 update adds the state of the game on `main` (commit `b432849`, then the merges of #353, #354, #220, #264 and #365) and the production URL.
 **Legal note:** This document is not legal advice. A lawyer must review section 7 before the pitch makes a legal claim.
 **First reader (owner decision, 2026-11-24):** the Mayor's Office of Technology and Innovation (OTI).
 
@@ -24,7 +24,7 @@ The game is live now at **https://skate-atl.vercel.app** (release v0.9.0). Secti
 | Intro and title screen | A 9 s camera flight along the real trail under the Skate ATL logo, then a title screen with the skater select (Nia or Marcus). | `docs/decisions.md` 2026-11-23 (#301) |
 | Skate moves | Push, carve, jump, grind on rails, ledges and curbs, ramp air, and Atlanta dance moves on the roll (for example Walk It Out, Swag Surf, The Prep). Combos and a style meter. A fall ends a combo, never the run. | `docs/review/content-checklist.md` 1.8, 4.5 |
 | Moves taught in the world | The first ride teaches push, steer, jump, dance and grind, one short prompt at a time, for the keyboard, a gamepad or touch. | `docs/decisions.md` 2026-11-21 (#76) |
-| 13 landmark spots and 2 edge markers | Each spot has a skate challenge (a gap, a grind, a ring line, or a combo). Found and Claimed banners, chimes, map icons, and a Guide tab. 65 facts, each with a source. | `levels/beltline-eastside/landmarks.json`, `docs/decisions.md` 2026-11-10 to 2026-11-12 (#216 to #219) |
+| 13 landmark spots and 2 edge markers | Each spot has a skate challenge (a gap, a grind, a ring line, or a combo). Found and Claimed banners, chimes, map icons, and a Guide tab. 65 facts, each with a source. A claim unlocks a story card with an in-game picture of the spot; the results screen lists the spots claimed in the run. "Reset progress" in the settings menu clears the saved spots. | `levels/beltline-eastside/landmarks.json`, `docs/decisions.md` 2026-11-10 to 2026-11-12 (#216 to #219), 2026-11-24 (#220) |
 | Thomas Taylor Memorial Skatepark | The real public skatepark in Historic Fourth Ward Park, as a skate spot: a pyramid, a quarter pipe, a kicker, a bank, rails and a ledge. | `docs/decisions.md` 2026-11-10 (#222) |
 | Open data fact cards | 3 cards from the City of Atlanta GIS services, through the open-data-atl catalog: the neighborhoods on the trail, the acres of Freedom Park, and the nearest MARTA rail station. | `levels/beltline-eastside/facts.json`, `src/facts/` |
 | Tour mode | `?run=tour`: no timer, no score goal. A visitor rides the whole trail at their own speed. The HUD names the next spot and its direction. | `docs/decisions.md` 2026-11-23 (#260) |
@@ -33,7 +33,7 @@ The game is live now at **https://skate-atl.vercel.app** (release v0.9.0). Secti
 | Two looks | A painted "pbr" look on laptops and a lighter look on phones ("pbr lite"). | `docs/decisions.md` 2026-11-10 (#246) |
 | Phones | Touch controls (stick and buttons), a phone quality tier, and layouts for portrait and landscape. | `docs/decisions.md` 2026-11-14 (#277), 2026-11-23 (#347) |
 | Photo mode and share card | Photo mode with a tilt-shift blur saves a PNG. A social card and favicons for link previews. | `docs/decisions.md` 2026-11-03 (#90), 2026-11-23 (#303) |
-| Content review | An agent checked the content against the 5 political rules: 24 checks, 20 pass, 3 flagged, 1 open (the real skater review, for Version 1). | `docs/review/content-checklist.md` (#22) |
+| Content review | An agent checked the content against the 5 political rules: 24 checks, 20 pass, 3 flagged, 1 open (the real skater review, for Version 1). The 3 flags are fixed: #353 (a clear afternoon on the first load), #354 (no alcohol on a story card) and #261 (calm traffic). | `docs/review/content-checklist.md` (#22) |
 
 Screenshots from the production URL: `docs/pitch/screenshots/` (section 11).
 
@@ -117,7 +117,7 @@ The design follows pillar 3 of the concept: "The city teaches, the game never le
 Now in v0.9.0:
 
 - **Open data fact cards.** 3 cards on the Eastside level. The game asks the open-data-atl API for the data; if the call fails, it uses a recorded copy. Each card names its source: the City of Atlanta Department of City Planning GIS. The client blocks the crime, crash and traffic count datasets, and drops text with crime, police, crash or decline words (`src/facts/client.js`).
-- **Story cards.** Each landmark spot has 3 to 5 facts. Each fact has a source name and URL (National Register of Historic Places, Atlanta BeltLine Inc., the park conservancies, the Carter Library). The full map shows them when the player opens the icon of a spot. A validator blocks a fact with no source and a list of banned words (`npm run validate:landmarks`).
+- **Story cards.** Each landmark spot has 3 to 5 facts. Each fact has a source name and URL (National Register of Historic Places, Atlanta BeltLine Inc., the park conservancies, the Carter Library). When the player claims a spot, its story card unlocks: an in-game picture of the spot and its facts. The full map and the results screen show it (#220). A validator blocks a fact with no source and a list of banned words (`npm run validate:landmarks`).
 
 The plan for the cards:
 
@@ -213,7 +213,7 @@ The level has 13 claim spots and 2 edge markers (an edge marker is a place outsi
 
 Notes:
 
-- Spot 3, New Realm Brewing: one story card fact names beer and spirits (#354, flagged by the content review). Do not open this card in a demo until #354 merges.
+- Spot 3, New Realm Brewing: the content review flagged one fact that named beer and spirits. #354 replaced it (owner decision 2026-11-24: story cards name no alcohol). The fact now reads "New Realm has a full food menu and hosts trivia, vintage market pop-ups and live music four days a week."
 - Spot 12, Freedom Park: the conservancy gives "130+ acres". The open data fact card gives 124 acres of city park land (City of Atlanta GIS). Both have a source; they measure different things.
 - Spot 13: the 2026-11-01 pitch called it the Historic Fourth Ward skatepark. Its name since 2024 is Thomas Taylor Memorial Skatepark ([H4W Park Conservancy](https://www.h4wpc.org/skate-park/)). The Tony Hawk fact now has a source: "Tony Hawk appeared at the grand opening, and his foundation gave $25,000 toward construction" (same source).
 
@@ -417,7 +417,7 @@ Weak or closed paths:
 | Cascade news coverage | The card talks about skate culture only. |
 | Moderation (the Denmark lesson) | No building tools, no chat, no user content. |
 | Traffic shown as danger | Calm traffic (owner decision 2026-11-23, #261): cars slow and stop for the skater, and a moving car never knocks her down or stops her. |
-| A first load at night in rain looks gloomy | #353 (P1, in progress): the game clock uses the device time zone. Until it merges, a demo sets `weather=clear&time=14` in the URL. |
+| A first load at night in rain looks gloomy | Fixed by #353 (owner decision 2026-11-24): with no time or weather in the URL, every first load is a clear afternoon (14:00) on the Atlanta date. |
 
 ---
 
@@ -497,7 +497,7 @@ The pitch to OTI happens with the M2 build. Version 1 is the proof.
 
 ## 11. Screenshots from the production URL
 
-Taken on 2026-11-24 from https://skate-atl.vercel.app (the build of `main` at `b432849`) with headless Chromium (Playwright). The URL had `weather=clear&time=14` (see #353) and `teach=0` (no move prompts). The renderer is SwiftShader (no GPU), so the frame rate is not real; the pictures show the content only.
+Taken on 2026-11-24 from https://skate-atl.vercel.app (the build of `main` at `b432849`) with headless Chromium (Playwright). The URL had `weather=clear&time=14` (now the default first load, #353) and `teach=0` (no move prompts). The pictures are from before #220 (story cards with art) merged. The renderer is SwiftShader (no GPU), so the frame rate is not real; the pictures show the content only.
 
 | File | Tier | What it shows |
 |---|---|---|

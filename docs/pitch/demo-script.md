@@ -10,15 +10,14 @@
 2. Open the demo URL. It plays the intro, starts Tour mode, sets a clear afternoon, and turns on fast travel from the map:
 
    ```
-   https://skate-atl.vercel.app/?intro=1&run=tour&weather=clear&time=14&travel=1&look=pbr&teach=0
+   https://skate-atl.vercel.app/?intro=1&run=tour&travel=1&look=pbr&teach=0
    ```
 
-   - `weather=clear&time=14`: until #353 merges, the game clock uses the device time zone and can start at night in rain.
+   - The first load is a clear afternoon (14:00, Atlanta date) on every computer (#353). No time or weather parameter is necessary.
    - `teach=0`: no move prompts (they take about 30 s). Use `teach=1` if the audience will play.
    - `travel=1`: the full map gets a "Travel here (T)" button. It is off in a normal production visit.
-3. Let the page load fully once. Skate for 1 minute. Then reload the same URL, so the intro plays from the browser cache.
-4. Phone: open `https://skate-atl.vercel.app/?run=tour&weather=clear&time=14&teach=0` in landscape. Leave it on the title screen ("TAP TO START").
-5. Do not open the New Realm Brewing story card until #354 merges (one fact names beer and spirits).
+3. Let the page load fully once. Skate for 1 minute. Then open SETTINGS (key O), select "Reset progress", and confirm. A rehearsal finds and claims spots, and a claimed spot does not show its banners again. Then reload the same URL, so the intro plays from the browser cache.
+4. Phone: open `https://skate-atl.vercel.app/?run=tour&teach=0` in landscape. If you rehearsed on the phone, use "Reset progress" in SETTINGS there too. Leave it on the title screen ("TAP TO START").
 
 ## 2. The route
 
@@ -43,7 +42,7 @@ Keys: W or Shift push, A and D steer, Space jump, F grind, Q and E dance, M map,
 | 0:35 to 1:05 | Tour mode starts (the HUD reads TOUR). The Found banner of the Freedom Parkway Bridge shows at the start. Turn around, push south, and jump under the bridge. The Claimed banner shows. | "Tour mode has no timer. When you skate near a real landmark, the game finds it and gives a skate challenge. Here: a gap under the John Lewis Freedom Parkway Bridge, where a BeltLine Marketplace sits." |
 | 1:05 to 1:30 | Push on south about 40 m and ride through the floating card on the trail (pick-up radius 2.5 m). The "ATL FACT 1/3" pop-up shows for a few seconds. | "This card comes from the City's own GIS data, through the open-data-atl catalog: the trail links Inman Park, Old Fourth Ward and Poncey-Highland." |
 | 1:30 to 2:30 | Turn west into the skatepark. Grind the long rail, ride the quarter pipe, dance on the roll-out (Q or E). Try the 2,000 point combo. | "This is Thomas Taylor Memorial Skatepark, Atlanta's first public skatepark, open since spring 2011. The moves come from Atlanta rink culture: Walk It Out, Swag Surf, The Prep. A fall never ends the run." |
-| 2:30 to 3:20 | Press M (full map), then G (Guide tab). Show the claimed spots. A story card shows its facts only after the spot is claimed (an unclaimed spot reads "Claim it to unlock"). If the skatepark is claimed, open its icon. If not, open the Freedom Parkway Bridge icon (claimed in step A). | Skatepark: "Every fact has a source. This one is from the Historic Fourth Ward Park Conservancy: Tony Hawk came to the opening, and his foundation gave $25,000 toward the park." Freedom Parkway Bridge: "Every fact has a source. This one is from the Historic Fourth Ward Park Conservancy: the skatepark sits alongside the BeltLine corridor in the shadow of Freedom Parkway." Then: "13 spots, 65 facts, all positive or neutral." |
+| 2:30 to 3:20 | Press M (full map), then G (Guide tab). Show the claimed spots. A story card (an in-game picture of the spot and its facts) shows only after the spot is claimed (an unclaimed spot reads "Claim it to unlock"). If the skatepark is claimed, open its icon. If not, open the Freedom Parkway Bridge icon (claimed in step A). | Skatepark: "Every fact has a source. This one is from the Historic Fourth Ward Park Conservancy: Tony Hawk came to the opening, and his foundation gave $25,000 toward the park." Freedom Parkway Bridge: "Every fact has a source. This one is from the Historic Fourth Ward Park Conservancy: the skatepark sits alongside the BeltLine corridor in the shadow of Freedom Parkway." Then: "13 spots, 65 facts, all positive or neutral." |
 | 3:20 to 3:50 | On the map, click the Ponce City Market icon, then "Travel here (T)". Close the map. The Found banner shows. | "Ponce City Market opened in 1926 as a Sears store and warehouse. That fact is from the National Register of Historic Places." |
 | 3:50 to 4:15 | Skate on the trail past people and bikes. Press P (photo mode), then Escape. | "Cars move calmly and stop for the skater. No crime, no police, no traffic danger. Murals, not graffiti." |
 | 4:15 to 4:40 | Phone: tap to start, push with the stick, tap JUMP and GROOVE. | "Phones are the top priority. Students can play it on a Chromebook or a phone, with no login and no personal data." |
@@ -62,6 +61,7 @@ Checked on production on 2026-11-24 (headless Chromium, phone tier, Tour mode): 
 | The frame rate is low on the projector laptop | Add `&quality=phone` or `&look=toon`. On the phone tier, the game can also step down to the toon look by itself and shows one line on the HUD. |
 | No network at all | Run a local copy: in the repository, `npm ci`, `npm run build`, and `npx vite preview`, then open the local URL with the same parameters. Test this once offline before the meeting. If that also fails, show the screenshots in `docs/pitch/screenshots/` with the one-pager. |
 | The intro does not play | Add `&intro=title` for the title screen only. Then start. |
+| A spot shows no Found or Claimed banner | It was found or claimed in a rehearsal. Open SETTINGS, select "Reset progress", confirm, and reload. |
 | After the fast travel, the banner shows the skatepark, not Ponce City Market | The banners wait in a queue (about 3 s each). Wait 3 s; the Ponce City Market banner follows. |
 | The skater is in a wrong place after a fast travel | Press M and travel to the spot again, or reload the tab. |
 | The phone does not respond to touch | Skip the phone part. Say that the phone layout has tests on 5 screen sizes. |

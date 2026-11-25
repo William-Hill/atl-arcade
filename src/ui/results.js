@@ -8,6 +8,7 @@
 
 import { cardButtonLabel } from "../landmarks/story-card.js";
 import "./story-card.css";
+import { TOUR_BUTTON } from "./results-text.js";
 
 const MEDAL_NAMES = { gold: "Gold", silver: "Silver", bronze: "Bronze" };
 
@@ -23,7 +24,7 @@ const fmt = (n) => Math.round(n).toLocaleString("en-US");
 
 // `onTour` (#260), when given, adds a second button that starts a tour: the
 // landmark loop with no timer.
-export const TOUR_BUTTON = "Tour (no timer)";
+export { TOUR_BUTTON };
 //
 // The landmark row (#220): the story cards that this run claimed, with a
 // "NEW" stamp on a first claim. A tap, a click, Enter or Space on a card

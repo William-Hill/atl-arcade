@@ -244,27 +244,43 @@ describe("the facade kit and the murals", () => {
       const out = dx * box.m.n[0] + dz * box.m.n[1];
       return along > 0 && along < box.len && out > 0.01 && out < 0.5 && y > box.m.y0 && y < box.m.y1;
     };
+    // One box around all the mural boxes skips most triangles at once.
+    const all = {
+      minX: Math.min(...boxes.map((b) => b.minX)),
+      maxX: Math.max(...boxes.map((b) => b.maxX)),
+      minZ: Math.min(...boxes.map((b) => b.minZ)),
+      maxZ: Math.max(...boxes.map((b) => b.maxZ)),
+    };
+    // The level has about 1.5 million kit triangles. The loop uses plain
+    // numbers, not small arrays, so that the test stays in the time limit.
     const hits = [];
     for (const mesh of meshes) {
       const p = mesh.positions;
       const idx = mesh.indices;
       for (let i = 0; i < idx.length; i += 3) {
-        const v = [idx[i], idx[i + 1], idx[i + 2]].map((k) => [p[k * 3], p[k * 3 + 1], p[k * 3 + 2]]);
-        const minX = Math.min(v[0][0], v[1][0], v[2][0]);
-        const maxX = Math.max(v[0][0], v[1][0], v[2][0]);
-        const minZ = Math.min(v[0][2], v[1][2], v[2][2]);
-        const maxZ = Math.max(v[0][2], v[1][2], v[2][2]);
+        const i0 = idx[i] * 3;
+        const i1 = idx[i + 1] * 3;
+        const i2 = idx[i + 2] * 3;
+        const x0 = p[i0], y0 = p[i0 + 1], z0 = p[i0 + 2];
+        const x1 = p[i1], y1 = p[i1 + 1], z1 = p[i1 + 2];
+        const x2 = p[i2], y2 = p[i2 + 1], z2 = p[i2 + 2];
+        const minX = Math.min(x0, x1, x2);
+        const maxX = Math.max(x0, x1, x2);
+        const minZ = Math.min(z0, z1, z2);
+        const maxZ = Math.max(z0, z1, z2);
+        if (maxX < all.minX || minX > all.maxX || maxZ < all.minZ || minZ > all.maxZ) continue;
+        const ex = x1 - x0, ey = y1 - y0, ez = z1 - z0;
+        const fx = x2 - x0, fy = y2 - y0, fz = z2 - z0;
         for (const box of boxes) {
           if (maxX < box.minX || minX > box.maxX || maxZ < box.minZ || minZ > box.maxZ) continue;
-          const size = Math.max(Math.hypot(v[1][0] - v[0][0], v[1][1] - v[0][1], v[1][2] - v[0][2]), Math.hypot(v[2][0] - v[0][0], v[2][1] - v[0][1], v[2][2] - v[0][2]));
+          const size = Math.max(Math.hypot(ex, ey, ez), Math.hypot(fx, fy, fz));
           const n = Math.max(1, Math.ceil(size / 0.2));
           let hit = false;
           for (let a = 0; a <= n && !hit; a += 1) {
             for (let b = 0; a + b <= n && !hit; b += 1) {
               const u = a / n;
               const w = b / n;
-              const q = [0, 1, 2].map((k) => v[0][k] + (v[1][k] - v[0][k]) * u + (v[2][k] - v[0][k]) * w);
-              if (inside(box, q[0], q[1], q[2])) hit = true;
+              if (inside(box, x0 + ex * u + fx * w, y0 + ey * u + fy * w, z0 + ez * u + fz * w)) hit = true;
             }
           }
           if (hit) hits.push(box.m.id);

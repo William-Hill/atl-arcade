@@ -3047,9 +3047,10 @@ Owner decisions on 2026-11-24 (AskUserQuestion):
 
 Files: `docs/pitch/2026-11-01-official-game-of-atlanta.md` (new section 1.1 "What a person can play today", section 4.0 with the 13 spots and the 3 open data cards of the Eastside level, updated sections 6 to 10, new section 11 with the screenshots), `docs/pitch/one-pager.md`, `docs/pitch/demo-script.md`, `docs/pitch/screenshots/`.
 
-- The screenshots come from the production URL with headless Chromium on SwiftShader, with `weather=clear&time=14` (until #353 merges) and `teach=0`.
+- The screenshots come from the production URL with headless Chromium on SwiftShader, with `weather=clear&time=14` (the #353 default now) and `teach=0`. They were taken before #220 merged, so they show no story card art.
 - The demo URL uses `travel=1` for one fast travel from the full map. Fast travel is off in a normal production visit.
-- The demo does not open the New Realm Brewing story card until #354 merges.
+- Before the demo, "Reset progress" in the settings menu (#220) clears the spots that a rehearsal found or claimed, so the Found and Claimed banners show again.
+- A story card shows only after a claim. If the skatepark combo does not land, the demo opens the Freedom Parkway Bridge card (claimed in the first stop).
 - Nobody was contacted. Contact with a City office waits for the owner's approval.
 
 ## 2026-11-24: Deploy smoke test, and no route from agenticatl.ai (#23)
@@ -3060,6 +3061,17 @@ Files: `docs/pitch/2026-11-01-official-game-of-atlanta.md` (new section 1.1 "Wha
 - The static Open Graph card (#303) closes the share card item of #23. The per-run card with the score and the neighborhood moves to #373.
 - `e2e-smoke/production.spec.js` checks a deployed build: the headers, the Open Graph card (the tags, the public 1200x630 image, a rendered preview), and that the game draws frames with no page error. It runs with `playwright.smoke.config.js` against `SMOKE_URL` (default `https://skate-atl.vercel.app`), not against the dev server, so the default Playwright suite does not include it.
 - The `smoke` job of the deploy workflow runs it after each deploy against the new URL. A preview with Vercel Deployment Protection (HTTP 401 or 403, or a 302 or 307 redirect to the Vercel login) skips the test with a note; production must answer 200.
+
+## 2026-11-24: Landmark claim effects (#221)
+
+The claim effects are in `src/landmarks/claim-fx.js` (pure, Vitest) and `src/render/landmark-rim.js`. The burst and the petals are particles of the #113 effects layer (`effects.burst()`); their tier rows `claim` and `petals` are in `EFFECT_TIERS` (`src/render/effects/fx.js`), so `prefers-reduced-motion`, the "Reduce motion" setting and `?fx=0` turn them off with every other effect.
+
+- **Burst.** A ring decal (1.6 m) and a star decal (1.0 m) flat on the ground at the feet, 0.4 s, in the district accent of the effects layer. High: star and ring, and only the star core is over the day bloom threshold. Phone: the ring only, no core.
+- **Low tier.** The GDD says "Phone: ring only. Low: no bloom." Art direction section 11 and the effects layer keep every effect off on the low tier, and their tests check it. So the burst and the petals are off on low too. On low the challenge ring still turns gold and fades on a claim (#219), so the claim keeps a visible moment. The owner confirmed this choice on 2026-11-24.
+- **Petals.** 16 on high, 8 on phone, none on low. Billboards in dogwood pink `#c98fa6`, scaled to the body emissive (0.8, under the 0.92 night bloom threshold), start 2.2 to 3 m over the skater and fall for 1 s. The same claim tick gives the same petals.
+- **Rim.** High tier only, and not with `?fx=0`. Reduced motion keeps it, because it does not move (GDD R-1 does not list it). It shows on a building spot that is Found and not yet Claimed: it points the player to a spot to claim, and it goes when the spot is claimed. It is an additive fresnel band 0.15 m outside the walls of the OSM footprint, opacity 0.35 at most, warm `#ffb36b` at the body emissive. It fades in from a sun elevation of -1 to 3 degrees and out from 10 to 16 degrees. One merged mesh: 1 draw call while it shows, 0 otherwise.
+- **Reduced motion.** No burst, no petals, no icon pulse. The challenge ring fades in 0.3 s in place of the burst (#219, `claimFade()`).
+- **Map pulse.** The pulse of a newly claimed icon on the minimap and the full map shipped with #218 (`pulseAt()`); this change does not touch it.
 
 ## 2026-11-24: Marcus's idle drum hits are slower; the pop check samples all idle phases (#369)
 

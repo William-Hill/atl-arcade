@@ -26,7 +26,11 @@ describe("geo meshes for the BeltLine Eastside block", () => {
       if (material === "mural") expect(mesh.uvs.length / 2).toBe(mesh.positions.length / 3);
       else expect(mesh.colors.length).toBe(mesh.positions.length);
       const n = mesh.positions.length / 3;
-      for (const i of mesh.indices) expect(i).toBeLessThan(n);
+      // The level has millions of indices. One expect() for each index is
+      // too slow for the time limit, so count the bad indices first.
+      let bad = 0;
+      for (const i of mesh.indices) if (!(i < n)) bad += 1;
+      expect(bad).toBe(0);
     }
   });
 

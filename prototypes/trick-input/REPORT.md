@@ -13,6 +13,7 @@ The capsule skater, one rail, one kicker, and a flat pad. Text labels show the t
 | GDD rule | In the prototype | Evidence |
 |---|---|---|
 | R2, R3 fresh direction | Keyboard (WASD and arrows, the newest key wins, Shift gives no direction), gamepad (stick 0.5, main axis, d-pad), `dirBefore` 150 ms, `dirAfter` 60 ms | `src/direction.js`, unit tests, sim tests, real-browser checks |
+| Autopilot playtest (owner choice 2026-11-25, extra evidence) | The bridge behind `?autopilot=1` (dev server only), the hooks, and the intent log (`playtest.intend`, `playtest.metrics`). See "Autopilot playtest kit". | `src/intent.js` (13 unit tests), `src/autopilot/hooks.js` (7 unit tests), real-browser checks |
 | R3a axis rule (owner choice 2026-11-25, default) | An up or down still held at the press counts up to `udHold` (300 ms); an up or down beats a left or right when both are fresh. The input keeps a short history of start events (`dirHist`). Key 7 or `?gddRule` turns it off (the R3 rule only). | `src/direction.js` (`freshDir`, `resolvePressHist`), 10 unit tests, 2 sim tests, 3 real-browser checks |
 | R4, R5 grabs | 5 grabs, `grabMinAir`, first press only, hold pay, air spin sum | `src/sim.js`, sim tests |
 | R6 grind stances | 5 stances at the press or at the snap (buffered), names "[Long] [edge] [stance] Grind", HUD short form | sim and name tests |
@@ -26,7 +27,7 @@ The capsule skater, one rail, one kicker, and a flat pad. Text labels show the t
 
 Not in the prototype: the grind balance and the grind bail (the bail bank is tested in `scoring.test.js`), vert ramps, drops, switch, sound, and clips.
 
-**Tests:** 136 Vitest tests in 7 files, all pass (`npx vitest run --config prototypes/trick-input/vitest.config.js`).
+**Tests:** 157 Vitest tests in 9 files, all pass (`npx vitest run --config prototypes/trick-input/vitest.config.js`).
 
 ## How to run it
 
@@ -158,6 +159,47 @@ For every trick press, write: the player, the device, the rule (axis or GDD), th
 3. **Unwanted Left/Right from carves** = presses that came out Left or Right while the player wanted neutral, Up, or Down and steered with A or D near the press / presses with a carve near the press and a neutral, Up, or Down intention. Target under 5%. The automated run predicts about 7% with the axis rule and about 11% with the GDD rule, so this metric decides between the rules.
 
 Also time each player to the first banked 3-link combo with a manual (target under 3 minutes). A screen recording with the log panel visible makes the counts easier.
+
+## Autopilot playtest kit (extra evidence, owner choice 2026-11-25)
+
+The owner chose (2026-11-25) to run an Autopilot playtest of the prototype now. It is **extra evidence only**. The human playtest (5 or more players) stays the gate for PROCEED, PIVOT, or KILL. Autopilot is an agent with a decision model, not human timing, so its numbers are model evidence, as the synthetic players are.
+
+A cloud session cannot run Autopilot: a run needs the Jev decision model (a TypeSafe key or an Aura plan) and an Anthropic API key. Run it on the owner's computer, as for the design audit runs of 2026-11-13 (`production/audits/2026-11-13-design-audit/REPORT.md`), with the fork `William-Hill/autopilot`, branch `threejs-engine`, and `AUTOPILOT_SHARE=0`.
+
+### What the prototype gives Autopilot
+
+- **The bridge.** `src/autopilot/` is a copy of the game's bridge (`src/autopilot/autopilot-bridge.js` at the repository root; a prototype never imports `src/`). It connects only in the dev server and only with `?autopilot=1`. It says hello as engine `threejs`, project `atl-arcade`, `share: false`.
+- **The hooks** (`src/autopilot/hooks.js`): the skater (position, heading, speed, mode), the key bindings (the direction actions share A, D, W, S with steer, push, and brake), `move` (hold W and steer toward a direction), restart, pause, and the game time (the sim clock).
+- **The intent log** (`src/intent.js`). The agent says the trick it wants before each press. The page pairs it with the trick that comes out and gives the 3 metrics with the same definitions as the synthetic players. The agent reaches it by name through the bridge objects:
+  - `game.call("playtest", "intend", "l")`: the intended direction (`n`, `l`, `r`, `u`, or `d`) just before the press. An optional second argument is a note.
+  - `game.call("playtest", "metrics")`: for the rule setting now (`config`, for example "axis" or "gdd+guard"): the trials, tricks as wanted, unwanted Up from push, unwanted Left/Right from carves, the presses with no trick, the time to the first 3-link combo with a manual (from the last restart), and the last 10 trials. `byConfig` gives the trial count of each setting; `metrics("gdd")` gives another setting. Each trial keeps the setting of its press, so a run that changes a toggle does not mix the settings.
+  - `game.call("playtest", "rows", 0, 100)`: the trials, 100 per page, with `total` and `next` (the offset of the next page, or null).
+  - The log tracks the TRICK, SPIN, and GRIND presses. A press with an intention and no trick within 1 s (GRIND: within the 0.15 s grind buffer plus one frame) is a failed trial. The push and carve windows start at the press. A reset starts a new run: old input does not reach the new run.
+  - Only `playtest` is reachable by name through the bridge. The skater state comes through the player hook.
+  - The same calls work in a browser console: `__ti.playtest.intend("l")`, `__ti.playtest.metrics()`.
+
+### Steps
+
+1. Start the prototype: `npx vite --port 5190` in the repository root.
+2. Start the Autopilot agent service (the fork) as for the 2026-11-13 runs, with `AUTOPILOT_SHARE=0`.
+3. Open the page for the run (the bridge connects to `ws://127.0.0.1:8765/v1/bridge`; `autopilot_url=` changes it):
+   - Run A, the axis rule (default): `http://localhost:5190/prototypes/trick-input/index.html?autopilot=1`
+   - Run B, the GDD rule: `http://localhost:5190/prototypes/trick-input/index.html?autopilot=1&gddRule`
+4. Give Autopilot the request below (a `goal` run of about 10 minutes each). Use the same request for runs A and B.
+5. At the end, the agent reads `playtest.metrics()`. Copy the numbers into the table below and the report into `reports/autopilot/`.
+
+### The request for Autopilot
+
+> Play the trick input prototype like a new player for 10 minutes. The keys: W pushes, A and D steer, S brakes, Space jumps, F grinds (hold it off a rail for a manual), Q is TRICK, E is SPIN. A direction key (W, A, S, or D) pressed just before Q, or at the same time, picks a different trick. Before EVERY press of Q, E, or F, call `game.call("playtest", "intend", <dir>)` with the direction you want: n (no direction), l, r, u, or d. Mix all 5 directions, in the air (off the kicker), on the ground (dances), and on the rail. Skate as a player does: push with W and steer with A and D between tricks. Do not wait still before a trick. Also try to bank a combo of 3 links or more with a manual (for example rail grind, manual, then a grab off the kicker). At the end, call `game.call("playtest", "metrics")` and report the result, and every trial where the result was not the intended direction.
+
+### Results (to fill in)
+
+| Run | Rule | Trials | Tricks as wanted | Unwanted Up from push | Unwanted L/R from carves | First 3-link combo with a manual |
+|---|---|---|---|---|---|---|
+| A | axis (default) | | | | | |
+| B | GDD (`?gddRule`) | | | | | |
+
+Targets: 90% or more, under 5%, under 5%, under 3 minutes. A metric with fewer than 20 trials in its count (`pushTrials`, `carveTrials`) is too small to read.
 
 ## Human playtest: checklist for the owner
 

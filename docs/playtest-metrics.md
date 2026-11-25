@@ -65,4 +65,6 @@ The prototype is `prototypes/trick-input/`. Its automated playtest runs with `no
 
 Values are the mean of the 5 synthetic players at seed 11. On 20 more seeds (101 to 120): keyboard 90.2% to 91.4% as wanted, carve leak 9.1% to 6.0%; gamepad 90.7% to 91.8%, carve leak 6.1% to 5.6%. The axis rule is GDD R3a and `docs/decisions.md` (2026-11-25). Toggle 7 (`?gddRule`) gives the first rule for the comparison in the human playtest.
 
+An Autopilot playtest (owner choice 2026-11-25) adds extra evidence; its kit and results table are in `prototypes/trick-input/REPORT.md`. It does not replace the human playtest.
+
 **Verdict: pending.** The human playtest (5 or more players, keyboard and phone) is open. The owner records PROCEED, PIVOT, or KILL here after it. The findings and the checklist are in `prototypes/trick-input/REPORT.md`.

@@ -11,6 +11,7 @@ import { createSim, LEVEL, place, stepSim } from "./sim.js";
 import { comboValue } from "./scoring.js";
 import { ARROWS, DANCES, GRABS, STANCES, hudShort } from "./tricks.js";
 import { metrics, PROFILES, pushTapSweep, routeBot, runSession, runTrial } from "./bots.js";
+import { createIntentLog, feed, intend, intentMetrics, pageRows, restartClock, setConfig } from "./intent.js";
 
 const params = new URLSearchParams(location.search);
 const opts = { oneButton: false, relaxed: false, carveGuard: params.has("carveGuard"), gddRule: params.has("gddRule"), shortFlick: params.has("shortFlick"), skater: "nia", touch: params.has("touch") || matchMedia("(pointer: coarse)").matches };
@@ -18,6 +19,30 @@ let k = { ...TRICK, ...(opts.gddRule ? GDD_RULE : {}), ...(opts.carveGuard ? { c
 let sim = createSim({ k, skater: opts.skater });
 let inp = createInput({ k });
 let paused = params.has("paused");
+
+// The intent log of an agent playtest (#326, intent.js). The agent says the
+// trick it wants (playtest.intend) before it presses; the log pairs it with
+// the trick that comes out and gives the 3 metrics (playtest.metrics).
+// Each trial keeps the rule setting of its press: "axis" or "gdd", "+guard"
+// with the carve guard, "+flick16" with the short flick, "+relaxed".
+const configOf = (kk) => `${kk.axisRule ? "axis" : "gdd"}${kk.carveGuard != null ? "+guard" : ""}${kk.flickMin === SHORT_FLICK ? "+flick16" : ""}${opts.relaxed ? "+relaxed" : ""}`;
+const intentLog = createIntentLog();
+setConfig(intentLog, configOf(k));
+const playtest = {
+  intend: (dir, note = "") => {
+    const e = intend(intentLog, dir, sim.t, note);
+    return e.error ? e : { ok: true, dir, at: sim.t, config: intentLog.config };
+  },
+  // The metrics of one setting (default: the setting now). byConfig counts
+  // the trials of each setting.
+  metrics: (config) => {
+    const { rows, ...m } = intentMetrics(intentLog, config ?? intentLog.config);
+    return { ...m, last: rows.slice(-10) };
+  },
+  // The trials of one setting, one page at a time (the bridge sends at most
+  // 200 items in a list).
+  rows: (offset = 0, limit = 100, config) => pageRows(intentMetrics(intentLog, config ?? intentLog.config).rows, offset, limit),
+};
 
 // --- Three.js scene -------------------------------------------------------
 
@@ -201,6 +226,7 @@ function step() {
   stepSim(sim, f);
   wallAtStep = performance.now();
   onEvents(sim.events);
+  feed(intentLog, f, sim.events);
 }
 
 let acc = 0;
@@ -309,6 +335,8 @@ function reset({ keepPos = false, ...placeOpts } = {}) {
   if (Object.keys(placeOpts).length) place(sim, placeOpts);
   lastTrickShown = null;
   logLines.length = 0;
+  restartClock(intentLog, sim.t);
+  setConfig(intentLog, configOf(k));
 }
 
 addEventListener("resize", () => {
@@ -329,6 +357,8 @@ window.__ti = {
   pause(v = true) {
     paused = v;
   },
+  paused: () => paused,
+  playtest,
   reset(o = {}) {
     if (o.oneButton !== undefined) opts.oneButton = o.oneButton;
     if (o.relaxed !== undefined) opts.relaxed = o.relaxed;
@@ -414,4 +444,12 @@ let frameRate = 0;
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
+}
+
+// Autopilot (#326): only in the dev server (npx vite) with ?autopilot=1. A
+// production build has no bridge, so a link cannot connect a page to a port.
+if (import.meta.env.DEV && params.get("autopilot") === "1") {
+  import("./autopilot/connect.js").then(({ connectAutopilot }) =>
+    connectAutopilot({ params, scene, camera, canvas: renderer.domElement, ti: window.__ti, intents: playtest, skaterObject: skater, render, threeRevision: THREE.REVISION }),
+  );
 }

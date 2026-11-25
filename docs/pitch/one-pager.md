@@ -37,7 +37,7 @@ Each fact in the game names its source. The full list is in `docs/pitch/2026-11-
 4. Facts are positive or neutral, and each fact has a source.
 5. Real skaters review the move set before Version 1.
 
-An agent checked the current game against these rules (24 checks: 20 pass, 3 flagged and now fixed, 1 open for Version 1: the real skater review). Code filters block crime, crash and decline data and words. The game has no chat, no accounts, no ads and no user content.
+An agent checked the current game against these rules (38 checks: 37 pass, 0 flagged, 1 open for Version 1: the real skater review; the 3 flags of 2026-11-23 are fixed). The owner approved the review for v0.9.0 on 2026-11-25. Code filters block crime, crash and decline data and words. The game has no chat, no accounts, no ads and no user content.
 
 ## Why Atlanta, why now
 

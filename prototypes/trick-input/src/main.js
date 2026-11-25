@@ -218,7 +218,7 @@ function step() {
   stepSim(sim, f);
   wallAtStep = performance.now();
   onEvents(sim.events);
-  feed(intentLog, f.dirHist, sim.events);
+  feed(intentLog, f, sim.events);
 }
 
 let acc = 0;

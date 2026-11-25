@@ -3081,3 +3081,13 @@ The claim effects are in `src/landmarks/claim-fx.js` (pure, Vitest) and `src/ren
 - Owner art review (2026-11-24): approved. The other options were a 6-frame spring back (sharper) or an 8-frame spring back (softer, but the toe-stop tap lets go in 4 frames).
 - `popCheck()` (`src/viewer/anim-lab.js`) now runs the whole script in 48 passes, at equal steps of the idle loop (and 24 steps of the coast loop). With 16 passes (9-frame steps) the check missed the old pop. Before the fix, Marcus failed at 0.173 rad. After it, the worst change is the push at 0.137 rad.
 - Evidence: `docs/characters/idle-369/`. Tool: `scripts/assets/clip-speed.mjs` measures the fastest bone turns of a clip in rad per game frame.
+
+## 2026-11-24: Content checklist updated to main for v0.9.0 (#22)
+
+An agent updated `docs/review/content-checklist.md` to `main` at `087a8a8`. The checklist still waits for the owner review. The agent does not give the owner verdict.
+
+- The 3 flags of 2026-11-23 are fixed. The agent checked the code and the data on `main`: #353 (PR 366, `FIRST_LOAD` in `src/render/weather-view.js`, a load gave clear weather at hour 14), #354 (PR 366, New Realm fact 3 names no alcohol), #261 (PR 360, a moving car is a soft wall in `src/sim/skate/controller.js`).
+- 14 new rows check the content of PRs 350, 358, 359, 367, 368, 371, 376 and 378. Counts: 38 rows, 37 pass, 0 flagged, 1 open (the real skater review, Version 1).
+- All 65 story card facts and all 3 open data fact cards have a source. 28 of 29 source URLs return HTTP 200; `poncecitymarket.com/history/` returns 403 to a script.
+- 5 new notes for the owner (N5 to N9): the "Stone Mountain Trail Bridge Hop" gap label, the New Realm source page that names beer and spirits, a change note in the pitch that names beer and spirits, 2 Freedom Parkway Bridge facts with a park conservancy source, and the old counts in the pitch docs.
+- `docs/review/screenshots/capture.cjs` takes the port from `PORT`, logs the weather of the load, and adds the results row, 2 story cards, Tour mode and the title screen. `night-default.jpg` is removed, because the first load is no longer a night.

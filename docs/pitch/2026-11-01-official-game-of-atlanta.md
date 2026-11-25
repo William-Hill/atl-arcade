@@ -33,7 +33,7 @@ The game is live now at **https://skate-atl.vercel.app** (release v0.9.0). Secti
 | Two looks | A painted "pbr" look on laptops and a lighter look on phones ("pbr lite"). | `docs/decisions.md` 2026-11-10 (#246) |
 | Phones | Touch controls (stick and buttons), a phone quality tier, and layouts for portrait and landscape. | `docs/decisions.md` 2026-11-14 (#277), 2026-11-23 (#347) |
 | Photo mode and share card | Photo mode with a tilt-shift blur saves a PNG. A social card and favicons for link previews. | `docs/decisions.md` 2026-11-03 (#90), 2026-11-23 (#303) |
-| Content review | An agent checked the content against the 5 political rules: 24 checks, 20 pass, 3 flagged, 1 open (the real skater review, for Version 1). The 3 flags are fixed: #353 (a clear afternoon on the first load), #354 (no alcohol on a story card) and #261 (calm traffic). | `docs/review/content-checklist.md` (#22) |
+| Content review | An agent checked the content against the 5 political rules: 38 checks, 37 pass, 0 flagged, 1 open (the real skater review, for Version 1). The owner approved the review for v0.9.0 on 2026-11-25. The 3 flags of 2026-11-23 are fixed: #353 (a clear afternoon on the first load), #354 (no alcohol on a story card) and #261 (calm traffic). | `docs/review/content-checklist.md` (#22) |
 
 Screenshots from the production URL: `docs/pitch/screenshots/` (section 11).
 
@@ -213,7 +213,7 @@ The level has 13 claim spots and 2 edge markers (an edge marker is a place outsi
 
 Notes:
 
-- Spot 3, New Realm Brewing: the content review flagged one fact that named beer and spirits. #354 replaced it (owner decision 2026-11-24: story cards name no alcohol). The fact now reads "New Realm has a full food menu and hosts trivia, vintage market pop-ups and live music four days a week."
+- Spot 3, New Realm Brewing: the content review flagged one fact that named alcohol. #354 replaced it (owner decision 2026-11-24: story cards name no alcohol). The fact now reads "New Realm has a full food menu and hosts trivia, vintage market pop-ups and live music four days a week."
 - Spot 12, Freedom Park: the conservancy gives "130+ acres". The open data fact card gives 124 acres of city park land (City of Atlanta GIS). Both have a source; they measure different things.
 - Spot 13: the 2026-11-01 pitch called it the Historic Fourth Ward skatepark. Its name since 2024 is Thomas Taylor Memorial Skatepark ([H4W Park Conservancy](https://www.h4wpc.org/skate-park/)). The Tony Hawk fact now has a source: "Tony Hawk appeared at the grand opening, and his foundation gave $25,000 toward construction" (same source).
 

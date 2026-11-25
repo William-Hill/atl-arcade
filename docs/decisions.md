@@ -3109,3 +3109,10 @@ An agent updated `docs/review/content-checklist.md` to `main` at `087a8a8`. The 
 - Not met. The carve leak target (under 5%) is still missed on the keyboard and the gamepad. In the bot model a carve and an intended left or right differ only in their timing spread, so a timing window cannot separate them. A narrower left/right window meets the leak target but drops the tricks as wanted under 90% (for example `dirBefore` 0.20, `lrBefore` 0.13, `lrAfter` 0.05: keyboard 88.0%, Up 6.2%, leak 4.9%).
 - Owner choice (2026-11-25): make the axis rule the default for the human playtest, with toggle 7 (`?gddRule`) to turn it off. The human playtest measures both rules. The verdict stays pending.
 
+## 2026-11-25: Trick input prototype: an Autopilot playtest as extra evidence (#326)
+
+- Owner choice (2026-11-25): run an Autopilot playtest of the trick input prototype now. It is extra evidence only. The human playtest (5 or more players) stays the gate for PROCEED, PIVOT, or KILL, and #327 to #344 still wait for it.
+- The prototype gets its own copy of the Autopilot bridge (`prototypes/trick-input/src/autopilot/`), because a prototype never imports `src/`. As in the game, it connects only in the dev server and only with `?autopilot=1`.
+- An intent log (`prototypes/trick-input/src/intent.js`) lets the agent say the trick it wants before each press. The page pairs it with the result and gives the 3 metrics with the same definitions as the synthetic players, so the numbers of the bots, Autopilot, and the humans can be compared.
+- A cloud session cannot run Autopilot (no Jev decision model key and no Anthropic API key). The owner runs it on their computer with `AUTOPILOT_SHARE=0`. The steps and the request text are in `prototypes/trick-input/REPORT.md`, "Autopilot playtest kit".
+

@@ -3098,3 +3098,14 @@ An agent updated `docs/review/content-checklist.md` to `main` at `087a8a8`. The 
 - All 65 story card facts and all 3 open data fact cards have a source. 28 of 29 source URLs return HTTP 200; `poncecitymarket.com/history/` returns 403 to a script.
 - 5 new notes for the owner (N5 to N9): the "Stone Mountain Trail Bridge Hop" gap label, the New Realm source page that names beer and spirits, a change note in the pitch that names beer and spirits, 2 Freedom Parkway Bridge facts with a park conservancy source, and the old counts in the pitch docs.
 - `docs/review/screenshots/capture.cjs` takes the port from `PORT`, logs the weather of the load, and adds the results row, 2 story cards, Tour mode and the title screen. `night-default.jpg` is removed, because the first load is no longer a night.
+
+## 2026-11-25: Trick input prototype: the axis rule is the default (#326)
+
+- Problem. The automated playtest of the trick input prototype missed 2 keyboard targets: tricks as wanted 88.8% (target 90% or more) and unwanted Left/Right from carves 11.3% (target under 5%). The gamepad carve leak was 6.4%.
+- Cause. 2 causes in the R3 rule. (1) A player who presses a direction 150 to 300 ms before TRICK and holds it gets the neutral trick, because the start is older than `dirBefore`. (2) R3 uses only the newest start event, so a carve (A or D) that starts after an intended up or down takes the trick.
+- The carve guard (toggle 6) does not fix it. A sweep of its threshold: 0.05 s gives keyboard 70.9% as wanted and 7.8% leak; 0.10 s gives 82.5% and 9.5%; 0.15 s and more does nothing (the same as `dirBefore`). Gamepad: 0.10 s gives 84.9% and 6.4%. The guard also blocks intended left and right that the player holds early.
+- Fix. The axis rule (GDD R3a): an up or down still held at the press counts up to `udHold` (0.3 s), and an up or down beats a left or right when both are fresh. The input keeps a short history of start events (`dirHist`). Left and right keep the R3 window.
+- Result (seed 11, mean of 5 synthetic players). Keyboard: 88.8% to 90.7% as wanted, unwanted Up 2.9% to 3.5%, carve leak 11.3% to 7.1%. Gamepad: 92.1% to 93.1%, carve leak 6.4% to 5.3%. On 20 more seeds: keyboard 90.2% to 91.4%, leak 9.1% to 6.0%.
+- Not met. The carve leak target (under 5%) is still missed on the keyboard and the gamepad. In the bot model a carve and an intended left or right differ only in their timing spread, so a timing window cannot separate them. A narrower left/right window meets the leak target but drops the tricks as wanted under 90% (for example `dirBefore` 0.20, `lrBefore` 0.13, `lrAfter` 0.05: keyboard 88.0%, Up 6.2%, leak 4.9%).
+- Owner choice (2026-11-25): make the axis rule the default for the human playtest, with toggle 7 (`?gddRule`) to turn it off. The human playtest measures both rules. The verdict stays pending.
+

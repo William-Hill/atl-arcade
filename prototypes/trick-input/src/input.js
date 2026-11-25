@@ -4,7 +4,8 @@
 //
 // Sim input per frame:
 //   steer -1..1, push, brake, jump, grind, trick, spin (held flags),
-//   dir, lastDir, lastDirAt (R2, R3), balance -1..1 (F1 s),
+//   dir, lastDir, lastDirAt (R2, R3), dirHist (the recent start events, for
+//   the axis rule), balance -1..1 (F1 s),
 //   flick: { trick, spin, grind } a direction on the frame a touch flick resolves,
 //   touchGrind: true while the GRIND press comes from a touch.
 
@@ -73,12 +74,12 @@ export function keyDown(inp, code, t) {
   for (const a of actionsOf(inp, code)) if (DIR_ACTION[a]) inp.dirs = dirDown(inp.dirs, DIR_ACTION[a], t);
 }
 
-export function keyUp(inp, code) {
+export function keyUp(inp, code, t = null) {
   if (!inp.down.has(code)) return;
   inp.down.delete(code);
   for (const a of actionsOf(inp, code)) {
     if (!DIR_ACTION[a]) continue;
-    if (!actionHeld(inp, a)) inp.dirs = dirUp(inp.dirs, DIR_ACTION[a]);
+    if (!actionHeld(inp, a)) inp.dirs = dirUp(inp.dirs, DIR_ACTION[a], t);
   }
 }
 
@@ -175,6 +176,7 @@ export function frameInput(inp, t) {
     flick[r.button] = r.dir;
     if (r.button !== "grind") {
       inp.touchFlickDir = { lastDir: r.dir === "n" ? inp.touchFlickDir.lastDir : r.dir, lastDirAt: r.dir === "n" ? inp.touchFlickDir.lastDirAt : t };
+      if (r.dir !== "n") inp.touchHist = [...(inp.touchHist || []), { dir: r.dir, at: t, up: t }].slice(-8);
       const stillDown = Object.values(inp.touch).some((e) => e.button === r.button);
       inp.touchHeld[r.button] = stillDown;
       if (!stillDown) inp.touchPulse[r.button] = true;
@@ -218,6 +220,8 @@ export function frameInput(inp, t) {
     lastDir: newest.lastDir,
     lastDirAt: newest.lastDirAt,
     lastDirHeld,
+    // The recent start events of all devices, oldest first (the axis rule).
+    dirHist: [...(inp.dirs.hist || []), ...(inp.pad.hist || []), ...(inp.touchHist || [])].sort((a, b) => a.at - b.at),
     balance,
     flick,
     touchGrind: inp.touchHeld.grind && !kb("grind") && !pb(PAD.grind),
@@ -226,5 +230,5 @@ export function frameInput(inp, t) {
 
 // A neutral frame, for tests.
 export function blankFrame(t = 0) {
-  return { t, steer: 0, push: false, brake: false, jump: false, grind: false, trick: false, spin: false, dir: "n", lastDir: "n", lastDirAt: -Infinity, lastDirHeld: false, balance: 0, flick: { trick: null, spin: null, grind: null }, touchGrind: false };
+  return { t, steer: 0, push: false, brake: false, jump: false, grind: false, trick: false, spin: false, dir: "n", lastDir: "n", lastDirAt: -Infinity, lastDirHeld: false, dirHist: [], balance: 0, flick: { trick: null, spin: null, grind: null }, touchGrind: false };
 }

@@ -41,10 +41,21 @@ export const TRICK = {
   // a left or right direction that is still held and started more than this
   // before the press is a carve, not a fresh direction. null = off (the GDD rule).
   carveGuard: null,
+  // The axis rule (#326 fix for the keyboard misses; owner choice 2026-11-25:
+  // on by default). See direction.js. Key 7 or ?gddRule turns it off.
+  axisRule: true,
+  udHold: 0.3, // s: an up/down still held at the press counts if it started inside this. 0.25 / 0.3 / 0.4
+  udFirst: true, // an up/down beats a left/right when both are fresh
+  lrBefore: null, // s: sweep knob, the dirBefore of left/right (null = dirBefore)
+  lrAfter: null, // s: sweep knob, the dirAfter of left/right (null = dirAfter)
 };
 
 // Prototype toggles for playtest 1 (owner choice 2026-11-23). Off by default.
 export const CARVE_GUARD = 0.1; // s
+
+// Toggle 7: the GDD R3 rule as written on 2026-11-23 (the newest event only),
+// for the human playtest comparison with the axis rule.
+export const GDD_RULE = { axisRule: false, udHold: null, udFirst: false, lrBefore: null, lrAfter: null };
 export const SHORT_FLICK = 16; // px
 
 // R12.3 "Relaxed timing" overrides.

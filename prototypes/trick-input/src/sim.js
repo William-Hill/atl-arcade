@@ -12,7 +12,7 @@
 // bail is tested in scoring.test.js), vert ramps, drops off edges, switch.
 
 import { BEAT, COMBO, DT, EPS, GRIND, SKATE, STYLE, TRICK } from "./constants.js";
-import { isFresh, resolvePress, resolvePending } from "./direction.js";
+import { freshDir, isFresh, resolvePress, resolvePending, resolvePressHist, resolvePendingHist } from "./direction.js";
 import { manualStep, manualPoints } from "./manual.js";
 import { airPoints, beatOffsetMs, beatTag, comboMove, comboTick, createCombo, grindPoints } from "./scoring.js";
 import { GRABS, STANCES, ONE_BUTTON, danceFor, grindName, MANUAL_NAMES } from "./tricks.js";
@@ -107,6 +107,7 @@ function snap(s, input) {
     if (s.touchGrindDir) dir = s.touchGrindDir;
     else pendingFlick = true;
   } else if (s.grindPress && s.grindPress.res.dir && s.grindPress.res.dir !== "n") dir = s.grindPress.res.dir;
+  else if (s.k.axisRule) dir = freshDir(input.dirHist, s.t, s.k);
   else if (isFresh(input.lastDir, input.lastDirAt, s.t, s.k, input.lastDirHeld)) dir = input.lastDir;
   s.mode = "grind";
   s.y = r.h;
@@ -293,7 +294,14 @@ function launch(s) {
 function pressRes(s, button, input) {
   const f = input.flick && input.flick[button];
   if (f) return { dir: f, at: s.t };
+  if (s.k.axisRule) return resolvePressHist(s.t, input.dirHist, s.k);
   return resolvePress(s.t, input.lastDir, input.lastDirAt, s.k, input.lastDirHeld);
+}
+
+// R3 for a pending press, each frame until it resolves.
+function pendRes(s, res, t, input) {
+  if (s.k.axisRule) return resolvePendingHist(res, t, input.dirHist, s.k);
+  return resolvePending(res, t, input.lastDir, input.lastDirAt, s.k);
 }
 
 export function stepSim(s, input, dt = DT) {
@@ -333,7 +341,7 @@ export function stepSim(s, input, dt = DT) {
     if (input.touchGrind) s.touchGrindDir = null;
   }
   if (!input.grind && !(s.oneButton && input.trick)) s.grindNeedsRepress = false;
-  if (s.grindPress && s.grindPress.res.pending !== undefined) s.grindPress.res = resolvePending(s.grindPress.res, t, input.lastDir, input.lastDirAt, s.k);
+  if (s.grindPress && s.grindPress.res.pending !== undefined) s.grindPress.res = pendRes(s, s.grindPress.res, t, input);
   // Touch GRIND: the stance arrives at the flick resolve (R6).
   if (input.flick && input.flick.grind) {
     if (s.mode === "grind" && s.grind.pendingFlick && !s.grind.changed) {
@@ -347,7 +355,7 @@ export function stepSim(s, input, dt = DT) {
 
   // A pending R3 press (dirAfter).
   if (s.pend) {
-    s.pend.res = resolvePending(s.pend.res, t, input.lastDir, input.lastDirAt, s.k);
+    s.pend.res = pendRes(s, s.pend.res, t, input);
     if (s.pend.res.dir) {
       const p = s.pend;
       s.pend = null;

@@ -146,6 +146,43 @@ try {
     await sleep(1200);
   }
 
+  // 1c3. The axis rule (default): W pressed 250 ms before Q and still held gives Up (Rocket Grab).
+  //      Key 7 (the GDD rule) turns it off: the same input gives the neutral Mute Grab.
+  for (const [gdd, want] of [[false, "rocket"], [true, "mute"]]) {
+    if (gdd) await page.keyboard.press("Digit7");
+    await airReset(page);
+    await sleep(250);
+    await page.keyboard.down("KeyW");
+    await sleep(250);
+    await page.keyboard.down("KeyQ");
+    await sleep(150);
+    const id = await page.evaluate(() => window.__ti.sim.air && window.__ti.sim.air.grab && window.__ti.sim.air.grab.id);
+    const rule = await page.evaluate(() => (window.__ti.sim.k.axisRule ? "axis" : "gdd"));
+    await page.keyboard.up("KeyQ");
+    await page.keyboard.up("KeyW");
+    if (gdd) await page.keyboard.press("Digit7");
+    check(`keyboard, ${gdd ? "GDD rule (key 7)" : "axis rule (default)"}: W held 250 ms before Q gives ${gdd ? "the neutral Mute Grab" : "Rocket Grab (Up)"}`, id === want && rule === (gdd ? "gdd" : "axis"), { id, rule });
+    await sleep(1200);
+  }
+  // 1c4. The axis rule: a W tap, then D 50 ms later (a carve), then Q 50 ms later: Up wins.
+  {
+    await airReset(page);
+    await sleep(250);
+    await page.keyboard.down("KeyW");
+    await sleep(40);
+    await page.keyboard.up("KeyW");
+    await sleep(10);
+    await page.keyboard.down("KeyD");
+    await sleep(50);
+    await page.keyboard.down("KeyQ");
+    await sleep(150);
+    const id = await page.evaluate(() => window.__ti.sim.air && window.__ti.sim.air.grab && window.__ti.sim.air.grab.id);
+    await page.keyboard.up("KeyQ");
+    await page.keyboard.up("KeyD");
+    check("keyboard, axis rule: a W tap, then a carve D, then Q gives Rocket Grab (Up first)", id === "rocket", { id });
+    await sleep(1200);
+  }
+
   // 1d. Fake gamepad: stick left, then Y.
   {
     await page.evaluate(() => (window.__fakePad.connected = true));
@@ -212,15 +249,38 @@ try {
   results.sweepPush = await page.evaluate(() => window.__ti.sweep({}));
   results.routes = await page.evaluate(() => window.__ti.routes({}));
   results.knobs = {};
+  const GDD = { axisRule: false, udHold: null, udFirst: false };
+  const KD = ["keyboard", "gamepad"];
   for (const [name, o, devs] of [
-    ["dirBefore 0.10", { dirBefore: 0.1 }, ["keyboard", "gamepad"]],
-    ["dirBefore 0.25", { dirBefore: 0.25 }, ["keyboard", "gamepad"]],
-    ["dirAfter 0", { dirAfter: 0 }, ["keyboard", "gamepad"]],
-    ["carveGuard 0.10 (toggle 6)", { carveGuard: 0.1 }, ["keyboard", "gamepad"]],
+    ["GDD rule (toggle 7, the rule before this fix)", GDD, KD],
+    ["GDD rule + carveGuard 0.05", { ...GDD, carveGuard: 0.05 }, KD],
+    ["GDD rule + carveGuard 0.10 (toggle 6)", { ...GDD, carveGuard: 0.1 }, KD],
+    ["GDD rule + carveGuard 0.15", { ...GDD, carveGuard: 0.15 }, KD],
+    ["carveGuard 0.05", { carveGuard: 0.05 }, KD],
+    ["carveGuard 0.10 (toggle 6)", { carveGuard: 0.1 }, KD],
+    ["udHold only (udFirst off)", { udFirst: false }, KD],
+    ["udFirst only (udHold off)", { udHold: null }, KD],
+    ["udHold 0.25", { udHold: 0.25 }, KD],
+    ["udHold 0.40", { udHold: 0.4 }, KD],
+    ["lrAfter 0.03", { lrAfter: 0.03 }, KD],
+    ["lrAfter 0", { lrAfter: 0 }, KD],
+    ["lrBefore 0.12", { lrBefore: 0.12 }, KD],
+    ["dirBefore 0.20, lrBefore 0.13, lrAfter 0.05", { dirBefore: 0.2, lrBefore: 0.13, lrAfter: 0.05 }, KD],
+    ["dirBefore 0.10", { dirBefore: 0.1 }, KD],
+    ["dirBefore 0.25", { dirBefore: 0.25 }, KD],
+    ["dirAfter 0", { dirAfter: 0 }, KD],
     ["flickMin 16 (toggle 5)", { flickMin: 16 }, ["touch"]],
     ["flickMin 40", { flickMin: 40 }, ["touch"]],
   ]) {
     results.knobs[name] = await page.evaluate(([oo, dd]) => window.__ti.bots({ trials: 150, seed: 11, devices: dd, kOverride: oo }), [o, devs]);
+  }
+  // Seed check: all 5 profiles use the same seed, so one seed is a small
+  // sample. 20 more seeds, for the default rule and the GDD rule.
+  results.seedCheck = {};
+  for (const [name, o] of [["axis rule (default)", null], ["GDD rule (toggle 7)", GDD]]) {
+    const rows = [];
+    for (let seed = 101; seed <= 120; seed++) rows.push(...(await page.evaluate(([sd, oo]) => window.__ti.bots({ trials: 150, seed: sd, devices: ["keyboard", "gamepad"], kOverride: oo }), [seed, o])));
+    results.seedCheck[name] = rows;
   }
   results.botSeconds = (Date.now() - t0) / 1000;
   await page.evaluate(() => window.__ti.reset({}));
@@ -312,12 +372,19 @@ md.push("", "## Synthetic sessions (150 trials each)", "", "| Device | Player | 
 for (const s of results.sessions) md.push(`| ${s.device} | ${s.profile} (${s.label}) | ${pct(s.wantedShare)} | ${pct(s.unwantedUpFromPush)} (n ${s.pushTrials}) | ${pct(s.unwantedLRFromCarve)} (n ${s.carveTrials}) | ${s.medianLatencyMs} |`);
 md.push("", "## Push taps with no pause (worst case)", "", "| dirBefore (s) | Tap period (s) | Neutral tricks that came out Up |", "|---|---|---|");
 for (const s of results.sweepPush) md.push(`| ${s.dirBefore} | ${s.period} | ${pct(s.upShare)} |`);
-md.push("", "## Knob sweeps (mean over the 5 players)", "", "| Knob | Device | As wanted | Unwanted Up | Unwanted L/R |", "|---|---|---|---|---|");
+md.push("", "## Knob sweeps (mean over the 5 players)", "", "Each knob row changes the default (the axis rule: udHold 0.3, udFirst on) by the named values. The GDD rule rows turn the axis rule off.", "", "| Knob | Device | As wanted | Unwanted Up | Unwanted L/R |", "|---|---|---|---|---|");
 const mean = (a, f) => a.reduce((s, x) => s + f(x), 0) / a.length;
 const base = (dev) => results.sessions.filter((s) => s.device === dev);
-for (const dev of ["keyboard", "gamepad", "touch"]) md.push(`| typical | ${dev} | ${pct(mean(base(dev), (x) => x.wantedShare))} | ${pct(mean(base(dev), (x) => x.unwantedUpFromPush))} | ${pct(mean(base(dev), (x) => x.unwantedLRFromCarve))} |`);
+for (const dev of ["keyboard", "gamepad", "touch"]) md.push(`| default (axis rule) | ${dev} | ${pct(mean(base(dev), (x) => x.wantedShare))} | ${pct(mean(base(dev), (x) => x.unwantedUpFromPush))} | ${pct(mean(base(dev), (x) => x.unwantedLRFromCarve))} |`);
 for (const [name, rows] of Object.entries(results.knobs)) {
   for (const dev of [...new Set(rows.map((r) => r.device))]) {
+    const g = rows.filter((r) => r.device === dev);
+    md.push(`| ${name} | ${dev} | ${pct(mean(g, (x) => x.wantedShare))} | ${pct(mean(g, (x) => x.unwantedUpFromPush))} | ${pct(mean(g, (x) => x.unwantedLRFromCarve))} |`);
+  }
+}
+md.push("", "## Seed check (seeds 101 to 120, mean over 100 sessions per row)", "", "All 5 players use seed 11 in the tables above, so they share the trial layouts. This check uses 20 more seeds.", "", "| Rule | Device | As wanted | Unwanted Up | Unwanted L/R |", "|---|---|---|---|---|");
+for (const [name, rows] of Object.entries(results.seedCheck)) {
+  for (const dev of ["keyboard", "gamepad"]) {
     const g = rows.filter((r) => r.device === dev);
     md.push(`| ${name} | ${dev} | ${pct(mean(g, (x) => x.wantedShare))} | ${pct(mean(g, (x) => x.unwantedUpFromPush))} | ${pct(mean(g, (x) => x.unwantedLRFromCarve))} |`);
   }

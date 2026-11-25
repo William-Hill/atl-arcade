@@ -72,6 +72,12 @@ Flips do not apply to quad roller skates: the skater has no board. The roller-sk
 
 **R3. Fresh direction (owner choice 1).** A direction counts only if it started in the window from `dirBefore` (150 ms) before the button press to `dirAfter` (60 ms) after it. A direction held from earlier (for example, a held W to push) does not count, so the trick is neutral. A tap counts: a direction key pressed and let go before the trick press is fresh if it started inside `dirBefore`. If two directions start before the press inside the window, the later one wins. The trick starts at the press frame when a fresh direction exists, and a direction that starts after the press cannot change it. Only when no fresh direction exists at the press does the game wait up to `dirAfter` for one; the first direction that starts in that time sets the trick, else the trick is neutral. A touch flick has its own timing (R11).
 
+**R3a. Axis rule (owner choice 2026-11-25, #326; the prototype default until the human playtest).** Two additions to R3 for the keyboard and the gamepad. They do not change the touch flick.
+1. **Up/down hold.** An up or down that is still held at the press counts if it started inside `udHold` (300 ms) before the press. An up or down that the player let go before the press keeps the `dirBefore` window. A W held to push started long before the press, so it still does not count.
+2. **Up/down first.** When an up or down and a left or right are both fresh at the press, the up or down wins, also when the left or right started later. Left and right are also the steer keys, so a carve that starts near the press does not take the trick from an intended up or down. Two fresh directions on the same axis: the later one wins (R3).
+
+Left and right keep the R3 window. The playtest toggle 7 (`?gddRule`) turns the axis rule off. Reason: in the automated playtest the axis rule raised the keyboard tricks as wanted from 88.8% to 90.7% and cut the keyboard carve leak from 11.3% to 7.1% (`prototypes/trick-input/REPORT.md`). The carve leak target (under 5%) is still not met; the human playtest decides.
+
 **R4. Air: grabs.** In the air, a press of TRICK starts a grab. The air must have lasted `grabMinAir` (0.1 s). The first press in one air sets the grab; a later press in the same air does nothing. The grab lasts while TRICK is held.
 
 | Direction | Grab | Clip | New clip |
@@ -204,7 +210,7 @@ The phone keeps 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH), so this system add
 
 | System | Data in | Data out | Owner |
 |---|---|---|---|
-| Input (`src/input/`) | Device events | Per frame, the present fields plus `dir` (the held direction: `"n"`, `"l"`, `"r"`, `"u"`, `"d"`; the newest key wins), `lastDir` (the newest direction start event, kept after the key is let go), and `lastDirAt` (the time of that event, in s on the sim clock). The sim applies R3 with `lastDir` and `lastDirAt`. A gamepad start event is a stick crossing 0.5 on a new axis side, or a d-pad press. Touch: the TRICK and SPIN press come at the flick resolve frame (R11), with `lastDir` the flick direction and `lastDirAt` that frame. The GRIND press comes at the touch-down, and its stance at the resolve (R6). Also `balance`: a float from -1 to 1, +1 is up, the input s of F1. Keyboard: +1 while a `dirUp` key is down, -1 while a `dirDown` key is down, the newest key wins, else 0. Gamepad: the left stick y with the sign changed (the browser gives up as negative), after the stick deadzone, not snapped to 0.5; the d-pad up or down gives +1 or -1. Touch: the steer stick y with the sign changed (`stickVector()` y in `src/input/touch-map.js`), not the boolean push and brake. The input sends `balance` on every frame; the sim reads it only in the manual. | Input |
+| Input (`src/input/`) | Device events | Per frame, the present fields plus `dir` (the held direction: `"n"`, `"l"`, `"r"`, `"u"`, `"d"`; the newest key wins), `lastDir` (the newest direction start event, kept after the key is let go), and `lastDirAt` (the time of that event, in s on the sim clock). The sim applies R3 with `lastDir` and `lastDirAt`. For the axis rule (R3a) the input also sends `dirHist`: the recent direction start events of all devices, each with its start time `at` and its release time `up` (null while held). A gamepad start event is a stick crossing 0.5 on a new axis side, or a d-pad press. Touch: the TRICK and SPIN press come at the flick resolve frame (R11), with `lastDir` the flick direction and `lastDirAt` that frame. The GRIND press comes at the touch-down, and its stance at the resolve (R6). Also `balance`: a float from -1 to 1, +1 is up, the input s of F1. Keyboard: +1 while a `dirUp` key is down, -1 while a `dirDown` key is down, the newest key wins, else 0. Gamepad: the left stick y with the sign changed (the browser gives up as negative), after the stick deadzone, not snapped to 0.5; the d-pad up or down gives +1 or -1. Touch: the steer stick y with the sign changed (`stickVector()` y in `src/input/touch-map.js`), not the boolean push and brake. The input sends `balance` on every frame; the sim reads it only in the manual. | Input |
 | Skater sim (`src/sim/skate/skater.js`, `controller.js`) | The input per frame | `state.trick` (`{ kind, id, name, clip, dir, held }`), `state.manual` (`{ balance, meters }`), the landing result | Sim |
 | Grind (`grind.js`) | The stance id at the snap | The grind meters and the balance, as now | Sim |
 | Combo (`combo.js`, `run.js`) | The trick name, the points, the beat offset at the judged moment, the landing result | The links, the multiplier, the bank | Sim |
@@ -320,7 +326,8 @@ With TRICK still held at the touchdown, link 3 pays 134: pending 1164, bank 3492
 - **If the player holds the grab for the whole air**: `holdCap` stops the hold pay at 90 points, and a hold at the touchdown is a stumble.
 - **If the player spins without end**: `spinCapHalfTurns` stops the pay at 240. A partial turn at the touchdown is clean.
 - **If the player repeats one trick**: the 4th and later repeats pay 0 and add no multiplier.
-- **If the player holds W to push and presses TRICK**: the direction is not fresh (R3), so the trick is neutral. To get Up, the player taps W in the window.
+- **If the player holds W to push and presses TRICK**: the direction is not fresh (R3), so the trick is neutral. To get Up, the player taps W in the window, or presses W less than `udHold` (300 ms) before TRICK and holds it (R3a).
+- **If the player taps W, then starts a carve with D, then presses TRICK, all inside the window**: the trick is Up (R3a, up/down first).
 - **If two directions start before the press in the window**: the later one wins. A direction that starts after the press does not change a fresh direction at the press.
 - **If the player taps W and lets go before the TRICK press**: `lastDir` keeps the Up, so the trick is Up if the tap started inside `dirBefore`.
 - **If the player holds W and presses A**: A is the newest key, so `lastDir` is left.
@@ -361,6 +368,8 @@ All knobs go in `src/sim/skate/constants.js` (a new `TRICK` block, and `COMBO` a
 |---|---|---|---|
 | `dirBefore` (ms) | 100 / 150 / 250 | Players miss the direction | A push tap turns into Up |
 | `dirAfter` (ms) | 0 / 60 / 100 | Late directions miss | The neutral trick starts late |
+| `udHold` (ms) | 250 / 300 / 400 | An up or down held early misses | A W held to push turns into Up |
+| `udFirst` | on / off | (off) A carve takes the trick from an intended up or down | (on) A carve that is an intended left or right loses to a push tap in the window |
 | `stickThreshold` | 0.35 / 0.5 / 0.7 | Drift reads as a direction | A full push is needed |
 | `flickMin` (px) | 16 / 24 / 40 | A tap reads as a flick | A short flick is a tap |
 | `flickMaxMs` (ms) | 80 / 120 / 250 | Slow flicks become taps | The neutral trick starts late |
@@ -457,6 +466,8 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 - **GIVEN** Shift held to push, **WHEN** Q is pressed, **THEN** the trick is neutral (Shift gives no direction).
 - **GIVEN** a touch on GRIND, **THEN** the GRIND press reaches the sim at the touch-down frame; **WHEN** the finger then moves 24 px up after the snap, **THEN** the stance changes to Makio at that frame, once.
 - **GIVEN** the player holds W for 1 s to push, **WHEN** the player presses Q on the ground, **THEN** the dance is the neutral slot (Bankhead Bounce for Nia).
+- **GIVEN** the axis rule (R3a), **WHEN** W goes down 15 frames (250 ms) before the Q press in the air and is still held, **THEN** the grab is the Rocket Grab; with toggle 7 (the R3 rule only), **THEN** it is the Mute Grab.
+- **GIVEN** the axis rule (R3a), **WHEN** W is tapped at frame -6, D goes down at frame -3 and stays down, and Q is pressed, **THEN** the grab is the Rocket Grab; with toggle 7, **THEN** it is the Side Grab.
 - **GIVEN** the gamepad stick at x 0.49, **WHEN** TRICK is pressed, **THEN** the trick is neutral; at x 0.5, **THEN** it is left or right; at x 0.6 and y 0.7, **THEN** up or down wins.
 - **GIVEN** the same direction on the keyboard, a simulated gamepad, and touch, **WHEN** TRICK is pressed in the air, **THEN** `state.trick.id` is the same for all 3.
 - **GIVEN** a touch on TRICK in the air, **WHEN** the finger moves 24 px right, **THEN** the Side Grab starts in that frame.

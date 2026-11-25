@@ -84,6 +84,9 @@ async function fillHud(page) {
     met.textContent = "\u2713 Goal met: Stone Mountain Trail Bridge Hop";
     met.hidden = false;
   });
+  // .hud-tag fades in (transition: opacity 0.3s). Wait for the end of the
+  // fade, so a check does not read a part opacity.
+  await page.waitForFunction(() => getComputedStyle(document.getElementById("hud-tag")).opacity === "1");
 }
 
 function overlaps(a, b) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createIntentLog, feed, intend, intentMetrics, restartClock, setConfig } from "./intent.js";
+import { createIntentLog, feed, GRIND_WINDOW, intend, intentMetrics, pageRows, restartClock, setConfig } from "./intent.js";
 import { createInput } from "./input.js";
 import { key, run, T, tap } from "./harness.js";
 import { createSim, place } from "./sim.js";
@@ -119,6 +119,33 @@ describe("intent log (agent playtest)", () => {
     feed(log, fr(8, { grind: true }), [trick(8, "n", "grind")]);
     feed(log, fr(8.1, { grind: true }), [{ type: "stance-change", dir: "d", t: 8.1 }]);
     expect(intentMetrics(log).rows[1].result).toBe("d");
+  });
+  it("a GRIND press pairs only inside the grind buffer: a later snap from a held GRIND is not that press", () => {
+    const log = createIntentLog();
+    // GRIND pressed at 1.0 (it starts a manual); still held, the snap comes 0.5 s later.
+    intend(log, "l", 1);
+    feed(log, fr(1, { grind: true }), [trick(1.15, "n", "manual")]);
+    feed(log, fr(1.2, { grind: true }), []);
+    feed(log, fr(1.5, { grind: true }), [trick(1.5, "u", "grind")]);
+    const m = intentMetrics(log);
+    expect(m.trials).toBe(1);
+    expect(m.rows[0]).toMatchObject({ intended: "l", result: null });
+    // A buffered press that snaps inside the buffer pairs.
+    feed(log, fr(2), []);
+    intend(log, "d", 2.9);
+    feed(log, fr(3, { grind: true }), []);
+    feed(log, fr(3 + GRIND_WINDOW - 0.01, { grind: true }), [trick(3 + GRIND_WINDOW - 0.01, "d", "grind")]);
+    expect(intentMetrics(log).rows[1]).toMatchObject({ intended: "d", result: "d", wanted: true });
+  });
+  it("pages the rows: 250 rows give pages at 0, 100, 200 with the total", () => {
+    const rows = Array.from({ length: 250 }, (_, i) => ({ i }));
+    const p0 = pageRows(rows, 0, 100);
+    const p1 = pageRows(rows, p0.next, 100);
+    const p2 = pageRows(rows, p1.next, 100);
+    expect([p0.next, p1.next, p2.next]).toEqual([100, 200, null]);
+    expect([...p0.rows, ...p1.rows, ...p2.rows].map((r) => r.i)).toEqual(rows.map((r) => r.i));
+    expect(p2).toMatchObject({ total: 250, offset: 200 });
+    expect(pageRows(rows, 0, 500).rows.length).toBe(100);
   });
   it("times the first 3-link combo with a manual from the last restart", () => {
     const log = createIntentLog();

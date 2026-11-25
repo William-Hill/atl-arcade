@@ -11,7 +11,7 @@ import { createSim, LEVEL, place, stepSim } from "./sim.js";
 import { comboValue } from "./scoring.js";
 import { ARROWS, DANCES, GRABS, STANCES, hudShort } from "./tricks.js";
 import { metrics, PROFILES, pushTapSweep, routeBot, runSession, runTrial } from "./bots.js";
-import { createIntentLog, feed, intend, intentMetrics, restartClock, setConfig } from "./intent.js";
+import { createIntentLog, feed, intend, intentMetrics, pageRows, restartClock, setConfig } from "./intent.js";
 
 const params = new URLSearchParams(location.search);
 const opts = { oneButton: false, relaxed: false, carveGuard: params.has("carveGuard"), gddRule: params.has("gddRule"), shortFlick: params.has("shortFlick"), skater: "nia", touch: params.has("touch") || matchMedia("(pointer: coarse)").matches };
@@ -41,12 +41,7 @@ const playtest = {
   },
   // The trials of one setting, one page at a time (the bridge sends at most
   // 200 items in a list).
-  rows: (offset = 0, limit = 100, config) => {
-    const all = intentMetrics(intentLog, config ?? intentLog.config).rows;
-    const o = Math.max(0, Number(offset) || 0);
-    const l = Math.max(1, Math.min(100, Number(limit) || 100));
-    return { total: all.length, offset: o, next: o + l < all.length ? o + l : null, rows: all.slice(o, o + l) };
-  },
+  rows: (offset = 0, limit = 100, config) => pageRows(intentMetrics(intentLog, config ?? intentLog.config).rows, offset, limit),
 };
 
 // --- Three.js scene -------------------------------------------------------

@@ -22,13 +22,19 @@
 // again, so each intention, press, and direction start keeps its run, and
 // the context of a trial reads only its own run.
 
+import { DT, GRIND } from "./constants.js";
+
 const DIRS = ["n", "l", "r", "u", "d"];
 const BUTTONS = ["trick", "spin", "grind"];
 const PAIR_KINDS = new Set(["grab", "dance", "grind"]);
 // An intention older than this (s) at the press does not pair.
 export const INTENT_MAX_AGE = 2;
-// The trick of a press must start inside this (s) after the press.
+// The trick of a press must start inside this (s) after the press. A GRIND
+// press snaps only inside the sim's grind buffer, so its window is that
+// buffer plus one frame: a later snap from a held GRIND is not this press.
 export const OUTCOME_WINDOW = 1;
+export const GRIND_WINDOW = GRIND.buffer + DT;
+const windowOf = (button) => (button === "grind" ? GRIND_WINDOW : OUTCOME_WINDOW);
 const PUSH_BEFORE = 1.5;
 const CARVE_BEFORE = 1.2;
 const CARVE_AFTER = 0.3;
@@ -105,7 +111,7 @@ export function feed(log, frame, events) {
     const button = e.kind === "grab" ? "trick" : e.kind === "grind" ? "grind" : e.button;
     let i = -1;
     log.pending.forEach((p, j) => {
-      if (p.button === button && p.pressAt <= e.t + 1e-9 && e.t - p.pressAt <= OUTCOME_WINDOW + 1e-9 && (i < 0 || p.pressAt >= log.pending[i].pressAt)) i = j;
+      if (p.button === button && p.pressAt <= e.t + 1e-9 && e.t - p.pressAt <= windowOf(p.button) + 1e-9 && (i < 0 || p.pressAt >= log.pending[i].pressAt)) i = j;
     });
     if (i < 0) continue;
     const [p] = log.pending.splice(i, 1);
@@ -113,8 +119,8 @@ export function feed(log, frame, events) {
     log.trials.push(row);
     if (e.kind === "grind") log.activeGrind = row;
   }
-  // A press with no trick inside OUTCOME_WINDOW is a failed trial.
-  const late = log.pending.filter((p) => t - p.pressAt > OUTCOME_WINDOW + 1e-9);
+  // A press with no trick inside its window is a failed trial.
+  const late = log.pending.filter((p) => t - p.pressAt > windowOf(p.button) + 1e-9);
   for (const p of late) log.trials.push({ ...p, result: null, resultAt: null });
   log.pending = log.pending.filter((p) => !late.includes(p));
 }
@@ -153,4 +159,12 @@ export function intentMetrics(log, config = log.config) {
     firstCombo: log.firstCombo,
     rows,
   };
+}
+
+// One page of rows: at most `limit` (1 to 100) from `offset`, with the total
+// and the offset of the next page (null on the last page).
+export function pageRows(rows, offset = 0, limit = 100) {
+  const o = Math.max(0, Math.floor(Number(offset) || 0));
+  const l = Math.max(1, Math.min(100, Math.floor(Number(limit) || 100)));
+  return { total: rows.length, offset: o, next: o + l < rows.length ? o + l : null, rows: rows.slice(o, o + l) };
 }

@@ -13,7 +13,7 @@ The capsule skater, one rail, one kicker, and a flat pad. Text labels show the t
 | GDD rule | In the prototype | Evidence |
 |---|---|---|
 | R2, R3 fresh direction | Keyboard (WASD and arrows, the newest key wins, Shift gives no direction), gamepad (stick 0.5, main axis, d-pad), `dirBefore` 150 ms, `dirAfter` 60 ms | `src/direction.js`, unit tests, sim tests, real-browser checks |
-| Autopilot playtest (owner choice 2026-11-25, extra evidence) | The bridge behind `?autopilot=1` (dev server only), the hooks, and the intent log (`playtest.intend`, `playtest.metrics`). See "Autopilot playtest kit". | `src/intent.js` (11 unit tests), `src/autopilot/hooks.js` (7 unit tests), real-browser checks |
+| Autopilot playtest (owner choice 2026-11-25, extra evidence) | The bridge behind `?autopilot=1` (dev server only), the hooks, and the intent log (`playtest.intend`, `playtest.metrics`). See "Autopilot playtest kit". | `src/intent.js` (13 unit tests), `src/autopilot/hooks.js` (7 unit tests), real-browser checks |
 | R3a axis rule (owner choice 2026-11-25, default) | An up or down still held at the press counts up to `udHold` (300 ms); an up or down beats a left or right when both are fresh. The input keeps a short history of start events (`dirHist`). Key 7 or `?gddRule` turns it off (the R3 rule only). | `src/direction.js` (`freshDir`, `resolvePressHist`), 10 unit tests, 2 sim tests, 3 real-browser checks |
 | R4, R5 grabs | 5 grabs, `grabMinAir`, first press only, hold pay, air spin sum | `src/sim.js`, sim tests |
 | R6 grind stances | 5 stances at the press or at the snap (buffered), names "[Long] [edge] [stance] Grind", HUD short form | sim and name tests |
@@ -27,7 +27,7 @@ The capsule skater, one rail, one kicker, and a flat pad. Text labels show the t
 
 Not in the prototype: the grind balance and the grind bail (the bail bank is tested in `scoring.test.js`), vert ramps, drops, switch, sound, and clips.
 
-**Tests:** 155 Vitest tests in 9 files, all pass (`npx vitest run --config prototypes/trick-input/vitest.config.js`).
+**Tests:** 157 Vitest tests in 9 files, all pass (`npx vitest run --config prototypes/trick-input/vitest.config.js`).
 
 ## How to run it
 
@@ -174,7 +174,7 @@ A cloud session cannot run Autopilot: a run needs the Jev decision model (a Type
   - `game.call("playtest", "intend", "l")`: the intended direction (`n`, `l`, `r`, `u`, or `d`) just before the press. An optional second argument is a note.
   - `game.call("playtest", "metrics")`: for the rule setting now (`config`, for example "axis" or "gdd+guard"): the trials, tricks as wanted, unwanted Up from push, unwanted Left/Right from carves, the presses with no trick, the time to the first 3-link combo with a manual (from the last restart), and the last 10 trials. `byConfig` gives the trial count of each setting; `metrics("gdd")` gives another setting. Each trial keeps the setting of its press, so a run that changes a toggle does not mix the settings.
   - `game.call("playtest", "rows", 0, 100)`: the trials, 100 per page, with `total` and `next` (the offset of the next page, or null).
-  - The log tracks the TRICK, SPIN, and GRIND presses. A press with an intention and no trick within 1 s is a failed trial. The push and carve windows start at the press. A reset starts a new run: old input does not reach the new run.
+  - The log tracks the TRICK, SPIN, and GRIND presses. A press with an intention and no trick within 1 s (GRIND: within the 0.15 s grind buffer plus one frame) is a failed trial. The push and carve windows start at the press. A reset starts a new run: old input does not reach the new run.
   - Only `playtest` is reachable by name through the bridge. The skater state comes through the player hook.
   - The same calls work in a browser console: `__ti.playtest.intend("l")`, `__ti.playtest.metrics()`.
 

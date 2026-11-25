@@ -56,11 +56,13 @@ Headless Chromium renders through SwiftShader (software) and is capped at 60 FPS
 
 The prototype is `prototypes/trick-input/`. Its automated playtest runs with `node prototypes/trick-input/playtest/playtest.mjs` and writes `prototypes/trick-input/playtest/results.md`. It uses 5 synthetic player profiles (a model of human timing), not humans.
 
-| Metric | Target | Automated result (2026-11-23, mean of 5 synthetic players) |
-|---|---|---|
-| Tricks as wanted | 90% or more | Keyboard 88.8%, phone 90.3%, gamepad 92.1% |
-| Unwanted Up from push taps | under 5% | Keyboard 2.9% (0% on the phone and the gamepad) |
-| Unwanted Left/Right from carves | under 5% | Keyboard 11.3%, gamepad 6.4%, phone 0% |
-| Time to the first 3-link combo with a manual | under 3 minutes | 6.1 s for the route bot (the shortest route, not a human) |
+| Metric | Target | Automated result, first run (2026-11-23, the R3 rule) | Automated result, after the #326 fix (2026-11-25, the axis rule, default) |
+|---|---|---|---|
+| Tricks as wanted | 90% or more | Keyboard 88.8%, phone 90.3%, gamepad 92.1% | Keyboard **90.7%**, phone 90.3%, gamepad 93.1% |
+| Unwanted Up from push taps | under 5% | Keyboard 2.9% (0% on the phone and the gamepad) | Keyboard 3.5% (0% on the phone and the gamepad) |
+| Unwanted Left/Right from carves | under 5% | Keyboard 11.3%, gamepad 6.4%, phone 0% | Keyboard **7.1%**, gamepad **5.3%**, phone 0% (target still not met) |
+| Time to the first 3-link combo with a manual | under 3 minutes | 6.1 s for the route bot (the shortest route, not a human) | 6.1 s for the route bot |
+
+Values are the mean of the 5 synthetic players at seed 11. On 20 more seeds (101 to 120): keyboard 90.2% to 91.4% as wanted, carve leak 9.1% to 6.0%; gamepad 90.7% to 91.8%, carve leak 6.1% to 5.6%. The axis rule is GDD R3a and `docs/decisions.md` (2026-11-25). Toggle 7 (`?gddRule`) gives the first rule for the comparison in the human playtest.
 
 **Verdict: pending.** The human playtest (5 or more players, keyboard and phone) is open. The owner records PROCEED, PIVOT, or KILL here after it. The findings and the checklist are in `prototypes/trick-input/REPORT.md`.

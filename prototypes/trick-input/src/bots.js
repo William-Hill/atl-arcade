@@ -99,6 +99,7 @@ function keyboardEvents(r, p, ctx, intended) {
     const start = TP + r.uniform(-1.2, 0.3);
     ev.push(keyEv(DIR_KEY[side], true, start), keyEv(DIR_KEY[side], false, start + r.uniform(0.2, 0.8)));
     notes.carve = side;
+    notes.carveAt = Math.round((start - TP) * 1000);
     notes.carveInWindow = start >= TP - TRICK.dirBefore && start <= TP + TRICK.dirAfter;
   }
   // The intended direction.

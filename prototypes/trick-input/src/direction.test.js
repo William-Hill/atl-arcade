@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { TRICK, withRelaxed } from "./constants.js";
-import { createDirTracker, createPadTracker, dirDown, dirUp, heldDir, isFresh, padUpdate, resolvePending, resolvePress, stickDir } from "./direction.js";
+import { GDD_RULE, TRICK, withRelaxed } from "./constants.js";
+import { createDirTracker, createPadTracker, dirDown, dirUp, freshDir, heldDir, isFresh, padUpdate, resolvePending, resolvePendingHist, resolvePress, resolvePressHist, stickDir } from "./direction.js";
 
 const F = (n) => n / 60;
 
@@ -54,12 +54,12 @@ describe("keyboard tracker (R2)", () => {
     tr = dirDown(tr, "l", 1);
     expect(tr.lastDir).toBe("l");
     expect(heldDir(tr)).toBe("l");
-    tr = dirUp(tr, "l");
+    tr = dirUp(tr, "l", 1.1);
     expect(heldDir(tr)).toBe("u");
   });
   it("a tap keeps lastDir after the key is let go", () => {
     let tr = dirDown(createDirTracker(), "u", 0.9);
-    tr = dirUp(tr, "u");
+    tr = dirUp(tr, "u", 1.2);
     expect(tr.lastDir).toBe("u");
     expect(tr.lastDirAt).toBe(0.9);
     expect(heldDir(tr)).toBe("n");
@@ -105,5 +105,70 @@ describe("carve guard toggle (prototype, off by default)", () => {
   it("on: a tap (let go) 140 ms before still counts, and up/down are not guarded", () => {
     expect(isFresh("l", 1 - 0.14, 1, guard, false)).toBe(true);
     expect(isFresh("u", 1 - 0.14, 1, guard, true)).toBe(true);
+  });
+});
+
+describe("axis rule (#326 fix, on by default)", () => {
+  const ev = (dir, at, up = null) => ({ dir, at, up });
+  const gdd = { ...TRICK, ...GDD_RULE };
+  it("is on in TRICK, and GDD_RULE turns it off", () => {
+    expect(TRICK.axisRule).toBe(true);
+    expect(gdd.axisRule).toBe(false);
+  });
+  it("an up still held at the press counts up to udHold (300 ms); a tap let go keeps dirBefore", () => {
+    expect(freshDir([ev("u", 1 - 0.25)], 1)).toBe("u");
+    expect(freshDir([ev("u", 1 - 0.32)], 1)).toBe("n");
+    expect(freshDir([ev("u", 1 - 0.25, 1 - 0.1)], 1)).toBe("n");
+    expect(freshDir([ev("u", 1 - 0.25)], 1, gdd)).toBe("n");
+  });
+  it("a W held 1 s to push still gives the neutral trick", () => {
+    expect(freshDir([ev("u", 0)], 1)).toBe("n");
+  });
+  it("a held left keeps the R3 window: 200 ms before the press does not count", () => {
+    expect(freshDir([ev("l", 1 - 0.2)], 1)).toBe("n");
+    expect(freshDir([ev("l", 1 - 0.1)], 1)).toBe("l");
+  });
+  it("up/down first: a carve that starts after a fresh up does not take the trick", () => {
+    const h = [ev("u", 1 - 0.1, 1 - 0.02), ev("r", 1 - 0.05)];
+    expect(freshDir(h, 1)).toBe("u");
+    expect(freshDir(h, 1, { ...TRICK, udFirst: false })).toBe("r");
+  });
+  it("two left/right events: the later one wins (R3)", () => {
+    expect(freshDir([ev("l", 1 - 0.1), ev("r", 1 - 0.05)], 1)).toBe("r");
+  });
+  it("starts at the press with a fresh direction, else waits dirAfter for the newest start", () => {
+    expect(resolvePressHist(1, [ev("d", 0.9)])).toEqual({ dir: "d", at: 1 });
+    const p = resolvePressHist(1, []);
+    expect(p.pending).toBe(1);
+    expect(resolvePendingHist(p, 1 + F(1), [ev("l", 1 + 0.01)])).toEqual({ dir: "l", at: 1 + F(1) });
+    expect(resolvePendingHist(p, 1 + F(4), [])).toEqual({ dir: "n", at: 1 + F(4) });
+  });
+  it("lrAfter (sweep knob) stops a left/right that starts late in dirAfter", () => {
+    const p = resolvePressHist(1, []);
+    const k = { ...TRICK, lrAfter: 0.03 };
+    expect(resolvePendingHist(p, 1 + F(3), [ev("r", 1 + 0.045)], k).pending).toBe(1);
+    expect(resolvePendingHist(p, 1 + F(3), [ev("u", 1 + 0.045)], k)).toEqual({ dir: "u", at: 1 + F(3) });
+  });
+  it("with the GDD rule knobs, the history gives the same result as the newest event", () => {
+    const cases = [[ev("r", 0.9)], [ev("u", 0.5)], [ev("l", 0.88), ev("u", 0.95)], [ev("u", 0.88, 0.9), ev("r", 0.95)]];
+    for (const h of cases) {
+      const last = h[h.length - 1];
+      const held = last.up == null;
+      expect(resolvePressHist(1, h, gdd)).toEqual(resolvePress(1, last.dir, last.at, gdd, held));
+    }
+  });
+  it("a W let go before the press (for example on a window blur) does not get the udHold extension", () => {
+    let tr = dirDown(createDirTracker(), "u", 0);
+    tr = dirUp(tr, "u", 0.1);
+    expect(freshDir(tr.hist, 0.25)).toBe("n");
+    expect(() => dirUp(dirDown(createDirTracker(), "u", 0), "u")).toThrow();
+  });
+  it("the trackers keep the release time of each start event", () => {
+    let tr = dirDown(createDirTracker(), "l", 1);
+    tr = dirUp(tr, "l", 1.2);
+    expect(tr.hist).toEqual([{ dir: "l", at: 1, up: 1.2 }]);
+    let pt = padUpdate(createPadTracker(), "r", 2);
+    pt = padUpdate(pt, "u", 2.1);
+    expect(pt.hist).toEqual([{ dir: "r", at: 2, up: 2.1 }, { dir: "u", at: 2.1, up: null }]);
   });
 });

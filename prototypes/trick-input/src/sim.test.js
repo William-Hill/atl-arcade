@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TRICK } from "./constants.js";
+import { GDD_RULE, TRICK } from "./constants.js";
 import { createInput, frameInput, padDisconnect, padSample, rebind } from "./input.js";
 import { key, run, T, tap } from "./harness.js";
 import { createSim, place } from "./sim.js";
@@ -547,6 +547,24 @@ describe("playtest toggles", () => {
       const inp = createInput({ k: { ...TRICK, carveGuard } });
       rampAir(s);
       run(s, inp, [key("KeyD", true, T(10)), key("KeyQ", true, T(18))], 24);
+      expect(s.air.grab.id).toBe(id);
+    }
+  });
+  it("axis rule (default): W held from 15 frames (250 ms) before Q gives Rocket Grab; the GDD rule (toggle 7) gives Mute Grab", () => {
+    for (const [kk, id] of [[TRICK, "rocket"], [{ ...TRICK, ...GDD_RULE }, "mute"]]) {
+      const s = createSim({ beat: false, k: kk });
+      const inp = createInput({ k: kk });
+      rampAir(s);
+      run(s, inp, [key("KeyW", true, T(5)), key("KeyQ", true, T(20))], 26);
+      expect(s.air.grab.id).toBe(id);
+    }
+  });
+  it("axis rule (default): a W tap, then a carve D 3 frames later, then Q gives Rocket Grab; the GDD rule gives Side Grab", () => {
+    for (const [kk, id] of [[TRICK, "rocket"], [{ ...TRICK, ...GDD_RULE }, "side"]]) {
+      const s = createSim({ beat: false, k: kk });
+      const inp = createInput({ k: kk });
+      rampAir(s);
+      run(s, inp, [...tap("KeyW", T(14), 0.08), key("KeyD", true, T(17)), key("KeyQ", true, T(20))], 26);
       expect(s.air.grab.id).toBe(id);
     }
   });

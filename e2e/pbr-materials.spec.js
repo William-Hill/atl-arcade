@@ -38,7 +38,7 @@ const OTHER_OK = [
   /^ShaderMaterial sky<Scene$/, // the sky dome (src/render/sky.js)
   /^ShaderMaterial rain<Scene$/, // the rain streaks (src/render/rain.js)
   /^ShaderMaterial fx-(bursts|screen)<Scene$/, // the effects (src/render/effects/effects-view.js)
-  /^ShaderMaterial landmark-rim<Scene$/, // the golden-hour rim on a claimed landmark (src/render/landmark-rim.js, #221)
+  /^ShaderMaterial landmark-rim<Scene$/, // the golden-hour rim on a Found landmark building (src/render/landmark-rim.js, #221)
   /^LineBasicMaterial debug-colliders<Scene$/, // the collider lines (?debug, hidden by default)
   /^ShaderMaterial far-trees<[\w-]+<Scene$/, // the far tree impostors past the prop draw distance (#281, src/render/far-trees.js)
 ];

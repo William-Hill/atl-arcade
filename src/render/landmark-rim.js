@@ -34,7 +34,10 @@ const fragmentShader = /* glsl */ `
   varying vec3 vWorld;
   varying float vAlong;
   void main() {
-    vec3 v = normalize(cameraPosition - vWorld);
+    // An orthographic camera (view=iso) looks along one direction: the
+    // camera's +z axis in world space. A perspective camera looks from its
+    // position.
+    vec3 v = isOrthographic ? normalize(vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2])) : normalize(cameraPosition - vWorld);
     float f = 1.0 - abs(dot(normalize(vNormal), v));
     // The rim: the silhouette edges, a little stronger toward the roof line.
     float a = pow(f, 2.0) * mix(0.35, 1.0, vAlong) * uAlpha;

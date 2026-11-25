@@ -1,13 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { BLOCKED_DATASETS, MAX_FACT_LENGTH, composeFact, datasetPage, factsMode, fillTemplate, fixtureFacts, loadFacts, queryFact, reviewFact } from "./client.js";
+import { BLOCKED_DATASETS, MAX_FACT_LENGTH, citySourceUrl, composeFact, factsMode, fillTemplate, fixtureFacts, reviewFact } from "./client.js";
 import fixture from "./fixtures/beltline-eastside.json";
 
 const SPECS = JSON.parse(readFileSync(new URL("../../levels/beltline-eastside/facts.json", import.meta.url), "utf8")).cards;
-
-function jsonResponse(body, status = 200) {
-  return { ok: status >= 200 && status < 300, status, json: async () => body };
-}
 
 describe("fillTemplate", () => {
   const rows = [{ NAME: "Old Fourth Ward", AC: 12.6 }, { NAME: "Inman Park", AC: 3 }, { NAME: "Inman Park", AC: 1 }];
@@ -47,7 +43,7 @@ describe("the BeltLine fact cards", () => {
     expect(SPECS).toHaveLength(3);
     for (const s of SPECS) expect(BLOCKED_DATASETS).not.toContain(s.dataset);
   });
-  it("gives a reviewed one-line text and a dataset link for each card from the fixture", () => {
+  it("gives a reviewed one-line text and a City of Atlanta source link for each card from the fixture", () => {
     const cards = fixtureFacts(SPECS, fixture);
     expect(cards.map((c) => c.text)).toEqual([
       "The Eastside Trail links 3 neighborhoods here: Inman Park, Old Fourth Ward and Poncey-Highland.",
@@ -56,77 +52,31 @@ describe("the BeltLine fact cards", () => {
     ]);
     for (const c of cards) {
       expect(reviewFact(c.text, c.dataset)).toEqual([]);
-      expect(c.sourceUrl).toBe(datasetPage(c.dataset));
-      expect(c.sourceUrl).toMatch(/^https:\/\/agenticatl\.ai\/datasets\//);
+      expect(c.sourceUrl).toMatch(/^https:\/\/gis\.atlantaga\.gov\/dpcd\/rest\/services\/OpenDataService1\/FeatureServer\/\d+$/);
       expect(c.publisher).toBe("City of Atlanta Department of City Planning");
       expect(c.origin).toBe("fixture");
     }
+    expect(cards.map((c) => c.sourceUrl.split("/").pop())).toEqual(["3", "26", "28"]);
   });
 });
 
-describe("queryFact and loadFacts", () => {
-  const spec = SPECS[1];
-  it("posts the query_dataset input to the tools API", async () => {
-    let seen = null;
-    const fetch = async (url, init) => {
-      seen = { url, body: JSON.parse(init.body) };
-      return jsonResponse(fixture["freedom-park"]);
-    };
-    await queryFact(spec, { fetch, base: "/oda" });
-    expect(seen.url).toBe("/oda/api/tools/query_dataset");
-    expect(seen.body).toEqual({ id: "atl-parks", ...spec.query });
+describe("citySourceUrl", () => {
+  it("gives the ArcGIS layer of a recorded City of Atlanta query URL", () => {
+    expect(citySourceUrl("https://gis.atlantaga.gov/dpcd/rest/services/OpenDataService1/FeatureServer/26/query?where=1%3D1&f=json")).toBe("https://gis.atlantaga.gov/dpcd/rest/services/OpenDataService1/FeatureServer/26");
+    expect(citySourceUrl("https://gis.atlantaga.gov/dpcd/rest/services/AdministrativeArea/AddressPoint/MapServer/0")).toBe("https://gis.atlantaga.gov/dpcd/rest/services/AdministrativeArea/AddressPoint/MapServer/0");
   });
-  it("uses the live text when the live call works", async () => {
-    const live = { rows: [{ NAME: "Freedom Park", GIS_AC: 130.2 }], sources: fixture["freedom-park"].sources };
-    const cards = await loadFacts([spec], fixture, { fetch: async () => jsonResponse(live) });
-    expect(cards[0]).toMatchObject({ origin: "live", text: "Freedom Park covers 130 acres of city park land." });
+  it("gives no link for a host that is not a City of Atlanta source, a bad URL, or no layer", () => {
+    expect(citySourceUrl("https://example.com/datasets/atl-parks")).toBeNull();
+    expect(citySourceUrl("http://gis.atlantaga.gov/dpcd/rest/services/OpenDataService1/FeatureServer/26")).toBeNull();
+    expect(citySourceUrl("https://gis.atlantaga.gov.example.com/x/FeatureServer/1")).toBeNull();
+    expect(citySourceUrl("https://gis.atlantaga.gov/dpcd/rest/services")).toBeNull();
+    expect(citySourceUrl("not a url")).toBeNull();
   });
-  it("uses the fixture text with no network, on an HTTP error, a tool error, or a live text that fails the review", async () => {
-    const cases = [
-      async () => {
-        throw new TypeError("Failed to fetch");
-      },
-      async () => jsonResponse({ error: "rate limited" }, 429),
-      async () => jsonResponse({ error: "Unknown dataset" }),
-      async () => jsonResponse({ rows: [{ NAME: "Freedom Park police post", GIS_AC: 1 }] }),
-      async () => jsonResponse({ rows: [] }),
-    ];
-    for (const fetch of cases) {
-      const [card] = await loadFacts([spec], fixture, { fetch });
-      expect(card.origin).toBe("fixture");
-      expect(card.text).toBe("Freedom Park covers 124 acres of city park land.");
-      expect(card.error).toBeTruthy();
-    }
-  });
-  it("uses the fixture text when the live call takes longer than the timeout", async () => {
-    const fetch = (url, init) =>
-      new Promise((resolve, reject) => {
-        init.signal.addEventListener("abort", () => reject(new Error("aborted")));
-      });
-    const [card] = await loadFacts([spec], fixture, { fetch, timeoutMs: 20 });
-    expect(card.origin).toBe("fixture");
-  });
-  it("throws when the fixture has no text for a card", () => {
-    expect(() => fixtureFacts([spec], {})).toThrow(/freedom-park/);
-  });
-  it("does not query a blocked dataset", async () => {
-    await expect(queryFact({ ...spec, dataset: "apd-crime-incidents" }, { fetch: async () => jsonResponse({ rows: [] }) })).rejects.toThrow(/blocked/);
-  });
-});
-
-describe("factsMode", () => {
-  it("reads the URL parameter, and uses the fixture under automation", () => {
-    expect(factsMode(null)).toBe("live");
-    expect(factsMode(null, { webdriver: true })).toBe("fixture");
-    expect(factsMode("live", { webdriver: true })).toBe("live");
-    expect(factsMode("fixture")).toBe("fixture");
-    expect(factsMode("0")).toBe("off");
-  });
-});
-
-describe("composeFact", () => {
-  it("gives null for a response with no rows", () => {
-    expect(composeFact(SPECS[0], null)).toBeNull();
-    expect(composeFact(SPECS[0], { error: "x" })).toBeNull();
+  it("gives a card with the source name and no link when the source is not a city source", () => {
+    const spec = SPECS[1];
+    const response = { rows: fixture["freedom-park"].rows, sources: [{ ...fixture["freedom-park"].sources[0], url: "https://example.com/api/tools/query_dataset" }] };
+    const card = composeFact(spec, response);
+    expect(card.title).toBe("Parks");
+    expect(card.sourceUrl).toBeNull();
   });
 });

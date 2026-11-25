@@ -20,14 +20,17 @@ function collectErrors(page) {
   return errors;
 }
 
-// Requests that leave the dev server for the open-data-atl site.
+// Requests to the open-data-atl site (agenticatl.ai) or to the old dev
+// proxy. The game must send none (#372).
 function watchFactCalls(page) {
   const calls = [];
   page.on("request", (req) => {
-    if (/agenticatl\.ai|\/oda-api\//.test(req.url())) calls.push(req.url());
+    if (/agenticatl|\/oda-api\//i.test(req.url())) calls.push(req.url());
   });
   return calls;
 }
+
+const CITY_LAYER = /^https:\/\/gis\.atlantaga\.gov\/dpcd\/rest\/services\/OpenDataService1\/FeatureServer\/\d+$/;
 
 async function open(page, query = "") {
   await page.goto(`/?level=beltline-eastside&mute=1&props=0&landmarks=0&${query}`);
@@ -79,7 +82,7 @@ test("the BeltLine level has 3 fact cards from the fixture, with no network call
   expect(facts.cards.map((c) => c.text)).toEqual(TEXTS);
   for (const c of facts.cards) {
     expect(c.origin).toBe("fixture");
-    expect(c.sourceUrl).toMatch(/^https:\/\/agenticatl\.ai\/datasets\//);
+    expect(c.sourceUrl).toMatch(CITY_LAYER);
     // Each card is on the trail surface (not inside a building).
     const ground = await page.evaluate(([x, z]) => window.__atl.level.sample(x, z), [c.position[0], c.position[2]]);
     expect(Math.abs(ground.height - c.position[1])).toBeLessThan(0.01);
@@ -97,7 +100,8 @@ test("collecting a card scores it and shows the text for 2 s without pausing pla
     expect(s.score).toBe(250);
     expect(s.popup.text).toBe(TEXTS[i]);
     expect(s.label).toBe("ATL FACT 1/3");
-    expect(s.href).toBe(`https://agenticatl.ai/datasets/${SPECS[i].dataset}`);
+    expect(s.href).toBe(FIXTURE[SPECS[i].id].sources[0].url.replace(/\/query\?.*$/, ""));
+    expect(s.href).toMatch(CITY_LAYER);
     expect(s.events).toHaveLength(1);
     expect(s.events[0].id).toBe(SPECS[i].id);
     expect(s.visible).toBe(2);
@@ -140,6 +144,20 @@ for (const vp of [
     await page.screenshot({ path: `e2e/__screenshots__/fact-card-phone-${vp.name}.png` });
   });
 }
+
+// #372: the game and agenticatl.ai are separate products (owner, 2026-11-24).
+// The old ?facts=live parameter must not bring back a live call.
+test("no fact card and no request names agenticatl, also with ?facts=live", async ({ page }) => {
+  const calls = watchFactCalls(page);
+  await open(page, "facts=live");
+  await collect(page, 0);
+  const state = await page.evaluate(() => ({ mode: window.__atl.facts.mode, cards: window.__atl.facts.cards, popup: document.getElementById("fact-popup").outerHTML }));
+  expect(state.mode).toBe("fixture");
+  expect(JSON.stringify(state.cards)).not.toMatch(/agenticatl/i);
+  expect(state.popup).not.toMatch(/agenticatl/i);
+  await page.waitForTimeout(1000);
+  expect(calls).toEqual([]);
+});
 
 test("?facts=0 removes the cards", async ({ page }) => {
   await open(page, "facts=0");

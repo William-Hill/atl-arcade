@@ -38,7 +38,9 @@ export function dirDown(tr, dir, t) {
   return { held: [...tr.held, dir], lastDir: dir, lastDirAt: t, hist: pushHist(tr.hist || [], { dir, at: t, up: null }) };
 }
 
-export function dirUp(tr, dir, t = null) {
+// `t` (s, sim clock) is required: the axis rule reads the release time.
+export function dirUp(tr, dir, t) {
+  if (!Number.isFinite(t)) throw new Error("dirUp needs the release time t");
   if (!tr.held.includes(dir)) return tr;
   return { ...tr, held: tr.held.filter((d) => d !== dir), hist: closeHist(tr.hist || [], dir, t) };
 }

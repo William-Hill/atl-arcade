@@ -235,7 +235,10 @@ addEventListener("keydown", (e) => {
   keyDown(inp, e.code, simTimeAt(performance.now()));
 });
 addEventListener("keyup", (e) => keyUp(inp, e.code, simTimeAt(performance.now())));
-addEventListener("blur", () => [...inp.down].forEach((c) => keyUp(inp, c)));
+addEventListener("blur", () => {
+  const t = simTimeAt(performance.now());
+  [...inp.down].forEach((c) => keyUp(inp, c, t));
+});
 
 function pollPad(t) {
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];

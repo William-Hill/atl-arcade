@@ -54,12 +54,12 @@ describe("keyboard tracker (R2)", () => {
     tr = dirDown(tr, "l", 1);
     expect(tr.lastDir).toBe("l");
     expect(heldDir(tr)).toBe("l");
-    tr = dirUp(tr, "l");
+    tr = dirUp(tr, "l", 1.1);
     expect(heldDir(tr)).toBe("u");
   });
   it("a tap keeps lastDir after the key is let go", () => {
     let tr = dirDown(createDirTracker(), "u", 0.9);
-    tr = dirUp(tr, "u");
+    tr = dirUp(tr, "u", 1.2);
     expect(tr.lastDir).toBe("u");
     expect(tr.lastDirAt).toBe(0.9);
     expect(heldDir(tr)).toBe("n");
@@ -156,6 +156,12 @@ describe("axis rule (#326 fix, on by default)", () => {
       const held = last.up == null;
       expect(resolvePressHist(1, h, gdd)).toEqual(resolvePress(1, last.dir, last.at, gdd, held));
     }
+  });
+  it("a W let go before the press (for example on a window blur) does not get the udHold extension", () => {
+    let tr = dirDown(createDirTracker(), "u", 0);
+    tr = dirUp(tr, "u", 0.1);
+    expect(freshDir(tr.hist, 0.25)).toBe("n");
+    expect(() => dirUp(dirDown(createDirTracker(), "u", 0), "u")).toThrow();
   });
   it("the trackers keep the release time of each start event", () => {
     let tr = dirDown(createDirTracker(), "l", 1);

@@ -74,7 +74,9 @@ export function keyDown(inp, code, t) {
   for (const a of actionsOf(inp, code)) if (DIR_ACTION[a]) inp.dirs = dirDown(inp.dirs, DIR_ACTION[a], t);
 }
 
-export function keyUp(inp, code, t = null) {
+// `t` (s, sim clock) is required: the axis rule reads the release time.
+export function keyUp(inp, code, t) {
+  if (!Number.isFinite(t)) throw new Error("keyUp needs the release time t");
   if (!inp.down.has(code)) return;
   inp.down.delete(code);
   for (const a of actionsOf(inp, code)) {

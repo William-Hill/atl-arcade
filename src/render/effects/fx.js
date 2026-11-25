@@ -61,6 +61,16 @@ export const EFFECT_TIERS = {
   // per simulation tick of a wall slide.
   dust: { low: 0, phone: 4, high: 7 },
   sparks: { low: 0, phone: 2, high: 3 },
+  // The landmark claim (#221, src/landmarks/claim-fx.js): the burst at the
+  // feet (phone: the ring only, no bloom) and the dogwood petals. Off on
+  // low, as every effect: there the challenge ring turns gold and fades
+  // (src/render/landmark-rings-math.js claimFade()).
+  claim: {
+    low: null,
+    phone: { star: false, ring: true, core: false },
+    high: { star: true, ring: true, core: true },
+  },
+  petals: { low: 0, phone: 8, high: 16 },
 };
 
 // Pure: the effects policy for a tier. `reducedMotion` (the

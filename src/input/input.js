@@ -34,6 +34,12 @@ export function createInput({ target = window, bindings = createBindings(), getG
   let lastDpad = "n";
   let lastFrame = null;
 
+  // A clear drops the events before it: they end in a release.
+  function clearQueue() {
+    queue.length = 0;
+    queue.push({ clear: true });
+  }
+
   function applyQueue(t) {
     for (const ev of queue) {
       if (ev.clear) {
@@ -67,7 +73,7 @@ export function createInput({ target = window, bindings = createBindings(), getG
   };
   const onBlur = () => {
     down.clear();
-    queue.push({ clear: true });
+    clearQueue();
   };
   target.addEventListener("keydown", onDown);
   target.addEventListener("keyup", onUp);
@@ -152,7 +158,16 @@ export function createInput({ target = window, bindings = createBindings(), getG
     // so a key from one mode does not reach the other mode.
     reset() {
       down.clear();
-      queue.push({ clear: true });
+      clearQueue();
+    },
+    // The sim does not read the input on this frame (the title screen, a
+    // scripted run): drop the waiting key events and let go of every held
+    // direction, so old events do not reach a later frame as fresh. A key
+    // that stays down gives no direction until it goes down again.
+    skip() {
+      queue.length = 0;
+      dirCodes.clear();
+      keyDirs = keyDirsClear(keyDirs, clock);
     },
     // New bindings let go of every held direction: a key that the old
     // bindings gave a direction must not stay held after the change.

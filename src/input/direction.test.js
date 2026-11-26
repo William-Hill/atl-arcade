@@ -404,3 +404,24 @@ describe("#341 review fixes", () => {
     expect(r.frame(2)).toMatchObject({ dir: "n", lastDirHeld: false, balance: 0 });
   });
 });
+
+describe("#341 key events while the sim does not sample", () => {
+  it("skip() drops waiting events, so a title-screen tap is not fresh later", () => {
+    const r = rig();
+    r.frame(1);
+    r.down("KeyA");
+    r.up("KeyA");
+    r.input.skip(); // a frame of the title screen
+    expect(r.frame(2)).toMatchObject({ lastDir: "n", dir: "n" });
+    expect(resolveAt(r, 3).dir).toBe("n");
+  });
+
+  it("reset() and blur drop the events before them", () => {
+    const r = rig();
+    r.frame(1);
+    r.down("KeyD");
+    r.up("KeyD");
+    r.input.reset();
+    expect(r.frame(2).dirHist).toEqual([]);
+  });
+});

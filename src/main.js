@@ -1008,8 +1008,12 @@ let scriptResolve = null;
 // `t` is the sim time of the step that reads the input (src/input/input.js).
 function sampleInput(t) {
   if (script) {
-    const input = script.next();
-    if (input) return input;
+    const next = script.next();
+    if (next) {
+      // The script drives the skater: drop the key events of this frame.
+      input.skip();
+      return next;
+    }
     const done = scriptResolve;
     script = null;
     scriptResolve = null;
@@ -1023,6 +1027,7 @@ function simulate(dt) {
   // intro and on the title screen (#301) the world moves, the skater stands,
   // and the goals, the lessons and the landmarks wait for the game.
   const attract = Boolean(front?.active);
+  if (attract) input.skip();
   const sampled = attract ? {} : sampleInput(run.time + dt);
   const before = run.skater;
   const comboBefore = run.combo;

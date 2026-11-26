@@ -2,7 +2,7 @@
 // https://github.com/William-Hill/autopilot, branch threejs-engine,
 // file plugin/threejs/autopilot-bridge.js (Apache License 2.0).
 // Do not edit here: change the fork, then copy the file again.
-// Source commit: 8029bb6
+// Source commit: 4153ef7
 
 // Autopilot's bridge for Three.js games in the browser (docs: plugin/threejs/README.md).
 //

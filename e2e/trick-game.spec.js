@@ -171,6 +171,46 @@ test("keyboard: One-button tricks: Q near the rail snaps; Q taps in the air give
   await pause(page, false);
 });
 
+test("keyboard: One-button tricks: a TRICK hold across a reset is a new press on the new run clock", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("atl.controls.v1", JSON.stringify({ oneButton: true })));
+  await ready(page);
+  // Let the run clock pass 2 s, then hold Q.
+  await runUntil(page, (s, f) => f.t > 2);
+  await page.keyboard.down("KeyQ");
+  await oneSample(page);
+  const before = await page.evaluate(() => ({ ob: window.__atl.input.oneButton, t: window.__atl.input.frame.t }));
+  expect(before.ob.down).toBe(true);
+  expect(before.ob.downAt).toBeGreaterThan(2);
+  // A reset with Q still held: the new run starts at t 0.
+  const t0 = before.t;
+  await page.evaluate(() => window.__atl.resetSkater());
+  // The run clock goes back to 0: wait for a sample with a new time (not a later one).
+  await pause(page, false);
+  await page.waitForFunction(
+    (t) => {
+      const ok = Math.abs((window.__atl.input.frame?.t ?? t) - t) > 1e-6;
+      if (ok) window.__atl.renderPaused = true;
+      return ok;
+    },
+    t0,
+    { timeout: 10000, polling: "raf" },
+  );
+  const after = await page.evaluate(() => ({ ob: window.__atl.input.oneButton, t: window.__atl.input.frame.t }));
+  expect(after.t).toBeLessThan(1);
+  expect(after.ob.down).toBe(true);
+  expect(after.ob.downAt).toBeLessThanOrEqual(after.t + 1e-6);
+  expect(after.ob.downAt).toBeLessThan(1);
+  await page.evaluate((v) => {
+    const el = document.createElement("pre");
+    el.style.cssText = "position:fixed;left:12px;top:12px;z-index:9999;background:#fff;color:#000;font:16px monospace;padding:8px;border:2px solid #000";
+    el.textContent = `One-button: Q held across a reset\nbefore: downAt ${v.before.ob.downAt.toFixed(3)} s (t ${v.before.t.toFixed(3)} s)\nafter:  downAt ${v.after.ob.downAt.toFixed(3)} s (t ${v.after.t.toFixed(3)} s), down ${v.after.ob.down}`;
+    document.body.appendChild(el);
+  }, { before, after });
+  await page.screenshot({ path: "e2e/__screenshots__/trick-game-one-button-reset.png" });
+  await page.keyboard.up("KeyQ");
+  await pause(page, false);
+});
+
 test.describe("touch on Pixel 7", () => {
   test.use(profile("Pixel 7"));
 

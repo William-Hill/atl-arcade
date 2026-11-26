@@ -7,8 +7,19 @@
 // closes the tab, and Control plus S or D opens browser dialogs.
 // Gamepad (standard mapping): left stick steer, A jump, X push, Y and B
 // style, RT grind, LT brake, LB switch.
+//
+// Trick directions (docs/gdd/trick-input.md, R2): 4 more actions, dirLeft,
+// dirRight, dirUp, dirDown. They read the keys themselves, not the push or
+// brake action, so Shift pushes and gives no direction. On the gamepad the
+// left stick (0.5 travel) and the d-pad give the direction.
 
-export const ACTIONS = ["left", "right", "push", "brake", "jump", "grind", "style1", "style2", "switch"];
+// The 2 action groups of R12.2. One key can hold one action of each group.
+export const MOVE_ACTIONS = ["left", "right", "push", "brake", "jump", "grind", "style1", "style2", "switch"];
+export const DIR_ACTIONS = ["dirLeft", "dirRight", "dirUp", "dirDown"];
+export const ACTIONS = [...MOVE_ACTIONS, ...DIR_ACTIONS];
+
+// The direction of each direction action.
+export const DIR_OF_ACTION = Object.freeze({ dirLeft: "l", dirRight: "r", dirUp: "u", dirDown: "d" });
 
 export const DEFAULT_KEYBOARD = {
   left: ["KeyA", "ArrowLeft"],
@@ -20,11 +31,18 @@ export const DEFAULT_KEYBOARD = {
   style1: ["KeyQ"],
   style2: ["KeyE"],
   switch: ["KeyR"],
+  dirLeft: ["KeyA", "ArrowLeft"],
+  dirRight: ["KeyD", "ArrowRight"],
+  dirUp: ["KeyW", "ArrowUp"],
+  dirDown: ["KeyS", "ArrowDown"],
 };
 
 // Standard gamepad button indexes: 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 6 LT, 7 RT.
 export const DEFAULT_GAMEPAD = {
   steerAxis: 0,
+  // The stick y for the trick direction and the manual balance. The Gamepad
+  // API gives up as negative; the input changes the sign.
+  balanceAxis: 1,
   deadzone: 0.15,
   buttons: {
     jump: [0],
@@ -36,6 +54,10 @@ export const DEFAULT_GAMEPAD = {
     switch: [4],
     left: [14], // d-pad left
     right: [15], // d-pad right
+    dirUp: [12], // d-pad up
+    dirDown: [13], // d-pad down
+    dirLeft: [14], // d-pad left
+    dirRight: [15], // d-pad right
   },
 };
 

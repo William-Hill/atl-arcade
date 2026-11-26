@@ -3168,6 +3168,22 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `41
 - Owner choices (2026-11-26, all the recommended option): the gamepad View/Back button (standard button 8) opens the trick list; the trick list is its own dialog; in one-button mode the direction is not read (GDD R12.1 fixed to agree with the Edge Cases and the criteria); the flick card shows the names away from the thumb.
 - Review fix (PR #395, Codex): the "BUSY" cue replaces the dance chip for 600 ms. Before, the rule that a trick in progress keeps E2 blocked the cue, because the ignored press always comes during a dance.
 
+## 2026-11-26: Trick input: the air turn rate is 6 rad/s, so that spins can pay (#344, Q5)
+
+- Owner choice (2026-11-26): raise `SKATE.airTurnRate` from 3 to 6 rad/s (the knob maximum). The spin points of F3 stay.
+- Data. Playtest 1 (#326) has no air time or turn data: the prototype has its own greybox skater, and the Autopilot runs did not log the air. So the sim measured the production controller in the Eastside skatepark (`src/sim/skate/air-turn-344.test.js`). Air times: a hop on flat ground 0.5 s; the kicker 0.38 s at 8 m/s, 0.48 s at 10 m/s, 0.55 s at 11 m/s, 0.60 s at 12 m/s; the vert quarter pipe 0.18 s at 9 m/s, 0.38 s at 10 m/s, 0.53 s at 11 m/s, 0.67 s at 12 m/s. The 0.9 s vert air of the GDD is not in the present park.
+- At 3 rad/s a half turn needs 1.05 s of air, so no air in the park paid a spin. At 6 rad/s a half turn needs 0.52 s. A kicker or a vert air at 11 m/s or more, with steer held for the whole air, turns one half turn (40 points). A hop on flat ground turns about 172 degrees, so it does not pay. Two half turns (1.05 s) stay out of reach in the present park.
+- Effect on the feel: the air turn changes the skater yaw only. The landing sets the yaw to the travel direction (`stepAir` in `controller.js`), so the rate does not change the path. The air spin looks two times faster.
+- The GDD (R4, F3, Q5) has the new values. The practical maximum of F3 is now 200 + 120 + 90 + 40 = 450 (vert air, direction grab, full hold, one half turn).
+
+## 2026-11-26: Trick input: the fresh direction rule in the production input (#341)
+
+- The input frame has the direction contract of `docs/gdd/trick-input.md` (Interactions): `t`, `dir`, `lastDir`, `lastDirAt`, `lastDirHeld`, `dirHist`, and `balance`. `src/input/direction.js` has the contract and the rule. The sim (lane A) calls `resolvePress(t, dirHist, knobs)` at the press frame and `resolvePending()` on the next frames.
+- The rule reads `dirHist`, not only `lastDir` and `lastDirAt`: the axis rule (R3a) needs the release times. With the R3 rule only (toggle 7, `trickKnobs({ r3Only: true })`) the rule uses the newest start event only, which is the same as a rule on `lastDir` and `lastDirAt`.
+- The knobs of the input (`dirBefore`, `dirAfter`, `udHold`, `udFirst`, `stickThreshold`, `flickMin`, `flickMaxMs`) are in `src/input/trick-constants.js`, not in `src/sim/skate/constants.js` as the GDD Tuning Knobs say. Reason: the input owns the rule, and lane A owns the sim constants. `RELAXED` also has `landingGrace` 0.2 s for the sim.
+- Clock: `input.sample(t)` takes the sim time of the step that reads the frame (`run.time + dt` in `src/main.js`). A key event gets the time of the first sample after it, so the times are whole frames, as the GDD acceptance criteria say. When the sim clock goes back (a new run), the old start events stop being fresh.
+- In the same frame after the press, an up or down beats a left or right with the axis rule on (the same as R3a.2 before the press).
+
 ## 2026-11-26 — Trick input clips: hand keys, the clip table, and the toe roll pitch (#329)
 
 The 10 trick clips (Nia and Marcus: `air_rocket`, `air_tuckknee`, `grind_makio`, `grind_royale`, `manual_toe`) and a stumble landing (`land_stumble`) are hand keys, as the dances of #293. No Meshy text-to-motion ran (0 credits). Marcus's air and grind clips and his `land_stumble` are the mirror of Nia's; his `manual_toe` has its own source. Evidence: `docs/characters/trick-clips/README.md`.

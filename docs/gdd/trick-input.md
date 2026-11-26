@@ -450,6 +450,8 @@ Risks (`art-director`):
 - **Teach prompts (#76)**: 3 new steps (a grab with a direction, a grind stance, a manual link).
 
 > **UX flag**: this system has UI requirements. Run `/ux-design` for the HUD trick line, the flick ring, and the trick list screen before the HUD story.
+>
+> **UX spec**: `docs/ux/trick-hud.md` (2026-11-26, #330). It gives each HUD element its content, place, timing, and states.
 
 ## Acceptance Criteria
 

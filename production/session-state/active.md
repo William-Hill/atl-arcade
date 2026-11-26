@@ -6,6 +6,10 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## #330 Trick HUD UX spec, 2026-11-26
+
+Branch `claude/focused-turing-0gpscl` from `main` (lane D, docs only). Spec: `docs/ux/trick-hud.md`. Decisions: `docs/decisions.md`, 2026-11-26. No code in `src/`. Wave 2 implements it. Open questions for the owner are in section 12 of the spec.
+
 ## #264 and #365 Claim targets, 2026-11-24
 
 Branch `claude/lucid-fermat-zrlawv` from `main`. Design: `docs/decisions.md`, 2026-11-24. Owner decision (#365): the skatepark combo zone is the whole pad plus 2 m, drawn as a gold double outline.

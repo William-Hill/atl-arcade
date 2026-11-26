@@ -172,7 +172,7 @@ The phone keeps 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH), so this system add
    - Ground, Nia (all 10 slots): Bankhead Bounce, Walk It Out, The Prep, Swag Surf, Snap Lean, Cross Step, Toe Spin, Smooth Quad, ATL Rydin, Sit Spin.
    - Ground, Marcus (all 10 slots, then 3 more): Swag Surf, Walk It Out, The Prep, Drumline Count, Jam Step, Cross Step, Toe Spin, Smooth Quad, ATL Rydin, Sit Spin, Jam Groove, Bankhead Bounce, Snap Lean.
 
-   In one-button mode, SPIN, GRIND, and the directions still work, but the player does not need them. SPIN plays its neutral slot (Cross Step). GRIND works as in R6 and R8 with the neutral stance.
+   In one-button mode, SPIN and GRIND still work, but the player does not need them. The direction is not read (owner choice 2026-11-26, #330): SPIN plays its neutral slot (Cross Step), and GRIND works as in R6 and R8 with the neutral stance.
 2. **Remapping.** Every action in `ACTIONS` is rebindable now (`rebind()` in `src/input/bindings.js`). The settings menu gets a remap screen for the keyboard and the gamepad. The actions are in 2 groups. The movement and button group is `left`, `right`, `push`, `brake`, `jump`, `grind`, `style1`, `style2`, and `switch`. The direction group is `dirLeft`, `dirRight`, `dirUp`, and `dirDown`. The game blocks two actions of one group on one key. One key can hold one action of each group: the default W is `push` and `dirUp`, S is `brake` and `dirDown`, A is `left` and `dirLeft`, and D is `right` and `dirRight`. A reset to the defaults is always possible. The direction source (WASD, arrows, stick, d-pad) is a choice.
 3. **Longer windows.** A "Relaxed timing" switch sets `dirBefore` to 250 ms, `dirAfter` to 100 ms, `flickMaxMs` to 250 ms, and `landingGrace` to 0.2 s.
 4. **No color-only signal.** The trick name and the direction arrow show as text and shape.
@@ -450,6 +450,8 @@ Risks (`art-director`):
 - **Teach prompts (#76)**: 3 new steps (a grab with a direction, a grind stance, a manual link).
 
 > **UX flag**: this system has UI requirements. Run `/ux-design` for the HUD trick line, the flick ring, and the trick list screen before the HUD story.
+>
+> **UX spec**: `docs/ux/trick-hud.md` (2026-11-26, #330). It gives each HUD element its content, place, timing, and states.
 
 ## Acceptance Criteria
 

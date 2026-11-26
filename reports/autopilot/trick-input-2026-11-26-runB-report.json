@@ -1,0 +1,55 @@
+{
+ "outcome": "explored",
+ "summary": "The agent played about 10 minutes of the trick-input greybox: 605 s of game time over 3 episodes (240 s, then 240 s and 125 s continued with restart=False). Jev made 321, 302 and 175 decisions, each among 5\u201311 options:\n- on flat ground, a TRICK (Q) or SPIN (E) dance in n/l/r/u/d, or \"just skate\";\n- lined up for the rail, a GRIND (F) stance in n/l/r/u/d, either popping off the rail end or holding F into a manual, or skipping the rail;\n- in the air off the kicker, a TRICK grab in n/l/r/u/d.\n\nThe harness pushed with W and steered with A/D around the loop the whole time. The skater never stopped before a trick. playtest.intend(dir) was called right before every Q, E and F press.\n\n**Final game.call('playtest','metrics'):**\n- config: gdd. This build started in the GDD rule, not the axis rule the previous run used.\n- trials: 257\n- wantedShare: 0.9961\n- unwantedUpFromPush: 0 of 45 pushTrials\n- unwantedLRFromCarve: 0.00855 of 117 carveTrials\n- noTrick: 0, pendingPresses: 0, unpairedIntents: 0\n- firstCombo: banked 17028 at 15.8 s, links Long Rail Grind + Manual + Mute Grab, then 6 dance links (Bankhead Bounce, Cross Step, Walk It Out, The Prep, Swag Surf, Snap Lean)\n\nAll 257 trials are from this session, all in run 1 of the log.\n\n**Every trial whose result was not the intended direction (1):**\n- E (SPIN) intended n, pressAt 420.517 s, during episode 2: the result was r, a \"Smooth Quad\" dance. The row has carve: true, so the harness was steering with A/D around then. The likely cause is a D key-down that landed in the 0.15 s before the press. The harness spaces key-downs on game.t, but the page stamps key events on its own clock, and some loop steps took 100\u2013265 ms. I could not confirm this: the game does not expose its key-start log, so the D press time can't be read back.\n\nNo press was ignored (noTrick 0). All other 256 trials came out as intended.",
+ "evidence": [
+  "Final game.call('playtest','metrics') (probe after episode 3): config gdd, trials 257, wantedShare 0.9961, unwantedUpFromPush 0 (pushTrials 45), unwantedLRFromCarve 0.00855 (carveTrials 117), noTrick 0, pendingPresses 0, unpairedIntents 0, firstCombo {seconds 15.8, names [Long Rail Grind, Manual, Mute Grab, Bankhead Bounce, Cross Step, Walk It Out, The Prep, Swag Surf, Snap Lean], banked 17028}.",
+  "The rows were read with game.call('playtest','rows') in pages until next was null: 257 rows. By kind and intended direction: dance n35 l35 r34 u37 d34; grind (rail) n11 l9 r7 u7 d7; grab (air off the kicker) n10 l9 r8 u7 d7. All 5 directions were tried in all three places.",
+  "Only one row has result != intended: {intended n, button spin, intendAt 420.500, pressAt 420.517, result r, kind dance, name Smooth Quad, pushed false, carve true} (episode 2, trace2).",
+  "The combo with a manual was banked in play at 15.8 s in episode 1 (trace1). Option combo_grind_n_manual ran at t=0.2 (snapped), then grab_n at t=4.6, then dances inside the combo window. The combo_grind options with the manual were taken 9 times over the 3 episodes, and every one snapped the rail.",
+  "Episodes: trace1 240 s with 321 decisions, trace2 240 s with 302, trace3 125 s with 175. No option failed, and the game logged no errors in any episode.",
+  "No direct state changes were made, in the episodes or in probes. The only probe was the final read of metrics and rows."
+ ],
+ "findings": [
+  "The game did nothing clearly wrong. 256 of the 257 trials came out as intended under the GDD rule. Pushing with W never caused an unwanted 'up' (0 of 45 push trials).",
+  "1 of 117 carve trials came out left/right when it was not wanted: an E press intended n gave r (Smooth Quad) at pressAt 420.517, with carve true. This fits a D key-down within the 150 ms fresh window before the press, which the rule is designed to read as a direction. But the game does not expose its key-start log, so I could not confirm the D timing.",
+  "Config note: the prototype started in the 'gdd' config (HUD 'GDD rule'). The previous run measured the 'axis' rule (wantedShare 0.990 over 204 trials), so the two runs' metrics are for different rules."
+ ],
+ "run": "20261126-151035",
+ "project": "atl-arcade",
+ "prompt": "Play the trick input prototype like a new player for 10 minutes. The keys: W pushes, A and D steer, S brakes, Space jumps, F grinds (hold it off a rail for a manual), Q is TRICK, E is SPIN. A direction key (W, A, S, or D) pressed just before Q, or at the same time, picks a different trick. Before EVERY press of Q, E, or F, call `game.call(\"playtest\", \"intend\", <dir>)` with the direction you want: n (no direction), l, r, u, or d. Mix all 5 directions, in the air (off the kicker), on the ground (dances), and on the rail. Skate as a player does: push with W and steer with A and D between tricks. Do not wait still before a trick. Also try to bank a combo of 3 links or more with a manual (for example rail grind, manual, then a grab off the kicker). At the end, call `game.call(\"playtest\", \"metrics\")` and report the result, and every trial where the result was not the intended direction.",
+ "seconds": 699.7,
+ "episodes": 3,
+ "tool_seconds": 610.5,
+ "stopped": null,
+ "level_modified": [],
+ "research_modified": [],
+ "agent": "claude",
+ "model": "claude-opus-5-5",
+ "fast": false,
+ "cost_usd": 0.8007964000000001,
+ "turns": 12,
+ "background_findings": 10,
+ "reading_usage": {
+  "claude-sonnet-5-5": {
+   "calls": 35,
+   "input": 82,
+   "output": 33913,
+   "cache_read": 1236560,
+   "cache_write": 322544
+  }
+ },
+ "episode_stats": [
+  {
+   "decisions": 321,
+   "play_seconds": 240.0
+  },
+  {
+   "decisions": 302,
+   "play_seconds": 240.0
+  },
+  {
+   "decisions": 175,
+   "play_seconds": 125.0
+  }
+ ]
+}

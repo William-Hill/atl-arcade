@@ -1,0 +1,61 @@
+{
+ "outcome": "explored",
+ "summary": "The agent played about 10 minutes of the trick-input greybox in 4 episodes, continuing play with restart=False after the first: 60 + 150 + 240 + 170 s = 620 s of game time. About 130 s of that was lost in episodes 1\u20132, when the skater coasted to a stop (a harness key-hold bug, explained below). Jev made 35, 91, 362 and 179 decisions. Each time it picked a trick and a direction from 5\u201311 options:\n- on flat ground, TRICK or SPIN dances in n/l/r/u/d, or skate on;\n- lined up for the rail, a GRIND stance in n/l/r/u/d, with or without holding into a manual, or skip the rail;\n- in the air off the kicker, a TRICK grab in n/l/r/u/d.\n\nCode steered with A/D and pushed with W between tricks; the skater never stood still before a trick. The harness called playtest.intend(dir) before every Q, E and F press.\n\n**Final playtest metrics** (axis rule, the default):\n- trials: 204\n- wantedShare: 0.990\n- unwantedUpFromPush: 0 (of 50 push trials)\n- unwantedLRFromCarve: 0.0109 (of 92 carve trials)\n- noTrick: 1, pendingPresses: 0, unpairedIntents: 0\n- firstCombo: {seconds 245.83, names [\"Rail Soul Grind\", \"Manual\", \"Japan Grab\"], banked 2295}\n\n200 of the 204 trials are from Jev's episodes (run 3). The other 4 are from my research probes (runs 0 and 2), and all 4 came out as intended.\n\n**Every trial where the result was not the intended direction (2):**\n1. Intended n, SPIN (E), pressAt 305.58 s (game time, episode 3): the result was r, Smooth Quad, a dance. The row has carve: true, meaning the skater was steering with D around then. Probably the D press started inside the fresh window (0.15 s before to 0.06 s after the press), even though the harness waits 0.36 s after any direction key starts before it presses. I did not confirm the cause.\n2. Intended n, TRICK (Q), pressAt 450.60 s (game time): no trick came out (result null). This was the first press of episode 4. Episode 3 had ended in the middle of the 4.8 s ATL Rydin dance (E + up). A Q pressed while a dance is running is ignored, so this miss comes from the episode boundary, not from the input rule.\n\nAll other 198 trials came out as intended.",
+ "evidence": [
+  "Final game.call('playtest','metrics') after episode 4: trials 204, wantedShare 0.990, unwantedUpFromPush 0/50, unwantedLRFromCarve 0.0109/92, noTrick 1, firstCombo Rail Soul Grind + Manual + Japan Grab, 2295 banked at 245.83 s.",
+  "game.call('playtest','rows') over all 204 rows, by button and intended direction: grind n8 l7 r5 u5 d5; spin (dances) n15 l14 r13 u13 d13; trick n26 l23 r20 u19 d18. By kind: grabs n8 l8 r6 u5 d5 (air, off the kicker); dances n32 l29 r27 u27 d26; grinds n8 l7 r5 u5 d5. All 5 directions were tried in all three places.",
+  "Miss 1: {intended n, button spin, pressAt 305.583, result r, kind dance, name Smooth Quad, carve true, pushed false} (trace3, episode-3 t\u224895.6 s, just after a kicker landing).",
+  "Miss 2: {intended n, button trick, pressAt 450.600, result null, carve true} (trace4 t=0.3 s, dance_trick_n). trace3 shows dance_spin_u (ATL Rydin, 4.8 s) still running at episode 3's time limit.",
+  "The combo with a manual was banked in play by the combo_grind_l_manual option (trace3 t\u224830\u201336) and later again by combo_grind_d/u/r/n_manual. The bank came from one F press: hold F through the rail end into the manual, launch off the kicker, then a Q grab.",
+  "Episodes 1\u20132 (trace1 t\u224831\u201360, trace2 t\u224847\u2013150): the skater coasted to speed 0 after a wall bounce, because the harness's W hold lapsed. Renewing holds every tick fixed it in episodes 3\u20134. This is a harness bug, not a game finding.",
+  "The game logged no errors in any of the 4 episodes.",
+  "Research probes, before the episodes, with no direct state writes: 1 game.restart, and intend+Q dances n and l, both as intended. Then 1 game.restart and a grind + manual + grab chain, which banked Rail Grind, Manual, Side Grab for 2712."
+ ],
+ "findings": [
+  "The game did nothing clearly wrong. With the axis rule, 198 of the 200 trials in play came out as intended. A W push never made an unwanted up (0 of 50 push trials).",
+  "1 of 92 carve trials came out Left/Right when not wanted: an E press intended n came out r (Smooth Quad) at pressAt 305.58, with carve true. I did not confirm whether a D press started inside the 0.15 s / 0.06 s window or whether something else caused it.",
+  "One press produced no trick, because a TRICK press during a running dance is dropped without any feedback. The 4.8 s ATL Rydin (SPIN + up) blocks every Q/E for its whole length, and a player gets no sign that the press was ignored. This is by design in sim.js, but it is worth noting for the playtest: 'press ignored' counts as a failed trial (result null)."
+ ],
+ "run": "20261126-145241",
+ "project": "atl-arcade",
+ "prompt": "Play the trick input prototype like a new player for 10 minutes. The keys: W pushes, A and D steer, S brakes, Space jumps, F grinds (hold it off a rail for a manual), Q is TRICK, E is SPIN. A direction key (W, A, S, or D) pressed just before Q, or at the same time, picks a different trick. Before EVERY press of Q, E, or F, call `game.call(\"playtest\", \"intend\", <dir>)` with the direction you want: n (no direction), l, r, u, or d. Mix all 5 directions, in the air (off the kicker), on the ground (dances), and on the rail. Skate as a player does: push with W and steer with A and D between tricks. Do not wait still before a trick. Also try to bank a combo of 3 links or more with a manual (for example rail grind, manual, then a grab off the kicker). At the end, call `game.call(\"playtest\", \"metrics\")` and report the result, and every trial where the result was not the intended direction.",
+ "seconds": 1053.8,
+ "episodes": 4,
+ "tool_seconds": 657.4,
+ "stopped": null,
+ "level_modified": [],
+ "research_modified": [],
+ "agent": "claude",
+ "model": "claude-opus-5-5",
+ "fast": false,
+ "cost_usd": 2.0281338,
+ "turns": 43,
+ "background_findings": 16,
+ "reading_usage": {
+  "claude-sonnet-5-5": {
+   "calls": 85,
+   "input": 184,
+   "output": 77967,
+   "cache_read": 4197521,
+   "cache_write": 519215
+  }
+ },
+ "episode_stats": [
+  {
+   "decisions": 35,
+   "play_seconds": 60.0
+  },
+  {
+   "decisions": 91,
+   "play_seconds": 150.1
+  },
+  {
+   "decisions": 362,
+   "play_seconds": 240.0
+  },
+  {
+   "decisions": 179,
+   "play_seconds": 170.1
+  }
+ ]
+}

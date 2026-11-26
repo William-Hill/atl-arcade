@@ -3131,3 +3131,16 @@ Both bridge copies (`src/autopilot/autopilot-bridge.js` and `prototypes/trick-in
 - The fork now also has the change of `aa58a905` (a failed connect keeps the holds of a running move hook). Before, only the copy here had it.
 - The registered objects do not change: the game registers `atl`, and the prototype registers `playtest`. Neither writes through `rc`, so neither sets `rcWritable`. The calls `playtest.intend`, `playtest.metrics`, and `playtest.rows(offset, limit)` are own functions, so they work.
 - Evidence: the fork Node tests (48 pass, 6 new), the root Vitest suite, the prototype Vitest suite, and `e2e/autopilot-agent.spec.js`. That spec connects the bridge to a small local WebSocket server (`e2e/ws-agent.js`) and checks the hello frame and the `rc` paths on both pages.
+
+## 2026-11-26: Autopilot bridge: 8 more review fixes from the fork (#388)
+
+Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` again, with the fixes for the 8 CodeRabbit findings of PR 387. The fork has a test for each fix. The `rc` uses of the game (`atl`) and of the trick input prototype (`playtest`) do not change.
+
+- `connect()` keeps a socket that is open or opening. A new socket comes only after the old socket closes, so `close()` always closes the live socket.
+- A `move` without a move hook holds its keys as its own owner. Two such moves that hold W at the same time each let go of their own hold only.
+- A `move` checks every `moveKeys` name before a key goes down, and lets go of its keys if it fails.
+- `close()` ends a `move` without a move hook that still waits, with the error 410.
+- `watch` compares a turn by the short way: 179.8 to -179.8 degrees is a turn of 0.4 degrees.
+- An `rc` path with `__proto__`, `prototype`, or `constructor` fails with 403 before any lookup, also after a missing part.
+- An `rc` write never writes a property name with `.` or `:`.
+- `record` start checks the picture canvas before the recording starts.

@@ -11,7 +11,7 @@
 
 import { DIR_OF_ACTION, createBindings } from "./bindings.js";
 import { createKeyDirs, createPadDirs, dirFields, keyBalance, keyDirDown, keyDirUp, keyDirsClear, padDirUpdate, stickDir } from "./direction.js";
-import { EMPTY_INPUT, isActive, mapGamepad, mapKeyboard, mergeBalance, mergeInputs, padBalance, padDir } from "./mapping.js";
+import { EMPTY_INPUT, isActive, mapGamepad, mapKeyboard, mergeBalance, mergeInputs, padBalance, padDir, padDpadDir } from "./mapping.js";
 import { TRICK_INPUT } from "./trick-constants.js";
 
 const STEP = 1 / 60;
@@ -31,6 +31,7 @@ export function createInput({ target = window, bindings = createBindings(), getG
   let keyDirs = createKeyDirs();
   let padDirs = createPadDirs();
   let clock = 0;
+  let lastDpad = "n";
   let lastFrame = null;
 
   function applyQueue(t) {
@@ -108,7 +109,12 @@ export function createInput({ target = window, bindings = createBindings(), getG
         if (isActive(gamepad)) source = "gamepad";
         else if (isActive(keyboard)) source = "keyboard";
         out = mergeInputs(keyboard, gamepad);
-        padDirs = padDirUpdate(padDirs, padDir(snap, current, (x, y) => stickDir(x, y, k.stickThreshold)), t);
+        // A new d-pad press is a start event, also when the stick already
+        // gives the same direction (GDD, Interactions).
+        const dpad = padDpadDir(snap, current);
+        const freshDpad = dpad !== "n" && dpad !== lastDpad;
+        lastDpad = dpad;
+        padDirs = padDirUpdate(padDirs, padDir(snap, current, (x, y) => stickDir(x, y, k.stickThreshold)), t, freshDpad);
         padBal = padBalance(snap, current);
       }
       if (touch) {
@@ -148,9 +154,12 @@ export function createInput({ target = window, bindings = createBindings(), getG
       down.clear();
       queue.push({ clear: true });
     },
+    // New bindings let go of every held direction: a key that the old
+    // bindings gave a direction must not stay held after the change.
     set bindings(b) {
       current = b;
       bound = new Set(Object.values(b.keyboard).flat());
+      queue.push({ clear: true });
     },
     dispose() {
       target.removeEventListener("keydown", onDown);

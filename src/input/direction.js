@@ -103,8 +103,10 @@ export function createPadDirs() {
 // The gamepad direction at time t. A start event is a change to a new
 // direction that is not neutral (a stick crossing on a new axis side, or a
 // d-pad press).
-export function padDirUpdate(tr, dir, t) {
-  if (dir === tr.dir) return tr;
+// `fresh` is true on the frame of a new d-pad press: it is a start event
+// also when the stick already gives the same direction.
+export function padDirUpdate(tr, dir, t, fresh = false) {
+  if (dir === tr.dir && !(fresh && isDir(dir))) return tr;
   const hist = tr.dir !== "n" ? closeEvent(tr.hist, tr.dir, t) : tr.hist;
   if (!isDir(dir)) return { ...tr, dir: "n", hist };
   return { dir, lastDir: dir, lastDirAt: t, hist: addEvent(hist, { dir, at: t, up: null }) };

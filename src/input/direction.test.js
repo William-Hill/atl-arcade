@@ -381,3 +381,26 @@ describe("#341 pure trackers", () => {
     expect(resolvePress(1, [], { ...TRICK_INPUT, dirAfter: 0 })).toEqual({ dir: "n", at: 1 });
   });
 });
+
+describe("#341 review fixes", () => {
+  const padOf = (x, y, pressed = []) => ({ id: "pad", connected: true, axes: [x, y, 0, 0], buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: pressed.includes(i), value: pressed.includes(i) ? 1 : 0 })) });
+
+  it("a new d-pad press is a start event while the stick holds the same direction", () => {
+    let p = padOf(-0.9, 0);
+    const r = rig({ pads: () => [p] });
+    for (let i = 60; i <= 97; i += 1) r.frame(i); // stick left for 0.6 s
+    p = padOf(-0.9, 0, [14]); // d-pad left
+    r.frame(98);
+    expect(r.input.frame).toMatchObject({ lastDir: "l", lastDirAt: 98 * F });
+    expect(resolveAt(r, 100).dir).toBe("l");
+  });
+
+  it("new bindings let go of a held direction", () => {
+    const r = rig();
+    r.down("KeyW");
+    expect(r.frame(1)).toMatchObject({ dir: "u", balance: 1 });
+    r.input.bindings = createBindings({ keyboard: { dirUp: ["KeyI"] } });
+    r.up("KeyW");
+    expect(r.frame(2)).toMatchObject({ dir: "n", lastDirHeld: false, balance: 0 });
+  });
+});

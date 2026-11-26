@@ -90,7 +90,14 @@ test("keyboard: the axis rule counts an up held 250 ms; toggle 7 does not", asyn
   await ready(page);
   await page.keyboard.down("KeyW");
   // Wait 250 ms of sim time with W still held.
-  await page.waitForFunction(() => window.__atl.input.frame.t - window.__atl.input.frame.lastDirAt >= 0.25, null, { timeout: 10000 });
+  await page.waitForFunction(
+    () => {
+      const f = window.__atl.input.frame;
+      return Number.isFinite(f.lastDirAt) && f.lastDir === "u" && f.lastDirHeld && f.t - f.lastDirAt >= 0.25;
+    },
+    null,
+    { timeout: 10000 },
+  );
   const res = await page.evaluate(async () => {
     const d = await import("/src/input/direction.js");
     const c = await import("/src/input/trick-constants.js");

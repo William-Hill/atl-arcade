@@ -78,9 +78,8 @@ function rescale(v, deadzone) {
   return Math.sign(v) * ((Math.abs(v) - deadzone) / (1 - deadzone));
 }
 
-// The gamepad trick direction: the d-pad first, else the left stick with
-// `threshold` travel on the main axis (R2).
-export function padDir(pad, bindings, stickDirOf) {
+// The d-pad direction alone, or "n".
+export function padDpadDir(pad, bindings) {
   const g = bindings.gamepad;
   const pressed = (i) => Boolean(pad.buttons && pad.buttons[i] && (pad.buttons[i].pressed || pad.buttons[i].value > 0.5));
   const on = (action) => any(g.buttons[action], pressed);
@@ -88,6 +87,15 @@ export function padDir(pad, bindings, stickDirOf) {
   if (on("dirDown")) return "d";
   if (on("dirLeft")) return "l";
   if (on("dirRight")) return "r";
+  return "n";
+}
+
+// The gamepad trick direction: the d-pad first, else the left stick with
+// `threshold` travel on the main axis (R2).
+export function padDir(pad, bindings, stickDirOf) {
+  const g = bindings.gamepad;
+  const dpad = padDpadDir(pad, bindings);
+  if (dpad !== "n") return dpad;
   const axes = pad.axes ?? [];
   const x = Number.isFinite(axes[g.steerAxis]) ? axes[g.steerAxis] : 0;
   const y = Number.isFinite(axes[g.balanceAxis ?? 1]) ? axes[g.balanceAxis ?? 1] : 0;

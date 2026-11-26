@@ -44,6 +44,18 @@ export function createSkaterEnv(level, extra = []) {
   return { grindables: [...(level ? prepareGrindables(level) : []), ...extra] };
 }
 
+// The sim context of one-button mode (src/input/one-button.js, GDD R12.1):
+// { state: "ground" | "air" | "grind" | "manual", railInRange, skater }.
+// `railInRange` is true when a grind press now would snap. The rail search
+// runs only with `rail` true (TRICK is down or was down), so a frame with no
+// TRICK press costs nothing.
+export function oneButtonContext(s, skaterEnv = { grindables: [] }, { rail = true, k = GRIND } = {}) {
+  const state = s.state === "grind" ? "grind" : s.state === "air" ? "air" : s.manual ? "manual" : "ground";
+  const grindables = skaterEnv.grindables ?? [];
+  const railInRange = rail && (state === "ground" || state === "air") && (s.grindCooldown ?? 0) <= 0 && grindables.length > 0 && Boolean(findSnap(grindables, s, k));
+  return { state, railInRange, skater: skaterEnv.skater };
+}
+
 // The constants with a body's skate constants, made once per body (not on
 // every tick).
 const bodyKs = new WeakMap();

@@ -3,10 +3,11 @@ import { resolveFramePress, resolvePress } from "./direction.js";
 import { createFlick, flickDirOf, flickLift, flickMove, flickTick, createTouchTricks, touchTrickDown, touchTrickMove, touchTrickUp, touchTricksFrame } from "./flick.js";
 import { createInput } from "./input.js";
 import { TRICK_INPUT, trickKnobs } from "./trick-constants.js";
+import { frameToSec, msToFrame } from "../sim/skate/frames.js";
 
-const FMS = 1000 / 60; // one frame in ms
-const HALF = FMS / 2;
-const ms = (frame) => frame * FMS;
+// The R11 times are the nearest whole 60 Hz frame (#343, src/sim/skate/frames.js).
+const ms = (frame) => frameToSec(frame) * 1000; // the time of a frame in ms
+const HALF = ms(1) / 2;
 
 // Steps the touch trick state through frames 0..last. `events[frame]` runs
 // before the frame: (st, tMs) => st. Returns the frame outputs by frame.
@@ -53,22 +54,22 @@ describe("#328 touch flick on TRICK (R11)", () => {
   });
 
   it("AC: a lift at 50 ms with less than 24 px gives neutral (Mute Grab) for one frame", () => {
-    const { outs } = run({ 0: (s, t) => touchTrickDown(s, "style1", 1, 300, 300, t), 2: (s, t) => touchTrickMove(s, 1, 310, 300, t), 3: (s, t) => touchTrickUp(s, 1, t) }, 5);
-    expect(outs.slice(0, 3).map((o) => o.style1)).toEqual([false, false, false]);
-    expect(outs[3]).toMatchObject({ style1: true, flick: { style1: "n" } });
-    expect(outs[4].style1).toBe(false);
+    const { outs } = run({ 0: (s, t) => touchTrickDown(s, "style1", 1, 300, 300, t), 2: (s, t) => touchTrickMove(s, 1, 310, 300, t), [msToFrame(50)]: (s, t) => touchTrickUp(s, 1, t) }, 5);
+    expect(outs.slice(0, msToFrame(50)).map((o) => o.style1)).toEqual([false, false, false]);
+    expect(outs[msToFrame(50)]).toMatchObject({ style1: true, flick: { style1: "n" } });
+    expect(outs[msToFrame(50) + 1].style1).toBe(false);
   });
 
   it("AC: 120 ms with no drag gives neutral at the 120 ms frame (frame 7)", () => {
     const { outs } = run({ 0: (s, t) => touchTrickDown(s, "style1", 1, 300, 300, t) }, 9);
-    expect(outs.findIndex((o) => o.flick.style1 != null)).toBe(7);
-    expect(outs[7]).toMatchObject({ style1: true, flick: { style1: "n" } });
+    expect(outs.findIndex((o) => o.flick.style1 != null)).toBe(msToFrame(TRICK_INPUT.flickMaxMs));
+    expect(outs[msToFrame(120)]).toMatchObject({ style1: true, flick: { style1: "n" } });
     expect(outs[9].style1).toBe(true); // held until the lift
   });
 
   it("Relaxed timing waits 250 ms (frame 15)", () => {
     const { outs } = run({ 0: (s, t) => touchTrickDown(s, "style1", 1, 300, 300, t) }, 16, trickKnobs({ relaxed: true }));
-    expect(outs.findIndex((o) => o.flick.style1 != null)).toBe(15);
+    expect(outs.findIndex((o) => o.flick.style1 != null)).toBe(msToFrame(250));
   });
 
   it("a held flick press ends at the lift", () => {
@@ -107,8 +108,8 @@ describe("#340 touch GRIND: press at the touch-down, stance at the resolve", () 
 
   it("the stance resolve is at most flickMaxMs after the touch-down (neutral)", () => {
     const { outs } = run({ 0: (s, t) => touchTrickDown(s, "grind", 2, 0, 0, t) }, 9);
-    expect(outs.findIndex((o) => o.flick.grind != null)).toBe(7);
-    expect(outs[7].flick.grind).toBe("n");
+    expect(outs.findIndex((o) => o.flick.grind != null)).toBe(msToFrame(TRICK_INPUT.flickMaxMs));
+    expect(outs[msToFrame(120)].flick.grind).toBe("n");
   });
 
   it("AC: TRICK and SPIN still press at the resolve frame, not at the touch-down", () => {
@@ -153,26 +154,26 @@ describe("#328 the same direction on keyboard, gamepad, and touch", () => {
     // Keyboard: W down 2 frames before Q.
     const kt = target();
     const ki = createInput({ target: kt, getGamepads: () => [] });
-    ki.sample(98 / 60);
+    ki.sample(frameToSec(98));
     kt.fire("keydown", "KeyW");
-    ki.sample(99 / 60);
+    ki.sample(frameToSec(99));
     kt.fire("keydown", "KeyQ");
-    const kf = ki.sample(100 / 60);
+    const kf = ki.sample(frameToSec(100));
     dirs.keyboard = resolveFramePress(kf, "style1").dir;
     // Gamepad: the stick up 2 frames before Y.
     let p = padOf(0, 0);
     const pi = createInput({ target: target(), getGamepads: () => [p] });
-    pi.sample(98 / 60);
+    pi.sample(frameToSec(98));
     p = padOf(0, -1);
-    pi.sample(99 / 60);
-    dirs.gamepad = resolveFramePress(pi.sample(100 / 60), "style1").dir;
+    pi.sample(frameToSec(99));
+    dirs.gamepad = resolveFramePress(pi.sample(frameToSec(100)), "style1").dir;
     // Touch: a flick up from TRICK.
     const touch = touchStub();
     const ti = createInput({ target: target(), getGamepads: () => [], touch });
     touch.events.push((s, t) => touchTrickDown(s, "style1", 1, 0, 0, t));
-    ti.sample(98 / 60);
+    ti.sample(frameToSec(98));
     touch.events.push((s, t) => touchTrickMove(s, 1, 0, -30, t));
-    const tf = ti.sample(100 / 60);
+    const tf = ti.sample(frameToSec(100));
     expect(tf).toMatchObject({ style1: true, flick: { style1: "u" }, lastDir: "u" });
     dirs.touch = resolveFramePress(tf, "style1").dir;
     expect(dirs).toEqual({ keyboard: "u", gamepad: "u", touch: "u" });

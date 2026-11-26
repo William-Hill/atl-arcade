@@ -98,7 +98,11 @@ for (const name of ["nia", "marcus"]) {
       expect(shots[move], `${name}: frames of ${move}`).toBeGreaterThan(0);
     }
     // Forward clips only: a dance spin and the backward ride turn the body on purpose.
-    const forward = samples.filter((s) => !/^dance_|^grind_/.test(s.clip) && Math.abs(s.facing) < 0.01);
+    // The first frames after a dance are the blend out of the dance pose
+    // (Swag Surf sways the hips 32 degrees), so they do not count either.
+    const BLEND = 3; // page frames
+    const afterDance = (i) => samples.slice(Math.max(0, i - BLEND), i).some((p) => /^dance_/.test(p.clip));
+    const forward = samples.filter((s, i) => !/^dance_|^grind_/.test(s.clip) && Math.abs(s.facing) < 0.01 && !afterDance(i));
     const worst = Math.max(...forward.map((s) => Math.abs(s.off)));
     fs.writeFileSync(`${OUT}/${look}-${name}-ride.json`, JSON.stringify({ worst, clips: [...seen], frames: samples.length }));
     expect(forward.length).toBeGreaterThan(80);

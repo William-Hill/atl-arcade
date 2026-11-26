@@ -129,3 +129,18 @@ export function stepOneButton(ob, ctx, trick, t, hold = ONE_BUTTON_HOLD) {
   }
   return { ob: s, ...out };
 }
+
+// One frame of one-button mode for the game loop (#328). `frame` is the
+// input frame; `ctx` is the sim context (oneButtonContext() in
+// src/sim/skate/skater.js). Returns the next state and the frame for the
+// sim: `grind` is also true while the intent holds GRIND, and `ob` is
+// { manual, start } (src/sim/skate/trick-step.js reads it). The real GRIND
+// and SPIN still work (R12.1).
+export function oneButtonFrame(ob, frame, ctx, t, hold = ONE_BUTTON_HOLD) {
+  const r = stepOneButton(ob, ctx, Boolean(frame.style1), t, hold);
+  return { ob: r.ob, frame: { ...frame, grind: Boolean(frame.grind) || r.grind, ob: { manual: r.manual, start: r.start } } };
+}
+
+// True when the frame needs the rail search of the sim context: TRICK is
+// down now or was down on the frame before.
+export const oneButtonNeedsRail = (ob, frame) => Boolean(frame.style1) || Boolean(ob.down);

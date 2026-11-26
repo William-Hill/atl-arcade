@@ -3116,3 +3116,18 @@ An agent updated `docs/review/content-checklist.md` to `main` at `087a8a8`. The 
 - An intent log (`prototypes/trick-input/src/intent.js`) lets the agent say the trick it wants before each press. The page pairs it with the result and gives the 3 metrics with the same definitions as the synthetic players, so the numbers of the bots, Autopilot, and the humans can be compared.
 - A cloud session cannot run Autopilot (no Jev decision model key and no Anthropic API key). The owner runs it on their computer with `AUTOPILOT_SHARE=0`. The steps and the request text are in `prototypes/trick-input/REPORT.md`, "Autopilot playtest kit".
 
+
+## 2026-11-25: Autopilot bridge: 6 review fixes from the fork, and the rc export rule (#386)
+
+Both bridge copies (`src/autopilot/autopilot-bridge.js` and `prototypes/trick-input/src/autopilot/autopilot-bridge.js`) are now the fork file `plugin/threejs/autopilot-bridge.js` at commit `53e31d1` (`William-Hill/autopilot`, the squash merge of William-Hill/autopilot#4). The fork commit fixes the 6 CodeRabbit findings of PR 385. The copies differ only in their headers.
+
+- Remote calls (`rc`). A path goes through own properties only. A path with `__proto__`, `prototype`, or `constructor` fails, and an inherited name fails (status 403). A call calls an own function of the object only. A write needs the game export in the new `rcWritable` hook, as `"object.property"`. The default is no write.
+- The answer to a request goes only to the socket that sent the request. A late close of an old socket does not change the new socket.
+- A tap in flight is an input owner, so `release_all`, a lost agent, and `close()` release it.
+- A press of a virtual stick stays until the game reads the pad once (or for 1 s). Holds and releases do not change.
+- When one owner of a pad button or stick lets go and another owner remains, the pad takes the value of the newest remaining owner (a Codex review finding on William-Hill/autopilot#4).
+- A physical key has a set of owners. It goes up only when its last owner lets go (for example, a hold of `steerLeft` and a tap of `A` on `KeyA`).
+- `close()` rejects the operations that still wait (a `watch`, a tap, a hook frame). An operation that ended before the close keeps its result.
+- The fork now also has the change of `aa58a905` (a failed connect keeps the holds of a running move hook). Before, only the copy here had it.
+- The registered objects do not change: the game registers `atl`, and the prototype registers `playtest`. Neither writes through `rc`, so neither sets `rcWritable`. The calls `playtest.intend`, `playtest.metrics`, and `playtest.rows(offset, limit)` are own functions, so they work.
+- Evidence: the fork Node tests (48 pass, 6 new), the root Vitest suite, the prototype Vitest suite, and `e2e/autopilot-agent.spec.js`. That spec connects the bridge to a small local WebSocket server (`e2e/ws-agent.js`) and checks the hello frame and the `rc` paths on both pages.

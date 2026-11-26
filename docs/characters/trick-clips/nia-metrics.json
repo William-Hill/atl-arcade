@@ -1,0 +1,1457 @@
+{
+ "source": "<build>/build-nia/nia-clips-v3.glb",
+ "skater": "nia",
+ "settings": {
+  "still": {
+   "push": 0.5,
+   "coast": 0.8,
+   "carve_left": 0.7,
+   "grind_makio": 0.8,
+   "grind_royale": 0.8,
+   "manual_toe": 0.8
+  },
+  "sigma_frames": 1.2,
+  "follow": [
+   [
+    "LeftForeArm",
+    2,
+    0.45
+   ],
+   [
+    "RightForeArm",
+    2,
+    0.45
+   ],
+   [
+    "LeftHand",
+    3,
+    0.55
+   ],
+   [
+    "RightHand",
+    3,
+    0.55
+   ],
+   [
+    "Head",
+    2,
+    0.35
+   ]
+  ],
+  "max_shift_m": {
+   "push": [
+    0.12,
+    0.06,
+    0.03
+   ],
+   "default": [
+    0.06,
+    0.06,
+    0.03
+   ]
+  },
+  "contact_m": 0.015,
+  "support_margin_m": 0.02,
+  "body_kg": 60.0,
+  "skate_kg": 1.2,
+  "recoil": {
+   "push": {
+    "event": "lift",
+    "pelvis": 0.025,
+    "chest": 5.0,
+    "arms": 6.0,
+    "head": 3.0,
+    "fwd": 1.0,
+    "side": 0.5,
+    "drop": 0.4
+   },
+   "carve_left": {
+    "event": "land",
+    "pelvis": 0.02,
+    "chest": 4.0,
+    "arms": 4.0,
+    "head": 2.5,
+    "fwd": 0.3,
+    "side": 0.6,
+    "drop": 0.25
+   },
+   "coast": {
+    "event": "beat",
+    "pelvis": 0.012,
+    "chest": 2.5,
+    "arms": 3.0,
+    "head": 1.5,
+    "fwd": 0.0,
+    "side": 1.0,
+    "drop": 0.5
+   }
+  },
+  "recoil_skater": {
+   "nia": {
+    "carve_left": {
+     "pelvis": 0.0
+    }
+   }
+  },
+  "arm_loose": {
+   "nia": {
+    "push": {
+     "elbow_deg": 8.0,
+     "elbow_fwd_deg": 18.0,
+     "follow": 0.6,
+     "follow_lag": 2,
+     "follow_max_deg": 14.0,
+     "wrist": 0.5,
+     "wrist_max_deg": 10.0,
+     "out_deg": 12.0,
+     "back_from_deg": 5.0,
+     "back_full_deg": 35.0
+    },
+    "coast": {
+     "elbow_deg": 10.0,
+     "elbow_fwd_deg": 14.0,
+     "follow": 0.6,
+     "follow_lag": 2,
+     "follow_max_deg": 10.0,
+     "wrist": 0.5,
+     "wrist_max_deg": 8.0,
+     "out_deg": 10.0,
+     "back_from_deg": 5.0,
+     "back_full_deg": 35.0
+    }
+   },
+   "marcus": {
+    "push": {
+     "elbow_deg": 8.0,
+     "elbow_fwd_deg": 18.0,
+     "follow": 0.6,
+     "follow_lag": 2,
+     "follow_max_deg": 14.0,
+     "wrist": 0.5,
+     "wrist_max_deg": 10.0,
+     "out_deg": 12.0,
+     "back_from_deg": 5.0,
+     "back_full_deg": 35.0
+    },
+    "coast": {
+     "elbow_deg": 10.0,
+     "elbow_fwd_deg": 14.0,
+     "follow": 0.6,
+     "follow_lag": 2,
+     "follow_max_deg": 10.0,
+     "wrist": 0.5,
+     "wrist_max_deg": 8.0,
+     "out_deg": 10.0,
+     "back_from_deg": 5.0,
+     "back_full_deg": 35.0
+    }
+   }
+  },
+  "torso_clip_m": -0.003,
+  "arm_out_max_deg": 45.0,
+  "stance": {
+   "coast": {
+    "hip_ankle": 0.78,
+    "max_hinge_deg": 35.0,
+    "head_keep": 0.8,
+    "arms_fwd_deg": 12.0
+   },
+   "push": {
+    "hip_ankle": 0.78,
+    "max_hinge_deg": 35.0,
+    "head_keep": 0.8,
+    "arms_fwd_deg": 0.0
+   }
+  },
+  "arm_mirror": {
+   "marcus": {
+    "push": "Left",
+    "coast": "Left"
+   }
+  },
+  "support": {
+   "nia": {
+    "carve_left": {
+     "core": 0.3,
+     "dilate_frames": 4,
+     "sigma_frames": 2.5
+    }
+   }
+  },
+  "clip_clear_m": 0.005,
+  "recoil_lead_back_frames": [
+   3,
+   4
+  ],
+  "recoil_delay_frames": {
+   "pelvis": 0,
+   "chest": 1,
+   "arms": 2,
+   "head": 3
+  }
+ },
+ "clips": {
+  "grind_makio": {
+   "before": {
+    "frames": 48,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0019,
+    "com_fore_aft_accel_peak_ms2": 0.062,
+    "com_side_accel_peak_ms2": 0.334,
+    "com_up_accel_min_ms2": -0.057,
+    "com_up_accel_max_ms2": 0.077,
+    "com_jerk_rms_ms3": 2.13,
+    "zmp_outside_frames": 0,
+    "zmp_outside_max_m": 0.0,
+    "zmp_outside_mean_m": 0.0,
+    "zmp_outside_by_frame_m": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "angular_jerk_rms": {
+     "Spine2": 8.9,
+     "Head": 8.9,
+     "LeftHand": 13.6,
+     "RightHand": 12.4
+    },
+    "wheel_z_min_m": {
+     "Left": 0.0021,
+     "Right": 0.2925
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0021,
+     "Right": 0.2925
+    },
+    "contact": [
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L"
+    ]
+   },
+   "after": {
+    "frames": 48,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0004,
+    "com_fore_aft_accel_peak_ms2": 0.009,
+    "com_side_accel_peak_ms2": 0.276,
+    "com_up_accel_min_ms2": -0.053,
+    "com_up_accel_max_ms2": 0.057,
+    "com_jerk_rms_ms3": 1.48,
+    "zmp_outside_frames": 0,
+    "zmp_outside_max_m": 0.0,
+    "zmp_outside_mean_m": 0.0,
+    "zmp_outside_by_frame_m": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "angular_jerk_rms": {
+     "Spine2": 6.2,
+     "Head": 6.2,
+     "LeftHand": 9.8,
+     "RightHand": 9.0
+    },
+    "wheel_z_min_m": {
+     "Left": -0.0,
+     "Right": 0.2925
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0,
+     "Right": 0.2925
+    },
+    "contact": [
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L",
+     "L"
+    ]
+   },
+   "hips_shift_max_m": [
+    0.0,
+    0.0011,
+    0.0003
+   ],
+   "leg_reach_max": 0.8163,
+   "skate_vertex_move_max_m": 0.00212,
+   "joint_limits": {
+    "before": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 71.3,
+      "right_knee_flex:knee bend": 107.9,
+      "left_knee_flex:knee hyperextension": -71.3,
+      "right_knee_flex:knee hyperextension": -107.9,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.3,
+      "left_elbow_flex:elbow bend": 11.3,
+      "right_elbow_flex:elbow bend": 8.7,
+      "left_elbow_flex:elbow hyperextension": -11.3,
+      "right_elbow_flex:elbow hyperextension": -8.7,
+      "left_elbow_off_hinge:elbow off hinge": 0.0,
+      "right_elbow_off_hinge:elbow off hinge": 0.0,
+      "left_hip_flex:hip flexion": 45.7,
+      "right_hip_flex:hip flexion": 29.4,
+      "left_hip_flex:hip extension": -45.6,
+      "right_hip_flex:hip extension": -29.3,
+      "left_hip_abduction:hip abduction": -11.7,
+      "right_hip_abduction:hip abduction": 39.2,
+      "left_hip_abduction:hip adduction": 11.7,
+      "right_hip_abduction:hip adduction": -39.2,
+      "spine_bend:spine bend": 13.6,
+      "spine_twist:spine twist": 18.9,
+      "neck_bend:neck bend": 3.2
+     }
+    },
+    "after": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 70.7,
+      "right_knee_flex:knee bend": 108.0,
+      "left_knee_flex:knee hyperextension": -70.7,
+      "right_knee_flex:knee hyperextension": -107.8,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.3,
+      "left_elbow_flex:elbow bend": 11.3,
+      "right_elbow_flex:elbow bend": 8.7,
+      "left_elbow_flex:elbow hyperextension": -11.3,
+      "right_elbow_flex:elbow hyperextension": -8.7,
+      "left_elbow_off_hinge:elbow off hinge": 0.0,
+      "right_elbow_off_hinge:elbow off hinge": 0.0,
+      "left_hip_flex:hip flexion": 45.4,
+      "right_hip_flex:hip flexion": 29.5,
+      "left_hip_flex:hip extension": -45.2,
+      "right_hip_flex:hip extension": -29.1,
+      "left_hip_abduction:hip abduction": -11.7,
+      "right_hip_abduction:hip abduction": 39.2,
+      "left_hip_abduction:hip adduction": 11.7,
+      "right_hip_abduction:hip adduction": -39.1,
+      "spine_bend:spine bend": 13.6,
+      "spine_twist:spine twist": 18.9,
+      "neck_bend:neck bend": 3.2
+     }
+    }
+   },
+   "elbow_deg_range": {
+    "before": {
+     "Left": [
+      11.3,
+      11.3
+     ],
+     "Right": [
+      8.7,
+      8.7
+     ]
+    },
+    "after": {
+     "Left": [
+      11.3,
+      11.3
+     ],
+     "Right": [
+      8.7,
+      8.7
+     ]
+    }
+   },
+   "sigma_z_frames": 1.2,
+   "com_target_error_max_m": 0.0,
+   "wheel_lift_max_m": {
+    "Left": -0.0021,
+    "Right": 0.0
+   },
+   "wheel_drop_max_m": {
+    "Left": 0.0021,
+    "Right": -0.0
+   },
+   "recoil_events": [],
+   "recoil_pelvis_target_max_m": 0.0,
+   "clipping": {
+    "overlap_max_m_before": {},
+    "overlap_max_m_after": {},
+    "skate_move_max_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "arm_swing_out_max_deg": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "com_error_after_rebalance_m": 0.0,
+    "fix_rounds": 1,
+    "overlap_max_m_final": {}
+   }
+  },
+  "grind_royale": {
+   "before": {
+    "frames": 48,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0015,
+    "com_fore_aft_accel_peak_ms2": 0.049,
+    "com_side_accel_peak_ms2": 0.313,
+    "com_up_accel_min_ms2": -0.102,
+    "com_up_accel_max_ms2": 0.119,
+    "com_jerk_rms_ms3": 2.11,
+    "zmp_outside_frames": 0,
+    "zmp_outside_max_m": 0.0,
+    "zmp_outside_mean_m": 0.0,
+    "zmp_outside_by_frame_m": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "angular_jerk_rms": {
+     "Spine2": 8.9,
+     "Head": 8.9,
+     "LeftHand": 20.5,
+     "RightHand": 19.1
+    },
+    "wheel_z_min_m": {
+     "Left": -0.0013,
+     "Right": 0.006
+    },
+    "wheel_z_max_m": {
+     "Left": -0.0013,
+     "Right": 0.006
+    },
+    "contact": [
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR"
+    ]
+   },
+   "after": {
+    "frames": 48,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0003,
+    "com_fore_aft_accel_peak_ms2": 0.007,
+    "com_side_accel_peak_ms2": 0.258,
+    "com_up_accel_min_ms2": -0.076,
+    "com_up_accel_max_ms2": 0.104,
+    "com_jerk_rms_ms3": 1.46,
+    "zmp_outside_frames": 0,
+    "zmp_outside_max_m": 0.0,
+    "zmp_outside_mean_m": 0.0,
+    "zmp_outside_by_frame_m": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "angular_jerk_rms": {
+     "Spine2": 6.2,
+     "Head": 6.2,
+     "LeftHand": 15.3,
+     "RightHand": 14.1
+    },
+    "wheel_z_min_m": {
+     "Left": -0.0,
+     "Right": -0.0
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "contact": [
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR"
+    ]
+   },
+   "hips_shift_max_m": [
+    0.0,
+    0.0008,
+    0.0003
+   ],
+   "leg_reach_max": 0.7427,
+   "skate_vertex_move_max_m": 0.00597,
+   "joint_limits": {
+    "before": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 84.2,
+      "right_knee_flex:knee bend": 87.9,
+      "left_knee_flex:knee hyperextension": -84.2,
+      "right_knee_flex:knee hyperextension": -87.9,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.3,
+      "left_elbow_flex:elbow bend": 15.3,
+      "right_elbow_flex:elbow bend": 12.7,
+      "left_elbow_flex:elbow hyperextension": -15.3,
+      "right_elbow_flex:elbow hyperextension": -12.7,
+      "left_elbow_off_hinge:elbow off hinge": 0.0,
+      "right_elbow_off_hinge:elbow off hinge": 0.0,
+      "left_hip_flex:hip flexion": 86.7,
+      "right_hip_flex:hip flexion": 31.6,
+      "left_hip_flex:hip extension": -86.7,
+      "right_hip_flex:hip extension": -31.6,
+      "left_hip_abduction:hip abduction": -2.4,
+      "right_hip_abduction:hip abduction": -8.8,
+      "left_hip_abduction:hip adduction": 2.4,
+      "right_hip_abduction:hip adduction": 8.8,
+      "spine_bend:spine bend": 21.3,
+      "spine_twist:spine twist": 4.2,
+      "neck_bend:neck bend": 4.8
+     }
+    },
+    "after": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 84.4,
+      "right_knee_flex:knee bend": 86.9,
+      "left_knee_flex:knee hyperextension": -84.3,
+      "right_knee_flex:knee hyperextension": -86.7,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.4,
+      "left_elbow_flex:elbow bend": 15.3,
+      "right_elbow_flex:elbow bend": 12.7,
+      "left_elbow_flex:elbow hyperextension": -15.3,
+      "right_elbow_flex:elbow hyperextension": -12.7,
+      "left_elbow_off_hinge:elbow off hinge": 0.0,
+      "right_elbow_off_hinge:elbow off hinge": 0.0,
+      "left_hip_flex:hip flexion": 86.9,
+      "right_hip_flex:hip flexion": 31.3,
+      "left_hip_flex:hip extension": -86.8,
+      "right_hip_flex:hip extension": -31.1,
+      "left_hip_abduction:hip abduction": -2.3,
+      "right_hip_abduction:hip abduction": -8.7,
+      "left_hip_abduction:hip adduction": 2.3,
+      "right_hip_abduction:hip adduction": 8.7,
+      "spine_bend:spine bend": 21.2,
+      "spine_twist:spine twist": 4.1,
+      "neck_bend:neck bend": 4.8
+     }
+    }
+   },
+   "elbow_deg_range": {
+    "before": {
+     "Left": [
+      15.3,
+      15.3
+     ],
+     "Right": [
+      12.7,
+      12.7
+     ]
+    },
+    "after": {
+     "Left": [
+      15.3,
+      15.3
+     ],
+     "Right": [
+      12.7,
+      12.7
+     ]
+    }
+   },
+   "sigma_z_frames": 1.2,
+   "com_target_error_max_m": 0.0,
+   "wheel_lift_max_m": {
+    "Left": 0.0013,
+    "Right": -0.006
+   },
+   "wheel_drop_max_m": {
+    "Left": -0.0013,
+    "Right": 0.006
+   },
+   "recoil_events": [],
+   "recoil_pelvis_target_max_m": 0.0,
+   "clipping": {
+    "overlap_max_m_before": {},
+    "overlap_max_m_after": {},
+    "skate_move_max_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "arm_swing_out_max_deg": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "com_error_after_rebalance_m": 0.0,
+    "fix_rounds": 1,
+    "overlap_max_m_final": {}
+   }
+  },
+  "manual_toe": {
+   "before": {
+    "frames": 30,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.005,
+    "com_fore_aft_accel_peak_ms2": 0.119,
+    "com_side_accel_peak_ms2": 0.0,
+    "com_up_accel_min_ms2": -0.098,
+    "com_up_accel_max_ms2": 0.106,
+    "com_jerk_rms_ms3": 0.61,
+    "zmp_outside_frames": 0,
+    "zmp_outside_max_m": 0.0,
+    "zmp_outside_mean_m": 0.0,
+    "zmp_outside_by_frame_m": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "angular_jerk_rms": {
+     "Spine2": 3.2,
+     "Head": 3.2,
+     "LeftHand": 3.2,
+     "RightHand": 3.2
+    },
+    "wheel_z_min_m": {
+     "Left": 0.0001,
+     "Right": -0.0004
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0001,
+     "Right": -0.0004
+    },
+    "contact": [
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR"
+    ]
+   },
+   "after": {
+    "frames": 30,
+    "loop_error_m": 0.0,
+    "com_fore_aft_range_m": 0.0009,
+    "com_fore_aft_accel_peak_ms2": 0.02,
+    "com_side_accel_peak_ms2": 0.0,
+    "com_up_accel_min_ms2": -0.089,
+    "com_up_accel_max_ms2": 0.095,
+    "com_jerk_rms_ms3": 0.39,
+    "zmp_outside_frames": 0,
+    "zmp_outside_max_m": 0.0,
+    "zmp_outside_mean_m": 0.0,
+    "zmp_outside_by_frame_m": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "angular_jerk_rms": {
+     "Spine2": 3.0,
+     "Head": 3.0,
+     "LeftHand": 3.0,
+     "RightHand": 3.0
+    },
+    "wheel_z_min_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "wheel_z_max_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "contact": [
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR",
+     "LR"
+    ]
+   },
+   "hips_shift_max_m": [
+    0.0,
+    0.0024,
+    0.0001
+   ],
+   "leg_reach_max": 0.8512,
+   "skate_vertex_move_max_m": 0.00047,
+   "joint_limits": {
+    "before": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 63.6,
+      "right_knee_flex:knee bend": 66.1,
+      "left_knee_flex:knee hyperextension": -63.6,
+      "right_knee_flex:knee hyperextension": -66.1,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.3,
+      "left_elbow_flex:elbow bend": 13.3,
+      "right_elbow_flex:elbow bend": 10.7,
+      "left_elbow_flex:elbow hyperextension": -13.3,
+      "right_elbow_flex:elbow hyperextension": -10.7,
+      "left_elbow_off_hinge:elbow off hinge": 0.0,
+      "right_elbow_off_hinge:elbow off hinge": 0.0,
+      "left_hip_flex:hip flexion": 70.8,
+      "right_hip_flex:hip flexion": 51.6,
+      "left_hip_flex:hip extension": -68.7,
+      "right_hip_flex:hip extension": -49.5,
+      "left_hip_abduction:hip abduction": 6.5,
+      "right_hip_abduction:hip abduction": 7.5,
+      "left_hip_abduction:hip adduction": -6.5,
+      "right_hip_abduction:hip adduction": -7.5,
+      "spine_bend:spine bend": 25.7,
+      "spine_twist:spine twist": 1.5,
+      "neck_bend:neck bend": 10.8
+     }
+    },
+    "after": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 63.7,
+      "right_knee_flex:knee bend": 66.3,
+      "left_knee_flex:knee hyperextension": -63.4,
+      "right_knee_flex:knee hyperextension": -66.1,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.3,
+      "left_elbow_flex:elbow bend": 13.3,
+      "right_elbow_flex:elbow bend": 10.7,
+      "left_elbow_flex:elbow hyperextension": -13.3,
+      "right_elbow_flex:elbow hyperextension": -10.7,
+      "left_elbow_off_hinge:elbow off hinge": 0.0,
+      "right_elbow_off_hinge:elbow off hinge": 0.0,
+      "left_hip_flex:hip flexion": 70.9,
+      "right_hip_flex:hip flexion": 51.9,
+      "left_hip_flex:hip extension": -68.6,
+      "right_hip_flex:hip extension": -49.3,
+      "left_hip_abduction:hip abduction": 6.5,
+      "right_hip_abduction:hip abduction": 7.5,
+      "left_hip_abduction:hip adduction": -6.5,
+      "right_hip_abduction:hip adduction": -7.5,
+      "spine_bend:spine bend": 25.7,
+      "spine_twist:spine twist": 1.5,
+      "neck_bend:neck bend": 10.8
+     }
+    }
+   },
+   "elbow_deg_range": {
+    "before": {
+     "Left": [
+      13.3,
+      13.3
+     ],
+     "Right": [
+      10.7,
+      10.7
+     ]
+    },
+    "after": {
+     "Left": [
+      13.3,
+      13.3
+     ],
+     "Right": [
+      10.7,
+      10.7
+     ]
+    }
+   },
+   "sigma_z_frames": 1.2,
+   "com_target_error_max_m": 0.0,
+   "wheel_lift_max_m": {
+    "Left": -0.0001,
+    "Right": 0.0004
+   },
+   "wheel_drop_max_m": {
+    "Left": 0.0001,
+    "Right": -0.0004
+   },
+   "recoil_events": [],
+   "recoil_pelvis_target_max_m": 0.0,
+   "clipping": {
+    "overlap_max_m_before": {},
+    "overlap_max_m_after": {},
+    "skate_move_max_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "arm_swing_out_max_deg": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "com_error_after_rebalance_m": 0.0,
+    "fix_rounds": 1,
+    "overlap_max_m_final": {}
+   }
+  },
+  "air_rocket": {
+   "hand_ik": {
+    "clap_frames": [],
+    "chest_bend_to_skate_max_deg": 9.0,
+    "skate_move_scaled_by_joint_limits_min": {
+     "Left": 1.0,
+     "Right": 1.0
+    },
+    "skate_moved_to_hand_max_m": {
+     "Left": 0.0,
+     "Right": 0.014
+    },
+    "spec": {
+     "grabs": [
+      [
+       "Left",
+       "l_skate",
+       "toe"
+      ],
+      [
+       "Right",
+       "r_skate",
+       "toe"
+      ]
+     ],
+     "chest_first": true,
+     "bend_max": 40.0
+    },
+    "palm_to_target_max_m": [
+     0.2638,
+     0.0018
+    ],
+    "palm_to_target_mean_m": [
+     0.2579,
+     0.0015
+    ]
+   },
+   "joint_limits": {
+    "before": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 30.9,
+      "right_knee_flex:knee bend": 33.2,
+      "left_knee_flex:knee hyperextension": -22.8,
+      "right_knee_flex:knee hyperextension": -26.2,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.3,
+      "left_elbow_flex:elbow bend": 27.2,
+      "right_elbow_flex:elbow bend": 24.7,
+      "left_elbow_flex:elbow hyperextension": -27.2,
+      "right_elbow_flex:elbow hyperextension": -24.7,
+      "left_elbow_off_hinge:elbow off hinge": 2.6,
+      "right_elbow_off_hinge:elbow off hinge": 0.0,
+      "left_hip_flex:hip flexion": 130.2,
+      "right_hip_flex:hip flexion": 131.9,
+      "left_hip_flex:hip extension": -126.3,
+      "right_hip_flex:hip extension": -128.4,
+      "left_hip_abduction:hip abduction": 4.7,
+      "right_hip_abduction:hip abduction": 2.7,
+      "left_hip_abduction:hip adduction": -1.8,
+      "right_hip_abduction:hip adduction": -0.6,
+      "spine_bend:spine bend": 52.8,
+      "spine_twist:spine twist": 1.4,
+      "neck_bend:neck bend": 15.2
+     }
+    },
+    "after": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 30.9,
+      "right_knee_flex:knee bend": 33.6,
+      "left_knee_flex:knee hyperextension": -22.8,
+      "right_knee_flex:knee hyperextension": -31.6,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.4,
+      "left_elbow_flex:elbow bend": 52.4,
+      "right_elbow_flex:elbow bend": 34.2,
+      "left_elbow_flex:elbow hyperextension": -37.5,
+      "right_elbow_flex:elbow hyperextension": -29.7,
+      "left_elbow_off_hinge:elbow off hinge": 8.8,
+      "right_elbow_off_hinge:elbow off hinge": 4.6,
+      "left_hip_flex:hip flexion": 130.2,
+      "right_hip_flex:hip flexion": 132.1,
+      "left_hip_flex:hip extension": -126.3,
+      "right_hip_flex:hip extension": -131.1,
+      "left_hip_abduction:hip abduction": 4.7,
+      "right_hip_abduction:hip abduction": 1.2,
+      "left_hip_abduction:hip adduction": -1.8,
+      "right_hip_abduction:hip adduction": -0.6,
+      "spine_bend:spine bend": 58.4,
+      "spine_twist:spine twist": 4.4,
+      "neck_bend:neck bend": 15.2
+     }
+    }
+   }
+  },
+  "air_tuckknee": {
+   "hand_ik": {
+    "clap_frames": [],
+    "skate_move_scaled_by_joint_limits_min": {
+     "Left": 1.0,
+     "Right": 1.0
+    },
+    "chest_bend_to_skate_max_deg": 0.0,
+    "skate_moved_to_hand_max_m": {
+     "Left": 0.0,
+     "Right": 0.0
+    },
+    "spec": {
+     "grabs": [
+      [
+       "Left",
+       "l_shin",
+       null
+      ],
+      [
+       "Right",
+       "r_shin",
+       null
+      ]
+     ]
+    },
+    "palm_to_target_max_m": [
+     0.0658,
+     0.0006
+    ],
+    "palm_to_target_mean_m": [
+     0.0462,
+     0.0005
+    ]
+   },
+   "joint_limits": {
+    "before": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 150.7,
+      "right_knee_flex:knee bend": 150.7,
+      "left_knee_flex:knee hyperextension": -146.0,
+      "right_knee_flex:knee hyperextension": -146.0,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.3,
+      "left_elbow_flex:elbow bend": 29.2,
+      "right_elbow_flex:elbow bend": 26.7,
+      "left_elbow_flex:elbow hyperextension": -29.2,
+      "right_elbow_flex:elbow hyperextension": -26.7,
+      "left_elbow_off_hinge:elbow off hinge": 2.7,
+      "right_elbow_off_hinge:elbow off hinge": 3.4,
+      "left_hip_flex:hip flexion": 116.4,
+      "right_hip_flex:hip flexion": 116.4,
+      "left_hip_flex:hip extension": -110.5,
+      "right_hip_flex:hip extension": -110.5,
+      "left_hip_abduction:hip abduction": 14.1,
+      "right_hip_abduction:hip abduction": 14.1,
+      "left_hip_abduction:hip adduction": -7.0,
+      "right_hip_abduction:hip adduction": -7.0,
+      "spine_bend:spine bend": 34.7,
+      "spine_twist:spine twist": 1.5,
+      "neck_bend:neck bend": 4.8
+     }
+    },
+    "after": {
+     "status": "PASS",
+     "warn": [],
+     "fail": [],
+     "peaks": {
+      "left_knee_flex:knee bend": 150.7,
+      "right_knee_flex:knee bend": 150.7,
+      "left_knee_flex:knee hyperextension": -146.0,
+      "right_knee_flex:knee hyperextension": -146.0,
+      "left_knee_off_hinge:knee off hinge": 23.3,
+      "right_knee_off_hinge:knee off hinge": 23.3,
+      "left_elbow_flex:elbow bend": 58.9,
+      "right_elbow_flex:elbow bend": 55.8,
+      "left_elbow_flex:elbow hyperextension": -40.0,
+      "right_elbow_flex:elbow hyperextension": -36.2,
+      "left_elbow_off_hinge:elbow off hinge": 3.1,
+      "right_elbow_off_hinge:elbow off hinge": 3.7,
+      "left_hip_flex:hip flexion": 116.4,
+      "right_hip_flex:hip flexion": 116.4,
+      "left_hip_flex:hip extension": -110.5,
+      "right_hip_flex:hip extension": -110.5,
+      "left_hip_abduction:hip abduction": 14.1,
+      "right_hip_abduction:hip abduction": 14.1,
+      "left_hip_abduction:hip adduction": -7.0,
+      "right_hip_abduction:hip adduction": -7.0,
+      "spine_bend:spine bend": 34.7,
+      "spine_twist:spine twist": 1.5,
+      "neck_bend:neck bend": 4.8
+     }
+    }
+   }
+  }
+ },
+ "rest_feet": {
+  "mixamorig:LeftFoot": [
+   0.1826164573431015,
+   -0.016601329669356346,
+   0.1958988904953003
+  ],
+  "mixamorig:RightFoot": [
+   -0.18261785805225372,
+   -0.016601119190454483,
+   0.1958988904953003
+  ]
+ },
+ "glb": "<build>/phys-nia/nia-physics.glb",
+ "glb_bytes": 2500668
+}

@@ -3176,6 +3176,24 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `41
 - Effect on the feel: the air turn changes the skater yaw only. The landing sets the yaw to the travel direction (`stepAir` in `controller.js`), so the rate does not change the path. The air spin looks two times faster.
 - The GDD (R4, F3, Q5) has the new values. The practical maximum of F3 is now 200 + 120 + 90 + 40 = 450 (vert air, direction grab, full hold, one half turn).
 
+## 2026-11-26: Trick input: the fresh direction rule in the production input (#341)
+
+- The input frame has the direction contract of `docs/gdd/trick-input.md` (Interactions): `t`, `dir`, `lastDir`, `lastDirAt`, `lastDirHeld`, `dirHist`, and `balance`. `src/input/direction.js` has the contract and the rule. The sim (lane A) calls `resolvePress(t, dirHist, knobs)` at the press frame and `resolvePending()` on the next frames.
+- The rule reads `dirHist`, not only `lastDir` and `lastDirAt`: the axis rule (R3a) needs the release times. With the R3 rule only (toggle 7, `trickKnobs({ r3Only: true })`) the rule uses the newest start event only, which is the same as a rule on `lastDir` and `lastDirAt`.
+- The knobs of the input (`dirBefore`, `dirAfter`, `udHold`, `udFirst`, `stickThreshold`, `flickMin`, `flickMaxMs`) are in `src/input/trick-constants.js`, not in `src/sim/skate/constants.js` as the GDD Tuning Knobs say. Reason: the input owns the rule, and lane A owns the sim constants. `RELAXED` also has `landingGrace` 0.2 s for the sim.
+- Clock: `input.sample(t)` takes the sim time of the step that reads the frame (`run.time + dt` in `src/main.js`). A key event gets the time of the first sample after it, so the times are whole frames, as the GDD acceptance criteria say. When the sim clock goes back (a new run), the old start events stop being fresh.
+- In the same frame after the press, an up or down beats a left or right with the axis rule on (the same as R3a.2 before the press).
+
+## 2026-11-26 — Trick input clips: hand keys, the clip table, and the toe roll pitch (#329)
+
+The 10 trick clips (Nia and Marcus: `air_rocket`, `air_tuckknee`, `grind_makio`, `grind_royale`, `manual_toe`) and a stumble landing (`land_stumble`) are hand keys, as the dances of #293. No Meshy text-to-motion ran (0 credits). Marcus's air and grind clips and his `land_stumble` are the mirror of Nia's; his `manual_toe` has its own source. Evidence: `docs/characters/trick-clips/README.md`.
+
+- The renderer plays `state.trick.clip` when the clip is in the group of the state, else the base clip (`jump`, `grind_frontside`, `manual`). The `AIR_TRICKS` and `GRINDS` cycles and the variant counters are removed. A ramp air with no grab plays `jump`.
+- A landing plays `land_stumble` when `state.landing` (a string, or `{ result }`) is `"stumble"`. The GDD does not name this field; #327 must use it or change the renderer.
+- The toe roll pitches the boots 8 degrees, not 15 to 20 (GDD). On both skate meshes the toe stop is 5 to 14 mm above the ground, and at 14 degrees a toe stop touches the ground. A larger pitch needs higher toe stops on the mesh.
+- The physics pass has two-hand grabs, a toe region of the skate box, and a shin target (the art-director risk 1 of the GDD). `graft-clips.mjs --prune-rest` drops the channels that stay at rest, so the Marcus phone GLB stays under 3 MB (3,094,444 bytes).
+- Owner choices (2026-11-26, on PR #400): keep the toe roll pitch at 8 degrees (the GDD row now says so), and accept Marcus's `air_rocket` (knees 50 to 64 degrees after the grab IK) for the skater review.
+
 ## 2026-11-26: Trick input: the sim and the combo rules (#327, #334, #339)
 
 The sim part of `docs/gdd/trick-input.md` is in `src/sim/skate/` (`direction.js`, `tricks.js`, `manual.js`, `trick-step.js`, and changes in `skater.js`, `run.js`, `combo.js`, `constants.js`). The reference was `prototypes/trick-input/src/`; no prototype code is imported.

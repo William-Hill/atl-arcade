@@ -3119,12 +3119,13 @@ An agent updated `docs/review/content-checklist.md` to `main` at `087a8a8`. The 
 
 ## 2026-11-25: Autopilot bridge: 6 review fixes from the fork, and the rc export rule (#386)
 
-Both bridge copies (`src/autopilot/autopilot-bridge.js` and `prototypes/trick-input/src/autopilot/autopilot-bridge.js`) are now the fork file at commit `5a10fce` (`William-Hill/autopilot`, `plugin/threejs/autopilot-bridge.js`). The fork commit fixes the 6 CodeRabbit findings of PR 385. The copies differ only in their headers.
+Both bridge copies (`src/autopilot/autopilot-bridge.js` and `prototypes/trick-input/src/autopilot/autopilot-bridge.js`) are now the fork file `plugin/threejs/autopilot-bridge.js` at commit `53e31d1` (`William-Hill/autopilot`, the squash merge of William-Hill/autopilot#4). The fork commit fixes the 6 CodeRabbit findings of PR 385. The copies differ only in their headers.
 
 - Remote calls (`rc`). A path goes through own properties only. A path with `__proto__`, `prototype`, or `constructor` fails, and an inherited name fails (status 403). A call calls an own function of the object only. A write needs the game export in the new `rcWritable` hook, as `"object.property"`. The default is no write.
 - The answer to a request goes only to the socket that sent the request. A late close of an old socket does not change the new socket.
 - A tap in flight is an input owner, so `release_all`, a lost agent, and `close()` release it.
 - A press of a virtual stick stays until the game reads the pad once (or for 1 s). Holds and releases do not change.
+- When one owner of a pad button or stick lets go and another owner remains, the pad takes the value of the newest remaining owner (a Codex review finding on William-Hill/autopilot#4).
 - A physical key has a set of owners. It goes up only when its last owner lets go (for example, a hold of `steerLeft` and a tap of `A` on `KeyA`).
 - `close()` rejects the operations that still wait (a `watch`, a tap, a hook frame). An operation that ended before the close keeps its result.
 - The fork now also has the change of `aa58a905` (a failed connect keeps the holds of a running move hook). Before, only the copy here had it.

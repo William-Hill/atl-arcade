@@ -2,7 +2,7 @@
 // https://github.com/William-Hill/autopilot, branch threejs-engine,
 // file plugin/threejs/autopilot-bridge.js (Apache License 2.0).
 // Do not edit here: change the fork, then copy the file again.
-// Source commit: 5a10fce
+// Source commit: 53e31d1
 // Prototype copy (#326): a byte copy of src/autopilot/autopilot-bridge.js,
 // because a prototype never imports src/ (AGENTS.md).
 
@@ -1149,13 +1149,20 @@ export function createBridge(options = {}) {
     if (first || spec.kind === "pad_button" || spec.kind === "pad_axis") send1(spec, true, value);
   }
 
-  // `owner` lets go of spec: the input goes up when no other owner holds it.
+  // `owner` lets go of spec: the input goes up when no other owner holds it. A pad button or stick that another owner
+  // still holds takes that owner's value again (the newest owner's).
   function letGo(owner, spec) {
     const id = physicalOf(spec);
     if (!id) return;
     const set = owners.get(id);
     if (!set || !set.delete(owner)) return;
-    if (set.size) return;
+    if (set.size) {
+      if (spec.kind === "pad_button" || spec.kind === "pad_axis") {
+        const rest = held.get([...set].at(-1));
+        if (rest) send1(spec, true, rest.value);
+      }
+      return;
+    }
     owners.delete(id);
     send1(spec, false);
   }

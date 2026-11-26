@@ -192,14 +192,27 @@ A cloud session cannot run Autopilot: a run needs the Jev decision model (a Type
 
 > Play the trick input prototype like a new player for 10 minutes. The keys: W pushes, A and D steer, S brakes, Space jumps, F grinds (hold it off a rail for a manual), Q is TRICK, E is SPIN. A direction key (W, A, S, or D) pressed just before Q, or at the same time, picks a different trick. Before EVERY press of Q, E, or F, call `game.call("playtest", "intend", <dir>)` with the direction you want: n (no direction), l, r, u, or d. Mix all 5 directions, in the air (off the kicker), on the ground (dances), and on the rail. Skate as a player does: push with W and steer with A and D between tricks. Do not wait still before a trick. Also try to bank a combo of 3 links or more with a manual (for example rail grind, manual, then a grab off the kicker). At the end, call `game.call("playtest", "metrics")` and report the result, and every trial where the result was not the intended direction.
 
-### Results (to fill in)
+### Results (2026-11-26)
 
 | Run | Rule | Trials | Tricks as wanted | Unwanted Up from push | Unwanted L/R from carves | First 3-link combo with a manual |
 |---|---|---|---|---|---|---|
-| A | axis (default) | | | | | |
-| B | GDD (`?gddRule`) | | | | | |
+| A | axis (default) | 204 | **99.0%** (202 of 204) | **0.0%** (0 of 50 `pushTrials`) | **1.1%** (1 of 92 `carveTrials`) | 245.8 s (4.1 min), see finding 4 |
+| B | GDD (`?gddRule`) | 257 | **99.6%** (256 of 257) | **0.0%** (0 of 45 `pushTrials`) | **0.9%** (1 of 117 `carveTrials`) | 15.8 s, not a new-player time (finding 4) |
 
-Targets: 90% or more, under 5%, under 5%, under 3 minutes. A metric with fewer than 20 trials in its count (`pushTrials`, `carveTrials`) is too small to read.
+Targets: 90% or more, under 5%, under 5%, under 3 minutes. A metric with fewer than 20 trials in its count (`pushTrials`, `carveTrials`) is too small to read. All counts here are 20 or more.
+
+Setup: the fork `William-Hill/autopilot` at `af5ffeb` (branch `feat/cost-estimate`, which contains `threejs-engine`), agent `claude` with the model `claude-opus-5-5`, fast mode off, decision model Jev 1.13.0 (TypeSafe), `AUTOPILOT_SHARE=0`. The page ran in headless Chromium. `byConfig` had only `axis` in run A and only `gdd` in run B. Cost: $2.03 (run A) and $0.80 (run B) on the Anthropic key; the TypeSafe cost was not measured. Raw output: `reports/autopilot/trick-input-2026-11-26-run{A,B}-{report,rows}.json`.
+
+### Findings
+
+1. **The 2 rules give the same result for Autopilot.** The GDD rule ("before") gives 99.6% as wanted and a 0.9% carve leak. The axis rule ("after") gives 99.0% and 1.1%. The difference is one trial. Both runs meet the 3 input targets. The synthetic players predict a 11.3% leak for the GDD rule and 7.1% for the axis rule on the keyboard. The Autopilot runs do not confirm or refute that difference (finding 3).
+2. **Missed trials by type.** Run A: 1 carve (SPIN intended n, the result was r, "Smooth Quad", `carve: true`) and 1 press with no trick (TRICK intended n, pressed while the 4.8 s ATL Rydin dance still ran from the end of the episode before). Run B: 1 carve, the same pattern (SPIN intended n, the result was r, "Smooth Quad"). No miss came from a late or an early direction, and no miss came from a push. The agent could not confirm the carve timing, because the page does not give its key-start log.
+3. **Harness limits.**
+   - The agent plays from code with fixed timing, not with human timing. It calls `intend` 16.7 ms (1 frame) before the press in most trials (largest gap: 117 ms in run A, 33 ms in run B). Run A says that its code waits 0.36 s after a direction key starts before a neutral press; I did not verify this. The rules differ only for early holds (150 to 300 ms) and for carves that start in the window, and the agent seldom makes these inputs.
+   - In run A, a W hold in the harness stopped, and the skater coasted to a stop in episodes 1 and 2 (about 130 s). The agent fixed it in episodes 3 and 4. This is a harness bug, not a game finding.
+   - Run B ran after run A with the Autopilot memory of run A (its report names "the previous run"). It banked the combo in its first episode on the route that run A found.
+4. **Time to the first combo is not a valid reading.** Run A banked "Rail Soul Grind + Manual + Japan Grab" (2295 points) at 245.8 s after the last restart, over the 3-minute target. That time includes episodes 1 and 2 with the coasting bug (finding 3). Run B banked "Long Rail Grind + Manual + Mute Grab" (17028 points with 6 dance links) at 15.8 s, with memory of run A. Neither time is the time of a new player.
+5. **A TRICK or SPIN press during a dance does nothing, with no feedback.** The 4.8 s ATL Rydin dance blocks every Q and E press. This is the design in `sim.js`, but a player sees no sign that the press was ignored. The log counts it as a failed trial. Watch for it in the human playtest.
 
 ## Human playtest: checklist for the owner
 

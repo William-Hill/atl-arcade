@@ -3155,3 +3155,11 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `41
 - Evidence: Autopilot met the 3 input targets with both rules (axis rule 99.0% as wanted, 0.0% Up from push, 1.1% L/R from carves; GDD rule 99.6%, 0.0%, 0.9%). See `prototypes/trick-input/REPORT.md`, "Autopilot playtest kit".
 - Open risk: the agent plays with fixed timing, not human timing. The synthetic players predict a 7.1% carve leak on the keyboard with the axis rule, over the 5% target. No run measured the time of a new player to the first 3-link combo. The human playtest must measure both before release.
 - #327 to #344 can start. The human playtest stays on the checklist in `prototypes/trick-input/REPORT.md`, for a later date.
+
+## 2026-11-26: Trick input: the fresh direction rule in the production input (#341)
+
+- The input frame has the direction contract of `docs/gdd/trick-input.md` (Interactions): `t`, `dir`, `lastDir`, `lastDirAt`, `lastDirHeld`, `dirHist`, and `balance`. `src/input/direction.js` has the contract and the rule. The sim (lane A) calls `resolvePress(t, dirHist, knobs)` at the press frame and `resolvePending()` on the next frames.
+- The rule reads `dirHist`, not only `lastDir` and `lastDirAt`: the axis rule (R3a) needs the release times. With the R3 rule only (toggle 7, `trickKnobs({ r3Only: true })`) the rule uses the newest start event only, which is the same as a rule on `lastDir` and `lastDirAt`.
+- The knobs of the input (`dirBefore`, `dirAfter`, `udHold`, `udFirst`, `stickThreshold`, `flickMin`, `flickMaxMs`) are in `src/input/trick-constants.js`, not in `src/sim/skate/constants.js` as the GDD Tuning Knobs say. Reason: the input owns the rule, and lane A owns the sim constants. `RELAXED` also has `landingGrace` 0.2 s for the sim.
+- Clock: `input.sample(t)` takes the sim time of the step that reads the frame (`run.time + dt` in `src/main.js`). A key event gets the time of the first sample after it, so the times are whole frames, as the GDD acceptance criteria say. When the sim clock goes back (a new run), the old start events stop being fresh.
+- In the same frame after the press, an up or down beats a left or right with the axis rule on (the same as R3a.2 before the press).

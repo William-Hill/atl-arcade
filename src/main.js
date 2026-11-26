@@ -1005,7 +1005,8 @@ window.addEventListener("pointerdown", startBeat);
 let script = null;
 let scriptResolve = null;
 
-function sampleInput() {
+// `t` is the sim time of the step that reads the input (src/input/input.js).
+function sampleInput(t) {
   if (script) {
     const input = script.next();
     if (input) return input;
@@ -1014,7 +1015,7 @@ function sampleInput() {
     scriptResolve = null;
     if (done) done({ ...skater, combo: run.combo });
   }
-  return input.sample();
+  return input.sample(t);
 }
 
 function simulate(dt) {
@@ -1022,7 +1023,7 @@ function simulate(dt) {
   // intro and on the title screen (#301) the world moves, the skater stands,
   // and the goals, the lessons and the landmarks wait for the game.
   const attract = Boolean(front?.active);
-  const sampled = attract ? {} : sampleInput();
+  const sampled = attract ? {} : sampleInput(run.time + dt);
   const before = run.skater;
   const comboBefore = run.combo;
   perf.begin("skater");
@@ -2094,6 +2095,10 @@ window.__atl = {
     },
     get bindings() {
       return input.bindings;
+    },
+    // The last input frame with the trick direction fields (#341).
+    get frame() {
+      return input.frame;
     },
     get touch() {
       return Boolean(touch);

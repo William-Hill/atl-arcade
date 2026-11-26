@@ -7,6 +7,8 @@ import { COMBO, TRICK } from "./constants.js";
 import { comboBail, comboMove, comboStumble, comboTick, createCombo } from "./combo.js";
 import { manualPoints } from "./manual.js";
 import { trickOptions } from "./trick-step.js";
+
+const AIR_EPS = 1e-6; // 12 ticks of 1/60 s sum to 0.19999999999999998
 import { MANUALS, airBase, airName, airPoints, grindName as trickGrindName, stanceBonus } from "./tricks.js";
 import { createSkater, stepSkater } from "./skater.js";
 import { FLAT_GROUND } from "./controller.js";
@@ -77,7 +79,7 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
     const l = skater.landing;
     if (l) {
       const name = l.grab ? l.grab.name : airName(l.airFrom);
-      if (name && l.airTime >= T.c.minAirTime) {
+      if (name && l.airTime + AIR_EPS >= T.c.minAirTime) { // the same float slack as trick-step.js
         const grab = l.grab ? (l.grab.dir === "n" ? "neutral" : "dir") : null;
         judge(airPoints({ base: airBase(l.airFrom, T.c), grab, tHold: l.hold, airYaw: l.airYaw }, T.k), "air", name, { landing: l.result });
       } else if (l.result === "stumble") combo = comboStumble(combo, T.c);

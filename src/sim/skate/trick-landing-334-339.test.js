@@ -141,6 +141,38 @@ describe("#327 review: short airs and the coyote jump", () => {
     expect(r.moves.at(-1).name).toBe("Japan Grab");
   });
 
+  it("an air of 12 ticks (0.19999999999999998 s by float sum) still counts as 0.2 s and adds its link", () => {
+    let found = null;
+    for (let vy = 1.6; vy < 2.4 && !found; vy += 0.01) {
+      const r = rig({ speed: 6 }).air({ airFrom: "launch", vy });
+      r.steps(60, {}, (run) => run.skater.justLanded);
+      if (r.s.landing && r.s.landing.airTime < 0.2 && r.s.landing.airTime > 0.2 - 1e-9) found = r;
+    }
+    expect(found).not.toBe(null);
+    expect(found.moves.at(-1)).toMatchObject({ name: "Ramp Air" });
+  });
+
+  it("a respawn ends a dance and a pending press", () => {
+    const env = { sampleGround: () => ({ height: 0, normal: [0, 1, 0], id: "flat" }), bounds: { minX: -5, maxX: 5, minZ: -5, maxZ: 5 }, spawn: { position: [0, 0, 0], yaw: 0 } };
+    const r = rig({ speed: 5, env, position: [0, 0, 0] });
+    r.step({ style1: true, flick: { style1: "r" } });
+    expect(r.s.style).not.toBe(null);
+    r.set({ position: [20, 0, 0] }); // out of the bounds: the next step respawns
+    r.step({});
+    expect(r.s.respawned).toBe(true);
+    expect(r.s.style).toBe(null);
+    r.steps(200, {});
+    expect(r.moves.filter((m) => m.move === "style")).toHaveLength(0);
+    // A pending press (no direction yet) also ends.
+    const r2 = rig({ speed: 5, env, position: [0, 0, 0] });
+    r2.step({ style1: true });
+    expect(r2.s.trickPend).not.toBe(null);
+    r2.set({ position: [20, 0, 0] });
+    r2.step({ style1: true });
+    expect(r2.s.trickPend).toBe(null);
+    expect(r2.s.style).toBe(null);
+  });
+
   it("a TRICK press before grabMinAir sets grabEarly on that tick only", () => {
     const r = rig({ speed: 6 }).air({ airFrom: "launch", vy: vyFor(0.6) });
     r.steps(2, {});

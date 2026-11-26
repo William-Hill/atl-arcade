@@ -42,6 +42,14 @@ describe("R3: fresh", () => {
     expect(resolvePress(P, { dirHist: [] }, null, { ...TRICK, dirAfter: 0 })).toEqual({ dir: "n" });
   });
 
+  it("a direction that starts after dirAfter does not set a pending press, also when the sim first sees it late", () => {
+    const pend = { pending: P };
+    const late = { dir: "u", at: P + at(fr(83)), up: null }; // 5 frames: after the 60 ms window
+    expect(resolvePending(pend, P + at(fr(83)), { dirHist: [late] })).toEqual({ dir: "n" });
+    const inWindow = { dir: "u", at: P + at(fr(50)), up: null }; // frame 3
+    expect(resolvePending(pend, P + at(fr(83)), { dirHist: [inWindow] })).toEqual({ dir: "u" });
+  });
+
   it("a touch flick wins over the keys", () => {
     expect(resolvePress(P, { flick: { style1: "d" }, dirHist: [ev("l", -20)] }, "style1")).toEqual({ dir: "d" });
     expect(resolvePending({ pending: P }, P + at(1), { flick: { style1: "r" } }, "style1")).toEqual({ dir: "r" });

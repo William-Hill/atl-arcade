@@ -67,7 +67,9 @@ export function resolvePending(pending, t, input = {}, button = null, k = TRICK)
   const flick = button && input.flick ? input.flick[button] : null;
   if (flick && DIRS.includes(flick)) return { dir: flick };
   const p = pending.pending;
-  const after = dirHistory(input).filter((e) => e.dir && e.dir !== "n" && e.at > p + EPS && e.at <= t + EPS);
+  // A direction counts only if it started inside dirAfter (an event of the window that the
+  // sim first sees on a later tick still counts).
+  const after = dirHistory(input).filter((e) => e.dir && e.dir !== "n" && e.at > p + EPS && e.at <= t + EPS && e.at <= p + k.dirAfter + EPS);
   if (after.length) return { dir: after.reduce((a, b) => (b.at < a.at ? b : a)).dir };
   if (t >= p + k.dirAfter - EPS) return { dir: "n" };
   return pending;

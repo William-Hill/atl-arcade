@@ -201,7 +201,7 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   }
 
   // --- Air: grabs (R4, R12.1) and the touchdown (R10) ---
-  let pend = prev.trickPend ?? null;
+  let pend = s.respawned ? null : (prev.trickPend ?? null); // a respawn ends a pending press
   if (pend && pend.ctx === "air" && s.state !== "air") pend = null;
   if (pend && pend.ctx === "ground" && (s.state !== "rolling" || s.manual)) pend = null;
   if (pend) {
@@ -263,7 +263,7 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   }
 
   // --- Ground: dance slots (R7) ---
-  let style = prev.style ? { ...prev.style } : null;
+  let style = prev.style && !s.respawned ? { ...prev.style } : null; // a respawn ends a dance
   let repeat = null;
   if (style && (s.state !== "rolling" || s.manual)) style = null;
   if (style) {

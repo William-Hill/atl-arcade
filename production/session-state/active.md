@@ -6,6 +6,20 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## Trick rules on in the game (#328, #340, #343, #337), 2026-11-26
+
+Branch `claude/quirky-heisenberg-xyd0i9` from `main` (step 1, alone, because it changes `src/main.js`). Design: `docs/decisions.md`, 2026-11-26 "The trick rules play in the game".
+
+| Part | Where | Verified |
+|---|---|---|
+| `skaterEnv.tricks` on, `?gddRule`, Relaxed timing | `src/main.js`, `src/input/trick-constants.js` (`simTricks`) | Playwright `e2e/trick-game.spec.js` |
+| One-button intent in the sim | `src/input/one-button.js` (`oneButtonFrame`), `src/sim/skate/skater.js` (`oneButtonContext`), `src/sim/skate/trick-step.js` | Vitest `one-button-328.test.js`; Playwright `trick-game.spec.js` |
+| Touch GRIND stance at the flick resolve | `src/sim/skate/trick-step.js` (from #399) | Vitest `touch-grind-340.test.js`; Playwright `trick-touch.spec.js` (Makio) |
+| Frame helper in the input timing tests | `src/input/direction.test.js`, `src/input/flick.test.js` | Vitest |
+| Beats and points per dance | `src/sim/skate/tricks.js` (`danceNamed`) | Vitest `dance-337.test.js` |
+
+NOT verified: no person played it; no real phone, GPU, or gamepad; the full Playwright suite did not run (it runs on `main` before the Autopilot playtest).
+
 ## #330 Trick HUD UX spec, 2026-11-26
 
 Branch `claude/focused-turing-0gpscl` from `main` (lane D, docs only). Spec: `docs/ux/trick-hud.md`. Decisions: `docs/decisions.md`, 2026-11-26. No code in `src/`. Wave 2 implements it. Open questions for the owner are in section 12 of the spec.

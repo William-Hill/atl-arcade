@@ -3,8 +3,11 @@ import { createBindings } from "./bindings.js";
 import { createKeyDirs, createPadDirs, dirFields, freshDir, keyBalance, keyDirDown, keyDirUp, keyDirsClear, keyHeldDir, padDirUpdate, resolvePending, resolvePress, stickDir } from "./direction.js";
 import { createInput } from "./input.js";
 import { R3_ONLY, RELAXED, TRICK_INPUT, trickKnobs } from "./trick-constants.js";
+import { FRAME_DT, msToFrame as fr } from "../sim/skate/frames.js";
 
-const F = 1 / 60; // one sim frame
+// The GDD times are the nearest whole 60 Hz frame (#343, src/sim/skate/frames.js).
+const F = FRAME_DT; // one sim frame
+const P = 100; // the press frame of the R3 tests
 const R3 = trickKnobs({ r3Only: true });
 
 // A keyboard and gamepad driver on the real createInput(), on frame times.
@@ -141,32 +144,32 @@ describe("#341 direction actions dirLeft, dirRight, dirUp, dirDown", () => {
 describe("#341 R3 fresh direction (keyboard, 60 Hz frames)", () => {
   it("AC: a W tap that ends before the press gives Up (frame -6 to -3)", () => {
     const r = rig();
-    play(r, { 94: [["down", "KeyW"]], 97: [["up", "KeyW"]] }, 90, 99);
-    expect(resolveAt(r, 100).dir).toBe("u");
+    play(r, { [P - 6]: [["down", "KeyW"]], [P - 3]: [["up", "KeyW"]] }, P - 10, P - 1);
+    expect(resolveAt(r, P).dir).toBe("u");
     // The same with the R3 rule only (toggle 7).
     const r2 = rig();
-    play(r2, { 94: [["down", "KeyW"]], 97: [["up", "KeyW"]] }, 90, 99);
-    expect(resolveAt(r2, 100, R3).dir).toBe("u");
+    play(r2, { [P - 6]: [["down", "KeyW"]], [P - 3]: [["up", "KeyW"]] }, P - 10, P - 1);
+    expect(resolveAt(r2, P, R3).dir).toBe("u");
   });
 
   it("AC: W held 1 s, then A down 3 frames before the press gives Left", () => {
     for (const k of [TRICK_INPUT, R3]) {
       const r = rig();
-      play(r, { 40: [["down", "KeyW"]], 97: [["down", "KeyA"]] }, 40, 99);
-      expect(resolveAt(r, 100, k).dir).toBe("l");
+      play(r, { [P - fr(1000)]: [["down", "KeyW"]], [P - 3]: [["down", "KeyA"]] }, P - fr(1000), P - 1);
+      expect(resolveAt(r, P, k).dir).toBe("l");
     }
   });
 
   it("AC: a fresh left at the press, then up 2 frames after, stays Left", () => {
     for (const k of [TRICK_INPUT, R3]) {
       const r = rig();
-      play(r, { 98: [["down", "KeyA"]] }, 90, 99);
-      const f = r.frame(100);
+      play(r, { [P - 2]: [["down", "KeyA"]] }, P - 10, P - 1);
+      const f = r.frame(P);
       const res = resolvePress(f.t, f.dirHist, k);
       expect(res).toEqual({ dir: "l", at: f.t });
       r.down("KeyW");
-      r.frame(101);
-      const g = r.frame(102);
+      r.frame(P + 1);
+      const g = r.frame(P + 2);
       // The press resolved at its frame: a later up cannot change it.
       expect(resolvePending(res, g.t, g.dirHist, k)).toEqual(res);
     }
@@ -174,44 +177,44 @@ describe("#341 R3 fresh direction (keyboard, 60 Hz frames)", () => {
 
   it("AC: Shift held to push gives neutral", () => {
     const r = rig();
-    play(r, { 40: [["down", "ShiftLeft"]] }, 40, 99);
-    expect(resolveAt(r, 100).dir).toBe("n");
+    play(r, { [P - fr(1000)]: [["down", "ShiftLeft"]] }, P - fr(1000), P - 1);
+    expect(resolveAt(r, P).dir).toBe("n");
   });
 
   it("AC: W held 1 s to push gives neutral (Bankhead Bounce slot)", () => {
     for (const k of [TRICK_INPUT, R3]) {
       const r = rig();
-      play(r, { 40: [["down", "KeyW"]] }, 40, 99);
-      expect(resolveAt(r, 100, k).dir).toBe("n");
+      play(r, { [P - fr(1000)]: [["down", "KeyW"]] }, P - fr(1000), P - 1);
+      expect(resolveAt(r, P, k).dir).toBe("n");
     }
   });
 
   it("AC: a right 100 ms before counts; 160 ms before gives neutral", () => {
     const a = rig();
-    play(a, { 94: [["down", "KeyD"]] }, 90, 99);
-    expect(resolveAt(a, 100).dir).toBe("r");
+    play(a, { [P - fr(100)]: [["down", "KeyD"]] }, P - 10, P - 1);
+    expect(resolveAt(a, P).dir).toBe("r");
     const b = rig();
-    play(b, { 90: [["down", "KeyD"]] }, 85, 99); // frame -10 = 167 ms; 160 ms rounds to frame 10
-    expect(resolveAt(b, 100).dir).toBe("n");
+    play(b, { [P - fr(160)]: [["down", "KeyD"]] }, P - 15, P - 1); // 160 ms is frame 10
+    expect(resolveAt(b, P).dir).toBe("n");
   });
 
   it("AC: with no fresh direction, the first direction in dirAfter sets the trick (up 20 ms after = frame 1)", () => {
     const r = rig();
-    play(r, {}, 90, 99);
-    const res = resolveAt(r, 100, TRICK_INPUT, (i) => i === 101 && r.down("KeyW"));
-    expect(res).toEqual({ dir: "u", frame: 101 });
+    play(r, {}, P - 10, P - 1);
+    const res = resolveAt(r, P, TRICK_INPUT, (i) => i === P + fr(20) && r.down("KeyW"));
+    expect(res).toEqual({ dir: "u", frame: P + fr(20) });
   });
 
   it("AC: with no direction, the press resolves neutral 60 ms after (frame 4)", () => {
     const r = rig();
-    expect(resolveAt(r, 100)).toEqual({ dir: "n", frame: 104 });
+    expect(resolveAt(r, P)).toEqual({ dir: "n", frame: P + fr(60) });
   });
 
   it("AC: left and then right in the window, right wins", () => {
     for (const k of [TRICK_INPUT, R3]) {
       const r = rig();
-      play(r, { 93: [["down", "KeyA"]], 96: [["up", "KeyA"], ["down", "KeyD"]] }, 90, 99);
-      expect(resolveAt(r, 100, k).dir).toBe("r");
+      play(r, { [P - 7]: [["down", "KeyA"]], [P - 4]: [["up", "KeyA"], ["down", "KeyD"]] }, P - 10, P - 1);
+      expect(resolveAt(r, P, k).dir).toBe("r");
     }
   });
 
@@ -219,11 +222,11 @@ describe("#341 R3 fresh direction (keyboard, 60 Hz frames)", () => {
     const relaxed = trickKnobs({ relaxed: true });
     expect(relaxed).toMatchObject(RELAXED);
     const r = rig();
-    play(r, { 86: [["down", "KeyA"], ["up", "KeyA"]] }, 80, 99);
-    expect(resolveAt(r, 100, relaxed).dir).toBe("l");
+    play(r, { [P - fr(240)]: [["down", "KeyA"], ["up", "KeyA"]] }, P - 20, P - 1);
+    expect(resolveAt(r, P, relaxed).dir).toBe("l");
     const r2 = rig();
-    play(r2, { 86: [["down", "KeyA"], ["up", "KeyA"]] }, 80, 99);
-    expect(resolveAt(r2, 100).dir).toBe("n");
+    play(r2, { [P - fr(240)]: [["down", "KeyA"], ["up", "KeyA"]] }, P - 20, P - 1);
+    expect(resolveAt(r2, P).dir).toBe("n");
   });
 });
 
@@ -235,21 +238,21 @@ describe("#341 R3a axis rule (default since 2026-11-25)", () => {
 
   it("AC: W down 15 frames (250 ms) before and still held gives Up; R3 only gives neutral", () => {
     const r = rig();
-    play(r, { 85: [["down", "KeyW"]] }, 80, 99);
-    expect(resolveAt(r, 100).dir).toBe("u");
+    play(r, { [P - fr(250)]: [["down", "KeyW"]] }, P - 20, P - 1);
+    expect(resolveAt(r, P).dir).toBe("u");
     const r2 = rig();
-    play(r2, { 85: [["down", "KeyW"]] }, 80, 99);
-    expect(resolveAt(r2, 100, R3).dir).toBe("n");
+    play(r2, { [P - fr(250)]: [["down", "KeyW"]] }, P - 20, P - 1);
+    expect(resolveAt(r2, P, R3).dir).toBe("n");
   });
 
   it("AC: W tapped at frame -6, D down at frame -3 and held: Up; R3 only: Right", () => {
-    const ev = { 94: [["down", "KeyW"]], 95: [["up", "KeyW"]], 97: [["down", "KeyD"]] };
+    const ev = { [P - 6]: [["down", "KeyW"]], [P - 5]: [["up", "KeyW"]], [P - 3]: [["down", "KeyD"]] };
     const r = rig();
-    play(r, ev, 90, 99);
-    expect(resolveAt(r, 100).dir).toBe("u");
+    play(r, ev, P - 10, P - 1);
+    expect(resolveAt(r, P).dir).toBe("u");
     const r2 = rig();
-    play(r2, ev, 90, 99);
-    expect(resolveAt(r2, 100, R3).dir).toBe("r");
+    play(r2, ev, P - 10, P - 1);
+    expect(resolveAt(r2, P, R3).dir).toBe("r");
   });
 
   it("keeps the dirBefore window for an up that was let go before the press", () => {

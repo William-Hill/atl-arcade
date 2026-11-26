@@ -414,7 +414,9 @@ function npcEnv(skaterEnv, model) {
   if (!byModel) npcEnvs.set(skaterEnv, (byModel = new Map()));
   let e = byModel.get(model);
   if (!e) {
-    e = { ...skaterEnv, skater: model, skate: null };
+    // The NPC skaters keep the old trick rules: their scripts send no
+    // direction fields (docs/decisions.md, 2026-11-26).
+    e = { ...skaterEnv, skater: model, skate: null, tricks: null };
     byModel.set(model, e);
   }
   return e;

@@ -50,6 +50,14 @@ export const DANCE_SLOTS = {
   style2: { n: byName("Cross Step"), l: byName("Toe Spin"), r: byName("Smooth Quad"), u: ATL_RYDIN, d: byName("Sit Spin") },
 };
 
+// A dance by its name (the one-button sets of src/input/one-button.js name
+// their items). ATL Rydin is a slot dance, not in STYLE.moves. Returns null
+// for an unknown name.
+export function danceNamed(name) {
+  if (name === ATL_RYDIN.name) return ATL_RYDIN;
+  return ALL_DANCES.find((x) => x.name === name) ?? null;
+}
+
 // The dance of a slot. An unknown skater gets Nia's TRICK slots.
 export function danceFor(button, skater, dir = "n") {
   const d = dirOk(dir);

@@ -104,43 +104,42 @@ export const GRIND = {
 };
 
 // Style (dance) moves on the roll-out. Each button has a list of dances.
-// A press starts the next dance in the list; a held button repeats the dance.
-// `beats` sets the length on the game beat clock (BEAT.bpm). `clip` names
-// the skater clip, and `anim` names the placeholder capsule animation.
+// With the old rules (trick input off), a press starts the next dance in the
+// list; a held button repeats the dance. With the trick input on (#327), the
+// direction picks the dance slot (src/sim/skate/tricks.js, GDD R7).
+// Each dance has its own `beats` (the length on the game beat clock,
+// BEAT.bpm) and `points` (GDD R7, #337). `clip` names the skater clip, and
+// `anim` names the placeholder capsule animation of the move.
 // The sources for the dances are in docs/characters/atl-dance-references.md.
 // A dance with `skaters` plays only for those skaters (their GLB has the clip).
+const groove = (clip, name, skaters) => ({ clip, name, beats: 2, points: 150, ...(skaters ? { skaters } : {}) });
+const spin = (clip, name) => ({ clip, name, beats: 1, points: 160 });
 export const STYLE = {
   minSpeed: 1.5, // m/s needed to start a style move. min 0.5 / typical 1.5 / max 3.
   moves: [
     {
       id: "groove",
-      beats: 2,
-      points: 150,
       anim: "tilt",
       dances: [
         // Marcus' own dances (#107 follow-up): a retargeted Tripo motion and
         // two Meshy text to motion clips. Real skaters review them before release.
-        { clip: "dance_jamgroove", name: "Jam Groove", skaters: ["marcus"] },
-        { clip: "dance_drumline", name: "Drumline Count", skaters: ["marcus"] },
-        { clip: "dance_jamstep", name: "Jam Step", skaters: ["marcus"] },
-        { clip: "dance_bankhead", name: "Bankhead Bounce" },
-        { clip: "dance_walkitout", name: "Walk It Out" },
-        { clip: "dance_prep", name: "The Prep" },
-        { clip: "dance_swagsurf", name: "Swag Surf" },
-        { clip: "dance_snaplean", name: "Snap Lean" },
-        { clip: "dance_crisscross", name: "Crisscross" },
-        { clip: "dance_smoothquad", name: "Smooth Quad" },
+        groove("dance_jamgroove", "Jam Groove", ["marcus"]),
+        groove("dance_drumline", "Drumline Count", ["marcus"]),
+        groove("dance_jamstep", "Jam Step", ["marcus"]),
+        groove("dance_bankhead", "Bankhead Bounce"),
+        groove("dance_walkitout", "Walk It Out"),
+        groove("dance_prep", "The Prep"),
+        groove("dance_swagsurf", "Swag Surf"),
+        groove("dance_snaplean", "Snap Lean"),
+        // The clip dance_crisscross is the Cross Step (docs/decisions.md, 2026-11-03; GDD R7).
+        groove("dance_crisscross", "Cross Step"),
+        groove("dance_smoothquad", "Smooth Quad"),
       ],
     },
     {
       id: "spin",
-      beats: 1,
-      points: 160,
       anim: "spin",
-      dances: [
-        { clip: "dance_spin", name: "Toe Spin" },
-        { clip: "dance_sitspin", name: "Sit Spin" },
-      ],
+      dances: [spin("dance_spin", "Toe Spin"), spin("dance_sitspin", "Sit Spin")],
     },
   ],
 };
@@ -148,8 +147,8 @@ export const STYLE = {
 // The dances of a move for one skater. A dance with no `skaters` list is for every skater.
 export const dancesFor = (move, skater) => move.dances.filter((d) => !d.skaters || d.skaters.includes(skater));
 
-// The length of a style move in seconds at `bpm`.
-export const styleDuration = (move, bpm = BEAT.bpm) => (move.beats * 60) / bpm;
+// The length in seconds at `bpm` of a dance (anything with `beats`).
+export const styleDuration = (dance, bpm = BEAT.bpm) => (dance.beats * 60) / bpm;
 
 // Combo scoring.
 export const COMBO = {
@@ -165,7 +164,7 @@ export const COMBO = {
   rampAirPoints: 100, // points for air off a kicker or a ramp lip that is not vert (#262). min 50 / typical 100 / max 200.
   hopPoints: 50, // points for a jump that lands. min 20 / typical 50 / max 100.
   vertAirPoints: 200, // points for air off the quarter pipe. min 100 / typical 200 / max 400.
-  manualPoints: 80, // points per manual (no input bound in M0). min 40 / typical 80 / max 150.
+  manualPoints: 80, // points per manual with the old rules (trick input off). With the trick input on, F2 (TRICK.manualBase) pays. min 40 / typical 80 / max 150.
   minAirTime: 0.2, // s airborne needed for a hop to count. min 0.1 / typical 0.2 / max 0.4.
   styleGain: 0.25, // style meter fill per dance move (meter is 0..1). min 0.1 / typical 0.25 / max 0.5.
   bailStyleLoss: 0.5, // style meter lost on a bail. min 0 / typical 0.5 / max 1.
@@ -176,7 +175,51 @@ export const COMBO = {
   // Each entry: min 0 / typical 1, 0.5, 0.25 / max 1. Keep the list short (2 to 4 entries).
   repeatDecay: [1, 0.5, 0.25],
   maxMultiplier: 10, // cap on the combo multiplier (#75). min 5 / typical 10 / max 20.
+  // Trick input (#327, docs/gdd/trick-input.md F5 to F7, R10).
+  beatPerfectBonus: 1.75, // F6: multiplier for a move judged PERFECT (BEAT.perfectMs). Keep at or above beatBonus. min 1.5 / typical 1.75 / max 2.
+  stumbleKeep: 0.5, // F5 L: fraction of the link points on a stumble. min 0.25 / typical 0.5 / max 0.75.
+  stumbleStyleLoss: 0.25, // R10: style meter lost on a stumble. min 0 / typical 0.25 / max 0.5.
+  stumbleSpeedKeep: 0.7, // R10: fraction of the speed kept on a stumble. min 0.5 / typical 0.7 / max 0.9.
+  bailBank: 0.25, // F7: fraction of the pending points that a bail banks, at multiplier 1. min 0 / typical 0.25 / max 0.5.
 };
+
+// Trick input (#327, docs/gdd/trick-input.md, Tuning Knobs). Times are in s
+// on the sim clock (`skater.time`). The input layer (src/input/, #328) owns
+// the stick threshold and the touch flick; the sim reads the result.
+export const TRICK = {
+  // R3 and R3a: the fresh direction.
+  dirBefore: 0.15, // s a direction may start before the press. min 0.1 / typical 0.15 / max 0.25.
+  dirAfter: 0.06, // s the game waits after the press when no direction is fresh. min 0 / typical 0.06 / max 0.1.
+  axisRule: true, // R3a (owner choice 2026-11-25, #326): the up/down hold and the up/down first rule. false = the R3 rule only.
+  udHold: 0.3, // s: an up or down still held at the press counts if it started inside this. min 0.25 / typical 0.3 / max 0.4.
+  udFirst: true, // R3a: an up or down beats a left or right when both are fresh.
+  // R4: grabs.
+  grabMinAir: 0.1, // s of air before a grab may start. min 0.05 / typical 0.1 / max 0.2.
+  // R8, F1, F2: the manual.
+  manualDelay: 0.15, // s GRIND is held with no rail before a manual starts. min 0.1 / typical 0.15 / max 0.3.
+  manualMinSpeed: 3, // m/s. min 2 / typical 3 / max 4.
+  manualFriction: 0.5, // times the roll friction and drag in a manual. min 0 / typical 0.5 / max 1.
+  manualDrift: 0.4, // F1 d. min 0.2 / typical 0.4 / max 0.8.
+  manualGravity: 1.0, // F1 g. min 0.5 / typical 1 / max 2.
+  manualCorrect: 2.2, // F1 c. min 1 / typical 2.2 / max 4.
+  manualBase: 40, // F2 points per manual (replaces COMBO.manualPoints). min 20 / typical 40 / max 80.
+  manualPerMeter: 15, // F2 points per m. Keep under COMBO.grindPerMeter. min 8 / typical 15 / max 25.
+  manualCapMeters: 30, // F2 m that pay; the link is added here. min 15 / typical 30 / max 50.
+  toeRollBonus: 20, // F2 extra points for a Toe Roll. min 0 / typical 20 / max 60.
+  // F3, F4: trick points.
+  trickBaseNeutral: 80, // F3 neutral grab. min 40 / typical 80 / max 150.
+  trickBaseDir: 120, // F3 direction grab. min 60 / typical 120 / max 300.
+  stanceBonus: 30, // F4 direction stance. min 0 / typical 30 / max 80.
+  holdRate: 60, // F3 points per s of grab held. Keep holdRate * holdCap under 1.5 x trickBase. min 20 / typical 60 / max 120.
+  holdCap: 1.5, // F3 s of hold that pay. min 0.5 / typical 1.5 / max 3.
+  spinPer180: 40, // F3 points per full half turn of |airYaw|. min 20 / typical 40 / max 80.
+  spinCapHalfTurns: 6, // F3. min 4 / typical 6 / max 8.
+  // R10: landings.
+  landingGrace: 0.1, // s: a grab younger than this at the touchdown is void (no points, no stumble). Larger is more lenient. min 0.05 / typical 0.1 / max 0.2.
+};
+
+// R12.3 "Relaxed timing": longer windows.
+export const TRICK_RELAXED = { dirBefore: 0.25, dirAfter: 0.1, landingGrace: 0.2 };
 
 // Beat clock and the on-beat bonus. The beat never gates input.
 export const BEAT = {

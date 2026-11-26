@@ -3163,3 +3163,16 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `41
 - At 3 rad/s a half turn needs 1.05 s of air, so no air in the park paid a spin. At 6 rad/s a half turn needs 0.52 s. A kicker or a vert air at 11 m/s or more, with steer held for the whole air, turns one half turn (40 points). A hop on flat ground turns about 172 degrees, so it does not pay. Two half turns (1.05 s) stay out of reach in the present park.
 - Effect on the feel: the air turn changes the skater yaw only. The landing sets the yaw to the travel direction (`stepAir` in `controller.js`), so the rate does not change the path. The air spin looks two times faster.
 - The GDD (R4, F3, Q5) has the new values. The practical maximum of F3 is now 200 + 120 + 90 + 40 = 450 (vert air, direction grab, full hold, one half turn).
+
+## 2026-11-26: Trick input: the sim and the combo rules (#327, #334, #339)
+
+The sim part of `docs/gdd/trick-input.md` is in `src/sim/skate/` (`direction.js`, `tricks.js`, `manual.js`, `trick-step.js`, and changes in `skater.js`, `run.js`, `combo.js`, `constants.js`). The reference was `prototypes/trick-input/src/`; no prototype code is imported.
+
+- **A switch for the trick rules.** The trick rules play when `skaterEnv.tricks` is on (`true`, or `{ oneButton, relaxed, k }`). Off, the old rules play: Q and E start the next dance of a list, and the air has no grab. The game does not set the switch yet, because the input does not send the direction fields yet (#328, #341). The wiring turns it on.
+- **The sim clock.** `skater.time` (s) counts the sim steps; it is equal to `run.time` and goes on after a teleport. The input must send `lastDirAt` and the `dirHist` times on this clock.
+- **R3 in the sim.** `direction.js` applies R3 and the axis rule (R3a) to the input fields `dirHist` (or `lastDir`, `lastDirAt`, `dir`) and `flick`. A flick wins. The input (#328) owns the key and stick trackers, the stick threshold, and the flick timing.
+- **The manual is not a new controller state.** `state` stays `"rolling"` and `skater.manual` holds the manual (`{ balance, side, meters, toe, pressT, capped, link }`). So the renderer, the camera, and the goals that read `"rolling"` do not change. `state.trick` has `kind: "manual"`.
+- **Rules that change for all play, also with the switch off:** a bail banks 25% of the pending points (`COMBO.bailBank`, F7); a PERFECT beat pays 1.75 (`COMBO.beatPerfectBonus`, F6); a stumble pays `stumbleKeep` and drops the style meter `stumbleStyleLoss` (only the trick rules make stumbles); `beats` and `points` are per dance in `STYLE.moves`, and "Crisscross" is "Cross Step" (R7). With the switch off, a grind is still judged at its exit; with it on, at the snap (F6).
+- **One-button mode in this change: the air only** (the grab set, and a held grab is a clean landing, #334). The ground and rail rows of the R12 table are #336.
+- **ATL Rydin** (8 beats, 600 points) plays the `dance_sitspin` clip until `dance_atlrydin` exists (#329). The new grab, stance, and manual clips (`air_rocket`, `air_tuckknee`, `grind_makio`, `grind_royale`, `manual_toe`) are names only; the renderer must map them to present clips until #329.
+- **Cost.** The trick rules add about 1.7 microseconds per sim step on the cloud container (3.2 against 1.5). `npm run perf:check` did not run.

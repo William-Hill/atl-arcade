@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { loadavg } from "node:os";
 import { expect, test } from "@playwright/test";
-import { GRIND } from "../src/sim/skate/constants.js";
+import { COMBO, GRIND } from "../src/sim/skate/constants.js";
 import { measureTaps } from "./beat-taps.js";
 
 async function ready(page) {
@@ -84,8 +84,10 @@ test("a move landed on the beat earns the bonus and a PERFECT or GOOD tag on the
     if (m.onBeat) expect(["PERFECT", "GOOD"]).toContain(m.beatTag);
     else expect(m.beatTag).toBeNull();
   }
-  // Pending points equal the sum of move points with the bonus applied where on beat.
-  const expected = result.moves.reduce((n, m) => n + Math.round(m.points * (m.onBeat ? 1.5 : 1)), 0);
+  // Pending points equal the sum of move points with the bonus applied where on beat:
+  // PERFECT pays COMBO.beatPerfectBonus (1.75) and GOOD pays COMBO.beatBonus (1.5) (GDD F6, #327).
+  const factor = (m) => (m.beatTag === "PERFECT" ? COMBO.beatPerfectBonus : m.beatTag === "GOOD" ? COMBO.beatBonus : 1);
+  const expected = result.moves.reduce((n, m) => n + Math.round(m.points * factor(m)), 0);
   expect(result.pending).toBe(expected);
   expect(result.pulse).not.toBe("none");
   const onBeat = result.moves.filter((m) => m.onBeat);

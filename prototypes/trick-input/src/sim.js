@@ -371,7 +371,12 @@ export function stepSim(s, input, dt = DT) {
     // Dances (R7): TRICK or SPIN.
     for (const b of ["trick", "spin"]) {
       const pressed = b === "trick" ? trickPress : press("spin");
-      if (!pressed || s.dance || s.pend) continue;
+      if (pressed && s.dance) {
+        // A dance runs to its end (R7): the press does nothing, so tell the HUD (Autopilot finding 5).
+        emit(s, "press-ignored", { button: b, reason: "dance", name: s.dance.name, left: s.dance.endT - t });
+        continue;
+      }
+      if (!pressed || s.pend) continue;
       if (v0 + EPS < STYLE.minSpeed) {
         emit(s, "no-dance", { speed: v0 });
         continue;

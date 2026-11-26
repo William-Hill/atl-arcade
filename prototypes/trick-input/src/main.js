@@ -125,7 +125,7 @@ function render() {
 // --- HUD ------------------------------------------------------------------
 
 const $ = (id) => document.getElementById(id);
-const TAG_TEXT = { PERFECT: "★ PERFECT", GOOD: "✓ GOOD", WOBBLE: "~ WOBBLE" };
+const TAG_TEXT = { PERFECT: "★ PERFECT", GOOD: "✓ GOOD", WOBBLE: "~ WOBBLE", BUSY: "… BUSY: dance" };
 let lastTrickShown = null;
 let tagUntil = 0;
 let tagText = null;
@@ -143,7 +143,7 @@ function hud() {
   if (s.t < tagUntil && tagText) {
     tagEl.style.display = "inline-block";
     tagEl.textContent = TAG_TEXT[tagText];
-    tagEl.style.color = tagText === "WOBBLE" ? "#ddd" : "#ffb000";
+    tagEl.style.color = tagText === "WOBBLE" || tagText === "BUSY" ? "#ddd" : "#ffb000";
   } else tagEl.style.display = "none";
   const c = s.combo;
   const names = c.links.map((l) => `${l.tag === "PERFECT" ? "★" : l.tag === "GOOD" ? "✓" : ""}${hudShort(l.name)}`);
@@ -209,6 +209,12 @@ function onEvents(events) {
     }
     if (e.type === "bank") logLines.push(`${e.t.toFixed(2)} BANK +${e.banked}`);
     if (e.type === "land" && e.result === "stumble") logLines.push(`${e.t.toFixed(2)} wobble`);
+    if (e.type === "press-ignored") {
+      // The press does nothing while a dance runs: show why (Autopilot finding 5).
+      logLines.push(`${e.t.toFixed(2)} ${e.button === "trick" ? "TRICK" : "SPIN"} ignored: ${e.name} ${e.left.toFixed(1)} s left`);
+      tagText = "BUSY";
+      tagUntil = sim.t + 0.6;
+    }
   }
   while (logLines.length > 40) logLines.shift();
 }

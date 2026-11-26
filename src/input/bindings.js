@@ -43,6 +43,8 @@ export const DEFAULT_GAMEPAD = {
   // The stick y for the trick direction and the manual balance. The Gamepad
   // API gives up as negative; the input changes the sign.
   balanceAxis: 1,
+  // The left stick gives the trick direction (false: the d-pad only).
+  dirStick: true,
   deadzone: 0.15,
   buttons: {
     jump: [0],

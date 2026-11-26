@@ -145,7 +145,7 @@ export function promptFor(step, kind, bindings = null) {
   } else if (step === "jump") {
     icons = kind === "touch" ? [{ type: "touch", label: "JUMP" }] : kind === "gamepad" ? btn("jump") : keys("jump", 1);
   } else if (step === "dance") {
-    icons = kind === "touch" ? [{ type: "touch", label: "GROOVE" }, { type: "touch", label: "SPIN" }] : kind === "gamepad" ? [...btn("style1"), ...btn("style2")] : [...keys("style1", 1), ...keys("style2", 1)];
+    icons = kind === "touch" ? [{ type: "touch", label: "TRICK" }, { type: "touch", label: "SPIN" }] : kind === "gamepad" ? [...btn("style1"), ...btn("style2")] : [...keys("style1", 1), ...keys("style2", 1)];
   } else if (step === "grind") {
     icons = kind === "touch" ? [{ type: "touch", label: "GRIND" }] : kind === "gamepad" ? btn("grind") : keys("grind", 1);
     hint = kind === "touch" ? "Ride to the rail, hold GRIND" : "Ride to the rail and hold";

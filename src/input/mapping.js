@@ -71,7 +71,7 @@ export function isActive(input) {
 
 // The fields of the direction contract (src/input/direction.js) with no
 // direction. A scripted input with no direction fields means these values.
-export const NEUTRAL_DIR = Object.freeze({ dir: "n", lastDir: "n", lastDirAt: -Infinity, lastDirHeld: false, dirHist: Object.freeze([]), balance: 0 });
+export const NEUTRAL_DIR = Object.freeze({ dir: "n", lastDir: "n", lastDirAt: -Infinity, lastDirHeld: false, dirHist: Object.freeze([]), balance: 0, flick: Object.freeze({ style1: null, style2: null, grind: null }), grindFlick: false, oneButton: false, relaxed: false });
 
 function rescale(v, deadzone) {
   if (!Number.isFinite(v) || Math.abs(v) < deadzone) return 0;
@@ -96,6 +96,7 @@ export function padDir(pad, bindings, stickDirOf) {
   const g = bindings.gamepad;
   const dpad = padDpadDir(pad, bindings);
   if (dpad !== "n") return dpad;
+  if (g.dirStick === false) return "n";
   const axes = pad.axes ?? [];
   const x = Number.isFinite(axes[g.steerAxis]) ? axes[g.steerAxis] : 0;
   const y = Number.isFinite(axes[g.balanceAxis ?? 1]) ? axes[g.balanceAxis ?? 1] : 0;

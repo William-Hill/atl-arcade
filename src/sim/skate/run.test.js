@@ -27,13 +27,14 @@ describe("style moves", () => {
     r.skater.speed = 5;
     r = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv);
     expect(r.skater.style).toMatchObject({ id: "groove", anim: "tilt", name: "Bankhead Bounce", clip: "dance_bankhead" });
-    const ticks = Math.ceil(styleDuration(STYLE.moves[0]) * 60);
+    const bankhead = STYLE.moves[0].dances.find((d) => d.name === "Bankhead Bounce");
+    const ticks = Math.ceil(styleDuration(bankhead) * 60);
     let done = null;
     for (let i = 0; i < ticks + 1 && !done; i += 1) {
       r = stepRun(r, {}, 1 / 60, env, skaterEnv);
       if (r.skater.justStyled) done = r.skater.justStyled;
     }
-    expect(done).toMatchObject({ id: "groove", name: "Bankhead Bounce", points: STYLE.moves[0].points });
+    expect(done).toMatchObject({ id: "groove", name: "Bankhead Bounce", points: bankhead.points });
     expect(r.combo.links).toHaveLength(1);
     expect(r.combo.style).toBeCloseTo(COMBO.styleGain);
   });
@@ -79,8 +80,9 @@ describe("style moves", () => {
     const beat = { bpm: 125, judge: () => null };
     const fast = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv, beat).skater.style;
     const base = stepRun(r, { style1: true }, 1 / 60, env, skaterEnv).skater.style;
-    expect(fast.duration).toBeCloseTo((STYLE.moves[0].beats * 60) / 125);
-    expect(base.duration).toBeCloseTo(styleDuration(STYLE.moves[0]));
+    const bankhead = STYLE.moves[0].dances.find((d) => d.name === "Bankhead Bounce");
+    expect(fast.duration).toBeCloseTo((bankhead.beats * 60) / 125);
+    expect(base.duration).toBeCloseTo(styleDuration(bankhead));
   });
 
   it("needs speed and cancels when the skater leaves the ground", () => {

@@ -56,12 +56,14 @@ describe("banking", () => {
 });
 
 describe("bail", () => {
-  it("throws the pending points away and keeps the banked score", () => {
+  it("banks bailBank (25%) of the pending points at multiplier 1 and keeps the banked score (GDD R10, F7)", () => {
     let c = comboMove(comboMove(createCombo(), grind), hop);
     c = comboTick(c, 1, false); // banks 300
     c = comboMove(comboMove(c, grind), shuffle);
+    const pending = c.pending;
     c = comboBail(c);
-    expect(c.score).toBe(300);
+    expect(c.score).toBe(300 + Math.round(pending * COMBO.bailBank));
+    expect(c.lastBanked).toBe(Math.round(pending * COMBO.bailBank));
     expect(c.pending).toBe(0);
     expect(c.links).toHaveLength(0);
     expect(c.multiplier).toBe(1);

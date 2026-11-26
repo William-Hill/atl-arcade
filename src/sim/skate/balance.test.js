@@ -100,7 +100,7 @@ describe("move balance", () => {
     // #262: a grind scores grindBase + grindPerMeter * meters, so its rate per
     // second grows with the speed. Before #262 it was 300 points per second
     // at any speed, and a slow grind of the same rail scored more.
-    const best = Math.max(...STYLE.moves.map((m) => m.points / styleDuration(m)));
+    const best = Math.max(...STYLE.moves.flatMap((m) => m.dances).map((d) => d.points / styleDuration(d)));
     for (const v of [8, 10, 12]) {
       for (const t of [0.5, 1, 2, 3, 5, 10]) {
         const grind = (COMBO.grindBase + COMBO.grindPerMeter * v * t) / t;

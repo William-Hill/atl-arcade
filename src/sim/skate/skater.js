@@ -5,6 +5,7 @@
 import { GRIND, SKATE, STYLE, dancesFor, styleDuration } from "./constants.js";
 import { FLAT_GROUND, createSkateState, stepSkate } from "./controller.js";
 import { findSnap, prepareGrindables, startGrind, stepGrind } from "./grind.js";
+import { airTurn, manualSkate, stepTricks, trickInput, trickOptions, trickStance } from "./trick-step.js";
 
 export function createSkater(level, { position, yaw } = {}) {
   const spawn = level?.spawn ?? { position: [0, 0, 0], yaw: 0 };
@@ -26,6 +27,13 @@ export function createSkater(level, { position, yaw } = {}) {
     backward: false, // the skater rides backward (ATL style). The travel does not change.
     switchHeld: false,
     justStyled: null, // the move that just completed
+    // Trick input (#327, docs/gdd/trick-input.md). Set when skaterEnv.tricks is on.
+    time: 0, // s on the sim clock; the input sends lastDirAt and dirHist on this clock
+    airYaw: 0, // rad: the signed sum of the yaw change in this air, with no wrap (#339)
+    trick: null, // { kind, id, name, clip, dir, held }: the trick in progress
+    grab: null, // the grab of this air
+    manual: null, // { balance, side, meters, toe, pressT, capped, link }
+    landing: null, // the touchdown result of this tick (trick-step.js)
     stats: { snaps: 0, falls: 0, exits: 0, grindTime: 0, styles: 0, respawns: 0, bonks: 0, slides: 0 },
   };
 }
@@ -49,8 +57,15 @@ function bodyK(kIn, skate) {
 
 export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, kIn = { skate: SKATE, grind: GRIND }) {
   // skaterEnv.skate: the skate constants of this skater's body (body.js).
-  const k = skaterEnv.skate ? bodyK(kIn, skaterEnv.skate) : kIn;
+  const k0 = skaterEnv.skate ? bodyK(kIn, skaterEnv.skate) : kIn;
   const grindables = skaterEnv.grindables ?? [];
+  // The trick input rules (#327) are on with skaterEnv.tricks (true or
+  // { oneButton, k }). Off, the old rules play (a press starts the next dance
+  // of a list), so the game does not change before the input sends `dirHist`.
+  const T = trickOptions(skaterEnv.tricks);
+  // In a manual: push and brake are off, and the roll friction is lower (R8).
+  const k = T && prev.manual ? { ...k0, skate: manualSkate(k0.skate, T.k) } : k0;
+  const ctlInput = T ? trickInput(prev, input) : input;
   const wantsGrind = Boolean(input.grind);
   const grindEdge = wantsGrind && !prev.grindHeld;
   const stats = { ...prev.stats };
@@ -67,7 +82,7 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
     if (s.justFell) stats.falls += 1;
     if (s.justExited) stats.exits += 1;
   } else {
-    s = stepSkate(prev, input, dt, env, k.skate);
+    s = stepSkate(prev, ctlInput, dt, env, k.skate);
     if (s.respawned) stats.respawns += 1;
     // Wall contacts (#261): a bonk stops the skater, a slide does not.
     if (s.bonked) stats.bonks = (stats.bonks ?? 0) + 1;
@@ -94,6 +109,7 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
       if (!snap && caught) snap = findSnap(grindables, s, { ...k.grind, minAlongDot: k.grind.catchAlongDot });
       if (snap) {
         s = startGrind(caught ? { ...s, speed: Math.max(Math.abs(s.speed), caught.speed) } : s, snap, lean, k.grind);
+        if (T) s.grind.stance = trickStance(prev, input, dt, T);
         s.bonked = false;
         s.bonkCatch = null;
         s.grindBuffer = 0;
@@ -105,8 +121,22 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
   }
   s.grindHeld = wantsGrind;
   // The grind steps copy the previous state, so set the push and brake flags here too.
-  s.pushing = s.state === "rolling" && Boolean(input.push);
-  s.braking = s.state === "rolling" && Boolean(input.brake);
+  s.pushing = s.state === "rolling" && Boolean(ctlInput.push);
+  s.braking = s.state === "rolling" && Boolean(ctlInput.brake);
+  s.airYaw = airTurn(prev, s, ctlInput, dt, k.skate);
+  s.time = (prev.time ?? 0) + dt; // the sim clock (s); the compares use a 1e-6 slack
+
+  // Switch: a press on the ground turns the skater to ride backward or
+  // forward again. A fall or a respawn resets the skater to forward.
+  const wantsSwitch = Boolean(input.switch);
+  s.backward = Boolean(prev.backward);
+  if (wantsSwitch && !prev.switchHeld && s.state === "rolling") s.backward = !s.backward;
+  if (s.justFell || s.respawned) s.backward = false;
+  s.switchHeld = wantsSwitch;
+  s.stats = stats;
+
+  // The trick input rules: grabs, stances, manual, landings, dance slots.
+  if (T) return stepTricks(prev, s, input, dt, stats, skaterEnv, T);
 
   // Style moves: a button press starts the next dance in that button's list,
   // while rolling at speed. A dance runs for its beats, and a held button
@@ -136,7 +166,7 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
         const dances = dancesFor(m, skaterEnv.skater);
         const dance = dances[counts[index] % dances.length];
         counts[index] += 1;
-        style = { id: m.id, button: index, name: dance.name, clip: dance.clip, time: 0, duration: styleDuration(m, skaterEnv.bpm), points: m.points, anim: m.anim };
+        style = { id: m.id, button: index, name: dance.name, clip: dance.clip, time: 0, duration: styleDuration(dance, skaterEnv.bpm), points: dance.points, anim: m.anim };
       }
     }
   }
@@ -154,14 +184,6 @@ export function stepSkater(prev, input = {}, dt, env = FLAT_GROUND, skaterEnv = 
   s.style = style;
   s.styleHeld = held;
 
-  // Switch: a press on the ground turns the skater to ride backward or
-  // forward again. A fall or a respawn resets the skater to forward.
-  const wantsSwitch = Boolean(input.switch);
-  s.backward = Boolean(prev.backward);
-  if (wantsSwitch && !prev.switchHeld && s.state === "rolling") s.backward = !s.backward;
-  if (s.justFell || s.respawned) s.backward = false;
-  s.switchHeld = wantsSwitch;
-  s.stats = stats;
   return s;
 }
 

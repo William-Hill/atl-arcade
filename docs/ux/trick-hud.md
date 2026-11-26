@@ -183,7 +183,8 @@ Rules:
 
 - A link result takes the place of a trick in progress at once.
 - A new trick start takes the place of a link result at once. The player needs the newest input first.
-- Busy and Refused never take the place of a trick in progress or a link result that shows. They show only when E2 is hidden or shows another refusal.
+- Refused never takes the place of a trick in progress or a link result that shows. It shows only when E2 is hidden or shows another refusal.
+- Busy is different: the ignored press always comes while a dance is in progress, so Busy replaces the text of the dance chip for 600 ms. The beat pips (E3) stay, so the player sees how long the dance has left. After 600 ms with no new ignored press, the chip shows the dance again. A link result that comes in the 600 ms takes the place of Busy at once.
 - The Busy cue does not show in one-button mode. In that mode a TRICK press during a dance has another job (R12.1).
 - No text uses the words "FAIL", "CRASH", "MISS", or "BAD". `src/content/banned-words.js` (#342) must contain them, and a Vitest test checks every E2 string against the list.
 
@@ -290,7 +291,7 @@ The grind balance meter (`#hud-balance`, horizontal, in the HUD column) does not
 
 ### 8.3 The flick card (away from the thumb)
 
-The thumb covers most of the ring. The GDD asks that the lit arrow "shows the short trick name". The name goes in a card away from the thumb, so the player can read it.
+The thumb covers most of the ring. The GDD asks that the lit arrow "shows the short trick name". The name goes in a card away from the thumb, so the player can read it (owner choice 2026-11-26).
 
 - The card shows at the touch-down, with the ring.
 - Content: a 3 x 3 grid with the 4 directions and the neutral slot of that button in the present context.
@@ -327,19 +328,19 @@ With "Relaxed timing" (R12.3), `flickMaxMs` is 250 ms. The ring and the card do 
 
 ### 8.5 One-button mode
 
-- The direction is not read (GDD Edge Cases and acceptance criteria). So no button shows ticks or a ring.
-- A touch-down on TRICK shows the card with one line: `Next: Japan Grab` (the next item of the one-button set for the present context). See Q3 in section 12 for a GDD conflict.
+- The direction is not read (GDD R12.1, Edge Cases, and acceptance criteria; owner choice 2026-11-26). So no button shows ticks or a ring.
+- A touch-down on TRICK shows the card with one line: `Next: Japan Grab` (the next item of the one-button set for the present context).
 
 ## 9. E6: Trick list screen
 
 ### 9.1 Entry and exit
 
-There is no pause menu in the game now. The settings dialog (key O) pauses the game (`main.js`: `paused` includes `settingsMenu.isOpen`). The trick list is a dialog of the same kind.
+There is no pause menu in the game now. The settings dialog (key O) pauses the game (`main.js`: `paused` includes `settingsMenu.isOpen`). The trick list is its own dialog of the same kind, not a page of the settings dialog (owner choice 2026-11-26).
 
 | Device | Open | Close |
 |---|---|---|
 | Keyboard | Key `T` (free in play; the full map uses T only while the map is open), or the `TRICKS T` button beside `SETTINGS O`, or the "Trick list" button in the settings dialog | `Escape`, `T`, or the close button |
-| Gamepad | See Q1 in section 12 (no menu button exists now). Default in this spec: the View/Back button (standard button 8). | B, or the View/Back button |
+| Gamepad | The View/Back button (standard button 8). Start (button 9) stays free for a later pause menu. Owner choice 2026-11-26. | B, or the View/Back button |
 | Touch | The `TRICKS` button beside `SETTINGS` (44 px or larger, the same row or column as `SETTINGS` in each #245 layout) | The close button (44 px) or a tap outside the dialog |
 
 - The game pauses while the dialog is open, as with the settings dialog. The dialog cannot open on the front screen, in photo mode, or on the results screen.
@@ -504,13 +505,15 @@ Evidence: Playwright screenshots with `filter: grayscale(1)` on the page, at 128
 
 ## 12. Open questions
 
+The owner answered Q1, Q2, Q3, and Q5 on 2026-11-26 (all the recommended option). The other questions do not block wave 2: each has a default that wave 2 can build, and a later answer changes only a detail.
+
 | # | Question | Default in this spec | Owner | By |
 |---|---|---|---|---|
-| Q1 | The gamepad has no menu button now. Which button opens the trick list? | View/Back (standard button 8). Start (button 9) stays free for a later pause menu. | Owner | Wave 2, before the trick list story |
-| Q2 | Does the trick list live in its own dialog (this spec), or as a page of the settings dialog? | Own dialog, with a "Trick list" button in the settings dialog | Owner | Wave 2 |
-| Q3 | GDD R12.1 says that in one-button mode "the directions still work". The Edge Cases and the acceptance criteria say that the direction is not read. Which is correct? | The direction is not read: no ring, no arrows | Owner (GDD fix) | Before #336 |
+| Q1 | The gamepad has no menu button now. Which button opens the trick list? | **Decided 2026-11-26**: View/Back (standard button 8). Start (button 9) stays free. | Owner | Done |
+| Q2 | Does the trick list live in its own dialog (this spec), or as a page of the settings dialog? | **Decided 2026-11-26**: own dialog, with a "Trick list" button in the settings dialog | Owner | Done |
+| Q3 | GDD R12.1 said that in one-button mode "the directions still work". The Edge Cases and the acceptance criteria say that the direction is not read. Which is correct? | **Decided 2026-11-26**: the direction is not read: no ring, no arrows. GDD R12.1 is fixed in this PR. | Owner | Done |
 | Q4 | The manual bar is vertical and beside the skater. The grind balance is horizontal in the HUD column. Does the grind balance move beside the skater too? | No change in #330 | Owner | After the human playtest |
-| Q5 | The flick card puts the trick names away from the thumb. The GDD says that the lit arrow "shows the short trick name". Is the card a good reading of that rule? | Yes: the ring keeps the arrows; the card shows the names | Owner | Wave 2 |
+| Q5 | The flick card puts the trick names away from the thumb. The GDD says that the lit arrow "shows the short trick name". Is the card a good reading of that rule? | **Decided 2026-11-26**: yes. The ring keeps the arrows; the card shows the names. | Owner | Done |
 | Q6 | What is the link name of an air with a spin (F3, #339, #344)? For example, "180 Japan Grab". | No spin word until #344 decides the turn rate | Owner | #344 |
 | Q7 | Does the trick list show the points of each trick? | No | Owner | After playtest data |
 | Q8 | The arrow and tag glyphs (`← → ↑ ↓ • ★ ✓ ~ … ▶`) need a font with these glyphs on every phone. Does wave 2 ship a small icon font or SVG glyphs? | System fonts, with a Playwright check that each glyph has a width over 0 | Wave 2 | Wave 2 |
@@ -528,7 +531,7 @@ These criteria add to the criteria of #330. Each one names its evidence.
 
 **E2 and E3**
 - Each state of section 6.1 shows its text, glyph, and border (Vitest on the pure text function; Playwright screenshot of PERFECT, GOOD, WOBBLE, and Busy).
-- A TRICK press during a dance shows `… BUSY:` and the dance name for 600 ms; not in one-button mode.
+- A TRICK press during a dance replaces the dance chip with `… BUSY:` and the dance name for 600 ms, with the beat pips still shown; then the dance chip shows again. Not in one-button mode.
 - With `perfectHitStopMs` 60, the PERFECT tag shows for 900 ms of wall time.
 - No E2 string contains a word of `src/content/banned-words.js`.
 
@@ -555,3 +558,4 @@ These criteria add to the criteria of #330. Each one names its evidence.
 ## 14. Change log
 
 - 2026-11-26: First draft (#330, lane D).
+- 2026-11-26: Review fixes (PR #395, Codex): Busy replaces the dance chip for 600 ms (it was blocked by the chip). Owner answers for Q1, Q2, Q3, Q5.

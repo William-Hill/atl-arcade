@@ -2,7 +2,7 @@
 // https://github.com/William-Hill/autopilot, branch threejs-engine,
 // file plugin/threejs/autopilot-bridge.js (Apache License 2.0).
 // Do not edit here: change the fork, then copy the file again.
-// Source commit: af753ad
+// Source commit: d62ed02
 // Prototype copy (#326): a byte copy of src/autopilot/autopilot-bridge.js,
 // because a prototype never imports src/ (AGENTS.md).
 

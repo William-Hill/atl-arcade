@@ -3134,7 +3134,7 @@ Both bridge copies (`src/autopilot/autopilot-bridge.js` and `prototypes/trick-in
 
 ## 2026-11-26: Autopilot bridge: 8 more review fixes from the fork (#388)
 
-Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` again, with the fixes for the 8 CodeRabbit findings of PR 387. The fork has a test for each fix. The `rc` uses of the game (`atl`) and of the trick input prototype (`playtest`) do not change.
+Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `d62ed02` (the squash merge of William-Hill/autopilot#5), with the fixes for the 8 CodeRabbit findings of PR 387. The fork has a test for each fix. The `rc` uses of the game (`atl`) and of the trick input prototype (`playtest`) do not change.
 
 - `connect()` keeps a socket that is open or opening. A new socket comes only after the old socket closes, so `close()` always closes the live socket.
 - A `move` without a move hook holds its keys as its own owner. Two such moves that hold W at the same time each let go of their own hold only.

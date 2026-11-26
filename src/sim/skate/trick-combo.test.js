@@ -62,6 +62,28 @@ describe("R6, F4: grind stances", () => {
     expect(r.s.trick.id).toBe("unity");
   });
 
+  it("a GRIND press at the snap with no fresh direction waits dirAfter: up 2 frames after the snap gives Makio, once", () => {
+    const r = toRail();
+    const p = r.frame + 1;
+    r.step({ grind: true });
+    expect(r.s.trick.id).toBe("edge");
+    r.step({ grind: true, steer: BAL });
+    const up = keys([{ dir: "u", down: p + 2, up: null }]);
+    r.step({ grind: true, steer: BAL, dirHist: up });
+    expect(r.s.trick.id).toBe("makio");
+    r.steps(8, { grind: true, steer: BAL, dirHist: keys([{ dir: "u", down: p + 2, up: null }, { dir: "l", down: p + 5, up: null }]) });
+    expect(r.s.trick.id).toBe("makio");
+  });
+
+  it("a touch flick token that is not a direction gives the neutral stance and no stance bonus", () => {
+    const r = toRail("rail:test", { length: 4 });
+    r.step({ grind: true, flick: { grind: "ul" } });
+    expect(r.s.grind.stance).toBe("n");
+    r.steps(200, { grind: true, steer: BAL }, (run) => run.skater.justExited);
+    const g = r.s.endedGrind;
+    expect(r.moves.at(-1)).toMatchObject({ name: "Rail Grind", points: Math.round(100 + 35 * g.distance) });
+  });
+
   it("a new direction during the grind does not change the clip", () => {
     const r = toRail();
     r.step({ grind: true, flick: { grind: "l" } });
@@ -200,7 +222,9 @@ describe("R9, R10, F5 to F7: links, landings, beat, bank", () => {
     }, (run) => run.skater.justFell);
     expect(r.s.justFell).toBe(true);
     expect(r.run.combo.score - c0.score).toBe(325);
-    expect(r.run.banked).toBe(325); // the run reports the bail payout of this tick
+    // The run reports the bail payout in bailBanked; banked is for combo banks only.
+    expect(r.run.bailBanked).toBe(325);
+    expect(r.run.banked).toBe(0);
     expect(r.run.combo.style).toBeCloseTo(0.25, 9);
     expect(Math.hypot(r.s.velocity[0], r.s.velocity[2])).toBeGreaterThan(before * GRIND.fallSpeedKeep - 0.01);
     expect(GRIND.fallSpeedKeep).toBe(0.5);

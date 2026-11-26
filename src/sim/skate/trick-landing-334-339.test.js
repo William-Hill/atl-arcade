@@ -109,6 +109,48 @@ describe("#334: the late grab and the landing", () => {
   });
 });
 
+describe("#327 review: short airs and the coyote jump", () => {
+  it("an air shorter than COMBO.minAirTime (0.2 s) has no grab: a held grab is no stumble and adds no link", () => {
+    const r = rig({ speed: 6 }).air({ airFrom: "jump", vy: vyFor(0.18) });
+    r.steps(fr(110), {});
+    r.step({ style1: true, flick: { style1: "l" } });
+    expect(r.s.trick?.kind).toBe("grab");
+    const style = r.run.combo.style;
+    r.steps(60, { style1: true }, (run) => run.skater.justLanded);
+    expect(r.s.landing.result).toBe("clean");
+    expect(r.moves).toHaveLength(0);
+    expect(r.run.combo.style).toBe(style);
+  });
+
+  it("a coyote jump after a grab does not make the grab late: the grab age is on the sim clock", () => {
+    // A roll off an edge, a grab at 0.11 s, then the coyote jump resets airTime.
+    const r = rig({ speed: 6 }).air({ airFrom: "edge", vy: 0, y: 1.5 });
+    r.steps(fr(100), {});
+    r.step({ style1: true, flick: { style1: "l" } });
+    expect(r.s.grab).toMatchObject({ id: "japan" });
+    const pressT = r.s.time;
+    expect(r.s.grab.startT).toBeCloseTo(pressT, 9);
+    r.step({ jump: true }); // inside SKATE.coyoteTime (0.12 s)
+    // The airTime value of the grab start is not valid after the reset; the age must not read it.
+    r.set({ grab: { ...r.s.grab, startAir: 99 } });
+    expect(r.s.airFrom).toBe("jump");
+    expect(r.s.airTime).toBeLessThan(0.05);
+    r.steps(120, {}, (run) => run.skater.justLanded);
+    expect(r.s.landing.voided).toBe(null);
+    expect(r.s.landing.grab).toMatchObject({ id: "japan" });
+    expect(r.moves.at(-1).name).toBe("Japan Grab");
+  });
+
+  it("a TRICK press before grabMinAir sets grabEarly on that tick only", () => {
+    const r = rig({ speed: 6 }).air({ airFrom: "launch", vy: vyFor(0.6) });
+    r.steps(2, {});
+    r.step({ style1: true });
+    expect(r.s.grabEarly).toBe(true);
+    r.step({});
+    expect(r.s.grabEarly).toBe(false);
+  });
+});
+
 describe("#339: airYaw and the drop", () => {
   it("airYaw is the signed sum of the air turn with no wrap: a 200 degree turn out and 200 back gives 0 half turns", () => {
     const r = rig({ speed: 6 }).air({ airFrom: "ramp", vy: vyFor(1.6) });

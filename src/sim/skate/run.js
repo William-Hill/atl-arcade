@@ -18,7 +18,7 @@ export function createRun(level, opts = {}) {
   // frame ran several ticks. `banked` is the points banked this tick (0 if none).
   // `cards` is the fact card state (M1-07): `cards.count` is the number of
   // cards collected in this run. `factsCollected` holds this tick's card ids.
-  return { skater: createSkater(level, opts), combo: createCombo(), tick: 0, time: 0, moves: [], lastMove: null, moveSeq: 0, banked: 0, cards: createCardState(opts.cards ?? []), factsCollected: [] };
+  return { skater: createSkater(level, opts), combo: createCombo(), tick: 0, time: 0, moves: [], lastMove: null, moveSeq: 0, banked: 0, bailBanked: 0, cards: createCardState(opts.cards ?? []), factsCollected: [] };
 }
 
 // [Long] [edge] [stance] Grind (GDD R6). With no stance: "Ledge Grind", "Long Rail Grind".
@@ -37,7 +37,7 @@ export function grindPoints(grind, k = COMBO, tk = TRICK) {
 // score, the time, and the fact cards stay.
 export function teleportRun(run, level, { position, yaw }) {
   // The sim clock (`skater.time`) goes on: the input sends its times on it.
-  return { ...run, skater: { ...createSkater(level, { position, yaw }), time: run.skater.time ?? run.time }, combo: createCombo(), moves: [], banked: 0 };
+  return { ...run, skater: { ...createSkater(level, { position, yaw }), time: run.skater.time ?? run.time }, combo: createCombo(), moves: [], banked: 0, bailBanked: 0 };
 }
 
 export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindables: [] }, beat = null) {
@@ -70,16 +70,16 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
 
   if (skater.justExited && prev.grind) {
     const g = skater.endedGrind ?? prev.grind;
-    judge(grindPoints(g), "grind", grindName(g.id, g.distance ?? 0, g.stance), { b: T ? snapBeat : judgeAt(time) });
+    judge(grindPoints(g, T ? T.c : COMBO, T ? T.k : TRICK), "grind", grindName(g.id, g.distance ?? 0, g.stance), { b: T ? snapBeat : judgeAt(time) });
   }
   if (T) {
     // F3: the air at the touchdown (#327, #334, #339).
     const l = skater.landing;
     if (l) {
       const name = l.grab ? l.grab.name : airName(l.airFrom);
-      if (name && l.airTime >= COMBO.minAirTime) {
+      if (name && l.airTime >= T.c.minAirTime) {
         const grab = l.grab ? (l.grab.dir === "n" ? "neutral" : "dir") : null;
-        judge(airPoints({ base: airBase(l.airFrom), grab, tHold: l.hold, airYaw: l.airYaw }, T.k), "air", name, { landing: l.result });
+        judge(airPoints({ base: airBase(l.airFrom, T.c), grab, tHold: l.hold, airYaw: l.airYaw }, T.k), "air", name, { landing: l.result });
       } else if (l.result === "stumble") combo = comboStumble(combo, T.c);
     }
     // F2: the manual link at the cap, or at the end.
@@ -94,7 +94,9 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
     else if (prev.airFrom === "jump" || prev.airFrom === "grind") judge(COMBO.hopPoints, "air", "Hop");
   }
   if (skater.justStyled) judge(skater.justStyled.points, "style", skater.justStyled.name);
-  // A bail banks bailBank of the pending points (F7); report it in `banked` too.
+  // A bail banks bailBank of the pending points at multiplier 1 (F7). It is
+  // reported in `bailBanked`, not in `banked`: `banked` is a combo bank (the
+  // combo callout, the cheer, and the landmark combo challenges read it).
   let bailBanked = 0;
   if (skater.justFell || skater.respawned) {
     const wasActive = combo.active;
@@ -106,7 +108,7 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
   const open = skater.state === "grind" || skater.state === "air" || Boolean(skater.style) || Boolean(skater.manual && !skater.manual.capped) || Boolean(skater.trickPend);
   const before = combo;
   combo = comboTick(combo, dt, open, T ? T.c : COMBO);
-  const banked = (before.active && !combo.active ? combo.lastBanked : 0) + bailBanked;
+  const banked = before.active && !combo.active ? combo.lastBanked : 0;
   // A fact card adds its points straight to the banked score, outside the
   // combo, so a bail does not lose them.
   const cardStep = stepCards(run.cards ?? createCardState(), skater.position);
@@ -125,6 +127,7 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
     snapBeat,
     grindBeat,
     manualBeat,
+    bailBanked,
   };
 }
 

@@ -12,13 +12,14 @@
 import { STYLE, TRICK, TRICK_RELAXED, COMBO, styleDuration } from "./constants.js";
 import { freshDir, dirHistory, resolvePending, resolvePress } from "./direction.js";
 import { manualOut, manualStep } from "./manual.js";
-import { MANUALS, ONE_BUTTON_AIR, danceFor, grabFor, grindName, stanceFor } from "./tricks.js";
+import { MANUALS, ONE_BUTTON_AIR, STANCES, danceFor, grabFor, grindName, stanceFor } from "./tricks.js";
 
 const EPS = 1e-6;
 const BUTTONS = ["style1", "style2"];
 
-// skaterEnv.tricks: true, or { oneButton, relaxed, k }. Returns null when off.
-// The options object is made once per tricks object.
+// skaterEnv.tricks: true, or { oneButton, relaxed, k, combo }. Returns null when off.
+// The options object is made once per tricks object: to change a setting,
+// give skaterEnv a new tricks object (a change in place has no effect).
 const optCache = new WeakMap();
 export function trickOptions(tricks) {
   if (!tricks) return null;
@@ -69,11 +70,14 @@ export function airTurn(prev, s, input, dt, skate) {
 export function trickStance(prev, input, dt, T) {
   const now = (prev.time ?? 0) + dt;
   const flick = input.flick?.grind;
-  if (flick) return stanceFor(flick) ? flick : "n";
+  if (flick) return validStance(flick);
   const pressNow = Boolean(input.grind) && !prev.grindHeld;
   if (!pressNow && prev.grindPress?.dir && prev.grindPress.dir !== "n") return prev.grindPress.dir;
   return freshDir(dirHistory(input), now, T.k);
 }
+
+// A touch flick token that is not a direction gives the neutral stance.
+const validStance = (d) => (Object.prototype.hasOwnProperty.call(STANCES, d) ? d : "n");
 
 function grabTrick(g) {
   return { kind: "grab", id: g.id, name: g.name, clip: g.clip, dir: g.dir, held: g.held };
@@ -97,7 +101,8 @@ function currentTrick(s, stanceMeters) {
 
 function startGrab(s, dir, held) {
   const g = grabFor(dir);
-  s.grab = { ...g, dir, startAir: s.airTime, hold: 0, held: Boolean(held) };
+  // startT is on the sim clock: a coyote jump resets airTime, not the clock.
+  s.grab = { ...g, dir, startAir: s.airTime, startT: s.time, hold: 0, held: Boolean(held) };
 }
 
 function startManual(s, { dir = "n", pressT, link = false, side }) {
@@ -121,6 +126,7 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   const { k, c } = T;
   const t = s.time; // set by stepSkater
   s.landing = null;
+  s.grabEarly = false; // a TRICK press before grabMinAir on this tick (no grab)
   s.manualCap = null;
   s.manualEnd = null;
   s.justManual = null;
@@ -153,9 +159,18 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
 
   // R6, phone: the stance comes at the flick resolve, once, if the snap came first.
   if (s.state === "grind" && prev.state === "grind" && input.flick?.grind && !s.grind.flickDone) {
-    s.grind = { ...s.grind, stance: stanceFor(input.flick.grind) ? input.flick.grind : "n", flickDone: true };
+    s.grind = { ...s.grind, stance: validStance(input.flick.grind), flickDone: true, stancePending: false };
   }
   if (s.state === "grind" && prev.state !== "grind" && input.flick?.grind) s.grind = { ...s.grind, flickDone: true };
+  // R3 for the stance: a GRIND press with no fresh direction at the snap
+  // waits dirAfter; the first direction in that time sets the stance, once.
+  if (s.state === "grind" && prev.state !== "grind" && !s.grind.flickDone && (s.grind.stance ?? "n") === "n" && gp && gp.pending !== undefined) {
+    s.grind = { ...s.grind, stancePending: true };
+  }
+  if (s.state === "grind" && s.grind.stancePending && prev.state === "grind") {
+    if (!gp) s.grind = { ...s.grind, stancePending: false };
+    else if (gp.dir) s.grind = { ...s.grind, stance: validStance(gp.dir), stancePending: false };
+  }
 
   // A respawn ends every trick.
   if (s.respawned) {
@@ -215,10 +230,11 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
     }
   }
   if (s.justLanded && prev.state === "air") {
-    let grab = s.grab;
+    // An air shorter than COMBO.minAirTime has no grab and no link (GDD Edge Cases), so no stumble.
+    let grab = prev.airTime + EPS >= c.minAirTime ? s.grab : null;
     let voided = null;
     // A late grab is void at the touchdown event (#334): no look-ahead.
-    if (grab && s.airTime - grab.startAir < k.landingGrace - EPS) {
+    if (grab && t - grab.startT < k.landingGrace - EPS) {
       voided = grab;
       grab = null;
     }

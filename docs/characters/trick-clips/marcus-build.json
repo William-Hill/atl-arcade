@@ -1,0 +1,24 @@
+{
+  "name": "marcus",
+  "source": "assets/skaters/marcus/source/marcus-forward.blend",
+  "pads": "{'Left': {'pad_vertices': 635, 'covered_vertices': 537, 'max_shin_weight_change': 0.662}, 'Right': {'pad_vertices': 652, 'covered_vertices': 600, 'max_shin_weight_change': 0.64}}",
+  "wristbands": "{'Left': {'band_vertices': 150, 'covered_vertices': 155}, 'Right': {'band_vertices': 152, 'covered_vertices': 142}}",
+  "finger_fit": "{'Left': {'cuts_m': {'Thumb': 0.0839, 'Index': 0.1273, 'Middle': 0.1273, 'Ring': 0.1254, 'Pinky': 0.1095}, 'lengths_m': {'Thumb': 0.0441, 'Index': 0.0854, 'Middle': 0.0948, 'Ring': 0.0823, 'Pinky': 0.",
+  "finger_weights": "{'Left': {'vertices_changed': 236, 'max_finger_share': {'Thumb': 1.0, 'Index': 1.0, 'Middle': 1.0, 'Ring': 1.0, 'Pinky': 1.0}}, 'Right': {'vertices_changed': 246, 'max_finger_share': {'Thumb': 1.0, 'I",
+  "clips": [
+    "air_rocket",
+    "air_tuckknee",
+    "grind_makio",
+    "grind_royale",
+    "land_stumble",
+    "manual_toe"
+  ],
+  "pole_angles_degrees": {
+    "L": 40,
+    "R": -22
+  },
+  "knee_keys": 70,
+  "knee_residual_degrees_max": 0.0,
+  "static_curves_removed": 3431,
+  "glb": "<build>/build-marcus/marcus-clips-v3.glb"
+}

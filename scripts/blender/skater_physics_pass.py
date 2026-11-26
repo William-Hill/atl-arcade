@@ -70,7 +70,10 @@ BODY_KG = 60.0
 SKATE_KG = 1.2
 
 # Fore-aft CoM oscillation removed: 0 keeps it, 1 removes it all.
-STILL = {"push": 0.5, "coast": 0.8, "carve_left": 0.7}
+STILL = {"push": 0.5, "coast": 0.8, "carve_left": 0.7,
+         # The trick clips (#329): held stances with a small wobble. On a rail
+         # or on the front wheels there is no push force, as in the coast.
+         "grind_makio": 0.8, "grind_royale": 0.8, "manual_toe": 0.8}
 # Gaussian sigma in frames for the hips path and the upper-body rotations.
 SIGMA = 1.2
 # (bone, lag in frames, blend weight) for the follow-through.
@@ -225,13 +228,27 @@ SUPPORT = {"nia": {"carve_left": {"core": 0.3, "dilate_frames": 4, "sigma_frames
 #     their midpoint, one hand radius apart, with a CLAP_WINDOW blend.
 # The specs are for Nia; Marcus's air clips and dances are the mirror of
 # Nia's (marcus_style in skater_anim_v3.py), so his sides swap.
+# A grab is (hand, part, region). The part is a skate box ("l_skate",
+# "r_skate") or a shin capsule ("l_shin", "r_shin", #329). The region of a
+# skate is None (the whole box) or "toe" (the front TOE_SHARE of the box:
+# the toe box of the boot and the toe stop); the region of a shin is the part of the shin below the knee
+# pad (SHIN_SPAN). A clip can have two grabs, one for each hand (#329).
 HAND_TARGETS = {
-    "air_mute": {"grab": ("Left", "r_skate")},
-    "air_japan": {"grab": ("Left", "r_skate")},
-    "air_liukang": {"grab": ("Left", "l_skate")},
+    "air_mute": {"grabs": [("Left", "r_skate", None)]},
+    "air_japan": {"grabs": [("Left", "r_skate", None)]},
+    "air_liukang": {"grabs": [("Left", "l_skate", None)]},
+    # The rocket keeps its legs almost straight: the chest bends first (up to
+    # bend_max degrees), and the skates move only for the rest of the gap.
+    "air_rocket": {"grabs": [("Left", "l_skate", "toe"), ("Right", "r_skate", "toe")], "chest_first": True, "bend_max": 40.0},
+    "air_tuckknee": {"grabs": [("Left", "l_shin", None), ("Right", "r_shin", None)]},
     "dance_prep": {"clap": True},
 }
-MIRRORED_STYLE = {"marcus": {"air_mute", "air_japan", "air_liukang", "dance_prep"}}
+MIRRORED_STYLE = {"marcus": {"air_mute", "air_japan", "air_liukang", "air_rocket", "air_tuckknee", "dance_prep"}}
+# The front share of a skate box that a "toe" grab holds.
+TOE_SHARE = 0.4
+# The span of a shin (0 = the knee joint, 1 = the ankle) that a hand can hold:
+# below the knee pad and above the boot.
+SHIN_SPAN = (0.3, 0.65)
 CLAP_WINDOW = 4  # frames on each side of a clap
 # A grab is a meeting: in the air the foot is free, so when the skate is out
 # of arm's reach, the leg IK brings the skate toward the hand by the rest.
@@ -252,7 +269,7 @@ def args():
     p.add_argument("--out", required=True)
     p.add_argument("--clips", default="push,coast,carve_left")
     p.add_argument("--no-mirror", action="store_true")
-    p.add_argument("--ik-clips", default="air_mute,air_japan,air_liukang,dance_prep",
+    p.add_argument("--ik-clips", default="air_mute,air_japan,air_liukang,air_rocket,air_tuckknee,dance_prep",
                    help="Clips that get only the arm IK with hand targets.")
     return p.parse_args(argv)
 
@@ -1444,9 +1461,48 @@ def hand_spec(who, name):
     if not spec:
         return None
     if name in MIRRORED_STYLE.get(who, set()):
-        sw = {"Left": "Right", "Right": "Left", "l_skate": "r_skate", "r_skate": "l_skate"}
-        spec = {k: (tuple(sw[x] for x in v) if isinstance(v, tuple) else v) for k, v in spec.items()}
+        sw = {"Left": "Right", "Right": "Left", "l_skate": "r_skate", "r_skate": "l_skate",
+              "l_shin": "r_shin", "r_shin": "l_shin"}
+        spec = {k: ([tuple(sw.get(x, x) for x in g) for g in v] if k == "grabs" else v) for k, v in spec.items()}
     return spec
+
+
+def leg_of(part):
+    return "Left" if part.startswith("l_") else "Right"
+
+
+def grab_point(mats, part, region, p, radii, boxes):
+    """The nearest point of a grab target to the palm p, and the outward
+    normal there. A skate is its box (a "toe" region: the front TOE_SHARE of
+    the box); a shin is a capsule around the Leg -> Foot segment."""
+    if part.endswith("_skate"):
+        c, R, h = clip_probe._box(mats, part, boxes[part])
+        lo, hi = -h.copy(), h.copy()
+        if region == "toe":
+            # The foot bone's +Y points from the ankle to the toes.
+            lo[1] = h[1] * (1 - 2 * TOE_SHARE)
+        q = R.T @ (p - c)
+        qn = np.clip(q, lo, hi)
+        if np.all(qn == q):  # inside: go out by the nearest face
+            d = np.concatenate([q - lo, hi - q])
+            i = int(np.argmin(d))
+            ax = i % 3
+            qn = q.copy()
+            qn[ax] = lo[ax] if i < 3 else hi[ax]
+            normal = R[:, ax] * (-1 if i < 3 else 1)
+        else:
+            near = c + R @ qn
+            normal = (p - near) / max(np.linalg.norm(p - near), 1e-9)
+        return c + R @ qn, normal, 0.0
+    side = leg_of(part)
+    a = np.array(mats[P + side + "Leg"].to_translation())
+    e = np.array(mats[P + side + "Foot"].to_translation())
+    u = e - a
+    t = float(np.clip(np.dot(p - a, u) / np.dot(u, u), *SHIN_SPAN))
+    c = a + u * t
+    n = (p - c) - u * np.dot(p - c, u) / np.dot(u, u)
+    n = n / max(np.linalg.norm(n), 1e-9)
+    return c, n, radii[part]
 
 
 def hand_targets_fn(sk, s, spec, radii, boxes):
@@ -1469,22 +1525,11 @@ def hand_targets_fn(sk, s, spec, radii, boxes):
 
     def fn(f, mats):
         out = {}
-        if "grab" in spec:
-            side, skate = spec["grab"]
+        for side, part, region in spec.get("grabs", []):
             p = np.array(palm(mats, side))
-            c, R, h = clip_probe._box(mats, skate, boxes[skate])
-            q = R.T @ (p - c)
-            near = c + R @ np.clip(q, -h, h)
-            if np.all(np.abs(q) <= h):  # inside the box: go out by the nearest face
-                i = int(np.argmin(h - np.abs(q)))
-                qq = q.copy()
-                qq[i] = math.copysign(h[i], q[i])
-                near = c + R @ qq
-                normal = R[:, i] * math.copysign(1, q[i])
-            else:
-                normal = (p - near) / max(np.linalg.norm(p - near), 1e-9)
+            near, normal, surface = grab_point(mats, part, region, p, radii, boxes)
             r = radii["l_hand" if side == "Left" else "r_hand"]
-            out[side] = (Vector((near + normal * r).tolist()), 1.0)
+            out[side] = (Vector((near + normal * (surface + r)).tolist()), 1.0)
         if spec.get("clap") and clap_w[f] > 0:
             pl, pr = palm(mats, "Left"), palm(mats, "Right")
             mid = (pl + pr) / 2
@@ -1505,86 +1550,122 @@ def hand_ik_clip(sk, who, name, act, radii, boxes):
     for f in range(n):
         t = fn(f, s["mat"][f])
         before.append(max((((palm(s["mat"][f], sd) - tgt).length) for sd, (tgt, w) in t.items() if w >= 0.999), default=0.0))
-    # Grabs: the skate comes toward the hand when the hand cannot reach it.
+    # Grabs: the skate (or the shin) comes toward the hand when the hand
+    # cannot reach it. With two grabs, each leg moves toward its own hand.
     feet = [dict(s["mat"][f]) for f in range(n)]
-    foot_moves = []
-    if "grab" in spec:
-        side, skate = spec["grab"]
-        leg = "Left" if skate == "l_skate" else "Right"
-        for f in range(n):
-            m = s["mat"][f]
-            S = m[P + side + "Arm"].to_translation()
-            l1 = (m[P + side + "ForeArm"].to_translation() - S).length
-            l2 = (m[P + side + "Hand"].to_translation() - m[P + side + "ForeArm"].to_translation()).length
-            off = (palm(m, side) - m[P + side + "Hand"].to_translation()).length
-            tgt, _ = fn(f, m)[side]
-            reach = l1 + l2 + off - GRAB_MARGIN
-            excess = (tgt - S).length - reach
-            move = Vector((0, 0, 0))
-            if excess > 0:
-                move = (S - tgt).normalized() * excess
-            foot_moves.append(move)
-        # Smooth the move over the loop, so the skate does not jump.
-        mv = circ_gauss(np.array([list(v) for v in foot_moves]), 1.5)
-        # The leg must stay in the human range: scale the move down on a frame
-        # until the leg angles are inside joint_limits.LIMITS.
+    grabs = spec.get("grabs", [])
+
+    def arm_gap(m, side, tgt):
+        S = m[P + side + "Arm"].to_translation()
+        l1 = (m[P + side + "ForeArm"].to_translation() - S).length
+        l2 = (m[P + side + "Hand"].to_translation() - m[P + side + "ForeArm"].to_translation()).length
+        off = (palm(m, side) - m[P + side + "Hand"].to_translation()).length
+        return S, (tgt - S).length - (l1 + l2 + off - GRAB_MARGIN)
+
+    def move_feet(rots, iters):
+        """Moves each grabbed leg's skate toward its hand by the part of the
+        gap that the arm cannot reach, in iters steps (the target moves with
+        the skate: a toe region or a shin moves less than the ankle). The
+        leg stays inside joint_limits.LIMITS. Returns the total move."""
         rp, rr = joint_limits.rest_world(sk.arm)
-        scale = np.ones(n)
-        for f in range(n):
-            for k in np.linspace(1.0, 0.0, 11):
-                T = Matrix.Translation(Vector((mv[f] * k).tolist()))
-                tm = dict(s["mat"][f])
-                tm["_keep_knee_plane"] = True
-                for b in ("Foot", "ToeBase"):
-                    tm[P + leg + b] = T @ s["mat"][f][P + leg + b]
-                write_pose(sk, f, s, s["mat"][f][P + "Hips"], {}, tm)
-                if leg_in_limits(sk, rp, rr, leg):
-                    scale[f] = k
-                    break
-            else:
-                scale[f] = 0.0
-        scale = np.minimum(scale, circ_gauss(scale, 1.0))
-        mv = mv * scale[:, None]
-        for f in range(n):
-            T = Matrix.Translation(Vector(mv[f].tolist()))
-            feet[f]["_keep_knee_plane"] = True
-            for b in ("Foot", "ToeBase"):
-                feet[f][P + leg + b] = T @ s["mat"][f][P + leg + b]
-        info["skate_moved_to_hand_max_m"] = round(float(np.linalg.norm(mv, axis=1).max()), 3)
-        info["skate_move_scaled_by_joint_limits_min"] = round(float(scale.min()), 2)
+        total = {}
+        for side, part, _ in grabs:
+            leg = leg_of(part)
+            acc = np.zeros((n, 3))
+            for _ in range(iters):
+                moves = []
+                for f in range(n):
+                    m, _ = write_pose(sk, f, s, s["mat"][f][P + "Hips"], rots, feet[f])
+                    tgt, _ = fn(f, m)[side]
+                    S, excess = arm_gap(m, side, tgt)
+                    moves.append(list((S - tgt).normalized() * excess) if excess > 0 else [0.0, 0.0, 0.0])
+                # Smooth the move over the loop, so the skate does not jump.
+                mv = circ_gauss(np.array(moves), 1.5)
+                scale = np.ones(n)
+                for f in range(n):
+                    for k in np.linspace(1.0, 0.0, 11):
+                        T = Matrix.Translation(Vector((mv[f] * k).tolist()))
+                        tm = dict(feet[f])
+                        tm["_keep_knee_plane"] = True
+                        for b in ("Foot", "ToeBase"):
+                            tm[P + leg + b] = T @ feet[f][P + leg + b]
+                        write_pose(sk, f, s, s["mat"][f][P + "Hips"], rots, tm)
+                        if leg_in_limits(sk, rp, rr, leg):
+                            scale[f] = k
+                            break
+                    else:
+                        scale[f] = 0.0
+                scale = np.minimum(scale, circ_gauss(scale, 1.0))
+                lim = info.setdefault("skate_move_scaled_by_joint_limits_min", {})
+                lim[side] = round(min(lim.get(side, 1.0), float(scale.min())), 2)
+                mv = mv * scale[:, None]
+                for f in range(n):
+                    T = Matrix.Translation(Vector(mv[f].tolist()))
+                    feet[f]["_keep_knee_plane"] = True
+                    for b in ("Foot", "ToeBase"):
+                        feet[f][P + leg + b] = T @ feet[f][P + leg + b]
+                acc += mv
+            total[side] = acc
+        return total
+
+    if grabs and not spec.get("chest_first"):
+        moved = move_feet({}, 3)
+    else:
+        moved = {side: np.zeros((n, 3)) for side, _, _ in grabs}
+    bend_max = spec.get("bend_max", GRAB_BEND_MAX)
     rots = {}
-    if "grab" in spec:
-        side, skate = spec["grab"]
+    if grabs:
+        # The rest of the gap: the chest bends toward the grab targets. With
+        # two hands, the bend is the sum of the bend toward each hand.
         rp, rr = joint_limits.rest_world(sk.arm)
         spine = [P + "Spine1", P + "Spine2"]
         rotvec = np.zeros((n, 3))
+
+        def spine_try(f, vec):
+            th = float(np.linalg.norm(vec))
+            W = Quaternion(Vector((vec / th).tolist()), th / 2) if th > 1e-9 else Quaternion()
+            return {b: np.array([list(s["basis"][g][b][1] @ local_delta(s, g, b, W)) if g == f else list(s["basis"][g][b][1]) for g in range(n)]) for b in spine}
+
+        def spine_ok():
+            pos = {j: [list(sk.pb[P + j].matrix.to_translation())] for j in joint_limits.JOINTS}
+            rot = {j: [[list(r) for r in sk.pb[P + j].matrix.to_3x3()]] for j in joint_limits.JOINTS}
+            a_ = joint_limits.measure(pos, rot, rp, rr)
+            return a_["spine_bend"][0] <= joint_limits.LIMITS["spine_bend_max_deg"] and abs(a_["spine_twist"][0]) <= joint_limits.LIMITS["spine_twist_max_deg"]
+
+        # With chest_first, the bend is solved in rounds (the estimate of one
+        # round is short when two hands pull on different sides).
+        rounds = 4 if spec.get("chest_first") else 1
         for f in range(n):
-            m, _ = write_pose(sk, f, s, s["mat"][f][P + "Hips"], {}, feet[f])
-            S = m[P + side + "Arm"].to_translation()
-            l1 = (m[P + side + "ForeArm"].to_translation() - S).length
-            l2 = (m[P + side + "Hand"].to_translation() - m[P + side + "ForeArm"].to_translation()).length
-            off = (palm(m, side) - m[P + side + "Hand"].to_translation()).length
-            tgt, _ = fn(f, m)[side]
-            gap = (tgt - S).length - (l1 + l2 + off - GRAB_MARGIN)
-            if gap <= 0:
-                continue
-            piv = m[P + "Spine1"].to_translation()
-            axis = (S - piv).cross(tgt - piv)
-            if axis.length < 1e-6:
-                continue
-            axis.normalize()
-            want = min(math.degrees(gap / max((S - piv).length, 0.1)), GRAB_BEND_MAX)
-            for k in np.linspace(1.0, 0.0, 11):
-                ang = want * k
-                W = Quaternion(axis, math.radians(ang / 2))
-                r_try = {b: np.array([list(s["basis"][g][b][1] @ local_delta(s, g, b, W)) if g == f else list(s["basis"][g][b][1]) for g in range(n)]) for b in spine}
-                write_pose(sk, f, s, s["mat"][f][P + "Hips"], r_try, feet[f])
-                pos = {j: [list(sk.pb[P + j].matrix.to_translation())] for j in joint_limits.JOINTS}
-                rot = {j: [[list(r) for r in sk.pb[P + j].matrix.to_3x3()]] for j in joint_limits.JOINTS}
-                a_ = joint_limits.measure(pos, rot, rp, rr)
-                if a_["spine_bend"][0] <= joint_limits.LIMITS["spine_bend_max_deg"] and abs(a_["spine_twist"][0]) <= joint_limits.LIMITS["spine_twist_max_deg"]:
-                    rotvec[f] = np.array(axis) * math.radians(ang)
+            total = np.zeros(3)
+            for _ in range(rounds):
+                m, _ = write_pose(sk, f, s, s["mat"][f][P + "Hips"], spine_try(f, total) if total.any() else {}, feet[f])
+                piv = m[P + "Spine1"].to_translation()
+                want_vec = np.zeros(3)
+                for side, part, _ in grabs:
+                    tgt, _ = fn(f, m)[side]
+                    S, gap = arm_gap(m, side, tgt)
+                    if gap <= 0:
+                        continue
+                    axis = (S - piv).cross(tgt - piv)
+                    if axis.length < 1e-6:
+                        continue
+                    axis.normalize()
+                    want_vec += np.array(axis) * math.radians(min(math.degrees(gap / max((S - piv).length, 0.1)), bend_max))
+                if np.linalg.norm(want_vec) < 1e-4:
                     break
+                step = None
+                for k in np.linspace(1.0, 0.0, 11):
+                    vec = total + want_vec * k
+                    if math.degrees(np.linalg.norm(vec)) > bend_max:
+                        vec = vec / np.linalg.norm(vec) * math.radians(bend_max)
+                    write_pose(sk, f, s, s["mat"][f][P + "Hips"], spine_try(f, vec), feet[f])
+                    if spine_ok():
+                        step = vec
+                        break
+                if step is None or np.allclose(step, total):
+                    break
+                total = step
+            rotvec[f] = total
         rotvec = circ_gauss(rotvec, 1.5)
         for b in spine:
             arr = []
@@ -1594,6 +1675,9 @@ def hand_ik_clip(sk, who, name, act, radii, boxes):
                 arr.append(list(s["basis"][g][b][1] @ local_delta(s, g, b, W)))
             rots[b] = np.array(arr)
         info["chest_bend_to_skate_max_deg"] = round(float(np.degrees(np.linalg.norm(rotvec, axis=1).max())), 1)
+        # The chest bend is an estimate: close the rest with the skates again.
+        more = move_feet(rots, 3 if spec.get("chest_first") else 2)
+        info["skate_moved_to_hand_max_m"] = {sd: round(float(np.linalg.norm(moved[sd] + more[sd], axis=1).max()), 3) for sd in moved}
     sk.arm.animation_data.action = None
     for f in range(n + 1):
         g = f % n
@@ -1605,7 +1689,7 @@ def hand_ik_clip(sk, who, name, act, radii, boxes):
     new = sk.arm.animation_data.action
     act.name = name + "_before"
     new.name = name
-    info.update({"spec": {k: list(v) if isinstance(v, tuple) else v for k, v in spec.items()},
+    info.update({"spec": spec,
                  "palm_to_target_max_m": [round(max(before), 4), round(max(after), 4)],
                  "palm_to_target_mean_m": [round(float(np.mean(before)), 4), round(float(np.mean(after)), 4)]})
     return new, info
@@ -1715,7 +1799,7 @@ def main():
     report["rest_feet"] = rest
     originals = {}
     new = {}
-    for name in a.clips.split(","):
+    for name in [c for c in a.clips.split(",") if c]:
         act = bpy.data.actions[name]
         originals[name] = act
         gate0 = joint_limits.gate_action(sk.arm, act)

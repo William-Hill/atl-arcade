@@ -1,0 +1,20 @@
+{
+  "name": "nia",
+  "source": "assets/skaters/nia/source/nia-forward.blend",
+  "clips": [
+    "air_rocket",
+    "air_tuckknee",
+    "grind_makio",
+    "grind_royale",
+    "land_stumble",
+    "manual_toe"
+  ],
+  "pole_angles_degrees": {
+    "L": 2,
+    "R": 16
+  },
+  "knee_keys": 48,
+  "knee_residual_degrees_max": 0.01,
+  "static_curves_removed": 3517,
+  "glb": "<build>/build-nia/nia-clips-v3.glb"
+}

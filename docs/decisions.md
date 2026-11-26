@@ -3184,6 +3184,16 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `41
 - Clock: `input.sample(t)` takes the sim time of the step that reads the frame (`run.time + dt` in `src/main.js`). A key event gets the time of the first sample after it, so the times are whole frames, as the GDD acceptance criteria say. When the sim clock goes back (a new run), the old start events stop being fresh.
 - In the same frame after the press, an up or down beats a left or right with the axis rule on (the same as R3a.2 before the press).
 
+## 2026-11-26 — Trick input clips: hand keys, the clip table, and the toe roll pitch (#329)
+
+The 10 trick clips (Nia and Marcus: `air_rocket`, `air_tuckknee`, `grind_makio`, `grind_royale`, `manual_toe`) and a stumble landing (`land_stumble`) are hand keys, as the dances of #293. No Meshy text-to-motion ran (0 credits). Marcus's air and grind clips and his `land_stumble` are the mirror of Nia's; his `manual_toe` has its own source. Evidence: `docs/characters/trick-clips/README.md`.
+
+- The renderer plays `state.trick.clip` when the clip is in the group of the state, else the base clip (`jump`, `grind_frontside`, `manual`). The `AIR_TRICKS` and `GRINDS` cycles and the variant counters are removed. A ramp air with no grab plays `jump`.
+- A landing plays `land_stumble` when `state.landing` (a string, or `{ result }`) is `"stumble"`. The GDD does not name this field; #327 must use it or change the renderer.
+- The toe roll pitches the boots 8 degrees, not 15 to 20 (GDD). On both skate meshes the toe stop is 5 to 14 mm above the ground, and at 14 degrees a toe stop touches the ground. A larger pitch needs higher toe stops on the mesh.
+- The physics pass has two-hand grabs, a toe region of the skate box, and a shin target (the art-director risk 1 of the GDD). `graft-clips.mjs --prune-rest` drops the channels that stay at rest, so the Marcus phone GLB stays under 3 MB (3,094,444 bytes).
+- Owner choices (2026-11-26, on PR #400): keep the toe roll pitch at 8 degrees (the GDD row now says so), and accept Marcus's `air_rocket` (knees 50 to 64 degrees after the grab IK) for the skater review.
+
 ## 2026-11-26: Trick input: touch flick, one-button mode, Relaxed timing, and the Controls screen (#328, #340)
 
 - Touch (R6, R11): `src/input/flick.js` is the pure flick and touch trick state. TRICK and SPIN press at the resolve frame (a tap is a press of one frame; a flick or a timeout holds the press to the lift). GRIND presses at the touch-down. The frame gives `flick: { style1, style2, grind }` (the direction on the resolve frame) and `grindFlick` (true while a GRIND touch is down and not resolved). A flick that is not neutral is also a start event in `dirHist`. `resolveFramePress(frame, button)` in `src/input/direction.js` gives the flick direction at once (no R3 window, no `dirAfter` wait) and else the R3 rule.

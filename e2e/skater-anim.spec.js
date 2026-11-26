@@ -98,7 +98,10 @@ test(`the scripted sessions show no ${name} T-pose frame`, async ({ page }) => {
     expect(r.pixels, `empty mask at ${r.session} #${r.i}`).toBeGreaterThan(100);
     expect(r.iou, `T-pose-like frame at ${r.session} #${r.i} (${r.clip})`).toBeLessThan(0.8);
   }
-  expect(clipsSeen).toEqual(expect.arrayContaining(["push", "coast", "carve_left", "grind_frontside", "jump", "land", "bail", "air_mute"]));
+  // #329: a ramp air with no grab plays jump. The scripted sessions press no
+  // TRICK, so no grab clip plays here (e2e/trick-clips.spec.js covers them).
+  expect(clipsSeen).toEqual(expect.arrayContaining(["push", "coast", "carve_left", "grind_frontside", "jump", "land", "bail"]));
+  expect(clipsSeen.filter((c) => c.startsWith("air_"))).toEqual([]);
   expect(errors, `console errors: ${errors.join(" | ")}`).toEqual([]);
 });
 }

@@ -69,4 +69,4 @@ An Autopilot playtest (owner choice 2026-11-25) adds extra evidence; its kit and
 
 Autopilot runs (2026-11-26, agent with Jev, not humans): axis rule 204 trials, 99.0% as wanted, Up from push 0.0% (0 of 50), L/R from carves 1.1% (1 of 92); GDD rule 257 trials, 99.6%, 0.0% (0 of 45), 0.9% (1 of 117). The agent's timing does not separate the 2 rules; the first-combo times (245.8 s, 15.8 s) are not new-player times. Details: `prototypes/trick-input/REPORT.md`.
 
-**Verdict: pending.** The human playtest (5 or more players, keyboard and phone) is open. The owner records PROCEED, PIVOT, or KILL here after it. The findings and the checklist are in `prototypes/trick-input/REPORT.md`.
+**Verdict: PROCEED (2026-11-26, owner choice, on the Autopilot evidence).** The human playtest is deferred to a later date; the carve leak (7.1% predicted on the keyboard) and the time of a new player to the first combo are not measured yet. See `docs/decisions.md` (2026-11-26) and the checklist in `prototypes/trick-input/REPORT.md`.

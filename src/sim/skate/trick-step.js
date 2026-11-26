@@ -6,7 +6,8 @@
 //   s.landing      the touchdown result { result, grab, hold, airYaw, airFrom, airTime }
 //   s.manualCap    the manual reached manualCapMeters: { toe, meters, pressT }
 //   s.manualEnd    the manual ended: { toe, meters, pressT, capped, result, reason }
-//   s.justManual   a manual started on this tick ({ link } for the grind-to-manual link)
+//   s.justManual   a manual started on this tick ({ link } for the grind-to-manual link;
+//                  { judgeNow } for a one-button manual, judged at its start)
 //   s.grindPressed a GRIND press on this tick (the judged moment of a manual)
 //
 // One-button mode (R12.1, #328): the input layer runs stepOneButton()
@@ -112,9 +113,9 @@ function startGrab(s, dir, held) {
   s.grab = { ...g, dir, startAir: s.airTime, startT: s.time, hold: 0, held: Boolean(held) };
 }
 
-function startManual(s, { dir = "n", pressT, link = false, side }) {
+function startManual(s, { dir = "n", pressT, link = false, side, judgeNow = false }) {
   s.manual = { balance: 0, side, meters: 0, toe: dir === "u", dir, pressT, capped: false, link };
-  s.justManual = { link };
+  s.justManual = judgeNow ? { link, judgeNow } : { link };
   s.style = null;
 }
 
@@ -281,7 +282,8 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
 
   // One-button: a TRICK hold of oneButtonHold on the ground starts a manual (R12.1).
   if (obManual && !s.obManualSpent && !s.manual && !prev.manual && s.state === "rolling" && prev.state === "rolling" && v0 + EPS >= k.manualMinSpeed) {
-    startManual(s, { dir: "n", pressT: t, side: -s.manualSide });
+    // No GRIND press: the beat judges the manual at its start (run.js).
+    startManual(s, { dir: "n", pressT: t, side: -s.manualSide, judgeNow: true });
   }
 
   // --- Ground: dance slots (R7) ---

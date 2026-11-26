@@ -109,6 +109,28 @@ describe("#328 one-button intent in the sim (R12.1)", () => {
     expect(r.moves.some((m) => m.move === "manual" || /Manual/.test(m.name))).toBe(true);
   });
 
+  it("a rail that comes in range during a one-button manual takes the input: the manual ends clean and the skater snaps (R8)", () => {
+    const g = straightGrindable("rail:test", 0, 20);
+    const r = obRig({ grindables: [g], speed: 6, position: [-6, 0, 0] });
+    r.obSteps(fr(ONE_BUTTON_HOLD * 1000) + 1, true, { push: true });
+    expect(r.s.manual).not.toBeNull();
+    r.obSteps(120, true, {}, (run) => run.skater.state === "grind");
+    expect(r.s.state).toBe("grind");
+    expect(r.s.manualEnd).toMatchObject({ reason: "rail", result: "clean" });
+  });
+
+  it("the beat judges a one-button manual at its start (there is no GRIND press)", () => {
+    const PERFECT = { index: 0, offsetMs: 0, tag: "PERFECT", onBeat: true };
+    const r = obRig({ speed: 6, beat: { judge: () => PERFECT } });
+    r.obSteps(fr(ONE_BUTTON_HOLD * 1000) + 1, true);
+    expect(r.s.justManual == null || r.s.manual).toBeTruthy();
+    expect(r.run.manualBeat).toEqual(PERFECT);
+    r.obSteps(30, true);
+    r.ob(false);
+    const m = r.moves.find((x) => x.move === "manual");
+    expect(m).toMatchObject({ onBeat: true, beatTag: "PERFECT" });
+  });
+
   it("a manual that ended while TRICK is still held does not start again", () => {
     const r = obRig({ speed: 6 });
     r.obSteps(fr(ONE_BUTTON_HOLD * 1000) + 1, true);

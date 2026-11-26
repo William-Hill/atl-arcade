@@ -167,7 +167,7 @@ describe("prompt icons per input", () => {
   it("touch prompts name the on-screen buttons and the stick", () => {
     expect(promptFor("push", "touch", b).icons[0].type).toBe("stick");
     expect(promptFor("jump", "touch", b).icons).toEqual([{ type: "touch", label: "JUMP" }]);
-    expect(promptFor("dance", "touch", b).icons.map((i) => i.label)).toEqual(["GROOVE", "SPIN"]);
+    expect(promptFor("dance", "touch", b).icons.map((i) => i.label)).toEqual(["TRICK", "SPIN"]);
     expect(promptFor("grind", "touch", b).icons).toEqual([{ type: "touch", label: "GRIND" }]);
     expect(touchButtonFor("jump")).toBe("jump");
     expect(touchButtonFor("dance")).toBe("style1");

@@ -75,6 +75,8 @@ import { EDGE_FENCE_ID } from "./level/edge-fence.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
 import { createTouchInput } from "./input/touch.js";
+import { bindingsOf, readControls, writeControls } from "./input/controls-store.js";
+import { createRemapScreen } from "./ui/remap-screen.js";
 import { wantsTouch } from "./input/touch-map.js";
 import { createLookInput } from "./input/look.js";
 import { mapLook } from "./sim/camera.js";
@@ -870,6 +872,11 @@ if (touch) document.body.classList.add("touch");
 // The fullscreen button and the "turn your phone" hint (#97), touch only.
 createScreenControls({ touch: Boolean(touch), after: firstFrame });
 const input = createInput({ target: window, touch });
+// The saved controls (#328): the remap, One-button tricks, Relaxed timing.
+const controlsStorage = safeStorage();
+const savedControls = readControls(controlsStorage);
+input.bindings = bindingsOf(savedControls);
+input.mode = { oneButton: savedControls.oneButton, relaxed: savedControls.relaxed, r3Only: params.has("gddRule") };
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 runReady = true;
@@ -1216,6 +1223,16 @@ const photo = createPhotoPanel({
 // The settings menu (#94, src/ui/settings-menu.js): O or the SETTINGS
 // button. The game stops while it is open. The ink and the bloom switch at
 // once; the tier, the look, the walkers and the shadows apply on a reload.
+// The Controls screen (#328, src/ui/remap-screen.js). The settings menu opens it.
+const remapScreen = createRemapScreen({
+  controls: savedControls,
+  onApply: (c, b) => {
+    writeControls(controlsStorage, c);
+    input.bindings = b;
+    input.mode = { oneButton: c.oneButton, relaxed: c.relaxed, r3Only: params.has("gddRule") };
+  },
+  onChange: () => input.reset(),
+});
 const runningSettings = { quality, look, peds: pedTotal, shadows: tier.shadows, ink: savedSettings.ink, bloom: savedSettings.bloom };
 const settingsMenu = createSettingsMenu({
   running: runningSettings,
@@ -1230,6 +1247,7 @@ const settingsMenu = createSettingsMenu({
   reload: (keys, carry) => window.location.assign(reloadHref(window.location.href, keys, carry)),
   canOpen: () => !photo.isOpen && !fullmap?.isOpen,
   onChange: () => input.reset(),
+  controls: remapScreen,
   // "Reset progress" and the notice when the storage fails (#220, E-5, E-8).
   progress: landmarkTracker ? { saved: () => landmarkTracker.saved, onReset: () => landmarkTracker.reset() } : null,
 });
@@ -2099,6 +2117,19 @@ window.__atl = {
     // The last input frame with the trick direction fields (#341).
     get frame() {
       return input.frame;
+    },
+    // The trick modes and the Controls screen (#328).
+    get mode() {
+      return input.mode;
+    },
+    get controls() {
+      return { open: remapScreen.isOpen, state: remapScreen.state };
+    },
+    openControls: () => remapScreen.open(),
+    // The input frame log for the tests: log(true) starts it.
+    log: (on) => input.log(on),
+    get frames() {
+      return input.frames;
     },
     get touch() {
       return Boolean(touch);

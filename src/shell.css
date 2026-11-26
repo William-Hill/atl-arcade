@@ -284,7 +284,7 @@ body.touch #shell-info { display: none; }
 .touch-btn[data-down="1"] { background: rgba(255, 95, 178, 0.75); border-color: #fff; transform: scale(0.92); }
 
 /* A thumb arc: JUMP is the biggest and nearest the corner. The top row
-   (SPIN, GROOVE, SWITCH) ends 162 px above the pad bottom, under the
+   (SPIN, TRICK, SWITCH) ends 162 px above the pad bottom, under the
    landscape minimap (184 px). SWITCH ends 190 px from the pad right edge, so
    on a 360 px screen it stays clear of the stick base (#65 re-run). Each
    label has 4 px or more of space to the inner edge of its circle. */
@@ -1081,3 +1081,47 @@ body.photo-open #fullscreen-toggle, body.photo-open #turn-hint { visibility: hid
   #fullscreen-toggle { top: calc(372px + env(safe-area-inset-top)); }
   #turn-hint { top: calc(428px + env(safe-area-inset-top)); }
 }
+
+/* The flick ring of TRICK, SPIN, and GRIND (docs/gdd/trick-input.md, R11,
+   UI Requirements). At rest: 4 small tick marks. While the finger is down: 4
+   arrows at a radius of 40 px or less. The arrow of the flick direction gets
+   bigger and filled, so the state does not show by color only (R12.4). The
+   ring takes no pointer events, so it does not change the #245 layout. */
+.flick-ring {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.flick-arrow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--atl-paper);
+  font: 700 12px/1 system-ui, sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+/* At rest: a short tick mark on the edge of the button. */
+.flick-arrow::before { content: ""; display: block; width: 3px; height: 8px; border-radius: 2px; background: rgba(255, 255, 255, 0.55); }
+.flick-arrow.flick-l::before, .flick-arrow.flick-r::before { width: 8px; height: 3px; }
+.flick-ring .flick-u { transform: translate(0, -30px); }
+.flick-ring .flick-d { transform: translate(0, 30px); }
+.flick-ring .flick-l { transform: translate(-30px, 0); }
+.flick-ring .flick-r { transform: translate(30px, 0); }
+/* Finger down: arrows at 38 px. */
+.flick-ring[data-active="1"] .flick-arrow::before { content: attr(data-glyph); width: auto; height: auto; background: none; opacity: 0.7; }
+.flick-ring[data-active="1"] .flick-u { transform: translate(0, -38px); }
+.flick-ring[data-active="1"] .flick-d { transform: translate(0, 38px); }
+.flick-ring[data-active="1"] .flick-l { transform: translate(-38px, 0); }
+.flick-ring[data-active="1"] .flick-r { transform: translate(38px, 0); }
+/* The flick direction: a bigger arrow in a filled circle. */
+.flick-ring[data-dir="u"] .flick-u, .flick-ring[data-dir="d"] .flick-d, .flick-ring[data-dir="l"] .flick-l, .flick-ring[data-dir="r"] .flick-r {
+  width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: #ff5fb2; border: 2px solid #fff; color: #14141c; text-shadow: none;
+}
+.flick-ring[data-dir="u"] .flick-u::before, .flick-ring[data-dir="d"] .flick-d::before, .flick-ring[data-dir="l"] .flick-l::before, .flick-ring[data-dir="r"] .flick-r::before { opacity: 1; font-size: 13px; }

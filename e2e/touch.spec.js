@@ -102,7 +102,7 @@ for (const name of ["iPhone 15", "Pixel 7"]) {
           return { label: el.textContent, spare: radius - corner };
         }),
       );
-      expect(rows.map((r) => r.label)).toEqual(["JUMP", "GRIND", "GROOVE", "SPIN", "SWITCH"]);
+      expect(rows.map((r) => r.label)).toEqual(["JUMP", "GRIND", "TRICK", "SPIN", "SWITCH"]);
       for (const r of rows) expect(r.spare, `${r.label} spare px`).toBeGreaterThanOrEqual(4);
     });
 

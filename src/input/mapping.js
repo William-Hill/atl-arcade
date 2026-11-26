@@ -66,3 +66,54 @@ export function mergeInputs(a, b) {
 export function isActive(input) {
   return input.steer !== 0 || input.push || input.brake || input.jump || input.grind || input.style1 || input.style2;
 }
+
+// --- Trick directions and the manual balance (docs/gdd/trick-input.md) -------
+
+// The fields of the direction contract (src/input/direction.js) with no
+// direction. A scripted input with no direction fields means these values.
+export const NEUTRAL_DIR = Object.freeze({ dir: "n", lastDir: "n", lastDirAt: -Infinity, lastDirHeld: false, dirHist: Object.freeze([]), balance: 0 });
+
+function rescale(v, deadzone) {
+  if (!Number.isFinite(v) || Math.abs(v) < deadzone) return 0;
+  return Math.sign(v) * ((Math.abs(v) - deadzone) / (1 - deadzone));
+}
+
+// The d-pad direction alone, or "n".
+export function padDpadDir(pad, bindings) {
+  const g = bindings.gamepad;
+  const pressed = (i) => Boolean(pad.buttons && pad.buttons[i] && (pad.buttons[i].pressed || pad.buttons[i].value > 0.5));
+  const on = (action) => any(g.buttons[action], pressed);
+  if (on("dirUp")) return "u";
+  if (on("dirDown")) return "d";
+  if (on("dirLeft")) return "l";
+  if (on("dirRight")) return "r";
+  return "n";
+}
+
+// The gamepad trick direction: the d-pad first, else the left stick with
+// `threshold` travel on the main axis (R2).
+export function padDir(pad, bindings, stickDirOf) {
+  const g = bindings.gamepad;
+  const dpad = padDpadDir(pad, bindings);
+  if (dpad !== "n") return dpad;
+  const axes = pad.axes ?? [];
+  const x = Number.isFinite(axes[g.steerAxis]) ? axes[g.steerAxis] : 0;
+  const y = Number.isFinite(axes[g.balanceAxis ?? 1]) ? axes[g.balanceAxis ?? 1] : 0;
+  return stickDirOf(x, -y);
+}
+
+// The gamepad balance (GDD Interactions): the left stick y with the sign
+// changed, after the deadzone, not snapped; the d-pad up or down gives +1 or -1.
+export function padBalance(pad, bindings) {
+  const g = bindings.gamepad;
+  const pressed = (i) => Boolean(pad.buttons && pad.buttons[i] && (pad.buttons[i].pressed || pad.buttons[i].value > 0.5));
+  if (any(g.buttons.dirUp, pressed)) return 1;
+  if (any(g.buttons.dirDown, pressed)) return -1;
+  const y = (pad.axes ?? [])[g.balanceAxis ?? 1];
+  return -rescale(y, g.deadzone) || 0;
+}
+
+// The balance of several devices: the largest magnitude wins.
+export function mergeBalance(...values) {
+  return values.reduce((a, b) => (Math.abs(b) > Math.abs(a) ? b : a), 0);
+}

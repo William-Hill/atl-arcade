@@ -3156,6 +3156,18 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `41
 - Open risk: the agent plays with fixed timing, not human timing. The synthetic players predict a 7.1% carve leak on the keyboard with the axis rule, over the 5% target. No run measured the time of a new player to the first 3-link combo. The human playtest must measure both before release.
 - #327 to #344 can start. The human playtest stays on the checklist in `prototypes/trick-input/REPORT.md`, for a later date.
 
+## 2026-11-26: Trick HUD UX spec (#330)
+
+- The UX spec for the trick HUD is `docs/ux/trick-hud.md`. Wave 2 (#335, #336, #337, #338, #342, then #331) builds the HUD from it. The `/ux-design` skill is not installed in the cloud session, so the spec follows the sections of that skill.
+- The trick line keeps the place of the present combo line (`#hud-combo`, top left). The live trick, the landing tags (PERFECT, GOOD, WOBBLE), and the "BUSY" cue use the place of the present move flash (`#hud-tag`).
+- The fold of older links is "+2" at the start of the line (GDD). It replaces the "… a + b (4)" form of #269. The multiplier moves to the end of the trick line; the pending line shows the points only.
+- The manual bar zones get a pattern each (solid, horizontal lines, hatching). The prototype grayscale screenshot shows the safe and warning zones with almost the same gray. The marker pulse is 2 Hz (the prototype blinks at 4 Hz, over the 3 flashes per second limit). With reduced motion the bar stays at a fixed place and does not pulse.
+- The phone flick ring keeps the 4 arrows at the button. The trick names go in a flick card away from the thumb: above the buttons in portrait, to their left in landscape (above them it would cover the landscape minimap).
+- The game has no pause menu, so the trick list is its own dialog (key T, a TRICKS button, a button in the settings dialog). It pauses the game as the settings dialog does.
+- The open questions (the gamepad button for the trick list, a GDD conflict on directions in one-button mode, the grind balance place, and more) are in section 12 of the spec.
+- Owner choices (2026-11-26, all the recommended option): the gamepad View/Back button (standard button 8) opens the trick list; the trick list is its own dialog; in one-button mode the direction is not read (GDD R12.1 fixed to agree with the Edge Cases and the criteria); the flick card shows the names away from the thumb.
+- Review fix (PR #395, Codex): the "BUSY" cue replaces the dance chip for 600 ms. Before, the rule that a trick in progress keeps E2 blocked the cue, because the ignored press always comes during a dance.
+
 ## 2026-11-26: Trick input: the air turn rate is 6 rad/s, so that spins can pay (#344, Q5)
 
 - Owner choice (2026-11-26): raise `SKATE.airTurnRate` from 3 to 6 rad/s (the knob maximum). The spin points of F3 stay.

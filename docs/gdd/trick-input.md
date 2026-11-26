@@ -3,7 +3,7 @@
 > **Status**: Approved by the owner 2026-11-22 (after the review fixes). Implementation: #326 (prototype, first), #327 (sim), #328 (input), #329 (animation), #330 (HUD), #331 (tutorial).
 > **Design review**: second review 2026-11-22 (independent agent, lean depth): **NEEDS REVISION**, 3 blocking, 9 recommended, 5 nice-to-have. The findings are in "Review log", pass 4, and pass 5 fixes all 17. A third review did not run. (First review: NEEDS REVISION, fixed in passes 1 to 3.)
 > **Author**: William Hill + Claude agents (`game-designer`, `systems-designer`)
-> **Last Updated**: 2026-11-22
+> **Last Updated**: 2026-11-26 (Q5, #344)
 > **Issue**: #324
 > **Implements Pillar**: 1 (Flow over failure), 5 (Style is Atlanta)
 > **Concept source**: `docs/games/2026-10-30-skate-atl-concept.md` (off-index GDD: no systems index exists)
@@ -88,7 +88,7 @@ Left and right keep the R3 window. The playtest toggle 7 (`?gddRule`) turns the 
 | Up | Rocket Grab | `air_rocket` | Yes |
 | Down | Tuck Knee | `air_tuckknee` | Yes |
 
-Steer turns the skater in the air as now (`SKATE.airTurnRate`). The sim adds a new field, `airYaw`: the signed sum of the yaw change in this air, with no wrap (`controller.js` wraps `yaw`). A turn back cancels a turn out. Each full half turn of `|airYaw|` scores as a spin (Formulas F3). With the present constants (3 rad/s, about 172 degrees per second, and 0.5 s for a hop), only a long vert air reaches 180 degrees, so spins seldom pay. Playtest 1 decides if `SKATE.airTurnRate` goes up (its max is 6 rad/s). A partial turn is never a fault: the landing is clean at any yaw. SPIN does nothing in the air in version 1.
+Steer turns the skater in the air as now (`SKATE.airTurnRate`). The sim adds a new field, `airYaw`: the signed sum of the yaw change in this air, with no wrap (`controller.js` wraps `yaw`). A turn back cancels a turn out. Each full half turn of `|airYaw|` scores as a spin (Formulas F3). `SKATE.airTurnRate` is 6 rad/s (owner choice 2026-11-26, #344, Q5): a half turn takes about 0.52 s of air. In the Eastside skatepark a kicker or a vert air at 11 m/s or more turns one half turn with steer held; a hop on flat ground (0.5 s) turns about 172 degrees and does not pay. A partial turn is never a fault: the landing is clean at any yaw. SPIN does nothing in the air in version 1.
 
 **R5. Ramp air with no press.** A ramp air with no grab plays the `jump` clip and scores the air only. The game no longer plays a grab by itself.
 
@@ -172,7 +172,7 @@ The phone keeps 5 buttons (JUMP, GRIND, TRICK, SPIN, SWITCH), so this system add
    - Ground, Nia (all 10 slots): Bankhead Bounce, Walk It Out, The Prep, Swag Surf, Snap Lean, Cross Step, Toe Spin, Smooth Quad, ATL Rydin, Sit Spin.
    - Ground, Marcus (all 10 slots, then 3 more): Swag Surf, Walk It Out, The Prep, Drumline Count, Jam Step, Cross Step, Toe Spin, Smooth Quad, ATL Rydin, Sit Spin, Jam Groove, Bankhead Bounce, Snap Lean.
 
-   In one-button mode, SPIN, GRIND, and the directions still work, but the player does not need them. SPIN plays its neutral slot (Cross Step). GRIND works as in R6 and R8 with the neutral stance.
+   In one-button mode, SPIN and GRIND still work, but the player does not need them. The direction is not read (owner choice 2026-11-26, #330): SPIN plays its neutral slot (Cross Step), and GRIND works as in R6 and R8 with the neutral stance.
 2. **Remapping.** Every action in `ACTIONS` is rebindable now (`rebind()` in `src/input/bindings.js`). The settings menu gets a remap screen for the keyboard and the gamepad. The actions are in 2 groups. The movement and button group is `left`, `right`, `push`, `brake`, `jump`, `grind`, `style1`, `style2`, and `switch`. The direction group is `dirLeft`, `dirRight`, `dirUp`, and `dirDown`. The game blocks two actions of one group on one key. One key can hold one action of each group: the default W is `push` and `dirUp`, S is `brake` and `dirDown`, A is `left` and `dirLeft`, and D is `right` and `dirRight`. A reset to the defaults is always possible. The direction source (WASD, arrows, stick, d-pad) is a choice.
 3. **Longer windows.** A "Relaxed timing" switch sets `dirBefore` to 250 ms, `dirAfter` to 100 ms, `flickMaxMs` to 250 ms, and `landingGrace` to 0.2 s.
 4. **No color-only signal.** The trick name and the direction arrow show as text and shape.
@@ -269,7 +269,7 @@ Source: `systems-designer` proposal, adjusted to the owner choices. The present 
 | spin angle | theta | float (deg) | 0 and up | `|airYaw|` (R4): the signed yaw sum of this air, with no wrap. Only full half turns pay. |
 | spin cap | spinCapHalfTurns | int | 4 to 8 | Typical 6. |
 
-**Output range:** a hop with no trick stays 50. The typical maximum is 200 + 120 + 90 + 240 = 650 in theory. It is not reachable now: 6 half turns take about 6.3 s of air at 3 rad/s, and even at the 6 rad/s maximum they take about 3.1 s. With the present constants, a vert air of about 0.9 s turns about 150 degrees, so no spin pays and the practical maximum is 200 + 120 + 90 = 410. One half turn (450 in total) needs about 1.05 s of air (see R4 and Q5). One air gives one link.
+**Output range:** a hop with no trick stays 50. The typical maximum is 200 + 120 + 90 + 240 = 650 in theory. It is not reachable now: 6 half turns take about 3.1 s of air at 6 rad/s. The longest air in the Eastside skatepark is about 0.67 s (vert at 12 m/s), so one half turn pays and the practical maximum is 200 + 120 + 90 + 40 = 450 (see R4 and Q5; `docs/decisions.md`, 2026-11-26). One air gives one link.
 **Example:** ramp air, Japan Grab held 0.8 s, no full half turn: 100 + 120 + 60 * 0.8 + 0 = 268. The same air on vert with a 180: 200 + 120 + 48 + 40 = 408.
 
 ### F4. Grind points
@@ -450,6 +450,8 @@ Risks (`art-director`):
 - **Teach prompts (#76)**: 3 new steps (a grab with a direction, a grind stance, a manual link).
 
 > **UX flag**: this system has UI requirements. Run `/ux-design` for the HUD trick line, the flick ring, and the trick list screen before the HUD story.
+>
+> **UX spec**: `docs/ux/trick-hud.md` (2026-11-26, #330). It gives each HUD element its content, place, timing, and states.
 
 ## Acceptance Criteria
 
@@ -567,7 +569,7 @@ Reviewed by `qa-lead` on 2026-11-22. The sim criteria use `stepSkater` with the 
 | Q2 | Does SPIN do anything in the air (a flat spin trick)? | No, in version 1 | Owner | After playtest 1 |
 | Q3 | Are "Makio Grind", "Royale Grind", "Rocket Grab", and "Tuck Knee" the right names for quad skaters? What is the final name of the Side Grab? Do Toe Spin, Sit Spin, Smooth Quad, Drumline Count, Jam Step, and Jam Groove get a source or a new name? | Yes to the 4 names; "Side Grab" until the review; "rink move (no source yet)" | Skater reviewers, owner | Before release |
 | Q4 | Does the touch label GROOVE change to TRICK? | Yes | Owner | HUD story |
-| Q5 | Does `SKATE.airTurnRate` go up so that spins pay (R4)? | No change before playtest 1 | Owner | After playtest 1 |
+| Q5 | Does `SKATE.airTurnRate` go up so that spins pay (R4)? | Answered 2026-11-26 (#344): 6 rad/s | Owner | Done |
 
 ## Review log
 

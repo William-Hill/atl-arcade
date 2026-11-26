@@ -210,3 +210,14 @@ describe("touch state when the sim clock goes back", () => {
     expect(touchTricksFrame(r, 220).out.flick.style2).toBe("n");
   });
 });
+
+describe("skip() with touch", () => {
+  it("calls the touch skip, so waiting flicks do not reach a later frame", () => {
+    let skipped = 0;
+    const touch = { sample: () => ({ steer: 0, push: false, brake: false, jump: false, grind: false, style1: false, style2: false, switch: false }), touching: false, skip: () => (skipped += 1) };
+    const l = {};
+    const input = createInput({ target: { addEventListener: (t, f) => (l[t] ||= []).push(f), removeEventListener() {} }, getGamepads: () => [], touch });
+    input.skip();
+    expect(skipped).toBe(1);
+  });
+});

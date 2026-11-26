@@ -223,6 +223,13 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
     get touching() {
       return stickId !== null || held.any || Object.keys(tricks.pointers).length > 0 || queue.length > 0;
     },
+    // The sim does not read the input on this frame: drop the waiting
+    // pointer events and the flicks, so that they do not reach a later frame.
+    skip() {
+      queue.length = 0;
+      tricks = createTouchTricks();
+      showRings();
+    },
     // The flick knobs (flickMin, flickMaxMs).
     set knobs(v) {
       k = v;

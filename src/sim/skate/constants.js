@@ -18,7 +18,9 @@ export const SKATE = {
   carveRate: 2.4, // rad/s yaw rate at full carve speed. min 1.5 / typical 2.4 / max 3.5.
   carveFullSpeed: 6, // m/s where the carve reaches carveRate. min 3 / typical 6 / max 9.
   carveMinFactor: 0.3, // fraction of carveRate at a crawl. min 0.1 / typical 0.3 / max 0.6.
-  airTurnRate: 3.0, // rad/s yaw spin while airborne. min 1 / typical 3 / max 6.
+  // rad/s yaw spin while airborne (visual: the landing sets the yaw to the travel). 6 so that a
+  // hop (0.57 s) or a fast kicker or vert air (11 m/s and up) can turn one 180 (#344, Q5).
+  airTurnRate: 6.0, // min 1 / typical 6 / max 6.
 
   // Jump and air
   jumpSpeed: 5, // m/s vertical. min 3.5 / typical 5 / max 7. Arc height = v^2 / (2 g).

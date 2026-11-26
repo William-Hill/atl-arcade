@@ -112,4 +112,16 @@ describe("#328 one-button: a hold that leaves the ground", () => {
     expect(outs.some((o) => o.manual)).toBe(false);
     expect(outs.every((o) => o.start === null)).toBe(true);
   });
+
+  it("a hold that is in the air at oneButtonHold starts nothing, also after the touchdown; the release starts no dance", () => {
+    const air = (i) => i * F >= 0.3 && i * F < 0.8;
+    const { outs } = play(70, (i) => i < 65, (i) => (air(i) ? { state: "air", railInRange: false, skater: "nia" } : ground));
+    expect(outs.some((o) => o.manual)).toBe(false);
+    expect(outs.some((o) => o.start)).toBe(false);
+  });
+
+  it("a hold that reaches oneButtonHold on the ground still starts the manual", () => {
+    const { outs } = play(40, () => true, () => ground);
+    expect(outs.findIndex((o) => o.manual)).toBe(Math.round(ONE_BUTTON_HOLD / F));
+  });
 });

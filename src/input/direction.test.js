@@ -381,3 +381,17 @@ describe("#341 pure trackers", () => {
     expect(resolvePress(1, [], { ...TRICK_INPUT, dirAfter: 0 })).toEqual({ dir: "n", at: 1 });
   });
 });
+
+describe("clock rollback by one step", () => {
+  it("forgets old start events when the clock goes back by only one frame", () => {
+    const r = rig();
+    r.down("KeyA");
+    r.up("KeyA");
+    r.input.sample(2 * F);
+    expect(r.input.sample(F)).toMatchObject({ lastDir: "n", lastDirAt: -Infinity });
+    // The same time again keeps the history.
+    r.down("KeyD");
+    r.input.sample(3 * F);
+    expect(r.input.sample(3 * F)).toMatchObject({ lastDir: "r" });
+  });
+});

@@ -14,7 +14,7 @@
 import { DIR_OF_ACTION, createBindings } from "./bindings.js";
 import { createKeyDirs, createPadDirs, dirFields, keyBalance, keyDirDown, keyDirUp, keyDirsClear, padDirUpdate, stickDir } from "./direction.js";
 import { EMPTY_INPUT, isActive, mapGamepad, mapKeyboard, mergeBalance, mergeInputs, padBalance, padDir } from "./mapping.js";
-import { TRICK_INPUT, trickKnobs } from "./trick-constants.js";
+import { EPS, TRICK_INPUT, trickKnobs } from "./trick-constants.js";
 
 const STEP = 1 / 60;
 const LOG_MAX = 600;
@@ -94,7 +94,7 @@ export function createInput({ target = window, bindings = createBindings(), getG
       const t = Number.isFinite(time) ? time : clock + STEP;
       // The sim clock went back (a new run): the old start events are not
       // fresh in the new clock. The held directions stay held.
-      if (t < clock - STEP) {
+      if (t < clock - EPS) {
         keyDirs = { ...keyDirs, lastDir: "n", lastDirAt: -Infinity, hist: keyDirs.hist.filter((e) => e.up == null).map((e) => ({ ...e, at: -Infinity })) };
         padDirs = { ...padDirs, lastDir: "n", lastDirAt: -Infinity, hist: padDirs.hist.filter((e) => e.up == null).map((e) => ({ ...e, at: -Infinity })) };
       }

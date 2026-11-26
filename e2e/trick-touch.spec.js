@@ -104,14 +104,21 @@ test.describe("touch flick on Pixel 7", () => {
     await ready(page);
     const f = await fingers(page);
     const c = await center(page, ".touch-style1");
+    // The tap goes in while the sim is paused (see the flick test), so the
+    // touch-down and the lift reach the same sample.
     await page.evaluate(() => window.__atl.input.log(true));
+    await page.evaluate(() => (window.__atl.renderPaused = true));
     await f.start(1, c.x, c.y);
     await f.end(1);
+    await page.evaluate(() => (window.__atl.renderPaused = false));
     await expect.poll(async () => resolves(await page.evaluate(() => window.__atl.input.frames), "style1").length, { timeout: 10000 }).toBe(1);
+    await expect.poll(async () => (await page.evaluate(() => window.__atl.input.frames)).length, { timeout: 10000 }).toBeGreaterThan(3);
     let frames = await page.evaluate(() => window.__atl.input.frames);
-    const r = resolves(frames, "style1")[0];
-    expect(r.flick.style1).toBe("n");
-    expect(frames.filter((fr) => fr.style1).length).toBeGreaterThanOrEqual(1);
+    const ri = frames.findIndex((fr) => fr.flick.style1 != null);
+    expect(frames[ri]).toMatchObject({ style1: true, flick: { style1: "n" } });
+    // Exactly one pressed frame, then a released frame.
+    expect(frames.filter((fr) => fr.style1)).toHaveLength(1);
+    expect(frames[ri + 1].style1).toBe(false);
 
     // A hold with no drag: neutral at flickMaxMs, and the press holds.
     await page.evaluate(() => window.__atl.input.log(true));

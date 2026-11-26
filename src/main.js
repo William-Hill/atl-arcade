@@ -1226,10 +1226,13 @@ const photo = createPhotoPanel({
 // The Controls screen (#328, src/ui/remap-screen.js). The settings menu opens it.
 const remapScreen = createRemapScreen({
   controls: savedControls,
+  // Returns false when the save failed: the screen then says that the
+  // change lasts for this page only. The change applies either way.
   onApply: (c, b) => {
-    writeControls(controlsStorage, c);
+    const saved = writeControls(controlsStorage, c);
     input.bindings = b;
     input.mode = { oneButton: c.oneButton, relaxed: c.relaxed, r3Only: params.has("gddRule") };
+    return saved;
   },
   onChange: () => input.reset(),
 });

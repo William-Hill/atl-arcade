@@ -193,3 +193,20 @@ describe("#328 the same direction on keyboard, gamepad, and touch", () => {
     expect(ti.sample(1)).toMatchObject({ balance: 0.4, flick: { style1: null, style2: null, grind: null }, grindFlick: false });
   });
 });
+
+describe("touch state when the sim clock goes back", () => {
+  it("clears the touch start events and restarts the timeout of a flick that is down", async () => {
+    const { rebaseTouchTricks } = await import("./flick.js");
+    let st = createTouchTricks();
+    st = touchTrickDown(st, "style1", 1, 0, 0, 5000);
+    st = touchTrickMove(st, 1, 0, -30, 5010);
+    st = touchTricksFrame(st, 5010).state;
+    st = touchTrickDown(st, "style2", 2, 0, 0, 5020);
+    expect(st.lastDirAt).toBeCloseTo(5.01);
+    const r = rebaseTouchTricks(st, 100);
+    expect(r).toMatchObject({ lastDir: "n", lastDirAt: -Infinity, hist: [] });
+    expect(r.pointers[2].t0).toBe(100);
+    expect(touchTricksFrame(r, 150).out.flick.style2).toBeNull();
+    expect(touchTricksFrame(r, 220).out.flick.style2).toBe("n");
+  });
+});

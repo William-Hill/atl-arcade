@@ -120,7 +120,9 @@ export function stepOneButton(ob, ctx, trick, t, hold = ONE_BUTTON_HOLD) {
     if (s.mode === "rail" || (rail && s.mode !== "air")) {
       out.grind = true;
       if (s.mode !== "rail") s = { ...s, mode: "rail", manual: false };
-    } else if (s.mode === "ground" && !s.manual && t - s.downAt >= hold - 1e-6) {
+    } else if (s.mode === "ground" && !s.manual && ctx.state === "ground" && t - s.downAt >= hold - 1e-6) {
+      // A manual starts on the ground only (R8, R12.1). A hold that is in the
+      // air at the threshold starts nothing; the release then ends the press.
       s = { ...s, manual: true };
     }
     if (s.manual) out.manual = true;

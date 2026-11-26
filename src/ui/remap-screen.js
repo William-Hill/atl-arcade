@@ -68,6 +68,7 @@ const listName = (codes, name) => (codes && codes.length ? codes.map(name).join(
 
 // `controls`: the saved controls (src/input/controls-store.js).
 // `onApply(controls, bindings)`: a change, to save and to give to the input.
+// It returns false when the save failed.
 // `getGamepads()`: the Gamepad API list. `onChange(open)`: the screen opens or closes.
 export function createRemapScreen({ root = document.body, controls, onApply = () => {}, onChange = () => {}, getGamepads = () => (navigator.getGamepads ? navigator.getGamepads() : []) } = {}) {
   if (!document.getElementById("controls-menu-style")) el("style", document.head, { id: "controls-menu-style", textContent: STYLE });
@@ -146,13 +147,17 @@ export function createRemapScreen({ root = document.body, controls, onApply = ()
     }
   }
   function say(text, kind = "info") {
-    status.textContent = text;
+    const note = !saved && kind !== "refused" && text ? " Your browser does not keep settings, so this lasts for this page only." : "";
+    status.textContent = text + note;
     status.dataset.kind = kind;
   }
+  // Applies and saves the change. Returns false when the save failed.
+  let saved = true;
   function apply() {
     state = controlsOf(bindings, { dirSource: state.dirSource, oneButton: state.oneButton, relaxed: state.relaxed });
-    onApply(state, bindings);
+    saved = onApply(state, bindings) !== false;
     show();
+    return saved;
   }
 
   function padButtons() {

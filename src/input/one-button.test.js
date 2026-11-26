@@ -105,3 +105,11 @@ describe("#328 one-button mode (R12.1)", () => {
     expect(names).toEqual(["Grind", "Soul Grind", "Unity Grind", "Makio Grind", "Royale Grind", "Grind"]);
   });
 });
+
+describe("#328 one-button: a hold that leaves the ground", () => {
+  it("starts no manual in the air; the release starts no dance after the hold time", () => {
+    const { outs } = play(50, (i) => i >= 2 && i < 45, (i) => (i < 10 ? ground : { state: "air", railInRange: false }));
+    expect(outs.some((o) => o.manual)).toBe(false);
+    expect(outs.every((o) => o.start === null)).toBe(true);
+  });
+});

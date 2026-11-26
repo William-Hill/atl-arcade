@@ -11,7 +11,7 @@
 // The overlay covers only the stick zone and the buttons. A drag on the rest
 // of the screen reaches the canvas and turns the camera (src/input/look.js).
 
-import { FLICK_BUTTONS, activeFlicks, createTouchTricks, flickDrag, touchTrickDown, touchTrickMove, touchTrickUp, touchTricksFrame } from "./flick.js";
+import { FLICK_BUTTONS, activeFlicks, createTouchTricks, flickDrag, rebaseTouchTricks, touchTrickDown, touchTrickMove, touchTrickUp, touchTricksFrame } from "./flick.js";
 import { TOUCH, createButtonState, mapTouch, stickVector } from "./touch-map.js";
 import { TRICK_INPUT } from "./trick-constants.js";
 
@@ -195,6 +195,9 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
     // `t` is the sim time (s) of the step that reads the frame.
     sample(t) {
       const tMs = Number.isFinite(t) ? t * 1000 : clockMs + 1000 / 60;
+      // The sim clock went back (a new run): the old flick start events are
+      // not fresh, and a flick still down starts its timeout again now.
+      if (tMs < clockMs - 1e-3) tricks = rebaseTouchTricks(tricks, tMs);
       clockMs = tMs;
       for (const ev of queue) {
         if (ev.type === "down") tricks = touchTrickDown(tricks, ev.button, ev.id, ev.x, ev.y, tMs);

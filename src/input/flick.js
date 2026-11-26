@@ -158,3 +158,10 @@ export function touchTricksFrame(st, tMs, k = TRICK_INPUT, slackMs = 0) {
 export function activeFlicks(st) {
   return Object.values(st.pointers);
 }
+
+// The sim clock went back to tMs (a new run): the flick start events are
+// not fresh any more, and a pointer that is down starts its timeout again.
+export function rebaseTouchTricks(st, tMs) {
+  const pointers = Object.fromEntries(Object.entries(st.pointers).map(([id, f]) => [id, f.resolved ? f : { ...f, t0: tMs }]));
+  return { ...st, pointers, resolves: st.resolves.map((r) => ({ ...r, atMs: tMs })), lastDir: "n", lastDirAt: -Infinity, hist: [] };
+}

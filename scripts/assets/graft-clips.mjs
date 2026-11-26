@@ -56,8 +56,9 @@ if (pruneRest) report.prunedChannels = 0;
 
 // True when every key of the channel is the rest value of its joint. A
 // quaternion q and -q are the same rotation.
+// The rest is the one of the shipped (target) node: a pruned joint holds it.
 function atRest(ch) {
-  const n = ch.getTargetNode();
+  const n = nodes.get(ch.getTargetNode().getName()) ?? ch.getTargetNode();
   const path = ch.getTargetPath();
   const rest = path === "translation" ? n.getTranslation() : path === "rotation" ? n.getRotation() : path === "scale" ? n.getScale() : null;
   if (!rest) return false;

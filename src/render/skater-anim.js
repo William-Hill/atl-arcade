@@ -169,6 +169,7 @@ export function createAnimState() {
     clip: "idle",
     time: 0,
     lock: 0,
+    landingRef: null,
     prevYaw: null,
     prevTick: null,
     prevSpeed: null,
@@ -270,6 +271,12 @@ export function stepAnim(prev, state, dt) {
   // The skater lands from a jump or an air trick with the land clip, or
   // with its stumble variant when the sim says the landing is a stumble.
   if (AIR.has(prev.clip) && GROUND.has(wanted)) wanted = landingResult(state) === "stumble" ? "land_stumble" : "land";
+  // A manual that ends in a balance-out stumble (R8, R10) plays the same
+  // recovery. Only the frame that leaves the manual starts it, and only with
+  // a new landing value (a value or an object that the last frame did not
+  // have), so an old "stumble" in the state does not play on a clean exit.
+  else if (MANUAL_CLIPS.includes(prev.clip) && !MANUAL_CLIPS.includes(wanted) && GROUND.has(wanted) && landingResult(state) === "stumble" && state.landing !== prev.landingRef) wanted = "land_stumble";
+  next.landingRef = state.landing ?? null;
   // A bail or a landing holds for its lock time before a ground clip.
   if (prev.lock > 0 && GROUND.has(wanted)) wanted = prev.clip;
   next.facing = facingFor(wanted, state);

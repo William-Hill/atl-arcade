@@ -172,6 +172,29 @@ describe("the trick clips (state.trick.clip)", () => {
     expect(run([rolling(), ...grab, rolling()]).anim.clip).toBe("land");
   });
 
+  it("plays land_stumble once when a manual ends in a stumble (R8, R10)", () => {
+    for (const clip of MANUAL_CLIPS) {
+      const manual = Array.from({ length: 20 }, () => rolling({ manual: { balance: 0.9 }, trick: trick("manual", clip) }));
+      const out = run([rolling(), ...manual, ...Array.from({ length: 10 }, () => rolling({ landing: "stumble" }))]);
+      expect(out.changes.map((c) => c.to)).toEqual(["coast", clip, "land_stumble"]);
+      // The landing result stays in the state: the clip does not start again.
+      const long = run([rolling(), ...manual, ...Array.from({ length: 120 }, () => rolling({ landing: "stumble" }))]);
+      expect(long.changes.map((c) => c.to)).toEqual(["coast", clip, "land_stumble", "coast"]);
+    }
+    // An old "stumble" from an air landing does not play on a clean manual exit.
+    const grab = Array.from({ length: 20 }, () => air({ airFrom: "ramp", trick: trick("grab", "air_mute") }));
+    const stale = Array.from({ length: 60 }, () => rolling({ landing: "stumble" }));
+    const manualStale = Array.from({ length: 20 }, () => rolling({ landing: "stumble", manual: { balance: 0 }, trick: trick("manual", "manual") }));
+    const exit = run([rolling(), ...grab, ...stale, ...manualStale, rolling({ landing: "stumble" })]);
+    expect(exit.changes.map((c) => c.to)).toEqual(["coast", "air_mute", "land_stumble", "coast", "manual", "coast"]);
+    // A new landing object on the exit frame plays it.
+    const fresh = run([rolling(), ...manualStale, rolling({ landing: { result: "stumble" } })]);
+    expect(fresh.anim.clip).toBe("land_stumble");
+    // A manual that ends with no stumble rolls on.
+    const clean = run([rolling(), ...Array.from({ length: 20 }, () => rolling({ manual: { balance: 0 } })), rolling()]);
+    expect(clean.anim.clip).toBe("coast");
+  });
+
   it("holds land_stumble for its lock, then rolls on", () => {
     const grab = Array.from({ length: 20 }, () => air({ airFrom: "ramp", trick: trick("grab", "air_mute") }));
     const after = (n) => run([rolling(), ...grab, rolling({ landing: "stumble" }), ...Array.from({ length: n }, () => rolling())]).anim.clip;

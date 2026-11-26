@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createBindings } from "./bindings.js";
-import { CONTROLS_KEY, bindingsOf, controlsOf, normalizeControls, readControls, writeControls } from "./controls-store.js";
+import { CONTROLS_KEY, bindingsOf, controlsOf, normalizeControls, readControls, withDirSource, writeControls } from "./controls-store.js";
 import { mapGamepad, mapKeyboard, padDir } from "./mapping.js";
 import { applyDirSource, findClash, keyName, newPadButton, padButtonName, remap, resetBindings } from "./remap.js";
 import { stickDir } from "./direction.js";
@@ -64,6 +64,22 @@ describe("#328 direction source (R12.2)", () => {
     const dpad = applyDirSource(createBindings(), { gamepad: "dpad" });
     expect(padDir(pad({ axes: [0, -1] }), dpad, sd)).toBe("n");
     expect(padDir(pad({ pressed: [12] }), dpad, sd)).toBe("u");
+  });
+});
+
+describe("#328 a source change of one device keeps the remaps of the other device", () => {
+  it("keyboard Trick up on I stays after the gamepad source goes to the d-pad", () => {
+    const both = { keyboard: "both", gamepad: "both" };
+    const b = remap(createBindings(), "keyboard", "dirUp", "KeyI").bindings;
+    const next = withDirSource(b, { dirSource: { keyboard: "both", gamepad: "dpad" } }, "gamepad");
+    expect(next.keyboard.dirUp).toEqual(["KeyI"]);
+    expect(next.gamepad.dirStick).toBe(false);
+    // The keyboard source change resets the keyboard direction remap only.
+    const pad = remap(createBindings(), "gamepad", "dirUp", 3).bindings;
+    const mixed = remap(pad, "keyboard", "dirUp", "KeyI").bindings;
+    const kb = withDirSource(mixed, { dirSource: { ...both, keyboard: "wasd" } }, "keyboard");
+    expect(kb.keyboard.dirUp).toEqual(["KeyW"]);
+    expect(kb.gamepad.buttons.dirUp).toEqual([3]);
   });
 });
 

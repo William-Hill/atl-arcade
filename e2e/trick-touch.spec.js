@@ -229,6 +229,16 @@ test.describe("Controls screen on the keyboard and a simulated gamepad", () => {
     await expect(page.locator("#controls-pad-jump")).toHaveText("Press a button");
     await page.evaluate(() => (window.__fakePad.buttons[5] = { pressed: true, touched: true, value: 1 }));
     await expect(page.locator("#controls-pad-jump")).toHaveText("RB");
+    // Escape cancels a gamepad wait; a later pad press changes nothing.
+    await page.click("#controls-pad-grind");
+    await expect(page.locator("#controls-pad-grind")).toHaveText("Press a button");
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#controls-pad-grind")).toHaveText("RT");
+    await expect(page.locator("#controls-menu")).toBeVisible();
+    await page.evaluate(() => (window.__fakePad.buttons[4] = { pressed: true, touched: true, value: 1 }));
+    await page.waitForTimeout(200);
+    await expect(page.locator("#controls-pad-grind")).toHaveText("RT");
+    await page.evaluate(() => (window.__fakePad.buttons[4] = { pressed: false, touched: false, value: 0 }));
     await page.evaluate(() => (window.__fakePad.buttons[5] = { pressed: false, touched: false, value: 0 }));
 
     // The 2 switches reach the input frame.

@@ -10,7 +10,7 @@
 // saves at once.
 
 import { DIR_ACTIONS, MOVE_ACTIONS } from "../input/bindings.js";
-import { bindingsOf, controlsOf } from "../input/controls-store.js";
+import { bindingsOf, controlsOf, withDirSource } from "../input/controls-store.js";
 import { ACTION_NAMES, RESERVED_KEYS, keyName, newPadButton, padButtonName, remap } from "../input/remap.js";
 
 // Colors as the settings menu: paper #f3f3f7 on #14141c is 17:1, the pink
@@ -203,16 +203,19 @@ export function createRemapScreen({ root = document.body, controls, onApply = ()
 
   dialog.addEventListener("keydown", (e) => {
     e.stopPropagation();
-    if (!waiting || waiting.device !== "keyboard") return;
-    e.preventDefault();
-    if (e.repeat) return;
+    if (!waiting) return;
+    // Escape cancels a keyboard wait and a gamepad wait.
     if (e.code === "Escape") {
+      e.preventDefault();
       const b = waiting.button;
       stopWait();
       say("No change.");
       b.focus();
       return;
     }
+    if (waiting.device !== "keyboard") return;
+    e.preventDefault();
+    if (e.repeat) return;
     if (RESERVED_KEYS.includes(e.code)) {
       say(`${keyName(e.code)} opens a menu. Pick another key.`, "refused");
       return;
@@ -239,20 +242,16 @@ export function createRemapScreen({ root = document.body, controls, onApply = ()
     apply();
     say(relaxed.checked ? "Relaxed timing on." : "Relaxed timing off.");
   });
-  const source = () => {
+  // A new source sets the direction keys of that device only; the other
+  // remaps stay, also the direction remaps of the other device.
+  const source = (device) => {
     state = { ...state, dirSource: { keyboard: kbSource.value, gamepad: padSource.value } };
-    // A new source sets the direction keys; the other remaps stay.
-    const keep = controlsOf(bindings, state);
-    for (const a of DIR_ACTIONS) {
-      delete keep.keyboard[a];
-      delete keep.gamepad[a];
-    }
-    bindings = bindingsOf({ ...keep, dirSource: state.dirSource });
+    bindings = withDirSource(bindings, state, device);
     apply();
     say("Trick direction changed.");
   };
-  kbSource.addEventListener("change", source);
-  padSource.addEventListener("change", source);
+  kbSource.addEventListener("change", () => source("keyboard"));
+  padSource.addEventListener("change", () => source("gamepad"));
   resetButton.addEventListener("click", () => {
     stopWait();
     state = { ...state, keyboard: {}, gamepad: {}, dirSource: { keyboard: "both", gamepad: "both" } };

@@ -3,7 +3,7 @@
 // timing". Pure except for the storage object that the caller gives
 // (`getItem`, `setItem`, as localStorage; it can be null or fail).
 
-import { ACTIONS, createBindings } from "./bindings.js";
+import { ACTIONS, DIR_ACTIONS, createBindings } from "./bindings.js";
 import { DIR_SOURCES, applyDirSource } from "./remap.js";
 
 export const CONTROLS_KEY = "atl.controls.v1";
@@ -77,4 +77,14 @@ export function writeControls(storage, controls) {
   } catch {
     return false;
   }
+}
+
+// The bindings after a change of the direction source of one device
+// ("keyboard" or "gamepad"): the direction remaps of that device go back to
+// the new source; all other remaps stay, also the direction remaps of the
+// other device. `controls` has the new dirSource.
+export function withDirSource(bindings, controls, device) {
+  const keep = controlsOf(bindings, controls);
+  for (const a of DIR_ACTIONS) delete keep[device][a];
+  return bindingsOf({ ...keep, dirSource: controls.dirSource });
 }

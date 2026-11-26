@@ -3164,3 +3164,4 @@ The 10 trick clips (Nia and Marcus: `air_rocket`, `air_tuckknee`, `grind_makio`,
 - A landing plays `land_stumble` when `state.landing` (a string, or `{ result }`) is `"stumble"`. The GDD does not name this field; #327 must use it or change the renderer.
 - The toe roll pitches the boots 8 degrees, not 15 to 20 (GDD). On both skate meshes the toe stop is 5 to 14 mm above the ground, and at 14 degrees a toe stop touches the ground. A larger pitch needs higher toe stops on the mesh.
 - The physics pass has two-hand grabs, a toe region of the skate box, and a shin target (the art-director risk 1 of the GDD). `graft-clips.mjs --prune-rest` drops the channels that stay at rest, so the Marcus phone GLB stays under 3 MB (3,094,444 bytes).
+- Owner choices (2026-11-26, on PR #400): keep the toe roll pitch at 8 degrees (the GDD row now says so), and accept Marcus's `air_rocket` (knees 50 to 64 degrees after the grab IK) for the skater review.

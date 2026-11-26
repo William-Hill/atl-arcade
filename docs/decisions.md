@@ -3155,3 +3155,11 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `41
 - Evidence: Autopilot met the 3 input targets with both rules (axis rule 99.0% as wanted, 0.0% Up from push, 1.1% L/R from carves; GDD rule 99.6%, 0.0%, 0.9%). See `prototypes/trick-input/REPORT.md`, "Autopilot playtest kit".
 - Open risk: the agent plays with fixed timing, not human timing. The synthetic players predict a 7.1% carve leak on the keyboard with the axis rule, over the 5% target. No run measured the time of a new player to the first 3-link combo. The human playtest must measure both before release.
 - #327 to #344 can start. The human playtest stays on the checklist in `prototypes/trick-input/REPORT.md`, for a later date.
+
+## 2026-11-26: Trick input: the air turn rate is 6 rad/s, so that spins can pay (#344, Q5)
+
+- Owner choice (2026-11-26): raise `SKATE.airTurnRate` from 3 to 6 rad/s (the knob maximum). The spin points of F3 stay.
+- Data. Playtest 1 (#326) has no air time or turn data: the prototype has its own greybox skater, and the Autopilot runs did not log the air. So the sim measured the production controller in the Eastside skatepark (`src/sim/skate/air-turn-344.test.js`). Air times: a hop on flat ground 0.5 s; the kicker 0.38 s at 8 m/s, 0.48 s at 10 m/s, 0.55 s at 11 m/s, 0.60 s at 12 m/s; the vert quarter pipe 0.18 s at 9 m/s, 0.38 s at 10 m/s, 0.53 s at 11 m/s, 0.67 s at 12 m/s. The 0.9 s vert air of the GDD is not in the present park.
+- At 3 rad/s a half turn needs 1.05 s of air, so no air in the park paid a spin. At 6 rad/s a half turn needs 0.52 s. A kicker or a vert air at 11 m/s or more, with steer held for the whole air, turns one half turn (40 points). A hop on flat ground turns about 172 degrees, so it does not pay. Two half turns (1.05 s) stay out of reach in the present park.
+- Effect on the feel: the air turn changes the skater yaw only. The landing sets the yaw to the travel direction (`stepAir` in `controller.js`), so the rate does not change the path. The air spin looks two times faster.
+- The GDD (R4, F3, Q5) has the new values. The practical maximum of F3 is now 200 + 120 + 90 + 40 = 450 (vert air, direction grab, full hold, one half turn).

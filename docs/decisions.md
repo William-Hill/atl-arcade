@@ -3155,3 +3155,12 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `41
 - Evidence: Autopilot met the 3 input targets with both rules (axis rule 99.0% as wanted, 0.0% Up from push, 1.1% L/R from carves; GDD rule 99.6%, 0.0%, 0.9%). See `prototypes/trick-input/REPORT.md`, "Autopilot playtest kit".
 - Open risk: the agent plays with fixed timing, not human timing. The synthetic players predict a 7.1% carve leak on the keyboard with the axis rule, over the 5% target. No run measured the time of a new player to the first 3-link combo. The human playtest must measure both before release.
 - #327 to #344 can start. The human playtest stays on the checklist in `prototypes/trick-input/REPORT.md`, for a later date.
+
+## 2026-11-26 — Trick input clips: hand keys, the clip table, and the toe roll pitch (#329)
+
+The 10 trick clips (Nia and Marcus: `air_rocket`, `air_tuckknee`, `grind_makio`, `grind_royale`, `manual_toe`) and a stumble landing (`land_stumble`) are hand keys, as the dances of #293. No Meshy text-to-motion ran (0 credits). Marcus's air and grind clips and his `land_stumble` are the mirror of Nia's; his `manual_toe` has its own source. Evidence: `docs/characters/trick-clips/README.md`.
+
+- The renderer plays `state.trick.clip` when the clip is in the group of the state, else the base clip (`jump`, `grind_frontside`, `manual`). The `AIR_TRICKS` and `GRINDS` cycles and the variant counters are removed. A ramp air with no grab plays `jump`.
+- A landing plays `land_stumble` when `state.landing` (a string, or `{ result }`) is `"stumble"`. The GDD does not name this field; #327 must use it or change the renderer.
+- The toe roll pitches the boots 8 degrees, not 15 to 20 (GDD). On both skate meshes the toe stop is 5 to 14 mm above the ground, and at 14 degrees a toe stop touches the ground. A larger pitch needs higher toe stops on the mesh.
+- The physics pass has two-hand grabs, a toe region of the skate box, and a shin target (the art-director risk 1 of the GDD). `graft-clips.mjs --prune-rest` drops the channels that stay at rest, so the Marcus phone GLB stays under 3 MB (3,094,444 bytes).

@@ -28,13 +28,21 @@ export const CLIPS = {
   carve_right: { beat: true },
   jump: { once: true },
   land: { once: true, lock: 0.3 },
+  // The stumble landing (#329, docs/gdd/trick-input.md R10): a deeper hit
+  // and a 0.2 s arm wave. It holds longer than land, so the wave shows.
+  land_stumble: { once: true, lock: 0.4 },
   air_mute: {},
   air_japan: {},
   air_liukang: {},
+  air_rocket: {},
+  air_tuckknee: {},
   grind_frontside: {},
   grind_soul: {},
   grind_unity: {},
-  manual: {}, // No manual input in M0. The table binds it to state.manual.
+  grind_makio: {},
+  grind_royale: {},
+  manual: {},
+  manual_toe: {}, // The toe roll: the front wheels down (#329).
   bail: { once: true, lock: 0.9 },
   dance_bankhead: { tempo: true },
   dance_walkitout: { tempo: true },
@@ -54,10 +62,13 @@ export const CLIPS = {
 // The clip names in the GLB of one skater.
 export const clipNamesFor = (skater) => Object.keys(CLIPS).filter((n) => !CLIPS[n].skaters || CLIPS[n].skaters.includes(skater));
 
-// The game cycles through these in order: one air trick per ramp air and
-// one grind stance per rail.
-export const AIR_TRICKS = ["air_mute", "air_japan", "air_liukang"];
-export const GRINDS = ["grind_frontside", "grind_soul", "grind_unity"];
+// The clip groups of the trick input (docs/gdd/trick-input.md). The sim
+// picks the trick (state.trick.clip); the renderer plays it when it is a clip
+// of the group of the state, and else the base clip of the state.
+export const GRAB_CLIPS = ["air_mute", "air_japan", "air_liukang", "air_rocket", "air_tuckknee"];
+export const GRIND_CLIPS = ["grind_frontside", "grind_soul", "grind_unity", "grind_makio", "grind_royale"];
+export const MANUAL_CLIPS = ["manual", "manual_toe"];
+export const LAND_CLIPS = ["land", "land_stumble"];
 
 // The dance clips of all style moves (src/sim/skate/constants.js STYLE).
 export const DANCE_CLIPS = STYLE.moves.flatMap((m) => m.dances.map((d) => d.clip));
@@ -66,15 +77,14 @@ export const ANIM = {
   clipBeat: 0.8, // s. The clips are keyed at 24 frames (30 fps) per beat. The renderer scales them to the game beat.
   idleSpeed: 0.3, // m/s. Under this speed the skater stands.
   carveRate: 0.6, // rad/s of yaw change that counts as a carve.
-  trickAirTime: 0.25, // s in the air off a ramp before the air trick starts.
   fade: 0.2, // s default crossfade. FADES sets the time for each change.
   turnTime: 0.35, // s for the half turn into and out of the backward ride.
   brakeDecel: 5, // m/s^2. A harder slow-down plays the brake clip. The roll friction and drag stay under 4.8 at the top speed, and the brake is 8.
   brakeHold: 0.1, // s. The slow-down must last this long, so a one-tick drop (a wall slide, a landing) does not play the brake.
 };
 
-const AIR = new Set(["jump", ...AIR_TRICKS]);
-const GROUND = new Set(["idle", "push", "brake", "coast", "ride_back", "carve_left", "carve_right", "manual"]);
+const AIR = new Set(["jump", ...GRAB_CLIPS]);
+const GROUND = new Set(["idle", "push", "brake", "coast", "ride_back", "carve_left", "carve_right", ...MANUAL_CLIPS]);
 
 // --- Fade times for each state change (#107) ---------------------------
 //
@@ -83,14 +93,14 @@ const GROUND = new Set(["idle", "push", "brake", "coast", "ride_back", "carve_le
 
 const GROUPS = {
   idle: ["idle"],
-  roll: ["push", "coast", "manual"],
+  roll: ["push", "coast", ...MANUAL_CLIPS],
   brake: ["brake"],
   carve: ["carve_left", "carve_right"],
   back: ["ride_back"],
   jump: ["jump"],
-  trick: AIR_TRICKS,
-  land: ["land"],
-  grind: GRINDS,
+  trick: GRAB_CLIPS,
+  land: LAND_CLIPS,
+  grind: GRIND_CLIPS,
   bail: ["bail"],
   dance: DANCE_CLIPS,
 };
@@ -159,10 +169,6 @@ export function createAnimState() {
     clip: "idle",
     time: 0,
     lock: 0,
-    airVariant: 0,
-    grindVariant: 0,
-    wasAirTrick: false,
-    wasGrind: false,
     prevYaw: null,
     prevTick: null,
     prevSpeed: null,
@@ -180,19 +186,34 @@ export function wrapAngle(a) {
   return y;
 }
 
+// The clip of the sim's trick (state.trick.clip, #327) when it is in the
+// group, else the fallback.
+const trickClip = (state, group, fallback) => {
+  const clip = state.trick?.clip;
+  return clip && group.includes(clip) ? clip : fallback;
+};
+
+// The landing result of the sim (docs/gdd/trick-input.md R10). The sim
+// (#327) can give it as a string or as { result }.
+export const landingResult = (state) => {
+  const l = state.landing;
+  return (l && typeof l === "object" ? l.result : l) ?? null;
+};
+
 // Picks the clip for one controller state. `ctx` holds the values that the
-// state does not carry: the yaw rate and the variant counters.
+// state does not carry: the yaw rate and the slow-down time.
 export function clipFor(state, ctx = {}) {
-  const { yawRate = 0, slowing = 0, airVariant = 0, grindVariant = 0 } = ctx;
+  const { yawRate = 0, slowing = 0 } = ctx;
   // The sim picks the dance (state.style.clip). The fallback is the first dance.
   if (state.style) return CLIPS[state.style.clip] ? state.style.clip : DANCE_CLIPS[0];
-  if (state.state === "grind") return GRINDS[grindVariant % GRINDS.length];
+  // The sim picks the stance; with no stance it is the edge grind.
+  if (state.state === "grind") return trickClip(state, GRIND_CLIPS, "grind_frontside");
   if (state.state === "air") {
     if (state.airFrom === "fall") return "bail";
-    if (state.airFrom === "ramp" && state.airTime >= ANIM.trickAirTime) return AIR_TRICKS[airVariant % AIR_TRICKS.length];
-    return "jump";
+    // A grab plays its clip. An air with no grab (a ramp air too) plays jump.
+    return trickClip(state, GRAB_CLIPS, "jump");
   }
-  if (state.manual) return "manual";
+  if (state.manual) return trickClip(state, MANUAL_CLIPS, "manual");
   if (Math.abs(state.speed) < ANIM.idleSpeed) return "idle";
   // Backward (the switch button): the backward ride swizzles the skates, so
   // it is the clip for the push, the coast, and the carves.
@@ -244,19 +265,11 @@ export function stepAnim(prev, state, dt) {
   const decel = measureDecel(prev, state, dt);
   const next = { ...prev, prevYaw: state.yaw, prevSpeed: state.speed, prevTick: state.tick ?? null, yawRate, decel, slowing: decel > ANIM.brakeDecel ? (prev.slowing ?? 0) + dt : 0, time: prev.time + dt, lock: Math.max(0, prev.lock - dt) };
 
-  // The variant counters change once per air trick and per rail.
-  const onRail = state.state === "grind";
-  if (!onRail && prev.wasGrind) next.grindVariant = prev.grindVariant + 1;
-  next.wasGrind = onRail;
+  let wanted = clipFor(state, { yawRate, slowing: next.slowing });
 
-  const ctx = { yawRate, slowing: next.slowing, airVariant: next.airVariant, grindVariant: next.grindVariant };
-  let wanted = clipFor(state, ctx);
-  const airTrick = AIR_TRICKS.includes(wanted);
-  if (!airTrick && prev.wasAirTrick) next.airVariant = prev.airVariant + 1;
-  next.wasAirTrick = airTrick;
-
-  // The skater lands from a jump or an air trick with the land clip.
-  if (AIR.has(prev.clip) && GROUND.has(wanted)) wanted = "land";
+  // The skater lands from a jump or an air trick with the land clip, or
+  // with its stumble variant when the sim says the landing is a stumble.
+  if (AIR.has(prev.clip) && GROUND.has(wanted)) wanted = landingResult(state) === "stumble" ? "land_stumble" : "land";
   // A bail or a landing holds for its lock time before a ground clip.
   if (prev.lock > 0 && GROUND.has(wanted)) wanted = prev.clip;
   next.facing = facingFor(wanted, state);
@@ -280,7 +293,7 @@ export function respawnAnim(state) {
 
 // The model yaw offset: PI faces backward. The skater faces backward on the
 // ground when the switch is on. Air, rails, and dances face forward.
-export const facingFor = (clip, state = {}) => (state.backward && GROUND.has(clip) && clip !== "manual" ? Math.PI : 0);
+export const facingFor = (clip, state = {}) => (state.backward && GROUND.has(clip) && !MANUAL_CLIPS.includes(clip) ? Math.PI : 0);
 
 // Moves the facing offset toward its target at a fixed turn rate.
 export function stepFacing(current, target, dt, turnTime = ANIM.turnTime) {

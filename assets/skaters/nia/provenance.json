@@ -723,6 +723,21 @@
       "result": "dance_walkitout: loop seam 1.368 -> 0.577 m/s, jitter 11.89 -> 5.12 m/s^2, lowest wheel -0.01 -> -0.17 cm, hover frames 0 -> 0, clip length 48 frames (1.6 s) unchanged. The other 22 looping clips have the same metrics as before. skater.glb 2,722,128 -> 2,728,492 bytes; skater-1024.glb 2,272,172 -> 2,278,536 bytes (grafted again on the #323 arm pass, 2026-11-23).",
       "evidence": "docs/characters/loop-seam/ (walkitout-before-after*.mp4, walkitout-seam.jpg, game-walkitout.jpg, nia-audit-before.json, nia-audit-after.json)",
       "credits_spent": 0
+    },
+    {
+      "tool": "Blender 5.2.4 LTS (background mode, local Mac): scripts/blender/skater_anim_v3.py (hand keys from scripts/blender/nia_clips.py), scripts/blender/skater_physics_pass.py, scripts/blender/skater_joint_limits.py, scripts/blender/skater_clip_probe.py; scripts/assets/graft-clips.mjs on Node with @gltf-transform/core, extensions, and functions 4.5.1 and draco3dgltf 1.5.9",
+      "date": "2026-11-26",
+      "issue": "#329",
+      "prompt": "Hand keys, no text-to-motion. The trick input clips of docs/gdd/trick-input.md, section Visual/Audio Requirements: air_rocket, air_tuckknee, grind_makio, grind_royale, manual_toe, and a stumble variant of land (land_stumble). Nia's clips are the source of Marcus's mirrored air and grind clips.",
+      "command": "blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_anim_v3.py -- --name nia --source assets/skaters/nia/source/nia-forward.blend --out <build> --clips air_rocket,air_tuckknee,grind_makio,grind_royale,manual_toe,land_stumble && blender -b --factory-startup --python-exit-code 1 -P scripts/blender/skater_physics_pass.py -- --in <build>/nia-clips-v3.glb --out <build> --clips grind_makio,grind_royale,manual_toe --ik-clips air_rocket,air_tuckknee && for g in skater skater-1024; do node scripts/assets/graft-clips.mjs assets/skaters/nia/$g.glb <build>/nia-clips-v3.glb assets/skaters/nia/$g.glb && node scripts/assets/graft-clips.mjs assets/skaters/nia/$g.glb <build>/nia-physics.glb assets/skaters/nia/$g.glb --prune-rest; done",
+      "settings": {
+        "physics_pass": "grind_makio, grind_royale, manual_toe: the full pass (STILL 0.8, balance, smoothing, clipping fix). air_rocket, air_tuckknee: the arm IK only, two-hand grabs (air_rocket: the toe region, the front 40% of each skate box, chest_first, bend_max 40; air_tuckknee: the shin capsules, 0.3 to 0.65 down the shin).",
+        "toe_roll_pitch_deg": 8,
+        "graft": "--prune-rest drops the channels that stay at the rest value of their joint (the physics pass exports 195 channels for each clip)."
+      },
+      "result": "6 clips added; 32 clips in each GLB. skater.glb 2,728,492 -> 2,778,160 bytes; skater-1024.glb 2,278,536 -> 2,328,204 bytes. Joint-limit gate PASS on the 6 clips. Clip probe: no clip over 1 cm. Lowest wheel -0.2 mm or higher. Details: docs/characters/trick-clips/README.md.",
+      "evidence": "docs/characters/trick-clips/ (README.md, sheets/, *-metrics.json, *-joint-limits.json, *-clip-probe.json, *-build.json); assets/skaters/nia/clips/<clip>.png (e2e/skater-anim.spec.js); e2e/trick-clips.spec.js",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 155,
@@ -730,13 +745,13 @@
   "tripo_credits_after": 2715,
   "file": "assets/skaters/nia/skater.glb",
   "triangles": 17896,
-  "file_size_bytes": 2728492,
+  "file_size_bytes": 2778160,
   "five_views": "assets/skaters/nia/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/nia/provenance.json)",
-  "animations": 25,
+  "animations": 32,
   "phone_variant": {
     "file": "assets/skaters/nia/skater-1024.glb",
-    "file_size_bytes": 1753764,
+    "file_size_bytes": 2328204,
     "base_color": "1024x1024 WebP",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
   },
@@ -744,7 +759,7 @@
     "date": "2026-11-05",
     "triangles": 23472,
     "joints": 65,
-    "clips": 25,
+    "clips": 32,
     "source": "assets/skaters/nia/raw/forward-v2 + raw/runtime-v2 (ignored build sources)",
     "method": "Keep the forward push and coast. Key the other 22 clips on the v2 rig with the forward IK. Retarget dance_smoothquad from the approved Tripo dance.",
     "added_clips": [

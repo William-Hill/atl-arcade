@@ -10,13 +10,22 @@
 // The tools are not in package.json. Install them once, without saving:
 //   npm i --no-save @gltf-transform/core@4.5.1 @gltf-transform/extensions@4.5.1 \
 //     @gltf-transform/functions@4.5.1 draco3dgltf@1.5.9 sharp@0.35.5
-//   node scripts/assets/graft-clips.mjs <skater.glb> <clips.glb> <out.glb>
+//   node scripts/assets/graft-clips.mjs <skater.glb> <clips.glb> <out.glb> [--prune-rest]
+//
+// --prune-rest (#329): drops each channel that stays at the rest value of its
+// joint for the whole clip (within PRUNE_EPS). Three.js holds a joint with
+// no track at its rest pose, so the pose does not change. The physics pass
+// exports a translation, a rotation, and a scale channel for all 65 joints,
+// and each channel adds JSON to the GLB.
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { resample } from "@gltf-transform/functions";
 import draco3d from "draco3dgltf";
 
-const [target, source, output] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const pruneRest = args.includes("--prune-rest");
+const [target, source, output] = args.filter((a) => !a.startsWith("--"));
+const PRUNE_EPS = 1e-4;
 if (!target || !source || !output) {
   console.error("usage: graft-clips.mjs <skater.glb> <clips.glb> <out.glb>");
   process.exit(1);
@@ -43,6 +52,28 @@ for (const n of clips.getRoot().listNodes()) {
 
 const buffer = doc.getRoot().listBuffers()[0];
 const report = { replaced: [], added: [] };
+if (pruneRest) report.prunedChannels = 0;
+
+// True when every key of the channel is the rest value of its joint. A
+// quaternion q and -q are the same rotation.
+function atRest(ch) {
+  const n = ch.getTargetNode();
+  const path = ch.getTargetPath();
+  const rest = path === "translation" ? n.getTranslation() : path === "rotation" ? n.getRotation() : path === "scale" ? n.getScale() : null;
+  if (!rest) return false;
+  const out = ch.getSampler().getOutput().getArray();
+  const k = rest.length;
+  for (let i = 0; i < out.length; i += k) {
+    let same = true;
+    let flip = path === "rotation";
+    for (let j = 0; j < k; j++) {
+      if (Math.abs(out[i + j] - rest[j]) > PRUNE_EPS) same = false;
+      if (Math.abs(out[i + j] + rest[j]) > PRUNE_EPS) flip = false;
+    }
+    if (!same && !flip) return false;
+  }
+  return true;
+}
 for (const anim of clips.getRoot().listAnimations()) {
   const name = anim.getName();
   const old = doc.getRoot().listAnimations().find((a) => a.getName() === name);
@@ -58,6 +89,10 @@ for (const anim of clips.getRoot().listAnimations()) {
   const copy = doc.createAnimation(name);
   const accessor = (src) => doc.createAccessor().setType(src.getType()).setArray(src.getArray().slice()).setBuffer(buffer);
   for (const ch of anim.listChannels()) {
+    if (pruneRest && atRest(ch)) {
+      report.prunedChannels += 1;
+      continue;
+    }
     const node = nodes.get(ch.getTargetNode().getName());
     if (!node) throw new Error(`No node ${ch.getTargetNode().getName()} in ${target}`);
     const s = ch.getSampler();

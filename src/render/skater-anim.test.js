@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { ANIM, AIR_TRICKS, CLIPS, clipNamesFor, GRINDS, DANCE_CLIPS, beatLength, beatPhase, clipFor, createAnimState, facingFor, grooveRate, measureYawRate, respawnAnim, stepAnim, stepFacing } from "./skater-anim.js";
+import { ANIM, CLIPS, clipNamesFor, DANCE_CLIPS, GRAB_CLIPS, GRIND_CLIPS, MANUAL_CLIPS, beatLength, landingResult, beatPhase, clipFor, createAnimState, facingFor, grooveRate, measureYawRate, respawnAnim, stepAnim, stepFacing } from "./skater-anim.js";
 import { SKATE, STYLE } from "../sim/skate/constants.js";
 import { createSkateState, runScript, stepSkate } from "../sim/skate/controller.js";
 
@@ -104,15 +104,97 @@ describe("the state -> clip table", () => {
   it("maps the air, grind, bail, and style states", () => {
     expect(clipFor(air())).toBe("jump");
     expect(clipFor(air({ airFrom: "ramp", airTime: 0.1 }))).toBe("jump");
-    expect(clipFor(air({ airFrom: "ramp", airTime: 0.5 }))).toBe("air_mute");
-    expect(clipFor(air({ airFrom: "ramp", airTime: 0.5 }), { airVariant: 1 })).toBe("air_japan");
-    expect(clipFor(air({ airFrom: "ramp", airTime: 0.5 }), { airVariant: 2 })).toBe("air_liukang");
     expect(clipFor(air({ airFrom: "fall" }))).toBe("bail");
     expect(clipFor({ ...rolling(), state: "grind" })).toBe("grind_frontside");
-    expect(clipFor({ ...rolling(), state: "grind" }, { grindVariant: 2 })).toBe("grind_unity");
     expect(clipFor(rolling({ style: { id: "groove", clip: "dance_walkitout" } }))).toBe("dance_walkitout");
     expect(clipFor(rolling({ style: { id: "spin", clip: "dance_sitspin" } }))).toBe("dance_sitspin");
     expect(clipFor(rolling({ style: { id: "groove", clip: "no_such_clip" } }))).toBe(DANCE_CLIPS[0]);
+  });
+});
+
+// The trick input (#329, docs/gdd/trick-input.md): the sim picks the trick
+// in state.trick (#327); the renderer plays state.trick.clip.
+const trick = (kind, clip) => ({ kind, id: clip, name: clip, clip, dir: "n", held: true });
+
+describe("the trick clips (state.trick.clip)", () => {
+  it("plays the grab of state.trick in the air", () => {
+    for (const clip of GRAB_CLIPS) {
+      expect(clipFor(air({ airFrom: "ramp", airTime: 0.5, trick: trick("grab", clip) }))).toBe(clip);
+      expect(clipFor(air({ airFrom: "jump", airTime: 0.1, trick: trick("grab", clip) }))).toBe(clip);
+    }
+  });
+
+  it("plays jump for a ramp air with no grab, at any air time", () => {
+    for (const airTime of [0.1, 0.25, 0.5, 2]) expect(clipFor(air({ airFrom: "ramp", airTime }))).toBe("jump");
+    expect(clipFor(air({ airFrom: "ramp", airTime: 0.5, trick: null }))).toBe("jump");
+  });
+
+  it("plays the stance of state.trick on a rail, and the edge grind with none", () => {
+    for (const clip of GRIND_CLIPS) expect(clipFor({ ...rolling(), state: "grind", trick: trick("grind", clip) })).toBe(clip);
+    expect(clipFor({ ...rolling(), state: "grind", trick: null })).toBe("grind_frontside");
+  });
+
+  it("plays the manual or the toe roll of state.trick", () => {
+    expect(clipFor(rolling({ manual: { balance: 0, meters: 0 } }))).toBe("manual");
+    for (const clip of MANUAL_CLIPS) expect(clipFor(rolling({ manual: { balance: 0, meters: 0 }, trick: trick("manual", clip) }))).toBe(clip);
+  });
+
+  it("plays a clip of state.trick only in the group of the state", () => {
+    // A grab clip on a rail, a grind clip in the air, and an unknown clip fall back.
+    expect(clipFor({ ...rolling(), state: "grind", trick: trick("grab", "air_rocket") })).toBe("grind_frontside");
+    expect(clipFor(air({ trick: trick("grind", "grind_makio") }))).toBe("jump");
+    expect(clipFor(air({ trick: trick("grab", "air_no_such") }))).toBe("jump");
+    expect(clipFor(rolling({ manual: { balance: 0 }, trick: trick("grab", "air_mute") }))).toBe("manual");
+    // On the ground with no manual, a trick left in the state does not change the clip.
+    expect(clipFor(rolling({ trick: trick("grab", "air_mute") }))).toBe("coast");
+    // A fall is a bail, with or without a grab.
+    expect(clipFor(air({ airFrom: "fall", trick: trick("grab", "air_mute") }))).toBe("bail");
+  });
+
+  it("changes the grab when the sim changes state.trick, with the trick fade", () => {
+    const states = [rolling(), air({ airFrom: "ramp" }), air({ airFrom: "ramp", trick: trick("grab", "air_rocket") }), air({ airFrom: "ramp", trick: trick("grab", "air_tuckknee") })];
+    const { changes } = run(states);
+    expect(changes.map((c) => c.to)).toEqual(["coast", "jump", "air_rocket", "air_tuckknee"]);
+    expect(changes[2].fade).toBe(0.15); // jump -> trick
+    expect(changes[3].fade).toBe(0.15); // trick -> trick
+  });
+
+  it("lands with land, or with land_stumble when the sim reports a stumble", () => {
+    const grab = Array.from({ length: 20 }, () => air({ airFrom: "ramp", trick: trick("grab", "air_rocket") }));
+    const clean = run([rolling(), ...grab, rolling({ landing: "clean" })]);
+    expect(clean.changes.map((c) => c.to)).toEqual(["coast", "air_rocket", "land"]);
+    const stumble = run([rolling(), ...grab, rolling({ landing: "stumble" })]);
+    expect(stumble.changes.map((c) => c.to)).toEqual(["coast", "air_rocket", "land_stumble"]);
+    expect(stumble.changes.at(-1).fade).toBe(0.05); // the impact reads at once, as land
+    const asObject = run([rolling(), ...grab, rolling({ landing: { result: "stumble" } })]);
+    expect(asObject.anim.clip).toBe("land_stumble");
+    // No landing result: a clean land.
+    expect(run([rolling(), ...grab, rolling()]).anim.clip).toBe("land");
+  });
+
+  it("holds land_stumble for its lock, then rolls on", () => {
+    const grab = Array.from({ length: 20 }, () => air({ airFrom: "ramp", trick: trick("grab", "air_mute") }));
+    const after = (n) => run([rolling(), ...grab, rolling({ landing: "stumble" }), ...Array.from({ length: n }, () => rolling())]).anim.clip;
+    expect(after(Math.floor(CLIPS.land_stumble.lock * 60) - 2)).toBe("land_stumble");
+    expect(after(Math.ceil(CLIPS.land_stumble.lock * 60) + 2)).toBe("coast");
+    expect(CLIPS.land_stumble.lock).toBeGreaterThan(CLIPS.land.lock);
+  });
+
+  it("reads the landing result as a string or as { result }", () => {
+    expect(landingResult({})).toBe(null);
+    expect(landingResult({ landing: "stumble" })).toBe("stumble");
+    expect(landingResult({ landing: { result: "perfect" } })).toBe("perfect");
+    expect(landingResult({ landing: null })).toBe(null);
+  });
+
+  it("keeps the toe roll facing forward in the backward ride", () => {
+    expect(facingFor("manual_toe", { backward: true })).toBe(0);
+    expect(facingFor("coast", { backward: true })).toBe(Math.PI);
+  });
+
+  it("has no variant counters (the sim picks the trick)", () => {
+    const a = createAnimState();
+    for (const k of ["airVariant", "grindVariant", "wasAirTrick", "wasGrind"]) expect(a).not.toHaveProperty(k);
   });
 });
 
@@ -138,16 +220,18 @@ describe("transitions", () => {
     expect(later.anim.clip).toBe("coast");
   });
 
-  it("alternates the air tricks and the dances", () => {
-    const trick = Array.from({ length: 30 }, (_, i) => air({ airFrom: "ramp", airTime: i / 60 }));
+  it("does not cycle the air tricks or the grind stances, and changes the dances", () => {
+    // Before #329 the renderer cycled the grabs and the stances. Now an air
+    // with no trick is always jump, and a rail with no stance is always the edge grind.
+    const ramp = Array.from({ length: 30 }, (_, i) => air({ airFrom: "ramp", airTime: i / 60 }));
     const land = Array.from({ length: 5 }, () => rolling());
-    const tricks = run([...trick, ...land, ...trick, ...land, ...trick, ...land, ...trick]).changes.map((c) => c.to).filter((n) => n.startsWith("air"));
-    expect(tricks).toEqual([...AIR_TRICKS, AIR_TRICKS[0]]);
+    const airs = run([...ramp, ...land, ...ramp, ...land, ...ramp]).changes.map((c) => c.to).filter((n) => n.startsWith("air") || n === "jump");
+    expect(airs).toEqual(["jump", "jump", "jump"]);
 
     const rail = Array.from({ length: 10 }, () => ({ ...rolling(), state: "grind" }));
     const off = Array.from({ length: 30 }, () => rolling());
     const grinds = run([...rail, ...off, ...rail, ...off, ...rail]).changes.map((c) => c.to).filter((n) => n.startsWith("grind"));
-    expect(grinds).toEqual(GRINDS);
+    expect(grinds).toEqual(["grind_frontside", "grind_frontside", "grind_frontside"]);
 
     const dance = (clip) => Array.from({ length: 10 }, () => rolling({ style: { id: "groove", clip } }));
     const dances = run([...dance("dance_bankhead"), ...land, ...dance("dance_walkitout")]).changes.map((c) => c.to).filter((n) => n.startsWith("dance"));

@@ -887,6 +887,10 @@ input.mode = { oneButton: savedControls.oneButton, relaxed: savedControls.relaxe
 skaterEnv.tricks = simTricks(input.mode);
 // One-button mode (R12.1, #328): the state of the one-button sets.
 let oneButton = createOneButton();
+// A press that the sim never sees end (a reset, a fast travel, the Controls
+// screen) must not start a dance or a manual later: drop the press, keep the
+// place in each set.
+const releaseOneButton = (ob) => ({ ...createOneButton(), next: ob.next });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 runReady = true;
@@ -1157,6 +1161,7 @@ function fastTravel(x, z) {
   const y = env.sampleGround(spot.x, spot.z, landingProbe(level, spot, ground))?.height ?? ground;
   run = teleportRun(run, level, { position: [spot.x, y, spot.z], yaw: spot.yaw });
   skater = run.skater;
+  oneButton = releaseOneButton(oneButton);
   skaterView.respawn(skater);
   if (follow) follow.reset(skater);
   events.push({ type: "travel", x: spot.x, z: spot.z });
@@ -1167,6 +1172,7 @@ function fastTravel(x, z) {
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   run = createRun(level, { position, yaw, cards: factCardSpots() });
   skater = run.skater;
+  oneButton = releaseOneButton(oneButton);
   if (goalDef) {
     goals = createGoals(goalDef);
     factCards.clear();
@@ -1255,9 +1261,13 @@ const remapScreen = createRemapScreen({
     input.bindings = b;
     input.mode = { oneButton: c.oneButton, relaxed: c.relaxed, r3Only: params.has("gddRule") };
     skaterEnv.tricks = simTricks(input.mode);
+    oneButton = releaseOneButton(oneButton);
     return saved;
   },
-  onChange: () => input.reset(),
+  onChange: () => {
+    input.reset();
+    oneButton = releaseOneButton(oneButton);
+  },
 });
 const runningSettings = { quality, look, peds: pedTotal, shadows: tier.shadows, ink: savedSettings.ink, bloom: savedSettings.bloom };
 const settingsMenu = createSettingsMenu({

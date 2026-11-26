@@ -54,6 +54,15 @@ describe("#328 one-button context from the sim", () => {
     expect(oneButtonContext({ ...r.s, grindCooldown: 0.2 }, env).railInRange).toBe(false);
   });
 
+  it("the ledge catch (#262): just after a bonk the rail is in range at the wider catch angle", () => {
+    const g = straightGrindable("ledge:test", 0, 20);
+    const env = { grindables: [g], skater: "nia" };
+    // 70 degrees to the ledge: |cos| 0.34 is under minAlongDot (0.5) and over catchAlongDot (0.2).
+    const s = { ...rig({ grindables: [g], position: [5, 0, 0.5] }).s, yaw: (70 * Math.PI) / 180 };
+    expect(oneButtonContext(s, env).railInRange).toBe(false);
+    expect(oneButtonContext({ ...s, bonkCatch: { speed: 6, left: 0.2 } }, env).railInRange).toBe(true);
+  });
+
   it("does the rail search only while TRICK is down or was down", () => {
     const ob = createOneButton();
     expect(oneButtonNeedsRail(ob, { style1: false })).toBe(false);

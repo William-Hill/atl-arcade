@@ -3148,3 +3148,10 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `d6
 ## 2026-11-26: Autopilot bridge: keySpec reads own entries only (#391)
 
 Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `4153ef7` (the squash merge of William-Hill/autopilot#6), with one more fix from the review of PR 389. `keySpec()` and `legacyKeyCode()` read their key tables through own entries only. An inherited name such as `constructor` or `toString` is no key, so a `move` with that name in `moveKeys` and an agent `key` request with that name fail before any input goes out. The fork has a test for it.
+
+## 2026-11-26: Trick input: PROCEED on the Autopilot evidence; the human playtest is deferred (#326)
+
+- Owner choice (2026-11-26): defer the human playtest and use the Autopilot runs of 2026-11-26 as the gate for #326. The verdict is PROCEED. This replaces the gate rule of the 2026-11-25 entry ("an Autopilot playtest as extra evidence").
+- Evidence: Autopilot met the 3 input targets with both rules (axis rule 99.0% as wanted, 0.0% Up from push, 1.1% L/R from carves; GDD rule 99.6%, 0.0%, 0.9%). See `prototypes/trick-input/REPORT.md`, "Autopilot playtest kit".
+- Open risk: the agent plays with fixed timing, not human timing. The synthetic players predict a 7.1% carve leak on the keyboard with the axis rule, over the 5% target. No run measured the time of a new player to the first 3-link combo. The human playtest must measure both before release.
+- #327 to #344 can start. The human playtest stays on the checklist in `prototypes/trick-input/REPORT.md`, for a later date.

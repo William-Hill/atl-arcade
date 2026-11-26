@@ -3194,6 +3194,17 @@ The 10 trick clips (Nia and Marcus: `air_rocket`, `air_tuckknee`, `grind_makio`,
 - The physics pass has two-hand grabs, a toe region of the skate box, and a shin target (the art-director risk 1 of the GDD). `graft-clips.mjs --prune-rest` drops the channels that stay at rest, so the Marcus phone GLB stays under 3 MB (3,094,444 bytes).
 - Owner choices (2026-11-26, on PR #400): keep the toe roll pitch at 8 degrees (the GDD row now says so), and accept Marcus's `air_rocket` (knees 50 to 64 degrees after the grab IK) for the skater review.
 
+## 2026-11-26: Trick input: touch flick, one-button mode, Relaxed timing, and the Controls screen (#328, #340)
+
+- Touch (R6, R11): `src/input/flick.js` is the pure flick and touch trick state. TRICK and SPIN press at the resolve frame (a tap is a press of one frame; a flick or a timeout holds the press to the lift). GRIND presses at the touch-down. The frame gives `flick: { style1, style2, grind }` (the direction on the resolve frame) and `grindFlick` (true while a GRIND touch is down and not resolved). A flick that is not neutral is also a start event in `dirHist`. `resolveFramePress(frame, button)` in `src/input/direction.js` gives the flick direction at once (no R3 window, no `dirAfter` wait) and else the R3 rule.
+- The pointer events of the flick buttons wait for the next sample, which gives them its time. `flickMaxMs` rounds to the nearest whole frame: 120 ms resolves at frame 7.
+- The touch label GROOVE is now TRICK. The touch layout keeps 5 buttons. The flick ring is a sibling element of the button with no pointer events, so the #245 layout and the button hit areas do not change.
+- One-button mode (R12.1): `src/input/one-button.js` gives the intent (`grind`, `manual`, `start`) from the sim context (`state`, `railInRange`, `skater`). The sim (lane A) must give the context and apply the intent. The input frame gives `oneButton` and `relaxed`.
+- Remap (R12.2): `src/input/remap.js` refuses two actions of one group on one key or pad button. A bind replaces the keys of the action. The direction source is a choice (keyboard: both, W A S D, arrows; gamepad: both, stick, d-pad). The Controls screen is `src/ui/remap-screen.js`; the settings menu opens it with "Keys, buttons, and tricks". The choice saves in `localStorage` key `atl.controls.v1`.
+- The Controls screen does not take Escape, O, P, M, or H (the menu keys).
+- Playwright on the software renderer: a touch move comes about 1 s of wall time after the touch-down, more than `flickMaxMs` of sim time. The touch tests pause the sim (`renderPaused`) while the gesture goes in. The events then wait for the next sample, as on a phone between 2 frames.
+- One-button mode, a hold that leaves the ground (owner choice 2026-11-26, review of #397): a manual starts only when the skater is on the ground at `oneButtonHold`. A hold that is in the air at that time starts nothing, and its release starts no dance. The GDD (R12.1) did not define this case. A short tap that releases in the air still starts the next dance; this case stays open for the owner.
+
 ## 2026-11-26: Trick input: the sim and the combo rules (#327, #334, #339)
 
 The sim part of `docs/gdd/trick-input.md` is in `src/sim/skate/` (`direction.js`, `tricks.js`, `manual.js`, `trick-step.js`, and changes in `skater.js`, `run.js`, `combo.js`, `constants.js`). The reference was `prototypes/trick-input/src/`; no prototype code is imported.

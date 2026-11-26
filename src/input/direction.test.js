@@ -382,6 +382,20 @@ describe("#341 pure trackers", () => {
   });
 });
 
+describe("clock rollback by one step", () => {
+  it("forgets old start events when the clock goes back by only one frame", () => {
+    const r = rig();
+    r.down("KeyA");
+    r.up("KeyA");
+    r.input.sample(2 * F);
+    expect(r.input.sample(F)).toMatchObject({ lastDir: "n", lastDirAt: -Infinity });
+    // The same time again keeps the history.
+    r.down("KeyD");
+    r.input.sample(3 * F);
+    expect(r.input.sample(3 * F)).toMatchObject({ lastDir: "r" });
+  });
+});
+
 describe("#341 review fixes", () => {
   const padOf = (x, y, pressed = []) => ({ id: "pad", connected: true, axes: [x, y, 0, 0], buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: pressed.includes(i), value: pressed.includes(i) ? 1 : 0 })) });
 

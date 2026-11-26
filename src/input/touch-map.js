@@ -6,7 +6,7 @@
 // with +x to the right and +y down (screen axes).
 // - Left and right steer. The stick left steers left, which is +steer.
 // - Up pushes. Down brakes.
-// The buttons are JUMP, GRIND, GROOVE (style1), SPIN (style2), and SWITCH
+// The buttons are JUMP, GRIND, TRICK (style1, was GROOVE), SPIN (style2), and SWITCH
 // (switch: ride backward, or forward again). The skater turns on the press
 // of SWITCH (src/sim/skate/skater.js), so a hold does not flip it again.
 

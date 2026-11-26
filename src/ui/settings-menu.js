@@ -70,7 +70,7 @@ const STYLE = `
 #settings-menu #settings-reload[hidden] { display: none; }
 #settings-menu #settings-progress-note { color: #ffd166; margin: 0 0 8px; }
 #settings-menu #settings-progress-note[hidden] { display: none; }
-#settings-menu #settings-reset, #settings-reset-dialog button {
+#settings-menu #settings-reset, #settings-menu #settings-controls-open, #settings-reset-dialog button {
   min-height: 44px; padding: 8px 14px; border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 8px;
   background: #22222e; color: #f3f3f7; font: 600 15px system-ui, sans-serif; cursor: pointer;
 }
@@ -126,7 +126,7 @@ function option(parent, { type, name, value, id, title, hint }) {
 // the reduced-motion choice at once. `progress` (#220), when given, adds
 // "Reset progress": { saved() is false when the landmark progress does not
 // reach the browser storage, onReset() clears it after the confirm }.
-export function createSettingsMenu({ root = document.body, running, choice, sources, autoQuality, post = () => ({ kind: null, look: running.look }), onSave = () => {}, onLive = () => {}, onMotion = () => {}, deviceMotion = () => false, reload = () => {}, canOpen = () => true, onChange = () => {}, progress = null }) {
+export function createSettingsMenu({ root = document.body, running, choice, sources, autoQuality, post = () => ({ kind: null, look: running.look }), onSave = () => {}, onLive = () => {}, onMotion = () => {}, deviceMotion = () => false, reload = () => {}, canOpen = () => true, onChange = () => {}, progress = null, controls = null }) {
   if (!document.getElementById("settings-menu-style")) el("style", document.head, { id: "settings-menu-style", textContent: STYLE });
 
   let state = normalizeSettings(choice);
@@ -180,6 +180,16 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
     // pulse motion and the comic effects. The sounds stay.
     reduceMotion: option(fxSet, { type: "checkbox", name: "reduce-motion", value: "on", id: "settings-reduce-motion", title: "Reduce motion", hint: "Applies at once." }),
   };
+
+  // Controls (#328): a button that opens the Controls screen
+  // (src/ui/remap-screen.js): the remap, One-button tricks, Relaxed timing.
+  let controlsButton = null;
+  if (controls) {
+    const controlsSet = el("fieldset", dialog, { id: "settings-controls" });
+    el("legend", controlsSet, { textContent: "Controls" });
+    controlsButton = el("button", controlsSet, { id: "settings-controls-open", type: "button", className: "settings-controls-open", textContent: "Keys, buttons, and tricks" });
+    controlsButton.setAttribute("aria-haspopup", "dialog");
+  }
 
   // Progress (#220): the notice when the storage fails, and "Reset progress"
   // with its own confirm dialog. Cancel (or Escape) changes nothing.
@@ -325,6 +335,10 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
   for (const key of ["ink", "bloom"]) fx[key].input.addEventListener("change", () => change({ [key]: fx[key].input.checked }, key));
 
   toggleButton.addEventListener("click", () => toggle());
+  controlsButton?.addEventListener("click", () => {
+    close();
+    controls.open();
+  });
   closeButton.addEventListener("click", () => close());
   reloadButton.addEventListener("click", () => reload(pending, stored ? null : { ...state }));
   // The browser closes the dialog on Escape ("cancel") and returns the focus
@@ -353,8 +367,9 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
   show();
 
   return {
+    // The Controls screen also stops the game.
     get isOpen() {
-      return dialog.open;
+      return dialog.open || Boolean(controls?.isOpen);
     },
     get state() {
       return { ...state };

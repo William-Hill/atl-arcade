@@ -197,3 +197,13 @@ export function resolvePending(pending, t, hist, k = TRICK_INPUT) {
   if (t >= p + k.dirAfter - EPS) return { dir: "n", at: t };
   return pending;
 }
+
+// The direction of a press on this frame, for every device: a touch flick
+// that resolved on this frame gives its direction at once (the R3 window
+// does not apply to a flick, R11); else the R3 rule. `button` is "style1",
+// "style2", or "grind". Returns the same shapes as resolvePress().
+export function resolveFramePress(frame, button, k = TRICK_INPUT) {
+  const f = frame.flick && frame.flick[button];
+  if (f != null) return { dir: f, at: frame.t };
+  return resolvePress(frame.t, frame.dirHist, k);
+}

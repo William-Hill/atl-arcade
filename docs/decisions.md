@@ -3144,3 +3144,7 @@ Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` at `d6
 - An `rc` path with `__proto__`, `prototype`, or `constructor` fails with 403 before any lookup, also after a missing part.
 - An `rc` write never writes a property name with `.` or `:`.
 - `record` start checks the picture canvas before the recording starts.
+
+## 2026-11-26: Autopilot bridge: keySpec reads own entries only (#391)
+
+Both bridge copies are the fork file `plugin/threejs/autopilot-bridge.js` again, with one more fix from the review of PR 389. `keySpec()` and `legacyKeyCode()` read their key tables through own entries only. An inherited name such as `constructor` or `toString` is no key, so a `move` with that name in `moveKeys` and an agent `key` request with that name fail before any input goes out. The fork has a test for it.

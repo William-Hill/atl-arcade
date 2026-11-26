@@ -126,6 +126,16 @@ describe("R3 and R7: the direction picks the dance slot", () => {
     }
   });
 
+  it("a held TRICK repeats the same dance (R7), and state.trick stays held", () => {
+    const r = rolling(8);
+    r.step({ style1: true, flick: { style1: "r" } });
+    r.steps(60, (f, rr) => ({ style1: true, push: rr.s.speed < 6 }));
+    expect(r.s.trick).toMatchObject({ kind: "dance", name: "The Prep", held: true });
+    r.steps(200, (f, rr) => ({ style1: true, push: rr.s.speed < 6 }), (run) => run.skater.justStyled);
+    expect(r.s.justStyled.name).toBe("The Prep");
+    expect(r.s.style).toMatchObject({ name: "The Prep", time: 0 });
+  });
+
   it("state.trick names the dance in progress", () => {
     const r = rolling();
     r.step({ style1: true, flick: { style1: "r" } });

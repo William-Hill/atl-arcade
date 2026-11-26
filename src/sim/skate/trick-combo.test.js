@@ -200,6 +200,7 @@ describe("R9, R10, F5 to F7: links, landings, beat, bank", () => {
     }, (run) => run.skater.justFell);
     expect(r.s.justFell).toBe(true);
     expect(r.run.combo.score - c0.score).toBe(325);
+    expect(r.run.banked).toBe(325); // the run reports the bail payout of this tick
     expect(r.run.combo.style).toBeCloseTo(0.25, 9);
     expect(Math.hypot(r.s.velocity[0], r.s.velocity[2])).toBeGreaterThan(before * GRIND.fallSpeedKeep - 0.01);
     expect(GRIND.fallSpeedKeep).toBe(0.5);

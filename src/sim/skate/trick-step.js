@@ -252,11 +252,11 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   if (style && (s.state !== "rolling" || s.manual)) style = null;
   if (style) {
     style.time += dt;
-    style.held = held[style.button];
+    style.held = held[BUTTONS[style.button]]; // style.button is the index 0 (TRICK) or 1 (SPIN)
     if (style.time >= style.duration) {
       s.justStyled = { id: style.id, name: style.name, points: style.points };
       stats.styles += 1;
-      if (held[style.button]) repeat = style;
+      if (held[BUTTONS[style.button]]) repeat = style; // hold to repeat (R7)
       style = null;
     }
   }

@@ -94,13 +94,19 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
     else if (prev.airFrom === "jump" || prev.airFrom === "grind") judge(COMBO.hopPoints, "air", "Hop");
   }
   if (skater.justStyled) judge(skater.justStyled.points, "style", skater.justStyled.name);
-  if (skater.justFell || skater.respawned) combo = comboBail(combo, T ? T.c : COMBO);
+  // A bail banks bailBank of the pending points (F7); report it in `banked` too.
+  let bailBanked = 0;
+  if (skater.justFell || skater.respawned) {
+    const wasActive = combo.active;
+    combo = comboBail(combo, T ? T.c : COMBO);
+    if (wasActive) bailBanked = combo.lastBanked;
+  }
 
   // A manual keeps the combo open until its link is added at the cap (R8).
   const open = skater.state === "grind" || skater.state === "air" || Boolean(skater.style) || Boolean(skater.manual && !skater.manual.capped) || Boolean(skater.trickPend);
   const before = combo;
   combo = comboTick(combo, dt, open, T ? T.c : COMBO);
-  const banked = before.active && !combo.active ? combo.lastBanked : 0;
+  const banked = (before.active && !combo.active ? combo.lastBanked : 0) + bailBanked;
   // A fact card adds its points straight to the banked score, outside the
   // combo, so a bail does not lose them.
   const cardStep = stepCards(run.cards ?? createCardState(), skater.position);

@@ -3217,3 +3217,10 @@ The sim part of `docs/gdd/trick-input.md` is in `src/sim/skate/` (`direction.js`
 - **One-button mode in this change: the air only** (the grab set, and a held grab is a clean landing, #334). The ground and rail rows of the R12 table are #336.
 - **ATL Rydin** (8 beats, 600 points) plays the `dance_sitspin` clip until `dance_atlrydin` exists (#329). The new grab, stance, and manual clips (`air_rocket`, `air_tuckknee`, `grind_makio`, `grind_royale`, `manual_toe`) are names only; the renderer must map them to present clips until #329.
 - **Cost.** The trick rules add about 1.7 microseconds per sim step on the cloud container (3.2 against 1.5). `npm run perf:check` did not run.
+
+## 2026-11-26: HUD short form of the grind names (#335)
+
+- The full grind name order [Long] [edge] [stance] Grind comes from `grindName` in `src/sim/skate/tricks.js` (#327, PR #399). #335 does not change it, so the two branches do not conflict.
+- The HUD short form is a pure function, `hudShortName()` in `src/ui/trick-names.js`. A grind with a direction stance drops the final word "Grind" ("Long Ledge Makio", 16 characters). The neutral stance keeps "Grind" ("Long Ledge Grind"). Every other name stays as it is. `HUD_NAME_MAX` is 18.
+- The combo line of the HUD (`src/ui/hud.js`) shows the short form now. The move flash keeps the full name until the trick chip of #330 (`docs/ux/trick-hud.md`, section 6).
+- The game does not turn on the trick sim in `main.js` yet, so no stance grind can happen in the browser. The browser check is the present combo line specs only.

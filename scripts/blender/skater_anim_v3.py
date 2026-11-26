@@ -40,6 +40,9 @@ from skater_motion_retarget import sole_points
 import skater_runtime
 
 
+NIA_LEG = 0.790  # m: Nia's hip joint to ankle height in the rest pose
+
+
 def ease(t):
     t = max(0.0, min(1.0, t))
     return t * t * (3 - 2 * t)
@@ -333,7 +336,46 @@ def marcus_carve_left(scope):
                   (32, lift), (38, cross), (44, out), (48, open_)]
 
 
-def marcus_style(scope, loop, keys, staccato=True):
+def marcus_manual_toe(scope):
+    # Marcus's toe roll (#329), his own source (not a mirror of Nia's). The
+    # spec is the same: the front wheels on the ground, the heels up, the toe
+    # stops clear, the boots pitched forward, the torso forward, the arms out.
+    # His style: the right skate leads, a lower and wider stance, fists, the
+    # arms out in a sharp asymmetric shape (the left arm forward, the right
+    # arm out and back), and a head nod on each beat that holds, then hits.
+    at, rot, merge = scope["at"], scope["rot"], scope["merge"]
+    LEFT, FWD, UP = scope["LEFT"], scope["FWD"], scope["UP"]
+    pitch, lift = scope["TOE_PITCH"], scope["TOE_LIFT"] + .0015
+
+    def key(down, nod):
+        return merge(scope["FISTS"], {
+            "hips": (-.02, .02, -.17 - down),
+            "hipsRot": [rot(LEFT, 12), rot(UP, -6)],
+            "Spine": [rot(LEFT, 28), rot(FWD, 3)],
+            "Spine1": [rot(UP, 6), rot(LEFT, 6)],
+            "Neck": [rot(LEFT, -14)],
+            "Head": [rot(LEFT, -6 + 8 * nod), rot(UP, 4)],
+            "R": at(-.15, -.15, lift, "R", [rot(LEFT, pitch), rot(UP, -8)]),
+            "L": at(.17, .11, lift, "L", [rot(LEFT, pitch), rot(UP, 12)]),
+            "LeftArm": [rot(FWD, -34), rot(LEFT, -30), rot(UP, -10)],
+            "RightArm": [rot(FWD, 26), rot(LEFT, 26), rot(UP, 24)],
+            "LeftForeArm": [rot(UP, -34)],
+            "RightForeArm": [rot(UP, 22)],
+        })
+    a, b = key(0.0, 1.0), key(.02, 0.0)
+    # 1 beat: the nod hits on the beat and holds, as in his other clips.
+    return True, [(0, a), (10, a), (16, b), (24, a)]
+
+
+# The trick input clips (#329). at() puts a foot at its rest y plus (y - the
+# mean rest y), and Marcus's rest feet are 4.4 cm apart in y. For these clips
+# marcus_style() removes that offset after the mirror, so the mirrored
+# skates are where Nia's pose puts them (the rocket needs both skates at the
+# same reach). The older clips keep their shipped shape.
+REBASE_Y = {"air_rocket", "air_tuckknee", "grind_makio", "grind_royale", "land_stumble"}
+
+
+def marcus_style(scope, loop, keys, staccato=True, rebase_y=False):
     # Marcus' version of a shared clip: the other lead foot, a lower and
     # wider stance, a chest that leans forward, a head nod on each beat, and
     # staccato timing.
@@ -350,7 +392,8 @@ def marcus_style(scope, loop, keys, staccato=True):
         for side, dx in (("L", .02), ("R", -.02)):
             spec = p.get(side, {"pos": (0, 0, 0)})
             pos = spec["pos"]
-            p[side] = dict(spec, pos=(pos[0] + dx, pos[1], pos[2]))
+            dy = scope["FY"] - scope["CFG"]["feet_y"][0 if side == "L" else 1] if rebase_y else 0.0
+            p[side] = dict(spec, pos=(pos[0] + dx, pos[1] + dy, pos[2]))
         out.append((frame, p))
     if staccato and loop:
         # Each move holds its pose for 45% of the gap, then hits the next.
@@ -385,7 +428,13 @@ def main():
     hip_half = abs(arm.data.bones["mixamorig:LeftUpLeg"].head_local.x)
     cfg = {"arm": arm.name, "mesh": mesh.name, "continuous_foot_rotation": True,
            "feet": (feet[0].x, feet[1].x, (feet[0].y + feet[1].y) / 2),
-           "stance": hip_half / skater_runtime.NIA_HIP_HALF}
+           "feet_y": (feet[0].y, feet[1].y),
+           "stance": hip_half / skater_runtime.NIA_HIP_HALF,
+           # #329: the leg length over Nia's (0.790 m, hip joint to ankle).
+           "leg": (arm.data.bones["mixamorig:LeftUpLeg"].head_local.z - feet[0].z) / NIA_LEG,
+           "hip_drop": arm.data.bones["mixamorig:Hips"].head_local.z - arm.data.bones["mixamorig:LeftUpLeg"].head_local.z,
+           "torso": (arm.data.bones["mixamorig:LeftArm"].head_local.z - arm.data.bones["mixamorig:Hips"].head_local.z)
+           / (arm.data.bones["mixamorig:LeftUpLeg"].head_local.z - feet[0].z)}
     scope = {"__name__": "skater_anim_v3", "SKATER_CFG": cfg}
     exec(compile((HERE / "nia_clips.py").read_text(), "nia_clips.py", "exec"), scope)
     shared = dict(scope["CLIPS"])
@@ -421,13 +470,18 @@ def main():
             loop, keys = marcus_carve_left(scope)
             return loop, [(f, scope["mirror_pose"](p)) for f, p in keys]
         clips["carve_right"] = carve_right
+        clips["manual_toe"] = lambda: marcus_manual_toe(scope)
         for n, fn in shared.items():
             if n in clips or n in ("push", "coast"):
                 continue
             groove = n.startswith("dance_") or n in ("ride_back", "manual") or n.startswith("grind_") or n.startswith("air_")
-            clips[n] = (lambda fn=fn, groove=groove: marcus_style(scope, *fn(), staccato=groove))
+            clips[n] = (lambda fn=fn, groove=groove, n=n: marcus_style(scope, *fn(), staccato=groove, rebase_y=n in REBASE_Y))
     if args.clips:
         keep = args.clips.split(",")
+        # Nia's other clips come from nia_clips.py as they are (#329).
+        for n in keep:
+            if n not in clips and n in shared:
+                clips[n] = shared[n]
         clips = {k: v for k, v in clips.items() if k in keep}
     # The leg IK calibrates its knee poles on the idle clip.
     scope["CLIPS"] = {"idle": shared["idle"], **clips}

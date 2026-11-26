@@ -413,7 +413,7 @@ All knobs go in `src/sim/skate/constants.js` (a new `TRICK` block, and `COMBO` a
 | `air_tuckknee` | New | Mirror of Nia | The smallest shape, a ball. Both knees high and apart, both hands on the shins. Symmetric, with no torso twist, so it does not look like `air_mute` (asymmetric: one arm across the body, a torso twist). |
 | `grind_makio` | New | Mirror of Nia | One skate across the rail, on the plate between the trucks. The other skate lifted behind the hip, knee about 90 degrees, beside the body. Torso open to the camera, arms wide. |
 | `grind_royale` | New | Mirror of Nia | A T shape: the front skate along the rail, the back skate across it. Body square to the travel, low crouch. Not the same as `grind_frontside`. |
-| `manual_toe` | New | New | The front wheels on the ground, the heels up, the toe stops clear of the ground (a toe stop on the ground brakes). Boots pitched forward 15 to 20 degrees, torso forward, arms out. The opposite lean of `manual` (which leans back). |
+| `manual_toe` | New | New | The front wheels on the ground, the heels up, the toe stops clear of the ground (a toe stop on the ground brakes). Boots pitched forward 8 degrees (owner choice 2026-11-26, #329: the toe stops of the meshes touch the ground at 14 degrees), torso forward, arms out. The opposite lean of `manual` (which leans back). |
 | `dance_atlrydin` | New | Mirror of Nia | The ATL Rydin spec in `docs/characters/atl-dance-references.md`, section 1 (2 bars, rolling forward). |
 
 Quad skates have no frame groove: a quad grinds on the plate or the boot (`docs/characters/skate-style-references.md`). The clip notes must name the touch point of each stance. Makio and Royale are inline names, so they stay open for the skater review (Q3).

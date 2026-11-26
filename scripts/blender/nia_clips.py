@@ -27,6 +27,20 @@ LEFT, FWD, UP = (1, 0, 0), (0, -1, 0), (0, 0, 1)
 CURL = "curl"
 # STANCE scales the absolute foot x of at() for a skater with wider hips.
 STANCE = CFG.get("stance", 1.0)
+# LEG scales the foot targets of the long air shapes for a skater with
+# shorter legs (#329): the hip joint to ankle height over Nia's.
+LEG = CFG.get("leg", 1.0)
+# Nia's hip joint x (m, armature space).
+HIP_X = 0.083
+# The drop from the Hips joint to the hip joints (m). A forward pitch of the
+# hips moves the hip joints back by more on a rig with a larger drop
+# (Marcus 0.108, Nia 0.047), so the rocket skates come back with them.
+HIP_DROP = CFG.get("hip_drop", 0.047)
+# FOLD scales the hip fold of the rocket: a skater with a longer torso for
+# the legs reaches the toes with less fold. The ratio is (shoulder height -
+# hips height) / leg length; Nia's is 0.43 (Marcus 0.60). The square root
+# keeps enough fold for the hands to reach the toes (Marcus 0.85).
+FOLD = (0.43 / CFG.get("torso", 0.43)) ** 0.5
 
 
 def bone(name):
@@ -578,6 +592,172 @@ def manual():
     return True, [(0, a), (15, b), (30, a)]
 
 
+# Trick input clips (#329). The specs are in docs/gdd/trick-input.md,
+# "Visual/Audio Requirements". The touch point of each stance is in its
+# comment. Marcus gets the mirror of the air and grind clips through
+# marcus_style() in skater_anim_v3.py; his manual_toe has its own source.
+
+def _yaw_xy(x, y, deg):
+    # Turns a point (x, y) about the hips line (x = 0, y = 0) by deg about +Z.
+    a = math.radians(deg)
+    return x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a)
+
+
+def _air_turned(yaw, L, R, **extra):
+    # An air pose whose whole body turns by yaw (degrees about +Z). L and R
+    # are (x, y, z, [foot rotations]) in the frame of the body before the turn,
+    # in metres of this skater (at() scales x by STANCE, so x is divided by
+    # it here, after the turn).
+    def foot(spec, side):
+        x, y, z, r = spec
+        tx, ty = _yaw_xy(x, y, yaw)
+        return at(tx / STANCE, ty, z, side, list(r) + [rot(UP, yaw)])
+    pose = _air(L=foot(L, "L"), R=foot(R, "R"), pole=yaw, **extra)
+    pose["hipsRot"] = list(extra.get("hipsRot", [])) + [rot(UP, yaw)]
+    return pose
+
+
+def air_rocket():
+    # Rocket: the longest shape. Both legs go forward almost straight (the
+    # knees bend 20 to 30 degrees), the hips fold about 90 degrees, and both
+    # hands hold the toes of the skates (the toe stop end). The head goes
+    # down. The body turns 28 degrees to the camera and the knees spread, so
+    # the torso does not hide the skates.
+    def key(reach, spread):
+        # The skates are 12 cm (plus spread) outside the hip joints.
+        x = HIP_X * STANCE + 0.117 + spread
+        y = (-0.72 - reach) * LEG + 0.66 * (HIP_DROP - 0.047)
+        return _air_turned(
+            28,
+            (x, y, 0.62 * LEG, [rot(LEFT, -80)]),
+            (-x, y, 0.62 * LEG, [rot(LEFT, -80)]),
+            # The shoulders reach forward (protraction) toward the toes.
+            LeftShoulder=[rot(UP, -20)], RightShoulder=[rot(UP, 20)],
+            hipsRot=[rot(LEFT, 30 * FOLD)],
+            Spine=[rot(LEFT, 30 * FOLD)], Spine1=[rot(LEFT, 22 * FOLD)], Spine2=[rot(LEFT, 14 * FOLD)],
+            Neck=[rot(LEFT, 10)], Head=[rot(LEFT, 16)],
+            # The chest pitches forward about 70 degrees, so the arms go
+            # forward and up in the frame of the chest to reach the toes.
+            LeftArm=[rot(FWD, 40), rot(UP, -72)], RightArm=[rot(FWD, -40), rot(UP, 72)],
+            # A clear elbow bend, so the arm IK keeps the elbow on its hinge.
+            LeftForeArm=[rot(UP, -28)], RightForeArm=[rot(UP, 28)],
+            LeftHand=[rot(FWD, -20)], RightHand=[rot(FWD, 20)],
+            knees=0.08,
+        )
+    a, b = key(0.0, 0.0), key(0.01, 0.02)
+    return True, [(0, a), (12, b), (24, a)]
+
+
+def air_tuckknee():
+    # Tuck knee: the smallest shape, a ball. Both knees come up high and
+    # apart, and both hands hold the shins (below the knee pads). The pose
+    # is symmetric, with no torso twist (air_mute is asymmetric).
+    def key(tuck):
+        return _air(
+            hips=(0, 0.04, 0.10),
+            hipsRot=[rot(LEFT, -14)],
+            # The skates turn out 25 degrees: the leg IK points each knee over
+            # its skate, so the knees go apart.
+            L=at(0.21, -0.06, 0.70 + tuck, "L", [rot(LEFT, -20), rot(UP, 25)]),
+            R=at(-0.21, -0.06, 0.70 + tuck, "R", [rot(LEFT, -20), rot(UP, -25)]),
+            knees=0.18,
+            Spine=[rot(LEFT, 30)], Spine1=[rot(LEFT, 12)], Spine2=[rot(LEFT, 6)],
+            Neck=[rot(LEFT, -10)], Head=[rot(LEFT, -8)],
+            LeftArm=[rot(FWD, -30), rot(UP, -58)], RightArm=[rot(FWD, 30), rot(UP, 58)],
+            LeftForeArm=[rot(UP, -30)], RightForeArm=[rot(UP, 30)],
+            LeftHand=[rot(FWD, -15)], RightHand=[rot(FWD, 15)],
+        )
+    a, b = key(0.0), key(0.04)
+    return True, [(0, a), (12, b), (24, a)]
+
+
+def grind_makio():
+    # Makio (an inline name; on quads it stays open for the skater review).
+    # Touch point: the left skate goes across the rail, on the plate between
+    # the trucks, under the hips. The right skate lifts behind the hip, the
+    # knee bent about 90 degrees, beside the body. The torso opens to the
+    # camera and the arms go wide.
+    a = _grind(
+        0,
+        at(0.0, -0.02, 0, "L", [rot(UP, 88)]),
+        at(-0.26, 0.30, 0.34, "R", [rot(LEFT, 55), rot(UP, -10)]),
+        hips=(0.04, 0.02, -0.16),
+        hipsRot=[rot(FWD, 4)],
+        Spine=[rot(LEFT, 14), rot(FWD, -4)], Spine1=[rot(LEFT, 2), rot(UP, -18)],
+        Neck=[rot(LEFT, -2), rot(UP, 8)], Head=[rot(LEFT, 6), rot(UP, 6)],
+        LeftArm=[rot(FWD, -20), rot(UP, -10)], RightArm=[rot(FWD, 20), rot(UP, 10)],
+        LeftForeArm=[rot(UP, -12)], RightForeArm=[rot(UP, 12)],
+    )
+    return _wobble(a)
+
+
+def grind_royale():
+    # Royale (an inline name; open for the skater review). A T shape. Touch
+    # points: the front (left) skate goes along the rail on the inside edge
+    # of its plate, the back (right) skate goes across the rail, on the plate
+    # between the trucks. The body stays square to the travel, in a low
+    # crouch. Not grind_frontside (both skates across, the body turned 85).
+    a = _grind(
+        0,
+        at(0.0, -0.32, 0.004, "L", [rot(FWD, 20)]),
+        at(0.0, 0.24, 0.006, "R", [rot(UP, -88)]),
+        hips=(0, 0.0, -0.28),
+        knees=0.32,
+        Spine=[rot(LEFT, 26)], Spine1=[rot(LEFT, 6)],
+        Neck=[rot(LEFT, -10)], Head=[rot(LEFT, -6)],
+        LeftArm=[rot(FWD, -32), rot(UP, -18)], RightArm=[rot(FWD, 32), rot(UP, 18)],
+        LeftForeArm=[rot(UP, -16)], RightForeArm=[rot(UP, 16)],
+    )
+    return _wobble(a)
+
+
+# The toe roll: the pitch of the boots (degrees; a positive turn about LEFT
+# puts the toe down) and the lift of
+# the ankle that keeps the front wheels on the ground. skater_anim_v3.py
+# measures the toe stop gap on the mesh (#329).
+TOE_PITCH = 8
+TOE_LIFT = 0.0125
+
+
+def manual_toe():
+    # Toe roll: the front wheels stay on the ground, the heels go up, and the
+    # toe stops stay clear of the ground (a toe stop on the ground brakes).
+    # The boots pitch forward, the torso leans forward, the arms go out. The
+    # opposite lean of manual (which leans back on the rear wheels).
+    def key(lean):
+        return stance(
+            hips=(0, 0.02, -0.12),
+            hipsRot=[rot(LEFT, 12)],
+            L=at(STANCE_X - 0.03, -0.14, TOE_LIFT, "L", [rot(LEFT, TOE_PITCH), rot(UP, 6)]),
+            R=at(-STANCE_X + 0.03, 0.10, TOE_LIFT, "R", [rot(LEFT, TOE_PITCH), rot(UP, -6)]),
+            Spine=[rot(LEFT, 24 + lean)], Spine1=[rot(LEFT, 10)],
+            Neck=[rot(LEFT, -16)], Head=[rot(LEFT, -12)],
+            LeftArm=[rot(FWD, -30), rot(UP, -20)], RightArm=[rot(FWD, 30), rot(UP, 20)],
+            LeftForeArm=[rot(UP, -14)], RightForeArm=[rot(UP, 14)],
+            LeftHand=[rot(FWD, 10)], RightHand=[rot(FWD, -10)],
+        )
+    a, b = key(0), key(4)
+    return True, [(0, a), (15, b), (30, a)]
+
+
+def land_stumble():
+    # The stumble landing (R10): a deeper hit, the torso pitches forward, the
+    # right skate steps out to catch the weight, and the arms wave in one
+    # quick circle for 0.2 s (6 frames). Then the skater rises as in land.
+    hit = merge(ride(0, 0.26, lean=30), {
+        "L": at(0.14, -0.04), "R": at(-0.20, 0.14, side="R", rot=[rot(UP, -14)]),
+        "LeftArm": [rot(FWD, -10), rot(UP, -40)], "RightArm": [rot(FWD, 10), rot(UP, 40)],
+    })
+    wave_a = merge(hit, {"LeftArm": [rot(FWD, -44), rot(LEFT, -46), rot(UP, -12)], "RightArm": [rot(FWD, 20), rot(LEFT, 40)],
+                         "Spine": [rot(LEFT, 22), rot(FWD, 6)]})
+    wave_b = merge(hit, {"LeftArm": [rot(FWD, -20), rot(LEFT, 40)], "RightArm": [rot(FWD, 44), rot(LEFT, -46), rot(UP, 12)],
+                         "Spine": [rot(LEFT, 18), rot(FWD, -6)]})
+    # The arms stay a little out from the body as the skater rises.
+    rise = merge(ride(0.5, 0.06, lean=8), {"Spine1": [rot(UP, -10)], "Head": [rot(UP, 8)],
+                                           "LeftArm": [rot(FWD, -58), rot(LEFT, 12)], "RightArm": [rot(FWD, 58), rot(LEFT, -12)]})
+    return False, [(0, hit), (4, hit), (7, wave_a), (10, wave_b), (13, hit), (20, rise)]
+
+
 def bail():
     trip = stance(hips=(0.05, -0.02, -0.12), hipsRot=[rot(UP, 15)], Spine=[rot(LEFT, -15), rot(FWD, 10)],
                   LeftArm=[rot(FWD, 30), rot(UP, -40)], RightArm=[rot(FWD, -20), rot(UP, 50)], Head=[rot(LEFT, -15)])
@@ -1060,6 +1240,8 @@ CLIPS = {
     "jump": jump, "land": land, "air_mute": air_mute, "air_japan": air_japan, "air_liukang": air_liukang,
     "grind_frontside": grind_frontside, "grind_soul": grind_soul, "grind_unity": grind_unity,
     "manual": manual, "bail": bail,
+    "air_rocket": air_rocket, "air_tuckknee": air_tuckknee, "grind_makio": grind_makio,
+    "grind_royale": grind_royale, "manual_toe": manual_toe, "land_stumble": land_stumble,
     "dance_bankhead": dance_bankhead, "dance_walkitout": dance_walkitout, "dance_prep": dance_prep,
     "dance_swagsurf": dance_swagsurf, "dance_snaplean": dance_snaplean, "dance_crisscross": dance_crisscross,
     "dance_spin": dance_spin, "dance_sitspin": dance_sitspin,

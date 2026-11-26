@@ -256,6 +256,16 @@ describe("dances (R7)", () => {
     expect(link).toMatchObject({ name: "ATL Rydin", earned: 600 });
     expect(link.frame - tricks(s)[0].frame).toBe(288);
   });
+  it("a Q or E press during a dance is ignored and gives a press-ignored event", () => {
+    const { s, inp } = setup();
+    rolling(s, 8);
+    run(s, inp, [key("KeyW", true, T(1)), key("KeyW", false, T(3)), ...tap("KeyE", T(3), 0.05), ...tap("KeyQ", T(60), 0.05)], 120);
+    expect(tricks(s)).toHaveLength(1);
+    const ign = ofType(s, "press-ignored");
+    expect(ign).toHaveLength(1);
+    expect(ign[0]).toMatchObject({ button: "trick", reason: "dance", name: "ATL Rydin" });
+    expect(ign[0].left).toBeGreaterThan(0);
+  });
   it("Marcus: Q neutral is Swag Surf; with up, Drumline Count", () => {
     let s = createSim({ skater: "marcus", beat: false });
     let inp = createInput();

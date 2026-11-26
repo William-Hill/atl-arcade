@@ -18,6 +18,7 @@ The capsule skater, one rail, one kicker, and a flat pad. Text labels show the t
 | R4, R5 grabs | 5 grabs, `grabMinAir`, first press only, hold pay, air spin sum | `src/sim.js`, sim tests |
 | R6 grind stances | 5 stances at the press or at the snap (buffered), names "[Long] [edge] [stance] Grind", HUD short form | sim and name tests |
 | R7 dances | 10 slots per skater (Nia, Marcus), `beats` and `points` per dance, `STYLE.minSpeed` | sim and data tests |
+| Ignored press cue (owner choice 2026-11-26, from the Autopilot playtest) | A TRICK or SPIN press during a dance does nothing (R7). The sim gives a `press-ignored` event, and the HUD shows "… BUSY: dance" for 0.6 s and a log line with the time left. Not in one-button mode. | 1 sim test, 1 real-browser check |
 | R8, F1, F2 manual | `manualDelay`, `manualMinSpeed`, W/S balance, half friction, Toe Roll, the cap at 30 m, the grind-to-manual link, the manual into a kicker | `src/manual.js`, 8 unit tests, 11 sim tests |
 | R10 landings | Clean, stumble (grab held at the touchdown), late grab void (`landingGrace`) | sim tests |
 | R11 phone flick | Tap = neutral, 24 px drag = direction, 120 ms timeout, GRIND press at the touch-down and the stance at the resolve (one change only), flick ring with short names | `src/flick.js`, 7 unit tests, 4 sim tests, 3 Pixel 7 checks |
@@ -27,7 +28,7 @@ The capsule skater, one rail, one kicker, and a flat pad. Text labels show the t
 
 Not in the prototype: the grind balance and the grind bail (the bail bank is tested in `scoring.test.js`), vert ramps, drops, switch, sound, and clips.
 
-**Tests:** 157 Vitest tests in 9 files, all pass (`npx vitest run --config prototypes/trick-input/vitest.config.js`).
+**Tests:** 158 Vitest tests in 9 files, all pass (`npx vitest run --config prototypes/trick-input/vitest.config.js`).
 
 ## How to run it
 
@@ -119,6 +120,7 @@ The route bot banks "Long Rail Grind + Manual + Japan Grab" (about 2360 points) 
 | `playtest/screenshots/07-grayscale-manual-bar.png` | Grayscale: the bar reads from shape and text (R12.4) |
 | `playtest/screenshots/08-phone-flick-ring.png` | Pixel 7: flick ring, Side Grab lit |
 | `playtest/screenshots/09-phone-atl-rydin.png` | Pixel 7: flick up on SPIN, ATL Rydin; 5 buttons |
+| `playtest/screenshots/10-busy-cue.png` | Q pressed during the Cross Step dance: "… BUSY: dance" and the log line "TRICK ignored" |
 
 ## Human playtest kit
 
@@ -227,6 +229,7 @@ The automated run cannot close these items. Do them, then record the verdict.
 - [ ] Each keyboard player plays half the time with the axis rule (default) and half the time with the GDD rule (key 7, or `?gddRule`). Count the carve leaks and the missed directions for both rules (finding 1, the kit above). If time permits, also try the carve guard (key 6).
 - [ ] Ask each player to try one-button mode (key 1) and Relaxed timing (key 2) once.
 - [ ] Watch for the early-GRIND manual before the rail (finding 5).
+- [ ] Watch if players see the "BUSY: dance" cue when they press TRICK or SPIN during a dance.
 - [ ] Write the numbers in the table below and the verdict in `docs/playtest-metrics.md`.
 
 | Player | Device and rule/toggle | Tricks as wanted | Unwanted Up | Unwanted L/R | Time to 3-link + manual | Notes |

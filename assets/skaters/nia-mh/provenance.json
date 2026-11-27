@@ -1,0 +1,61 @@
+{
+  "asset": "Nia MetaHuman spike sources (research, not shipped)",
+  "date": "2026-11-27",
+  "credits": "The author generated these models with Tripo Studio from the project's own images in docs/characters/concept/nia-mh-bare/ (see its provenance.json). No third-party art is in them.",
+  "local_files_not_in_git": "assets/skaters/nia-mh/raw/*.glb (over 10 MB or raw sources). Exported from the canvas Export panel (GLB, 4k textures), 0 credits.",
+  "ledger": {
+    "start_balance": 22434,
+    "end_balance": 21949,
+    "total_credits": 485
+  },
+  "models": [
+    {
+      "file": "raw/nia-body-hd.glb",
+      "tool": "Tripo Studio Agentic Canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a, HD Model node",
+      "input": "a-bare-apose.png",
+      "settings": "Image, Texture on, Remove Lighting on, 4k, PBR off, Generate in Parts off, polycount 500000",
+      "button_price": "125 struck through, 55",
+      "credits_spent": 55,
+      "result": "473,348 faces, 249,089 vertices, 4096 px base color",
+      "bytes": 15297072
+    },
+    {
+      "file": "raw/nia-head-hd.glb",
+      "tool": "Tripo Studio Agentic Canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a, HD Model node",
+      "input": "a-head-crop.png (crop 330,50-570,290 of a-bare-apose.png, Lanczos to 768 px)",
+      "settings": "same as the body, polycount 60000",
+      "button_price": "125 struck through, 55",
+      "credits_spent": 55,
+      "result": "58,184 faces, 32,527 vertices",
+      "bytes": 3252112
+    },
+    {
+      "file": "raw/nia-jacket-sm.glb",
+      "tool": "Tripo Studio Agentic Canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a, Smart Mesh node (Nexus)",
+      "input": "c-jacket.png",
+      "settings": "Image, Quad, polycount 10000, 1 generation, Texture on",
+      "button_price": "100",
+      "credits_spent": 125,
+      "note": "Charged 25 more than the button price. The owner approved 125 for the joggers and the skates.",
+      "bytes": 13645368
+    },
+    {
+      "file": "raw/nia-joggers-sm.glb",
+      "tool": "Tripo Studio Agentic Canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a, Smart Mesh node (Nexus)",
+      "input": "c-joggers.png",
+      "settings": "same as the jacket",
+      "button_price": "100",
+      "credits_spent": 125,
+      "bytes": 8506768
+    },
+    {
+      "file": "raw/nia-skates-sm.glb",
+      "tool": "Tripo Studio Agentic Canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a, Smart Mesh node (Nexus)",
+      "input": "c-skates.png",
+      "settings": "same as the jacket",
+      "button_price": "100",
+      "credits_spent": 125,
+      "bytes": 25151428
+    }
+  ]
+}

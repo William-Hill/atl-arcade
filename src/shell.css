@@ -89,7 +89,8 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
    refused none at 16 px. The borders are inset outlines, so the HUD column
    keeps its height (#268, #277). */
 .hud-tag { font-size: 22px; font-weight: 700; color: #f3f3f7; min-height: 26px; outline: 0 solid transparent; outline-offset: -2px; transition: opacity 0.3s; }
-.hud-tag[data-shown="0"] { background: none; }
+/* Before the first chip the text is empty: no pill. */
+.hud-tag:has(> .hud-tag-text:empty) { background: none; }
 .hud-tag[data-look="progress"] { outline: 2px solid #f3f3f7; font-weight: 600; }
 .hud-tag[data-look="clean"] { outline: none; }
 .hud-tag[data-look="good"] { color: #ffd166; outline: 2px solid #ffd166; }

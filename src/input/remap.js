@@ -83,9 +83,12 @@ export function keyName(code) {
 const PAD_NAMES = ["A", "B", "X", "Y", "LB", "RB", "LT", "RT", "Back", "Start", "Left stick", "Right stick", "D-pad up", "D-pad down", "D-pad left", "D-pad right", "Home"];
 export const padButtonName = (i) => PAD_NAMES[i] ?? `Button ${i}`;
 
-// Keys the remap screen does not take: Escape cancels; O, P, M, and H open
-// the settings, the photo mode, the map, and the debug panel.
-export const RESERVED_KEYS = Object.freeze(["Escape", "KeyO", "KeyP", "KeyM", "KeyH"]);
+// Keys the remap screen does not take: Escape cancels; O, P, M, H, and T open
+// the settings, the photo mode, the map, the debug panel, and the trick list
+// (#330).
+export const RESERVED_KEYS = Object.freeze(["Escape", "KeyO", "KeyP", "KeyM", "KeyH", "KeyT"]);
+// Pad buttons the remap screen does not take: View/Back opens the trick list (#330).
+export const RESERVED_PAD_BUTTONS = Object.freeze([8]);
 
 // The first pad button that is down in `now` and was up in `before`, or null.
 export function newPadButton(before, now) {

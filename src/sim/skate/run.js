@@ -56,11 +56,14 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
   const judgeAt = (t) => (beat ? (beat.judgeNow ? beat.judgeNow() : beat.judge(t)) : null);
   // The judged moment (F6): air, the touchdown; grind, the snap; manual, the
   // GRIND press; dance, its end. `b` is the judge result of that moment.
-  const judge = (points, move, name, { b = judgeAt(time), landing = "clean" } = {}) => {
+  // `dir` is the direction that chose the trick, or null. With the old rules
+  // and in one-button mode no direction chose it, so it is null (UX 5.1).
+  const judge = (points, move, name, { b = judgeAt(time), landing = "clean", dir = null } = {}) => {
     const onBeat = Boolean(b && b.onBeat) && landing !== "stumble";
-    combo = comboMove(combo, { move, name, points: Math.round(points), onBeat, beat: b, landing }, T ? T.c : COMBO);
+    const linkDir = T && !T.oneButton ? dir : null;
+    combo = comboMove(combo, { move, name, points: Math.round(points), onBeat, beat: b, landing, dir: linkDir }, T ? T.c : COMBO);
     const link = combo.links[combo.links.length - 1];
-    moves.push({ tick: run.tick + 1, move, name, points: Math.round(points), earned: link.points, onBeat: link.onBeat, beatTag: link.tag, offsetMs: b ? b.offsetMs : null, landing });
+    moves.push({ tick: run.tick + 1, move, name, points: Math.round(points), earned: link.points, onBeat: link.onBeat, beatTag: link.tag, offsetMs: b ? b.offsetMs : null, landing, dir: linkDir });
   };
   // The beat at the grind snap and at the GRIND press, kept for the link.
   let snapBeat = run.snapBeat ?? null;
@@ -73,7 +76,7 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
 
   if (skater.justExited && prev.grind) {
     const g = skater.endedGrind ?? prev.grind;
-    judge(grindPoints(g, T ? T.c : COMBO, T ? T.k : TRICK), "grind", grindName(g.id, g.distance ?? 0, g.stance), { b: T ? snapBeat : judgeAt(time) });
+    judge(grindPoints(g, T ? T.c : COMBO, T ? T.k : TRICK), "grind", grindName(g.id, g.distance ?? 0, g.stance), { b: T ? snapBeat : judgeAt(time), dir: g.stance ?? "n" });
   }
   if (T) {
     // F3: the air at the touchdown (#327, #334, #339).
@@ -82,21 +85,21 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
       const name = l.grab ? l.grab.name : airName(l.airFrom);
       if (name && l.airTime + AIR_EPS >= T.c.minAirTime) { // the same float slack as trick-step.js
         const grab = l.grab ? (l.grab.dir === "n" ? "neutral" : "dir") : null;
-        judge(airPoints({ base: airBase(l.airFrom, T.c), grab, tHold: l.hold, airYaw: l.airYaw }, T.k), "air", name, { landing: l.result });
+        judge(airPoints({ base: airBase(l.airFrom, T.c), grab, tHold: l.hold, airYaw: l.airYaw }, T.k), "air", name, { landing: l.result, dir: l.grab ? (l.grab.dir ?? "n") : null });
       } else if (l.result === "stumble") combo = comboStumble(combo, T.c);
     }
     // F2: the manual link at the cap, or at the end.
     const manualName = (m) => (m.toe ? MANUALS.toe.name : MANUALS.manual.name);
-    if (skater.manualCap) judge(manualPoints(skater.manualCap.meters, skater.manualCap.toe, T.k), "manual", manualName(skater.manualCap), { b: manualBeat });
+    if (skater.manualCap) judge(manualPoints(skater.manualCap.meters, skater.manualCap.toe, T.k), "manual", manualName(skater.manualCap), { b: manualBeat, dir: skater.manualCap.toe ? "u" : "n" });
     const end = skater.manualEnd;
-    if (end && !end.capped) judge(manualPoints(end.meters, end.toe, T.k), "manual", manualName(end), { b: manualBeat, landing: end.result });
+    if (end && !end.capped) judge(manualPoints(end.meters, end.toe, T.k), "manual", manualName(end), { b: manualBeat, landing: end.result, dir: end.toe ? "u" : "n" });
     else if (end && end.result === "stumble") combo = comboStumble(combo, T.c);
   } else if (skater.justLanded && prev.airTime >= COMBO.minAirTime) {
     if (prev.airFrom === "ramp") judge(COMBO.vertAirPoints, "air", "Vert Air");
     else if (prev.airFrom === "launch") judge(COMBO.rampAirPoints, "air", "Ramp Air");
     else if (prev.airFrom === "jump" || prev.airFrom === "grind") judge(COMBO.hopPoints, "air", "Hop");
   }
-  if (skater.justStyled) judge(skater.justStyled.points, "style", skater.justStyled.name);
+  if (skater.justStyled) judge(skater.justStyled.points, "style", skater.justStyled.name, { dir: skater.justStyled.dir ?? null });
   // A bail banks bailBank of the pending points at multiplier 1 (F7). It is
   // reported in `bailBanked`, not in `banked`: `banked` is a combo bank (the
   // combo callout, the cheer, and the landmark combo challenges read it).

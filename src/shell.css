@@ -83,9 +83,32 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
 .hud-combo[data-fade="1"] { opacity: 0; transition: opacity 0.4s; }
 .hud-combo[data-fade="1"][data-rm="1"] { transition: none; }
 .hud-pending { font-size: 16px; min-height: 20px; }
-.hud-tag { font-size: 22px; font-weight: 700; color: #7ef0c2; min-height: 26px; transition: opacity 0.3s; }
-.hud-tag[data-beat="GOOD"] { color: #ffd166; }
-.hud-tag[data-refused="1"] { font-size: 16px; font-weight: 600; color: #ffffff; }
+/* E2, the live trick chip (#330, docs/ux/trick-hud.md 6.1). Each state has
+   its own border and word, so no state is color only (R12.4): progress solid
+   2 px, clean none, GOOD 2 px, PERFECT 3 px and bold, WOBBLE dotted, Busy and
+   refused none at 16 px. The borders are inset outlines, so the HUD column
+   keeps its height (#268, #277). */
+.hud-tag { font-size: 22px; font-weight: 700; color: #f3f3f7; min-height: 26px; outline: 0 solid transparent; outline-offset: -2px; transition: opacity 0.3s; }
+/* Before the first chip the text is empty: no pill. */
+.hud-tag:has(> .hud-tag-text:empty) { background: none; }
+.hud-tag[data-look="progress"] { outline: 2px solid #f3f3f7; font-weight: 600; }
+.hud-tag[data-look="clean"] { outline: none; }
+.hud-tag[data-look="good"] { color: #ffd166; outline: 2px solid #ffd166; }
+.hud-tag[data-look="perfect"] { color: #7ef0c2; outline: 3px solid #7ef0c2; outline-offset: -3px; font-weight: 800; }
+.hud-tag[data-look="wobble"] { color: #f3f3f7; outline: 2px dotted #f3f3f7; }
+.hud-tag[data-look="busy"], .hud-tag[data-refused="1"] { font-size: 16px; font-weight: 600; color: #ffffff; outline: none; }
+.hud-tag-text { display: block; }
+/* E3: the hold bar of a grab (stripes at holdCap) and the beat pips. */
+.hud-hold { height: 4px; margin: 2px 0 1px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; overflow: hidden; }
+.hud-hold-fill { height: 100%; width: 0; background: #f3f3f7; }
+.hud-hold[data-capped="1"] .hud-hold-fill { background: repeating-linear-gradient(135deg, #7ef0c2 0 5px, #1f8f68 5px 10px); }
+.hud-pips { display: flex; gap: 3px; margin: 3px 0 1px; }
+.hud-pip { width: 6px; height: 6px; box-sizing: border-box; border: 1px solid #f3f3f7; }
+.hud-pip[data-past="1"] { background: #f3f3f7; }
+.hud-hold[hidden], .hud-pips[hidden] { display: none; }
+/* E1: the multiplier in bold; a bail "+N" has a dashed border and paper text. */
+.hud-mult { font-weight: 800; }
+.hud-combo[data-active="0"][data-bail="1"] { color: rgba(243, 243, 247, 0.8); outline: 2px dashed rgba(243, 243, 247, 0.8); outline-offset: -2px; }
 .hud-meter { display: flex; align-items: center; gap: 8px; }
 .hud-label { font-size: 14px; letter-spacing: 0.08em; min-width: 72px; }
 .hud-bar { position: relative; width: 180px; height: 10px; background: rgba(255, 255, 255, 0.15); border-radius: 5px; overflow: hidden; }
@@ -107,7 +130,6 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
   box-shadow: 0 0 12px var(--atl-pink);
   transform-origin: center;
 }
-.hud-tag[data-beat="PERFECT"] { color: #7ef0c2; }
 .hud-hint { font-size: 14px; color: #ffd166; margin-top: 4px; }
 .hud-notice { color: #fff; }
 /* The round line at the end of a timed round (#260): why the input stops. */
@@ -1114,14 +1136,38 @@ body.photo-open #fullscreen-toggle, body.photo-open #turn-hint { visibility: hid
 .flick-ring .flick-d { transform: translate(0, 30px); }
 .flick-ring .flick-l { transform: translate(-30px, 0); }
 .flick-ring .flick-r { transform: translate(30px, 0); }
-/* Finger down: arrows at 38 px. */
-.flick-ring[data-active="1"] .flick-arrow::before { content: attr(data-glyph); width: auto; height: auto; background: none; opacity: 0.7; }
-.flick-ring[data-active="1"] .flick-u { transform: translate(0, -38px); }
-.flick-ring[data-active="1"] .flick-d { transform: translate(0, 38px); }
-.flick-ring[data-active="1"] .flick-l { transform: translate(-38px, 0); }
-.flick-ring[data-active="1"] .flick-r { transform: translate(38px, 0); }
-/* The flick direction: a bigger arrow in a filled circle. */
-.flick-ring[data-dir="u"] .flick-u, .flick-ring[data-dir="d"] .flick-d, .flick-ring[data-dir="l"] .flick-l, .flick-ring[data-dir="r"] .flick-r {
-  width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: #ff5fb2; border: 2px solid #fff; color: #14141c; text-shadow: none;
+/* The neutral dot (a tap) has no tick at rest. */
+.flick-ring .flick-n { display: none; }
+/* Finger down (#330, docs/ux/trick-hud.md 8.2): 4 arrow chips of 22 x 22 px
+   with their centers 40 px from the button center, ink fill at 75%, a 1 px
+   paper border, and a 16 px glyph. */
+.flick-ring[data-active="1"] .flick-arrow {
+  width: 22px; height: 22px; margin: -11px 0 0 -11px; box-sizing: border-box; border-radius: 50%;
+  background: rgba(11, 11, 18, 0.75); border: 1px solid #f3f3f7; color: #f3f3f7; font-size: 16px; text-shadow: none;
 }
-.flick-ring[data-dir="u"] .flick-u::before, .flick-ring[data-dir="d"] .flick-d::before, .flick-ring[data-dir="l"] .flick-l::before, .flick-ring[data-dir="r"] .flick-r::before { opacity: 1; font-size: 13px; }
+.flick-ring[data-active="1"] .flick-arrow::before { content: attr(data-glyph); width: auto; height: auto; background: none; font-size: 12px; }
+.flick-ring[data-active="1"] .flick-u { transform: translate(0, -40px); }
+.flick-ring[data-active="1"] .flick-d { transform: translate(0, 40px); }
+.flick-ring[data-active="1"] .flick-l { transform: translate(-40px, 0); }
+.flick-ring[data-active="1"] .flick-r { transform: translate(40px, 0); }
+/* The flick direction (from flickMin): the lit chip gets the paper fill, the
+   ink glyph, a 2 px ink border, and 1.25 times the size; the other 3 hide.
+   A tap lights the dot at the center. Shape and size, not only color (R12.4). */
+.flick-ring[data-active="1"]:is([data-dir="u"], [data-dir="d"], [data-dir="l"], [data-dir="r"], [data-dir="n"]) .flick-arrow { visibility: hidden; }
+.flick-ring[data-dir="u"] .flick-u, .flick-ring[data-dir="d"] .flick-d, .flick-ring[data-dir="l"] .flick-l, .flick-ring[data-dir="r"] .flick-r, .flick-ring[data-dir="n"] .flick-n {
+  visibility: visible !important; display: flex; background: #f3f3f7; border: 2px solid #0b0b12; color: #0b0b12;
+}
+.flick-ring[data-dir="u"] .flick-u { transform: translate(0, -40px) scale(1.25); }
+.flick-ring[data-dir="d"] .flick-d { transform: translate(0, 40px) scale(1.25); }
+.flick-ring[data-dir="l"] .flick-l { transform: translate(-40px, 0) scale(1.25); }
+.flick-ring[data-dir="r"] .flick-r { transform: translate(40px, 0) scale(1.25); }
+.flick-ring[data-dir="n"] .flick-n { transform: scale(1.25); }
+/* Reduced motion: the lit chip does not grow; it gets a 3 px border. */
+body.reduced-motion .flick-ring[data-dir="u"] .flick-u { transform: translate(0, -40px); }
+body.reduced-motion .flick-ring[data-dir="d"] .flick-d { transform: translate(0, 40px); }
+body.reduced-motion .flick-ring[data-dir="l"] .flick-l { transform: translate(-40px, 0); }
+body.reduced-motion .flick-ring[data-dir="r"] .flick-r { transform: translate(40px, 0); }
+body.reduced-motion .flick-ring[data-dir="n"] .flick-n { transform: none; }
+body.reduced-motion :is(.flick-ring[data-dir="u"] .flick-u, .flick-ring[data-dir="d"] .flick-d, .flick-ring[data-dir="l"] .flick-l, .flick-ring[data-dir="r"] .flick-r, .flick-ring[data-dir="n"] .flick-n) { border-width: 3px; }
+/* One-button mode (R12.1): no tick marks and no ring (8.5). */
+#touch-controls[data-one-button="1"] .flick-ring { display: none; }

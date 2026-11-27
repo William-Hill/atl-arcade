@@ -2,12 +2,13 @@
 // meter, balance meter while grinding. Plain DOM, updated once per frame
 // from the run state. The simulation never sees this.
 
-import { COMBO_LINE, comboLine } from "../sim/skate/combo.js";
+import { TRICK } from "../sim/skate/constants.js";
+import { danceNamed } from "../sim/skate/tricks.js";
 import { formatClock } from "../sim/skate/goals.js";
 import { isCompact, startHint } from "./layout.js";
 import { nearEdge } from "../level/edge-fence.js";
 import { createHudGoals } from "./hud-goals.js";
-import { hudLinks } from "./trick-names.js";
+import { TRICK_LINE, beatPips, createChip, holdBar, stepChip, trickLine } from "./trick-hud-text.js";
 
 // The hint near the level edge fence (#229).
 export const EDGE_HINT = "Edge of the map. Turn around and keep skating.";
@@ -72,7 +73,9 @@ function el(tag, className, parent) {
 // `goalDef` is the goal definition of the level, or null for free skate.
 // `tour` is true in a tour (#260): the timer place reads TOUR_LABEL.
 export const TOUR_LABEL = "TOUR";
-export function createHud(root, { touch = false, fence = null, reducedMotion = () => false, goalDef = null, tour = false } = {}) {
+// `oneButton()` is true in one-button mode (R12.1): no arrows on the trick
+// line and the chip, and no Busy cue (docs/ux/trick-hud.md 5.1, 6.1).
+export function createHud(root, { touch = false, fence = null, reducedMotion = () => false, goalDef = null, tour = false, oneButton = () => false } = {}) {
   root.innerHTML = "";
   // The score and the run timer (M1-05) share the top line.
   const top = el("div", "hud-top", root);
@@ -87,8 +90,26 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
   combo.id = "hud-combo";
   const pending = el("div", "hud-pending", root);
   pending.id = "hud-pending";
+  // E1 (docs/ux/trick-hud.md 5): the fold and the links, then the
+  // multiplier in bold.
+  const comboText = document.createTextNode("");
+  const comboMult = document.createElement("b");
+  comboMult.className = "hud-mult";
+  // The nodes go in at the first line (an empty line has no child nodes).
+
+  // E2 and E3 (6): the chip text, the hold bar of a grab, the beat pips of
+  // a dance. The text is the only text node of #hud-tag.
   const tag = el("div", "hud-tag", root);
   tag.id = "hud-tag";
+  tag.dataset.look = "";
+  const tagText = el("span", "hud-tag-text", tag);
+  const hold = el("div", "hud-hold", tag);
+  hold.id = "hud-hold";
+  hold.hidden = true;
+  const holdFill = el("div", "hud-hold-fill", hold);
+  const pips = el("div", "hud-pips", tag);
+  pips.id = "hud-pips";
+  pips.hidden = true;
   const pulse = el("div", "hud-pulse", root);
   pulse.id = "hud-pulse";
   const hint = el("div", "hud-hint", root);
@@ -128,9 +149,22 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
   const balanceDot = el("div", "hud-dot", balanceBar);
   balanceDot.id = "hud-balance-dot";
 
-  let tagUntil = 0;
+  let chipState = createChip();
   let seenSeq = 0;
   let seenRefused = 0;
+  let seenIgnored = 0;
+  let seenBails = 0;
+  let comboKey = "";
+  const setCombo = (body, mult) => {
+    const key = `${body}\u0000${mult}`;
+    if (key === comboKey) return;
+    comboKey = key;
+    comboText.data = body;
+    comboMult.textContent = mult;
+    // An empty line has no child nodes, so .hud-combo:empty hides its pill.
+    if (!body && !mult) combo.replaceChildren();
+    else if (combo.firstChild !== comboText || comboMult.parentNode !== combo) combo.replaceChildren(comboText, comboMult);
+  };
   // The time of the last bank: the combo was active, and now it is not.
   let wasActive = false;
   let bankedAt = null;
@@ -150,19 +184,27 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
         timer.dataset.low = goals.timeLeft <= 10 ? "1" : "0";
       }
       score.textContent = c.score.toLocaleString("en-US");
+      const compact = isCompact(window.innerWidth, window.innerHeight);
+      const ob = Boolean(oneButton());
+      // A bail banks at multiplier 1: its "+N" has a dashed border (5.2).
+      if ((c.bails ?? 0) !== seenBails) {
+        seenBails = c.bails ?? 0;
+        combo.dataset.bail = "1";
+      }
       if (c.active) {
-        const phone = isCompact(window.innerWidth, window.innerHeight);
         // The links use the HUD short form of their names (#335).
-        const text = comboLine(hudLinks(c.links), phone ? COMBO_LINE.phone : COMBO_LINE.desktop);
-        if (combo.textContent !== text) combo.textContent = text;
-        pending.textContent = `${c.pending.toLocaleString("en-US")} x ${c.multiplier}`;
+        const line = trickLine(c.links, { ...(compact ? TRICK_LINE.compact : TRICK_LINE.desktop), oneButton: ob, multiplier: c.multiplier });
+        setCombo(`${line.fold}${line.body}`, line.mult);
+        pending.textContent = c.pending.toLocaleString("en-US");
         combo.dataset.active = "1";
         combo.dataset.fade = "0";
+        combo.dataset.bail = "0";
         bankedAt = null;
       } else {
         if (wasActive) bankedAt = nowMs;
         const line = bankedLine(c.lastBanked, bankedAt, nowMs);
-        if (combo.textContent !== line.text) combo.textContent = line.text;
+        setCombo(line.text, "");
+        if (!line.text) combo.dataset.bail = "0";
         combo.dataset.rm = reducedMotion() ? "1" : "0";
         combo.dataset.fade = line.fade ? "1" : "0";
         pending.textContent = "";
@@ -183,27 +225,44 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
         balanceWrap.style.display = "none";
       }
 
-      // Flash the last move name (and its on-beat tag, M0-07) for a moment.
-      // moveSeq counts every scored move, so a move on any tick of a
-      // multi-tick frame still shows.
+      // E2: the live trick chip (docs/ux/trick-hud.md 6.1). moveSeq counts
+      // every scored move, so a move on any tick of a multi-tick frame still
+      // shows. The times are on the wall clock (`nowMs`), so the PERFECT hit
+      // stop (#338) does not make a tag longer or shorter.
       const last = run.moveSeq !== seenSeq ? run.lastMove : null;
       seenSeq = run.moveSeq;
-      if (last) {
-        tag.textContent = last.beatTag ? `${last.beatTag} ${last.name}` : last.name;
-        tag.dataset.beat = last.beatTag ?? "";
-        tag.dataset.refused = "0";
-        tagUntil = nowMs + 900;
-      }
-      // A dance press that did not count: the reason, in the same place (#264).
       const refused = s.refused && s.refused.seq !== seenRefused ? refusedText(s.refused) : null;
       seenRefused = s.refused?.seq ?? 0;
-      if (refused && !last) {
-        tag.textContent = refused;
-        tag.dataset.beat = "";
-        tag.dataset.refused = "1";
-        tagUntil = nowMs + REFUSED_SHOW_MS;
+      const ignored = s.ignored && s.ignored.seq !== seenIgnored ? s.ignored : null;
+      seenIgnored = s.ignored?.seq ?? 0;
+      const step = stepChip(chipState, { nowMs, trick: s.trick ?? null, manual: s.manual ?? null, move: last, ignored, refused, compact, oneButton: ob, capMeters: TRICK.manualCapMeters });
+      chipState = step.state;
+      const chip = step.chip;
+      if (chip) {
+        if (tagText.textContent !== chip.text) tagText.textContent = chip.text;
+        tag.dataset.look = chip.look;
+        tag.dataset.beat = chip.look === "perfect" ? "PERFECT" : chip.look === "good" ? "GOOD" : "";
+        tag.dataset.refused = chip.look === "refused" ? "1" : "0";
       }
-      tag.style.opacity = nowMs < tagUntil ? "1" : "0";
+      tag.dataset.shown = chip ? "1" : "0";
+      tag.style.opacity = chip ? "1" : "0";
+      // E3: the hold bar of a grab (6.2), the beat pips of a dance (6.3).
+      const bar = chip && chip.look === "progress" ? holdBar(s.trick, s.grab?.hold, TRICK.holdCap) : null;
+      hold.hidden = !bar;
+      if (bar) {
+        holdFill.style.width = `${Math.round(bar.fill * 100)}%`;
+        hold.dataset.capped = bar.capped ? "1" : "0";
+      }
+      const beats = s.style ? (danceNamed(s.style.name)?.beats ?? null) : null;
+      const pip = chip && (chip.look === "progress" || chip.look === "busy") && s.trick?.kind === "dance" ? beatPips(s.style, beats) : null;
+      pips.hidden = !pip;
+      if (pip) {
+        if (pips.childElementCount !== pip.total) {
+          pips.replaceChildren();
+          for (let i = 0; i < pip.total; i += 1) el("span", "hud-pip", pips);
+        }
+        for (let i = 0; i < pip.total; i += 1) pips.children[i].dataset.past = i < pip.past ? "1" : "0";
+      }
 
       // Beat pulse: a ring that flashes on each beat and fades through the beat.
       // Browsers start audio only after a key or a click, and a gamepad
@@ -237,6 +296,6 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
       notice.hidden = !statusText;
       notice.dataset.round = statusText ? "1" : "0";
     },
-    elements: { score, timer, roundGoals: roundGoals.elements.list, goalMet: roundGoals.elements.met, combo, pending, tag, pulse, edge, notice, goal, styleWrap, styleText, styleFill, balanceWrap, balanceDot },
+    elements: { score, timer, roundGoals: roundGoals.elements.list, goalMet: roundGoals.elements.met, combo, pending, tag, tagText, hold, pips, pulse, edge, notice, goal, styleWrap, styleText, styleFill, balanceWrap, balanceDot },
   };
 }

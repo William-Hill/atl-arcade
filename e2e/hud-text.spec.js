@@ -1,12 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { BANKED_FADE_MS, BANKED_SHOW_MS } from "../src/ui/hud.js";
-import { COMBO_LINE } from "../src/sim/skate/combo.js";
+import { TRICK_LINE } from "../src/ui/trick-hud-text.js";
 import { LINE_RESTART } from "../src/landmarks/play.js";
 import { rideLineRestart } from "./landmark-rides.js";
 
 // The HUD text of #269: a long combo line keeps a fixed length, the "+N" of
-// a bank fades after a fixed time, and a restarted ring line says so.
+// a bank fades after a fixed time, and a restarted ring line says so. The
+// trick line of #330 (docs/ux/trick-hud.md 5.3) folds the older links into
+// "+N" at the start and ends with the multiplier " xM".
 
 const DATA = JSON.parse(readFileSync(new URL("../levels/beltline-eastside/landmarks.json", import.meta.url), "utf8"));
 const shot = (name) => `e2e/__screenshots__/hud-text-${name}.png`;
@@ -39,21 +41,22 @@ async function longCombo(page) {
 }
 
 for (const size of [
-  { name: "desktop", viewport: { width: 1280, height: 720 }, k: COMBO_LINE.desktop },
-  { name: "phone", viewport: { width: 844, height: 390 }, k: COMBO_LINE.phone },
+  { name: "desktop", viewport: { width: 1280, height: 720 }, k: TRICK_LINE.desktop },
+  { name: "phone", viewport: { width: 844, height: 390 }, k: TRICK_LINE.compact },
 ]) {
   test.describe(`the combo line, ${size.name}`, () => {
     test.use({ viewport: size.viewport });
 
-    test(`a long combo shows its last links and the count, then the +N fades (${size.name})`, async ({ page }) => {
+    test(`a long combo shows its last links after the +N fold, then the banked +N fades (${size.name})`, async ({ page }) => {
       const errors = collectErrors(page);
       const end = await longCombo(page);
       expect(end.active).toBe(true);
       expect(end.links).toBeGreaterThan(size.k.maxLinks);
-      expect(end.text.startsWith("… ")).toBe(true);
-      expect(end.text.endsWith(` (${end.links})`)).toBe(true);
-      expect(end.text.length).toBeLessThanOrEqual(size.k.maxChars + ` (${end.links})`.length);
-      expect(end.text.split(" + ").length).toBeLessThanOrEqual(size.k.maxLinks);
+      const shown = end.text.split(" + ").length;
+      expect(shown).toBeLessThanOrEqual(size.k.maxLinks);
+      expect(end.text.startsWith(`+${end.links - shown} `)).toBe(true);
+      expect(end.text).toMatch(/ x\d+$/);
+      expect(end.text.length).toBeLessThanOrEqual(size.k.maxChars);
       // The line stays on one line of the HUD.
       const box = await page.locator("#hud-combo").boundingBox();
       const lineHeight = await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById("hud-combo")).fontSize) * 1.6);

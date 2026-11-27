@@ -70,7 +70,7 @@ const STYLE = `
 #settings-menu #settings-reload[hidden] { display: none; }
 #settings-menu #settings-progress-note { color: #ffd166; margin: 0 0 8px; }
 #settings-menu #settings-progress-note[hidden] { display: none; }
-#settings-menu #settings-reset, #settings-menu #settings-controls-open, #settings-reset-dialog button {
+#settings-menu #settings-reset, #settings-menu #settings-controls-open, #settings-menu #settings-tricks-open, #settings-reset-dialog button {
   min-height: 44px; padding: 8px 14px; border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 8px;
   background: #22222e; color: #f3f3f7; font: 600 15px system-ui, sans-serif; cursor: pointer;
 }
@@ -126,7 +126,7 @@ function option(parent, { type, name, value, id, title, hint }) {
 // the reduced-motion choice at once. `progress` (#220), when given, adds
 // "Reset progress": { saved() is false when the landmark progress does not
 // reach the browser storage, onReset() clears it after the confirm }.
-export function createSettingsMenu({ root = document.body, running, choice, sources, autoQuality, post = () => ({ kind: null, look: running.look }), onSave = () => {}, onLive = () => {}, onMotion = () => {}, deviceMotion = () => false, reload = () => {}, canOpen = () => true, onChange = () => {}, progress = null, controls = null }) {
+export function createSettingsMenu({ root = document.body, running, choice, sources, autoQuality, post = () => ({ kind: null, look: running.look }), onSave = () => {}, onLive = () => {}, onMotion = () => {}, deviceMotion = () => false, reload = () => {}, canOpen = () => true, onChange = () => {}, progress = null, controls = null, tricks = null }) {
   if (!document.getElementById("settings-menu-style")) el("style", document.head, { id: "settings-menu-style", textContent: STYLE });
 
   let state = normalizeSettings(choice);
@@ -189,6 +189,17 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
     el("legend", controlsSet, { textContent: "Controls" });
     controlsButton = el("button", controlsSet, { id: "settings-controls-open", type: "button", className: "settings-controls-open", textContent: "Keys, buttons, and tricks" });
     controlsButton.setAttribute("aria-haspopup", "dialog");
+  }
+
+  // The trick list (#330, docs/ux/trick-hud.md 9.1): a button that closes
+  // this dialog and opens the trick list dialog. `tricks.open()` opens it.
+  let tricksButton = null;
+  if (tricks) {
+    const tricksSet = controlsButton ? controlsButton.parentElement : el("fieldset", dialog, { id: "settings-controls" });
+    if (!controlsButton) el("legend", tricksSet, { textContent: "Controls" });
+    tricksButton = el("button", tricksSet, { id: "settings-tricks-open", type: "button", className: "settings-controls-open", textContent: "Trick list" });
+    tricksButton.style.marginLeft = controlsButton ? "8px" : "0";
+    tricksButton.setAttribute("aria-haspopup", "dialog");
   }
 
   // Progress (#220): the notice when the storage fails, and "Reset progress"
@@ -338,6 +349,10 @@ export function createSettingsMenu({ root = document.body, running, choice, sour
   controlsButton?.addEventListener("click", () => {
     close();
     controls.open();
+  });
+  tricksButton?.addEventListener("click", () => {
+    close();
+    tricks.open();
   });
   closeButton.addEventListener("click", () => close());
   reloadButton.addEventListener("click", () => reload(pending, stored ? null : { ...state }));

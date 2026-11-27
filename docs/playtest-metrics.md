@@ -70,3 +70,18 @@ An Autopilot playtest (owner choice 2026-11-25) adds extra evidence; its kit and
 Autopilot runs (2026-11-26, agent with Jev, not humans): axis rule 204 trials, 99.0% as wanted, Up from push 0.0% (0 of 50), L/R from carves 1.1% (1 of 92); GDD rule 257 trials, 99.6%, 0.0% (0 of 45), 0.9% (1 of 117). The agent's timing does not separate the 2 rules; the first-combo times (245.8 s, 15.8 s) are not new-player times. Details: `prototypes/trick-input/REPORT.md`.
 
 **Verdict: PROCEED (2026-11-26, owner choice, on the Autopilot evidence).** The human playtest is deferred to a later date; the carve leak (7.1% predicted on the keyboard) and the time of a new player to the first combo are not measured yet. See `docs/decisions.md` (2026-11-26) and the checklist in `prototypes/trick-input/REPORT.md`.
+
+Autopilot runs in the real game (2026-11-27, `main` at `bb08aaff`, after wave 2: #402, #401, #403, #404; agent with Jev, not humans; BeltLine Eastside skatepark, `?run=free`; no game code changed):
+
+| Run | Focus | Trials | Tricks as wanted | Up from push | L/R from carves | Rail stance as wanted | Cost |
+|---|---|---|---|---|---|---|---|
+| 1 | Dances and grabs | 21 | 90.5% (19 of 21) | 0.0% (0 of 1) | 0.0% (0 of 5) | not tested | $2.02 |
+| 2 | Rails and manuals | 34 | 91.2% (31 of 34) | none | 0.0% (0 of 2) | 100% (15 of 15 snaps: n 2, l 3, r 4, u 4, d 2) | $3.86 |
+
+- The game gave no trick with a wrong direction that the log can prove. All 5 misses are timing misses: 4 presses gave no trick (2 late Q presses in a short hop, 2 F presses in the air with no rail in reach), and in run 2 i33 a Q press in a hop gave no grab, so the log took the next Manual link (n) as its result.
+- Run 2 banked combos of grind, manual, and grab, but the time to the first 3-link combo is not measured: the page script read the combo links after the bank cleared them. The script now keeps the links of the frame before the bank.
+- The sample is small: about 4.5 and 4 minutes of play. In run 2 the headless game stepped about 0.4 s of sim for each frame, so the agent could not time presses to the frame.
+- Run 1 has 8 more trials from the agent's setup probe (i0 to i7); they are not in the numbers above.
+- The raw reports are the agent's own text and are kept as they are. Where they differ from the rows, the rows count: the run 1 report says that grabs from hops worked in all 5 directions, but the rows show a grab only for l (i23) and u (i25); r (i24) gave a dance, and d (i26) and n (i27) gave no trick.
+- The page script now matches a scored move only to a button that can start it, and never to a press during a busy dance; it keeps a result seen before the next intent; it counts a trial that is not resolved yet as open; and it counts the first combo only for a bank of 3 or more links with a manual. Runs 1 and 2 used the script before these fixes. In run 2, i33 (d, result n from a Manual move) is a miss that the fixed script gives as no trick.
+- The intent log is a page script, `reports/autopilot/trick-game-intent-page.mjs`; it reads `skater.trick` and the key events. Raw data: `reports/autopilot/trick-game-2026-11-27-run{1,2}-*`.

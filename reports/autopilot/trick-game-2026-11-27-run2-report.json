@@ -1,0 +1,201 @@
+{
+ "outcome": "explored",
+ "summary": "The agent played the beltline-eastside skatepark rail lane in 4 episodes: about 245 s of game time (60 + 66 + 85 + 34 s, the last three continued with restart=False). That is well short of the 10 minutes asked. The game ran at only about 2\u20133 frames per second of game time (each frame stepped about 0.4 s of sim), so each episode took 3\u20135 times its game time in wall time, and the budget ran out.\n\nJev made 58, 217, 347 and 294 decisions:\n- before each rail or ledge, a grind stance among n/l/r/u/d, or keep GRIND held to carry the last stance;\n- after the long rail, a manual then a grab in n/l/r/u/d, or let go;\n- on the return lane, a flat manual in n/l/r/u/d, or just skate.\n\nThe harness called atl.playtest.intend(dir) before every Q/F press. No research probe called it.\n\n**Final `metrics()`** (cumulative since page load): trials 34, wanted 31, wantedShare 0.912, noTrick 2, noTrickBusy 0, intentsWithoutPress 4, pushTrials 0, carveTrials 2, unwantedLRFromCarve 0 (lrFromCarve 0), banks 14, firstCombo null.\n\n**Grind stance trials that snapped a rail or ledge:** 15, and every one came out in the intended stance: n 2, l 3, r 4, u 4, d 2. They were on the end rail, the line ledge and the long rail, at 8\u201311 m/s, after a straight run-up from u\u224829 (about 15 m before the end rail).\n\n**Trials where the result was not the intended direction (3):**\n- **i3** (grind, intended n): no result (timeout). F was pressed in the air at 11.2 m/s with no rail in range, so there was no snap.\n- **i14** (grind, intended d): no result (timeout). Held ['l','d'], in the air at 9.7 m/s; there was no snap.\n- **i33** (trick/Q in the air, intended d): result 'n', kind 'manual', source 'move'. The grab never registered and the trial took the Manual link's dir n.\n\nAll three are timing failures (an F press with no rail in reach, a Q press at the wrong moment of a 0.5 s hop that 0.4 s frames can't time). None is a wrong direction picked by the game.\n\nCombos with a manual were banked: the trace shows Rail/Ledge Grind + Hop + Manual + grab (for example \"... Manual, Tuck Knee\" in episode 3). metrics().firstCombo stayed null, even though the game banked 14 combos with 3 or more links. No errors were logged by the game.",
+ "evidence": [
+  "Final probe after episode 4: metrics {trials 34, wanted 31, wantedShare 0.912, noTrick 2, noTrickBusy 0, intentsWithoutPress 4, pushTrials 0, carveTrials 2, lrFromCarve 0, banks 14, firstCombo None}. Misses: i3 {intended n, result None, button grind, state air, speed 11.2, timeout}; i14 {intended d, result None, button grind, held [l,d], state air, speed 9.74, timeout}; i33 {intended d, result n, kind manual, button trick, held [d], state air, speed 9.68, source move}.",
+  "rows() tallied by (button, kind, intended, result): grind/grind d->d 2, l->l 3, n->n 2, r->r 4, u->u 4. Grind presses that ended as ground manuals: l->l 2, n->n 2, u->u 1. Grabs: d->d 3, n->n 5, u->u 1. Dances: l->l 1, r->r 1. trick/manual d->n 1.",
+  "trace2 (t 26-46): snapped end_rail stance r; long_rail stance n; end_rail u, then ledge u, then long_rail u; then manual_then_grab_d. trace3 (t 27-81): end_rail d, ledge d, long_rail n, end_rail r, ledge r, long_rail r, end_rail u, long_rail l, plus grabs n/l/r/u/d after manuals. trace4 t=29: end_rail stance l, then keep_grind_held carried onto the long rail.",
+  "Banked combos in the traces include grind + manual + grab, e.g. episode 3: '... Rail Grind, Hop, Manual, Tuck Knee'. Episode 3's last bank was [Rail Makio Grind, Hop, Ledge Grind, Hop, Rail Soul Grind, Hop, Manual, Hop], which has no grab link (miss i33).",
+  "Frame rate: a probe measured 20 sim ticks (0.33 s of game time) per page frame and about 0.9 s of wall time per frame. In episodes, executor steps that waited on the game took 400-600 ms.",
+  "Episode 1 (earlier harness, frame-blind) made no grind trials: every option 'left the lane'. It was fixed by acting once per observation, steering gently, and tapping the direction keys.",
+  "Game error log: no errors in episodes 1-4.",
+  "Direct changes in research probes only, before episode 1: atl.resetSkater teleported the skater onto the rail lane (u 26-33, v -3.5), with test Shift/Space/F presses and no intend calls. The episodes made no direct changes."
+ ],
+ "findings": [
+  "Grind stance direction worked in every snapped grind: 15 of 15 snaps (n 2, l 3, r 4, u 4, d 2) took the intended stance, with the direction key tapped in the same frame as Space+F. Carry-over also worked as the code says: with F held from the end rail, the ledge and the long rail snapped with the same stance (u,u,u; r,r,r; d,d), and 'n' carried as n.",
+  "metrics().firstCombo stayed null even though banks reached 14 and banked combos had 3+ links (grind + manual + grab, and the 33-link ledge resnap chain). The hook's firstCombo reads atl.combo.links.length at the bank event. That is probably 0 by then (the links are cleared at the bank), so firstCombo may never fire. Worth checking in the intent-page script.",
+  "A trial counts as 'wanted' when an F press lands short of the rail and starts a ground manual with the same direction (5 trials: l,l,n,n,u). wantedShare therefore overstates grind-stance coverage. Report grind stances from grind snaps, not from metrics alone.",
+  "An F pressed in the air with no rail in reach gives no trick at all (grindNeedsRepress), and the trial times out (i3, i14). A Q press at the wrong moment of a ~0.5 s hop gives no grab, and the trial takes the previous Manual link as its result (i33: d -> n, source 'move'). These are timing failures under ~0.4 s frames, not direction errors.",
+  "A slow ledge grind (2.5 m/s floor) falls and resnaps over and over. The result was a 33-link 'Ledge Grind, Hop' chain at about 2.5 m/s (episode 3, t\u224829-36), with repeat decay to 0 points.",
+  "Not covered for lack of time: the full 10 minutes (only about 4 min played), and flat manuals on the return lane (Jev chose just_skate there)."
+ ],
+ "run": "20261127-103613",
+ "project": "atl-arcade",
+ "prompt": "Play Skate ATL for 10 minutes to test the trick input on rails and ledges. The keys: W or Shift pushes, A and D steer, S brakes, Space jumps, F grinds (hold F; off a rail, F gives a manual), Q is TRICK, E is SPIN. A direction key (W, A, S, or D) held just before F, or pressed at the same time, picks the grind stance on a rail: n, l, r, u, or d. Before EVERY press of Q, E, or F in play, call `game.call(\"atl.playtest\", \"intend\", <dir>)` with the direction you want; do not call it in a research probe. Spend most of the time on grinds: find the rails and ledges of the skatepark, line up straight with the rail from 15 m or more, push to a high speed, jump just before the rail, and hold F with the direction key. Mix all 5 stance directions on the rails. Also bank combos of 3 links or more with a manual: grind, land, hold F for a manual, then jump and grab with Q. Keep your speed up; a stopped skater does no trick. At the end, call `game.call(\"atl.playtest\", \"metrics\")` and report the result, and every trial where the result was not the intended direction.",
+ "seconds": 1827.4,
+ "episodes": 4,
+ "tool_seconds": 1185.2,
+ "stopped": null,
+ "level_modified": [],
+ "research_modified": [
+  {
+   "t": 0.13,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      294.527,
+      24.4,
+      -10.607
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 6.73,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      294.527,
+      24.4,
+      -10.607
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 15.27,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      287.899,
+      24.26,
+      -8.361
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 17.52,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      282.216,
+      24.26,
+      -6.434
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 20.1,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      289.793,
+      24.3,
+      -9.002
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 21.63,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      291.687,
+      24.3,
+      -9.645
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 23.3,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      293.107,
+      24.3,
+      -10.126
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  },
+  {
+   "t": 25.05,
+   "object": "atl",
+   "name": "atl",
+   "call": "resetSkater",
+   "parameters": {
+    "args": [
+     [
+      291.687,
+      24.3,
+      -9.645
+     ],
+     3.469
+    ]
+   },
+   "probe": true
+  }
+ ],
+ "agent": "claude",
+ "model": "claude-opus-5-5",
+ "fast": false,
+ "cost_usd": 3.862712,
+ "turns": 63,
+ "background_findings": 19,
+ "reading_usage": {
+  "claude-sonnet-5-5": {
+   "calls": 91,
+   "input": 198,
+   "output": 67994,
+   "cache_read": 4065134,
+   "cache_write": 531190
+  }
+ },
+ "episode_stats": [
+  {
+   "decisions": 58,
+   "play_seconds": 60.2
+  },
+  {
+   "decisions": 217,
+   "play_seconds": 66.5
+  },
+  {
+   "decisions": 347,
+   "play_seconds": 85.3
+  },
+  {
+   "decisions": 294,
+   "play_seconds": 34.0
+  }
+ ]
+}

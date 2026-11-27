@@ -1,0 +1,95 @@
+{
+  "purpose": "Source images for the MetaHuman conform of Nia (bare body) and for her garments made in the same pose, camera and frame. Research spike, not a game asset.",
+  "date": "2026-11-27",
+  "credits": "The author generated these images with Tripo Studio (Nano Banana Pro edits) from the project's own Nia concept docs/characters/concept/nia-realistic/nia-real-tpose-front.png. No third-party art is in them.",
+  "images": [
+    {
+      "file": "source-nia-real-tpose-front.png",
+      "tool": "copy",
+      "use": "The input: a copy of docs/characters/concept/nia-realistic/nia-real-tpose-front.png (see its provenance.json).",
+      "credits_spent": 0
+    },
+    {
+      "file": "a-bare-apose.png",
+      "tool": "Tripo Studio Agentic Canvas (studio.tripo3d.ai/canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a), Generate Image node, model Nano Banana Pro, 1 image, aspect 3:4, output 896 x 1200 WebP, saved as PNG",
+      "input_image": "source-nia-real-tpose-front.png",
+      "prompt": "Edit the reference image. Keep the SAME young woman: the same face, the same dark skin tone, the same body proportions and height, the same photoreal 3D character render style, the same soft studio lighting, and a plain white background. Change ONLY these things. POSE: a symmetric A-pose, front view, facing the camera. The arms are straight and point down and out at about 45 degrees from the body, with a clear gap between each arm and the torso at the armpits. The legs are straight and apart, feet at shoulder width, with a clear gap between the thighs. HANDS: open and flat, palms toward the thighs, all five fingers spread apart with visible gaps between the fingers, the thumb apart from the hand. HEAD: completely bald, a smooth bare scalp with no hair, no braids, no bun; no eyebrows; no earrings, no jewelry. Neutral face, mouth closed, eyes open, looking at the camera. CLOTHES: remove the jacket, the crop top, the joggers, the knee pads, the wristband and the roller skates. She wears only a plain matte light-gray form-fitting sports crop top and plain fitted light-gray bike shorts that end at mid-thigh. Bare feet, flat on the floor, toes visible. The full body from the top of the head to the toes is in the frame, centered, with a small margin.",
+      "credits_spent": 0,
+      "button_price": "20 shown struck through, 0 charged",
+      "tries": 1,
+      "use": "The conform source: bare body, A-pose, open hands, no hair."
+    },
+    {
+      "file": "b-dressed-apose.png",
+      "tool": "Tripo Studio Agentic Canvas (studio.tripo3d.ai/canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a), Generate Image node, model Nano Banana Pro, 1 image, aspect 3:4, output 896 x 1200 WebP, saved as PNG",
+      "input_image": "a-bare-apose.png",
+      "prompt": "Edit the reference image only. Keep the SAME woman, the SAME A-pose, the SAME camera, the SAME frame, and the SAME size and place of the body in the frame. Do NOT move the arms, the legs, the hands or the head. The hands stay open with the fingers apart. The head stays bald with a smooth scalp and no hair. Dress her in this outfit, worn over the body: a cropped light peach-orange bomber jacket, open at the front, with long full sleeves that end in ribbed cuffs at the wrists, the jacket hem at the bottom of the ribs; under the jacket a plain cream crop top; loose dark-green jogger sweatpants with a drawstring waist, elastic cuffs at the lower calf; cream knee pads with small gold studs over the joggers at the knees; a dark-green sweat wristband on her right wrist (the left side of the image); cream leather lace-up quad roller skates with gold wheels and peach toe stops. The skates are on her feet at the same place in the frame, the wheels on the floor. Same photoreal 3D character render style, same soft studio lighting, plain white background, full body in the frame.",
+      "credits_spent": 0,
+      "button_price": "20 shown struck through, 0 charged",
+      "tries": 1,
+      "use": "The dressed sheet. Same bounding box as a-bare-apose.png (x 83-816, y 77-1160; skates to y 1169). The wristband is on the left wrist, not the right wrist that the prompt asked for."
+    },
+    {
+      "file": "c-jacket.png",
+      "tool": "Tripo Studio Agentic Canvas (studio.tripo3d.ai/canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a), Generate Image node, model Nano Banana Pro, 1 image, aspect 3:4, output 896 x 1200 WebP, saved as PNG",
+      "input_image": "b-dressed-apose.png",
+      "prompt": "Edit the reference image only. Erase the woman: her head, her skin, her hands, her torso and her legs. Erase the crop top, the joggers, the knee pads, the wristband and the roller skates. Keep ONLY the peach-orange cropped bomber jacket and do not move it: it stays at the SAME place and the SAME size in the frame, in the SAME A-pose shape as worn. THE TWO SLEEVES POINT DOWN AND OUT AT ABOUT 45 DEGREES, exactly as in the reference. The sleeves do NOT hang straight down and do NOT point straight sideways. The jacket stays open at the front, as worn. NOT a product photo, NOT a flat lay, NOT on a hanger, NOT on a mannequin. The jacket is an empty hollow shell that floats in the air in the same A-pose. Dark inside is visible at the collar, in the open front, in the two sleeve cuffs and at the hem. Plain light-gray background.",
+      "credits_spent": 0,
+      "button_price": "20 shown struck through, 0 charged",
+      "tries": 1,
+      "use": "Garment source: jacket, same place in the frame."
+    },
+    {
+      "file": "c-croptop.png",
+      "tool": "Tripo Studio Agentic Canvas (studio.tripo3d.ai/canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a), Generate Image node, model Nano Banana Pro, 1 image, aspect 3:4, output 896 x 1200 WebP, saved as PNG",
+      "input_image": "b-dressed-apose.png",
+      "prompt": "Edit the reference image only. Erase the woman: her head, her skin, her arms, her hands and her legs. Erase the bomber jacket, the joggers, the knee pads, the wristband and the roller skates. Keep ONLY the plain cream crop top and do not move it: it stays at the SAME place and the SAME size in the frame, as worn on the body. Complete the parts of the crop top that the jacket hid: the two shoulder straps and the sides, with the same cream fabric. NOT a product photo, NOT a flat lay, NOT on a hanger, NOT on a mannequin. The crop top is an empty hollow shell that floats in the air at the same place. Dark inside is visible at the neckline, in the two armholes and at the hem. Plain light-gray background.",
+      "credits_spent": 0,
+      "button_price": "20 shown struck through, 0 charged",
+      "tries": 3,
+      "use": "Garment source: crop top. Enlarged and centered (not at the sheet place). Two more tries with stronger placement wording were also enlarged; one kept all garments but the jacket. Scale must come from the sheet."
+    },
+    {
+      "file": "c-joggers.png",
+      "tool": "Tripo Studio Agentic Canvas (studio.tripo3d.ai/canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a), Generate Image node, model Nano Banana Pro, 1 image, aspect 3:4, output 896 x 1200 WebP, saved as PNG",
+      "input_image": "b-dressed-apose.png",
+      "prompt": "Edit the reference image only. Erase the woman: her head, her skin, her arms, her hands, her torso and her lower legs. Erase the bomber jacket, the crop top, the knee pads, the wristband and the roller skates. Keep ONLY the dark-green jogger sweatpants and do not move them: they stay at the SAME place and the SAME size in the frame, in the SAME A-pose shape as worn, the two legs apart exactly as in the reference. Rebuild the parts of the joggers that the knee pads hid, with the same green fabric. NOT a product photo, NOT a flat lay, NOT on a hanger, NOT on a mannequin. The joggers are an empty hollow shell that floats in the air in the same A-pose. Dark inside is visible at the waistband and in the two ankle cuffs. Plain light-gray background.",
+      "credits_spent": 0,
+      "button_price": "20 shown struck through, 0 charged",
+      "tries": 1,
+      "use": "Garment source: joggers, close to the sheet place."
+    },
+    {
+      "file": "c-kneepads.png",
+      "tool": "Tripo Studio Agentic Canvas (studio.tripo3d.ai/canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a), Generate Image node, model Nano Banana Pro, 1 image, aspect 3:4, output 896 x 1200 WebP, saved as PNG",
+      "input_image": "b-dressed-apose.png",
+      "prompt": "Edit the reference image only. Erase the woman: her head, her skin, her arms, her hands, her torso and her legs. Erase the bomber jacket, the crop top, the green joggers, the wristband and the roller skates. Keep ONLY the TWO cream knee pads with gold studs and do not move them: they stay at the SAME places and the SAME size in the frame, at knee height, apart exactly as in the reference. NOT a product photo, NOT a flat lay, NOT on a mannequin. Each knee pad is an empty hollow curved shell that floats in the air at the same place. Dark inside is visible at the top and the bottom openings and at the back of each pad, where the elastic straps go around the knee. Plain light-gray background.",
+      "credits_spent": 0,
+      "button_price": "20 shown struck through, 0 charged",
+      "tries": 1,
+      "use": "Garment source: knee pads, at the sheet place."
+    },
+    {
+      "file": "c-skates.png",
+      "tool": "Tripo Studio Agentic Canvas (studio.tripo3d.ai/canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a), Generate Image node, model Nano Banana Pro, 1 image, aspect 3:4, output 896 x 1200 WebP, saved as PNG",
+      "input_image": "b-dressed-apose.png",
+      "prompt": "Edit the reference image only. Erase the woman: her head, her skin, her arms, her hands, her torso and her legs. Erase the bomber jacket, the crop top, the green joggers, the knee pads and the wristband. Keep ONLY the TWO cream lace-up quad roller skates with gold wheels and peach toe stops, and do not move them: they stay at the SAME places and the SAME size in the frame, at the bottom of the frame, apart exactly as in the reference, the wheels on the floor. NOT a product photo, NOT on a shelf, NOT turned to the side. Each skate boot is an empty hollow shell: a dark opening is visible at the top of each boot, where the ankle goes in. Plain light-gray background.",
+      "credits_spent": 0,
+      "button_price": "20 shown struck through, 0 charged",
+      "tries": 1,
+      "use": "Garment source: skates, at the sheet place."
+    },
+    {
+      "file": "(not kept) wristband",
+      "tool": "Tripo Studio Agentic Canvas (studio.tripo3d.ai/canvas, project 01a21e19-ceb3-783f-ae71-b874bc63439a), Generate Image node, model Nano Banana Pro, 1 image, aspect 3:4, output 896 x 1200 WebP, saved as PNG",
+      "credits_spent": 0,
+      "use": "Failed: the result kept the whole woman and added a large separate tube. The wristband is modeled in Blender instead."
+    },
+    {
+      "file": "review-board.jpg",
+      "tool": "Python PIL contact sheet of the files above",
+      "credits_spent": 0,
+      "use": "Owner review. The owner approved all images on 2026-11-27."
+    }
+  ]
+}

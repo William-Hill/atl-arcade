@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-27T23:32:01.440Z",
+  "label": "mhbare-high-gpu",
+  "glb": "/Users/william-meroxa/Development/nia-fit/bake/nia-mh-bare-high.glb",
+  "glbBytes": 5857984,
+  "swapped": "skater-D0jBOLMn.glb",
+  "gpu": "machine (ANGLE Metal)",
+  "tier": "high",
+  "look": "pbr",
+  "viewer": {
+    "info": {
+      "triangles": 1500,
+      "bones": 79,
+      "skinned": true,
+      "animations": 24,
+      "face": false,
+      "meshMin": [
+        -0.17808915674686432,
+        1.1634001731872559,
+        -0.1334584355354309
+      ],
+      "meshMax": [
+        0.1796543300151825,
+        1.3553235530853271,
+        0.1171291172504425
+      ],
+      "min": [
+        -0.1609917960125635,
+        -0.014141738821437272,
+        -0.510434518184287
+      ],
+      "max": [
+        0.22702943522298766,
+        1.7991031286779626,
+        0.5091405715129018
+      ]
+    },
+    "error": null,
+    "clips": [
+      "air_japan",
+      "air_liukang",
+      "air_mute",
+      "bail",
+      "carve_left",
+      "carve_right",
+      "coast",
+      "dance_bankhead",
+      "dance_crisscross",
+      "dance_prep",
+      "dance_sitspin",
+      "dance_snaplean",
+      "dance_spin",
+      "dance_swagsurf",
+      "dance_walkitout",
+      "grind_frontside",
+      "grind_soul",
+      "grind_unity",
+      "idle",
+      "jump",
+      "land",
+      "manual",
+      "push",
+      "ride_back"
+    ],
+    "frame": {
+      "frames": 297,
+      "meanMs": 16.7,
+      "p95Ms": 16.8,
+      "medianFps": 59.9,
+      "meanFps": 60
+    },
+    "errors": []
+  },
+  "game": {
+    "finished": true,
+    "wallSeconds": 15,
+    "frame": {
+      "frames": 896,
+      "meanMs": 16.7,
+      "p95Ms": 16.7,
+      "medianFps": 59.9,
+      "meanFps": 60
+    },
+    "calls": 346,
+    "triangles": 1405456,
+    "skaterModel": {
+      "name": "nia",
+      "loaded": true,
+      "error": null
+    },
+    "errors": []
+  }
+}

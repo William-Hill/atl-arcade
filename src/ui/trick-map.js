@@ -87,13 +87,18 @@ export function buttonName(action, device, bindings) {
 // direction actions, the left stick (`dirStick`), and the d-pad.
 const DIR_ORDER = ["dirUp", "dirLeft", "dirDown", "dirRight"];
 const ARROW_KEYS = { dirUp: "ArrowUp", dirLeft: "ArrowLeft", dirDown: "ArrowDown", dirRight: "ArrowRight" };
+const DPAD_BUTTONS = { dirUp: 12, dirLeft: 14, dirDown: 13, dirRight: 15 };
 export function inputLine(device, bindings) {
   if (device === "touch") return `Flick the button. A tap gives the ${ARROWS.n} trick.`;
   if (device === "gamepad") {
     const g = bindings?.gamepad ?? {};
     const stick = g.dirStick !== false;
-    const dpad = DIR_ORDER.some((a) => (g.buttons?.[a] ?? []).length > 0);
-    const src = stick && dpad ? "Left stick or d-pad" : stick ? "Left stick" : dpad ? "D-pad" : "Direction";
+    const first = DIR_ORDER.map((a) => g.buttons?.[a]?.[0]);
+    const bound = first.some((i) => Number.isInteger(i));
+    // The d-pad, or the names of other buttons that a remap gave the directions.
+    const dpad = bound && DIR_ORDER.every((a, i) => first[i] === DPAD_BUTTONS[a]);
+    const buttons = bound ? (dpad ? "d-pad" : first.map((i) => (Number.isInteger(i) ? padButtonName(i) : "?")).join(" ")) : null;
+    const src = stick && buttons ? `Left stick or ${buttons}` : stick ? "Left stick" : buttons ? (dpad ? "D-pad" : buttons) : "Direction";
     return `${src} + button`;
   }
   const kb = bindings?.keyboard ?? {};

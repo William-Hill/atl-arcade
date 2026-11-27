@@ -75,6 +75,10 @@ describe("#330 E6 the trick list", () => {
     expect(inputLine("gamepad", base)).toBe("Left stick or d-pad + button");
     expect(inputLine("gamepad", applyDirSource(base, { gamepad: "stick" }))).toBe("Left stick + button");
     expect(inputLine("gamepad", applyDirSource(base, { gamepad: "dpad" }))).toBe("D-pad + button");
+    // A remap of the 4 directions to other buttons names those buttons (up, left, down, right).
+    const custom = createBindings({ gamepad: { dirStick: false, buttons: { dirUp: [3], dirLeft: [2], dirDown: [0], dirRight: [1] } } });
+    expect(inputLine("gamepad", custom)).toBe("Y X A B + button");
+    expect(inputLine("gamepad", { ...custom, gamepad: { ...custom.gamepad, dirStick: true } })).toBe("Left stick or Y X A B + button");
   });
 
   it("a pad remap changes the button names", () => {

@@ -3266,3 +3266,4 @@ Design: `docs/ux/trick-hud.md` (PR #395). Rendering stays out of the sim: the te
 - The stance and the link steps show the rail pin of the grind step.
 - The saved value after all the steps is now "done-v2". A player with the old value "done" (the first 5 moves) sees only the 3 new steps. `?teach=<step>` starts at a step (for the tests).
 - Owner choice (2026-11-27): #331 closes when its code criteria are met. The review of the prompt words by real skaters goes to a new issue.
+- Perf (2026-11-27, `npm run perf:check` on this branch): the draw calls, triangles, geometries, textures, and heap are in the budget on every tier. `firstDownloadMB` is over the cap on low/pbr (4.95 > 4.8), phone/pbr (4.52 > 4.3), and high/pbr (5.16 > 5.0). This branch adds 2.2 KB of JavaScript (main bundle 1,254,381 bytes on `main`, 1,256,630 bytes here), so the overage was already on `main`. This PR does not change the caps. The teach steps add no draw call (plain DOM).

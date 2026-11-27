@@ -7,6 +7,7 @@ import { formatClock } from "../sim/skate/goals.js";
 import { isCompact, startHint } from "./layout.js";
 import { nearEdge } from "../level/edge-fence.js";
 import { createHudGoals } from "./hud-goals.js";
+import { hudLinks } from "./trick-names.js";
 
 // The hint near the level edge fence (#229).
 export const EDGE_HINT = "Edge of the map. Turn around and keep skating.";
@@ -151,7 +152,8 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
       score.textContent = c.score.toLocaleString("en-US");
       if (c.active) {
         const phone = isCompact(window.innerWidth, window.innerHeight);
-        const text = comboLine(c.links, phone ? COMBO_LINE.phone : COMBO_LINE.desktop);
+        // The links use the HUD short form of their names (#335).
+        const text = comboLine(hudLinks(c.links), phone ? COMBO_LINE.phone : COMBO_LINE.desktop);
         if (combo.textContent !== text) combo.textContent = text;
         pending.textContent = `${c.pending.toLocaleString("en-US")} x ${c.multiplier}`;
         combo.dataset.active = "1";

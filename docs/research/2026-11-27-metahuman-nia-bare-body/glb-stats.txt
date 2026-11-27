@@ -1,0 +1,68 @@
+== nia-shipped-b050f969
+/Users/william-meroxa/Development/nia-fit/bake/nia-shipped-b050f969.glb: 5.90 MB, 27494 verts, 33789 tris, skins 73, 24 anims
+  tripo_mesh_12076de5-cade-401d-b957-dbb11cc9238e: 26470 v, 32253 t, 0 morphs, 4 w/v
+  tripo_mesh_12076de5-cade-401d-b957-dbb11cc9238e: 1024 v, 1536 t, 0 morphs, 4 w/v
+  tex tripo_node_f03779f7-4732-4d78-b475-4219210255d9_Normal_Bake image/jpeg 2048x2048 0.99 MB
+  tex tripo_image_12076de5-cade-401d-b957-dbb11cc9238e_0_0 image/jpeg 4096x4096 3.59 MB
+  tex nia-real-tripo_metallic-nia-real-tripo_roughness image/jpeg 2048x2048 0.41 MB
+== nia-shipped-b050f969-1024
+/Users/william-meroxa/Development/nia-fit/bake/nia-shipped-b050f969-1024.glb: 1.55 MB, 27489 verts, 33789 tris, skins 73, 24 anims
+  tripo_mesh_12076de5-cade-401d-b957-dbb11cc9238e: 26465 v, 32253 t, 0 morphs, 4 w/v
+  tripo_mesh_12076de5-cade-401d-b957-dbb11cc9238e: 1024 v, 1536 t, 0 morphs, 4 w/v
+  tex tripo_node_f03779f7-4732-4d78-b475-4219210255d9_Normal_Bake image/jpeg 1024x1024 0.26 MB
+  tex tripo_image_12076de5-cade-401d-b957-dbb11cc9238e_0_0 image/jpeg 1024x1024 0.25 MB
+  tex nia-real-tripo_metallic-nia-real-tripo_roughness image/jpeg 1024x1024 0.24 MB
+== nia-mh-bare-high
+/Users/william-meroxa/Development/nia-fit/bake/nia-mh-bare-high.glb: 5.86 MB, 55433 verts, 65398 tris, skins 79, 24 anims
+  crop_top: 935 v, 1500 t, 0 morphs, 4 w/v
+  tripo_mesh_12076de5-cade-401d-b957-dbb11cc9238e.001: 588 v, 714 t, 0 morphs, 4 w/v
+  tripo_mesh_fa28747b: 7599 v, 6999 t, 0 morphs, 4 w/v
+  tripo_mesh_ba16e54f: 6322 v, 5999 t, 0 morphs, 4 w/v
+  Sphere: 1898 v, 800 t, 0 morphs, 4 w/v
+  tripo_mesh_a7365125: 12653 v, 6999 t, 0 morphs, 4 w/v
+  Cylinder: 388 v, 256 t, 0 morphs, 4 w/v
+  head_body_lod0_mesh: 14628 v, 24999 t, 0 morphs, 4 w/v
+  head_eyelashes_lod0_mesh: 2144 v, 1722 t, 51 morphs, 4 w/v
+  head_eyeLeft_lod0_mesh: 802 v, 1536 t, 2 morphs, 4 w/v
+  head_eyeRight_lod0_mesh: 802 v, 1536 t, 2 morphs, 4 w/v
+  head_head_lod0_mesh.001: 5123 v, 9833 t, 51 morphs, 4 w/v
+  head_teeth_lod0_mesh.001: 1551 v, 2505 t, 1 morphs, 4 w/v
+  tex tripo_node_f03779f7-4732-4d78-b475-4219210255d9_Normal_Bake image/webp 2048x2048 0.42 MB
+  tex tripo_image_12076de5-cade-401d-b957-dbb11cc9238e_0_0 image/webp 2048x2048 0.47 MB
+  tex nia-real-tripo_metallic-nia-real-tripo_roughness image/webp 2048x2048 0.36 MB
+  tex Untitled_#15_normal image/webp 2048x2048 0.02 MB
+  tex Untitled_#15_basecolor image/webp 2048x2048 0.16 MB
+  tex Untitled_#15_rm image/webp 2048x2048 0.15 MB
+  tex Untitled_#16_normal image/webp 2048x2048 0.02 MB
+  tex Untitled_#16_basecolor image/webp 2048x2048 0.08 MB
+  tex Untitled_#16_rm image/webp 2048x2048 0.08 MB
+  tex Untitled_#17_normal image/webp 2048x2048 0.05 MB
+  tex Untitled_#17_basecolor image/webp 2048x2048 0.27 MB
+  tex Untitled_#17_rm image/webp 2048x2048 0.31 MB
+== nia-mh-bare-phone
+/Users/william-meroxa/Development/nia-fit/bake/nia-mh-bare-phone.glb: 3.10 MB, 55433 verts, 65398 tris, skins 79, 24 anims
+  crop_top: 935 v, 1500 t, 0 morphs, 4 w/v
+  tripo_mesh_12076de5-cade-401d-b957-dbb11cc9238e.001: 588 v, 714 t, 0 morphs, 4 w/v
+  tripo_mesh_fa28747b: 7599 v, 6999 t, 0 morphs, 4 w/v
+  tripo_mesh_ba16e54f: 6322 v, 5999 t, 0 morphs, 4 w/v
+  Sphere: 1898 v, 800 t, 0 morphs, 4 w/v
+  tripo_mesh_a7365125: 12653 v, 6999 t, 0 morphs, 4 w/v
+  Cylinder: 388 v, 256 t, 0 morphs, 4 w/v
+  head_body_lod0_mesh: 14628 v, 24999 t, 0 morphs, 4 w/v
+  head_eyelashes_lod0_mesh: 2144 v, 1722 t, 0 morphs, 4 w/v
+  head_eyeLeft_lod0_mesh: 802 v, 1536 t, 0 morphs, 4 w/v
+  head_eyeRight_lod0_mesh: 802 v, 1536 t, 0 morphs, 4 w/v
+  head_head_lod0_mesh.001: 5123 v, 9833 t, 0 morphs, 4 w/v
+  head_teeth_lod0_mesh.001: 1551 v, 2505 t, 0 morphs, 4 w/v
+  tex tripo_node_f03779f7-4732-4d78-b475-4219210255d9_Normal_Bake image/webp 1024x1024 0.16 MB
+  tex tripo_image_12076de5-cade-401d-b957-dbb11cc9238e_0_0 image/webp 1024x1024 0.21 MB
+  tex nia-real-tripo_metallic-nia-real-tripo_roughness image/webp 1024x1024 0.14 MB
+  tex Untitled_#15_normal image/webp 1024x1024 0.01 MB
+  tex Untitled_#15_basecolor image/webp 1024x1024 0.07 MB
+  tex Untitled_#15_rm image/webp 1024x1024 0.06 MB
+  tex Untitled_#16_normal image/webp 1024x1024 0.01 MB
+  tex Untitled_#16_basecolor image/webp 1024x1024 0.03 MB
+  tex Untitled_#16_rm image/webp 1024x1024 0.03 MB
+  tex Untitled_#17_normal image/webp 1024x1024 0.02 MB
+  tex Untitled_#17_basecolor image/webp 1024x1024 0.12 MB
+  tex Untitled_#17_rm image/webp 1024x1024 0.12 MB

@@ -1,0 +1,24 @@
+{
+  "schema": "crossroads.metahuman_fit.unreal_report/1",
+  "stage": "autorig",
+  "fighter": "nia",
+  "attempt": 4,
+  "tag": "nia_a04_20261127T232431",
+  "status": "DONE",
+  "engine": "5.8.3-58210709+++UE5+Release-5.8",
+  "project_file": "CrossroadsFit.uproject",
+  "character_path": "/Game/Fit/nia/nia_a04_20261127T195824/MHC_Fit_nia_a04_20261127T195824",
+  "rig_state": null,
+  "inputs": {
+    "fit/conform-report.json": "bdd18462507398eb34f80c75461726d4e756d1b9693d38b4a1ae8888ce22e01a",
+    "fit/posed.dna": "8d52f94e741a80c78fee1a974da5d9378c66f8358e22a190b5c83de8013a5a7e"
+  },
+  "outputs": {
+    "rig/head.dna": "b6aca08e0dd161a4f1ad25262e4ec0efed9229d440cf34e3ae40809cbb6f86b4",
+    "rig/body.dna": "52c361e162b9a9d5c6a934324e16f6c313466dcf9f5e7972af5e238d3dac8b32"
+  },
+  "bytes": {
+    "rig/head.dna": 49041581,
+    "rig/body.dna": 4530625
+  }
+}

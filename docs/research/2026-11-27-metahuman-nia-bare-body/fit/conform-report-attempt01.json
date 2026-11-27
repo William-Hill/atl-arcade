@@ -1,0 +1,36 @@
+{
+  "schema": "crossroads.metahuman_fit.unreal_report/1",
+  "stage": "conform",
+  "fighter": "nia",
+  "attempt": 1,
+  "tag": "nia_a01_20261127T194727",
+  "status": "EXPORTED",
+  "engine": "5.8.3-58210709+++UE5+Release-5.8",
+  "project_file": "CrossroadsFit.uproject",
+  "package": "/Game/Fit/nia/nia_a01_20261127T194727",
+  "character_path": "/Game/Fit/nia/nia_a01_20261127T194727/MHC_Fit_nia_a01_20261127T194727",
+  "mesh": {
+    "vertices": 116095,
+    "triangles": 232162,
+    "height_cm": 169.64640280266758
+  },
+  "face_curves": 16,
+  "custom_keypoints": 0,
+  "pins_in_input": 0,
+  "conform": "SUCCEEDED",
+  "refine_state": "SUCCEEDED",
+  "refine_requested_iterations": 10,
+  "refine_seconds": 10.2,
+  "height_cm_input": 170.0,
+  "inputs": {
+    "source/fit-source.fbx": "723e169c6ec0146f333e3eb98ff2b56316f1c2b23d29c3f8112ea2149c62858e",
+    "source/portrait.png": "d2991e764485eaca993cdcfe1a3f2a49a058daf3834839e0f3669966dd5b1b26",
+    "source/portrait-camera.json": "f2e3d3928420cb0817d65c5c028e95d46073942ad5284997e7b2d8faacf551e1",
+    "source/fit-params.json": "7477675d85c342d2810a37283edd995b62d91861596b84773dba7e6519e5d4d6",
+    "source/keypoints.json": "8a881517e2f2b19318206bb2527c2fe279defed0972e1e5f672b3e4c0531d8f1"
+  },
+  "outputs": {
+    "fit/posed.dna": "50eaadc7e76dd45f0b420210b24e9cfab2603be904dcd4b40176f9bb3b4301f5"
+  },
+  "posed_dna_bytes": 7106689
+}

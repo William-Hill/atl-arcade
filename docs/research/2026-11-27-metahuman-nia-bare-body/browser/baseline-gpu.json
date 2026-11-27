@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-27T23:30:52.203Z",
+  "label": "baseline-gpu",
+  "glb": null,
+  "glbBytes": 5901924,
+  "swapped": "skater-D0jBOLMn.glb",
+  "gpu": "machine (ANGLE Metal)",
+  "tier": "high",
+  "look": "pbr",
+  "viewer": {
+    "info": {
+      "triangles": 32253,
+      "bones": 73,
+      "skinned": true,
+      "animations": 24,
+      "face": false,
+      "meshMin": [
+        -0.8631771802902222,
+        0.01718709245324135,
+        -0.14052826166152954
+      ],
+      "meshMax": [
+        0.8631770610809326,
+        1.6999995708465576,
+        0.14585338532924652
+      ],
+      "min": [
+        -0.1433202216000103,
+        -0.000999907043481713,
+        -0.8631769959139489
+      ],
+      "max": [
+        0.14588034421885726,
+        1.7000218644520784,
+        0.8631773226468441
+      ]
+    },
+    "error": null,
+    "clips": [
+      "air_japan",
+      "air_liukang",
+      "air_mute",
+      "bail",
+      "carve_left",
+      "carve_right",
+      "coast",
+      "dance_bankhead",
+      "dance_crisscross",
+      "dance_prep",
+      "dance_sitspin",
+      "dance_snaplean",
+      "dance_spin",
+      "dance_swagsurf",
+      "dance_walkitout",
+      "grind_frontside",
+      "grind_soul",
+      "grind_unity",
+      "idle",
+      "jump",
+      "land",
+      "manual",
+      "push",
+      "ride_back"
+    ],
+    "frame": {
+      "frames": 296,
+      "meanMs": 16.7,
+      "p95Ms": 16.8,
+      "medianFps": 59.9,
+      "meanFps": 60
+    },
+    "errors": []
+  },
+  "game": {
+    "finished": true,
+    "wallSeconds": 15,
+    "frame": {
+      "frames": 896,
+      "meanMs": 16.7,
+      "p95Ms": 16.8,
+      "medianFps": 59.9,
+      "meanFps": 60
+    },
+    "calls": 258,
+    "triangles": 1152584,
+    "skaterModel": {
+      "name": "nia",
+      "loaded": true,
+      "error": null
+    },
+    "errors": []
+  }
+}

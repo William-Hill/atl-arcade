@@ -154,9 +154,17 @@ describe("teach trick steps (#331)", () => {
     expect(stepTeach(t0, grind("n"), grind("u"), {}).done.stance).toBe(true);
   });
 
-  it("one-button mode: any snap counts for the stance step", () => {
-    const t = stepTeach(createTeach("stance"), rolling(), grind("n", { justSnapped: true }), {}, null, 1 / 60, TEACH, { oneButton: true });
+  it("one-button mode: a snap that TRICK made counts for the stance step, after the grind step", () => {
+    const OB = { oneButton: true };
+    const t = stepTeach(createTeach("stance"), rolling(), grind("n", { justSnapped: true }), { style1: true, ob: { stance: "n" } }, null, 1 / 60, TEACH, OB);
     expect(t.done.stance).toBe(true);
+    // A snap of the real GRIND (no TRICK intent) does not count.
+    const g = stepTeach(createTeach("stance"), rolling(), grind("n", { justSnapped: true }), { grind: true }, null, 1 / 60, TEACH, OB);
+    expect(g.done.stance).toBeUndefined();
+    // The snap that finishes the grind step does not also finish the stance step.
+    const first = stepTeach(createTeach("grind"), rolling(), grind("n", { justSnapped: true }), { style1: true, ob: { stance: "n" } }, null, 1 / 60, TEACH, OB);
+    expect(first.justDone).toEqual(["grind"]);
+    expect(first.step).toBe("grab");
   });
 
   it("the link step needs a grind, a manual in the same combo, and an air out of the manual", () => {
@@ -263,6 +271,20 @@ describe("prompt icons per input", () => {
     expect(promptFor("grab", "gamepad", b)).toMatchObject({ icons: [{ type: "stick", label: "L" }, { type: "pad", label: "Y" }], hint: "In the air, tilt the stick and press Y" });
     expect(promptFor("stance", "gamepad", b)).toMatchObject({ icons: [{ type: "stick", label: "L" }, { type: "pad", label: "RT" }], hint: "At the rail, tilt the stick and press RT" });
     expect(promptFor("link", "gamepad", b)).toMatchObject({ icons: [{ type: "pad", label: "RT" }], hint: "Hold RT off the rail, then jump or hit a kicker" });
+  });
+
+  it("with the d-pad as the gamepad direction source, the prompts name the d-pad", () => {
+    const dp = { ...b, gamepad: { ...b.gamepad, dirStick: false } };
+    expect(promptFor("grab", "gamepad", dp)).toMatchObject({ icons: [{ type: "stick", label: "✚" }, { type: "pad", label: "Y" }], hint: "In the air, push the d-pad and press Y" });
+    expect(promptFor("stance", "gamepad", dp).hint).toBe("At the rail, push the d-pad and press RT");
+  });
+
+  it("an action with no binding shows its name, not undefined", () => {
+    const none = { ...b, keyboard: { ...b.keyboard, style1: [], grind: [] }, gamepad: { ...b.gamepad, buttons: { ...b.gamepad.buttons, style1: [], grind: [] } } };
+    for (const kind of ["keyboard", "gamepad"]) {
+      for (const step of ["grab", "stance", "link"]) expect(promptFor(step, kind, none).hint).not.toMatch(/undefined/);
+    }
+    expect(promptFor("grab", "keyboard", none).hint).toBe("In the air, tap a direction with TRICK");
   });
 
   it("the trick steps show the flick on touch (#331)", () => {

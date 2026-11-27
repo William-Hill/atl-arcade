@@ -98,8 +98,11 @@ export function stepTeach(t, prev, s, input = {}, combo = null, dt = 1 / 60, k =
   // A grab with a direction (R4). One-button mode: any grab (the next of the set).
   if (s.grab && !prev.grab && (ob || (s.grab.dir ?? "n") !== "n")) mark("grab");
   // A grind stance (R6). The phone flick can set it after the snap, so every
-  // grind tick counts. One-button mode: any snap (TRICK picks the stance).
-  if (s.state === "grind" && (ob ? s.justSnapped : (s.grind?.stance ?? "n") !== "n")) mark("stance");
+  // grind tick counts. One-button mode: a snap that TRICK made (the input
+  // sends the stance of the set in `ob.stance`), after the grind step, so
+  // the snap of the grind step does not also finish this step.
+  const obSnap = s.justSnapped && t.done.grind && typeof input.ob?.stance === "string";
+  if (s.state === "grind" && (ob ? obSnap : (s.grind?.stance ?? "n") !== "n")) mark("stance");
   // The manual link (R8): a grind, then a manual in the same combo, then an
   // air straight from the manual: a JUMP or a kicker (owner choice
   // 2026-11-27, #331: every ramp of the Eastside skatepark but the kicker has
@@ -193,7 +196,10 @@ export function promptFor(step, kind, bindings = null, { oneButton = false } = {
   // The icons of one action on this input, and the name of its first icon.
   const of = (action, touchLabel) => (kind === "touch" ? [{ type: "touch", label: touchLabel }] : kind === "gamepad" ? btn(action) : keys(action, 1));
   const nameOf = (action, touchLabel) => of(action, touchLabel)[0]?.label ?? touchLabel;
-  const dir = kind === "gamepad" ? [{ type: "stick", label: "L" }] : [{ type: "key", label: dirKeysLabel(kb) }];
+  // The gamepad direction source (R12.2): the left stick, or the d-pad only.
+  const dpad = bindings?.gamepad?.dirStick === false;
+  const dir = kind === "gamepad" ? [{ type: "stick", label: dpad ? "✚" : "L" }] : [{ type: "key", label: dirKeysLabel(kb) }];
+  const tilt = dpad ? "push the d-pad" : "tilt the stick";
   const title = (oneButton && TITLES_ONE_BUTTON[step]) || TITLES[step] || "";
   let icons = [];
   let hint = "";
@@ -222,7 +228,7 @@ export function promptFor(step, kind, bindings = null, { oneButton = false } = {
       hint = "In the air, flick TRICK up, down, left, or right";
     } else {
       icons = [...dir, ...of("style1", "TRICK")];
-      hint = kind === "gamepad" ? `In the air, tilt the stick and press ${nameOf("style1")}` : `In the air, tap a direction with ${nameOf("style1")}`;
+      hint = kind === "gamepad" ? `In the air, ${tilt} and press ${nameOf("style1", "TRICK")}` : `In the air, tap a direction with ${nameOf("style1", "TRICK")}`;
     }
   } else if (step === "stance") {
     // R6: a direction with GRIND at the rail.
@@ -231,7 +237,7 @@ export function promptFor(step, kind, bindings = null, { oneButton = false } = {
       hint = "At the rail, flick GRIND up, down, left, or right";
     } else {
       icons = [...dir, ...of("grind", "GRIND")];
-      hint = kind === "gamepad" ? `At the rail, tilt the stick and press ${nameOf("grind")}` : `At the rail, tap a direction with ${nameOf("grind")}`;
+      hint = kind === "gamepad" ? `At the rail, ${tilt} and press ${nameOf("grind", "GRIND")}` : `At the rail, tap a direction with ${nameOf("grind", "GRIND")}`;
     }
   } else if (step === "link") {
     // R8: GRIND held off the rail lands in a manual; then a kicker.

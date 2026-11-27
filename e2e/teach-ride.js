@@ -5,9 +5,10 @@
 // and spins after the landing, so the combo has 3 links.
 // The spec plays the script in the page with window.__atl.runScript.
 
-import { park } from "./skatepark-ride.js";
-import { BALANCE } from "./skatepark-ride.js";
+import { BALANCE, at, park, startAt, uv } from "./skatepark-ride.js";
 import { createCombo } from "../src/sim/skate/combo.js";
+import { GRIND, TRICK } from "../src/sim/skate/constants.js";
+import { simTricks } from "../src/input/trick-constants.js";
 import { yawFromHeading } from "../src/sim/skate/controller.js";
 import { stepRun } from "../src/sim/skate/run.js";
 import { createSkater } from "../src/sim/skate/skater.js";
@@ -84,4 +85,77 @@ export function pinRide({ maxFrames = 60 * 40, approach = null } = {}) {
   }
   for (let i = 0; i < 30; i += 1) inputs.push({});
   return { script: compress(inputs), start, target, snapAt, links: run.combo.links.map((l) => l.name), ticks: inputs.length };
+}
+
+// The ride of the 3 trick steps of #331 in the skatepark, heading +u: the
+// 9 m flat bar with a flick at the GRIND press (the stance step; "l" gives a
+// Soul Grind), GRIND held off the bar end (the grind-to-manual link, R8), the
+// manual balanced with the W/S input (F1) out of the rail lane, and a JUMP
+// out of the manual (the link step). The landing adds the air link, so the
+// combo has 3 or more links (the combo tip).
+// Returns { script, start, links, stance, manualFrom, launch, ticks }.
+export function linkRide({ stance = "l", startU = -22, manualTicks = 24, maxFrames = 60 * 12 } = {}) {
+  const { level, env, skaterEnv: base } = park();
+  // The trick rules on, as in the game (src/main.js).
+  const skaterEnv = { ...base, tricks: simTricks({}) };
+  const start = startAt(startU, -3.5, 1, 0);
+  let run = { skater: createSkater(level, start), combo: createCombo(), tick: 0, time: 0, moves: [], lastMove: null, moveSeq: 0, banked: 0, cards: createCardState() };
+  const inputs = [];
+  let phase = "rail";
+  let pressed = false;
+  let stanceOut = null;
+  let manualFrom = null;
+  let manualAge = 0;
+  let launch = null;
+  let landed = 0;
+  const steerTo = (s, p) => {
+    const err = wrap(yawFromHeading(p[0] - s.position[0], p[1] - s.position[2]) - s.yaw);
+    return Math.max(-1, Math.min(1, err * 4));
+  };
+  for (let i = 0; i < maxFrames; i += 1) {
+    const s = run.skater;
+    const [u] = uv(s.position[0], s.position[2]);
+    let input;
+    if (s.state === "grind") {
+      // Hold GRIND to the bar end, with no jump. The steer that pulls the
+      // rail balance back to 0 (grind.js).
+      const b = s.grind.balance;
+      input = { grind: true, steer: Math.max(-1, Math.min(1, (GRIND.balanceDrift * s.grind.lean + GRIND.balanceGravity * b) / GRIND.balanceCorrect + 2 * b)) };
+    } else if (s.manual) {
+      // F1: m_next = m + dt * (side * d + g * m - c * s). The balance s that
+      // pulls m back to 0. Out of the rail lane, away from the line ledge.
+      const m = s.manual;
+      const balance = Math.max(-1, Math.min(1, (m.side * TRICK.manualDrift + TRICK.manualGravity * m.balance) / TRICK.manualCorrect + 2 * m.balance));
+      manualAge += 1;
+      input = manualAge >= manualTicks ? { jump: true } : { grind: true, balance, steer: steerTo(s, at(2, -0.5)) };
+    } else if (phase === "rail") {
+      // Push along the rail lane; GRIND with the flick near the bar.
+      input = { steer: steerTo(s, at(-4, -3.5)), push: s.speed < 7 };
+      if (u > -14.2) {
+        input = { ...input, push: false, grind: true, ...(pressed ? {} : { flick: { grind: stance } }) };
+        pressed = true;
+      }
+    } else if (phase === "off") {
+      // Off the bar end: GRIND held with no release through the air.
+      input = { grind: true };
+    } else {
+      // After the jump: no input to the landing and a short roll.
+      if (s.state === "rolling") landed += 1;
+      input = {};
+    }
+    const before = s;
+    run = stepRun(run, input, 1 / 60, env, skaterEnv);
+    inputs.push(input);
+    const n = run.skater;
+    if (n.justSnapped && stanceOut === null) stanceOut = n.grind.stance;
+    if (n.manual && !before.manual && manualFrom === null) manualFrom = n.manual.link ? "link" : "press";
+    if (before.manual && !n.manual && launch === null) {
+      launch = { tick: i + 1, state: n.state, reason: n.manualEnd?.reason };
+      phase = "after";
+    }
+    if (phase === "rail" && before.state === "grind" && n.state !== "grind") phase = "off";
+    if (phase === "after" && landed > 20) break;
+  }
+  for (let i = 0; i < 30; i += 1) inputs.push({});
+  return { script: compress(inputs), start, links: run.combo.links.map((l) => l.name), stance: stanceOut, manualFrom, launch, ticks: inputs.length };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createBindings } from "../input/bindings.js";
-import { TEACH, TEACH_SPOTS, TEACH_STEPS, createTeach, currentStep, inputKind, keyLabel, keyLabels, pinLabel, pinPlacement, promptFor, stepTeach, teachMode, teachTarget, touchButtonFor } from "./teach-steps.js";
+import { PIN_STEPS, TEACH, TEACH_DONE, TEACH_SPOTS, TEACH_STEPS, createTeach, currentStep, dirKeysLabel, inputKind, keyLabel, keyLabels, pinLabel, pinPlacement, promptFor, stepTeach, teachMode, teachStart, teachTarget, touchButtonFor } from "./teach-steps.js";
 
 const rolling = (extra = {}) => ({ state: "rolling", speed: 4, style: null, justJumped: false, justSnapped: false, justExited: false, exitReason: null, ...extra });
 
@@ -12,8 +12,8 @@ function hold(t, s, input, seconds, combo = null) {
 }
 
 describe("teach steps (#76)", () => {
-  it("starts at push and has the five moves in order, then the combo tip", () => {
-    expect(TEACH_STEPS).toEqual(["push", "steer", "jump", "dance", "grind", "combo"]);
+  it("starts at push and has the eight moves in order, then the combo tip", () => {
+    expect(TEACH_STEPS).toEqual(["push", "steer", "jump", "dance", "grind", "grab", "stance", "link", "combo"]);
     const t = createTeach();
     expect(t.step).toBe("push");
     expect(t.finished).toBe(false);
@@ -71,12 +71,11 @@ describe("teach steps (#76)", () => {
     t = hold(t, rolling(), { steer: 1 }, 1);
     t = stepTeach(t, rolling(), rolling({ justJumped: true, state: "air" }), {});
     t = stepTeach(t, rolling(), rolling({ style: { id: "spin" } }), {});
-    expect(t.step).toBe("combo");
+    expect(t.step).toBe("grab");
   });
 
   it("the combo tip ends at 3 links, or after comboTime", () => {
-    const five = { push: true, steer: true, jump: true, dance: true, grind: true };
-    const t = { ...createTeach(), done: five, step: "combo" };
+    const t = createTeach("combo");
     const two = stepTeach(t, rolling(), rolling(), {}, { links: [1, 2] });
     expect(two.finished).toBe(false);
     const three = stepTeach(t, rolling(), rolling(), {}, { links: [1, 2, 3] });
@@ -87,7 +86,7 @@ describe("teach steps (#76)", () => {
     expect(late.finished).toBe(true);
   });
 
-  it("the combo tip does not count links before the five moves", () => {
+  it("the combo tip does not count links before the moves", () => {
     const t = stepTeach(createTeach(), rolling(), rolling(), {}, { links: [1, 2, 3, 4] });
     expect(t.done.combo).toBeUndefined();
   });
@@ -105,11 +104,120 @@ describe("teach steps (#76)", () => {
 
 describe("teach mode", () => {
   it("the URL flag wins, then the saved state, on geodata levels only", () => {
-    expect(teachMode("1", "done", false)).toBe("on");
+    expect(teachMode("1", TEACH_DONE, false)).toBe("on");
     expect(teachMode("0", null, true)).toBe("off");
     expect(teachMode(null, null, true)).toBe("on");
-    expect(teachMode(null, "done", true)).toBe("off");
+    expect(teachMode(null, TEACH_DONE, true)).toBe("off");
     expect(teachMode(null, null, false)).toBe("off");
+    expect(teachMode("grab", TEACH_DONE, false)).toBe("on");
+  });
+
+  it("a player who finished the first version (#76) starts at the new steps (#331)", () => {
+    expect(teachMode(null, "done", true)).toBe("on");
+    expect(teachStart(null, "done")).toBe("grab");
+    expect(teachStart("1", "done")).toBe("push");
+    expect(teachStart(null, null)).toBe("push");
+    expect(teachStart("stance", null)).toBe("stance");
+    const t = createTeach("stance");
+    expect(t.step).toBe("stance");
+    expect(Object.keys(t.done)).toEqual(["push", "steer", "jump", "dance", "grind", "grab"]);
+  });
+});
+
+// The 3 trick input steps (#331, docs/gdd/trick-input.md UI Requirements).
+describe("teach trick steps (#331)", () => {
+  const air = (extra = {}) => rolling({ state: "air", grab: null, ...extra });
+  const grind = (stance, extra = {}) => rolling({ state: "grind", grind: { id: "rail:a", stance }, ...extra });
+
+  it("a grab with a direction finishes the grab step; a neutral grab does not", () => {
+    const t0 = createTeach("grab");
+    const mute = stepTeach(t0, air(), air({ grab: { id: "mute", dir: "n" } }), {});
+    expect(mute.done.grab).toBeUndefined();
+    const japan = stepTeach(t0, air(), air({ grab: { id: "japan", dir: "l" } }), {});
+    expect(japan.justDone).toEqual(["grab"]);
+    expect(japan.step).toBe("stance");
+    // A grab that goes on does not count again.
+    const held = stepTeach(t0, air({ grab: { id: "rocket", dir: "u" } }), air({ grab: { id: "rocket", dir: "u" } }), {});
+    expect(held.done.grab).toBeUndefined();
+  });
+
+  it("one-button mode: any grab counts, as the game does not read the direction", () => {
+    const t = stepTeach(createTeach("grab"), air(), air({ grab: { id: "mute", dir: "n" } }), {}, null, 1 / 60, TEACH, { oneButton: true });
+    expect(t.done.grab).toBe(true);
+  });
+
+  it("a grind with a stance finishes the stance step; the neutral stance does not", () => {
+    const t0 = createTeach("stance");
+    expect(stepTeach(t0, rolling(), grind("n", { justSnapped: true }), {}).done.stance).toBeUndefined();
+    expect(stepTeach(t0, rolling(), grind("d", { justSnapped: true }), {}).justDone).toEqual(["stance"]);
+    // The phone flick sets the stance after the snap (R6): it counts too.
+    expect(stepTeach(t0, grind("n"), grind("u"), {}).done.stance).toBe(true);
+    // The grind that finishes the grind step does not also finish the stance
+    // step, also on its next ticks; the next grind does.
+    let g = stepTeach(createTeach("grind"), rolling(), grind("l", { justSnapped: true }), {});
+    expect(g.justDone).toEqual(["grind"]);
+    g = stepTeach(g, grind("l"), grind("l"), {});
+    expect(g.done.stance).toBeUndefined();
+    g = stepTeach(g, grind("l"), rolling(), {});
+    expect(stepTeach(g, rolling(), grind("l", { justSnapped: true }), {}).justDone).toEqual(["stance"]);
+  });
+
+  it("one-button mode: a snap that TRICK made counts for the stance step, after the grind step", () => {
+    const OB = { oneButton: true };
+    const t = stepTeach(createTeach("stance"), rolling(), grind("n", { justSnapped: true }), { style1: true, ob: { stance: "n" } }, null, 1 / 60, TEACH, OB);
+    expect(t.done.stance).toBe(true);
+    // A snap of the real GRIND (no TRICK intent) does not count.
+    const g = stepTeach(createTeach("stance"), rolling(), grind("n", { justSnapped: true }), { grind: true }, null, 1 / 60, TEACH, OB);
+    expect(g.done.stance).toBeUndefined();
+    // The snap that finishes the grind step does not also finish the stance step.
+    const first = stepTeach(createTeach("grind"), rolling(), grind("n", { justSnapped: true }), { style1: true, ob: { stance: "n" } }, null, 1 / 60, TEACH, OB);
+    expect(first.justDone).toEqual(["grind"]);
+    expect(first.step).toBe("grab");
+  });
+
+  it("the link step needs a grind, a manual in the same combo, and an air out of the manual", () => {
+    const active = { links: [1], active: true };
+    const manual = { balance: 0, side: 1 };
+    let t = createTeach("link");
+    t = stepTeach(t, rolling(), grind("n"), {}, { links: [], active: false });
+    expect(t.afterGrind).toBe(true);
+    t = stepTeach(t, grind("n"), air(), {}, active);
+    t = stepTeach(t, air(), rolling({ manual }), {}, active);
+    expect(t.linkManual).toBe(true);
+    t = stepTeach(t, rolling({ manual }), rolling({ manual }), {}, active);
+    const jumped = stepTeach(t, rolling({ manual }), air({ manual: null, airFrom: "jump" }), {}, active);
+    expect(jumped.justDone).toEqual(["link"]);
+    const kicker = stepTeach(t, rolling({ manual }), air({ manual: null, airFrom: "launch" }), {}, active);
+    expect(kicker.done.link).toBe(true);
+    // A roll off an edge is not a JUMP or a kicker.
+    const edge = stepTeach(t, rolling({ manual }), air({ manual: null, airFrom: "edge" }), {}, active);
+    expect(edge.done.link).toBeUndefined();
+    // The combo ends during the manual (a capped manual): a jump after it does not count.
+    const ended = stepTeach(t, rolling({ manual }), rolling({ manual }), {}, { links: [], active: false });
+    expect(ended.linkManual).toBe(false);
+    expect(stepTeach(ended, rolling({ manual }), air({ manual: null, airFrom: "jump" }), {}, active).done.link).toBeUndefined();
+    // A manual that ends on the ground does not count, and the next manual needs a grind first.
+    const released = stepTeach(t, rolling({ manual }), rolling({ manual: null }), {}, active);
+    expect(released.done.link).toBeUndefined();
+    expect(released.linkManual).toBe(false);
+  });
+
+  it("a manual with no grind before it in the combo does not count", () => {
+    const manual = { balance: 0, side: 1 };
+    const active = { links: [1], active: true };
+    let t = createTeach("link");
+    t = stepTeach(t, rolling(), rolling({ manual }), {}, active);
+    expect(t.linkManual).toBe(false);
+    t = stepTeach(t, rolling({ manual }), air({ manual: null }), {}, active);
+    expect(t.done.link).toBeUndefined();
+    // The combo ends after a grind: the grind no longer counts.
+    t = stepTeach(createTeach("link"), rolling(), grind("n"), {}, active);
+    t = stepTeach(t, grind("n"), rolling(), {}, { links: [], active: false });
+    expect(t.afterGrind).toBe(false);
+  });
+
+  it("the stance and the link steps show the rail pin", () => {
+    expect(PIN_STEPS).toEqual(["grind", "stance", "link"]);
   });
 });
 
@@ -162,6 +270,69 @@ describe("prompt icons per input", () => {
     expect(promptFor("dance", "gamepad", b).icons.map((i) => i.label)).toEqual(["Y", "B"]);
     expect(promptFor("grind", "gamepad", b).icons).toEqual([{ type: "pad", label: "RT" }]);
     expect(promptFor("steer", "gamepad", b).icons[0].type).toBe("stick");
+  });
+
+  it("the trick steps show the direction and the button on the keyboard (#331)", () => {
+    expect(dirKeysLabel(b.keyboard)).toBe("WASD");
+    expect(promptFor("grab", "keyboard", b)).toMatchObject({ title: "Aim a grab", icons: [{ type: "key", label: "WASD" }, { type: "key", label: "Q" }], hint: "In the air, tap a direction with Q" });
+    expect(promptFor("stance", "keyboard", b)).toMatchObject({ title: "Grind with a stance", icons: [{ type: "key", label: "WASD" }, { type: "key", label: "F" }], hint: "At the rail, tap a direction with F" });
+    expect(promptFor("link", "keyboard", b)).toMatchObject({ title: "Grind, manual, jump", icons: [{ type: "key", label: "F" }], hint: "Hold F off the rail, then jump or hit a kicker" });
+    // A remap shows in the prompt.
+    const re = { ...b, keyboard: { ...b.keyboard, style1: ["KeyR"], dirUp: ["ArrowUp"], dirLeft: ["ArrowLeft"], dirDown: ["ArrowDown"], dirRight: ["ArrowRight"] } };
+    expect(promptFor("grab", "keyboard", re).icons.map((i) => i.label)).toEqual(["↑←↓→", "R"]);
+  });
+
+  it("the trick steps show the stick and the button on the gamepad (#331)", () => {
+    expect(promptFor("grab", "gamepad", b)).toMatchObject({ icons: [{ type: "stick", label: "L" }, { type: "pad", label: "Y" }], hint: "In the air, tilt the stick and press Y" });
+    expect(promptFor("stance", "gamepad", b)).toMatchObject({ icons: [{ type: "stick", label: "L" }, { type: "pad", label: "RT" }], hint: "At the rail, tilt the stick and press RT" });
+    expect(promptFor("link", "gamepad", b)).toMatchObject({ icons: [{ type: "pad", label: "RT" }], hint: "Hold RT off the rail, then jump or hit a kicker" });
+  });
+
+  it("with the d-pad as the gamepad direction source, the prompts name the d-pad", () => {
+    const dp = { ...b, gamepad: { ...b.gamepad, dirStick: false } };
+    expect(promptFor("grab", "gamepad", dp)).toMatchObject({ icons: [{ type: "stick", label: "✚" }, { type: "pad", label: "Y" }], hint: "In the air, push the d-pad and press Y" });
+    expect(promptFor("stance", "gamepad", dp).hint).toBe("At the rail, push the d-pad and press RT");
+  });
+
+  it("an action with no binding shows its name, not undefined", () => {
+    const none = { ...b, keyboard: { ...b.keyboard, style1: [], grind: [] }, gamepad: { ...b.gamepad, buttons: { ...b.gamepad.buttons, style1: [], grind: [] } } };
+    for (const kind of ["keyboard", "gamepad"]) {
+      for (const step of ["grab", "stance", "link"]) expect(promptFor(step, kind, none).hint).not.toMatch(/undefined/);
+    }
+    expect(promptFor("grab", "keyboard", none).hint).toBe("In the air, tap a direction with TRICK");
+  });
+
+  it("the trick steps show the flick on touch (#331)", () => {
+    expect(promptFor("grab", "touch", b)).toMatchObject({ icons: [{ type: "touch", label: "TRICK" }], hint: "In the air, flick TRICK up, down, left, or right" });
+    expect(promptFor("stance", "touch", b)).toMatchObject({ icons: [{ type: "touch", label: "GRIND" }], hint: "At the rail, flick GRIND up, down, left, or right" });
+    expect(promptFor("link", "touch", b)).toMatchObject({ icons: [{ type: "touch", label: "GRIND" }], hint: "Hold GRIND off the rail, then jump or hit a kicker" });
+    expect(touchButtonFor("grab")).toBe("style1");
+    expect(touchButtonFor("stance")).toBe("grind");
+    expect(touchButtonFor("link")).toBe("grind");
+  });
+
+  it("one-button mode shows TRICK only on every input (#331, R12.1)", () => {
+    const ob = { oneButton: true };
+    expect(promptFor("grab", "keyboard", b, ob)).toMatchObject({ title: "Grab in the air", icons: [{ type: "key", label: "Q" }], hint: "In the air, tap Q for the next grab" });
+    expect(promptFor("stance", "gamepad", b, ob)).toMatchObject({ title: "Grind with TRICK", icons: [{ type: "pad", label: "Y" }], hint: "At the rail, tap Y for the next stance" });
+    expect(promptFor("link", "touch", b, ob)).toMatchObject({ icons: [{ type: "touch", label: "TRICK" }], hint: "After a grind, hold TRICK, then jump or hit a kicker" });
+    expect(touchButtonFor("stance", ob)).toBe("style1");
+    expect(touchButtonFor("link", ob)).toBe("style1");
+    expect(touchButtonFor("grab", ob)).toBe("style1");
+    // The other steps do not change.
+    expect(promptFor("jump", "keyboard", b, ob)).toEqual(promptFor("jump", "keyboard", b));
+  });
+
+  it("every prompt word passes the banned word list", async () => {
+    const { bannedIn } = await import("../content/banned-words.js");
+    for (const step of TEACH_STEPS) {
+      for (const kind of ["keyboard", "gamepad", "touch"]) {
+        for (const oneButton of [false, true]) {
+          const p = promptFor(step, kind, b, { oneButton });
+          expect(bannedIn(`${p.title} ${p.hint}`), `${step} ${kind}`).toEqual([]);
+        }
+      }
+    }
   });
 
   it("touch prompts name the on-screen buttons and the stick", () => {

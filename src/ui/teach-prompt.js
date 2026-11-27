@@ -1,13 +1,14 @@
 // Teach prompts (#76): one prompt at a time at the bottom middle of the
 // screen, with the icon of the active input (keyboard, gamepad, or touch).
 // On the grind step a pin shows the rail or ledge in the world, or an arrow
-// on the screen edge when it is off the screen. On touch, the button of the
+// on the screen edge when it is off the screen; the stance and the manual
+// link steps (#331) show the same pin. On touch, the button of the
 // step glows. Plain DOM; the step logic is pure (src/ui/teach-steps.js).
 // Nothing here draws in WebGL, so the prompts add no draw call.
 
 import { Vector3 } from "three";
 import "./teach.css";
-import { TEACH, TEACH_SPOTS, TEACH_STEPS, TEACH_STORAGE_KEY, createTeach, inputKind, pinLabel, pinPlacement, promptFor, stepTeach, teachMode, teachTarget, touchButtonFor } from "./teach-steps.js";
+import { PIN_STEPS, TEACH, TEACH_DONE, TEACH_SPOTS, TEACH_STEPS, TEACH_STORAGE_KEY, createTeach, inputKind, pinLabel, pinPlacement, promptFor, stepTeach, teachMode, teachStart, teachTarget, touchButtonFor } from "./teach-steps.js";
 
 const MOVES = TEACH_STEPS.filter((s) => s !== "combo");
 
@@ -37,10 +38,12 @@ function writeStored(storage, value) {
 
 // `param` is ?teach. `geo` is true on a geodata level. `grindables` are the
 // skater env grindables. `gamepad()` is true when a gamepad is connected.
-export function createTeachPrompts({ parent = document.body, levelName = "", geo = true, param = null, storage = null, grindables = [], touch = false, gamepad = () => false, reducedMotion = () => false } = {}) {
-  const mode = teachMode(param, readStored(storage), geo);
+// `oneButton()` is true when the "One-button tricks" switch is on (R12.1).
+export function createTeachPrompts({ parent = document.body, levelName = "", geo = true, param = null, storage = null, grindables = [], touch = false, gamepad = () => false, oneButton = () => false, reducedMotion = () => false } = {}) {
+  const stored = readStored(storage);
+  const mode = teachMode(param, stored, geo);
   if (param === "1") writeStored(storage, null);
-  let state = createTeach();
+  let state = createTeach(teachStart(param, stored));
   let started = false;
   let doneStep = null;
   let doneUntil = 0;
@@ -88,7 +91,7 @@ export function createTeachPrompts({ parent = document.body, levelName = "", geo
   }
 
   function render(prompt, done) {
-    const key = done ? `done:${done}` : `${prompt.step}:${kind}:${prompt.icons.map((i) => i.label).join(",")}`;
+    const key = done ? `done:${done}` : `${prompt.step}:${kind}:${prompt.title}:${prompt.hint}:${prompt.icons.map((i) => i.label).join(",")}`;
     if (key === shownKey) return;
     shownKey = key;
     root.dataset.done = done ? "1" : "0";
@@ -133,12 +136,12 @@ export function createTeachPrompts({ parent = document.body, levelName = "", geo
     observe(prev, s, input = {}, combo = null, dt = 1 / 60) {
       if (state.finished) return;
       if (!started && (input.push || input.jump || input.grind || input.style1 || input.style2 || input.brake || Math.abs(input.steer ?? 0) > 0.3)) started = true;
-      state = stepTeach(state, prev, s, input, combo, dt);
+      state = stepTeach(state, prev, s, input, combo, dt, TEACH, { oneButton: oneButton() });
       if (state.justDone.length) {
         doneStep = state.justDone[state.justDone.length - 1];
         doneUntil = performance.now() + TEACH.doneMs;
       }
-      if (state.finished) writeStored(storage, "done");
+      if (state.finished) writeStored(storage, TEACH_DONE);
     },
     // Once per frame. `hidden` is true while a menu, the photo mode, or the
     // results cover the game.
@@ -149,15 +152,16 @@ export function createTeachPrompts({ parent = document.body, levelName = "", geo
         return;
       }
       kind = inputKind(source, { touch, gamepad: gamepad(), started });
-      const prompt = promptFor(state.step, kind, bindings);
+      const ob = { oneButton: oneButton() };
+      const prompt = promptFor(state.step, kind, bindings, ob);
       render(prompt, flashing ? doneStep : null);
       root.dataset.rm = reducedMotion() ? "1" : "0";
       if (root.hidden) root.hidden = false;
       visible = true;
-      light(!flashing && kind === "touch" ? touchButtonFor(state.step) : null);
+      light(!flashing && kind === "touch" ? touchButtonFor(state.step, ob) : null);
 
-      // The grind pin.
-      target = state.step === "grind" && !flashing ? teachTarget(grindables, position, spots) : null;
+      // The rail pin: the grind, the stance, and the manual link need a rail.
+      target = PIN_STEPS.includes(state.step) && !flashing ? teachTarget(grindables, position, spots) : null;
       if (!target || !camera) {
         if (!pin.hidden) pin.hidden = true;
         return;

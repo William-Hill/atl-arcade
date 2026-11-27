@@ -3,10 +3,18 @@
 // ledge to show for the grind, and where its pin goes on the screen.
 // src/ui/teach-prompt.js draws it; Vitest tests this file.
 //
-// One prompt at a time: push, steer, jump, dance, grind, then a combo tip.
-// A move done before its turn counts, so its prompt does not show.
+// One prompt at a time: push, steer, jump, dance, grind, then the 3 trick
+// input steps of #331 (docs/gdd/trick-input.md, UI Requirements): a grab with
+// a direction, a grind stance, and the manual link from a grind to a kicker.
+// Then a combo tip. A move done before its turn counts, so its prompt does
+// not show. In one-button mode (R12.1) the game does not read the direction,
+// so the prompts show TRICK only and any grab or snap counts.
 
-export const TEACH_STEPS = ["push", "steer", "jump", "dance", "grind", "combo"];
+export const TEACH_STEPS = ["push", "steer", "jump", "dance", "grind", "grab", "stance", "link", "combo"];
+
+// The steps that show the rail pin: each needs a rail or a ledge.
+export const PIN_STEPS = ["grind", "stance", "link"];
+
 
 export const TEACH = {
   pushTime: 0.6, // s of push held while rolling
@@ -29,18 +37,34 @@ export const TEACH_SPOTS = {
 };
 
 export const TEACH_STORAGE_KEY = "atl.teach.v1";
+// The saved value after all the steps. "done" is the value of the first
+// version (#76, 5 moves): a player with it sees only the new steps (#331).
+export const TEACH_DONE = "done-v2";
+const TEACH_DONE_V1 = "done";
+const FIRST_NEW = "grab";
 
 // On or off: ?teach=1 forces the prompts (and starts them again), ?teach=0
-// turns them off. Else they show once per browser, on a geodata level.
+// turns them off, ?teach=<step> starts at that step (for the tests). Else
+// they show once per browser, on a geodata level.
 export function teachMode(param, stored, geo) {
-  if (param === "1") return "on";
+  if (param === "1" || TEACH_STEPS.includes(param)) return "on";
   if (param === "0") return "off";
   if (!geo) return "off";
-  return stored === "done" ? "off" : "on";
+  return stored === TEACH_DONE ? "off" : "on";
 }
 
-export function createTeach() {
-  return { done: {}, step: TEACH_STEPS[0], push: 0, steer: 0, comboTime: 0, finished: false, justDone: [] };
+// The step to start at: the ?teach step, else the first new step for a
+// player who finished the first version, else the first step.
+export function teachStart(param, stored) {
+  if (TEACH_STEPS.includes(param)) return param;
+  if (param !== "1" && stored === TEACH_DONE_V1) return FIRST_NEW;
+  return TEACH_STEPS[0];
+}
+
+export function createTeach(start = TEACH_STEPS[0]) {
+  const n = Math.max(0, TEACH_STEPS.indexOf(start));
+  const done = Object.fromEntries(TEACH_STEPS.slice(0, n).map((s) => [s, true]));
+  return { done, step: TEACH_STEPS[n], push: 0, steer: 0, comboTime: 0, afterGrind: false, linkManual: false, firstGrind: false, finished: false, justDone: [] };
 }
 
 export function currentStep(done, steps = TEACH_STEPS) {
@@ -48,9 +72,10 @@ export function currentStep(done, steps = TEACH_STEPS) {
 }
 
 // One fixed tick. `prev` and `s` are the skater before and after the tick,
-// `input` the sampled input, `combo` the run combo. Returns a new state;
-// `justDone` lists the steps done in this tick.
-export function stepTeach(t, prev, s, input = {}, combo = null, dt = 1 / 60, k = TEACH) {
+// `input` the sampled input, `combo` the run combo, `mode.oneButton` the
+// one-button switch. Returns a new state; `justDone` lists the steps done in
+// this tick.
+export function stepTeach(t, prev, s, input = {}, combo = null, dt = 1 / 60, k = TEACH, mode = {}) {
   if (t.finished) return t.justDone.length ? { ...t, justDone: [] } : t;
   const done = { ...t.done };
   const justDone = [];
@@ -69,7 +94,36 @@ export function stepTeach(t, prev, s, input = {}, combo = null, dt = 1 / 60, k =
   if (s.justJumped || (s.justExited && s.exitReason === "jump")) mark("jump");
   if (s.style && !prev.style) mark("dance");
   if (s.justSnapped) mark("grind");
-  // The combo tip shows only after the five moves.
+  const ob = Boolean(mode.oneButton);
+  // A grab with a direction (R4). One-button mode: any grab (the next of the set).
+  if (s.grab && !prev.grab && (ob || (s.grab.dir ?? "n") !== "n")) mark("grab");
+  // A grind stance (R6). The phone flick can set it after the snap, so every
+  // grind tick counts, but not on the grind that finished the grind step:
+  // the player must see the stance prompt first. One-button mode: a snap that TRICK made (the input
+  // sends the stance of the set in `ob.stance`), after the grind step, so
+  // the snap of the grind step does not also finish this step.
+  const obSnap = s.justSnapped && t.done.grind && typeof input.ob?.stance === "string";
+  const firstGrind = s.state === "grind" && ((s.justSnapped && !t.done.grind) || (!s.justSnapped && Boolean(t.firstGrind)));
+  if (s.state === "grind" && (ob ? obSnap : !firstGrind && (s.grind?.stance ?? "n") !== "n")) mark("stance");
+  // The manual link (R8): a grind, then a manual in the same combo, then an
+  // air straight from the manual: a JUMP or a kicker (owner choice
+  // 2026-11-27, #331: every ramp of the Eastside skatepark but the kicker has
+  // a grind edge, and street levels have few kickers).
+  let afterGrind = t.afterGrind;
+  let linkManual = t.linkManual;
+  if (s.state === "grind") afterGrind = true;
+  else if (combo && !combo.active) {
+    // The combo ended: a grind and a manual of that combo no longer link.
+    afterGrind = false;
+    linkManual = false;
+  }
+  // Only a JUMP or a kicker counts, not a roll off an edge.
+  if (prev.manual && !s.manual) {
+    if (linkManual && s.state === "air" && (s.airFrom === "jump" || s.airFrom === "launch")) mark("link");
+    linkManual = false;
+  }
+  if (s.manual && !prev.manual) linkManual = afterGrind;
+  // The combo tip shows only after the moves.
   const step0 = currentStep(done);
   let comboTime = t.comboTime;
   if (step0 === "combo") {
@@ -77,7 +131,7 @@ export function stepTeach(t, prev, s, input = {}, combo = null, dt = 1 / 60, k =
     if ((combo?.links?.length ?? 0) >= k.comboLinks || comboTime >= k.comboTime) mark("combo");
   }
   const step = currentStep(done);
-  return { done, step, push, steer, comboTime, finished: step === null, justDone };
+  return { done, step, push, steer, comboTime, afterGrind, linkManual, firstGrind, finished: step === null, justDone };
 }
 
 // The input kind for the icons: "touch", "gamepad", or "keyboard".
@@ -122,18 +176,38 @@ const TITLES = {
   jump: "Jump",
   dance: "Dance while you roll",
   grind: "Grind the rail",
+  grab: "Aim a grab",
+  stance: "Grind with a stance",
+  link: "Grind, manual, jump",
   combo: "Chain 3 moves for a combo",
 };
 
+// One-button mode (R12.1): TRICK does the move, with no direction.
+const TITLES_ONE_BUTTON = { grab: "Grab in the air", stance: "Grind with TRICK" };
+
+// The direction keys as one cap: "WASD" (up, left, down, right), or the
+// arrows when the direction keys are the arrows only.
+export function dirKeysLabel(kb = {}) {
+  const labels = ["dirUp", "dirLeft", "dirDown", "dirRight"].map((a) => keyLabels(kb[a], 1)[0]).filter(Boolean);
+  return labels.length ? labels.join("") : "WASD";
+}
+
 // The prompt of a step for an input kind. `bindings` is input.bindings.
 // Each icon is { type: "key" | "pad" | "stick" | "touch", label }. `hint` is
-// a short second line, or "".
-export function promptFor(step, kind, bindings = null) {
+// a short second line, or "". `oneButton` is the one-button switch (R12.1).
+export function promptFor(step, kind, bindings = null, { oneButton = false } = {}) {
   const kb = bindings?.keyboard ?? {};
   const pad = bindings?.gamepad?.buttons ?? {};
   const keys = (action, max) => keyLabels(kb[action], max).map((label) => ({ type: "key", label }));
   const btn = (action) => (pad[action]?.length ? [{ type: "pad", label: padLabel(pad[action][0]) }] : []);
-  const title = TITLES[step] ?? "";
+  // The icons of one action on this input, and the name of its first icon.
+  const of = (action, touchLabel) => (kind === "touch" ? [{ type: "touch", label: touchLabel }] : kind === "gamepad" ? btn(action) : keys(action, 1));
+  const nameOf = (action, touchLabel) => of(action, touchLabel)[0]?.label ?? touchLabel;
+  // The gamepad direction source (R12.2): the left stick, or the d-pad only.
+  const dpad = bindings?.gamepad?.dirStick === false;
+  const dir = kind === "gamepad" ? [{ type: "stick", label: dpad ? "✚" : "L" }] : [{ type: "key", label: dirKeysLabel(kb) }];
+  const tilt = dpad ? "push the d-pad" : "tilt the stick";
+  const title = (oneButton && TITLES_ONE_BUTTON[step]) || TITLES[step] || "";
   let icons = [];
   let hint = "";
   if (step === "push") {
@@ -149,15 +223,44 @@ export function promptFor(step, kind, bindings = null) {
   } else if (step === "grind") {
     icons = kind === "touch" ? [{ type: "touch", label: "GRIND" }] : kind === "gamepad" ? btn("grind") : keys("grind", 1);
     hint = kind === "touch" ? "Ride to the rail, hold GRIND" : "Ride to the rail and hold";
+  } else if (oneButton && (step === "grab" || step === "stance" || step === "link")) {
+    // One-button mode: TRICK only, from the context (R12.1).
+    icons = of("style1", "TRICK");
+    const trick = nameOf("style1", "TRICK");
+    hint = step === "grab" ? `In the air, tap ${trick} for the next grab` : step === "stance" ? `At the rail, tap ${trick} for the next stance` : `After a grind, hold ${trick}, then jump or hit a kicker`;
+  } else if (step === "grab") {
+    // R4: a direction with TRICK in the air. Touch: a flick from TRICK (R11).
+    if (kind === "touch") {
+      icons = of("style1", "TRICK");
+      hint = "In the air, flick TRICK up, down, left, or right";
+    } else {
+      icons = [...dir, ...of("style1", "TRICK")];
+      hint = kind === "gamepad" ? `In the air, ${tilt} and press ${nameOf("style1", "TRICK")}` : `In the air, tap a direction with ${nameOf("style1", "TRICK")}`;
+    }
+  } else if (step === "stance") {
+    // R6: a direction with GRIND at the rail.
+    if (kind === "touch") {
+      icons = of("grind", "GRIND");
+      hint = "At the rail, flick GRIND up, down, left, or right";
+    } else {
+      icons = [...dir, ...of("grind", "GRIND")];
+      hint = kind === "gamepad" ? `At the rail, ${tilt} and press ${nameOf("grind", "GRIND")}` : `At the rail, tap a direction with ${nameOf("grind", "GRIND")}`;
+    }
+  } else if (step === "link") {
+    // R8: GRIND held off the rail lands in a manual; then a kicker.
+    icons = of("grind", "GRIND");
+    hint = `Hold ${nameOf("grind", "GRIND")} off the rail, then jump or hit a kicker`;
   } else if (step === "combo") {
     hint = "Jump, grind, and dance before the combo ends";
   }
   return { step, title, icons, hint };
 }
 
-// The touch button to light up for a step on touch, or null.
-export function touchButtonFor(step) {
-  return { jump: "jump", dance: "style1", grind: "grind" }[step] ?? null;
+// The touch button to light up for a step on touch, or null. In one-button
+// mode TRICK does the grab, the stance, and the manual.
+export function touchButtonFor(step, { oneButton = false } = {}) {
+  if (oneButton && (step === "stance" || step === "link")) return "style1";
+  return { jump: "jump", dance: "style1", grind: "grind", grab: "style1", stance: "grind", link: "grind" }[step] ?? null;
 }
 
 // The rail or ledge for the grind pin: the nearest of the level's teach

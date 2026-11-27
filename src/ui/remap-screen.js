@@ -11,7 +11,7 @@
 
 import { DIR_ACTIONS, MOVE_ACTIONS } from "../input/bindings.js";
 import { bindingsOf, controlsOf, withDirSource } from "../input/controls-store.js";
-import { ACTION_NAMES, RESERVED_KEYS, keyName, newPadButton, padButtonName, remap } from "../input/remap.js";
+import { ACTION_NAMES, RESERVED_KEYS, RESERVED_PAD_BUTTONS, keyName, newPadButton, padButtonName, remap } from "../input/remap.js";
 
 // Colors as the settings menu: paper #f3f3f7 on #14141c is 17:1, the pink
 // #ff5fb2 is 6.9:1, the muted #c4c4d0 is 11:1, the yellow #ffd166 is 12:1.
@@ -185,7 +185,10 @@ export function createRemapScreen({ root = document.body, controls, onApply = ()
         const now = padButtons();
         const i = newPadButton(waiting.padBefore, now);
         waiting.padBefore = now;
-        if (i !== null) take(i);
+        if (i !== null && RESERVED_PAD_BUTTONS.includes(i)) {
+          say(`${padButtonName(i)} opens the trick list. Pick another button.`, "refused");
+          raf = requestAnimationFrame(poll);
+        } else if (i !== null) take(i);
         else raf = requestAnimationFrame(poll);
       };
       raf = requestAnimationFrame(poll);

@@ -242,6 +242,7 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
     skip() {
       queue.length = 0;
       tricks = createTouchTricks();
+      for (const key of Object.keys(shown)) delete shown[key];
       showRings();
     },
     // The rings now shown (the flick card reads them): [{ button, dir }].

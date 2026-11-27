@@ -66,6 +66,11 @@ describe("#330 E6 the trick list", () => {
     expect(touch[0].button).toBe("TRICK");
   });
 
+  it("a pad remap changes the button names", () => {
+    const b = createBindings({ gamepad: { buttons: { style1: [2] } } });
+    expect(trickListSections("nia", { device: "gamepad", bindings: b })[0].button).toBe("X");
+  });
+
   it("a remap changes the key names", () => {
     const b = createBindings({ keyboard: { style1: ["KeyZ"], dirUp: ["KeyI"], dirDown: ["KeyK"] } });
     const kb = trickListSections("nia", { device: "keyboard", bindings: b });

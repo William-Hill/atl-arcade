@@ -261,6 +261,8 @@ export function createTrickList({ root = document.body, skater = () => "nia", so
   window.addEventListener("keydown", (e) => {
     if (e.code !== TRICK_LIST_KEY_CODE || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.target instanceof HTMLElement && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    // A key that an older save binds to a move keeps its move.
+    if (Object.values(bindings()?.keyboard ?? {}).some((codes) => codes.includes(TRICK_LIST_KEY_CODE))) return;
     if (!dialog.open) open();
   });
 

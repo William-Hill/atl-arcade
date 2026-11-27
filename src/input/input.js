@@ -38,6 +38,9 @@ export function createInput({ target = window, bindings = createBindings(), getG
   let clock = 0;
   let lastDpad = "n";
   let lastFrame = null;
+  // True after a dialog closes from the pad: the pad buttons give no input
+  // until every button is up (latchPad()).
+  let padLatch = false;
   let log = null;
 
   // A clear drops the events before it: they end in a release.
@@ -121,6 +124,8 @@ export function createInput({ target = window, bindings = createBindings(), getG
         padDirs = padDirUpdate(padDirs, "n", t);
       } else {
         const snap = { axes: Array.from(pad.axes ?? []), buttons: Array.from(pad.buttons ?? []) };
+        if (padLatch && !snap.buttons.some((b) => b && (b.pressed || b.value > 0.5))) padLatch = false;
+        if (padLatch) snap.buttons = snap.buttons.map(() => ({ pressed: false, value: 0 }));
         const gamepad = mapGamepad(snap, current);
         if (isActive(gamepad)) source = "gamepad";
         else if (isActive(keyboard)) source = "keyboard";
@@ -204,6 +209,11 @@ export function createInput({ target = window, bindings = createBindings(), getG
     reset() {
       down.clear();
       clearQueue();
+    },
+    // The pad buttons now down give no input until every button is up (a
+    // button that closed a dialog must not start a move, #330).
+    latchPad() {
+      padLatch = true;
     },
     // The sim does not read the input on this frame (the title screen, a
     // scripted run): drop the waiting key events and let go of every held

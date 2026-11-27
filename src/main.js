@@ -1326,6 +1326,8 @@ const trickList = createTrickList({
   canOpen: () => !photo.isOpen && !fullmap?.isOpen && !settingsMenu.isOpen && !remapScreen?.isOpen && !storyView?.isOpen && !front?.active && !results?.shown,
   onChange: () => {
     input.reset();
+    // A pad button that closes the list (B, A, View) must not reach the game.
+    input.latchPad();
     oneButton = releaseOneButton(oneButton);
   },
 });
@@ -1355,10 +1357,10 @@ function touchButtonsRect() {
   }
   return touchButtonsBox;
 }
+// The pad that the game input reads (input.gamepadId), else the first pad.
 function firstPad() {
-  const pads = typeof navigator.getGamepads === "function" ? navigator.getGamepads() : [];
-  for (const p of pads ?? []) if (p && p.connected !== false) return p;
-  return null;
+  const pads = [...((typeof navigator.getGamepads === "function" ? navigator.getGamepads() : []) ?? [])].filter((p) => p && p.connected !== false);
+  return pads.find((p) => (p.id ?? "gamepad") === input.gamepadId) ?? pads[0] ?? null;
 }
 
 // The full map of the level (M key, or the minimap expand button). The game
@@ -1508,7 +1510,9 @@ function frame(now) {
       simulate(stepper.dt);
       ran += 1;
       if (hitStopLeft > 0) {
-        stepper = { ...stepper, leftover: 0 };
+        // The steps of this frame after the PERFECT run after the hit stop,
+        // so the sim loses exactly perfectHitStopMs.
+        stepper = { ...stepper, leftover: stepper.leftover + (stepped.steps - ran) * stepper.dt };
         break;
       }
     }

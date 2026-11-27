@@ -82,6 +82,7 @@ describe("#330 E2 the live trick chip", () => {
   });
 
   it("a compact screen uses the short name in progress", () => {
+    expect(progressChip({ kind: "manual", id: "toe", name: "Toe Roll" }, { manual: { meters: 3, toe: true }, compact: true }).text).toBe("\u2191 Toe Roll 3 m");
     expect(progressChip({ kind: "grind", id: "makio", name: "Long Ledge Makio Grind", dir: "u" }, { compact: true }).text).toBe("↑ Long Ledge Makio");
     expect(progressChip({ kind: "grind", id: "makio", name: "Long Ledge Makio Grind", dir: "u" }).text).toBe("↑ Long Ledge Makio Grind");
   });

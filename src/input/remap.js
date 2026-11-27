@@ -87,6 +87,8 @@ export const padButtonName = (i) => PAD_NAMES[i] ?? `Button ${i}`;
 // the settings, the photo mode, the map, the debug panel, and the trick list
 // (#330).
 export const RESERVED_KEYS = Object.freeze(["Escape", "KeyO", "KeyP", "KeyM", "KeyH", "KeyT"]);
+// Pad buttons the remap screen does not take: View/Back opens the trick list (#330).
+export const RESERVED_PAD_BUTTONS = Object.freeze([8]);
 
 // The first pad button that is down in `now` and was up in `before`, or null.
 export function newPadButton(before, now) {

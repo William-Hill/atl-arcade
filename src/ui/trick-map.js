@@ -4,7 +4,7 @@
 
 import { GRABS, MANUALS, STANCES, danceFor } from "../sim/skate/tricks.js";
 import { ONE_BUTTON_SETS } from "../input/one-button.js";
-import { keyName } from "../input/remap.js";
+import { keyName, padButtonName } from "../input/remap.js";
 import { originOf } from "../content/dance-origins.js";
 import { ARROWS } from "./trick-hud-text.js";
 
@@ -74,7 +74,10 @@ const keyPair = (bindings, a, b) => `${firstKey(bindings, a)} and ${firstKey(bin
 const PAD = { style1: "Y", style2: "B", grind: "RT" };
 const TOUCH = { style1: "TRICK", style2: "SPIN", grind: "GRIND" };
 export function buttonName(action, device, bindings) {
-  if (device === "gamepad") return PAD[action];
+  if (device === "gamepad") {
+    const i = bindings?.gamepad?.buttons?.[action]?.[0];
+    return Number.isInteger(i) ? padButtonName(i) : PAD[action];
+  }
   if (device === "touch") return TOUCH[action];
   return firstKey(bindings, action);
 }

@@ -123,3 +123,18 @@ describe("touch", () => {
     expect(input.source).toBe("gamepad");
   });
 });
+
+describe("latchPad (#330): a pad button that closes a dialog does not reach the game", () => {
+  it("drops the pad buttons until every button is up", () => {
+    let pads = [pad([1])];
+    const input = createInput({ target: fakeTarget(), getGamepads: () => pads });
+    expect(input.sample(1 / 60).style2).toBe(true);
+    input.latchPad();
+    expect(input.sample(2 / 60).style2).toBe(false);
+    expect(input.sample(3 / 60).style2).toBe(false);
+    pads = [pad([])];
+    expect(input.sample(4 / 60).style2).toBe(false);
+    pads = [pad([1])];
+    expect(input.sample(5 / 60).style2).toBe(true);
+  });
+});

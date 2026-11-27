@@ -89,7 +89,7 @@ export function progressChip(trick, { manual = null, capMeters = 30, compact = f
     const meters = manual ? Math.floor(manual.meters + 1e-9) : 0;
     const capped = Boolean(manual && (manual.capped || manual.meters >= capMeters));
     const dir = manual?.toe ? "u" : "n";
-    return { look: "progress", text: `${named(trick.name, dir, { oneButton })} ${capped ? "MAX" : `${meters} m`}` };
+    return { look: "progress", text: `${named(trick.name, dir, { compact, oneButton })} ${capped ? "MAX" : `${meters} m`}` };
   }
   return { look: "progress", text: named(trick.name, trick.dir, { compact, oneButton }) };
 }

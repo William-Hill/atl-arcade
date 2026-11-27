@@ -37,6 +37,8 @@ export function createFlickCard(parent = document.body) {
   const line = el("div", "fc-line", root);
   const cellEls = Object.fromEntries(CELL_ORDER.map((d) => [d, el("div", `fc-cell fc-${d}`, root)]));
   let key = "";
+  let size = null;
+  window.addEventListener("resize", () => (size = null));
   const state = { visible: false, button: null, ctx: null, lit: null, text: [] };
 
   return {
@@ -59,6 +61,7 @@ export function createFlickCard(parent = document.body) {
       const k = `${f.button}|${ctx}|${skaterId}|${oneButton}|${card.line ?? ""}`;
       if (k !== key) {
         key = k;
+        size = null;
         root.dataset.line = card.line != null ? "1" : "0";
         line.hidden = card.line == null;
         line.textContent = card.line ?? "";
@@ -77,8 +80,11 @@ export function createFlickCard(parent = document.body) {
       }
       root.hidden = false;
       if (buttons) {
-        const r = root.getBoundingClientRect();
-        const p = cardPlace(buttons, { w: r.width, h: r.height }, window.innerWidth, window.innerHeight);
+        if (!size) {
+          const r = root.getBoundingClientRect();
+          size = { w: r.width, h: r.height };
+        }
+        const p = cardPlace(buttons, size, window.innerWidth, window.innerHeight);
         root.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px)`;
         root.dataset.side = p.side;
       }

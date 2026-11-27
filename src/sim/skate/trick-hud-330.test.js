@@ -63,6 +63,22 @@ describe("#330 the Busy cue: a press during a dance", () => {
     expect(r.s.ignored).toMatchObject({ name: "Cross Step", seq: 2 });
   });
 
+  it("a press that starts the next dance at the end tick of a dance is not ignored", () => {
+    const r = rig({ speed: 5 });
+    r.step({ style2: true, flick: { style2: "l" } }); // Toe Spin: 1 beat
+    let i = 0;
+    while (r.s.style && r.s.style.time + 1 / 60 < r.s.style.duration - 1e-9 && i < 200) {
+      r.step({ push: true });
+      i += 1;
+    }
+    // The next tick ends Toe Spin; SPIN down on it starts the next dance
+    // (hold to repeat, R7), so the press is not ignored.
+    r.step({ push: true, style2: true, flick: { style2: "r" } });
+    expect(r.s.justStyled).toMatchObject({ name: "Toe Spin" });
+    expect(r.s.style).not.toBeNull();
+    expect(r.s.ignored).toBeNull();
+  });
+
   it("a press with no dance gives no `ignored` event", () => {
     const r = rig({ speed: 5 });
     r.step({ style2: true, flick: { style2: "n" } });

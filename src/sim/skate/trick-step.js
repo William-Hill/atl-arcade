@@ -303,6 +303,8 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
       style = null;
     }
   }
+  // The dance of the last tick goes on at this tick (it did not end).
+  const danceGoesOn = Boolean(style);
   const canDance = s.state === "rolling" && !s.manual && v0 + EPS >= STYLE.minSpeed;
   const startDance = (button, dir) => {
     const move = STYLE.moves[BUTTONS.indexOf(button)];
@@ -337,7 +339,7 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   // A TRICK or SPIN press while a dance runs starts nothing (the dance
   // goes on). The HUD shows "BUSY" and the dance name (docs/ux/trick-hud.md
   // 6.1). Not in one-button mode: there a TRICK press has another job.
-  if (style && prev.style && !T.oneButton && (edge("style1") || edge("style2"))) {
+  if (danceGoesOn && style && !T.oneButton && (edge("style1") || edge("style2"))) {
     s.ignored = { name: style.name, seq: (prev.ignored?.seq ?? 0) + 1 };
   }
   // A press that starts no trick (#264): the HUD says why.

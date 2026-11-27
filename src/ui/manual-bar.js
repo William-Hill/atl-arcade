@@ -84,6 +84,7 @@ export function createManualBar(parent = document.body, { reducedMotion = () => 
   let active = false;
   let lastM = 0;
   let outUntil = -Infinity;
+  let seenOut = 0;
   let blocks = null;
   window.addEventListener("resize", () => (blocks = null));
 
@@ -110,7 +111,9 @@ export function createManualBar(parent = document.body, { reducedMotion = () => 
     },
     // `manual` is state.manual or null; `anchor` is the skater hip on the
     // screen { x, y } (CSS px) or null; `dt` is the frame time in s.
-    update({ manual, anchor, dt = 0, nowMs = performance.now(), compact = false, labels = { top: "W", bottom: "S" }, viewW = window.innerWidth, viewH = window.innerHeight }) {
+    // `balanceOut` is { seq, side }: a new seq is a balance out (the manual
+    // ended at |m| = 1 on the side `side`).
+    update({ manual, balanceOut = null, anchor, dt = 0, nowMs = performance.now(), compact = false, labels = { top: "W", bottom: "S" }, viewW = window.innerWidth, viewH = window.innerHeight }) {
       const rm = Boolean(reducedMotion());
       root.dataset.rm = rm ? "1" : "0";
       layout(compact ? MANUAL_BAR.h.compact : MANUAL_BAR.h.desktop);
@@ -122,10 +125,14 @@ export function createManualBar(parent = document.body, { reducedMotion = () => 
         pos = null;
         side = anchor && !rm ? pickSide(anchor, size, safe) : "right";
       }
-      if (!manual && active) {
-        active = false;
-        // A balance out (|m| at 1): the marker stays at the end for 300 ms.
-        if (Math.abs(lastM) >= 1 - 1e-6) outUntil = nowMs + MANUAL_BAR.outMs;
+      if (!manual && active) active = false;
+      // A balance out: the marker stays at the end for 300 ms.
+      if (balanceOut && balanceOut.seq !== seenOut) {
+        seenOut = balanceOut.seq;
+        if (!manual) {
+          lastM = balanceOut.side < 0 ? -1 : 1;
+          outUntil = nowMs + MANUAL_BAR.outMs;
+        }
       }
       const holding = !manual && nowMs < outUntil;
       const show = Boolean(manual) || holding;

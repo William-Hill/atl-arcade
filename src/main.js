@@ -916,6 +916,10 @@ const hipProbe = new THREE.Vector3();
 const hitStopK = numParam("hitstop") != null ? { ...COMBO, perfectHitStopMs: numParam("hitstop") } : COMBO;
 let hitStopLeft = 0;
 let hitStops = 0;
+// The sim time (s) of the steps that a hit stop put off: they run when it ends.
+let hitStopDebt = 0;
+// The last manual balance out (#330, E4): the bar holds the marker at its end.
+let manualOut = { seq: 0, side: 0 };
 // Teach the moves in the world (#76): one prompt at a time, ?teach=1 or 0.
 const teach = createTeachPrompts({ levelName: level.name, geo, param: params.get("teach"), storage: safeStorage(), grindables: skaterEnv.grindables, touch: Boolean(touch), gamepad: () => input.gamepadId !== null, reducedMotion: () => effects.reducedMotion });
 // After the step from pbr lite to toon (#246): one line, one time. The flag
@@ -1083,6 +1087,8 @@ function simulate(dt) {
   run = stepRun(run, applied, dt, env, skaterEnv, beat.running ? beat : null);
   perf.end("skater");
   // A PERFECT link starts the hit stop (#338). The HUD does not stop.
+  const end = run.skater.manualEnd;
+  if (end && end.reason === "balance") manualOut = { seq: manualOut.seq + 1, side: Math.sign(end.balance) || 1 };
   const stopMs = hitStopFor(run.moves, hitStopK);
   if (stopMs) {
     hitStopLeft = startHitStop(hitStopLeft, stopMs);
@@ -1503,6 +1509,10 @@ function frame(now) {
     // the hit stop. A hit stop that starts in this frame ends the frame's steps.
     const hs = stepHitStop(hitStopLeft, elapsed * 1000);
     hitStopLeft = hs.left;
+    if (hitStopLeft <= 0 && hitStopDebt > 0) {
+      stepper = { ...stepper, leftover: stepper.leftover + hitStopDebt };
+      hitStopDebt = 0;
+    }
     const stepped = advance(stepper, hs.simMs / 1000);
     stepper = stepped.stepper;
     let ran = 0;
@@ -1512,7 +1522,7 @@ function frame(now) {
       if (hitStopLeft > 0) {
         // The steps of this frame after the PERFECT run after the hit stop,
         // so the sim loses exactly perfectHitStopMs.
-        stepper = { ...stepper, leftover: stepper.leftover + (stepped.steps - ran) * stepper.dt };
+        hitStopDebt += (stepped.steps - ran) * stepper.dt;
         break;
       }
     }
@@ -1560,7 +1570,7 @@ function frame(now) {
       hipProbe.set(skater.position[0], skater.position[1] + 1, skater.position[2]).project(camera);
       if (hipProbe.z < 1) anchor = { x: ((hipProbe.x + 1) / 2) * window.innerWidth, y: ((1 - hipProbe.y) / 2) * window.innerHeight };
     }
-    manualBar.update({ manual: skater.manual ?? null, anchor, dt: paused ? 0 : Math.min(elapsed, 0.1), nowMs: now, compact: compactHud, labels: barLabels(touch && input.source === "touch" ? "touch" : input.source, input.bindings) });
+    manualBar.update({ manual: skater.manual ?? null, balanceOut: manualOut, anchor, dt: paused ? 0 : Math.min(elapsed, 0.1), nowMs: now, compact: compactHud, labels: barLabels(touch && input.source === "touch" ? "touch" : input.source, input.bindings) });
     document.body.classList.toggle("reduced-motion", Boolean(effects.reducedMotion));
     if (touch) touch.oneButton = Boolean(input.mode?.oneButton);
     if (flickCardView) flickCardView.update({ flicks: touch.flicks, skater, skaterId: skaterEnv.skater, oneButton: Boolean(input.mode?.oneButton), ob: oneButton, buttons: touchButtonsRect() });

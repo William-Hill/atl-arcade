@@ -121,7 +121,8 @@ function startManual(s, { dir = "n", pressT, link = false, side, judgeNow = fals
 
 function endManual(s, reason, result, c) {
   const m = s.manual;
-  s.manualEnd = { toe: m.toe, meters: m.meters, pressT: m.pressT, capped: m.capped, result, reason };
+  // `balance` is the lean at the end: its sign gives the end of a balance out (the HUD bar).
+  s.manualEnd = { toe: m.toe, meters: m.meters, pressT: m.pressT, capped: m.capped, result, reason, balance: m.balance };
   if (result === "stumble") {
     s.speed *= c.stumbleSpeedKeep;
     s.velocity = s.velocity.map((v) => v * c.stumbleSpeedKeep);

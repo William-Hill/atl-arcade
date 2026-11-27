@@ -94,3 +94,16 @@ describe("#330 the Busy cue: a press during a dance", () => {
     expect(r.s.ignored).toBeNull();
   });
 });
+
+describe("#330 E4 the balance out of a manual", () => {
+  it("manualEnd has the lean at the end, so the HUD bar can hold the marker at that end", () => {
+    const r = rig({ speed: 6 });
+    let end = null;
+    r.steps(400, { grind: true, balance: -1 }, (run) => {
+      if (run.skater.manualEnd) end = run.skater.manualEnd;
+      return Boolean(end);
+    });
+    expect(end).toMatchObject({ reason: "balance", result: "stumble" });
+    expect(Math.abs(end.balance)).toBeCloseTo(1, 6);
+  });
+});

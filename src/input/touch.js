@@ -179,13 +179,22 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
   // resolve) as `data-dir`: "u", "d", "l", "r", or "n" for the neutral trick.
   // The lit arrow shows from flickMin (8.2).
   const shown = {};
-  function showRings() {
+  // `resolved` is the flick resolves of this sample ({ style1: "n", ... }):
+  // a tap can resolve and lift in one sample, and its dot still lights.
+  function showRings(resolved = {}) {
     const flicks = activeFlicks(tricks);
     const now = performance.now();
     for (const [action, { ring, button }] of Object.entries(rings)) {
       ring.style.left = `${button.offsetLeft + button.offsetWidth / 2}px`;
       ring.style.top = `${button.offsetTop + button.offsetHeight / 2}px`;
       const f = flicks.find((g) => g.button === action);
+      if (!f && resolved[action] != null) {
+        shown[action] = { at: now, dir: resolved[action] };
+        ring.dataset.active = "1";
+        ring.dataset.dir = resolved[action];
+        ring.dataset.resolved = "1";
+        continue;
+      }
       if (!f) {
         const last = shown[action];
         if (last && now - last.at < RING_HIDE_MS) continue;
@@ -221,7 +230,7 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
       queue.length = 0;
       const frame = touchTricksFrame(tricks, tMs, k, HALF_FRAME_MS);
       tricks = frame.state;
-      showRings();
+      showRings(frame.out.flick ?? {});
       const b = { ...held.snapshot(), style1: frame.out.style1, style2: frame.out.style2, grind: frame.out.grind };
       return {
         ...mapTouch({ stick, buttons: b }),

@@ -21,6 +21,10 @@ await page.addInitScript(() => {
   let lastKey = null;
   let evIdx = 0;
   let lastLinks = 0; // the links of the combo in the frame before a bank (a bank clears them)
+  let lastManual = false; // true when those links have a manual
+  // The move kinds that each button can start: a move event of another kind
+  // (for example the end of a dance that was busy at the press) is not the result.
+  const FITS = { trick: ["style", "dance", "grab"], spin: ["style", "dance", "grab", "spin"], grind: ["grind", "manual"] };
   const banks = [];
   const t0 = performance.now();
   const now = () => (performance.now() - t0) / 1000;
@@ -75,34 +79,39 @@ await page.addInitScript(() => {
     if (ev.length < evIdx) evIdx = 0;
     for (; evIdx < ev.length; evIdx++) {
       const e = ev[evIdx];
-      if (e.type === "move" && pending && pending.pressAt !== null && !cand && e.dir) close({ kind: e.move, dir: e.dir, name: e.name }, "move");
-      if (e.type === "bank") banks.push({ t, points: e.points, links: Math.max(lastLinks, atl.combo?.links?.length ?? 0) });
+      if (e.type === "move" && pending && pending.pressAt !== null && !cand && e.dir && !pending.busyAtPress && (FITS[pending.button] ?? []).includes(e.move)) close({ kind: e.move, dir: e.dir, name: e.name }, "move");
+      if (e.type === "bank") banks.push({ t, points: e.points, links: Math.max(lastLinks, atl.combo?.links?.length ?? 0), manual: lastManual });
     }
     lastLinks = atl.combo?.links?.length ?? 0;
+    lastManual = (atl.combo?.links ?? []).some((l) => l.move === "manual");
     if (pending && t - (pending.pressAt ?? pending.at) > (pending.button === "spin" ? 3.5 : 2.5)) close(null, "timeout");
   }
   requestAnimationFrame(tick);
   const playtest = {
     intend(dir) {
       const d = String(dir ?? "n").toLowerCase()[0];
-      if (pending) close(null, "superseded");
+      if (pending && cand) close({ kind: cand.kind, dir: cand.dir ?? null }, "superseded-seen");
+      else if (pending) close(null, "superseded");
       pending = { i: trials.length, at: now(), intended: "nlrud".includes(d) ? d : "n", heldAtIntend: dirs(), state: window.__atl?.skater?.state ?? null, pressAt: null, button: null, heldAtPress: null };
       trials.push(pending);
       return { ok: true, trial: pending.i };
     },
     metrics() {
       const done = trials.filter((x) => x.pressAt !== null);
-      const got = done.filter((x) => x.result !== null);
+      const open = done.filter((x) => x.source === undefined); // pressed, not resolved yet
+      const closed = done.filter((x) => x.source !== undefined);
+      const got = closed.filter((x) => x.result !== null);
       const wanted = got.filter((x) => x.result === x.intended);
-      const push = done.filter((x) => x.intended !== "u" && (x.heldAtPress ?? []).includes("u"));
-      const carve = done.filter((x) => !"lr".includes(x.intended) && (x.heldAtPress ?? []).some((h) => h === "l" || h === "r"));
-      const firstCombo = banks.find((b) => (b.links ?? 0) >= 3);
+      const push = closed.filter((x) => x.intended !== "u" && (x.heldAtPress ?? []).includes("u"));
+      const carve = closed.filter((x) => !"lr".includes(x.intended) && (x.heldAtPress ?? []).some((h) => h === "l" || h === "r"));
+      const firstCombo = banks.find((b) => (b.links ?? 0) >= 3 && b.manual);
       return {
-        trials: done.length,
+        trials: closed.length,
         intentsWithoutPress: trials.length - done.length,
-        noTrick: done.length - got.length,
-        noTrickBusy: done.filter((x) => x.result === null && x.busyAtPress).length,
-        wantedShare: done.length ? wanted.length / done.length : null,
+        open: open.length,
+        noTrick: closed.length - got.length,
+        noTrickBusy: closed.filter((x) => x.result === null && x.busyAtPress).length,
+        wantedShare: closed.length ? wanted.length / closed.length : null,
         wanted: wanted.length,
         unwantedUpFromPush: push.length ? push.filter((x) => x.result === "u").length / push.length : null,
         upFromPush: push.filter((x) => x.result === "u").length,
@@ -112,7 +121,7 @@ await page.addInitScript(() => {
         carveTrials: carve.length,
         firstCombo: firstCombo ? firstCombo.t : null,
         banks: banks.length,
-        misses: done.filter((x) => x.result !== x.intended).map((x) => ({ i: x.i, intended: x.intended, result: x.result, kind: x.kind, button: x.button, held: x.heldAtPress, busy: x.busyAtPress, state: x.stateAtPress, speed: x.speedAtPress, source: x.source })),
+        misses: closed.filter((x) => x.result !== x.intended).map((x) => ({ i: x.i, intended: x.intended, result: x.result, kind: x.kind, button: x.button, held: x.heldAtPress, busy: x.busyAtPress, state: x.stateAtPress, speed: x.speedAtPress, source: x.source })),
       };
     },
     rows: () => trials,

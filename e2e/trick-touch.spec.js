@@ -82,7 +82,7 @@ test.describe("touch flick on Pixel 7", () => {
       const rr = ring.getBoundingClientRect();
       return {
         dir: ring.dataset.dir,
-        radius: Math.max(...[...ring.querySelectorAll(".flick-arrow")].map((a) => {
+        radius: Math.max(...[...ring.querySelectorAll(".flick-arrow:not(.flick-n)")].map((a) => {
           const r = a.getBoundingClientRect();
           return Math.hypot(r.left + r.width / 2 - rr.left, r.top + r.height / 2 - rr.top);
         })),

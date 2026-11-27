@@ -88,7 +88,7 @@ test.describe("desktop 1280 x 720", () => {
       mult: document.querySelector("#hud-combo .hud-mult").textContent,
       pending: document.getElementById("hud-pending").textContent,
       tag: document.getElementById("hud-tag").textContent,
-      border: getComputedStyle(document.getElementById("hud-tag")).borderTopWidth,
+      border: getComputedStyle(document.getElementById("hud-tag")).outlineWidth,
       link: window.__atl.combo.links.find((l) => l.name === "Japan Grab"),
       stop: window.__atl.hitStop,
     }));
@@ -142,7 +142,7 @@ test.describe("desktop 1280 x 720", () => {
     // WOBBLE: the grab is still held at the touchdown.
     await page.evaluate(() => (window.__atl.renderPaused = false));
     await page.waitForFunction(() => document.getElementById("hud-tag").dataset.look === "wobble", null, { timeout: 60000, polling: "raf" });
-    const wobble = await page.evaluate(() => ({ text: document.getElementById("hud-tag").textContent, style: getComputedStyle(document.getElementById("hud-tag")).borderTopStyle, combo: document.getElementById("hud-combo").textContent }));
+    const wobble = await page.evaluate(() => ({ text: document.getElementById("hud-tag").textContent, style: getComputedStyle(document.getElementById("hud-tag")).outlineStyle, combo: document.getElementById("hud-combo").textContent }));
     expect(wobble.text).toBe("~ WOBBLE ↑ Rocket Grab");
     expect(wobble.style).toBe("dotted");
     expect(wobble.combo).toContain("↑ Rocket Grab ~");

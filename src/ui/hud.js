@@ -95,8 +95,8 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
   const comboText = document.createTextNode("");
   const comboMult = document.createElement("b");
   comboMult.className = "hud-mult";
-  combo.append(comboText, comboMult);
-  combo.dataset.empty = "1";
+  // The nodes go in at the first line (an empty line has no child nodes).
+
   // E2 and E3 (6): the chip text, the hold bar of a grab, the beat pips of
   // a dance. The text is the only text node of #hud-tag.
   const tag = el("div", "hud-tag", root);
@@ -161,7 +161,9 @@ export function createHud(root, { touch = false, fence = null, reducedMotion = (
     comboKey = key;
     comboText.data = body;
     comboMult.textContent = mult;
-    combo.dataset.empty = body || mult ? "0" : "1";
+    // An empty line has no child nodes, so .hud-combo:empty hides its pill.
+    if (!body && !mult) combo.replaceChildren();
+    else if (combo.firstChild !== comboText || comboMult.parentNode !== combo) combo.replaceChildren(comboText, comboMult);
   };
   // The time of the last bank: the combo was active, and now it is not.
   let wasActive = false;

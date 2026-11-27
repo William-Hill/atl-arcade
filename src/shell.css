@@ -70,9 +70,6 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
   background: var(--hud-pill);
 }
 .hud-combo:empty, .hud-pending:empty, .hud-tag:empty { background: none; padding: 0; }
-/* #hud-combo holds a text node and the bold multiplier, so hud.js marks it
-   empty (an empty item has no pill). */
-.hud-combo[data-empty="1"] { background: none; padding: 0; border-color: transparent; }
 :root { --hud-pill: rgba(11, 11, 18, 0.82); }
 
 .hud-score { font-size: 28px; font-weight: 700; letter-spacing: 0.02em; }
@@ -89,15 +86,16 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
 /* E2, the live trick chip (#330, docs/ux/trick-hud.md 6.1). Each state has
    its own border and word, so no state is color only (R12.4): progress solid
    2 px, clean none, GOOD 2 px, PERFECT 3 px and bold, WOBBLE dotted, Busy and
-   refused none at 16 px. */
-.hud-tag { font-size: 22px; font-weight: 700; color: #f3f3f7; min-height: 26px; border: 2px solid transparent; transition: opacity 0.3s; }
+   refused none at 16 px. The borders are inset outlines, so the HUD column
+   keeps its height (#268, #277). */
+.hud-tag { font-size: 22px; font-weight: 700; color: #f3f3f7; min-height: 26px; outline: 0 solid transparent; outline-offset: -2px; transition: opacity 0.3s; }
 .hud-tag[data-shown="0"] { background: none; }
-.hud-tag[data-look="progress"] { border-color: #f3f3f7; font-weight: 600; }
-.hud-tag[data-look="clean"] { border-color: transparent; }
-.hud-tag[data-look="good"] { color: #ffd166; border-color: #ffd166; }
-.hud-tag[data-look="perfect"] { color: #7ef0c2; border: 3px solid #7ef0c2; font-weight: 800; }
-.hud-tag[data-look="wobble"] { color: #f3f3f7; border: 2px dotted #f3f3f7; }
-.hud-tag[data-look="busy"], .hud-tag[data-refused="1"] { font-size: 16px; font-weight: 600; color: #ffffff; border-color: transparent; }
+.hud-tag[data-look="progress"] { outline: 2px solid #f3f3f7; font-weight: 600; }
+.hud-tag[data-look="clean"] { outline: none; }
+.hud-tag[data-look="good"] { color: #ffd166; outline: 2px solid #ffd166; }
+.hud-tag[data-look="perfect"] { color: #7ef0c2; outline: 3px solid #7ef0c2; outline-offset: -3px; font-weight: 800; }
+.hud-tag[data-look="wobble"] { color: #f3f3f7; outline: 2px dotted #f3f3f7; }
+.hud-tag[data-look="busy"], .hud-tag[data-refused="1"] { font-size: 16px; font-weight: 600; color: #ffffff; outline: none; }
 .hud-tag-text { display: block; }
 /* E3: the hold bar of a grab (stripes at holdCap) and the beat pips. */
 .hud-hold { height: 4px; margin: 2px 0 1px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; overflow: hidden; }
@@ -109,8 +107,7 @@ body.dev .dev-only { display: inline; opacity: 0.8; }
 .hud-hold[hidden], .hud-pips[hidden] { display: none; }
 /* E1: the multiplier in bold; a bail "+N" has a dashed border and paper text. */
 .hud-mult { font-weight: 800; }
-.hud-combo { border: 2px solid transparent; }
-.hud-combo[data-active="0"][data-bail="1"] { color: rgba(243, 243, 247, 0.8); border: 2px dashed rgba(243, 243, 247, 0.8); }
+.hud-combo[data-active="0"][data-bail="1"] { color: rgba(243, 243, 247, 0.8); outline: 2px dashed rgba(243, 243, 247, 0.8); outline-offset: -2px; }
 .hud-meter { display: flex; align-items: center; gap: 8px; }
 .hud-label { font-size: 14px; letter-spacing: 0.08em; min-width: 72px; }
 .hud-bar { position: relative; width: 180px; height: 10px; background: rgba(255, 255, 255, 0.15); border-radius: 5px; overflow: hidden; }

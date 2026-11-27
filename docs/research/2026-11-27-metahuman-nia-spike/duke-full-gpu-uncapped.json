@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-27T16:57:47.327Z",
+  "label": "duke-full-gpu-uncapped",
+  "glb": "duke-assembled-v01.glb",
+  "glbBytes": 62974348,
+  "swapped": "skater-D0jBOLMn.glb",
+  "gpu": "machine (ANGLE Metal), vsync off",
+  "tier": "high",
+  "look": "pbr",
+  "viewer": {
+    "info": {
+      "triangles": 60816,
+      "bones": 359,
+      "skinned": true,
+      "animations": 1,
+      "face": false,
+      "meshMin": [
+        -0.5832164287567139,
+        -0.005368021782487631,
+        -0.1688501536846161
+      ],
+      "meshMax": [
+        0.5827690362930298,
+        1.480627417564392,
+        0.2653655707836151
+      ],
+      "min": [
+        -0.16885023992224815,
+        -0.005368219582236564,
+        -0.582768722143502
+      ],
+      "max": [
+        0.2653655556725313,
+        1.794574064511672,
+        0.5832162592762795
+      ]
+    },
+    "error": null,
+    "clips": [
+      "assembled_check"
+    ],
+    "frame": {
+      "frames": 3745,
+      "meanMs": 1.3,
+      "p95Ms": 2.5,
+      "medianFps": 555.6,
+      "meanFps": 749.3
+    },
+    "errors": []
+  }
+}

@@ -14,6 +14,16 @@ import { labBuildings } from "./lab.js";
 const LEVEL = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../levels/beltline-eastside/level.json"), "utf8"));
 const SQUARE = orientRing([[0, 0], [10, 0], [10, 10], [0, 10]], false);
 
+// One build of facadeKit(LEVEL) with the default arguments takes about 2 s.
+// The tests that read it share this one build. facadeKit does not change
+// LEVEL. A test must not change the result; a test that must change it
+// builds its own.
+let defaultKitResult = null;
+function defaultKit() {
+  defaultKitResult ??= facadeKit(LEVEL);
+  return defaultKitResult;
+}
+
 function empty() {
   return { positions: [], indices: [], colors: [], facade: [] };
 }
@@ -98,7 +108,7 @@ describe("facade kit", () => {
   });
 
   it("builds the kit for the BeltLine level in each building tile", () => {
-    const { tiles, counts } = facadeKit(LEVEL);
+    const { tiles, counts } = defaultKit();
     expect(tiles.length).toBeGreaterThan(5);
     expect(counts.roof).toBeGreaterThan(100);
     expect(counts.cornice).toBeGreaterThan(100);
@@ -188,7 +198,7 @@ describe("facade kit", () => {
   });
 
   it("puts the sills and the piers in small depth tiles, not in the building tiles", () => {
-    const { tiles, depthTiles, counts } = facadeKit(LEVEL);
+    const { tiles, depthTiles, counts } = defaultKit();
     expect(counts.sill).toBeGreaterThan(10000);
     expect(counts.pier).toBeGreaterThan(1000);
     let tris = 0;
@@ -230,7 +240,7 @@ describe("the facade kit and the murals", () => {
   it("puts no kit geometry on a mural", () => {
     const murals = muralWalls(LEVEL);
     expect(murals.length).toBeGreaterThanOrEqual(10);
-    const { tiles, depthTiles } = facadeKit(LEVEL);
+    const { tiles, depthTiles } = defaultKit();
     const meshes = [...tiles, ...depthTiles].map((t) => t.mesh);
     const boxes = murals.map((m) => {
       const len = Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]);
@@ -911,7 +921,7 @@ describe("the solar rows and the level counts", () => {
   });
 
   it("puts the solar rows on BeltLine roofs and keeps the kit budgets", () => {
-    const { counts } = facadeKit(LEVEL);
+    const { counts } = defaultKit();
     expect(counts.solar).toBeGreaterThan(40);
     expect(counts.porch).toBeGreaterThan(150);
   });
@@ -939,7 +949,7 @@ describe("facadeKit and the claimed landmark footprints (#200)", () => {
 describe("the mural frame (#198)", () => {
   it("puts a cap over and a base under each mural only with muralFrames", () => {
     const murals = muralWalls(LEVEL);
-    const off = facadeKit(LEVEL);
+    const off = defaultKit();
     const on = facadeKit(LEVEL, undefined, null, undefined, null, undefined, { muralFrames: true });
     expect(off.counts.muralFrame).toBe(0);
     expect(on.counts.muralFrame).toBe(murals.length);

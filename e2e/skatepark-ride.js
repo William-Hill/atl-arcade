@@ -15,6 +15,9 @@ import { yawFromHeading } from "../src/sim/skate/controller.js";
 import { stepRun } from "../src/sim/skate/run.js";
 import { createSkater, createSkaterEnv } from "../src/sim/skate/skater.js";
 import { createCardState } from "../src/sim/fact-cards.js";
+import { createOneButton, oneButtonFrame, oneButtonNeedsRail } from "../src/input/one-button.js";
+import { simTricks } from "../src/input/trick-constants.js";
+import { oneButtonContext } from "../src/sim/skate/skater.js";
 
 const read = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), "utf8"));
 
@@ -35,6 +38,46 @@ export function park() {
     made = { level, env, skaterEnv };
   }
   return made;
+}
+
+// The step of a ride (#336). Normal mode: stepRun with the planner input.
+// One-button mode (GDD R12.1): the skater env has the trick rules on with
+// one-button mode, as the game with the "One-button tricks" switch. The
+// planner gives an intent ({ push, brake, steer, jump } and one of `trick`,
+// `grind`, `style1`, `style2`); the device frame holds only the movement
+// inputs and TRICK (`style1`), and each frame goes through oneButtonFrame()
+// with the sim context, as sampleInput() in src/main.js does.
+// `step(run, intent)` returns { run, frame }; replay the frames with a new
+// stepper of the same mode.
+let obEnv = null;
+export function stepperFor(oneButton = false) {
+  const { env, skaterEnv } = park();
+  if (!oneButton) return { oneButton, skaterEnv, step: (run, input) => ({ run: stepRun(run, input, 1 / 60, env, skaterEnv), frame: input }) };
+  obEnv ??= { ...skaterEnv, tricks: simTricks({ oneButton: true }) };
+  let ob = createOneButton();
+  return {
+    oneButton,
+    skaterEnv: obEnv,
+    step(run, intent = {}) {
+      const frame = oneButtonDevice(intent);
+      const ctx = oneButtonContext(run.skater, obEnv, { rail: oneButtonNeedsRail(ob, frame) });
+      const r = oneButtonFrame(ob, { ...frame, oneButton: true }, ctx, run.time + 1 / 60);
+      ob = r.ob;
+      return { run: stepRun(run, r.frame, 1 / 60, env, obEnv), frame };
+    },
+  };
+}
+
+// The device frame of a one-button intent: steer, push, brake, JUMP, and
+// TRICK (`style1`) only. GRIND, SPIN, and SWITCH become TRICK or nothing.
+export function oneButtonDevice(intent = {}) {
+  const f = {};
+  if (intent.steer) f.steer = intent.steer;
+  if (intent.push) f.push = true;
+  if (intent.brake) f.brake = true;
+  if (intent.jump) f.jump = true;
+  if (intent.trick || intent.grind || intent.style1 || intent.style2) f.style1 = true;
+  return f;
 }
 
 // A pad point [u, v] in level meters, and the yaw of a pad direction.
@@ -101,8 +144,9 @@ export function simulate(script, start) {
 // to the short round rail, ride it off its end, and roll until the combo
 // banks. The planner presses grind when the next feature is in reach and
 // jumps just before a rail ends.
-export function comboLine({ startU = -32, lane = -3.5, frames = 460 } = {}) {
-  const { env, skaterEnv } = park();
+export function comboLine({ startU = -32, lane = -3.5, frames = 460, oneButton = false } = {}) {
+  const { skaterEnv } = park();
+  const stepper = stepperFor(oneButton);
   const start = startAt(startU, lane, 1, 0);
   // The pad u where the grind press for each feature starts.
   const pressAt = [-14.2, 0, 8.9];
@@ -119,8 +163,9 @@ export function comboLine({ startU = -32, lane = -3.5, frames = 460 } = {}) {
       input = { grind: true, steer: BALANCE, ...(left < 0.35 && grinds < 3 ? { jump: true } : {}) };
     } else if (grinds < 3 && u > pressAt[grinds]) input = { grind: true, steer: BALANCE };
     else if (grinds === 0) input = { push: true };
-    run = stepRun(run, input, 1 / 60, env, skaterEnv);
-    inputs.push(input);
+    const stepped = stepper.step(run, input);
+    run = stepped.run;
+    inputs.push(stepped.frame);
     if (run.skater.justSnapped) grinds += 1;
     if (run.banked) break;
   }

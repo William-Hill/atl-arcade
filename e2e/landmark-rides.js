@@ -8,8 +8,14 @@
 // planRide(id) plans the ride for the challenge of one spot of
 // levels/beltline-eastside/landmarks.json and checks it with the landmark
 // module: { id, type, script, start, claimed, found, ticks, note }.
+//
+// planRide(id, { oneButton: true }) plans the same ride in one-button mode
+// (#336, GDD R12.1): the script holds only steer, push, brake, JUMP, and
+// TRICK (`style1`), and replay(script, start, { oneButton: true }) plays it
+// through oneButtonFrame() as the game does (stepperFor() in
+// ./skatepark-ride.js).
 
-import { BALANCE, LANDMARKS as DATA, comboLine, park } from "./skatepark-ride.js";
+import { BALANCE, LANDMARKS as DATA, comboLine, park, stepperFor } from "./skatepark-ride.js";
 import { landingProbe, travelSpot } from "../src/level/geo/travel.js";
 import { terrainOf } from "../src/level/geo/terrain.js";
 import { goalsFor } from "../src/level/goals.js";
@@ -58,17 +64,21 @@ function pack(inputs) {
   return script;
 }
 
+// The mode of the plan that planRide() makes now (false or true: one-button).
+let rideMode = false;
+
 // Plans a ride in a closed loop: `plan(run, tick)` gives the input of the
 // tick, or null to stop. Returns { script, start }.
-function drive(start, plan, { max = 1500, tail = 45 } = {}) {
-  const { env, skaterEnv } = park();
+function drive(start, plan, { max = 1500, tail = 45, oneButton = rideMode } = {}) {
+  const stepper = stepperFor(oneButton);
   let run = newRun(start);
   const inputs = [];
   for (let t = 0; t < max; t += 1) {
     const input = plan(run, t);
     if (!input) break;
-    run = stepRun(run, input, DT, env, skaterEnv);
-    inputs.push(input);
+    const stepped = stepper.step(run, input);
+    run = stepped.run;
+    inputs.push(stepped.frame);
   }
   // A short roll at the end, so the page shows the banner.
   for (let i = 0; i < tail; i += 1) inputs.push({});
@@ -77,8 +87,8 @@ function drive(start, plan, { max = 1500, tail = 45 } = {}) {
 
 // Replays a script with the real controller, the goals and the landmark
 // module, as the page does. Every spot starts Unknown.
-export function replay(script, start, { progress } = {}) {
-  const { env, skaterEnv } = park();
+export function replay(script, start, { progress, oneButton = false } = {}) {
+  const stepper = stepperFor(oneButton);
   const def = goalsFor("beltline-eastside");
   let run = newRun(start);
   let goals = createGoals(def);
@@ -87,7 +97,7 @@ export function replay(script, start, { progress } = {}) {
   let grindFrom = null;
   for (const entry of script) {
     for (let i = 0; i < entry.frames; i += 1) {
-      run = stepRun(run, entry.input ?? {}, DT, env, skaterEnv);
+      run = stepper.step(run, entry.input ?? {}).run;
       goals = stepGoals(goals, run, def, DT);
       marks = stepLandmarks(marks, landmarkObs(run), DT, { active: !goals.ended });
       out.ticks += 1;
@@ -279,17 +289,26 @@ function comboPlans(spot) {
 // The ride for the challenge of spot `id`. It tries a few starts and keeps
 // the first that claims the spot with no bail. `claimed` is false when no
 // plan worked: then `note` says what happened in the last one.
-export function planRide(id) {
+export function planRide(id, { oneButton = false } = {}) {
+  rideMode = oneButton;
+  try {
+    return planRideNow(id, oneButton);
+  } finally {
+    rideMode = false;
+  }
+}
+
+function planRideNow(id, oneButton) {
   const spot = spotOf(id);
   const c = spot.challenge;
   if (!c) return { id, type: null, claimed: false, note: "an edge marker has no challenge" };
   // The skatepark combo is the rail line of the skatepark test (#222).
-  const plans = c.type === "gap" ? gapPlans(spot) : c.type === "grind" ? grindPlans(spot) : c.type === "line" ? linePlans(spot) : id === "historic-fourth-ward-skatepark" ? [() => comboLine()] : comboPlans(spot);
+  const plans = c.type === "gap" ? gapPlans(spot) : c.type === "grind" ? grindPlans(spot) : c.type === "line" ? linePlans(spot) : id === "historic-fourth-ward-skatepark" ? [() => comboLine({ oneButton })] : comboPlans(spot);
   let lastTry = null;
   for (const plan of plans) {
     const ride = plan();
     if (!ride) continue;
-    const r = replay(ride.script, ride.start);
+    const r = replay(ride.script, ride.start, { oneButton });
     lastTry = { ride, r };
     if (r.claimed.includes(id) && r.bails === 0 && r.respawns === 0) return { id, type: c.type, tier: c.tier, script: ride.script, start: ride.start, claimed: true, ticks: r.ticks, claimTick: r.claimTick, grindMeters: r.grindMeters, banks: r.banks, also: r.claimed.filter((x) => x !== id), found: [...new Set(r.found)], gaps: r.gaps, claimSum: r.claimSum, end: r.end.position };
   }

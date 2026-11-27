@@ -75,6 +75,9 @@ export const stanceFor = (dir = "n") => STANCES[dirOk(dir)];
 // R12.1: the one-button air set (Mute, Japan, Side, Rocket, Tuck Knee). The
 // next press takes the next item; the list starts again after the last.
 export const ONE_BUTTON_AIR = ["n", "l", "r", "u", "d"];
+// R12.1: the one-button grind set: "(edge) Grind" (the neutral stance), Soul,
+// Unity, Makio, Royale. A snap that TRICK causes takes the next one (#336).
+export const ONE_BUTTON_STANCES = ["n", "l", "r", "u", "d"];
 
 // R6: [Long] [edge] [stance] Grind. `id` is the grindable id ("ledge:..." is a ledge).
 export function grindName(id, meters, stance = "n", k = COMBO) {

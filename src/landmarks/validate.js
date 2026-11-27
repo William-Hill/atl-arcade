@@ -12,6 +12,7 @@
 //   goals        the goals of the level (goals.json `goals`), optional
 //   permissions  the file names in docs/permissions/, optional
 
+import { BANNED_WORDS } from "../content/banned-words.js";
 import { EDGE_FENCE } from "../level/edge-fence.js";
 import { distanceToSegment, pointInRings } from "../level/geo/geo-ground.js";
 
@@ -64,7 +65,8 @@ export const POINTER_HOSTS = ["wikipedia.org", "wikimedia.org", "wikidata.org", 
 
 // Words that a fact, a `short` line, or a hint must not hold (AGENTS.md
 // political rules, and the research note, section 3). Whole words, any case.
-export const BANNED_WORDS = ["crime", "police", "graffiti", "blight", "blighted", "slum", "decline", "declined", "abandoned", "derelict", "gentrification", "displaced", "displacement", "riot", "arson", "murder", "bail"];
+// The list is src/content/banned-words.js (#342), also for the trick names.
+export { BANNED_WORDS };
 
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
 const isPoint = (p) => Array.isArray(p) && p.length === 2 && isNum(p[0]) && isNum(p[1]);

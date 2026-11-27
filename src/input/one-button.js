@@ -19,6 +19,10 @@
 // | Manual                | nothing                 | stay in the manual                |
 
 export const ONE_BUTTON_HOLD = 0.5; // s, `oneButtonHold`. 0.3 / 0.5 / 0.8
+// s: an air press still snaps to a rail that comes in range this soon after
+// it ("buffered as GRIND.buffer", R12.1; #336). The same value as
+// GRIND.buffer in src/sim/skate/constants.js (a test checks it).
+export const ONE_BUTTON_BUFFER = 0.15;
 
 // The one-button sets, in order. The next press takes the next item; after
 // the last item the set starts again. `button` and `dir` are the slot of the
@@ -31,12 +35,14 @@ export const ONE_BUTTON_SETS = Object.freeze({
     { name: "Rocket Grab", dir: "u" },
     { name: "Tuck Knee", dir: "d" },
   ],
+  // "(edge)" is "Rail" or "Ledge" at the snap (grindName in
+  // src/sim/skate/tricks.js). The neutral stance has no stance word (#342).
   grind: [
-    { name: "Grind", dir: "n" },
-    { name: "Soul Grind", dir: "l" },
-    { name: "Unity Grind", dir: "r" },
-    { name: "Makio Grind", dir: "u" },
-    { name: "Royale Grind", dir: "d" },
+    { name: "(edge) Grind", dir: "n" },
+    { name: "(edge) Soul Grind", dir: "l" },
+    { name: "(edge) Unity Grind", dir: "r" },
+    { name: "(edge) Makio Grind", dir: "u" },
+    { name: "(edge) Royale Grind", dir: "d" },
   ],
   nia: [
     { name: "Bankhead Bounce", button: "style1", dir: "n" },
@@ -69,7 +75,8 @@ export const ONE_BUTTON_SETS = Object.freeze({
 
 export function createOneButton() {
   // `mode` is how the press now down works: "rail", "ground", "air", "none".
-  return { next: { air: 0, grind: 0, nia: 0, marcus: 0 }, down: false, downAt: 0, mode: "none", manual: false };
+  // `stanceSent`: the last frame sent a grind stance of the set (oneButtonFrame).
+  return { next: { air: 0, grind: 0, nia: 0, marcus: 0 }, down: false, downAt: 0, mode: "none", manual: false, stanceSent: false };
 }
 
 function take(ob, set) {
@@ -79,7 +86,8 @@ function take(ob, set) {
 }
 
 // The grind stance of the next snap in this mode, and the next state.
-// The sim calls it at the snap that the one-button intent caused.
+// oneButtonFrame() calls it on the frame after a snap that the one-button
+// intent caused.
 export function takeStance(ob) {
   const { item, next } = take(ob, "grind");
   return { ob: { ...ob, next }, stance: item };
@@ -116,8 +124,11 @@ export function stepOneButton(ob, ctx, trick, t, hold = ONE_BUTTON_HOLD) {
     s = { ...s, down: false, mode: "none", manual: false };
   }
   if (s.down) {
-    // A rail that comes in range during a hold takes the input (R8).
-    if (s.mode === "rail" || (rail && s.mode !== "air")) {
+    // A rail that comes in range during a hold takes the input (R8). In the
+    // air the press takes the next grab, and a rail that comes in range in
+    // ONE_BUTTON_BUFFER after the press still takes the input (the grind
+    // buffer, R12.1): the snap ends the grab.
+    if (s.mode === "rail" || (rail && (s.mode !== "air" || t - s.downAt <= ONE_BUTTON_BUFFER + 1e-6))) {
       out.grind = true;
       if (s.mode !== "rail") s = { ...s, mode: "rail", manual: false };
     } else if (s.mode === "ground" && !s.manual && t - s.downAt >= hold - 1e-6) {
@@ -135,11 +146,19 @@ export function stepOneButton(ob, ctx, trick, t, hold = ONE_BUTTON_HOLD) {
 // input frame; `ctx` is the sim context (oneButtonContext() in
 // src/sim/skate/skater.js). Returns the next state and the frame for the
 // sim: `grind` is also true while the intent holds GRIND, and `ob` is
-// { manual, start } (src/sim/skate/trick-step.js reads it). The real GRIND
-// and SPIN still work (R12.1).
+// { manual, start, stance } (src/sim/skate/trick-step.js reads it).
+// `ob.stance` is the direction of the next stance of the grind set while
+// the TRICK intent holds GRIND and the real GRIND is up, else null: a snap
+// on that frame takes it (#336). The skater on a rail on the next frame
+// shows the snap, and the set moves to the next stance. The real GRIND and
+// SPIN still work, with no direction (R12.1).
 export function oneButtonFrame(ob, frame, ctx, t, hold = ONE_BUTTON_HOLD) {
-  const r = stepOneButton(ob, ctx, Boolean(frame.style1), t, hold);
-  return { ob: r.ob, frame: { ...frame, grind: Boolean(frame.grind) || r.grind, ob: { manual: r.manual, start: r.start } } };
+  let o = ob;
+  if (o.stanceSent && ctx.state === "grind") o = takeStance(o).ob;
+  const r = stepOneButton(o, ctx, Boolean(frame.style1), t, hold);
+  const send = r.grind && !frame.grind && ctx.state !== "grind";
+  const stance = send ? ONE_BUTTON_SETS.grind[r.ob.next.grind % ONE_BUTTON_SETS.grind.length].dir : null;
+  return { ob: { ...r.ob, stanceSent: send }, frame: { ...frame, grind: Boolean(frame.grind) || r.grind, ob: { manual: r.manual, start: r.start, stance } } };
 }
 
 // True when the frame needs the rail search of the sim context: TRICK is

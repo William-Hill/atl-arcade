@@ -232,7 +232,7 @@ describe("R9, R10, F5 to F7: links, landings, beat, bank", () => {
     // The speed along the rail after the bail is 0.5 times the speed of the
     // step before (the fall adds only a side push, GRIND.fallSideSpeed).
     const keep = r.s.velocity.reduce((sum, v, i) => sum + v * along[i], 0);
-    expect(keep).toBeCloseTo(before * GRIND.fallSpeedKeep, 1);
+    expect(keep).toBeCloseTo(before * 0.5, 1);
     expect(GRIND.fallSpeedKeep).toBe(0.5);
   });
 

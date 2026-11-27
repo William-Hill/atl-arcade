@@ -112,7 +112,11 @@ export function stepTeach(t, prev, s, input = {}, combo = null, dt = 1 / 60, k =
   let afterGrind = t.afterGrind;
   let linkManual = t.linkManual;
   if (s.state === "grind") afterGrind = true;
-  else if (combo && !combo.active) afterGrind = false;
+  else if (combo && !combo.active) {
+    // The combo ended: a grind and a manual of that combo no longer link.
+    afterGrind = false;
+    linkManual = false;
+  }
   // Only a JUMP or a kicker counts, not a roll off an edge.
   if (prev.manual && !s.manual) {
     if (linkManual && s.state === "air" && (s.airFrom === "jump" || s.airFrom === "launch")) mark("link");

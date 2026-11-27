@@ -192,6 +192,10 @@ describe("teach trick steps (#331)", () => {
     // A roll off an edge is not a JUMP or a kicker.
     const edge = stepTeach(t, rolling({ manual }), air({ manual: null, airFrom: "edge" }), {}, active);
     expect(edge.done.link).toBeUndefined();
+    // The combo ends during the manual (a capped manual): a jump after it does not count.
+    const ended = stepTeach(t, rolling({ manual }), rolling({ manual }), {}, { links: [], active: false });
+    expect(ended.linkManual).toBe(false);
+    expect(stepTeach(ended, rolling({ manual }), air({ manual: null, airFrom: "jump" }), {}, active).done.link).toBeUndefined();
     // A manual that ends on the ground does not count, and the next manual needs a grind first.
     const released = stepTeach(t, rolling({ manual }), rolling({ manual: null }), {}, active);
     expect(released.done.link).toBeUndefined();

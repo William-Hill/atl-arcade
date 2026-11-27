@@ -7,7 +7,7 @@
 // hatching) and color second, so they read in grayscale (R12.4).
 
 import { keyName } from "../input/remap.js";
-import { MANUAL_BAR, barHeight, barTarget, fixedPlace, hitsBlocker, markerLook, markerTop, pickSide, safeRect, smoothToward, zoneOf } from "./manual-bar-math.js";
+import { MANUAL_BAR, barHeight, barTarget, fixedPlace, followStep, markerLook, markerTop, pickSide, safeRect, zoneOf } from "./manual-bar-math.js";
 
 const STYLE = `
 #manual-bar { position: fixed; left: 0; top: 0; z-index: 12; width: 16px; pointer-events: none; opacity: 0; transition: opacity 0.1s; will-change: transform; }
@@ -146,9 +146,8 @@ export function createManualBar(parent = document.body, { reducedMotion = () => 
       if (bottom.textContent !== labels.bottom) bottom.textContent = labels.bottom;
       root.dataset.side = side;
       const target = rm || !anchor ? fixedPlace(viewW, viewH, size, safe) : barTarget(anchor, side, size, safe, blocks);
-      pos = rm || !anchor ? target : smoothToward(pos, target, dt);
       // The smoothing path can cross a blocker: then the bar goes to the target at once.
-      if (hitsBlocker(pos, size, blocks)) pos = target;
+      pos = rm || !anchor ? target : followStep(pos, target, dt, size, blocks);
       root.style.transform = `translate(${Math.round(pos.x - size.w / 2)}px, ${Math.round(pos.y - size.h / 2)}px)`;
       marker.style.top = `${markerTop(m, trackH - 4)}px`;
       const look = markerLook(m, nowMs / 1000, rm);

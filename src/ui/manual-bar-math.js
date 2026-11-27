@@ -90,6 +90,14 @@ export function smoothToward(cur, target, dt, tau = MANUAL_BAR.tau) {
   return { x: cur.x + (target.x - cur.x) * a, y: cur.y + (target.y - cur.y) * a };
 }
 
+// One follow step of the rendered place: the smoothing, but when the
+// smoothed place overlaps a blocker the bar goes to the (clear) target at
+// once, so the rendered bar never covers a blocker.
+export function followStep(pos, target, dt, size, blockers = [], tau = MANUAL_BAR.tau) {
+  const next = smoothToward(pos, target, dt, tau);
+  return hitsBlocker(next, size, blockers) ? { ...target } : next;
+}
+
 // With reduced motion the bar does not follow the skater: it stays 120 px
 // right of the screen center, at the center height, inside the safe rectangle.
 export function fixedPlace(viewW, viewH, { w, h }, safe, k = MANUAL_BAR) {

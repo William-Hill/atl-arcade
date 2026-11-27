@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MANUAL_BAR, barHeight, barTarget, fixedPlace, hitsBlocker, markerLook, markerTop, pickSide, safeRect, smoothToward, zoneOf } from "./manual-bar-math.js";
+import { MANUAL_BAR, barHeight, barTarget, fixedPlace, followStep, hitsBlocker, markerLook, markerTop, pickSide, safeRect, smoothToward, zoneOf } from "./manual-bar-math.js";
 
 const size = { w: MANUAL_BAR.w, h: barHeight(false) };
 
@@ -51,6 +51,19 @@ describe("#330 E4 the manual balance bar", () => {
     expect(hitsBlocker({ x: 696, y: 350 }, size, [blocker])).toBe(true);
     expect(hitsBlocker({ x: 696, y: 520 }, size, [blocker])).toBe(false);
     expect(hitsBlocker({ x: 600, y: 350 }, size, [])).toBe(false);
+  });
+
+  it("followStep: the rendered bar jumps to the clear target when the smoothed place hits a blocker", () => {
+    const blocker = { x: 690, y: 300, w: 100, h: 100 };
+    // The review example: from (696, 520) to the target (696, 180), half the way in one step.
+    const dt = 0.12 * Math.LN2;
+    const plain = smoothToward({ x: 696, y: 520 }, { x: 696, y: 180 }, dt);
+    expect(hitsBlocker(plain, size, [blocker])).toBe(true);
+    const step = followStep({ x: 696, y: 520 }, { x: 696, y: 180 }, dt, size, [blocker]);
+    expect(step).toEqual({ x: 696, y: 180 });
+    expect(hitsBlocker(step, size, [blocker])).toBe(false);
+    // With no blocker on the path it smooths as before.
+    expect(followStep({ x: 696, y: 520 }, { x: 696, y: 180 }, dt, size, [])).toEqual(plain);
   });
 
   it("the smoothing step moves 1 - exp(-dt / 0.12) of the distance", () => {

@@ -304,6 +304,28 @@ test.describe("desktop 1280 x 720", () => {
   });
 });
 
+test.describe("saved bindings", () => {
+  test("E6: a saved jump on pad button 8 keeps its move; View does not open or close the list", async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem("atl.controls.v1", JSON.stringify({ gamepad: { jump: [8] } }));
+      } catch {}
+    });
+    await ready(page);
+    const pad = (pressed) => ({ connected: true, buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: pressed.includes(i), value: pressed.includes(i) ? 1 : 0 })), axes: [0, 0, 0, 0] });
+    const poll = (p) => page.evaluate((x) => window.__atl.trickHud.trickList.pollPad(x), p);
+    expect(await page.evaluate(() => window.__atl.input.bindings.gamepad.buttons.jump)).toEqual([8]);
+    await poll(pad([]));
+    await poll(pad([8]));
+    expect(await page.evaluate(() => window.__atl.trickHud.trickList.isOpen)).toBe(false);
+    // Opened another way, View still does not close it.
+    await page.evaluate(() => window.__atl.trickHud.trickList.open());
+    await poll(pad([]));
+    await poll(pad([8]));
+    expect(await page.evaluate(() => window.__atl.trickHud.trickList.isOpen)).toBe(true);
+  });
+});
+
 test.describe("reduced motion", () => {
   test("E4: the manual bar has a fixed place, no pulse, and the ! mark near the limit", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });

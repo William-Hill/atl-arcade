@@ -216,8 +216,10 @@ describe("R9, R10, F5 to F7: links, landings, beat, bank", () => {
     r.step({ grind: true });
     r.setRun({ combo: c0 });
     let before = null;
+    let along = null;
     r.steps(200, (f, rr) => {
       before = rr.s.speed;
+      along = rr.s.velocity.map((v) => v / (Math.hypot(...rr.s.velocity) || 1)); // the rail direction
       return { grind: true, steer: 0 };
     }, (run) => run.skater.justFell);
     expect(r.s.justFell).toBe(true);
@@ -227,6 +229,10 @@ describe("R9, R10, F5 to F7: links, landings, beat, bank", () => {
     expect(r.run.banked).toBe(0);
     expect(r.run.combo.style).toBeCloseTo(0.25, 9);
     expect(Math.hypot(r.s.velocity[0], r.s.velocity[2])).toBeGreaterThan(before * GRIND.fallSpeedKeep - 0.01);
+    // The speed along the rail after the bail is 0.5 times the speed of the
+    // step before (the fall adds only a side push, GRIND.fallSideSpeed).
+    const keep = r.s.velocity.reduce((sum, v, i) => sum + v * along[i], 0);
+    expect(keep).toBeCloseTo(before * GRIND.fallSpeedKeep, 1);
     expect(GRIND.fallSpeedKeep).toBe(0.5);
   });
 
@@ -261,7 +267,9 @@ describe("R9, R10, F5 to F7: links, landings, beat, bank", () => {
     expect(r.s.landing.result).toBe("stumble");
     expect(r.s.landing.hold).toBeCloseTo(0.8, 1);
     const full = r.moves.at(-1).points;
-    expect(r.moves.at(-1)).toMatchObject({ name: "Japan Grab", landing: "stumble", earned: Math.round(full * 0.5) });
+    // F3 for the same air: 100 + 120 + 60 * 0.8 = 268; F5 with stumbleKeep 0.5: 134.
+    expect(full).toBe(268);
+    expect(r.moves.at(-1)).toMatchObject({ name: "Japan Grab", landing: "stumble", earned: 134 });
     expect(r.run.combo.style).toBeCloseTo(0.25, 9);
     expect(r.s.speed).toBeCloseTo(before * 0.7, 6);
   });

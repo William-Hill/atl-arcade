@@ -1,0 +1,55 @@
+{
+ "native_vertex_count": 54412,
+ "pins": {
+  "face_eye_outer_L": {
+   "vertex": 3907,
+   "ue_cm": [
+    5.177959054708481,
+    8.271116018295288,
+    157.81716108322144
+   ],
+   "fit_hit_to_vertex_mm": 0.28,
+   "pin_move_mm": 4.61
+  },
+  "face_eye_outer_R": {
+   "vertex": 15121,
+   "ue_cm": [
+    -5.02120703458786,
+    8.10694694519043,
+    157.3662281036377
+   ],
+   "fit_hit_to_vertex_mm": 0.2,
+   "pin_move_mm": 4.79
+  },
+  "face_eye_inner_L": {
+   "vertex": 3820,
+   "ue_cm": [
+    1.9315971061587334,
+    8.615505695343018,
+    157.43838548660278
+   ],
+   "fit_hit_to_vertex_mm": 0.26,
+   "pin_move_mm": 1.54
+  },
+  "face_eye_inner_R": {
+   "vertex": 13666,
+   "ue_cm": [
+    -2.2086411714553833,
+    8.447408676147461,
+    157.12215900421143
+   ],
+   "fit_hit_to_vertex_mm": 0.32,
+   "pin_move_mm": 3.22
+  },
+  "face_chin": {
+   "vertex": 2975,
+   "ue_cm": [
+    -0.009713968029245734,
+    9.335601329803467,
+    146.0257649421692
+   ],
+   "fit_hit_to_vertex_mm": 1.24,
+   "pin_move_mm": 5.66
+  }
+ }
+}

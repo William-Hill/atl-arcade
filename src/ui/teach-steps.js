@@ -64,7 +64,7 @@ export function teachStart(param, stored) {
 export function createTeach(start = TEACH_STEPS[0]) {
   const n = Math.max(0, TEACH_STEPS.indexOf(start));
   const done = Object.fromEntries(TEACH_STEPS.slice(0, n).map((s) => [s, true]));
-  return { done, step: TEACH_STEPS[n], push: 0, steer: 0, comboTime: 0, afterGrind: false, linkManual: false, finished: false, justDone: [] };
+  return { done, step: TEACH_STEPS[n], push: 0, steer: 0, comboTime: 0, afterGrind: false, linkManual: false, firstGrind: false, finished: false, justDone: [] };
 }
 
 export function currentStep(done, steps = TEACH_STEPS) {
@@ -98,11 +98,13 @@ export function stepTeach(t, prev, s, input = {}, combo = null, dt = 1 / 60, k =
   // A grab with a direction (R4). One-button mode: any grab (the next of the set).
   if (s.grab && !prev.grab && (ob || (s.grab.dir ?? "n") !== "n")) mark("grab");
   // A grind stance (R6). The phone flick can set it after the snap, so every
-  // grind tick counts. One-button mode: a snap that TRICK made (the input
+  // grind tick counts, but not on the grind that finished the grind step:
+  // the player must see the stance prompt first. One-button mode: a snap that TRICK made (the input
   // sends the stance of the set in `ob.stance`), after the grind step, so
   // the snap of the grind step does not also finish this step.
   const obSnap = s.justSnapped && t.done.grind && typeof input.ob?.stance === "string";
-  if (s.state === "grind" && (ob ? obSnap : (s.grind?.stance ?? "n") !== "n")) mark("stance");
+  const firstGrind = s.state === "grind" && ((s.justSnapped && !t.done.grind) || (!s.justSnapped && Boolean(t.firstGrind)));
+  if (s.state === "grind" && (ob ? obSnap : !firstGrind && (s.grind?.stance ?? "n") !== "n")) mark("stance");
   // The manual link (R8): a grind, then a manual in the same combo, then an
   // air straight from the manual: a JUMP or a kicker (owner choice
   // 2026-11-27, #331: every ramp of the Eastside skatepark but the kicker has
@@ -111,8 +113,9 @@ export function stepTeach(t, prev, s, input = {}, combo = null, dt = 1 / 60, k =
   let linkManual = t.linkManual;
   if (s.state === "grind") afterGrind = true;
   else if (combo && !combo.active) afterGrind = false;
+  // Only a JUMP or a kicker counts, not a roll off an edge.
   if (prev.manual && !s.manual) {
-    if (linkManual && s.state === "air") mark("link");
+    if (linkManual && s.state === "air" && (s.airFrom === "jump" || s.airFrom === "launch")) mark("link");
     linkManual = false;
   }
   if (s.manual && !prev.manual) linkManual = afterGrind;
@@ -124,7 +127,7 @@ export function stepTeach(t, prev, s, input = {}, combo = null, dt = 1 / 60, k =
     if ((combo?.links?.length ?? 0) >= k.comboLinks || comboTime >= k.comboTime) mark("combo");
   }
   const step = currentStep(done);
-  return { done, step, push, steer, comboTime, afterGrind, linkManual, finished: step === null, justDone };
+  return { done, step, push, steer, comboTime, afterGrind, linkManual, firstGrind, finished: step === null, justDone };
 }
 
 // The input kind for the icons: "touch", "gamepad", or "keyboard".

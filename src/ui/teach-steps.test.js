@@ -152,6 +152,14 @@ describe("teach trick steps (#331)", () => {
     expect(stepTeach(t0, rolling(), grind("d", { justSnapped: true }), {}).justDone).toEqual(["stance"]);
     // The phone flick sets the stance after the snap (R6): it counts too.
     expect(stepTeach(t0, grind("n"), grind("u"), {}).done.stance).toBe(true);
+    // The grind that finishes the grind step does not also finish the stance
+    // step, also on its next ticks; the next grind does.
+    let g = stepTeach(createTeach("grind"), rolling(), grind("l", { justSnapped: true }), {});
+    expect(g.justDone).toEqual(["grind"]);
+    g = stepTeach(g, grind("l"), grind("l"), {});
+    expect(g.done.stance).toBeUndefined();
+    g = stepTeach(g, grind("l"), rolling(), {});
+    expect(stepTeach(g, rolling(), grind("l", { justSnapped: true }), {}).justDone).toEqual(["stance"]);
   });
 
   it("one-button mode: a snap that TRICK made counts for the stance step, after the grind step", () => {
@@ -181,6 +189,9 @@ describe("teach trick steps (#331)", () => {
     expect(jumped.justDone).toEqual(["link"]);
     const kicker = stepTeach(t, rolling({ manual }), air({ manual: null, airFrom: "launch" }), {}, active);
     expect(kicker.done.link).toBe(true);
+    // A roll off an edge is not a JUMP or a kicker.
+    const edge = stepTeach(t, rolling({ manual }), air({ manual: null, airFrom: "edge" }), {}, active);
+    expect(edge.done.link).toBeUndefined();
     // A manual that ends on the ground does not count, and the next manual needs a grind first.
     const released = stepTeach(t, rolling({ manual }), rolling({ manual: null }), {}, active);
     expect(released.done.link).toBeUndefined();

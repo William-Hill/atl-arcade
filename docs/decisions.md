@@ -3261,9 +3261,10 @@ Design: `docs/ux/trick-hud.md` (PR #395). Rendering stays out of the sim: the te
 ## 2026-11-27: Teach prompts for the trick input (#331)
 
 - The teach prompts (#76, `src/ui/teach-steps.js`) get 3 steps after the grind: "grab" (a grab with a direction), "stance" (a grind with a direction stance), and "link" (the manual link). The order is push, steer, jump, dance, grind, grab, stance, link, then the combo tip. The step count shows "N of 8".
-- Owner choice (2026-11-27): the link step ends with a grind, then a manual in the same combo, then an air straight out of the manual, from a JUMP or a kicker. Reason: every ramp of the Eastside skatepark except the kicker has a grind edge, so a held GRIND snaps to it, and the street levels have few kickers.
+- Owner choice (2026-11-27): the link step ends with a grind, then a manual in the same combo, then an air straight out of the manual, from a JUMP or a kicker. A roll off an edge does not count. Reason: every ramp of the Eastside skatepark except the kicker has a grind edge, so a held GRIND snaps to it, and the street levels have few kickers.
 - One-button mode (R12.1): the 3 steps show TRICK only. Any grab and any snap count, because the game does not read the direction in this mode.
 - The stance and the link steps show the rail pin of the grind step.
+- The grind that finishes the grind step does not also finish the stance step, so the player sees the stance prompt first.
 - The saved value after all the steps is now "done-v2". A player with the old value "done" (the first 5 moves) sees only the 3 new steps. `?teach=<step>` starts at a step (for the tests).
 - Owner choice (2026-11-27): #331 closes when its code criteria are met. The review of the prompt words by real skaters goes to a new issue.
 - Perf (2026-11-27, `npm run perf:check` on this branch): the draw calls, triangles, geometries, textures, and heap are in the budget on every tier. `firstDownloadMB` is over the cap on low/pbr (4.95 > 4.8), phone/pbr (4.52 > 4.3), and high/pbr (5.16 > 5.0). This branch adds 2.2 KB of JavaScript (main bundle 1,254,381 bytes on `main`, 1,256,630 bytes here), so the overage was already on `main`. This PR does not change the caps. The teach steps add no draw call (plain DOM).

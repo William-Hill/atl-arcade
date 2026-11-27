@@ -1,0 +1,200 @@
+{
+ "body_height_m": 1.6962688470375724,
+ "m_per_px": 0.001564823659628757,
+ "jacket": {
+  "scale_xyz": [
+   0.007575015080577898,
+   0.007575015080577898,
+   0.007575015080577898
+  ],
+  "box_m": [
+   -0.3833817966090454,
+   0.3833817966090454,
+   1.0124409077798058,
+   1.4568508271143727
+  ],
+  "placed_inside_pct": 13.84,
+  "placed_mean_dist_mm": 24.36,
+  "dark_front_faces_removed": 1638,
+  "pushed_out_verts": 1763,
+  "inside_pct": 0.52,
+  "mean_dist_mm": 24.85,
+  "boundary_loops": 17,
+  "opening_loops_m": [
+   0.566,
+   0.58,
+   1.342,
+   1.863
+  ],
+  "opening_verts": 1745
+ },
+ "joggers": {
+  "scale_xyz": [
+   0.009297546943603364,
+   0.009297546943603364,
+   0.008172369918261263
+  ],
+  "box_m": [
+   -0.21281601770951095,
+   0.2143808413691397,
+   0.2613255511580024,
+   1.0781635014842135
+  ],
+  "placed_inside_pct": 57.12,
+  "placed_mean_dist_mm": 12.99,
+  "pushed_out_verts": 7586,
+  "inside_pct": 0.8,
+  "mean_dist_mm": 8.97,
+  "boundary_loops": 16,
+  "opening_loops_m": [
+   0.314,
+   0.316
+  ],
+  "opening_verts": 205
+ },
+ "skates": {
+  "scale_xyz": [
+   0.0051777446124584734,
+   0.0051777446124584734,
+   0.0051777446124584734
+  ],
+  "box_m": [
+   -0.24567731456171482,
+   0.24724213822134358,
+   -0.014083412936658813,
+   0.27697378775429
+  ],
+  "placed_inside_pct": 30.39,
+  "placed_mean_dist_mm": 22.48,
+  "inside_pct": 30.39,
+  "mean_dist_mm": 22.48
+ },
+ "croptop": {
+  "faces": 2164,
+  "band_m": [
+   1.1470157425078789,
+   1.3238408160459283
+  ],
+  "inside_pct": 1.83,
+  "mean_dist_mm": 2.45
+ },
+ "kneepads": {
+  "source": "sphere shells at the knees (the image c-kneepads.png sets the height band)",
+  "image_band_m": [
+   0.44128027201530945,
+   0.6087164035955864
+  ],
+  "inside_pct": 25.71,
+  "mean_dist_mm": 23.25
+ },
+ "wristband": {
+  "radius_m": 0.03425045353710505,
+  "inside_pct": 16.28,
+  "mean_dist_mm": 6.47
+ },
+ "bun_note": "cut from nia-real-tripo.glb: points outside the MetaHuman skull and above the ears",
+ "bun_init_nose_m": [
+  [
+   -0.00040405706386081874,
+   -0.12057119607925415,
+   1.5420615673065186
+  ],
+  [
+   0.004303707172022533,
+   -0.11506789790997134,
+   1.4729761188618788
+  ]
+ ],
+ "bun_icp_last_mm": 3.072121013232234,
+ "bun_parts": 46,
+ "bun_verts_dropped": 32,
+ "hairbun": {
+  "verts": 603,
+  "faces": 714,
+  "inside_pct": 0.0,
+  "mean_dist_mm": 35.86
+ },
+ "wheels": [
+  {
+   "name": "skate_wheel_L_front_b",
+   "center": [
+    0.2287,
+    -0.0854,
+    0.0208
+   ],
+   "radius": 0.0349,
+   "verts": 547
+  },
+  {
+   "name": "skate_wheel_L_front_a",
+   "center": [
+    0.186,
+    -0.0442,
+    0.0213
+   ],
+   "radius": 0.0344,
+   "verts": 572
+  },
+  {
+   "name": "skate_wheel_L_rear_b",
+   "center": [
+    0.2164,
+    0.0446,
+    0.0218
+   ],
+   "radius": 0.0339,
+   "verts": 405
+  },
+  {
+   "name": "skate_wheel_L_rear_a",
+   "center": [
+    0.1605,
+    0.0571,
+    0.0223
+   ],
+   "radius": 0.0334,
+   "verts": 343
+  },
+  {
+   "name": "skate_wheel_R_front_a",
+   "center": [
+    -0.203,
+    -0.0854,
+    0.0208
+   ],
+   "radius": 0.0349,
+   "verts": 545
+  },
+  {
+   "name": "skate_wheel_R_front_b",
+   "center": [
+    -0.1603,
+    -0.044,
+    0.0213
+   ],
+   "radius": 0.0344,
+   "verts": 579
+  },
+  {
+   "name": "skate_wheel_R_rear_a",
+   "center": [
+    -0.1906,
+    0.0446,
+    0.0218
+   ],
+   "radius": 0.0339,
+   "verts": 405
+  },
+  {
+   "name": "skate_wheel_R_rear_b",
+   "center": [
+    -0.1347,
+    0.0572,
+    0.0223
+   ],
+   "radius": 0.0334,
+   "verts": 343
+  }
+ ],
+ "body_hidden_verts": 15764
+}

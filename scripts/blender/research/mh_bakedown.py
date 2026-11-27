@@ -27,6 +27,15 @@
 #   Blender -b --factory-startup -P scripts/blender/research/mh_bakedown.py -- \
 #     --source assets/skaters/nia/skater.glb --mh duke-assembled-v01.glb \
 #     --out out/nia-mh-high.glb [--phone out/nia-mh-phone.glb] [--report out/report.json]
+#     [--garments nia-mh-clothed.blend --wheels clothes_report.json]
+#
+# --garments (2026-11-27, bare-body Nia): appends every object named garment_* from a .blend
+# made by scripts/blender/research/nia_mh_clothes.py. The garments must be in the space of the
+# MetaHuman GLB (the Save Pose DNA). Their weights use the MetaHuman body bone names, plus
+# skate_wheel_* on the skates. The script hides the body under the cloth (deletes the covered
+# body vertices), collapses the garment weights to the kept bones, decimates each garment to
+# GARMENT_TRIS, and exports the garments with the body.
+# --wheels: the wheel centers (clothes_report.json "wheels") replace the default wheel layout.
 import bpy
 import json
 import math
@@ -52,6 +61,10 @@ HEAD_VERTS = int(arg("head-verts", "5000"))
 BODY_TRIS = int(arg("body-tris", "25000"))
 FPS = int(arg("fps", "30"))
 DRACO = arg("draco", "1") == "1"
+GARMENTS = arg("garments")
+WHEELS = arg("wheels")
+GARMENT_TRIS = {"jacket": 7000, "joggers": 6000, "skates": 7000, "croptop": 1500, "kneepads": 800,
+                "wristband": 256, "hairbun": 1200}
 report = {"started": time.strftime("%Y-%m-%d %H:%M:%S")}
 T0 = time.time()
 
@@ -231,6 +244,27 @@ cartilage = find_mesh("cartilage_lod0")
 if cartilage:
     bpy.data.objects.remove(cartilage, do_unlink=True)
 
+garments = []
+if GARMENTS:
+    with bpy.data.libraries.load(GARMENTS, link=False) as (src_lib, dst_lib):
+        dst_lib.objects = [n for n in src_lib.objects if n.startswith("garment_")]
+    for g in dst_lib.objects:
+        mw = g.matrix_world.copy()
+        bpy.context.scene.collection.objects.link(g)
+        g.parent = None
+        g.matrix_world = mw
+        for m in list(g.modifiers):
+            g.modifiers.remove(m)
+        garments.append(g)
+    for o in list(bpy.data.objects):
+        if not o.users_collection:  # objects that came along with the append (old body, old rig)
+            bpy.data.objects.remove(o, do_unlink=True)
+    bv = [body.matrix_world @ v.co for v in body.data.vertices]
+    report["garments_in"] = {g.name: len(g.data.polygons) for g in garments}
+    report["mh_body_box_m"] = [[round(min(v[i] for v in bv), 4) for i in range(3)], [round(max(v[i] for v in bv), 4) for i in range(3)]]
+    log("garments", report["garments_in"], "MetaHuman body box", report["mh_body_box_m"])
+wheel_spec = json.load(open(WHEELS))["wheels"] if WHEELS else None
+
 # 3. Scale to the source pelvis height, and face the same way as the source.
 mh_hips_z = (body_rig.matrix_world @ body_rig.data.bones["pelvis"].matrix_local).translation.z
 scale = src_hips_z / mh_hips_z
@@ -243,8 +277,9 @@ mh_fwd.z = 0
 yaw = 0.0 if mh_fwd.normalized().dot(fwd_src) > 0 else math.pi
 report["yaw_fix_deg"] = math.degrees(yaw)
 tops = [o for o in bpy.data.objects if o.parent is None]
+M_FIX = Matrix.Rotation(yaw, 4, "Z") @ Matrix.Scale(scale, 4)
 for o in tops:
-    o.matrix_world = Matrix.Rotation(yaw, 4, "Z") @ Matrix.Scale(scale, 4) @ o.matrix_world
+    o.matrix_world = M_FIX @ o.matrix_world
 select_only(*bpy.data.objects)
 bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 
@@ -271,8 +306,15 @@ for n, parent in FACE_BONES.items():
     nb.length = max(head_len[n], 0.01)
     nb.matrix = head_rest[n]
     nb.parent = eb[parent]
-# Skate wheel bones (no weights), as on the shipped skaters.
-for s, S in (("l", "L"), ("r", "R")):
+# Skate wheel bones. With --wheels: at the measured wheel centers, weighted (the skates garment).
+# Without: no weights, at a default layout, as on the shipped skaters.
+for w in (wheel_spec or []):
+    wb = eb.new(w["name"])
+    c = M_FIX @ Vector(w["center"])
+    wb.head = c
+    wb.tail = c + (M_FIX.to_3x3() @ Vector((0.03, 0, 0)))
+    wb.parent = eb["foot_" + w["name"].split("_")[2].lower()]
+for s, S in (() if wheel_spec else (("l", "L"), ("r", "R"))):
     foot = eb[f"foot_{s}"]
     ball = eb[f"ball_{s}"]
     fwd = (ball.head - foot.head)
@@ -333,6 +375,44 @@ for obj, anc in ((body, body_anc), (head, head_anc), (teeth, head_anc), (lashes,
     rebind(obj)
 bpy.data.objects.remove(head_rig, do_unlink=True)
 log("weights collapsed")
+
+if garments:
+    from mathutils.bvhtree import BVHTree
+    wheel_names = [b.name for b in rig.data.bones if b.name.startswith("skate_wheel_")]
+    g_anc = dict(body_anc)
+    g_anc.update({n: n for n in wheel_names})
+    # Hide the body under the cloth: delete the body vertices that a short ray out along
+    # the normal hits a garment (the Mask step of nia_mh_clothes.py, applied).
+    trees = []
+    for g in garments:
+        if g.name in ("garment_hairbun",):
+            continue
+        trees.append((g.name, BVHTree.FromPolygons([g.matrix_world @ v.co for v in g.data.vertices], [tuple(p.vertices) for p in g.data.polygons])))
+    import bmesh
+    bm = bmesh.new(); bm.from_mesh(body.data)
+    bm.normal_update()
+    mw = body.matrix_world
+    dead = []
+    for v in bm.verts:
+        p = mw @ v.co
+        n = (mw.to_3x3() @ v.normal).normalized()
+        for name, t in trees:
+            if t.ray_cast(p + n * 0.0005, n, 0.06)[0] is not None:
+                dead.append(v); break
+    before = len(bm.verts)
+    bmesh.ops.delete(bm, geom=dead, context="VERTS")
+    bm.to_mesh(body.data); bm.free()
+    report["body_hidden_verts"] = [len(dead), before]
+    for g in garments:
+        collapse_weights(g, g_anc)
+        key = g.name.replace("garment_", "")
+        tris = sum(len(p.vertices) - 2 for p in g.data.polygons)
+        target = GARMENT_TRIS.get(key, 2000)
+        if tris > target:
+            m = g.modifiers.new("Decimate", "DECIMATE"); m.ratio = target / tris
+            select_only(g); bpy.ops.object.modifier_apply(modifier="Decimate")
+        rebind(g)
+    log("garments bound", {g.name: sum(len(p.vertices) - 2 for p in g.data.polygons) for g in garments}, "body hidden", report["body_hidden_verts"])
 
 # ---------------------------------------------------------------------------
 # 5. ARKit shapes on the head and the teeth.
@@ -467,7 +547,7 @@ body_tris = sum(len(p.vertices) - 2 for p in body.data.polygons)
 if body_tris > BODY_TRIS:
     decimate_plain(body, BODY_TRIS / body_tris)
     renormalize(body)
-for o in (lashes, *eyes):
+for o in (lashes, *eyes, *garments):
     renormalize(o)
 
 
@@ -489,7 +569,7 @@ def key_check(o):
     return round(basis, 4), round(worst, 4)
 
 
-report["meshes"] = {o.name: {**mesh_stats(o), "max_coord_and_delta_m": key_check(o)} for o in (body, head, teeth, lashes, *eyes)}
+report["meshes"] = {o.name: {**mesh_stats(o), "max_coord_and_delta_m": key_check(o)} for o in (body, head, teeth, lashes, *eyes, *garments)}
 log("meshes", report["meshes"])
 
 # ---------------------------------------------------------------------------
@@ -638,7 +718,7 @@ def shrink_images(max_px, small_px=512):
 
 
 def export(path, morphs):
-    select_only(rig, *[o for o in (body, head, teeth, lashes, *eyes)])
+    select_only(rig, *[o for o in (body, head, teeth, lashes, *eyes, *garments)])
     bpy.ops.export_scene.gltf(
         filepath=path,
         export_format="GLB",

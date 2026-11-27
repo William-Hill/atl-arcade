@@ -1,0 +1,31 @@
+{
+ "shape_keys": 816,
+ "meshes": {
+  "head_body_lod0_mesh": {
+   "verts": 30455,
+   "shapes": 0
+  },
+  "head_eyelashes_lod0_mesh": {
+   "verts": 2144,
+   "shapes": 0
+  },
+  "head_eyeLeft_lod0_mesh": {
+   "verts": 770,
+   "shapes": 2
+  },
+  "head_eyeRight_lod0_mesh": {
+   "verts": 770,
+   "shapes": 2
+  },
+  "head_head_lod0_mesh": {
+   "verts": 24049,
+   "shapes": 695
+  },
+  "head_teeth_lod0_mesh": {
+   "verts": 4246,
+   "shapes": 41
+  }
+ },
+ "body_joints": 342,
+ "head_joints": 875
+}

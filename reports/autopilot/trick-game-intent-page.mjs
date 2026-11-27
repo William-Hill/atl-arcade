@@ -20,6 +20,7 @@ await page.addInitScript(() => {
   let cand = null;
   let lastKey = null;
   let evIdx = 0;
+  let lastLinks = 0; // the links of the combo in the frame before a bank (a bank clears them)
   const banks = [];
   const t0 = performance.now();
   const now = () => (performance.now() - t0) / 1000;
@@ -75,8 +76,9 @@ await page.addInitScript(() => {
     for (; evIdx < ev.length; evIdx++) {
       const e = ev[evIdx];
       if (e.type === "move" && pending && pending.pressAt !== null && !cand && e.dir) close({ kind: e.move, dir: e.dir, name: e.name }, "move");
-      if (e.type === "bank") banks.push({ t, points: e.points, links: atl.combo?.links?.length ?? null });
+      if (e.type === "bank") banks.push({ t, points: e.points, links: Math.max(lastLinks, atl.combo?.links?.length ?? 0) });
     }
+    lastLinks = atl.combo?.links?.length ?? 0;
     if (pending && t - (pending.pressAt ?? pending.at) > (pending.button === "spin" ? 3.5 : 2.5)) close(null, "timeout");
   }
   requestAnimationFrame(tick);

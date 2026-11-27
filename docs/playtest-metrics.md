@@ -71,4 +71,15 @@ Autopilot runs (2026-11-26, agent with Jev, not humans): axis rule 204 trials, 9
 
 **Verdict: PROCEED (2026-11-26, owner choice, on the Autopilot evidence).** The human playtest is deferred to a later date; the carve leak (7.1% predicted on the keyboard) and the time of a new player to the first combo are not measured yet. See `docs/decisions.md` (2026-11-26) and the checklist in `prototypes/trick-input/REPORT.md`.
 
-Autopilot run in the real game (2026-11-27, `main` at `bb08aaff`, after wave 2: #402, #401, #403, #404; agent with Jev, not humans; BeltLine Eastside skatepark, `?run=free`; $2.02): 21 trials in play, **90.5% as wanted (19 of 21)**, 0 tricks with the wrong direction, 2 presses with no trick (late grab presses in a short hop, i26 and i27); Up from push 0.0% (0 of 1); L/R from carves 0.0% (0 of 5); no 3-link combo with a manual (first combo: none). The sample is small: about 4.5 minutes of play, and no rail stance trial, because the agent left the rail lane before each F press. The log has 8 more trials from the agent's setup probe (i0 to i7, 6 of them grind presses with no rail in reach); they are not in the numbers above. The intent log is a page script, `reports/autopilot/trick-game-intent-page.mjs`; it reads `skater.trick` and changes no game code. Raw data: `reports/autopilot/trick-game-2026-11-27-run1-*.json`.
+Autopilot runs in the real game (2026-11-27, `main` at `bb08aaff`, after wave 2: #402, #401, #403, #404; agent with Jev, not humans; BeltLine Eastside skatepark, `?run=free`; no game code changed):
+
+| Run | Focus | Trials | Tricks as wanted | Up from push | L/R from carves | Rail stance as wanted | Cost |
+|---|---|---|---|---|---|---|---|
+| 1 | Dances and grabs | 21 | 90.5% (19 of 21) | 0.0% (0 of 1) | 0.0% (0 of 5) | not tested | $2.02 |
+| 2 | Rails and manuals | 34 | 91.2% (31 of 34) | none | 0.0% (0 of 2) | 100% (15 of 15 snaps: n 2, l 3, r 4, u 4, d 2) | $3.86 |
+
+- The game gave no trick with a wrong direction that the log can prove. All 5 misses are timing misses: 4 presses gave no trick (2 late Q presses in a short hop, 2 F presses in the air with no rail in reach), and in run 2 i33 a Q press in a hop gave no grab, so the log took the next Manual link (n) as its result.
+- Run 2 banked combos of grind, manual, and grab, but the time to the first 3-link combo is not measured: the page script read the combo links after the bank cleared them. The script now keeps the links of the frame before the bank.
+- The sample is small: about 4.5 and 4 minutes of play. In run 2 the headless game stepped about 0.4 s of sim for each frame, so the agent could not time presses to the frame.
+- Run 1 has 8 more trials from the agent's setup probe (i0 to i7); they are not in the numbers above.
+- The intent log is a page script, `reports/autopilot/trick-game-intent-page.mjs`; it reads `skater.trick` and the key events. Raw data: `reports/autopilot/trick-game-2026-11-27-run{1,2}-*`.

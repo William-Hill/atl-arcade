@@ -180,3 +180,35 @@ describe("#336 the air snap buffer (R12.1: buffered as GRIND.buffer)", () => {
     expect(b.ob.mode).toBe("air");
   });
 });
+
+describe("#336 a short TRICK tap that snaps through the sim grind buffer (Codex review on PR #403)", () => {
+  it("keeps the stance of the set until the buffered snap: the second snap is Rail Soul Grind", () => {
+    const g = straightGrindable("rail:test", 0, 20);
+    const r = obRig({ grindables: [g], speed: 6, position: [-1, 0, 0] });
+    // The first snap: (edge) Grind.
+    r.ob(true);
+    expect(r.s.trick.name).toBe("Rail Grind");
+    r.ob(false);
+    // In the air over the rail, going up: a one-frame tap does not snap at once.
+    r.set({ state: "air", grind: null, airFrom: "jump", airTime: 0.2, position: [4, 0.74, 0], velocity: [6, 1, 0], speed: 6, yaw: 0, grindCooldown: 0 });
+    r.ob(true);
+    expect(r.s.state).toBe("air");
+    r.obSteps(12, false, {}, (run) => run.skater.state === "grind");
+    expect(r.s.state).toBe("grind");
+    expect(r.s.trick.name).toBe("Rail Soul Grind");
+  });
+
+  it("the stance stays sent for ONE_BUTTON_BUFFER after the tap, then stops; with no snap the set does not move", () => {
+    const air = { state: "air", railInRange: true, skater: "nia" };
+    const a = oneButtonFrame(createOneButton(), { style1: true }, air, 1);
+    expect(a.frame.ob.stance).toBe("n");
+    const b = oneButtonFrame(a.ob, {}, { ...air, railInRange: false }, 1 + ONE_BUTTON_BUFFER - 0.02);
+    expect(b.frame.ob.stance).toBe("n");
+    const c = oneButtonFrame(b.ob, {}, { ...air, railInRange: false }, 1 + ONE_BUTTON_BUFFER + 0.03);
+    expect(c.frame.ob.stance).toBe(null);
+    expect(c.ob.next.grind).toBe(0);
+    // A real GRIND in the window gives the neutral stance, not the set.
+    const d = oneButtonFrame(a.ob, { grind: true }, air, 1.02);
+    expect(d.frame.ob.stance).toBe(null);
+  });
+});

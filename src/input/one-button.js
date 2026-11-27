@@ -75,8 +75,9 @@ export const ONE_BUTTON_SETS = Object.freeze({
 
 export function createOneButton() {
   // `mode` is how the press now down works: "rail", "ground", "air", "none".
-  // `stanceSent`: the last frame sent a grind stance of the set (oneButtonFrame).
-  return { next: { air: 0, grind: 0, nia: 0, marcus: 0 }, down: false, downAt: 0, mode: "none", manual: false, stanceSent: false };
+  // `stanceSent`: the last frame sent a grind stance of the set, and
+  // `stanceUntil` the time to which the stance stays sent (oneButtonFrame).
+  return { next: { air: 0, grind: 0, nia: 0, marcus: 0 }, down: false, downAt: 0, mode: "none", manual: false, stanceSent: false, stanceUntil: -Infinity };
 }
 
 function take(ob, set) {
@@ -149,16 +150,20 @@ export function stepOneButton(ob, ctx, trick, t, hold = ONE_BUTTON_HOLD) {
 // { manual, start, stance } (src/sim/skate/trick-step.js reads it).
 // `ob.stance` is the direction of the next stance of the grind set while
 // the TRICK intent holds GRIND and the real GRIND is up, else null: a snap
-// on that frame takes it (#336). The skater on a rail on the next frame
-// shows the snap, and the set moves to the next stance. The real GRIND and
-// SPIN still work, with no direction (R12.1).
+// on that frame takes it (#336). The stance stays sent for
+// ONE_BUTTON_BUFFER after the intent ends, because the sim can still snap
+// with its grind buffer after a short tap. The skater on a rail on the next
+// frame shows the snap, and the set moves to the next stance. The real GRIND
+// and SPIN still work, with no direction (R12.1).
 export function oneButtonFrame(ob, frame, ctx, t, hold = ONE_BUTTON_HOLD) {
   let o = ob;
-  if (o.stanceSent && ctx.state === "grind") o = takeStance(o).ob;
+  if (o.stanceSent && ctx.state === "grind") o = { ...takeStance(o).ob, stanceUntil: -Infinity };
   const r = stepOneButton(o, ctx, Boolean(frame.style1), t, hold);
-  const send = r.grind && !frame.grind && ctx.state !== "grind";
+  const intent = r.grind && !frame.grind && ctx.state !== "grind";
+  const until = intent ? t + ONE_BUTTON_BUFFER : o.stanceUntil ?? -Infinity;
+  const send = !frame.grind && ctx.state !== "grind" && (intent || t <= until + 1e-6);
   const stance = send ? ONE_BUTTON_SETS.grind[r.ob.next.grind % ONE_BUTTON_SETS.grind.length].dir : null;
-  return { ob: { ...r.ob, stanceSent: send }, frame: { ...frame, grind: Boolean(frame.grind) || r.grind, ob: { manual: r.manual, start: r.start, stance } } };
+  return { ob: { ...r.ob, stanceSent: send, stanceUntil: send ? until : -Infinity }, frame: { ...frame, grind: Boolean(frame.grind) || r.grind, ob: { manual: r.manual, start: r.start, stance } } };
 }
 
 // True when the frame needs the rail search of the sim context: TRICK is

@@ -80,6 +80,9 @@ export function barTarget(anchor, side, { w, h }, safe, blockers = [], gap = MAN
   return { x: cx, y: cy0 };
 }
 
+// True when a bar of size (w, h) at the center p overlaps a blocker.
+export const hitsBlocker = (p, { w, h }, blockers = []) => blockers.some((b) => overlaps(rectAt(p.x, p.y, w, h), b));
+
 // The follow smoothing: each axis moves 1 - exp(-dt / tau) of the distance.
 export function smoothToward(cur, target, dt, tau = MANUAL_BAR.tau) {
   if (!cur) return { ...target };

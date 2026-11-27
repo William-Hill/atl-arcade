@@ -281,6 +281,15 @@ test.describe("desktop 1280 x 720", () => {
     await poll(pad([]));
     await poll(pad([8]));
     expect(await page.evaluate(() => window.__atl.trickHud.trickList.isOpen)).toBe(true);
+    // The View button opens it with the gamepad names, also after keyboard play.
+    expect(await page.evaluate(() => document.getElementById("trick-list-input").textContent)).toBe("Left stick or d-pad + button");
+    expect(await page.locator("#trick-list section.tl-air h3 small").textContent()).toBe("Y");
+    await poll(pad([]));
+    // The left stick moves the focus.
+    const f0 = await page.evaluate(() => document.activeElement?.id || document.activeElement?.textContent);
+    await poll({ ...pad([]), axes: [0, 0.9, 0, 0] });
+    const f1 = await page.evaluate(() => document.activeElement?.id || document.activeElement?.textContent);
+    expect(f1).not.toBe(f0);
     await poll(pad([]));
     await poll(pad([5]));
     expect(await page.evaluate(() => window.__atl.trickHud.trickList.skater)).toBe("marcus");

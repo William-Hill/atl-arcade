@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MANUAL_BAR, barHeight, barTarget, fixedPlace, markerLook, markerTop, pickSide, safeRect, smoothToward, zoneOf } from "./manual-bar-math.js";
+import { MANUAL_BAR, barHeight, barTarget, fixedPlace, hitsBlocker, markerLook, markerTop, pickSide, safeRect, smoothToward, zoneOf } from "./manual-bar-math.js";
 
 const size = { w: MANUAL_BAR.w, h: barHeight(false) };
 
@@ -44,6 +44,13 @@ describe("#330 E4 the manual balance bar", () => {
     const r = { x: b.x - size.w / 2, y: b.y - size.h / 2, w: size.w, h: size.h };
     const hit = r.x < blocker.x + blocker.w && blocker.x < r.x + r.w && r.y < blocker.y + blocker.h && blocker.y < r.y + r.h;
     expect(hit).toBe(false);
+  });
+
+  it("hitsBlocker finds a bar on a blocker (the smoothing path check)", () => {
+    const blocker = { x: 690, y: 300, w: 100, h: 100 };
+    expect(hitsBlocker({ x: 696, y: 350 }, size, [blocker])).toBe(true);
+    expect(hitsBlocker({ x: 696, y: 520 }, size, [blocker])).toBe(false);
+    expect(hitsBlocker({ x: 600, y: 350 }, size, [])).toBe(false);
   });
 
   it("the smoothing step moves 1 - exp(-dt / 0.12) of the distance", () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DANCE_ORIGINS, NO_SOURCE, originOf } from "../content/dance-origins.js";
 import { createBindings } from "../input/bindings.js";
+import { applyDirSource } from "../input/remap.js";
 import { createOneButton } from "../input/one-button.js";
 import { CHIP_BANNED } from "./trick-hud-text.js";
 import { CELL_ORDER, cardPlace, cellText, contextOf, flickCard, inputLine, oneButtonNext, originText, trickListSections } from "./trick-map.js";
@@ -64,6 +65,16 @@ describe("#330 E6 the trick list", () => {
     expect(pad.map((s) => s.button)).toEqual(["Y", "RT, at the snap", "Y", "B", "Hold RT, no rail near"]);
     const touch = trickListSections("nia", { device: "touch" });
     expect(touch[0].button).toBe("TRICK");
+  });
+
+  it("the input line names only the direction sources of the bindings", () => {
+    const base = createBindings();
+    expect(inputLine("keyboard", base)).toBe("Direction (W A S D or the arrows) + button");
+    expect(inputLine("keyboard", applyDirSource(base, { keyboard: "wasd" }))).toBe("Direction (W A S D) + button");
+    expect(inputLine("keyboard", applyDirSource(base, { keyboard: "arrows" }))).toBe("Direction (the arrows) + button");
+    expect(inputLine("gamepad", base)).toBe("Left stick or d-pad + button");
+    expect(inputLine("gamepad", applyDirSource(base, { gamepad: "stick" }))).toBe("Left stick + button");
+    expect(inputLine("gamepad", applyDirSource(base, { gamepad: "dpad" }))).toBe("D-pad + button");
   });
 
   it("a pad remap changes the button names", () => {

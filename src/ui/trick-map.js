@@ -83,11 +83,27 @@ export function buttonName(action, device, bindings) {
 }
 
 // The input line under the header.
+// The direction sources come from the bindings: the keys of the 4
+// direction actions, the left stick (`dirStick`), and the d-pad.
+const DIR_ORDER = ["dirUp", "dirLeft", "dirDown", "dirRight"];
+const ARROW_KEYS = { dirUp: "ArrowUp", dirLeft: "ArrowLeft", dirDown: "ArrowDown", dirRight: "ArrowRight" };
 export function inputLine(device, bindings) {
-  if (device === "gamepad") return "Left stick or d-pad + button";
   if (device === "touch") return `Flick the button. A tap gives the ${ARROWS.n} trick.`;
-  const dirs = ["dirUp", "dirLeft", "dirDown", "dirRight"].map((a) => firstKey(bindings, a)).join(" ");
-  return `Direction (${dirs} or the arrows) + button`;
+  if (device === "gamepad") {
+    const g = bindings?.gamepad ?? {};
+    const stick = g.dirStick !== false;
+    const dpad = DIR_ORDER.some((a) => (g.buttons?.[a] ?? []).length > 0);
+    const src = stick && dpad ? "Left stick or d-pad" : stick ? "Left stick" : dpad ? "D-pad" : "Direction";
+    return `${src} + button`;
+  }
+  const kb = bindings?.keyboard ?? {};
+  const keys = (a) => kb[a] ?? [];
+  const arrows = DIR_ORDER.every((a) => keys(a).includes(ARROW_KEYS[a]));
+  const letters = DIR_ORDER.map((a) => keys(a).find((c) => c !== ARROW_KEYS[a]) ?? null);
+  const hasLetters = letters.every(Boolean);
+  const named = hasLetters ? letters.map((c) => keyName(c)).join(" ") : null;
+  const text = named && arrows ? `${named} or the arrows` : named ?? (arrows ? "the arrows" : DIR_ORDER.map((a) => firstKey(bindings, a)).join(" "));
+  return `Direction (${text}) + button`;
 }
 
 // The 5 sections of the trick list (9.2), plus the one-button set first in

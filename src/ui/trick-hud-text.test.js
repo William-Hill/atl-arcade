@@ -118,6 +118,17 @@ describe("#330 E2 the live trick chip", () => {
     expect(r.chip.text).toBe("• Cross Step");
   });
 
+  it("an ignored press after the result of a repeated dance shows Busy; a new result wins again", () => {
+    let r = stepChip(createChip(), ev({ nowMs: 0, trick: dance }));
+    // The dance ends and repeats (hold to repeat): same key, a new result.
+    r = stepChip(r.state, ev({ nowMs: 1000, trick: dance, move: { name: "Cross Step", dir: "n" } }));
+    expect(r.chip.look).toBe("clean");
+    r = stepChip(r.state, ev({ nowMs: 1100, trick: dance, ignored: { seq: 1 } }));
+    expect(r.chip.look).toBe("busy");
+    r = stepChip(r.state, ev({ nowMs: 1200, trick: dance, move: { name: "Cross Step", dir: "n", beatTag: "GOOD" } }));
+    expect(r.chip.look).toBe("good");
+  });
+
   it("a link result in the Busy time takes its place at once; no Busy in one-button mode", () => {
     let r = stepChip(createChip(), ev({ nowMs: 0, trick: dance, ignored: { seq: 1 } }));
     expect(r.chip.look).toBe("busy");

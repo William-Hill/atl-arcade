@@ -13,6 +13,8 @@ import { inputLine, originText, trickListSections } from "./trick-map.js";
 export const TRICK_LIST_KEY_CODE = "KeyT";
 export const PAD_VIEW = 8; // standard gamepad View/Back
 const PAD = { a: 0, b: 1, lb: 4, rb: 5, up: 12, down: 13, left: 14, right: 15 };
+// Slots past the pad buttons for the left stick directions (edge detect).
+const PAD_STICK = { up: 100, down: 101, left: 102, right: 103 };
 export const SKATERS = Object.freeze([
   ["nia", "Nia"],
   ["marcus", "Marcus"],
@@ -141,8 +143,12 @@ export function createTrickList({ root = document.body, skater = () => "nia", so
     li.dataset.section = sectionId;
   }
 
+  // The device that opened the list (the View button gives "gamepad"),
+  // else the input source.
+  let deviceHint = null;
   function render() {
-    const device = source() === "gamepad" ? "gamepad" : touch || source() === "touch" ? "touch" : "keyboard";
+    const src = deviceHint ?? source();
+    const device = src === "gamepad" ? "gamepad" : touch || src === "touch" ? "touch" : "keyboard";
     input.textContent = inputLine(device, bindings());
     list.replaceChildren();
     for (const s of trickListSections(current, { device, bindings: bindings(), oneButton: oneButton() })) {
@@ -205,8 +211,9 @@ export function createTrickList({ root = document.body, skater = () => "nia", so
     tabs[id].focus();
   }
 
-  function open() {
+  function open(device = null) {
     if (dialog.open || !canOpen()) return;
+    deviceHint = device;
     opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     current = tabs[skater()] ? skater() : "nia";
     detail.hidden = true;
@@ -257,7 +264,7 @@ export function createTrickList({ root = document.body, skater = () => "nia", so
     if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close();
   });
   closeButton.addEventListener("click", close);
-  toggle.addEventListener("click", () => (dialog.open ? close() : open()));
+  toggle.addEventListener("click", () => (dialog.open ? close() : open(touch ? "touch" : null)));
   window.addEventListener("keydown", (e) => {
     if (e.code !== TRICK_LIST_KEY_CODE || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.target instanceof HTMLElement && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
@@ -290,11 +297,23 @@ export function createTrickList({ root = document.body, skater = () => "nia", so
     // change the skater tab (9.6).
     pollPad(pad) {
       const now = pad ? Array.from(pad.buttons ?? [], (b) => Boolean(b && (b.pressed || b.value > 0.5))) : [];
+      // The left stick moves the focus too (9.6): a push past 0.5 is a press.
+      const ax = pad?.axes ?? [];
+      now[PAD_STICK.up] = (ax[1] ?? 0) < -0.5;
+      now[PAD_STICK.down] = (ax[1] ?? 0) > 0.5;
+      now[PAD_STICK.left] = (ax[0] ?? 0) < -0.5;
+      now[PAD_STICK.right] = (ax[0] ?? 0) > 0.5;
       const edge = (i) => Boolean(now[i]) && !padPrev[i];
-      if (edge(PAD_VIEW)) {
+      // A saved binding on the View button keeps its move.
+      const viewBound = Object.values(bindings()?.gamepad?.buttons ?? {}).some((list) => list?.includes?.(PAD_VIEW));
+      if (edge(PAD_VIEW) && !viewBound) {
         if (dialog.open) close();
-        else open();
+        else open("gamepad");
       } else if (dialog.open) {
+        if (deviceHint !== "gamepad" && now.some(Boolean)) {
+          deviceHint = "gamepad";
+          render();
+        }
         if (edge(PAD.b)) {
           if (!detail.hidden) hideDetail();
           else close();
@@ -303,8 +322,8 @@ export function createTrickList({ root = document.body, skater = () => "nia", so
           const ids = SKATERS.map(([id]) => id);
           const i = ids.indexOf(current);
           select(ids[(i + (edge(PAD.rb) ? 1 : ids.length - 1)) % ids.length]);
-        } else if (edge(PAD.down) || edge(PAD.right)) moveFocus(1);
-        else if (edge(PAD.up) || edge(PAD.left)) moveFocus(-1);
+        } else if (edge(PAD.down) || edge(PAD.right) || edge(PAD_STICK.down) || edge(PAD_STICK.right)) moveFocus(1);
+        else if (edge(PAD.up) || edge(PAD.left) || edge(PAD_STICK.up) || edge(PAD_STICK.left)) moveFocus(-1);
       }
       padPrev = now;
     },

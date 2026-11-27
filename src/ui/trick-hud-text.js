@@ -110,7 +110,7 @@ export const refusedChip = (text) => (text ? { look: "refused", text } : null);
 // The chip state machine (6.1 rules). Pure: each call returns a new state.
 // state: { result, resultAt, resultUntil, trickKey, trickSince, busyUntil, refused, refusedUntil }
 export function createChip() {
-  return { result: null, resultAt: -Infinity, resultUntil: -Infinity, trickKey: null, trickSince: -Infinity, busyUntil: -Infinity, refused: null, refusedUntil: -Infinity };
+  return { result: null, resultAt: -Infinity, resultUntil: -Infinity, trickKey: null, trickSince: -Infinity, busyAt: -Infinity, busyUntil: -Infinity, refused: null, refusedUntil: -Infinity };
 }
 
 const keyOf = (trick) => (trick ? `${trick.kind}:${trick.id}` : null);
@@ -137,12 +137,18 @@ export function stepChip(prev, ev) {
     s.busyUntil = -Infinity;
   }
   const dance = ev.trick && ev.trick.kind === "dance";
-  if (ev.ignored && dance && !ev.oneButton) s.busyUntil = now + CHIP_MS.busy;
+  if (ev.ignored && dance && !ev.oneButton) {
+    s.busyAt = now;
+    s.busyUntil = now + CHIP_MS.busy;
+  }
   if (!dance) s.busyUntil = -Infinity;
   const resultShows = s.result && now < s.resultUntil;
   // A link result wins over a trick that started before it (or on the same
   // frame); a trick that started after it wins over it.
-  const resultWins = resultShows && s.resultAt >= s.trickSince;
+  // A Busy press after the result (a held dance repeats and keeps its key)
+  // wins over it; a new result wins over Busy.
+  const busyShows = dance && now < s.busyUntil;
+  const resultWins = resultShows && s.resultAt >= s.trickSince && !(busyShows && s.busyAt > s.resultAt);
   const shows = resultWins || ev.trick;
   // A refusal shows only when the chip is hidden or shows another refusal.
   if (ev.refused && !shows) {
@@ -151,7 +157,7 @@ export function stepChip(prev, ev) {
   }
   let chip = null;
   if (resultWins) chip = s.result;
-  else if (ev.trick) chip = dance && now < s.busyUntil ? busyChip(ev.trick.name) : progressChip(ev.trick, { manual: ev.manual, capMeters: ev.capMeters, ...opts });
+  else if (ev.trick) chip = busyShows ? busyChip(ev.trick.name) : progressChip(ev.trick, { manual: ev.manual, capMeters: ev.capMeters, ...opts });
   else if (resultShows) chip = s.result;
   else if (s.refused && now < s.refusedUntil) chip = s.refused;
   return { state: s, chip };

@@ -132,7 +132,7 @@ test.describe("touch flick on Pixel 7", () => {
     await f.end(2);
   });
 
-  test("GRIND: the press is at the touch-down; a flick up resolves u once; the skater snaps on the touch press", async ({ page }) => {
+  test("GRIND: the press is at the touch-down; a flick up resolves u once; the skater snaps on the touch press; the grind is Makio", async ({ page }) => {
     await ready(page);
     const f = await fingers(page);
     const grind = await center(page, ".touch-grind");
@@ -191,6 +191,8 @@ test.describe("touch flick on Pixel 7", () => {
     expect(frames.slice(0, i).every((fr) => fr.grind && fr.grindFlick)).toBe(true);
     expect(frames.slice(i + 1).every((fr) => fr.grind && fr.flick.grind === null)).toBe(true);
     expect(await page.evaluate(() => window.__atl.skater.state)).toBe("grind");
+    // The sim applies the stance of the flick (#340): the grind is a Makio Grind.
+    expect(await page.evaluate(() => window.__atl.skater.trick)).toMatchObject({ kind: "grind", id: "makio", clip: "grind_makio", name: "Rail Makio Grind" });
     test.info().annotations.push({ type: "grind flick", description: `snap by frame ${snapFrames - 1}, resolve u at frame ${i}, ${((res[0].t - frames[0].t) * 1000).toFixed(0)} ms after the touch-down` });
     await page.screenshot({ path: "e2e/__screenshots__/trick-touch-grind.png" });
     await f.end(2);

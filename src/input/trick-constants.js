@@ -28,3 +28,11 @@ export const RELAXED = Object.freeze({ dirBefore: 0.25, dirAfter: 0.1, flickMaxM
 export function trickKnobs({ relaxed = false, r3Only = false } = {}) {
   return { ...TRICK_INPUT, ...(r3Only ? R3_ONLY : {}), ...(relaxed ? RELAXED : {}) };
 }
+
+// The trick switch of the sim (`skaterEnv.tricks`, src/sim/skate/trick-step.js)
+// for a choice of the switches. The sim takes Relaxed timing from `relaxed`
+// and toggle 7 (`?gddRule`, the R3 rule only) from `k`. A new object for each
+// change: the sim caches its options per object.
+export function simTricks({ oneButton = false, relaxed = false, r3Only = false } = {}) {
+  return { oneButton: Boolean(oneButton), relaxed: Boolean(relaxed), ...(r3Only ? { k: { axisRule: false, udFirst: false } } : {}) };
+}

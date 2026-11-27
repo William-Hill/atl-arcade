@@ -11,7 +11,7 @@ import { createSilhouette } from "./render/silhouette.js";
 import { createFollowCamera } from "./render/follow-camera.js";
 import { createScreenFlash } from "./ui/screen-flash.js";
 import { advance, createStepper } from "./sim/fixed-step.js";
-import { createSkaterEnv } from "./sim/skate/skater.js";
+import { createSkaterEnv, oneButtonContext } from "./sim/skate/skater.js";
 import { createRun, stepRun, teleportRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
 import { createMinimap } from "./ui/minimap.js";
@@ -74,6 +74,8 @@ import { createEdgeFenceView } from "./render/edge-fence-view.js";
 import { EDGE_FENCE_ID } from "./level/edge-fence.js";
 import { createPhysicsWorld, initPhysics, isGeoLevel } from "./physics/world.js";
 import { createInput } from "./input/input.js";
+import { createOneButton, oneButtonFrame, oneButtonNeedsRail } from "./input/one-button.js";
+import { simTricks } from "./input/trick-constants.js";
 import { createTouchInput } from "./input/touch.js";
 import { bindingsOf, readControls, writeControls } from "./input/controls-store.js";
 import { createRemapScreen } from "./ui/remap-screen.js";
@@ -877,6 +879,18 @@ const controlsStorage = safeStorage();
 const savedControls = readControls(controlsStorage);
 input.bindings = bindingsOf(savedControls);
 input.mode = { oneButton: savedControls.oneButton, relaxed: savedControls.relaxed, r3Only: params.has("gddRule") };
+// The trick rules (#327, docs/gdd/trick-input.md) play in the game: the sim
+// reads the direction fields of the input frame (dir, lastDir, lastDirAt,
+// lastDirHeld, dirHist, flick). The axis rule (R3a) is the default;
+// `?gddRule` (toggle 7) plays the R3 rule only, in the input and in the sim.
+// The NPC skaters keep the old rules (src/sim/npc/skaters.js).
+skaterEnv.tricks = simTricks(input.mode);
+// One-button mode (R12.1, #328): the state of the one-button sets.
+let oneButton = createOneButton();
+// A press that the sim never sees end (a reset, a fast travel, the Controls
+// screen) must not start a dance or a manual later: drop the press, keep the
+// place in each set.
+const releaseOneButton = (ob) => ({ ...createOneButton(), next: ob.next });
 let run = createRun(level, { cards: factCardSpots() });
 let skater = run.skater;
 runReady = true;
@@ -1026,7 +1040,14 @@ function sampleInput(t) {
     scriptResolve = null;
     if (done) done({ ...skater, combo: run.combo });
   }
-  return input.sample(t);
+  const frame = input.sample(t);
+  if (!frame.oneButton) return frame;
+  // One-button mode: stepOneButton() gets the sim context, and its intent
+  // (grind, manual, start) goes on the frame for the sim (#328).
+  const ctx = oneButtonContext(run.skater, skaterEnv, { rail: oneButtonNeedsRail(oneButton, frame) });
+  const r = oneButtonFrame(oneButton, frame, ctx, t);
+  oneButton = r.ob;
+  return r.frame;
 }
 
 function simulate(dt) {
@@ -1140,6 +1161,7 @@ function fastTravel(x, z) {
   const y = env.sampleGround(spot.x, spot.z, landingProbe(level, spot, ground))?.height ?? ground;
   run = teleportRun(run, level, { position: [spot.x, y, spot.z], yaw: spot.yaw });
   skater = run.skater;
+  oneButton = releaseOneButton(oneButton);
   skaterView.respawn(skater);
   if (follow) follow.reset(skater);
   events.push({ type: "travel", x: spot.x, z: spot.z });
@@ -1150,6 +1172,7 @@ function fastTravel(x, z) {
 function resetSkater(position = level.spawn.position, yaw = level.spawn.yaw) {
   run = createRun(level, { position, yaw, cards: factCardSpots() });
   skater = run.skater;
+  oneButton = releaseOneButton(oneButton);
   if (goalDef) {
     goals = createGoals(goalDef);
     factCards.clear();
@@ -1237,9 +1260,14 @@ const remapScreen = createRemapScreen({
     const saved = writeControls(controlsStorage, c);
     input.bindings = b;
     input.mode = { oneButton: c.oneButton, relaxed: c.relaxed, r3Only: params.has("gddRule") };
+    skaterEnv.tricks = simTricks(input.mode);
+    oneButton = releaseOneButton(oneButton);
     return saved;
   },
-  onChange: () => input.reset(),
+  onChange: () => {
+    input.reset();
+    oneButton = releaseOneButton(oneButton);
+  },
 });
 const runningSettings = { quality, look, peds: pedTotal, shadows: tier.shadows, ink: savedSettings.ink, bloom: savedSettings.bloom };
 const settingsMenu = createSettingsMenu({
@@ -2129,6 +2157,13 @@ window.__atl = {
     // The trick modes and the Controls screen (#328).
     get mode() {
       return input.mode;
+    },
+    // The trick switch of the sim (skaterEnv.tricks) and the one-button state.
+    get tricks() {
+      return skaterEnv.tricks;
+    },
+    get oneButton() {
+      return oneButton;
     },
     get controls() {
       return { open: remapScreen.isOpen, state: remapScreen.state };

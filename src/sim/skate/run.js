@@ -68,7 +68,8 @@ export function stepRun(run, input, dt, env = FLAT_GROUND, skaterEnv = { grindab
   let manualBeat = run.manualBeat ?? null;
   if (skater.justSnapped) snapBeat = judgeAt(time);
   if (T && skater.grindPressed) grindBeat = judgeAt(time);
-  if (T && skater.justManual) manualBeat = skater.justManual.link ? judgeAt(time) : grindBeat;
+  // A one-button manual has no GRIND press: it is judged at its start.
+  if (T && skater.justManual) manualBeat = skater.justManual.link || skater.justManual.judgeNow ? judgeAt(time) : grindBeat;
 
   if (skater.justExited && prev.grind) {
     const g = skater.endedGrind ?? prev.grind;

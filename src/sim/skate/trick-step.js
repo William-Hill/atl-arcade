@@ -6,13 +6,21 @@
 //   s.landing      the touchdown result { result, grab, hold, airYaw, airFrom, airTime }
 //   s.manualCap    the manual reached manualCapMeters: { toe, meters, pressT }
 //   s.manualEnd    the manual ended: { toe, meters, pressT, capped, result, reason }
-//   s.justManual   a manual started on this tick ({ link } for the grind-to-manual link)
+//   s.justManual   a manual started on this tick ({ link } for the grind-to-manual link;
+//                  { judgeNow } for a one-button manual, judged at its start)
 //   s.grindPressed a GRIND press on this tick (the judged moment of a manual)
+//
+// One-button mode (R12.1, #328): the input layer runs stepOneButton()
+// (src/input/one-button.js) with the sim context and puts its intent on the
+// frame: `grind` (a GRIND hold) and `ob: { manual, start }`. With `ob` on
+// the frame, the sim starts the grab and the dance of `ob.start` and holds a
+// manual while `ob.manual` is true. With no `ob`, the sim takes the air set
+// itself (ONE_BUTTON_AIR) on a TRICK press.
 
 import { STYLE, TRICK, TRICK_RELAXED, COMBO, styleDuration } from "./constants.js";
 import { freshDir, dirHistory, resolvePending, resolvePress } from "./direction.js";
 import { manualOut, manualStep } from "./manual.js";
-import { MANUALS, ONE_BUTTON_AIR, STANCES, danceFor, grabFor, grindName, stanceFor } from "./tricks.js";
+import { MANUALS, ONE_BUTTON_AIR, STANCES, danceFor, danceNamed, grabFor, grindName, stanceFor } from "./tricks.js";
 
 const EPS = 1e-6;
 const BUTTONS = ["style1", "style2"];
@@ -105,9 +113,9 @@ function startGrab(s, dir, held) {
   s.grab = { ...g, dir, startAir: s.airTime, startT: s.time, hold: 0, held: Boolean(held) };
 }
 
-function startManual(s, { dir = "n", pressT, link = false, side }) {
+function startManual(s, { dir = "n", pressT, link = false, side, judgeNow = false }) {
   s.manual = { balance: 0, side, meters: 0, toe: dir === "u", dir, pressT, capped: false, link };
-  s.justManual = { link };
+  s.justManual = judgeNow ? { link, judgeNow } : { link };
   s.style = null;
 }
 
@@ -141,6 +149,8 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   const wantsGrind = Boolean(input.grind);
   const grindEdge = wantsGrind && !prev.grindHeld;
   const v0 = Math.abs(prev.speed ?? 0); // the speed gates read the speed at the start of the tick
+  const ob = T.oneButton && input.ob && typeof input.ob === "object" ? input.ob : null;
+  const obManual = Boolean(ob && ob.manual);
 
   // GRIND press: R3 for the stance and the Toe Roll, and the manual hold timer.
   s.grindPressed = grindEdge;
@@ -193,12 +203,14 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
         m.capped = true;
       }
       if (manualOut(m.balance)) endManual(s, "balance", "stumble", c);
-      else if (!wantsGrind) endManual(s, "release", "clean", c);
+      else if (!wantsGrind && !obManual) endManual(s, "release", "clean", c);
       else if (Math.abs(s.speed) < k.manualMinSpeed - EPS) endManual(s, "slow", "clean", c);
     }
     // A new manual needs a new GRIND press.
     if (!s.manual && wantsGrind) s.grindNeedsRepress = true;
   }
+  // One-button: a manual that ended needs a new TRICK hold.
+  s.obManualSpent = obManual && Boolean(prev.obManualSpent || (prev.manual && !s.manual));
 
   // --- Air: grabs (R4, R12.1) and the touchdown (R10) ---
   let pend = s.respawned ? null : (prev.trickPend ?? null); // a respawn ends a pending press
@@ -213,7 +225,13 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   }
   s.obAir = prev.obAir ?? 0;
   if (s.state === "air" && prev.state === "air") {
-    if (edge("style1") && !s.grab && !pend) {
+    if (ob) {
+      // One-button: the grab of the set that the input took (never a stumble).
+      if (ob.start && ob.start.kind === "grab" && !s.grab) {
+        if (s.airTime + EPS < k.grabMinAir) s.grabEarly = true;
+        else startGrab(s, ob.start.dir ?? "n", held.style1);
+      }
+    } else if (edge("style1") && !s.grab && !pend) {
       if (s.airTime + EPS < k.grabMinAir) s.grabEarly = true;
       else if (T.oneButton) {
         startGrab(s, ONE_BUTTON_AIR[s.obAir % ONE_BUTTON_AIR.length], true);
@@ -262,6 +280,12 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
     startManual(s, { dir: gp.dir ?? "n", pressT: gp.at, side: -s.manualSide });
   }
 
+  // One-button: a TRICK hold of oneButtonHold on the ground starts a manual (R12.1).
+  if (obManual && !s.obManualSpent && !s.manual && !prev.manual && s.state === "rolling" && prev.state === "rolling" && v0 + EPS >= k.manualMinSpeed) {
+    // No GRIND press: the beat judges the manual at its start (run.js).
+    startManual(s, { dir: "n", pressT: t, side: -s.manualSide, judgeNow: true });
+  }
+
   // --- Ground: dance slots (R7) ---
   let style = prev.style && !s.respawned ? { ...prev.style } : null; // a respawn ends a dance
   let repeat = null;
@@ -272,7 +296,9 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
     if (style.time >= style.duration) {
       s.justStyled = { id: style.id, name: style.name, points: style.points };
       stats.styles += 1;
-      if (held[BUTTONS[style.button]]) repeat = style; // hold to repeat (R7)
+      // Hold to repeat (R7). In one-button mode a TRICK dance starts at the
+      // release, so a TRICK down at the end is the next press, not a hold.
+      if (held[BUTTONS[style.button]] && !(ob && style.button === 0)) repeat = style;
       style = null;
     }
   }
@@ -282,14 +308,24 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
     const d = danceFor(button, skaterEnv.skater, dir);
     style = { id: move.id, button: BUTTONS.indexOf(button), name: d.name, clip: d.clip, dir, time: 0, duration: styleDuration(d, skaterEnv.bpm), points: d.points, anim: move.anim, held: held[button] };
   };
+  // One-button: the dance of the set that the input took, by its name.
+  const startObDance = (st) => {
+    const button = st.button === "style2" ? "style2" : "style1";
+    const move = STYLE.moves[BUTTONS.indexOf(button)];
+    const d = danceNamed(st.name) ?? danceFor(button, skaterEnv.skater, st.dir ?? "n");
+    style = { id: move.id, button: BUTTONS.indexOf(button), name: d.name, clip: d.clip, dir: st.dir ?? "n", time: 0, duration: styleDuration(d, skaterEnv.bpm), points: d.points, anim: move.anim, held: false };
+  };
+  const obDance = ob && ob.start && ob.start.kind === "dance" ? ob.start : null;
   if (pend && pend.done) {
     if (!style && canDance) startDance(pend.button, pend.res.dir);
     pend = null;
   }
   if (!style && canDance) {
     if (repeat) style = { ...repeat, time: 0 };
+    else if (obDance) startObDance(obDance);
     else if (!pend) {
-      const button = BUTTONS.find((b) => edge(b));
+      // In one-button mode TRICK starts no dance at the press (R12.1).
+      const button = BUTTONS.find((b) => edge(b) && !(ob && b === "style1"));
       if (button) {
         const res = resolvePress(t, input, button, k);
         if (res.dir) startDance(button, res.dir);
@@ -300,7 +336,7 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   // A press that starts no trick (#264): the HUD says why.
   if (!style && !repeat && !prev.style && !pend) {
     const pressedSpin = edge("style2");
-    const pressedTrick = edge("style1");
+    const pressedTrick = ob ? Boolean(obDance) : edge("style1");
     let reason = null;
     if (s.state === "air" && pressedSpin) reason = "air";
     else if (s.state === "grind" && (pressedSpin || pressedTrick)) reason = "grind";

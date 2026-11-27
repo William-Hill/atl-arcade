@@ -1,10 +1,13 @@
 import { expect, test, devices } from "@playwright/test";
-import { pinRide } from "./teach-ride.js";
+import { linkRide, pinRide } from "./teach-ride.js";
 
 // Teach the moves in the world (#76). A new player (empty storage) follows
 // the prompts: push, steer, jump and dance with real keys or real touches,
 // then the grind pin with the ride of e2e/teach-ride.js (planned in the pure
-// simulation from the spawn to the rail the pin shows), then a 3-link combo.
+// simulation from the spawn to the rail the pin shows). Then the 3 trick
+// steps of #331: a grab with a direction (real keys, a simulated gamepad, or
+// a touch flick), a grind stance, and the manual link (the skatepark ride of
+// linkRide, which also gives the 3-link combo of the combo tip).
 // Screenshots: e2e/__screenshots__/teach-*.png.
 
 const SHOTS = "e2e/__screenshots__";
@@ -56,6 +59,35 @@ async function readable(page) {
   expect(r.overlap).toBe(false);
 }
 
+const pause = (page, on = true) => page.evaluate((v) => (window.__atl.renderPaused = v), on);
+
+// Runs the sim until the skater is in the air for `air` s, then stops it, so
+// the next key or button goes in on one sample (as in e2e/trick-game.spec.js).
+async function inTheAir(page, air = 0.15) {
+  await page.waitForFunction(
+    (a) => {
+      const s = window.__atl.skater;
+      const ok = s.state === "air" && s.airTime >= a;
+      if (ok) window.__atl.renderPaused = true;
+      return ok;
+    },
+    air,
+    { timeout: 60000, polling: "raf" },
+  );
+}
+
+// Plays the link ride of #331 in the page (the stance, the manual link, and
+// the combo tip). Resolves when the script ends.
+async function rideLink(page) {
+  const ride = linkRide();
+  await page.evaluate(({ script, start }) => {
+    window.__ride = { done: false };
+    window.__atl.runScript(script, start).then(() => (window.__ride.done = true));
+  }, ride);
+  await page.waitForFunction(() => window.__ride.done, null, { timeout: 900000 });
+  return ride;
+}
+
 // Plays the pin ride in the page. Resolves with the end skater.
 async function ridePin(page, onTarget) {
   // The full ride from the spawn runs in Vitest (src/ui/teach-ride.test.js);
@@ -84,7 +116,7 @@ test.describe("teach prompts (#76)", () => {
       { type: "key", label: "W" },
       { type: "key", label: "Shift" },
     ]);
-    expect(t.prompt.count).toBe("1 of 5");
+    expect(t.prompt.count).toBe("1 of 8");
     await inside(page);
     await page.screenshot({ path: `${SHOTS}/teach-high-1-push.png` });
 
@@ -96,7 +128,7 @@ test.describe("teach prompts (#76)", () => {
     await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Steer", null, { timeout: 30000 });
     t = await teach(page);
     expect(t.prompt.icons.map((i) => i.label)).toEqual(["A", "D"]);
-    expect(t.prompt.count).toBe("2 of 5");
+    expect(t.prompt.count).toBe("2 of 8");
     await page.screenshot({ path: `${SHOTS}/teach-high-2-steer.png` });
 
     // Steer: hold A with W.
@@ -138,12 +170,58 @@ test.describe("teach prompts (#76)", () => {
       await page.screenshot({ path: `${SHOTS}/teach-high-6-pin.png` });
     });
     expect(ride.links).toEqual(["Rail Grind", "Hop", "Toe Spin"]);
+
+    // #331 step 6: a grab with a direction. Real keys: Space, then A and Q in the air.
+    await stepIs(page, "grab");
+    await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Aim a grab", null, { timeout: 30000 });
+    t = await teach(page);
+    expect(t.prompt.icons).toEqual([
+      { type: "key", label: "WASD" },
+      { type: "key", label: "Q" },
+    ]);
+    expect(t.prompt.hint).toBe("In the air, tap a direction with Q");
+    expect(t.prompt.count).toBe("6 of 8");
+    expect(t.target).toBeNull(); // no rail pin for the grab
+    await inside(page);
+    await page.screenshot({ path: `${SHOTS}/teach-high-7-grab.png` });
+    await page.keyboard.press("Space");
+    await inTheAir(page);
+    await page.keyboard.down("KeyA");
+    await page.keyboard.down("KeyQ");
+    await pause(page, false);
+    await stepIs(page, "stance");
+    await page.keyboard.up("KeyQ");
+    await page.keyboard.up("KeyA");
+    expect(await page.evaluate(() => window.__atl.teach.done.grab)).toBe(true);
+
+    // #331 step 7: a grind stance. The rail pin shows again.
+    await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Grind with a stance" && window.__atl.teach.target, null, { timeout: 30000 });
+    t = await teach(page);
+    expect(t.prompt.icons.map((i) => i.label)).toEqual(["WASD", "F"]);
+    expect(t.prompt.hint).toBe("At the rail, tap a direction with F");
+    await expect(page.locator("#teach-pin .teach-pin-label")).toBeVisible();
+    await inside(page);
+    await page.screenshot({ path: `${SHOTS}/teach-high-8-stance.png` });
+
+    // #331 step 8 and the combo tip: the skatepark ride (Soul Grind, GRIND held
+    // off the bar into a manual, a jump out of the manual).
+    const seen = [];
+    const linkRun = rideLink(page);
+    await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Grind, manual, jump", null, { timeout: 900000 });
+    t = await teach(page);
+    seen.push(t.step);
+    expect(t.prompt.icons).toEqual([{ type: "key", label: "F" }]);
+    expect(t.prompt.hint).toBe("Hold F off the rail, then jump or hit a kicker");
+    await page.screenshot({ path: `${SHOTS}/teach-high-9-link.png` });
+    const link = await linkRun;
+    expect(link.links.slice(0, 3)).toEqual(["Rail Soul Grind", "Hop", "Manual"]);
+    expect(seen).toEqual(["link"]);
     t = await teach(page);
     expect(t.finished).toBe(true);
     await page.waitForFunction(() => !window.__atl.teach.visible, null, { timeout: 30000 });
     await expect(page.locator("#teach")).toBeHidden();
     await expect(page.locator("#teach-pin")).toBeHidden();
-    expect(await page.evaluate(() => localStorage.getItem("atl.teach.v1"))).toBe("done");
+    expect(await page.evaluate(() => localStorage.getItem("atl.teach.v1"))).toBe("done-v2");
 
     // A second visit shows no prompt; ?teach=1 shows them again.
     await open(page, "&quality=high");
@@ -174,6 +252,131 @@ test.describe("teach prompts (#76)", () => {
     expect(t.kind).toBe("gamepad");
     expect(t.prompt.icons[0].type).toBe("stick");
     expect(t.prompt.hint).toBe("Left stick");
+  });
+
+  test("gamepad: the trick steps (#331) name the stick and the pad buttons; a stick grab finishes the grab step", async ({ page }) => {
+    await page.addInitScript(() => {
+      const pad = { id: "Test pad (STANDARD GAMEPAD)", index: 0, connected: true, mapping: "standard", axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
+      window.__pad = pad;
+      navigator.getGamepads = () => [pad];
+    });
+    await open(page, "&teach=grab");
+    await page.waitForFunction(() => window.__atl.teach.kind === "gamepad" && window.__atl.teach.prompt?.title === "Aim a grab", null, { timeout: 30000 });
+    let t = await teach(page);
+    expect(t.prompt.icons).toEqual([
+      { type: "stick", label: "L" },
+      { type: "pad", label: "Y" },
+    ]);
+    expect(t.prompt.hint).toBe("In the air, tilt the stick and press Y");
+    await page.screenshot({ path: `${SHOTS}/teach-gamepad-grab.png` });
+    // A jumps; in the air, the stick left and Y: a Japan Grab.
+    await page.evaluate(() => (window.__pad.buttons[0] = { pressed: true, value: 1 }));
+    await inTheAir(page);
+    await page.evaluate(() => {
+      window.__pad.buttons[0] = { pressed: false, value: 0 };
+      window.__pad.axes[0] = -1;
+      window.__pad.buttons[3] = { pressed: true, value: 1 };
+    });
+    await pause(page, false);
+    await stepIs(page, "stance");
+    expect(await page.evaluate(() => window.__atl.skater.grab?.id ?? window.__atl.teach.done.grab)).toBeTruthy();
+    await page.evaluate(() => {
+      window.__pad.axes[0] = 0;
+      window.__pad.buttons[3] = { pressed: false, value: 0 };
+    });
+    await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Grind with a stance", null, { timeout: 30000 });
+    t = await teach(page);
+    expect(t.kind).toBe("gamepad");
+    expect(t.prompt.icons).toEqual([
+      { type: "stick", label: "L" },
+      { type: "pad", label: "RT" },
+    ]);
+    expect(t.prompt.hint).toBe("At the rail, tilt the stick and press RT");
+    await page.screenshot({ path: `${SHOTS}/teach-gamepad-stance.png` });
+    // The link step on the gamepad.
+    await open(page, "&teach=link");
+    await page.waitForFunction(() => window.__atl.teach.kind === "gamepad" && window.__atl.teach.prompt?.title === "Grind, manual, jump", null, { timeout: 30000 });
+    t = await teach(page);
+    expect(t.prompt.icons).toEqual([{ type: "pad", label: "RT" }]);
+    expect(t.prompt.hint).toBe("Hold RT off the rail, then jump or hit a kicker");
+    expect(t.prompt.count).toBe("8 of 8");
+    await page.screenshot({ path: `${SHOTS}/teach-gamepad-link.png` });
+  });
+
+  test("one-button mode: the trick steps (#331) show TRICK only; a plain TRICK grab counts", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("atl.controls.v1", JSON.stringify({ oneButton: true })));
+    await open(page, "&teach=grab");
+    await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Grab in the air", null, { timeout: 30000 });
+    let t = await teach(page);
+    expect(t.prompt.icons).toEqual([{ type: "key", label: "Q" }]);
+    expect(t.prompt.hint).toBe("In the air, tap Q for the next grab");
+    await page.screenshot({ path: `${SHOTS}/teach-onebutton-grab.png` });
+    // Space, then Q in the air with no direction: the Mute Grab of the set counts.
+    await page.keyboard.press("Space");
+    await inTheAir(page);
+    await page.keyboard.down("KeyQ");
+    await pause(page, false);
+    await stepIs(page, "stance");
+    await page.keyboard.up("KeyQ");
+    await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Grind with TRICK", null, { timeout: 30000 });
+    t = await teach(page);
+    expect(t.prompt.icons).toEqual([{ type: "key", label: "Q" }]);
+    expect(t.prompt.hint).toBe("At the rail, tap Q for the next stance");
+    await page.screenshot({ path: `${SHOTS}/teach-onebutton-stance.png` });
+  });
+
+  test("touch: the trick steps (#331) teach the flick; a flick right on TRICK in the air finishes the grab step", async ({ browser }) => {
+    const { defaultBrowserType, ...pixel } = devices["Pixel 7"]; // eslint-disable-line no-unused-vars
+    const context = await browser.newContext({ ...pixel });
+    const page = await context.newPage();
+    await open(page, "&touch=1&teach=grab");
+    const cdp = await context.newCDPSession(page);
+    const down = new Map();
+    const send = (type) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: [...down.entries()].map(([id, p]) => ({ id, x: p.x, y: p.y })) });
+    const finger = {
+      start: async (id, x, y) => (down.set(id, { x, y }), send("touchStart")),
+      move: async (id, x, y) => (down.set(id, { x, y }), send("touchMove")),
+      end: async (id) => {
+        down.delete(id);
+        if (down.size) await send("touchMove");
+        else await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      },
+    };
+    const c = await page.evaluate(() => {
+      const ctr = (sel) => {
+        const r = document.querySelector(sel).getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      };
+      return { jump: ctr(".touch-jump"), style1: ctr(".touch-style1") };
+    });
+    await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Aim a grab", null, { timeout: 30000 });
+    let t = await teach(page);
+    expect(t.kind).toBe("touch");
+    expect(t.prompt.icons).toEqual([{ type: "touch", label: "TRICK" }]);
+    expect(t.prompt.hint).toBe("In the air, flick TRICK up, down, left, or right");
+    await expect(page.locator(".touch-style1")).toHaveAttribute("data-teach", "1");
+    await inside(page);
+    await readable(page);
+    await page.screenshot({ path: `${SHOTS}/teach-phone-7-grab.png` });
+    // A tap on JUMP, then in the air a 40 px flick right from TRICK: the Side Grab.
+    await finger.start(1, c.jump.x, c.jump.y);
+    await finger.end(1);
+    await inTheAir(page);
+    await finger.start(2, c.style1.x, c.style1.y);
+    await finger.move(2, c.style1.x + 40, c.style1.y);
+    await pause(page, false);
+    await stepIs(page, "stance");
+    await finger.end(2);
+    await page.waitForFunction(() => window.__atl.teach.prompt?.title === "Grind with a stance" && window.__atl.teach.target, null, { timeout: 30000 });
+    t = await teach(page);
+    expect(t.prompt.icons).toEqual([{ type: "touch", label: "GRIND" }]);
+    expect(t.prompt.hint).toBe("At the rail, flick GRIND up, down, left, or right");
+    await expect(page.locator(".touch-grind")).toHaveAttribute("data-teach", "1");
+    await expect(page.locator(".touch-style1")).not.toHaveAttribute("data-teach", "1");
+    await inside(page);
+    await readable(page);
+    await page.screenshot({ path: `${SHOTS}/teach-phone-8-stance.png` });
+    await context.close();
   });
 
   test("touch: on a phone in landscape the card keeps clear of the top buttons", async ({ browser }) => {
@@ -283,9 +486,10 @@ test.describe("teach prompts (#76)", () => {
       await page.waitForFunction(() => (window.__atl.teach.target?.distance ?? 99) < 22, null, { timeout: 240000 });
       await page.screenshot({ path: `${SHOTS}/teach-phone-6-pin.png` });
     });
-    expect((await teach(page)).finished).toBe(true);
-    await page.waitForFunction(() => !window.__atl.teach.visible, null, { timeout: 30000 });
-    await expect(page.locator(".touch-btn[data-teach]")).toHaveCount(0);
+    // The trick steps (#331) come next: the TRICK button glows for the grab.
+    await stepIs(page, "grab");
+    await expect(page.locator(".touch-style1")).toHaveAttribute("data-teach", "1");
+    await expect(page.locator(".touch-grind")).not.toHaveAttribute("data-teach", "1");
     await context.close();
   });
 });

@@ -921,7 +921,7 @@ let hitStopDebt = 0;
 // The last manual balance out (#330, E4): the bar holds the marker at its end.
 let manualOut = { seq: 0, side: 0 };
 // Teach the moves in the world (#76): one prompt at a time, ?teach=1 or 0.
-const teach = createTeachPrompts({ levelName: level.name, geo, param: params.get("teach"), storage: safeStorage(), grindables: skaterEnv.grindables, touch: Boolean(touch), gamepad: () => input.gamepadId !== null, reducedMotion: () => effects.reducedMotion });
+const teach = createTeachPrompts({ levelName: level.name, geo, param: params.get("teach"), storage: safeStorage(), grindables: skaterEnv.grindables, touch: Boolean(touch), gamepad: () => input.gamepadId !== null, oneButton: () => Boolean(input.mode?.oneButton), reducedMotion: () => effects.reducedMotion });
 // After the step from pbr lite to toon (#246): one line, one time. The flag
 // leaves the address, so a refresh does not show the line again.
 const lookNotice = lookDownNotice(window.location.href);

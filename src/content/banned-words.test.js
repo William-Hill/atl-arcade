@@ -6,6 +6,7 @@ import { ONE_BUTTON_SETS } from "../input/one-button.js";
 import { hudShortName } from "../ui/trick-names.js";
 import { TEACH_STEPS, promptFor } from "../ui/teach-steps.js";
 import { BANNED_WORDS as LANDMARK_WORDS } from "../landmarks/validate.js";
+import { CHIP_BANNED } from "../ui/trick-hud-text.js";
 
 // #342, GDD R13: every trick and dance name is positive or neutral. The
 // banned word list holds the AGENTS.md political rules.
@@ -44,6 +45,8 @@ describe("#342 the banned word list", () => {
     for (const words of Object.values(BANNED_GROUPS)) expect(words.length).toBeGreaterThan(0);
     // The examples of the GDD (R13).
     expect(BANNED_WORDS).toEqual(expect.arrayContaining(["crash", "fail"]));
+    // The chip words of the trick HUD spec (CHIP_BANNED in src/ui/trick-hud-text.js, #330).
+    for (const w of CHIP_BANNED) expect(BANNED_WORDS).toContain(w.toLowerCase());
   });
 
   it("is lower case, one word each, and has no repeat", () => {

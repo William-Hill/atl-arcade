@@ -54,7 +54,7 @@ test.describe("touch flick on Pixel 7", () => {
     const info = await page.evaluate(() => ({
       labels: [...document.querySelectorAll(".touch-btn")].map((el) => el.textContent),
       rings: [...document.querySelectorAll(".flick-ring")].map((el) => el.className),
-      ticks: document.querySelectorAll(".flick-ring .flick-arrow").length,
+      ticks: document.querySelectorAll(".flick-ring .flick-arrow:not(.flick-n)").length,
     }));
     expect(info.labels).toEqual(["JUMP", "GRIND", "TRICK", "SPIN", "SWITCH"]);
     expect(info.rings).toEqual(["flick-ring flick-ring-grind", "flick-ring flick-ring-style1", "flick-ring flick-ring-style2"]);
@@ -82,7 +82,7 @@ test.describe("touch flick on Pixel 7", () => {
       const rr = ring.getBoundingClientRect();
       return {
         dir: ring.dataset.dir,
-        radius: Math.max(...[...ring.querySelectorAll(".flick-arrow")].map((a) => {
+        radius: Math.max(...[...ring.querySelectorAll(".flick-arrow:not(.flick-n)")].map((a) => {
           const r = a.getBoundingClientRect();
           return Math.hypot(r.left + r.width / 2 - rr.left, r.top + r.height / 2 - rr.top);
         })),

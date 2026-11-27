@@ -45,8 +45,11 @@ test("a scripted grind, jump, style move yields a 3-link combo on the HUD", asyn
   expect(result.end.combo.links).toHaveLength(3);
   expect(result.end.combo.multiplier).toBe(3);
   expect(result.end.combo.active).toBe(true);
-  expect(hud.combo).toBe("Rail Grind + Hop + Bankhead Bounce");
-  expect(hud.pending).toMatch(/^\d[\d,]* x 3$/);
+  // The trick line (#330, docs/ux/trick-hud.md 5.1): the arrow of the
+  // direction (the neutral dot), the names, and the multiplier at the end.
+  // The pending line shows the points only.
+  expect(hud.combo).toBe("\u2022 Rail Grind + Hop + \u2022 Bankhead Bounce x3");
+  expect(hud.pending).toMatch(/^\d[\d,]*$/);
   expect(hud.style).toBe("25%");
   await page.screenshot({ path: "e2e/__screenshots__/combo-three-link.png" });
 

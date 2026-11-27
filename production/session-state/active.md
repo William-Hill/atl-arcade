@@ -19,6 +19,21 @@ Branch `claude/gifted-darwin-mhhrm3` from `main` (wave 2 step 2, lane O). Design
 
 NOT verified: no person played one-button mode; no real phone, GPU, or gamepad; the full Playwright suite did not run (it runs on `main` before the Autopilot playtest).
 
+## Trick HUD (#330) and PERFECT hit stop (#338), 2026-11-27
+
+Branch `claude/determined-bell-1h3iho` from `main` (wave 2 step 2, lane H; lane O does #336 and #342 in parallel). Spec: `docs/ux/trick-hud.md`. Design: `docs/decisions.md`, 2026-11-27.
+
+| Part | Where | Verified |
+|---|---|---|
+| E1 trick line, E2 chip, E3 hold bar and pips (pure text) | `src/ui/trick-hud-text.js`, `src/ui/hud.js`, `src/shell.css` | Vitest `trick-hud-text.test.js`; Playwright `e2e/trick-hud.spec.js` |
+| Link direction, Busy event | `src/sim/skate/combo.js`, `run.js`, `trick-step.js` | Vitest `trick-hud-330.test.js` |
+| E4 manual bar | `src/ui/manual-bar-math.js`, `src/ui/manual-bar.js` | Vitest `manual-bar-math.test.js`; Playwright `trick-hud.spec.js` |
+| E5 ring and flick card | `src/input/touch.js`, `src/ui/flick-card.js`, `src/ui/trick-map.js` | Vitest `trick-map.test.js`; Playwright `trick-hud.spec.js`, `trick-touch.spec.js` |
+| E6 trick list, dance origins | `src/ui/trick-list.js`, `src/content/dance-origins.js`, `src/ui/settings-menu.js` | Vitest `trick-map.test.js`; Playwright `trick-hud.spec.js` |
+| `perfectHitStopMs` | `src/sim/skate/constants.js`, `src/sim/skate/hit-stop.js`, `src/main.js` | Vitest `hit-stop.test.js`; Playwright `trick-hud.spec.js` |
+
+NOT verified: no person played it; no real phone, GPU, or gamepad (the gamepad test sends fake pad objects); no person signed off the grayscale screenshots; the full Playwright suite did not run.
+
 ## Trick rules on in the game (#328, #340, #343, #337), 2026-11-26
 
 Branch `claude/quirky-heisenberg-xyd0i9` from `main` (step 1, alone, because it changes `src/main.js`). Design: `docs/decisions.md`, 2026-11-26 "The trick rules play in the game".

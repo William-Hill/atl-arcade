@@ -14,6 +14,11 @@ import { advance, createStepper } from "./sim/fixed-step.js";
 import { createSkaterEnv, oneButtonContext } from "./sim/skate/skater.js";
 import { createRun, stepRun, teleportRun } from "./sim/skate/run.js";
 import { createHud } from "./ui/hud.js";
+import { createManualBar, barLabels } from "./ui/manual-bar.js";
+import { createFlickCard } from "./ui/flick-card.js";
+import { createTrickList } from "./ui/trick-list.js";
+import { hitStopFor, startHitStop, stepHitStop } from "./sim/skate/hit-stop.js";
+import { COMBO } from "./sim/skate/constants.js";
 import { createMinimap } from "./ui/minimap.js";
 import { createFullMap } from "./ui/fullmap.js";
 import { travelMode } from "./ui/travel-rule.js";
@@ -23,7 +28,7 @@ import { ISO, isoBasis, isoCameraPose, levelIsoGrid, tileCenter } from "./level/
 import { createIconSource } from "./ui/landmark-icons.js";
 import { createScreenControls } from "./ui/screen-controls.js";
 import { createSkaterSelect, createSkaterSwitch, resolveSkater, skaterUrl } from "./ui/skater-select.js";
-import { shortAttribution } from "./ui/layout.js";
+import { isCompact, shortAttribution } from "./ui/layout.js";
 import { BeatClock } from "./audio/beat-clock.js";
 import { beatClockOptions, trackChoices, writeChoice } from "./audio/music-tracks.js";
 import { createSfx } from "./audio/sfx.js";
@@ -896,7 +901,25 @@ let skater = run.skater;
 runReady = true;
 // The goals of the run (M1-05), or null with ?run=free or ?run=tour. The HUD shows them (#268).
 const goalDef = runRules.timer ? goalsFor(resolveLevelName(params.get("level"))) : null;
-const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef, tour: runRules.mode === "tour" });
+const hud = createHud(document.getElementById("hud"), { touch: Boolean(touch), fence: env.fence, reducedMotion: () => effects.reducedMotion, goalDef, tour: runRules.mode === "tour", oneButton: () => Boolean(input.mode?.oneButton) });
+// The trick HUD (#330, docs/ux/trick-hud.md): the manual balance bar beside
+// the skater (E4) and the touch flick card (E5). Rendering only.
+const hudBlockers = () =>
+  ["#hud", ".touch-buttons", ".touch-stick-base", "#minimap"]
+    .map((q) => document.querySelector(q)?.getBoundingClientRect())
+    .filter((r) => r && r.width > 0 && r.height > 0)
+    .map((r) => ({ x: r.left, y: r.top, w: r.width, h: r.height }));
+const manualBar = createManualBar(document.body, { reducedMotion: () => effects.reducedMotion, blockers: hudBlockers });
+const flickCardView = touch ? createFlickCard(document.body) : null;
+const hipProbe = new THREE.Vector3();
+// The PERFECT hit stop (#338): the ms left. ?hitstop=<ms> sets the knob (0 turns it off).
+const hitStopK = numParam("hitstop") != null ? { ...COMBO, perfectHitStopMs: numParam("hitstop") } : COMBO;
+let hitStopLeft = 0;
+let hitStops = 0;
+// The sim time (s) of the steps that a hit stop put off: they run when it ends.
+let hitStopDebt = 0;
+// The last manual balance out (#330, E4): the bar holds the marker at its end.
+let manualOut = { seq: 0, side: 0 };
 // Teach the moves in the world (#76): one prompt at a time, ?teach=1 or 0.
 const teach = createTeachPrompts({ levelName: level.name, geo, param: params.get("teach"), storage: safeStorage(), grindables: skaterEnv.grindables, touch: Boolean(touch), gamepad: () => input.gamepadId !== null, reducedMotion: () => effects.reducedMotion });
 // After the step from pbr lite to toon (#246): one line, one time. The flag
@@ -1063,6 +1086,14 @@ function simulate(dt) {
   const applied = attract || (goals && goals.ended) ? {} : sampled;
   run = stepRun(run, applied, dt, env, skaterEnv, beat.running ? beat : null);
   perf.end("skater");
+  // A PERFECT link starts the hit stop (#338). The HUD does not stop.
+  const end = run.skater.manualEnd;
+  if (end && end.reason === "balance") manualOut = { seq: manualOut.seq + 1, side: Math.sign(end.balance) || 1 };
+  const stopMs = hitStopFor(run.moves, hitStopK);
+  if (stopMs) {
+    hitStopLeft = startHitStop(hitStopLeft, stopMs);
+    hitStops += 1;
+  }
   skater = run.skater;
   if (!attract) teach.observe(before, skater, applied, run.combo, dt);
   effects.observe(before, skater, run.moves);
@@ -1284,9 +1315,59 @@ const settingsMenu = createSettingsMenu({
   canOpen: () => !photo.isOpen && !fullmap?.isOpen,
   onChange: () => input.reset(),
   controls: remapScreen,
+  tricks: { open: () => trickList.open() },
   // "Reset progress" and the notice when the storage fails (#220, E-5, E-8).
   progress: landmarkTracker ? { saved: () => landmarkTracker.saved, onReset: () => landmarkTracker.reset() } : null,
 });
+
+// The trick list (#330, docs/ux/trick-hud.md 9): T, the TRICKS button, the
+// "Trick list" button in the settings, or the gamepad View/Back button. The
+// game stops while it is open.
+const trickList = createTrickList({
+  skater: () => skaterEnv.skater,
+  source: () => input.source,
+  bindings: () => input.bindings,
+  oneButton: () => Boolean(input.mode?.oneButton),
+  touch: Boolean(touch),
+  canOpen: () => !photo.isOpen && !fullmap?.isOpen && !settingsMenu.isOpen && !remapScreen?.isOpen && !storyView?.isOpen && !front?.active && !results?.shown,
+  onChange: () => {
+    input.reset();
+    // A pad button that closes the list (B, A, View) must not reach the game.
+    input.latchPad();
+    oneButton = releaseOneButton(oneButton);
+  },
+});
+// On a touch screen the TRICKS button sits beside SETTINGS: to its right in
+// a landscape phone (the top center pair), else to its left.
+function placeTricksToggle() {
+  if (!touch) return;
+  const t = trickList.toggle;
+  const r = document.getElementById("settings-toggle")?.getBoundingClientRect();
+  if (!r || !r.width) return;
+  const w = t.getBoundingClientRect().width || 80;
+  const landscape = window.innerWidth > window.innerHeight;
+  t.style.position = "fixed";
+  t.style.top = `${r.top}px`;
+  t.style.bottom = "auto";
+  t.style.right = "auto";
+  t.style.left = `${landscape ? r.right + 8 : r.left - 8 - w}px`;
+}
+window.addEventListener("resize", () => requestAnimationFrame(placeTricksToggle));
+firstFrame.then(() => requestAnimationFrame(placeTricksToggle));
+let touchButtonsBox = null;
+window.addEventListener("resize", () => (touchButtonsBox = null));
+function touchButtonsRect() {
+  if (!touchButtonsBox) {
+    const r = document.querySelector(".touch-buttons")?.getBoundingClientRect();
+    touchButtonsBox = r && r.width ? { x: r.left, y: r.top, w: r.width, h: r.height } : null;
+  }
+  return touchButtonsBox;
+}
+// The pad that the game input reads (input.gamepadId), else the first pad.
+function firstPad() {
+  const pads = [...((typeof navigator.getGamepads === "function" ? navigator.getGamepads() : []) ?? [])].filter((p) => p && p.connected !== false);
+  return pads.find((p) => (p.id ?? "gamepad") === input.gamepadId) ?? pads[0] ?? null;
+}
 
 // The full map of the level (M key, or the minimap expand button). The game
 // stops while it is open. ?fullmap=0 leaves it out.
@@ -1413,7 +1494,7 @@ function frame(now) {
     return;
   }
   // Photo mode and the full map stop the game.
-  const paused = photo.isOpen || Boolean(fullmap?.isOpen) || settingsMenu.isOpen;
+  const paused = photo.isOpen || Boolean(fullmap?.isOpen) || settingsMenu.isOpen || trickList.isOpen;
   // Photo mode pauses the governor: the blur is slow and the game is stopped.
   if (governor && !paused) {
     governor = governorStep(governor, elapsed * 1000);
@@ -1424,15 +1505,33 @@ function frame(now) {
     // Photo mode and the full map stop the simulation and the skater animation.
     stepper = { ...stepper, leftover: 0 };
   } else {
-    const stepped = advance(stepper, elapsed);
+    // The PERFECT hit stop (#338): the sim gets only the wall time after
+    // the hit stop. A hit stop that starts in this frame ends the frame's steps.
+    const hs = stepHitStop(hitStopLeft, elapsed * 1000);
+    hitStopLeft = hs.left;
+    if (hitStopLeft <= 0 && hitStopDebt > 0) {
+      stepper = { ...stepper, leftover: stepper.leftover + hitStopDebt };
+      hitStopDebt = 0;
+    }
+    const stepped = advance(stepper, hs.simMs / 1000);
     stepper = stepped.stepper;
-    for (let i = 0; i < stepped.steps; i += 1) simulate(stepper.dt);
-    perf.steps(stepped.steps);
-    ticks += stepped.steps;
+    let ran = 0;
+    for (let i = 0; i < stepped.steps; i += 1) {
+      simulate(stepper.dt);
+      ran += 1;
+      if (hitStopLeft > 0) {
+        // The steps of this frame after the PERFECT run after the hit stop,
+        // so the sim loses exactly perfectHitStopMs.
+        hitStopDebt += (stepped.steps - ran) * stepper.dt;
+        break;
+      }
+    }
+    perf.steps(ran);
+    ticks += ran;
   }
 
   perf.begin("views");
-  skaterView.sync(skater, paused ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
+  skaterView.sync(skater, paused || hitStopLeft > 0 ? 0 : Math.min(elapsed, 0.1), beat.running ? { time: beat.now(), bpm: beat.bpm } : null);
   if (photo.isOpen) {
     photo.update(Math.min(elapsed, 0.1));
   } else if (controls) {
@@ -1463,6 +1562,20 @@ function frame(now) {
   const phase = roundPhase(goals, { endedFor: roundEndedFor });
   landmarkGuide = landmarkNow ? guideLine(landmarkNow, skater.position, skater.yaw, { claims: landmarkTimed, timeLeft: phase === "play" ? goals.timeLeft : null }) : null;
   hud.update(run, now, beat.running ? beat.phase() : null, goals, phase === "play" || phase === "none" ? (landmarkGuide?.text ?? null) : null);
+  // The trick HUD (#330): the manual bar follows the skater hip (1 m up).
+  {
+    const compactHud = isCompact(window.innerWidth, window.innerHeight);
+    let anchor = null;
+    if (skater.manual) {
+      hipProbe.set(skater.position[0], skater.position[1] + 1, skater.position[2]).project(camera);
+      if (hipProbe.z < 1) anchor = { x: ((hipProbe.x + 1) / 2) * window.innerWidth, y: ((1 - hipProbe.y) / 2) * window.innerHeight };
+    }
+    manualBar.update({ manual: skater.manual ?? null, balanceOut: manualOut, anchor, dt: paused ? 0 : Math.min(elapsed, 0.1), nowMs: now, compact: compactHud, labels: barLabels(touch && input.source === "touch" ? "touch" : input.source, input.bindings) });
+    document.body.classList.toggle("reduced-motion", Boolean(effects.reducedMotion));
+    if (touch) touch.oneButton = Boolean(input.mode?.oneButton);
+    if (flickCardView) flickCardView.update({ flicks: touch.flicks, skater, skaterId: skaterEnv.skater, oneButton: Boolean(input.mode?.oneButton), ob: oneButton, buttons: touchButtonsRect() });
+    trickList.pollPad(firstPad());
+  }
   // The soft round end (#260): the HUD says why the input stops.
   const status = roundStatus(phase, goals, goalDef ?? {});
   if (status !== roundStatusText) {
@@ -1561,6 +1674,37 @@ requestAnimationFrame(frame);
 
 // Read by the Playwright tests.
 window.__atl = {
+  // The trick HUD (#330) and the PERFECT hit stop (#338).
+  trickHud: {
+    get manualBar() {
+      return manualBar.state;
+    },
+    get flickCard() {
+      return flickCardView ? flickCardView.state : null;
+    },
+    trickList: {
+      get isOpen() {
+        return trickList.isOpen;
+      },
+      get skater() {
+        return trickList.skater;
+      },
+      open: () => trickList.open(),
+      close: () => trickList.close(),
+      pollPad: (pad) => trickList.pollPad(pad),
+    },
+  },
+  hitStop: {
+    get left() {
+      return hitStopLeft;
+    },
+    get count() {
+      return hitStops;
+    },
+    get ms() {
+      return hitStopK.perfectHitStopMs;
+    },
+  },
   // The intro and the title screen (#301): the phase ("intro", "title" or
   // "play"), the plan, and press() (the same as a key).
   front: {

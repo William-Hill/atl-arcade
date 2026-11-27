@@ -24,13 +24,17 @@ const BUTTONS = [
   { action: "switch", label: "SWITCH", aria: "Switch: ride backward or forward" },
 ];
 
-// The 4 arrows of the flick ring: up, right, down, left.
+// The 4 arrows of the flick ring: up, right, down, left, and the dot of the
+// neutral trick (a tap) at the center (docs/ux/trick-hud.md 8.2).
 const RING_DIRS = [
   ["u", "\u25B2"],
   ["r", "\u25B6"],
   ["d", "\u25BC"],
   ["l", "\u25C0"],
+  ["n", "\u2022"],
 ];
+// The ring and the flick card stay this long after the finger lifts (8.2).
+export const RING_HIDE_MS = 150;
 const HALF_FRAME_MS = 1000 / 120;
 
 export function createTouchInput({ parent = document.body, radius = TOUCH.radius, knobs = TRICK_INPUT } = {}) {
@@ -170,23 +174,42 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
   zone.addEventListener("contextmenu", (e) => e.preventDefault());
   release();
 
-  // The ring of each flick button: active while a finger is down, and the
-  // direction of the drag (or of the resolve) as `data-dir`.
-  function showRings() {
+  // The ring of each flick button: active while a finger is down (and for
+  // RING_HIDE_MS after the lift), and the direction of the drag (or of the
+  // resolve) as `data-dir`: "u", "d", "l", "r", or "n" for the neutral trick.
+  // The lit arrow shows from flickMin (8.2).
+  const shown = {};
+  // `resolved` is the flick resolves of this sample ({ style1: "n", ... }):
+  // a tap can resolve and lift in one sample, and its dot still lights.
+  function showRings(resolved = {}) {
     const flicks = activeFlicks(tricks);
+    const now = performance.now();
     for (const [action, { ring, button }] of Object.entries(rings)) {
       ring.style.left = `${button.offsetLeft + button.offsetWidth / 2}px`;
       ring.style.top = `${button.offsetTop + button.offsetHeight / 2}px`;
       const f = flicks.find((g) => g.button === action);
-      ring.dataset.active = f ? "1" : "0";
+      if (!f && resolved[action] != null) {
+        shown[action] = { at: now, dir: resolved[action] };
+        ring.dataset.active = "1";
+        ring.dataset.dir = resolved[action];
+        ring.dataset.resolved = "1";
+        continue;
+      }
       if (!f) {
+        const last = shown[action];
+        if (last && now - last.at < RING_HIDE_MS) continue;
+        delete shown[action];
+        ring.dataset.active = "0";
         ring.dataset.dir = "";
         continue;
       }
       const { dx, dy } = flickDrag(f);
-      const dir = f.resolved ? f.resolved.dir : Math.hypot(dx, dy) >= 6 ? (Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "r" : "l") : dy < 0 ? "u" : "d") : "";
-      ring.dataset.dir = dir === "n" ? "" : dir;
+      const far = Math.hypot(dx, dy) >= (k.flickMin ?? 24);
+      const dir = f.resolved ? f.resolved.dir : far ? (Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "r" : "l") : dy < 0 ? "u" : "d") : "";
+      ring.dataset.active = "1";
+      ring.dataset.dir = dir;
       ring.dataset.resolved = f.resolved ? "1" : "0";
+      shown[action] = { at: now, dir };
     }
   }
 
@@ -207,7 +230,7 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
       queue.length = 0;
       const frame = touchTricksFrame(tricks, tMs, k, HALF_FRAME_MS);
       tricks = frame.state;
-      showRings();
+      showRings(frame.out.flick ?? {});
       const b = { ...held.snapshot(), style1: frame.out.style1, style2: frame.out.style2, grind: frame.out.grind };
       return {
         ...mapTouch({ stick, buttons: b }),
@@ -228,7 +251,19 @@ export function createTouchInput({ parent = document.body, radius = TOUCH.radius
     skip() {
       queue.length = 0;
       tricks = createTouchTricks();
+      for (const key of Object.keys(shown)) delete shown[key];
       showRings();
+    },
+    // The rings now shown (the flick card reads them): [{ button, dir }].
+    // `dir` is "" before the drag reaches flickMin.
+    get flicks() {
+      return Object.entries(rings)
+        .filter(([, r]) => r.ring.dataset.active === "1")
+        .map(([button, r]) => ({ button, dir: r.ring.dataset.dir || "" }));
+    },
+    // One-button mode (R12.1): no tick marks and no ring (8.5).
+    set oneButton(v) {
+      root.dataset.oneButton = v ? "1" : "0";
     },
     // The flick knobs (flickMin, flickMaxMs).
     set knobs(v) {

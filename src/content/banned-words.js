@@ -17,7 +17,7 @@ export const BANNED_GROUPS = Object.freeze({
   weapons: ["weapon", "weapons", "gun", "guns", "pistol", "rifle", "knife", "bomb", "bullet", "bullets", "ammo"],
   drugs: ["drug", "drugs", "dope", "weed", "cocaine", "pills", "dealer", "trap"],
   decline: ["decline", "declined", "declining", "blight", "blighted", "slum", "slums", "ghetto", "hood", "abandoned", "derelict", "ruin", "ruins", "ruined", "condemned", "vacant", "poverty", "gentrification", "displaced", "displacement"],
-  failure: ["fail", "fails", "failed", "failure", "crash", "crashed", "wipeout", "wreck", "wrecked", "slam", "bailed", "loser", "lose", "lost", "dead", "die", "dies"],
+  failure: ["fail", "fails", "failed", "failure", "miss", "missed", "bad", "crash", "crashed", "wipeout", "wreck", "wrecked", "slam", "bailed", "loser", "lose", "lost", "dead", "die", "dies"],
 });
 
 // Every banned word, lower case, once.

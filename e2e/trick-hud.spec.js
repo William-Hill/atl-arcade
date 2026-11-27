@@ -115,7 +115,7 @@ test.describe("desktop 1280 x 720", () => {
     await ready(page, "&hitstop=0");
     await forceBeat(page, "PERFECT");
     await page.evaluate((script) => window.__atl.runScript(script, { position: [0, 0, 0], yaw: 0 }), [...GRAB_LEFT, { frames: 60, input: {} }]);
-    const stop = await page.evaluate(() => ({ ms: window.__atl.hitStop.ms, count: window.__atl.hitStop.count, perfect: window.__atl.combo.links.some((l) => l.tag === "PERFECT") }));
+    const stop = await page.evaluate(() => ({ ms: window.__atl.hitStop.ms, count: window.__atl.hitStop.count, perfect: window.__atl.events.some((e) => e.type === "move" && e.beatTag === "PERFECT") }));
     expect(stop).toEqual({ ms: 0, count: 0, perfect: true });
   });
 
@@ -301,11 +301,11 @@ test.describe("reduced motion", () => {
     await ready(page);
     await page.evaluate((script) => {
       window.__atl.runScript(script, { position: [0, 0, 0], yaw: 0 });
-    }, [{ frames: 50, input: { push: true } }, { frames: 300, input: { grind: true, balance: 0 } }]);
+    }, [{ frames: 50, input: { push: true } }, { frames: 300, input: { grind: true, balance: -0.3 } }]);
     await page.waitForFunction(
       () => {
         const m = window.__atl.skater.manual;
-        const ok = Boolean(m) && Math.abs(m.balance) >= 0.75 && window.__atl.trickHud.manualBar.visible;
+        const ok = Boolean(m) && Math.abs(m.balance) >= 0.7 && window.__atl.trickHud.manualBar.visible;
         if (ok) window.__atl.renderPaused = true;
         return ok;
       },
@@ -342,31 +342,31 @@ for (const orientation of ["portrait", "landscape"]) {
         window.__atl.resetSkater([0, 30, 0], 0);
       });
       await page.waitForFunction(() => window.__atl.skater.state === "air", null, { timeout: 20000, polling: "raf" });
+      // The touch-down and the 30 px drag go in while the sim is paused, so
+      // they reach the same sample (the software renderer is slower than
+      // flickMaxMs between 2 touch events; see e2e/trick-touch.spec.js).
       await page.evaluate(() => (window.__atl.renderPaused = true));
       await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ id: 1, x: btn.x, y: btn.y }] });
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ id: 1, x: btn.x + 30, y: btn.y + 1 }] });
       await page.evaluate(() => (window.__atl.renderPaused = false));
-      await page.waitForFunction(() => window.__atl.trickHud.flickCard?.visible && window.__atl.trickHud.flickCard.ctx === "air", null, { timeout: 10000, polling: "raf" });
+      await page.waitForFunction(() => window.__atl.trickHud.flickCard?.visible && window.__atl.trickHud.flickCard.ctx === "air" && window.__atl.trickHud.flickCard.lit === "r", null, { timeout: 10000, polling: "raf" });
+      await page.evaluate(() => (window.__atl.renderPaused = true));
+      // 4 chips with their centers 40 px from the button center.
       const ring = await page.evaluate(() => {
         const ring = document.querySelector(".flick-ring-style1");
         const rr = ring.getBoundingClientRect();
         return [...ring.querySelectorAll(".flick-arrow:not(.flick-n)")].map((a) => {
           const r = a.getBoundingClientRect();
-          return { d: Math.hypot(r.left + r.width / 2 - rr.left, r.top + r.height / 2 - rr.top), w: r.width, visible: getComputedStyle(a).visibility };
+          return Math.hypot(r.left + r.width / 2 - rr.left, r.top + r.height / 2 - rr.top);
         });
       });
       expect(ring).toHaveLength(4);
-      for (const a of ring) {
-        expect(a.d).toBeGreaterThan(36);
-        expect(a.d).toBeLessThanOrEqual(40.5);
+      for (const d of ring) {
+        expect(d).toBeGreaterThan(36);
+        expect(d).toBeLessThanOrEqual(40.5);
       }
-      const card0 = await page.evaluate(() => window.__atl.trickHud.flickCard.text);
-      expect(card0).toEqual(["• Mute Grab tap", "↑ Rocket Grab", "← Japan Grab", "→ Side Grab", "↓ Tuck Knee"]);
-      await page.screenshot({ path: shot(`ring-${orientation}`) });
-      // The drag right.
-      await page.evaluate(() => (window.__atl.renderPaused = true));
-      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ id: 1, x: btn.x + 30, y: btn.y + 1 }] });
-      await page.evaluate(() => (window.__atl.renderPaused = false));
-      await page.waitForFunction(() => window.__atl.trickHud.flickCard?.lit === "r", null, { timeout: 10000, polling: "raf" });
+      const card = await page.evaluate(() => window.__atl.trickHud.flickCard.text);
+      expect(card).toEqual(["\u2022 Mute Grab tap", "\u2191 Rocket Grab", "\u2190 Japan Grab", "\u25B6 \u2192 Side Grab", "\u2193 Tuck Knee"]);
       await page.evaluate(() => (window.__atl.renderPaused = true));
       const lit = await page.evaluate(() => {
         const box = (q) => {

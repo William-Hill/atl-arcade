@@ -12,6 +12,7 @@
 //   goals        the goals of the level (goals.json `goals`), optional
 //   permissions  the file names in docs/permissions/, optional
 
+import { BANNED_WORDS, wordsOf } from "../content/banned-words.js";
 import { EDGE_FENCE } from "../level/edge-fence.js";
 import { distanceToSegment, pointInRings } from "../level/geo/geo-ground.js";
 
@@ -64,7 +65,8 @@ export const POINTER_HOSTS = ["wikipedia.org", "wikimedia.org", "wikidata.org", 
 
 // Words that a fact, a `short` line, or a hint must not hold (AGENTS.md
 // political rules, and the research note, section 3). Whole words, any case.
-export const BANNED_WORDS = ["crime", "police", "graffiti", "blight", "blighted", "slum", "decline", "declined", "abandoned", "derelict", "gentrification", "displaced", "displacement", "riot", "arson", "murder", "bail"];
+// The list is src/content/banned-words.js (#342), also for the trick names.
+export { BANNED_WORDS };
 
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
 const isPoint = (p) => Array.isArray(p) && p.length === 2 && isNum(p[0]) && isNum(p[1]);
@@ -143,7 +145,7 @@ function footprintShapes(fp, level, err) {
 function checkText(label, text, max, err) {
   if (!isText(text)) return err(`${label} is missing or has space at an end`);
   if ([...text].length > max) err(`${label} has ${[...text].length} characters (max ${max})`);
-  const words = text.toLowerCase().match(/[a-z']+/g) ?? [];
+  const words = wordsOf(text); // the same whole-word rule as bannedIn (#342)
   for (const w of BANNED_WORDS) if (words.includes(w)) err(`${label} has the word "${w}" (political rules)`);
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { contrast, over } from "./layout.js";
+import { bannedIn } from "../content/banned-words.js";
 import { ARROWS, CHIP_BANNED, CHIP_MS, TRICK_LINE, beatPips, busyChip, createChip, holdBar, linkText, progressChip, resultChip, stepChip, tagGlyph, trickLine } from "./trick-hud-text.js";
 import { REFUSED_TEXT } from "./hud.js";
 
@@ -158,6 +159,8 @@ describe("#330 E2 the live trick chip", () => {
       strings.push(busyChip(n).text, progressChip({ kind: "grab", id: "x", name: n, dir: "u" }).text);
     }
     for (const s of strings) for (const w of CHIP_BANNED) expect(s.toUpperCase().split(/[^A-Z]+/)).not.toContain(w);
+    // The full list of #342 (src/content/banned-words.js).
+    for (const s of strings) expect(bannedIn(s)).toEqual([]);
   });
 });
 

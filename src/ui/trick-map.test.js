@@ -4,6 +4,7 @@ import { createBindings } from "../input/bindings.js";
 import { applyDirSource } from "../input/remap.js";
 import { createOneButton } from "../input/one-button.js";
 import { CHIP_BANNED } from "./trick-hud-text.js";
+import { bannedIn } from "../content/banned-words.js";
 import { CELL_ORDER, cardPlace, cellText, contextOf, flickCard, inputLine, oneButtonNext, originText, trickListSections } from "./trick-map.js";
 
 const names = (card) => CELL_ORDER.map((d) => card.cells[d]);
@@ -129,6 +130,7 @@ describe("#330 E6 the trick list", () => {
     for (const o of Object.values(DANCE_ORIGINS)) {
       const words = `${o.short} ${o.detail ?? ""}`.toUpperCase().split(/[^A-Z]+/);
       for (const w of CHIP_BANNED) expect(words).not.toContain(w);
+      expect(bannedIn(`${o.short} ${o.detail ?? ""}`)).toEqual([]); // the full list of #342
     }
   });
 

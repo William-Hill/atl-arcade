@@ -102,7 +102,7 @@ describe("#328 one-button mode (R12.1)", () => {
       ob = r.ob;
       names.push(r.stance.name);
     }
-    expect(names).toEqual(["Grind", "Soul Grind", "Unity Grind", "Makio Grind", "Royale Grind", "Grind"]);
+    expect(names).toEqual(["(edge) Grind", "(edge) Soul Grind", "(edge) Unity Grind", "(edge) Makio Grind", "(edge) Royale Grind", "(edge) Grind"]);
   });
 });
 

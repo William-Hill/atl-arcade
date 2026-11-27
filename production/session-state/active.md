@@ -6,6 +6,19 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## One-button sets, SPIN rule, goal reachability, banned words (#336, #342), 2026-11-27
+
+Branch `claude/gifted-darwin-mhhrm3` from `main` (wave 2 step 2, lane O). Design: `docs/decisions.md`, 2026-11-27. No change to `src/main.js`, the trick HUD, or `perfectHitStopMs` (lane H owns them).
+
+| Part | Where | Verified |
+|---|---|---|
+| No direction in one-button mode: SPIN is Cross Step, GRIND is the neutral stance | `src/sim/skate/trick-step.js` (`kd`, `dirInput`, `oneButtonStance`) | Vitest `one-button-336.test.js`; Playwright `e2e/one-button-336.spec.js` |
+| TRICK snaps take the grind set; the air snap buffer | `src/input/one-button.js` (`ob.stance`, `ONE_BUTTON_BUFFER`) | Vitest `one-button-336.test.js`, `one-button.test.js`; Playwright `e2e/one-button-336.spec.js` |
+| Every goal and landmark challenge in one-button mode | `src/sim/skate/one-button-goals-336.test.js`, `e2e/skatepark-ride.js` (`stepperFor`), `e2e/landmark-rides.js`, `e2e/route-ride.js` | Vitest (5 goals, 13 challenges) |
+| Banned word list, name check, "(edge) Grind" | `src/content/banned-words.js`, `src/landmarks/validate.js` | Vitest `src/content/banned-words.test.js` |
+
+NOT verified: no person played one-button mode; no real phone, GPU, or gamepad; the full Playwright suite did not run (it runs on `main` before the Autopilot playtest).
+
 ## Trick HUD (#330) and PERFECT hit stop (#338), 2026-11-27
 
 Branch `claude/determined-bell-1h3iho` from `main` (wave 2 step 2, lane H; lane O does #336 and #342 in parallel). Spec: `docs/ux/trick-hud.md`. Design: `docs/decisions.md`, 2026-11-27.

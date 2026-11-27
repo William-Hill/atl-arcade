@@ -16,11 +16,16 @@
 // the frame, the sim starts the grab and the dance of `ob.start` and holds a
 // manual while `ob.manual` is true. With no `ob`, the sim takes the air set
 // itself (ONE_BUTTON_AIR) on a TRICK press.
+//
+// One-button mode does not read the direction (owner choice 2026-11-26,
+// #330, #336): SPIN plays its neutral slot (Cross Step) at the press, a
+// GRIND press gives the neutral stance, and a snap that the TRICK intent
+// causes takes the next stance of the grind set (ONE_BUTTON_STANCES).
 
 import { STYLE, TRICK, TRICK_RELAXED, COMBO, styleDuration } from "./constants.js";
 import { freshDir, dirHistory, resolvePending, resolvePress } from "./direction.js";
 import { manualOut, manualStep } from "./manual.js";
-import { MANUALS, ONE_BUTTON_AIR, STANCES, danceFor, danceNamed, grabFor, grindName, stanceFor } from "./tricks.js";
+import { MANUALS, ONE_BUTTON_AIR, ONE_BUTTON_STANCES, STANCES, danceFor, danceNamed, grabFor, grindName, stanceFor } from "./tricks.js";
 
 const EPS = 1e-6;
 const BUTTONS = ["style1", "style2"];
@@ -35,11 +40,19 @@ export function trickOptions(tricks) {
   const cached = optCache.get(tricks);
   if (cached) return cached;
   const k = { ...TRICK, ...(tricks.relaxed ? TRICK_RELAXED : {}), ...(tricks.k ?? {}) };
-  const out = { k, c: { ...COMBO, ...(tricks.combo ?? {}) }, oneButton: Boolean(tricks.oneButton) };
+  const oneButton = Boolean(tricks.oneButton);
+  // `kd` is the knob set of the direction rule: in one-button mode no press
+  // waits for a direction (dirAfter 0), so the neutral slot starts at once.
+  const out = { k, kd: oneButton ? { ...k, dirAfter: 0 } : k, c: { ...COMBO, ...(tricks.combo ?? {}) }, oneButton };
   optCache.set(tricks, out);
   return out;
 }
-const DEFAULT_OPTS = { k: TRICK, c: COMBO, oneButton: false };
+const DEFAULT_OPTS = { k: TRICK, kd: TRICK, c: COMBO, oneButton: false };
+
+// The input that the direction rule reads. In one-button mode it has no
+// direction and no flick, so every press is neutral (R12.1).
+const NO_DIR = Object.freeze({ dirHist: Object.freeze([]), flick: null });
+const dirInput = (input, T) => (T.oneButton ? NO_DIR : input);
 
 // R8: in a manual, push and brake are off. The W/S keys move the balance.
 export function trickInput(prev, input) {
@@ -76,12 +89,22 @@ export function airTurn(prev, s, input, dt, skate) {
 // the fresh direction of the GRIND press; else the fresh direction at the
 // snap (a buffered press).
 export function trickStance(prev, input, dt, T) {
+  if (T.oneButton) return oneButtonStance(input);
   const now = (prev.time ?? 0) + dt;
   const flick = input.flick?.grind;
   if (flick) return validStance(flick);
   const pressNow = Boolean(input.grind) && !prev.grindHeld;
   if (!pressNow && prev.grindPress?.dir && prev.grindPress.dir !== "n") return prev.grindPress.dir;
   return freshDir(dirHistory(input), now, T.k);
+}
+
+// R12.1, #336: the stance at a snap in one-button mode. A snap that the TRICK
+// intent caused takes the stance that the input sends (`input.ob.stance`,
+// the next of the grind set; the input keeps the count, as for the grabs
+// and the dances). A snap of the real GRIND gives the neutral stance.
+export function oneButtonStance(input) {
+  const d = input.ob?.stance;
+  return ONE_BUTTON_STANCES.includes(d) ? d : "n";
 }
 
 // A touch flick token that is not a direction gives the neutral stance.
@@ -153,12 +176,14 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   const v0 = Math.abs(prev.speed ?? 0); // the speed gates read the speed at the start of the tick
   const ob = T.oneButton && input.ob && typeof input.ob === "object" ? input.ob : null;
   const obManual = Boolean(ob && ob.manual);
+  const dIn = dirInput(input, T); // the direction rule reads only this input
+  const kd = T.kd ?? k;
 
   // GRIND press: R3 for the stance and the Toe Roll, and the manual hold timer.
   s.grindPressed = grindEdge;
   let gp = prev.grindPress ?? null;
-  if (grindEdge) gp = { at: t, ...resolvePress(t, input, "grind", k) };
-  else if (gp && gp.pending !== undefined) gp = { at: gp.at, ...resolvePending(gp, t, input, "grind", k) };
+  if (grindEdge) gp = { at: t, ...resolvePress(t, dIn, "grind", kd) };
+  else if (gp && gp.pending !== undefined) gp = { at: gp.at, ...resolvePending(gp, t, dIn, "grind", kd) };
   if (!wantsGrind) gp = null;
   s.grindPress = gp;
   // A GRIND press in the air with no rail starts no manual at the touchdown (R8).
@@ -170,10 +195,10 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   if (s.state === "grind") fromExit = false;
 
   // R6, phone: the stance comes at the flick resolve, once, if the snap came first.
-  if (s.state === "grind" && prev.state === "grind" && input.flick?.grind && !s.grind.flickDone) {
-    s.grind = { ...s.grind, stance: validStance(input.flick.grind), flickDone: true, stancePending: false };
+  if (s.state === "grind" && prev.state === "grind" && dIn.flick?.grind && !s.grind.flickDone) {
+    s.grind = { ...s.grind, stance: validStance(dIn.flick.grind), flickDone: true, stancePending: false };
   }
-  if (s.state === "grind" && prev.state !== "grind" && input.flick?.grind) s.grind = { ...s.grind, flickDone: true };
+  if (s.state === "grind" && prev.state !== "grind" && dIn.flick?.grind) s.grind = { ...s.grind, flickDone: true };
   // R3 for the stance: a GRIND press with no fresh direction at the snap
   // waits dirAfter; the first direction in that time sets the stance, once.
   if (s.state === "grind" && prev.state !== "grind" && !s.grind.flickDone && (s.grind.stance ?? "n") === "n" && gp && gp.pending !== undefined) {
@@ -219,7 +244,7 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   if (pend && pend.ctx === "air" && s.state !== "air") pend = null;
   if (pend && pend.ctx === "ground" && (s.state !== "rolling" || s.manual)) pend = null;
   if (pend) {
-    const res = resolvePending(pend.res, t, input, pend.button, k);
+    const res = resolvePending(pend.res, t, dIn, pend.button, kd);
     if (res.dir) {
       if (pend.ctx === "air" && !s.grab) startGrab(s, res.dir, held.style1);
       pend = pend.ctx === "ground" ? { ...pend, res, done: true } : null;
@@ -331,7 +356,7 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
       // In one-button mode TRICK starts no dance at the press (R12.1).
       const button = BUTTONS.find((b) => edge(b) && !(ob && b === "style1"));
       if (button) {
-        const res = resolvePress(t, input, button, k);
+        const res = resolvePress(t, dIn, button, kd);
         if (res.dir) startDance(button, res.dir);
         else pend = { button, ctx: "ground", res };
       }

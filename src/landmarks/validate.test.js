@@ -134,6 +134,9 @@ describe("validateLandmarks", () => {
     bad[0].text = "The block saw years of decline.";
     expect(errorsOf(building({ card: bad }))[0]).toMatch(/the word "decline"/);
     expect(errorsOf(building({ challenge: { ...building().challenge, hint: "Do not bail here" } }))[0]).toMatch(/the word "bail"/);
+    // A word in quotes is still a whole word (CodeRabbit on PR #403).
+    expect(errorsOf(building({ challenge: { ...building().challenge, hint: "No 'crash' here" } }))[0]).toMatch(/the word "crash"/);
+    expect(errorsOf(building({ challenge: { ...building().challenge, hint: "Dance the Bankhead Bounce" } }))).toEqual([]);
   });
 
   it("ships an art spot only with a cleared credit (S-2)", () => {

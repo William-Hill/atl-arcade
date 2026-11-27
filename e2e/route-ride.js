@@ -11,20 +11,22 @@ const key = (p) => `${Math.round(p[0] * 2)},${Math.round(p[1] * 2)}`;
 
 // The graph: a node per strip point (shared points join the strips), edges
 // along each strip, and a link between the points of 2 strips that are
-// nearer than `join` m (a junction that OSM did not share).
+// nearer than `join` m (a junction that OSM did not share). A junction never
+// links 2 points of one strip: that would cut the bends of the strip.
 export function stripGraph(level, { join = 4, step = 4 } = {}) {
-  const nodes = new Map(); // key -> { p, edges: [[key, cost]] }
-  const node = (p) => {
+  const nodes = new Map(); // key -> { p, edges: [[key, cost]], strips: Set of strip indexes }
+  const node = (p, strip) => {
     const k = key(p);
-    if (!nodes.has(k)) nodes.set(k, { p, edges: [] });
+    if (!nodes.has(k)) nodes.set(k, { p, edges: [], strips: new Set() });
+    nodes.get(k).strips.add(strip);
     return k;
   };
   const link = (a, b, cost) => {
     nodes.get(a).edges.push([b, cost]);
     nodes.get(b).edges.push([a, cost]);
   };
-  for (const s of level.strips ?? []) {
-    if (!KINDS.includes(s.kind) || !(s.points?.length > 1)) continue;
+  (level.strips ?? []).forEach((s, si) => {
+    if (!KINDS.includes(s.kind) || !(s.points?.length > 1)) return;
     let prev = null;
     for (let i = 0; i + 1 < s.points.length; i += 1) {
       const [ax, az] = s.points[i];
@@ -32,12 +34,12 @@ export function stripGraph(level, { join = 4, step = 4 } = {}) {
       const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / step));
       for (let j = i === 0 ? 0 : 1; j <= n; j += 1) {
         const p = [ax + ((bx - ax) * j) / n, az + ((bz - az) * j) / n];
-        const k = node(p);
+        const k = node(p, si);
         if (prev && prev !== k) link(prev, k, Math.hypot(p[0] - nodes.get(prev).p[0], p[1] - nodes.get(prev).p[1]) * COST[s.kind]);
         prev = k;
       }
     }
-  }
+  });
   // Junctions: a grid of the nodes, then a link to each near node.
   const cell = (p) => `${Math.floor(p[0] / join)},${Math.floor(p[1] / join)}`;
   const grid = new Map();
@@ -52,6 +54,8 @@ export function stripGraph(level, { join = 4, step = 4 } = {}) {
       for (let dz = -1; dz <= 1; dz += 1)
         for (const o of grid.get(`${cx + dx},${cz + dz}`) ?? []) {
           if (o <= k) continue;
+          const other = nodes.get(o).strips;
+          if ([...n.strips].some((x) => other.has(x))) continue; // the same strip
           const d = Math.hypot(nodes.get(o).p[0] - n.p[0], nodes.get(o).p[1] - n.p[1]);
           if (d < join) link(k, o, d * 1.5);
         }

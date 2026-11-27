@@ -12,7 +12,7 @@
 //   goals        the goals of the level (goals.json `goals`), optional
 //   permissions  the file names in docs/permissions/, optional
 
-import { BANNED_WORDS } from "../content/banned-words.js";
+import { BANNED_WORDS, wordsOf } from "../content/banned-words.js";
 import { EDGE_FENCE } from "../level/edge-fence.js";
 import { distanceToSegment, pointInRings } from "../level/geo/geo-ground.js";
 
@@ -145,7 +145,7 @@ function footprintShapes(fp, level, err) {
 function checkText(label, text, max, err) {
   if (!isText(text)) return err(`${label} is missing or has space at an end`);
   if ([...text].length > max) err(`${label} has ${[...text].length} characters (max ${max})`);
-  const words = text.toLowerCase().match(/[a-z']+/g) ?? [];
+  const words = wordsOf(text); // the same whole-word rule as bannedIn (#342)
   for (const w of BANNED_WORDS) if (words.includes(w)) err(`${label} has the word "${w}" (political rules)`);
 }
 

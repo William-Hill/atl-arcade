@@ -180,3 +180,20 @@ describe("#336 one-button mode: every landmark challenge, with the movement inpu
     });
   }
 });
+
+describe("#336 the route helper (e2e/route-ride.js)", () => {
+  it("a junction never links 2 points of one strip: the route keeps the bends (CodeRabbit on PR #403)", () => {
+    const level = { strips: [{ kind: "path", points: [[0, 0], [0, 3], [1, 3], [1, 0]] }] };
+    const way = route(stripGraph(level, { step: 1 }), [0, 0], [1, 0]);
+    expect(way.length).toBeGreaterThan(2);
+    expect(way).toContainEqual([0, 3]);
+    expect(way).toContainEqual([1, 3]);
+  });
+
+  it("a junction links 2 near points of different strips", () => {
+    const level = { strips: [{ kind: "path", points: [[0, 0], [10, 0]] }, { kind: "path", points: [[10, 2], [20, 2]] }] };
+    const way = route(stripGraph(level), [0, 0], [20, 2]);
+    expect(way).not.toBeNull();
+    expect(way.at(-1)).toEqual([20, 2]);
+  });
+});

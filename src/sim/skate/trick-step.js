@@ -140,6 +140,7 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
   s.justManual = null;
   s.justStyled = null;
   s.refused = prev.refused ?? null;
+  s.ignored = prev.ignored ?? null;
   s.manual = prev.manual ? { ...prev.manual } : null;
   s.grab = prev.state === "air" && prev.grab ? { ...prev.grab } : null; // kept to the touchdown tick
   s.manualSide = prev.manualSide ?? -1;
@@ -294,7 +295,7 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
     style.time += dt;
     style.held = held[BUTTONS[style.button]]; // style.button is the index 0 (TRICK) or 1 (SPIN)
     if (style.time >= style.duration) {
-      s.justStyled = { id: style.id, name: style.name, points: style.points };
+      s.justStyled = { id: style.id, name: style.name, points: style.points, dir: style.dir ?? "n" };
       stats.styles += 1;
       // Hold to repeat (R7). In one-button mode a TRICK dance starts at the
       // release, so a TRICK down at the end is the next press, not a hold.
@@ -332,6 +333,12 @@ export function stepTricks(prev, s, input, dt, stats, skaterEnv, T) {
         else pend = { button, ctx: "ground", res };
       }
     }
+  }
+  // A TRICK or SPIN press while a dance runs starts nothing (the dance
+  // goes on). The HUD shows "BUSY" and the dance name (docs/ux/trick-hud.md
+  // 6.1). Not in one-button mode: there a TRICK press has another job.
+  if (style && prev.style && !T.oneButton && (edge("style1") || edge("style2"))) {
+    s.ignored = { name: style.name, seq: (prev.ignored?.seq ?? 0) + 1 };
   }
   // A press that starts no trick (#264): the HUD says why.
   if (!style && !repeat && !prev.style && !pend) {

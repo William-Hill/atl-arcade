@@ -54,7 +54,7 @@ test.describe("touch flick on Pixel 7", () => {
     const info = await page.evaluate(() => ({
       labels: [...document.querySelectorAll(".touch-btn")].map((el) => el.textContent),
       rings: [...document.querySelectorAll(".flick-ring")].map((el) => el.className),
-      ticks: document.querySelectorAll(".flick-ring .flick-arrow").length,
+      ticks: document.querySelectorAll(".flick-ring .flick-arrow:not(.flick-n)").length,
     }));
     expect(info.labels).toEqual(["JUMP", "GRIND", "TRICK", "SPIN", "SWITCH"]);
     expect(info.rings).toEqual(["flick-ring flick-ring-grind", "flick-ring flick-ring-style1", "flick-ring flick-ring-style2"]);

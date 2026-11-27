@@ -180,6 +180,9 @@ export const COMBO = {
   stumbleKeep: 0.5, // F5 L: fraction of the link points on a stumble. min 0.25 / typical 0.5 / max 0.75.
   stumbleStyleLoss: 0.25, // R10: style meter lost on a stumble. min 0 / typical 0.25 / max 0.5.
   stumbleSpeedKeep: 0.7, // R10: fraction of the speed kept on a stumble. min 0.5 / typical 0.7 / max 0.9.
+  // The hit stop at a PERFECT link (#338, docs/ux/trick-hud.md 6.4): the sim and the skater stop
+  // for this many ms of wall time. The HUD does not stop. 0 turns it off. min 0 / typical 60 / max 100.
+  perfectHitStopMs: 60,
   bailBank: 0.25, // F7: fraction of the pending points that a bail banks, at multiplier 1. min 0 / typical 0.25 / max 0.5.
 };
 

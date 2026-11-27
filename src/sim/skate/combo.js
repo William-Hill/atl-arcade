@@ -58,7 +58,10 @@ export function createCombo() {
 // `beat` is the judge result { tag, offsetMs } of the judged moment, or null.
 // `onBeat` with no beat counts as GOOD (the old call). `landing` is "clean"
 // or "stumble" (R10).
-export function comboMove(c, { move, name, points, onBeat = false, beat = null, landing = "clean" }, k = COMBO) {
+// `dir` is the direction that chose the trick ("n", "l", "r", "u", "d"), or
+// null when no direction chose it (no trick input, one-button mode). The HUD
+// trick line shows it as an arrow (docs/ux/trick-hud.md 5.1).
+export function comboMove(c, { move, name, points, onBeat = false, beat = null, landing = "clean", dir = null }, k = COMBO) {
   const stumble = landing === "stumble";
   const tag = stumble ? null : beat ? (beat.tag ?? null) : onBeat ? "GOOD" : null;
   const bonus = beatFactorOfTag(tag, stumble, k);
@@ -67,7 +70,7 @@ export function comboMove(c, { move, name, points, onBeat = false, beat = null, 
   const keep = stumble ? (k.stumbleKeep ?? 1) : 1;
   const earned = Math.round(points * decay * keep * bonus);
   const hit = tag !== null;
-  const links = [...c.links, { move, name, points: earned, base: points, onBeat: hit, tag, beat, repeat, landing, scores: earned > 0 }];
+  const links = [...c.links, { move, name, points: earned, base: points, onBeat: hit, tag, beat, repeat, landing, dir, scores: earned > 0 }];
   let style = move === "style" ? Math.min(1, c.style + k.styleGain) : c.style;
   if (stumble) style = Math.max(0, style - (k.stumbleStyleLoss ?? 0));
   return {

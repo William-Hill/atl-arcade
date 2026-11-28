@@ -62,7 +62,7 @@ function makeAtlas(names) {
 
 // One blade: a thin box. The two big faces show the atlas row; the four
 // edges show the green border.
-function bladeGeometry(length, row, atlasRows, widthPx) {
+export function bladeGeometry(length, row, atlasRows, widthPx) {
   const u0 = 0.5 - widthPx / ATLAS_W / 2;
   const u1 = 0.5 + widthPx / ATLAS_W / 2;
   const g = new THREE.BoxGeometry(length, BLADE_H, BLADE_T);
@@ -74,9 +74,9 @@ function bladeGeometry(length, row, atlasRows, widthPx) {
     for (let k = 0; k < 4; k += 1) {
       const i = face * 4 + k;
       if (face >= 4) {
-        // A face seen from behind reads right to left; flip its u.
-        const u = face === 5 ? 1 - uv.getX(i) : uv.getX(i);
-        uv.setXY(i, u0 + u * (u1 - u0), v0 + uv.getY(i) * (v1 - v0));
+        // BoxGeometry already maps the -z face to read left to right from
+        // behind (u = 0 at x = +length/2), so both big faces keep its u (#405).
+        uv.setXY(i, u0 + uv.getX(i) * (u1 - u0), v0 + uv.getY(i) * (v1 - v0));
       } else uv.setXY(i, u0 + 0.001, v0 + 0.03 * (v1 - v0));
     }
   }

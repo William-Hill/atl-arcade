@@ -3325,3 +3325,14 @@ Research: `docs/research/2026-11-27-lidar-heights-spike.md`.
 - Next step: the owner registers a Mapillary app and saves its client token for `graph.mapillary.com`. Then an agent counts the coverage of the BeltLine Eastside bbox before the 50-building pilot. The count was not done: the API returned "Invalid OAuth 2.0 Access Token" (code 190) with no token.
 - Not done: a lawyer has not read the research note.
 - Alternative: contribute the checked labels to OpenStreetMap as `building:colour` and `building:material` (terms section 13), after a review of the OSM automated edit rules.
+
+## 2026-11-28: The parcel year built for the OSM house types (#406 follow-up)
+
+- Before: an OSM `building=house`, `detached`, `semidetached_house`, or `terrace` got its style from `BY_TYPE` before the Fulton County data, so its year built did nothing.
+- Now: `houseEraStyle(b, area)` in `src/level/geo/parcel-style.js` runs for these types and in the parcel house rule. A house parcel (land use group "house") built before 1910 gets `victorian-house`, or `shotgun-house` when it has one story (or no story count) and a footprint of 120 m² (`SHOTGUN_AREA`) or less. From 1910 on, or with no year, the OSM type keeps its style: the kit has no house style newer than the craftsman house. A footprint under 40 m² is an outbuilding and keeps its style.
+- The historic district mix (#407) does not change a house that the year decides. Owner choice (2026-11-28): the mix still changes the houses built 1910 to 1944. The assessor years near 1910 to 1925 are often estimates for older houses.
+- Effect in the BeltLine Eastside level (with the historic districts, `chooseStyle(b, level)` before and after, 17 buildings change):
+  - Out of the districts: 4 craftsman houses built before 1910 become Victorian houses.
+  - In Inman Park, the pre-1910 houses now follow the year, not the mix: 6 craftsman and 3 shotgun houses become Victorian houses, 2 Victorian houses and 1 shotgun house become craftsman houses (outbuildings of 25 to 27 m² that keep the OSM type), and 1 Victorian house becomes a shotgun house (one story, 55 m²).
+  - Totals: victorian-house 155 to 165, craftsman-house 602 to 595, shotgun-house 32 to 29. The hash count does not change (23).
+- A Victorian house can now be out of a historic district, but only from the year built (the #407 test checks this).

@@ -36,7 +36,7 @@ import { FULLMAP, baseTransform, clampView, fitView, isoBounds, isoLevelFor, lab
 import { isoBasis, isoProject, isoUnproject } from "../level/geo/iso-map.js";
 
 // The sky color of the baked isometric map, around the level.
-const ISO_BACKGROUND = "#b6dbf2";
+const ISO_BACKGROUND = "#cde4f6";
 
 function el(tag, className, parent, text) {
   const e = document.createElement(tag);

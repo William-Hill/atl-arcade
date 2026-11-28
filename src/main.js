@@ -269,7 +269,11 @@ if (geo) {
   // The low tier has no sky dome (a flat horizon color), to keep the
   // headless frame budget. ?sky=0 leaves it out on the high tier too.
   sky = tier.post !== "full" || params.get("sky") === "0" ? null : createSky({ radius: GEO_FAR * 0.9, sunDirection: geoLights.sunDirection, clouds: tier.clouds, pbr: look === "pbr" });
+  // ?skydome=0 hides the dome but keeps the sky for the light, the env map
+  // and the fog color: the iso map bake (scripts/bake-iso-map.mjs) needs one
+  // background color in every tile, with the same light as the game.
   if (sky) scene.add(sky.mesh);
+  if (sky && params.get("skydome") === "0") sky.mesh.visible = false;
   if (look === "pbr") {
     // The height fog (src/render/pbr-look.js): before the first material compiles.
     if (params.get("heightfog") !== "0") installHeightFog();
@@ -784,7 +788,9 @@ setPostToggles(post, savedSettings);
 // The pbr look's per-frame light (src/render/pbr-look.js): the grade by
 // time of day and district, the fog tint, the env map bake, the skater rim.
 // ?pbrgrade=0 keeps the fixed day values (for a before/after check).
-const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: districtAnchors(level), getPost: () => post, skySh }) : null;
+// ?districtgrade=0 keeps the trail grade everywhere (no district tint), so
+// the tiles of the iso map bake (scripts/bake-iso-map.mjs) share one grade.
+const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: params.get("districtgrade") === "0" ? [] : districtAnchors(level), getPost: () => post, skySh }) : null;
 // Comic effects (#113, src/render/effects/): speed lines, impact frames and
 // bursts from the controller flags. Emissive overlays: no material or grade
 // change. Off on the low tier, with prefers-reduced-motion, and with ?fx=0.

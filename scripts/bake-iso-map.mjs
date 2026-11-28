@@ -51,7 +51,14 @@ page.on("console", (msg) => {
   if (msg.type() === "error") errors.push(msg.text());
 });
 
-const query = `level=${level}&mute=1&quality=high&look=${look}&governor=0&view=iso&iso=0,0&fog=0&npcs=0&minimap=0&fullmap=0&facts=off`;
+// skydome=0: the orthographic camera sees a different part of the sky dome
+// from each tile, so each tile got its own sky color and the map showed
+// seams. The switch hides only the dome: the background is one color, and
+// the sky still sets the light as in the game (sky=0 made the ground about
+// 7% darker). districtgrade=0: the pbr look tints the
+// grade by the district at the camera, so each tile got the grade of its
+// district; the bake keeps the trail grade everywhere.
+const query = `level=${level}&mute=1&quality=high&look=${look}&governor=0&view=iso&iso=0,0&fog=0&skydome=0&districtgrade=0&npcs=0&minimap=0&fullmap=0&facts=off`;
 await page.goto(`http://localhost:${PORT}/?${query}`);
 await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5 && window.__atl.iso, null, { timeout: 300000 });
 await page.waitForFunction(() => window.__atl.level.props && (window.__atl.level.props.loaded || window.__atl.level.props.error), null, { timeout: 300000 });
@@ -115,7 +122,7 @@ writeFileSync(
       tool: "scripts/bake-iso-map.mjs (the game renderer, Three.js, headless Chromium, orthographic camera) and scripts/iso-pyramid.py (Pillow resize)",
       prompt: null,
       generativeModel: null,
-      sources: ["OpenStreetMap contributors (ODbL 1.0)", "Overture Maps Foundation (heights)", "USGS 3DEP (elevation)", "City of Atlanta Department of City Planning (street names)", "Poly Haven CC0 scans (surface detail)"],
+      sources: ["OpenStreetMap contributors (ODbL 1.0)", "Overture Maps Foundation (heights)", "USGS 3DEP LiDAR 2018 (heights)", "USGS 3DEP (elevation)", "City of Atlanta Department of City Planning (street names)", "Poly Haven CC0 scans (surface detail)"],
       renderer,
       look,
       date: new Date().toISOString().slice(0, 10),

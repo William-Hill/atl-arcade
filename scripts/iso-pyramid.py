@@ -17,7 +17,7 @@ from PIL import Image
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 # The sky color of the bake, past the edge of the grid (src/ui/fullmap.js
 # ISO_BACKGROUND).
-BACKGROUND = (182, 219, 242)
+BACKGROUND = (205, 228, 246)
 
 
 def main():

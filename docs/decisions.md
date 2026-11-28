@@ -3336,3 +3336,12 @@ Research: `docs/research/2026-11-27-lidar-heights-spike.md`.
   - In Inman Park, the pre-1910 houses now follow the year, not the mix: 6 craftsman and 3 shotgun houses become Victorian houses, 2 Victorian houses and 1 shotgun house become craftsman houses (outbuildings of 25 to 27 m² that keep the OSM type), and 1 Victorian house becomes a shotgun house (one story, 55 m²).
   - Totals: victorian-house 155 to 165, craftsman-house 602 to 595, shotgun-house 32 to 29. The hash count does not change (23).
 - A Victorian house can now be out of a historic district, but only from the year built (the #407 test checks this).
+
+## 2026-11-28: Iso map re-bake after the LiDAR heights
+
+- `assets/map/beltline-eastside/` is baked again (153 tiles, Apple M4 Max GPU, `BAKE_GPU=1`), so the full map shows the LiDAR heights of #423 and the house styles of #406 (parcel year built). The provenance lists "USGS 3DEP LiDAR 2018 (heights)".
+- The bake query now has `skydome=0`, a new switch in `src/main.js` that hides only the sky dome. With the dome, the orthographic camera saw a different part of it from each tile, so each tile had its own sky color and the map showed seams. The sky still sets the light, the env map, and the fog color, as in the game. A first try with `sky=0` made the middle tile about 7% darker than the game (mean RGB 79/98/67 against 86/104/71); with `skydome=0` it is 85/104/71.
+- The bake query now has `districtgrade=0`, a new switch in `src/main.js`. The pbr look tints the grade by the district at the camera, so each tile had the grade of its district. With the switch, the trail grade applies everywhere. The game is not changed when the switch is absent.
+- The sky of the bake is now (205, 228, 246), the same in all 153 tiles. `ISO_BACKGROUND` in `src/ui/fullmap.js` and `BACKGROUND` in `scripts/iso-pyramid.py` are now `#cde4f6`, so the fill past the grid matches the tiles.
+- The ground still shows small steps at some tile edges (the edge-to-inside ratio of the pixel jumps is 1.15 on columns and 1.27 on rows; it was 1.08 and 1.25 before). This was there before the re-bake and is not fixed.
+- The new map is brighter than the 2026-11-06 bake, because the game look changed after that bake.

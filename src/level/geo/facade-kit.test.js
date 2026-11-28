@@ -868,6 +868,11 @@ describe("the house porches", () => {
       const g = sample(x, z);
       return Boolean(g && byId.has(g.id) && g.id !== self);
     };
+    // The loop keeps the ids of the bad porches and the test makes one
+    // expect at the end. An expect for each of the approximately 100,000
+    // porch vertices took approximately 0.8 s.
+    const onWay = new Set();
+    const inBuilding = new Set();
     let porches = 0;
     for (const [id, front] of houses) {
       const b = byId.get(id);
@@ -882,10 +887,12 @@ describe("the house porches", () => {
       for (let i = 0; i < m.positions.length; i += 3) {
         const x = m.positions[i];
         const z = m.positions[i + 2];
-        expect(isStreet(x, z), `porch of ${id} on a way`).toBe(false);
-        expect(blocked(x, z), `porch of ${id} in another building`).toBe(false);
+        if (isStreet(x, z)) onWay.add(id);
+        if (blocked(x, z)) inBuilding.add(id);
       }
     }
+    expect([...onWay], "porches on a way").toEqual([]);
+    expect([...inBuilding], "porches in another building").toEqual([]);
     expect(porches).toBeGreaterThan(150);
   });
 });

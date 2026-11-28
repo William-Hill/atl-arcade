@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { APARTMENT_HEIGHT, APARTMENT_STORIES, ERA, OUTBUILDING_AREA, landUseGroup, styleFromParcel } from "./parcel-style.js";
+import { APARTMENT_HEIGHT, APARTMENT_STORIES, ERA, OUTBUILDING_AREA, SHOTGUN_AREA, houseEraStyle, landUseGroup, styleFromParcel } from "./parcel-style.js";
 import { STYLE_INDEX, chooseStyle } from "./styles.js";
 
 // Issue #406: the facade style from the Fulton County parcel data.
@@ -39,7 +39,8 @@ describe("styleFromParcel", () => {
   });
 
   it("gives the houses their era", () => {
-    expect(styleFromParcel(at("101", { yearBuilt: ERA.victorian - 1 }), 150)).toBe("shotgun-house");
+    expect(styleFromParcel(at("101", { yearBuilt: ERA.victorian - 1 }), 150)).toBe("victorian-house");
+    expect(styleFromParcel(at("101", { yearBuilt: ERA.victorian - 1, stories: 1 }), SHOTGUN_AREA)).toBe("shotgun-house");
     expect(styleFromParcel(at("101", { yearBuilt: ERA.victorian }), 150)).toBe("craftsman-house");
     expect(styleFromParcel(at("102", { yearBuilt: 1925 }), 150)).toBe("craftsman-house");
     // No year: not old.
@@ -82,13 +83,52 @@ describe("styleFromParcel", () => {
   });
 });
 
+describe("houseEraStyle", () => {
+  const house = (more, parcel = {}) => ({ id: "w1", height: 7, ...more, parcel: { landUse: "101", yearBuilt: 1895, ...parcel } });
+
+  it("gives a house before 1910 a Victorian house, or a shotgun house when it is small and one story", () => {
+    expect(houseEraStyle(house({}, { stories: 2 }), 80)).toBe("victorian-house");
+    expect(houseEraStyle(house({}, { stories: 1 }), SHOTGUN_AREA + 1)).toBe("victorian-house");
+    expect(houseEraStyle(house({}, { stories: 1 }), SHOTGUN_AREA)).toBe("shotgun-house");
+    // No story count: one story.
+    expect(houseEraStyle(house(), 80)).toBe("shotgun-house");
+  });
+
+  it("does not decide from 1910 on, with no year, off a house parcel, or for an outbuilding", () => {
+    expect(houseEraStyle(house({}, { yearBuilt: ERA.victorian }), 150)).toBeNull();
+    expect(houseEraStyle(house({}, { yearBuilt: undefined }), 150)).toBeNull();
+    expect(houseEraStyle(house({}, { landUse: "107" }), 150)).toBeNull();
+    expect(houseEraStyle(house({}, { landUse: "374" }), 150)).toBeNull();
+    expect(houseEraStyle({ id: "w1" }, 150)).toBeNull();
+    expect(houseEraStyle(house(), OUTBUILDING_AREA - 1)).toBeNull();
+  });
+});
+
 describe("chooseStyle with parcel data", () => {
   const house = { id: "w1", height: 7, outer: SQUARE(12), parcel: { landUse: "101", yearBuilt: 1895 } };
 
   it("uses the parcel data before the hash", () => {
-    expect(chooseStyle(house)).toBe("shotgun-house");
+    expect(chooseStyle(house)).toBe("victorian-house");
     // The style does not depend on the id now.
-    for (const id of ["a", "b", "c", "d", "e", "f"]) expect(chooseStyle({ ...house, id })).toBe("shotgun-house");
+    for (const id of ["a", "b", "c", "d", "e", "f"]) expect(chooseStyle({ ...house, id })).toBe("victorian-house");
+  });
+
+  it("gives an OSM house type its era from the year built", () => {
+    for (const type of ["house", "detached"]) {
+      expect(chooseStyle({ ...house, type })).toBe("victorian-house");
+      expect(chooseStyle({ ...house, type, outer: SQUARE(9), parcel: { ...house.parcel, stories: 1 } })).toBe("shotgun-house");
+      // From 1910 on, or with no year, the OSM type keeps its style.
+      expect(chooseStyle({ ...house, type, parcel: { landUse: "101", yearBuilt: 1925 } })).toBe("craftsman-house");
+      expect(chooseStyle({ ...house, type, parcel: undefined })).toBe("craftsman-house");
+    }
+    // An OSM type that is not a house keeps its style.
+    expect(chooseStyle({ ...house, type: "retail" })).toBe("storefront");
+  });
+
+  it("keeps a house that the year decides out of the historic district mix", () => {
+    for (const id of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
+      expect(chooseStyle({ ...house, id, type: "house", historicDistrict: "cabbagetown" })).toBe("victorian-house");
+    }
   });
 
   it("keeps the name, the OSM type, and the OSM material before the parcel data", () => {

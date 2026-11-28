@@ -16,6 +16,7 @@
 
 import { createProjection } from "./projection.js";
 import { hash32 } from "./styles.js";
+import { houseEraStyle } from "./parcel-style.js";
 
 // The house styles that a district mix can change.
 const HOUSE_PICKS = new Set(["craftsman-house", "shotgun-house"]);
@@ -111,13 +112,15 @@ export function withHistoricDistricts(level, file) {
 // `pick` is not a house. Deterministic for a building id.
 // A house with a Fulton County year built (`b.parcel.yearBuilt`, #406) of
 // MIX_YEAR_END or later keeps `pick`: the mix is for the historic stock, not
-// for a new house in the district.
+// for a new house in the district. A house that the year built already
+// decides (before 1910, houseEraStyle() in parcel-style.js) keeps `pick` too.
 export const MIX_YEAR_END = 1945;
 export function districtStyleMix(b, pick) {
   const mix = b?.historicDistrict ? HISTORIC_MIX[b.historicDistrict] : null;
   if (!mix || !HOUSE_PICKS.has(pick)) return pick;
   const year = b.parcel?.yearBuilt ?? null;
   if (year !== null && year >= MIX_YEAR_END) return pick;
+  if (houseEraStyle(b)) return pick;
   const r = hash32(`${b.id}:historic`) % 100;
   let acc = 0;
   for (const [id, w] of mix) {

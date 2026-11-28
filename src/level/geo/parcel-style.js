@@ -50,6 +50,24 @@ export const OUTBUILDING_AREA = 40;
 export const APARTMENT_STORIES = 4;
 export const APARTMENT_HEIGHT = 14;
 
+// A one-story house before ERA.victorian with a footprint of this area (m²)
+// or less is a shotgun house or a mill cottage. A larger one, or one with 2
+// stories or more, is a Victorian house (a Queen Anne house or cottage).
+export const SHOTGUN_AREA = 120;
+
+// The style of a house from its year built, or null when the year does not
+// decide. Only a house before ERA.victorian changes: the kit has no house
+// style newer than the craftsman house. `b.parcel` must be on a house
+// parcel (land use group "house"), so that the year is the year of a house.
+// chooseStyle() uses it for the parcel rule and for an OSM house type.
+export function houseEraStyle(b, area = Infinity) {
+  const p = b?.parcel;
+  if (!p || area < OUTBUILDING_AREA || landUseGroup(p.landUse) !== "house") return null;
+  const year = p.yearBuilt ?? null;
+  if (year === null || year >= ERA.victorian) return null;
+  return (p.stories ?? 1) <= 1 && area <= SHOTGUN_AREA ? "shotgun-house" : "victorian-house";
+}
+
 // The facade style id for a building from its parcel data, or null when the
 // data does not decide. `area` is the footprint area in m².
 export function styleFromParcel(b, area = Infinity) {
@@ -63,9 +81,7 @@ export function styleFromParcel(b, area = Infinity) {
   switch (group) {
     case "house":
       if (tall) return "stucco-apartment";
-      // #407 adds a Victorian style; until then the pre-1910 houses get the
-      // shotgun house, the other old style of the kit.
-      return old(ERA.victorian) ? "shotgun-house" : "craftsman-house";
+      return houseEraStyle(b, area) ?? "craftsman-house";
     case "townhouse":
       return "stucco-apartment";
     case "condo":

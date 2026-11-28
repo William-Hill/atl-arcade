@@ -5,7 +5,7 @@
 // Colors are [r, g, b] in 0..1. The look follows Atlanta at its best: warm
 // brick, painted stucco, bright storefronts, clean glass.
 
-import { styleFromParcel } from "./parcel-style.js";
+import { houseEraStyle, styleFromParcel } from "./parcel-style.js";
 import { districtStyleMix } from "./historic-districts.js";
 
 export const STYLES = [
@@ -384,7 +384,12 @@ export function chooseStyle(b, level = null) {
 
 function baseStyle(b, level = null) {
   for (const [re, id] of BY_NAME) if (re.test(b.name ?? "")) return id;
-  if (b.type && BY_TYPE[b.type]) return BY_TYPE[b.type];
+  if (b.type && BY_TYPE[b.type]) {
+    const t = BY_TYPE[b.type];
+    // An OSM house type: the Fulton County year built picks the house era
+    // (#406, src/level/geo/parcel-style.js houseEraStyle()).
+    return (HOUSE_STYLES.has(t) && houseEraStyle(b, footprintArea(b.outer))) || t;
+  }
   const area = footprintArea(b.outer);
   if (b.material === "brick" && area >= 220) return area > 2500 ? "brick-warehouse" : "brick-loft";
   // The Fulton County parcel data (issue #406, src/level/geo/parcel-style.js).

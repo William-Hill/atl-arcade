@@ -86,7 +86,7 @@ Evidence: `e2e/__screenshots__/lidar-ponce-before.png` and `lidar-ponce-after.pn
 1. Install the Python tools:
 
    ```bash
-   pip install "laspy[lazrs]" pyproj shapely numpy
+   pip install laspy==2.7.0 lazrs==0.8.2 pyproj==3.8.0 shapely==2.2.0 numpy==2.5.5
    ```
 
 2. Download the points:

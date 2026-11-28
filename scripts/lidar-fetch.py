@@ -11,7 +11,8 @@ Data: USGS 3D Elevation Program, Georgia statewide 2018 LiDAR, public
 domain. EPT on AWS: https://s3-us-west-2.amazonaws.com/usgs-lidar-public/.
 The EPT coordinates are EPSG:3857 (x, y) and meters (z).
 
-Needs: pyproj (pip install pyproj). The point reads need laspy with lazrs.
+Needs (tested versions): pyproj 3.8.0. The point reads in
+scripts/lidar-heights.py need laspy 2.7.0 with lazrs 0.8.2.
 """
 
 import json
@@ -94,7 +95,10 @@ def main():
             name = "-".join(map(str, key))
             f = out / f"{name}.laz"
             if not f.exists():
-                urllib.request.urlretrieve(f"{base}/ept-data/{name}.laz", f)
+                # A .part file first, so a broken download is not kept.
+                part = f.with_suffix(".laz.part")
+                urllib.request.urlretrieve(f"{base}/ept-data/{name}.laz", part)
+                part.rename(f)
             return f.stat().st_size
 
         with ThreadPoolExecutor(8) as pool:

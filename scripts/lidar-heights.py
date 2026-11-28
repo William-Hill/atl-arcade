@@ -27,7 +27,8 @@ change a footprint, so the output stays the same after a rebuild.
 scripts/building-sources.mjs and scripts/build-block.mjs read the output
 (the order of the height sources is in build-block.mjs buildingHeight()).
 
-Needs: numpy, shapely 2, pyproj, laspy with lazrs.
+Needs (tested versions): numpy 2.5.5, shapely 2.2.0, pyproj 3.8.0,
+laspy 2.7.0, lazrs 0.8.2.
 """
 
 import glob

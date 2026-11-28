@@ -231,8 +231,9 @@ export function lidarByOsmId(heights) {
 }
 
 // The order: a value in the level heights.json (with a source), the OSM
-// height tag, the LiDAR height (capped by OVERTURE_CAP, because dense
-// canopy over a house can still give single returns), the OSM levels tag,
+// height tag, the LiDAR height (when it is over OVERTURE_CAP, the OSM
+// levels tag, else the cap, because dense canopy over a house can still
+// give single returns), the OSM levels tag,
 // the Overture height (raw/overture.json, from scripts/overture-heights.py,
 // capped by OVERTURE_CAP), the Overture floor count, and last a default for
 // the building type. The LiDAR goes before the levels tag: a measured roof
@@ -243,10 +244,14 @@ export function buildingHeight(tags, overture = null, override = null, lidar = n
   const h = parseHeight(tags.height);
   if (h && h > 0) return { height: h, source: "height" };
   const cap = OVERTURE_CAP[tags.building] ?? Infinity;
-  const measured = lidarHeight(lidar);
-  if (measured !== null) return measured > cap ? { height: cap, source: "lidar-capped" } : { height: measured, source: "lidar" };
   const levels = Number(tags["building:levels"]);
-  if (Number.isFinite(levels) && levels > 0) return { height: levels * LEVEL_HEIGHT + 1, source: "levels" };
+  const tagged = Number.isFinite(levels) && levels > 0;
+  const measured = lidarHeight(lidar);
+  if (measured !== null && measured <= cap) return { height: measured, source: "lidar" };
+  // Over the cap: a levels tag says the building is tall, so it wins over
+  // the cap (the rule of OVERTURE_CAP).
+  if (tagged) return { height: levels * LEVEL_HEIGHT + 1, source: "levels" };
+  if (measured !== null) return { height: cap, source: "lidar-capped" };
   if (overture?.height > 0) {
     const raw = Math.max(overture.height, MIN_OVERTURE_HEIGHT);
     return raw > cap ? { height: cap, source: "overture-capped" } : { height: raw, source: "overture" };

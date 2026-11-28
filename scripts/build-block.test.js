@@ -67,6 +67,8 @@ describe("build-block tags", () => {
     expect(buildingHeight({ building: "yes", height: "50" }, null, null, flat)).toEqual({ height: 50, source: "height" });
     expect(buildingHeight({ building: "yes" }, null, { height: 68.2 }, flat)).toEqual({ height: 68.2, source: "override" });
     expect(buildingHeight({ building: "house" }, { height: 9 }, null, { p50: 30, p90: 31, roofPoints: 500, area: 100 })).toEqual({ height: 12, source: "lidar-capped" });
+    // Over the cap, a levels tag wins over the cap.
+    expect(buildingHeight({ building: "house", "building:levels": "4" }, null, null, { p50: 14, p90: 14.2, roofPoints: 500, area: 100 })).toEqual({ height: 4 * 3.2 + 1, source: "levels" });
     // Thin data falls through to Overture.
     expect(buildingHeight({ building: "yes" }, { height: 9 }, null, { ...flat, roofPoints: LIDAR_MIN_POINTS - 1 })).toEqual({ height: 9, source: "overture" });
   });

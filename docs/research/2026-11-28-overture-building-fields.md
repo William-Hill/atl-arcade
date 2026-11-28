@@ -22,14 +22,14 @@ Overture release **2026-10-21.0** (the release in `scripts/overture-heights.py`)
 | `height` (for reference) | 994 | 92.3% | already read |
 | `num_floors` (for reference) | 19 | 1.8% | already read |
 
-The current release, **2026-11-18.0**, gives the same counts for each field. It has 1,089 buildings (12 more from Microsoft ML Buildings, with no values for these fields), so the percentages are 0.8 to 0.9 points lower: `class` 75.5%, `subtype` 76.0%.
+The current release, **2026-11-18.0**, gives the same counts for the seven fields. It has 1,089 buildings (12 more from Microsoft ML Buildings, with a height but no value for the seven fields), so the percentages are 0.8 to 0.9 points lower: `class` 75.5%, `subtype` 76.0%.
 
 ## Why `class` and `subtype` add no new data
 
 - Overture copies `class` from the OSM `building` tag. For the 1,014 OSM rows, `class` is the same as the `building` tag in `raw/overpass.json` on 1,013 rows (`building=yes` gives no `class`). The one difference is a `building=yes` way with `class` parking.
 - `build-block.mjs` already writes `type = tags.building` for each building that is not `building=yes`. `chooseStyle()` in `src/level/geo/styles.js` already reads `b.type`.
 - `subtype` is a group of `class` values (house, detached, apartments to residential). It adds data only on 6 `building=yes` buildings: 4 commercial and 2 religious.
-- The 63 Microsoft ML rows have no value for any of the fields.
+- The 63 Microsoft ML rows have no value for any of the seven fields.
 - Total new data: 7 of 1,077 buildings (0.6%).
 
 ## Method

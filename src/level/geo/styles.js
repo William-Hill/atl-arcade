@@ -5,6 +5,9 @@
 // Colors are [r, g, b] in 0..1. The look follows Atlanta at its best: warm
 // brick, painted stucco, bright storefronts, clean glass.
 
+import { styleFromParcel } from "./parcel-style.js";
+import { districtStyleMix } from "./historic-districts.js";
+
 export const STYLES = [
   {
     id: "brick-loft",
@@ -197,6 +200,29 @@ export const STYLES = [
     awnings: 0,
     roof: {},
   },
+  {
+    // The Inman Park Victorian (Queen Anne) house (#407): a steep hip roof
+    // with a front gable, a corner turret on some houses, a wrap porch with
+    // turned posts, tall narrow windows, and painted wood siding in the
+    // historic color sets (facade-kit.js victorianRoof(), victorianTurret(),
+    // victorianPorch()). It is last in the list, so the indices of the
+    // other styles do not change. Sources:
+    // docs/research/2026-11-28-inman-park-victorian.md.
+    id: "victorian-house",
+    walls: [[0.56, 0.66, 0.5], [0.86, 0.72, 0.42], [0.5, 0.6, 0.72], [0.72, 0.46, 0.4], [0.93, 0.88, 0.74], [0.7, 0.6, 0.76]],
+    trim: [0.97, 0.94, 0.86],
+    glass: [0.2, 0.28, 0.38],
+    floorHeight: 3.8,
+    bay: 2.6,
+    window: [0.3, 0.64],
+    parapet: 0.35,
+    storefront: false,
+    awnings: 0,
+    roof: {},
+    // The accent color of the gable, the turret, and the posts: one of
+    // these by building id, a darker set against the body color.
+    accents: [[0.36, 0.2, 0.18], [0.2, 0.32, 0.26], [0.24, 0.26, 0.4], [0.62, 0.44, 0.16]],
+  },
 ];
 
 // The belt course of the facade kit: a ledge over the ground floor of a
@@ -346,14 +372,24 @@ function districtOf(b, level) {
 const RESTYLEABLE = new Set(["modern-apartment", "stucco-apartment", "craftsman-house", "shotgun-house", "brick-loft", "brick-warehouse", "industrial-shed"]);
 
 // Picks the style for one building: a landmark name, then the OSM building
-// type, then the OSM wall material (brick), then the size and height, with
+// type, then the OSM wall material (brick), then the Fulton County parcel
+// data (land use and year built), then the size and height, with
 // the district mix for the stock that can change hands. Deterministic for a
 // building id.
+// The historic district mix (historic-districts.js, #407) goes after every
+// other rule: it changes only a house in a City historic district.
 export function chooseStyle(b, level = null) {
+  return districtStyleMix(b, baseStyle(b, level));
+}
+
+function baseStyle(b, level = null) {
   for (const [re, id] of BY_NAME) if (re.test(b.name ?? "")) return id;
   if (b.type && BY_TYPE[b.type]) return BY_TYPE[b.type];
   const area = footprintArea(b.outer);
   if (b.material === "brick" && area >= 220) return area > 2500 ? "brick-warehouse" : "brick-loft";
+  // The Fulton County parcel data (issue #406, src/level/geo/parcel-style.js).
+  const fromParcel = styleFromParcel(b, area);
+  if (fromParcel) return fromParcel;
   const r = hash32(b.id) % 100;
   let pick;
   if (area < 40) pick = "garage";
@@ -398,7 +434,7 @@ export function floorCount(b, style, wall) {
 }
 
 // The house styles: a gable roof and a porch.
-export const HOUSE_STYLES = new Set(["craftsman-house", "shotgun-house"]);
+export const HOUSE_STYLES = new Set(["craftsman-house", "shotgun-house", "victorian-house"]);
 // The OSM roof shapes that the kit builds as a gable roof.
 const GABLE_SHAPES = new Set(["gabled", "hipped", "pyramidal", "half-hipped", "gambrel"]);
 

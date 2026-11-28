@@ -3269,6 +3269,50 @@ Design: `docs/ux/trick-hud.md` (PR #395). Rendering stays out of the sim: the te
 - Owner choice (2026-11-27): #331 closes when its code criteria are met. The review of the prompt words by real skaters goes to a new issue.
 - Perf (2026-11-27, `npm run perf:check` on this branch): the draw calls, triangles, geometries, textures, and heap are in the budget on every tier. `firstDownloadMB` is over the cap on low/pbr (4.95 > 4.8), phone/pbr (4.52 > 4.3), and high/pbr (5.16 > 5.0). This branch adds 2.2 KB of JavaScript (main bundle 1,254,381 bytes on `main`, 1,256,630 bytes here), so the overage was already on `main`. This PR does not change the caps. The teach steps add no draw call (plain DOM).
 
+## 2026-11-27: Building heights from the USGS 3DEP LiDAR
+
+Research: `docs/research/2026-11-27-lidar-heights-spike.md`.
+
+- The 2018 Georgia statewide LiDAR is a height source. The order in `buildingHeight()` (`scripts/build-block.mjs`) is now: `heights.json` override, OSM `height` tag, **LiDAR**, OSM `building:levels`, Overture, Overture floors, the type default.
+- The LiDAR goes before the levels tag, because a measured roof beats floors x 3.2 m. Example: 725 Ponce has 12 office floors, which the rule makes 39.4 m. The LiDAR measures 56 m.
+- The OSM `height` tag stays first, because a mapper measured it. Ponce City Market keeps its 50 m: the LiDAR p50 is 35 m and the p99 is 62 m (the tower), and one box cannot show both.
+- The roof points are class 6 points with one return. On houses under trees, 23% to 76% of the class 6 points had more than one return, which is canopy.
+- The height is p90 of the roof points over the ground when p90 − p50 ≤ 3 m, else p50. A record needs 50 roof points and 30 m².
+- The LiDAR height is capped by `OVERTURE_CAP` for the building type (12 m for a house), as Overture is. Dense canopy can still give one return. Such a height has the source `lidar-capped` and the confidence `low`. A `lidar` height has the confidence `high`.
+- The flights are from 2018. A newer building has no roof points or a construction site (Signal House reads 23 m). The `heights.json` overrides win for them. A year-built source is a follow-up.
+- Result on `beltline-eastside`: 697 `lidar` and 27 `lidar-capped` heights. The 14 `levels` heights are all replaced. Overture keeps 169 heights and 51 capped heights.
+- `scripts/lidar-heights.py` measures the footprints of the committed `level.json`. The heights do not change a footprint, so a rebuild with the new heights gives the same footprints.
+- `level.stats.buildingHeights` now lists only the sources in use.
+- Two tests that hold data counts changed: the street awning vertices (6,368 to 6,288, because some styles depend on the height), and the brick-loft lab test now names its building (`w270469054`), because the lab order changed.
+- Not done: the isometric full map (`assets/map/beltline-eastside/`) is a baked render. It still shows the old heights until `scripts/bake-iso-map.mjs` runs again.
+
+## 2026-11-28: Do not read more Overture building fields (#409)
+
+- Count in the BeltLine Eastside bbox, Overture 2026-10-21.0 (1,077 buildings): `class` 76.3%, `subtype` 76.9%, `roof_shape` 0.2%, `roof_material` 0.1%, `roof_color`, `facade_color` and `facade_material` 0%. Release 2026-11-18.0 gives the same counts. Table: `docs/research/2026-11-28-overture-building-fields.md`.
+- `class` is a copy of the OSM `building` tag (same on 1,013 of 1,014 OSM rows), and `build-block.mjs` already carries that tag as `type`. `subtype` adds data on 6 buildings only. Total new data: 7 buildings (0.6%).
+- Owner choice (2026-11-28): no field is read. `scripts/overture-heights.py` and `scripts/build-block.mjs` do not change. #409 closes with the research doc.
+
+## 2026-11-28 — The Victorian house style and the historic district mix (#407)
+
+- New style `victorian-house` (`src/level/geo/styles.js`), at the end of `STYLES`, so the shader index of each other style does not change. It is in `HOUSE_STYLES`. The kit (`src/level/geo/facade-kit.js`) gives it a steep hip roof with a front gable (`victorianRoof()`), an 8-sided corner turret on about half of the houses (`victorianTurret()`), and a wrap porch on turned posts (`victorianPorch()`). A craftsman or shotgun house keeps its kit with no change. Sources: `docs/research/2026-11-28-inman-park-victorian.md`.
+- The district boundaries come from the City of Atlanta "Historic District - Open Data" layer (`scripts/historic-districts.mjs`, `levels/beltline-eastside/historic-districts.json`). No license is stated; the game cites the City, as for the other City layers. `level.json` does not change: `withHistoricDistricts()` (`src/level/geo/historic-districts.js`) tags each building with `historicDistrict` at load time (`src/level/levels.js`).
+- The hook is small and separate, because #406 also edits `chooseStyle()`: `chooseStyle()` is now `districtStyleMix(b, baseStyle(b, level))`, and `baseStyle()` is the old body with no change. `districtStyleMix()` changes only a house pick (craftsman or shotgun) of a building in a district with a mix (`HISTORIC_MIX`). The tag is on the building, so the calls with no level (the porch fronts, the lab, the props) see the same mix.
+- Inman Park mix: 70 % Victorian, 22 % craftsman, 8 % shotgun. On the BeltLine level, 185 of the 265 Inman Park houses (70 %) are Victorian. The MLK Jr. Landmark District mix keeps more shotgun houses (50 %).
+- Triangle budget (kit triangles for each house, the BeltLine level, `src/level/geo/victorian.test.js`): craftsman mean 759 (median 730, max 2976); shotgun mean 1040 (median 816, max 3430); Victorian mean 1046 (median 1007, max 2319). Rule: each Victorian house stays under the largest current house, and the Victorian mean stays within 10 % of the larger current mean.
+- Known, not changed here: the anchor district mix in `baseStyle()` acts only when the level is given, so a few buildings get a different style with and without the level (for example, a roof with no porch). This was so before #407.
+
+## 2026-11-28: Building styles from the Fulton County structure footprints (#406)
+
+- Source: Fulton County GIS, "Structure Footprints" (`https://services1.arcgis.com/AQDHTHDrZzfsFsB5/arcgis/rest/services/Structure_Footprints/FeatureServer/0`). It has the year built, the stories, and the parcel land use code (LUC) for each structure. The layer states no license. Owner choice (2026-11-28): use it and cite "Fulton County GIS" in the level attribution, as for the City of Atlanta layers with no stated license. Research: `docs/research/2026-11-28-fulton-parcel-data.md`. Row in `docs/sources.md`.
+- Not used: the Fulton County "Tax Parcels" layer. It is CC BY-SA (share-alike, no version) and has no year built and no stories. Owner choice (2026-11-28): no CC BY-SA data in the ODbL `level.json`. The layer would add the land use of only 46 buildings.
+- Pipeline: `scripts/fulton-structures.mjs` writes `levels/beltline-eastside/raw/fulton-structures.json` (fetched once, 1,251 structures). `scripts/build-block.mjs` joins it with the pure `scripts/parcel-join.mjs` (point in polygon, both ways) and writes `parcel: { landUse, yearBuilt, stories }` on each joined building, and `stats.parcels`. The parcel id and the structure form stay in the raw file, to keep the first download small (`level.json` +3.7 KB gzip).
+- Coverage: 988 of 1,042 buildings join; 988 get a land use, 960 a year built, 814 a story count.
+- Style: `styleFromParcel(b, area)` in the new pure module `src/level/geo/parcel-style.js`. `chooseStyle()` calls it after the name, the OSM type, and the OSM material, and before the hash, with no other change, so #407 (the Victorian style) can merge next to it. Rules: a house before 1910 gets `shotgun-house` (a Victorian style can replace it after #407), other houses `craftsman-house`, a house parcel with 4 stories or 14 m gets `stucco-apartment`; townhouses `stucco-apartment`; apartments and condos by era (from 1990 `modern-apartment`); lofts, offices, warehouses, and industry before 1960 get the brick styles; retail `storefront`; churches `church`; parking decks `parking-deck`. A footprint under 40 m² keeps the size rule (`garage`). Vacant land and common areas give no style.
+- Hash-decided buildings (`scripts/style-coverage.mjs`, the style changes with the id): 191 before, 23 after.
+- The parcel style comes before the district mix: the mix is a guess, the parcel data is not.
+- The lab reference building changes: `w270469054` (brick-loft pick 0 of the art loop) is a 2014 condo in the county data, so it now gets `modern-apartment`. `LAB_KIND=brick-loft LAB_PICK=0` now shows another building. The tests that used it as a brick loft now use it with the brick-loft style given in the test.
+- Not changed: the OSM `building=house` buildings (764) keep `craftsman-house` from `BY_TYPE`, so their year built does not change their style yet. The story count is not used for the floor count (`floorCount()` uses the OSM levels).
+
 ## 2026-11-28: Wall labels from Mapillary street images (#408)
 
 - **Status: decided.** The owner accepted the proposal on 2026-11-28 (PR #420). The owner treats Skate ATL as a commercial use under Mapillary terms section 12, so the section 12 safeguards apply.

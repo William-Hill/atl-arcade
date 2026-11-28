@@ -247,11 +247,20 @@ describe("shop and roof props", () => {
 
   it("takes the roof props from the roof plan, square to the walls", () => {
     const loft = LEVEL.buildings.find((b) => b.id === "w270469054");
-    const style = STYLES.find((s) => s.id === chooseStyle(loft));
+    // The brick-loft style: it has no solar panels, so every roof part of
+    // the plan except the vents is a roof prop. Since #406 the Fulton County
+    // data gives this building another style.
+    const style = STYLES.find((s) => s.id === "brick-loft");
     const roof = roofProps(loft, style);
     const plan = roofPlan(loft, style).parts.filter((p) => p.kind !== "vent");
     expect(roof.map((p) => [p.kind, p.x, p.z, p.yaw])).toEqual(plan.map((p) => [p.kind, p.x, p.z, p.yaw]));
     expect(roof.some((p) => p.kind === "roof_unit")).toBe(true);
-    expect(doorBay(fronts.get(loft.id), 8)).toBe(fronts.get(loft.id).door);
+    // The door bay of the front comes from the bay count of the style that
+    // the level gives the building (frontWalk()).
+    const front = fronts.get(loft.id);
+    const ring = orientRing(loft.outer, false);
+    const [p0, p1] = [ring[front.edge], ring[(front.edge + 1) % ring.length]];
+    const bays = Math.max(1, Math.round(Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / STYLES.find((s) => s.id === chooseStyle(loft)).bay));
+    expect(doorBay(front, bays)).toBe(front.door);
   });
 });

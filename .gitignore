@@ -17,3 +17,4 @@ landmarks/*/ref/reference-4000.jpg
 .env*
 .cache/
 reports/perf/
+levels/*/raw/lidar/

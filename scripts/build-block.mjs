@@ -199,17 +199,59 @@ const MIN_OVERTURE_HEIGHT = 2.5;
 // OSM types is capped. A real tall house has an OSM height or levels tag.
 export const OVERTURE_CAP = { house: 12, detached: 12, semidetached_house: 12, bungalow: 10, terrace: 14, garage: 6, garages: 6, shed: 5, carport: 5, hut: 5 };
 
+// The LiDAR rules (scripts/lidar-heights.py, raw/lidar-heights.json; see
+// docs/research/2026-11-27-lidar-heights-spike.md). A roof is p90 of the
+// single-return building points over the ground when p90 - p50 <= SPREAD m
+// (a flat roof or one mass), else p50: a wide spread on a small roof is most
+// often tree points. A record needs LIDAR_MIN_POINTS roof points and
+// LIDAR_MIN_AREA m². The flights are from 2018: a newer building has no
+// roof points, or the points of the site before it, so heights.json wins.
+export const LIDAR_SPREAD = 3;
+export const LIDAR_MIN_POINTS = 50;
+export const LIDAR_MIN_AREA = 30;
+
+// Pure: the LiDAR height (m) of one record of raw/lidar-heights.json, before
+// the type cap, or null.
+export function lidarHeight(r) {
+  if (!r || !(r.p90 > 0) || !(r.roofPoints >= LIDAR_MIN_POINTS) || !(r.area >= LIDAR_MIN_AREA)) return null;
+  const h = r.p90 - r.p50 <= LIDAR_SPREAD ? r.p90 : r.p50;
+  return h >= MIN_OVERTURE_HEIGHT ? h : null;
+}
+
+// Pure: the LiDAR records keyed by OSM id ("w123"), from the records keyed
+// by level building id ("w123" or "w123-0"). A footprint cut in pieces
+// keeps the record of its largest piece.
+export function lidarByOsmId(heights) {
+  const out = {};
+  for (const [id, r] of Object.entries(heights ?? {})) {
+    const osm = String(id).split("-")[0];
+    if (!out[osm] || (r.area ?? 0) > (out[osm].area ?? 0)) out[osm] = r;
+  }
+  return out;
+}
+
 // The order: a value in the level heights.json (with a source), the OSM
-// height tag, the OSM levels tag, the Overture height (raw/overture.json,
-// from scripts/overture-heights.py, capped by OVERTURE_CAP), the Overture
-// floor count, and last a default for the building type.
-export function buildingHeight(tags, overture = null, override = null) {
+// height tag, the LiDAR height (when it is over OVERTURE_CAP, the OSM
+// levels tag, else the cap, because dense canopy over a house can still
+// give single returns), the OSM levels tag,
+// the Overture height (raw/overture.json, from scripts/overture-heights.py,
+// capped by OVERTURE_CAP), the Overture floor count, and last a default for
+// the building type. The LiDAR goes before the levels tag: a measured roof
+// beats floors x 3.2 m (725 Ponce: 12 office floors, 39.4 m by the rule,
+// 56 m measured).
+export function buildingHeight(tags, overture = null, override = null, lidar = null) {
   if (override?.height > 0) return { height: override.height, source: "override" };
   const h = parseHeight(tags.height);
   if (h && h > 0) return { height: h, source: "height" };
-  const levels = Number(tags["building:levels"]);
-  if (Number.isFinite(levels) && levels > 0) return { height: levels * LEVEL_HEIGHT + 1, source: "levels" };
   const cap = OVERTURE_CAP[tags.building] ?? Infinity;
+  const levels = Number(tags["building:levels"]);
+  const tagged = Number.isFinite(levels) && levels > 0;
+  const measured = lidarHeight(lidar);
+  if (measured !== null && measured <= cap) return { height: measured, source: "lidar" };
+  // Over the cap: a levels tag says the building is tall, so it wins over
+  // the cap (the rule of OVERTURE_CAP).
+  if (tagged) return { height: levels * LEVEL_HEIGHT + 1, source: "levels" };
+  if (measured !== null) return { height: cap, source: "lidar-capped" };
   if (overture?.height > 0) {
     const raw = Math.max(overture.height, MIN_OVERTURE_HEIGHT);
     return raw > cap ? { height: cap, source: "overture-capped" } : { height: raw, source: "overture" };
@@ -385,6 +427,8 @@ function inBox([x, z], box) {
 // `overture` maps an OSM id ("w123") to { height, floors } (raw/overture.json).
 // `terrain` is the grid from raw/terrain.json (scripts/terrain-dem.py).
 // `heights` maps an OSM id to { height, source } (the level heights.json).
+// `lidar` maps an OSM id to a LiDAR record (lidarByOsmId of
+// raw/lidar-heights.json, scripts/lidar-heights.py).
 // `sources` maps a level building id to its record in the building source
 // file (data/buildings/<name>.json, issue #88). With `sources`, each height
 // comes from its record, and a building with no record is an error.
@@ -392,7 +436,7 @@ function inBox([x, z], box) {
 // the street names come from the City of Atlanta centerlines (issue #78,
 // scripts/street-names.mjs).
 // `furniture` is raw/street-furniture.json: the OSM street furniture points.
-export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, sources = null, cityStreets = null, furniture = null }) {
+export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, lidar = null, sources = null, cityStreets = null, furniture = null }) {
   const origin = bboxCenter(bbox);
   const proj = createProjection(origin);
   const project = (g) => g.map(({ lat, lon }) => proj.toLocal(lat, lon).map(round));
@@ -481,7 +525,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     }
     if (isBuilding) {
       if (!hasGroundWalls(tags)) continue;
-      const { height, source } = buildingHeight(tags, overture?.[id], heights?.[id]);
+      const { height, source } = buildingHeight(tags, overture?.[id], heights?.[id], lidar?.[id]);
       const extra = { height: round(height), heightSource: source };
       if (tags.name) extra.name = tags.name;
       if (tags.building !== "yes") extra.type = tags.building;
@@ -548,7 +592,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     name,
     title,
     format: "geo-level/1",
-    attribution: `Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright${overture ? ". Heights: Overture Maps Foundation" : ""}${terrain ? ". Elevation: USGS 3DEP" : ""}${cityStreets ? ". Street names: City of Atlanta Department of City Planning" : ""}`,
+    attribution: `Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright${overture ? ". Heights: Overture Maps Foundation" : ""}${lidar ? ". Heights: USGS 3DEP LiDAR" : ""}${terrain ? ". Elevation: USGS 3DEP" : ""}${cityStreets ? ". Street names: City of Atlanta Department of City Planning" : ""}`,
     bbox,
     origin,
     axes: "+x east, +y up, +z south; meters from the origin",
@@ -557,7 +601,8 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     surfaces: SURFACES,
     stats: {
       buildings: buildings.length,
-      buildingHeights: counts,
+      // Only the sources in use: a source with no building is left out.
+      buildingHeights: Object.fromEntries(Object.entries(counts).filter(([, n]) => n > 0)),
       ...(sources ? { buildingSources: `data/buildings/${name}.json` } : {}),
       ...(cityStreets ? { streetNames: nameCounts } : {}),
       strips: Object.fromEntries(["street", "sidewalk", "path", "trail"].map((k) => [k, strips.filter((s) => s.kind === k).length])),
@@ -804,6 +849,10 @@ async function main() {
   const terrainFile = resolve(rawDir, "terrain.json");
   const terrain = existsSync(terrainFile) ? JSON.parse(readFileSync(terrainFile, "utf8")).terrain : null;
   if (terrain) console.log(`build-block: terrain ${terrain.cols} x ${terrain.rows} from ${terrainFile}`);
+  // LiDAR roof heights (scripts/lidar-heights.py), when present.
+  const lidarFile = resolve(rawDir, "lidar-heights.json");
+  const lidar = existsSync(lidarFile) ? lidarByOsmId(JSON.parse(readFileSync(lidarFile, "utf8")).heights) : null;
+  if (lidar) console.log(`build-block: ${Object.keys(lidar).length} LiDAR records from ${lidarFile}`);
   // Height overrides with sources (levels/<name>/heights.json), when present.
   const heightsFile = resolve(outDir, "heights.json");
   const heights = existsSync(heightsFile) ? JSON.parse(readFileSync(heightsFile, "utf8")).heights : null;
@@ -819,7 +868,7 @@ async function main() {
   const cityStreetsFile = resolve(rawDir, "city-streets.json");
   const cityStreets = existsSync(cityStreetsFile) ? JSON.parse(readFileSync(cityStreetsFile, "utf8")) : null;
   if (cityStreets) console.log(`build-block: ${cityStreets.segments.length} city centerline segments from ${cityStreetsFile}`);
-  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, sources, cityStreets, furniture });
+  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, lidar, sources, cityStreets, furniture });
   const outFile = resolve(outDir, "level.json");
   writeFileSync(outFile, `${JSON.stringify(level)}\n`);
   console.log(`build-block: wrote ${outFile}`);

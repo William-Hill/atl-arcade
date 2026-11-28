@@ -9,7 +9,6 @@ import { roofPlan } from "./roof-plan.js";
 import { SIGN_COLORS, STYLES, chooseStyle, floorCount } from "./styles.js";
 import { orientRing } from "./extrude.js";
 import { muralWalls } from "./geo-mesh.js";
-import { labBuildings } from "./lab.js";
 
 const LEVEL = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../../levels/beltline-eastside/level.json"), "utf8"));
 const SQUARE = orientRing([[0, 0], [10, 0], [10, 10], [0, 10]], false);
@@ -604,7 +603,10 @@ describe("the front wall of a building with no street wall", () => {
   });
 
   it("gives the BeltLine lab building a front on open ground", () => {
-    const lab = labBuildings(LEVEL, "brick-loft")[0];
+    // The first brick-loft lab building before the LiDAR heights (2026-11-27)
+    // changed the lab order; the test keeps the same building.
+    const lab = LEVEL.buildings.find((b) => b.id === "w270469054");
+    expect(chooseStyle(lab)).toBe("brick-loft");
     const ring = orientRing(lab.outer, false);
     const f = frontEdges(LEVEL).get(lab.id);
     expect(f.street).toBe(false);

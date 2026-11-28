@@ -3325,3 +3325,9 @@ Research: `docs/research/2026-11-27-lidar-heights-spike.md`.
 - Next step: the owner registers a Mapillary app and saves its client token for `graph.mapillary.com`. Then an agent counts the coverage of the BeltLine Eastside bbox before the 50-building pilot. The count was not done: the API returned "Invalid OAuth 2.0 Access Token" (code 190) with no token.
 - Not done: a lawyer has not read the research note.
 - Alternative: contribute the checked labels to OpenStreetMap as `building:colour` and `building:material` (terms section 13), after a review of the OSM automated edit rules.
+
+## 2026-11-28 — No wall AC unit on a house porch wall
+
+- Problem: the GLB facade kit (`facadeKitPlacements()`, `src/level/geo/facade-kit-glb.js`) gave `facadePlacements()` only the shop fronts (`frontEdges()`). A house is not in that map, so its porch wall counted as a side wall, and a wall AC unit could go next to the porch door. On the BeltLine level, 329 of 3692 wall AC units were on a porch wall.
+- Fix: a house (a house style with the level) gets its porch wall from `houseFronts()` as its front, as `facadeKit()` does (`houseFront()`). The side wall of a Victorian wrap porch is a wrap wall. For a house style, the front changes only the AC rule: the random draws, the windows, and every other module stay the same (`src/level/geo/porch-ac.test.js`).
+- Result: 0 AC units on porch walls; 3363 wall AC units. Lab captures: `reports/lab/craftsman-house-98-pbr-porch-ac-before/` and `-after/`.

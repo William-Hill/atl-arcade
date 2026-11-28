@@ -9,10 +9,10 @@
 // GLB sign boards (shop-names.js).
 import { facadePlacements } from "../../../scripts/assets/facade-kit-placement.js";
 import { orientRing } from "./extrude.js";
-import { DEPTH_TILE } from "./facade-kit.js";
+import { DEPTH_TILE, houseFronts } from "./facade-kit.js";
 import { muralWalls } from "./geo-mesh.js";
 import { claimedIds } from "./landmarks.js";
-import { STYLES, STYLE_INDEX, chooseStyle, floorCount, hash32 } from "./styles.js";
+import { HOUSE_STYLES, STYLES, STYLE_INDEX, chooseStyle, floorCount, hash32 } from "./styles.js";
 import { buildingSpan } from "./terrain.js";
 
 // Modules the game does not place, so the procedural part stays: the
@@ -64,6 +64,13 @@ export function boardOf(it) {
   return { x: it.position[0] + nx * d, y: it.position[1] + SIGN_BOARD.center, z: it.position[2] + nz * d, w: SIGN_BOARD.width, h: SIGN_BOARD.height, nx, nz };
 }
 
+// The front of a house for facadePlacements(): the porch wall, and the
+// side wall of a wrap porch (houseFronts() `wrap`) as a wrap wall.
+export function houseFront(h) {
+  if (!h || !(h.edge >= 0)) return null;
+  return { edge: h.edge, wraps: h.wrap && h.wrap.edge >= 0 ? [h.wrap.edge] : [] };
+}
+
 // Pure: the GLB kit of a level. `fronts` is frontEdges(); `signs` the shop
 // signs (shopSigns()). Claimed landmark footprints get nothing (their model
 // draws the building). Returns { tiles: Map(tile -> { center, list }),
@@ -72,7 +79,10 @@ export function boardOf(it) {
 // has the same placements per building: { id, center: [x, z], radius, tile
 // (its depth tile center), list, boards }, for culling by building
 // (facade-kit-view.js).
-export function facadeKitPlacements(level, fronts, { signs = [], claimed = claimedIds(level), murals = new Map(muralWalls(level).map((m) => [m.id, m])) } = {}) {
+// `houses` is houseFronts(): a house gets its porch wall (and the wrap wall
+// of a wrap porch) as its front, as facadeKit() does, so no wall AC unit
+// goes on the porch wall next to the door.
+export function facadeKitPlacements(level, fronts, { signs = [], claimed = claimedIds(level), murals = new Map(muralWalls(level).map((m) => [m.id, m])), houses = houseFronts(level) } = {}) {
   const tiles = new Map();
   const covers = new Map();
   const buildings = [];
@@ -83,7 +93,7 @@ export function facadeKitPlacements(level, fronts, { signs = [], claimed = claim
     const style = STYLES[STYLE_INDEX[chooseStyle(b, level)]];
     const span = buildingSpan(level, b);
     const sign = signsOf.get(b.id) ?? null;
-    const list = facadePlacements({ ring: orientRing(b.outer, false), holes: b.holes ?? [], style, base: span.base, top: span.top, front: fronts.get(b.id) ?? null, mural: murals.get(b.id) ?? null, seed: hash32(String(b.id)), floors: floorCount(b, style, span.top - span.base) }).filter((it) => !GLB_SKIP.has(it.module) && !(it.module === "trim_sign_board" && sign && underShopSign(it, sign)));
+    const list = facadePlacements({ ring: orientRing(b.outer, false), holes: b.holes ?? [], style, base: span.base, top: span.top, front: fronts.get(b.id) ?? (HOUSE_STYLES.has(style.id) ? houseFront(houses.get(b.id)) : null), mural: murals.get(b.id) ?? null, seed: hash32(String(b.id)), floors: floorCount(b, style, span.top - span.base) }).filter((it) => !GLB_SKIP.has(it.module) && !(it.module === "trim_sign_board" && sign && underShopSign(it, sign)));
     if (!list.length) continue;
     covers.set(b.id, kitCovers(list));
     // The depth tile of the building, as facadeKit() keys it.

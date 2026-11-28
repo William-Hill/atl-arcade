@@ -49,10 +49,10 @@ describe("labCamera", () => {
 
 describe("labBuildings", () => {
   it("lists only buildings of the style, 5 m or taller", () => {
-    const list = labBuildings(LEVEL, "brick-loft");
+    const list = labBuildings(LEVEL, "stucco-apartment");
     expect(list.length).toBeGreaterThan(5);
     for (const b of list) {
-      expect(chooseStyle(b)).toBe("brick-loft");
+      expect(chooseStyle(b)).toBe("stucco-apartment");
       expect(b.height).toBeGreaterThanOrEqual(5);
     }
   });

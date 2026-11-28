@@ -31,6 +31,7 @@ import { cleanRing, signedArea } from "../src/level/geo/extrude.js";
 import { FOOTPRINT_GRADE, decodeHeights, encodeHeights, gradeBridgeEnds, gradeFootprints, gradeTrail, gradeWays, bridgeNodes, raiseEmbankments, terrainOf } from "../src/level/geo/terrain.js";
 import { shortName } from "../src/level/geo/signs.js";
 import { createStreetNamer } from "./street-names.mjs";
+import { joinParcels } from "./parcel-join.mjs";
 
 const ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
 const USER_AGENT = "atl-arcade-build-block/0.1 (https://github.com/William-Hill/atl-arcade)";
@@ -436,7 +437,10 @@ function inBox([x, z], box) {
 // the street names come from the City of Atlanta centerlines (issue #78,
 // scripts/street-names.mjs).
 // `furniture` is raw/street-furniture.json: the OSM street furniture points.
-export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, lidar = null, sources = null, cityStreets = null, furniture = null }) {
+// `structures` is raw/fulton-structures.json (scripts/fulton-structures.mjs).
+// With it, each building that joins to a Fulton County structure footprint
+// gets a `parcel` object (scripts/parcel-join.mjs, issue #406).
+export function buildLevel(raw, { bbox, name, title, overture = null, terrain = null, heights = null, lidar = null, sources = null, cityStreets = null, furniture = null, structures = null }) {
   const origin = bboxCenter(bbox);
   const proj = createProjection(origin);
   const project = (g) => g.map(({ lat, lon }) => proj.toLocal(lat, lon).map(round));
@@ -561,6 +565,17 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
   areas.sort(byId);
   crossings.sort(byId);
 
+  // The Fulton County parcel data on each building (issue #406).
+  let parcelCounts = null;
+  if (structures) {
+    const { byId, counts } = joinParcels(buildings, structures, (lat, lon) => proj.toLocal(lat, lon));
+    for (const b of buildings) {
+      const p = byId.get(b.id);
+      if (p) b.parcel = p;
+    }
+    parcelCounts = counts;
+  }
+
   // Raise the bridge approaches that the grid smooths (src/level/geo/terrain.js).
   let embankments = [];
   if (terrain) {
@@ -592,7 +607,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
     name,
     title,
     format: "geo-level/1",
-    attribution: `Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright${overture ? ". Heights: Overture Maps Foundation" : ""}${lidar ? ". Heights: USGS 3DEP LiDAR" : ""}${terrain ? ". Elevation: USGS 3DEP" : ""}${cityStreets ? ". Street names: City of Atlanta Department of City Planning" : ""}`,
+    attribution: `Map data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright${overture ? ". Heights: Overture Maps Foundation" : ""}${lidar ? ". Heights: USGS 3DEP LiDAR" : ""}${terrain ? ". Elevation: USGS 3DEP" : ""}${cityStreets ? ". Street names: City of Atlanta Department of City Planning" : ""}${structures ? ". Building land use and year built: Fulton County GIS" : ""}`,
     bbox,
     origin,
     axes: "+x east, +y up, +z south; meters from the origin",
@@ -605,6 +620,7 @@ export function buildLevel(raw, { bbox, name, title, overture = null, terrain = 
       buildingHeights: Object.fromEntries(Object.entries(counts).filter(([, n]) => n > 0)),
       ...(sources ? { buildingSources: `data/buildings/${name}.json` } : {}),
       ...(cityStreets ? { streetNames: nameCounts } : {}),
+      ...(parcelCounts ? { parcels: parcelCounts } : {}),
       strips: Object.fromEntries(["street", "sidewalk", "path", "trail"].map((k) => [k, strips.filter((s) => s.kind === k).length])),
       areas: areas.length,
       crossings: crossings.length,
@@ -868,7 +884,12 @@ async function main() {
   const cityStreetsFile = resolve(rawDir, "city-streets.json");
   const cityStreets = existsSync(cityStreetsFile) ? JSON.parse(readFileSync(cityStreetsFile, "utf8")) : null;
   if (cityStreets) console.log(`build-block: ${cityStreets.segments.length} city centerline segments from ${cityStreetsFile}`);
-  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, lidar, sources, cityStreets, furniture });
+  // The Fulton County structure footprints (scripts/fulton-structures.mjs),
+  // when present. The parcel data on each building comes from them.
+  const structuresFile = resolve(rawDir, "fulton-structures.json");
+  const structures = existsSync(structuresFile) ? JSON.parse(readFileSync(structuresFile, "utf8")) : null;
+  if (structures) console.log(`build-block: ${structures.structures.length} Fulton County structure footprints from ${structuresFile}`);
+  const level = buildLevel(raw, { bbox, name, title, overture, terrain, heights, lidar, sources, cityStreets, furniture, structures });
   const outFile = resolve(outDir, "level.json");
   writeFileSync(outFile, `${JSON.stringify(level)}\n`);
   console.log(`build-block: wrote ${outFile}`);

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { LEVEL_FLOOR, STYLES, chooseStyle, floorCount, roofForm } from "./styles.js";
+import { styleFromParcel } from "./parcel-style.js";
 
 const LEVEL = JSON.parse(readFileSync(new URL("../../../levels/beltline-eastside/level.json", import.meta.url), "utf8"));
 
@@ -17,6 +18,8 @@ describe("district styles", () => {
       LEVEL.buildings
         .filter((b) => {
           if (!b.outer || b.type || b.height >= 30) return false;
+          // The parcel data (#406) comes before the district mix.
+          if (styleFromParcel(b)) return false;
           const cx = b.outer.reduce((s, p) => s + p[0], 0) / b.outer.length;
           const cz = b.outer.reduce((s, p) => s + p[1], 0) / b.outer.length;
           return Math.hypot(cx - kx, cz - kz) < 380;

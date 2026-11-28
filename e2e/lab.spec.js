@@ -35,7 +35,9 @@ test(`asset lab: ${KIND} pick ${PICK}, ${LOOK} look`, async ({ page }) => {
     const query = `level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=${LOOK}&lab=building&kind=${KIND}&pick=${PICK}&labview=${view}`;
     await page.goto(`/?${query}`);
     await page.waitForFunction(() => window.__atl && window.__atl.ready && window.__atl.frames > 5, null, { timeout: 120000 });
-    await page.waitForFunction(() => window.__atl.level.landmarks && window.__atl.level.landmarks.towers >= 2, null, { timeout: 120000 });
+    // The landmarks load as GLB models now (`landmarks.loaded`); the old
+    // `towers` count stays at 1 on this level, so it cannot be the wait.
+    await page.waitForFunction(() => window.__atl.level.landmarks && (window.__atl.level.landmarks.loaded || window.__atl.level.landmarks.towers >= 2), null, { timeout: 120000 });
     await page.waitForFunction(() => window.__atl.level.props && (window.__atl.level.props.loaded || window.__atl.level.props.error), null, { timeout: 120000 });
     const lab = await page.evaluate(() => window.__atl.lab);
     expect(lab, "the lab building").not.toBeNull();

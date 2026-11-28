@@ -613,10 +613,10 @@ describe("the front wall of a building with no street wall", () => {
   });
 
   it("gives the BeltLine lab building a front on open ground", () => {
-    // The first brick-loft lab building before the LiDAR heights (2026-11-27)
-    // changed the lab order; the test keeps the same building.
+    // The old brick-loft lab building. Since #406 the Fulton County data
+    // gives it another style (a 2014 condo), but the front rule does not
+    // depend on the style.
     const lab = LEVEL.buildings.find((b) => b.id === "w270469054");
-    expect(chooseStyle(lab)).toBe("brick-loft");
     const ring = orientRing(lab.outer, false);
     const f = frontEdges(LEVEL).get(lab.id);
     expect(f.street).toBe(false);

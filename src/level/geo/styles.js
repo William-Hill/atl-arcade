@@ -5,6 +5,7 @@
 // Colors are [r, g, b] in 0..1. The look follows Atlanta at its best: warm
 // brick, painted stucco, bright storefronts, clean glass.
 
+import { styleFromParcel } from "./parcel-style.js";
 import { districtStyleMix } from "./historic-districts.js";
 
 export const STYLES = [
@@ -371,7 +372,8 @@ function districtOf(b, level) {
 const RESTYLEABLE = new Set(["modern-apartment", "stucco-apartment", "craftsman-house", "shotgun-house", "brick-loft", "brick-warehouse", "industrial-shed"]);
 
 // Picks the style for one building: a landmark name, then the OSM building
-// type, then the OSM wall material (brick), then the size and height, with
+// type, then the OSM wall material (brick), then the Fulton County parcel
+// data (land use and year built), then the size and height, with
 // the district mix for the stock that can change hands. Deterministic for a
 // building id.
 // The historic district mix (historic-districts.js, #407) goes after every
@@ -385,6 +387,9 @@ function baseStyle(b, level = null) {
   if (b.type && BY_TYPE[b.type]) return BY_TYPE[b.type];
   const area = footprintArea(b.outer);
   if (b.material === "brick" && area >= 220) return area > 2500 ? "brick-warehouse" : "brick-loft";
+  // The Fulton County parcel data (issue #406, src/level/geo/parcel-style.js).
+  const fromParcel = styleFromParcel(b, area);
+  if (fromParcel) return fromParcel;
   const r = hash32(b.id) % 100;
   let pick;
   if (area < 40) pick = "garage";

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { HISTORIC_MIX, districtAt, districtSlug, districtStyleMix, projectDistricts, withHistoricDistricts } from "./historic-districts.js";
+import { HISTORIC_MIX, MIX_YEAR_END, districtAt, districtSlug, districtStyleMix, projectDistricts, withHistoricDistricts } from "./historic-districts.js";
 import { STYLE_INDEX, chooseStyle } from "./styles.js";
 import { labBuildings } from "./lab.js";
 
@@ -67,6 +67,18 @@ describe("historic districts (#407)", () => {
     expect(districtStyleMix(b, "shotgun-house")).toBe(one);
   });
 
+  it("keeps the style of a house built in or after MIX_YEAR_END", () => {
+    const ids = Array.from({ length: 200 }, (_, i) => `w${i}`);
+    for (const id of ids) {
+      expect(districtStyleMix({ id, historicDistrict: "inman-park", parcel: { yearBuilt: MIX_YEAR_END } }, "craftsman-house")).toBe("craftsman-house");
+      expect(districtStyleMix({ id, historicDistrict: "inman-park", parcel: { yearBuilt: 2004 } }, "shotgun-house")).toBe("shotgun-house");
+    }
+    // An old house, or a house with no year, still gets the mix.
+    const mixed = (parcel) => ids.filter((id) => districtStyleMix({ id, historicDistrict: "inman-park", parcel }, "craftsman-house") === "victorian-house").length;
+    expect(mixed({ yearBuilt: 1900 })).toBeGreaterThan(100);
+    expect(mixed(undefined)).toBe(mixed({ yearBuilt: 1900 }));
+  });
+
   it("makes about 70 percent of the Inman Park houses Victorian", () => {
     let v = 0;
     for (let i = 0; i < 2000; i += 1) if (districtStyleMix({ id: `w${i}`, historicDistrict: "inman-park" }, "craftsman-house") === "victorian-house") v += 1;
@@ -83,7 +95,10 @@ describe("historic districts (#407)", () => {
 
   it("makes most Inman Park houses Victorian in the BeltLine level, and keeps the landmarks", () => {
     const level = withHistoricDistricts(LEVEL, FILE);
-    const ip = level.buildings.filter((b) => b.historicDistrict === "inman-park");
+    // The historic stock only: a house with a Fulton year built of
+    // MIX_YEAR_END or later keeps its own style (#406).
+    const historic = (b) => !((b.parcel?.yearBuilt ?? 0) >= MIX_YEAR_END);
+    const ip = level.buildings.filter((b) => b.historicDistrict === "inman-park" && historic(b));
     const houses = ip.map((b) => chooseStyle(b, level)).filter((s) => /-house$/.test(s));
     const v = houses.filter((s) => s === "victorian-house").length;
     expect(houses.length).toBeGreaterThan(150);

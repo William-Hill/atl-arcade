@@ -109,9 +109,15 @@ export function withHistoricDistricts(level, file) {
 // The style of building `b` after its district mix: `pick` (the style of
 // the normal rules) when the building is in no district with a mix, or when
 // `pick` is not a house. Deterministic for a building id.
+// A house with a Fulton County year built (`b.parcel.yearBuilt`, #406) of
+// MIX_YEAR_END or later keeps `pick`: the mix is for the historic stock, not
+// for a new house in the district.
+export const MIX_YEAR_END = 1945;
 export function districtStyleMix(b, pick) {
   const mix = b?.historicDistrict ? HISTORIC_MIX[b.historicDistrict] : null;
   if (!mix || !HOUSE_PICKS.has(pick)) return pick;
+  const year = b.parcel?.yearBuilt ?? null;
+  if (year !== null && year >= MIX_YEAR_END) return pick;
   const r = hash32(`${b.id}:historic`) % 100;
   let acc = 0;
   for (const [id, w] of mix) {

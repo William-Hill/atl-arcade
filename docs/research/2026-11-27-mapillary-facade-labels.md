@@ -1,6 +1,6 @@
 # Wall labels from Mapillary street images: license review (issue #408, stage 1)
 
-Date: 2026-11-28. Status: research only. No image was read for labels. The owner must accept the license decision in `docs/decisions.md` before stage 2 starts.
+Date: 2026-11-28. Status: research only. No image was read for labels. The owner accepted the decision on 2026-11-28 (`docs/decisions.md`) and treats the game as a commercial use (Mapillary terms section 12).
 
 This note is not legal advice. An agent wrote it from the primary texts. Skate ATL aims to be the official game of the City of Atlanta, so a lawyer of the City (or of the owner) should read it before the game ships with these labels.
 

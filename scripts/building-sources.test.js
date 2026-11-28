@@ -80,9 +80,10 @@ describe("building source file: beltline-eastside (#88)", () => {
     const city = read("levels/beltline-eastside/raw/city-addresses.json");
     const raw = read("levels/beltline-eastside/raw/overpass.json");
     const heights = read("levels/beltline-eastside/heights.json").heights;
+    const lidar = read("levels/beltline-eastside/raw/lidar-heights.json");
     const name = "beltline-eastside";
-    const { records, stats, disagreements } = buildSources({ raw, bbox: fetch.bbox, name, overture, heights, city });
-    expect(`${JSON.stringify(sourceFile({ name, records, stats, overture, city }), null, 1)}\n`).toBe(readFileSync(resolve(ROOT, "data/buildings/beltline-eastside.json"), "utf8"));
+    const { records, stats, disagreements } = buildSources({ raw, bbox: fetch.bbox, name, overture, heights, city, lidar });
+    expect(`${JSON.stringify(sourceFile({ name, records, stats, overture, city, lidar }), null, 1)}\n`).toBe(readFileSync(resolve(ROOT, "data/buildings/beltline-eastside.json"), "utf8"));
     expect(reportText({ name, stats, disagreements })).toBe(readFileSync(resolve(ROOT, "data/buildings/beltline-eastside.report.md"), "utf8"));
   });
 });

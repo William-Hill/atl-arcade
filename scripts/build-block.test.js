@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createGeoGroundSampler } from "../src/level/geo/geo-ground.js";
-import { buildingHeight, buildingTags, buildLevel, classifyWay, clipOffCorridor, clipPolyline, furnitureQuery, hasGroundWalls, joinRings, overpassQuery, parseHeight, trailCorridor } from "./build-block.mjs";
+import { LIDAR_MIN_AREA, LIDAR_MIN_POINTS, LIDAR_SPREAD, buildingHeight, buildingTags, lidarByOsmId, lidarHeight, buildLevel, classifyWay, clipOffCorridor, clipPolyline, furnitureQuery, hasGroundWalls, joinRings, overpassQuery, parseHeight, trailCorridor } from "./build-block.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const BBOX = { south: 33.756, west: -84.3685, north: 33.7735, east: -84.358 };
@@ -59,6 +59,28 @@ describe("build-block tags", () => {
     expect(buildingHeight({ building: "yes" }, { height: null, floors: 3 })).toEqual({ height: 3 * 3.2 + 1, source: "overture" });
     expect(buildingHeight({ building: "house" }, { height: null, floors: null })).toEqual({ height: 7, source: "default" });
     expect(buildingHeight({ building: "yes" }).source).toBe("default");
+  });
+
+  it("takes the LiDAR roof after the overrides and the height tag, and before the levels tag and Overture", () => {
+    const flat = { p50: 20, p90: 21, roofPoints: 500, area: 400 };
+    expect(buildingHeight({ building: "office", "building:levels": "12" }, { height: 30 }, null, flat)).toEqual({ height: 21, source: "lidar" });
+    expect(buildingHeight({ building: "yes", height: "50" }, null, null, flat)).toEqual({ height: 50, source: "height" });
+    expect(buildingHeight({ building: "yes" }, null, { height: 68.2 }, flat)).toEqual({ height: 68.2, source: "override" });
+    expect(buildingHeight({ building: "house" }, { height: 9 }, null, { p50: 30, p90: 31, roofPoints: 500, area: 100 })).toEqual({ height: 12, source: "lidar-capped" });
+    // Thin data falls through to Overture.
+    expect(buildingHeight({ building: "yes" }, { height: 9 }, null, { ...flat, roofPoints: LIDAR_MIN_POINTS - 1 })).toEqual({ height: 9, source: "overture" });
+  });
+
+  it("picks p90 for one roof mass and p50 for a wide spread", () => {
+    expect(lidarHeight({ p50: 20, p90: 20 + LIDAR_SPREAD, roofPoints: 500, area: 400 })).toBe(20 + LIDAR_SPREAD);
+    expect(lidarHeight({ p50: 6, p90: 6 + LIDAR_SPREAD + 1, roofPoints: 500, area: 400 })).toBe(6);
+    expect(lidarHeight({ p50: 9, p90: 10, roofPoints: 500, area: LIDAR_MIN_AREA - 1 })).toBe(null);
+    expect(lidarHeight({ p50: 1, p90: 2, roofPoints: 500, area: 400 })).toBe(null);
+    expect(lidarHeight(null)).toBe(null);
+  });
+
+  it("keys the LiDAR records by OSM id and keeps the largest piece", () => {
+    expect(lidarByOsmId({ w1: { area: 5 }, "w2-0": { area: 10 }, "w2-1": { area: 30 } })).toEqual({ w1: { area: 5 }, w2: { area: 30 } });
   });
 
   it("sorts ways into street, sidewalk, path, and trail, and skips the rest", () => {
@@ -226,7 +248,9 @@ describe("build-block committed BeltLine level (#57)", () => {
 describe("build-block offline run", () => {
   it("rebuilds the committed level from the cached fetch with no network, byte for byte", () => {
     const out = mkdtempSync(join(tmpdir(), "build-block-"));
-    cpSync(resolve(ROOT, "levels/beltline-eastside/raw"), join(out, "raw"), { recursive: true });
+    // The LiDAR points (raw/lidar/, git-ignored, 56 MB) are not an input:
+    // raw/lidar-heights.json is.
+    cpSync(resolve(ROOT, "levels/beltline-eastside/raw"), join(out, "raw"), { recursive: true, filter: (src) => !/[\\/]raw[\\/]lidar([\\/]|$)/.test(src) });
     // The height overrides (with sources) are an input too. The building
     // source file (data/buildings/beltline-eastside.json, #88) comes from the
     // repository by the level name, and gives every height.

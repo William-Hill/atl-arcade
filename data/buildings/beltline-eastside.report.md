@@ -6,12 +6,13 @@ Written by `scripts/building-sources.mjs`. 1042 buildings.
 
 | Source | Buildings |
 | --- | ---: |
-| default | 110 |
+| default | 86 |
 | height | 5 |
-| levels | 14 |
+| lidar | 697 |
+| lidar-capped | 27 |
 | override | 7 |
-| overture | 808 |
-| overture-capped | 98 |
+| overture | 169 |
+| overture-capped | 51 |
 
 ## Floors
 

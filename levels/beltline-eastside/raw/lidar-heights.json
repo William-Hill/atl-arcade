@@ -1,0 +1,8552 @@
+{
+ "source": "USGS 3DEP, Georgia statewide 2018 LiDAR (GA_Statewide_B2_2018, GA_Statewide_B3_2018), public domain",
+ "method": "single-return class 6 points inside the footprint shrunk 0.75 m; ground = median class 2 z in a 1.5 to 8.0 m ring; heights are percentiles of roof z - ground; at least 12 roof points",
+ "buildings": 1042,
+ "measured": 764,
+ "heights": {
+  "r11742136": {
+   "roofPoints": 20609,
+   "groundPoints": 3233,
+   "area": 9307.2,
+   "ground": 310.71,
+   "p50": 8.0,
+   "p90": 8.56,
+   "p99": 8.84
+  },
+  "r14030318": {
+   "roofPoints": 37061,
+   "groundPoints": 5660,
+   "area": 10682.0,
+   "ground": 289.36,
+   "p50": 17.56,
+   "p90": 20.85,
+   "p99": 21.1
+  },
+  "r15445924": {
+   "roofPoints": 4460,
+   "groundPoints": 4628,
+   "area": 6169.5,
+   "ground": 288.87,
+   "p50": 6.03,
+   "p90": 7.4,
+   "p99": 7.71
+  },
+  "r2533787": {
+   "roofPoints": 13594,
+   "groundPoints": 3565,
+   "area": 7521.1,
+   "ground": 283.68,
+   "p50": 18.07,
+   "p90": 18.31,
+   "p99": 23.43
+  },
+  "r4314932": {
+   "roofPoints": 12372,
+   "groundPoints": 3010,
+   "area": 6668.3,
+   "ground": 295.08,
+   "p50": 14.74,
+   "p90": 16.15,
+   "p99": 16.94
+  },
+  "r4726171": {
+   "roofPoints": 11216,
+   "groundPoints": 2032,
+   "area": 2384.1,
+   "ground": 280.36,
+   "p50": 17.93,
+   "p90": 18.07,
+   "p99": 18.43
+  },
+  "r5413435": {
+   "roofPoints": 7224,
+   "groundPoints": 2418,
+   "area": 4573.1,
+   "ground": 300.68,
+   "p50": 7.52,
+   "p90": 9.15,
+   "p99": 9.79
+  },
+  "w1139043884": {
+   "roofPoints": 0,
+   "groundPoints": 3598,
+   "area": 6252.9,
+   "ground": 274.9
+  },
+  "w1139043886": {
+   "roofPoints": 0,
+   "groundPoints": 2634,
+   "area": 4684.6,
+   "ground": 278.34
+  },
+  "w1139043887": {
+   "roofPoints": 484,
+   "groundPoints": 1120,
+   "area": 2154.9,
+   "ground": 284.45,
+   "p50": 4.61,
+   "p90": 4.71,
+   "p99": 4.99
+  },
+  "w1139043888": {
+   "roofPoints": 0,
+   "groundPoints": 1735,
+   "area": 2159.9,
+   "ground": 282.69
+  },
+  "w1139043889": {
+   "roofPoints": 2519,
+   "groundPoints": 837,
+   "area": 2166.1,
+   "ground": 288.94,
+   "p50": 5.25,
+   "p90": 6.65,
+   "p99": 7.08
+  },
+  "w1139043893": {
+   "roofPoints": 0,
+   "groundPoints": 1390,
+   "area": 1238.0,
+   "ground": 301.83
+  },
+  "w1229184073": {
+   "roofPoints": 255,
+   "groundPoints": 1017,
+   "area": 752.0,
+   "ground": 284.08,
+   "p50": 4.89,
+   "p90": 4.96,
+   "p99": 6.46
+  },
+  "w1229184074": {
+   "roofPoints": 0,
+   "groundPoints": 2215,
+   "area": 2750.2,
+   "ground": 278.22
+  },
+  "w1383647772": {
+   "roofPoints": 0,
+   "groundPoints": 410,
+   "area": 124.7,
+   "ground": 301.11
+  },
+  "w1383647773": {
+   "roofPoints": 139,
+   "groundPoints": 340,
+   "area": 119.3,
+   "ground": 290.05,
+   "p50": 10.37,
+   "p90": 10.4,
+   "p99": 10.46
+  },
+  "w1383647774": {
+   "roofPoints": 110,
+   "groundPoints": 586,
+   "area": 96.8,
+   "ground": 290.0,
+   "p50": 10.27,
+   "p90": 10.31,
+   "p99": 10.32
+  },
+  "w1383647775": {
+   "roofPoints": 159,
+   "groundPoints": 460,
+   "area": 133.5,
+   "ground": 291.93,
+   "p50": 11.02,
+   "p90": 11.05,
+   "p99": 11.12
+  },
+  "w1383647776": {
+   "roofPoints": 106,
+   "groundPoints": 376,
+   "area": 184.6,
+   "ground": 300.49,
+   "p50": 8.88,
+   "p90": 9.38,
+   "p99": 9.91
+  },
+  "w1396654871": {
+   "roofPoints": 0,
+   "groundPoints": 1791,
+   "area": 3912.9,
+   "ground": 309.99
+  },
+  "w1493295097": {
+   "roofPoints": 91,
+   "groundPoints": 305,
+   "area": 115.9,
+   "ground": 295.56,
+   "p50": 3.45,
+   "p90": 28.84,
+   "p99": 29.33
+  },
+  "w1493295098": {
+   "roofPoints": 117,
+   "groundPoints": 422,
+   "area": 101.6,
+   "ground": 295.99,
+   "p50": 3.0,
+   "p90": 3.02,
+   "p99": 3.04
+  },
+  "w1493295099": {
+   "roofPoints": 0,
+   "groundPoints": 411,
+   "area": 119.8,
+   "ground": 295.55
+  },
+  "w1493295100": {
+   "roofPoints": 0,
+   "groundPoints": 526,
+   "area": 140.5,
+   "ground": 294.94
+  },
+  "w1493295101": {
+   "roofPoints": 0,
+   "groundPoints": 259,
+   "area": 74.4,
+   "ground": 295.24
+  },
+  "w182531217": {
+   "roofPoints": 14045,
+   "groundPoints": 2872,
+   "area": 4029.9,
+   "ground": 278.64,
+   "p50": 18.27,
+   "p90": 22.2,
+   "p99": 30.46
+  },
+  "w182531230": {
+   "roofPoints": 7561,
+   "groundPoints": 81,
+   "area": 3932.0,
+   "ground": 283.69,
+   "p50": 14.09,
+   "p90": 14.21,
+   "p99": 17.83
+  },
+  "w182533620": {
+   "roofPoints": 13414,
+   "groundPoints": 5114,
+   "area": 6853.9,
+   "ground": 290.31,
+   "p50": 16.16,
+   "p90": 18.84,
+   "p99": 20.32
+  },
+  "w182533621": {
+   "roofPoints": 1125,
+   "groundPoints": 588,
+   "area": 666.8,
+   "ground": 286.85,
+   "p50": 14.25,
+   "p90": 14.37,
+   "p99": 15.64
+  },
+  "w182533622": {
+   "roofPoints": 11226,
+   "groundPoints": 2415,
+   "area": 5697.1,
+   "ground": 290.44,
+   "p50": 22.45,
+   "p90": 22.7,
+   "p99": 22.77
+  },
+  "w182533623": {
+   "roofPoints": 1083,
+   "groundPoints": 851,
+   "area": 653.0,
+   "ground": 286.8,
+   "p50": 14.27,
+   "p90": 14.38,
+   "p99": 14.56
+  },
+  "w182533624": {
+   "roofPoints": 1025,
+   "groundPoints": 1002,
+   "area": 686.5,
+   "ground": 287.13,
+   "p50": 14.69,
+   "p90": 14.81,
+   "p99": 14.99
+  },
+  "w182533626": {
+   "roofPoints": 5567,
+   "groundPoints": 579,
+   "area": 3159.4,
+   "ground": 294.06,
+   "p50": 9.96,
+   "p90": 10.06,
+   "p99": 13.08
+  },
+  "w182533627": {
+   "roofPoints": 4226,
+   "groundPoints": 928,
+   "area": 2572.1,
+   "ground": 290.31,
+   "p50": 11.98,
+   "p90": 13.15,
+   "p99": 14.87
+  },
+  "w182533628": {
+   "roofPoints": 9773,
+   "groundPoints": 1250,
+   "area": 6239.3,
+   "ground": 292.44,
+   "p50": 7.81,
+   "p90": 13.27,
+   "p99": 13.48
+  },
+  "w182544252": {
+   "roofPoints": 7274,
+   "groundPoints": 1524,
+   "area": 5093.6,
+   "ground": 297.14,
+   "p50": 10.33,
+   "p90": 11.51,
+   "p99": 12.34
+  },
+  "w182544256": {
+   "roofPoints": 1871,
+   "groundPoints": 702,
+   "area": 1011.8,
+   "ground": 282.86,
+   "p50": 11.91,
+   "p90": 12.36,
+   "p99": 13.8
+  },
+  "w182544489": {
+   "roofPoints": 3482,
+   "groundPoints": 1025,
+   "area": 2055.3,
+   "ground": 294.91,
+   "p50": 13.04,
+   "p90": 14.48,
+   "p99": 15.3
+  },
+  "w182544491": {
+   "roofPoints": 1936,
+   "groundPoints": 1290,
+   "area": 975.4,
+   "ground": 292.39,
+   "p50": 6.28,
+   "p90": 6.79,
+   "p99": 6.88
+  },
+  "w182544492": {
+   "roofPoints": 11497,
+   "groundPoints": 2855,
+   "area": 5585.2,
+   "ground": 295.93,
+   "p50": 8.12,
+   "p90": 8.2,
+   "p99": 8.3
+  },
+  "w182617875": {
+   "roofPoints": 5445,
+   "groundPoints": 951,
+   "area": 2742.9,
+   "ground": 290.69,
+   "p50": 7.3,
+   "p90": 7.58,
+   "p99": 7.64
+  },
+  "w182617891": {
+   "roofPoints": 21963,
+   "groundPoints": 5118,
+   "area": 12091.2,
+   "ground": 296.89,
+   "p50": 14.75,
+   "p90": 18.5,
+   "p99": 19.4
+  },
+  "w183666531": {
+   "roofPoints": 26863,
+   "groundPoints": 5110,
+   "area": 6538.3,
+   "ground": 278.41,
+   "p50": 5.89,
+   "p90": 6.16,
+   "p99": 10.56
+  },
+  "w184803195": {
+   "roofPoints": 67431,
+   "groundPoints": 6640,
+   "area": 17681.3,
+   "ground": 274.8,
+   "p50": 35.04,
+   "p90": 42.58,
+   "p99": 62.27
+  },
+  "w184819882": {
+   "roofPoints": 5062,
+   "groundPoints": 1010,
+   "area": 3449.9,
+   "ground": 281.04,
+   "p50": 7.37,
+   "p90": 8.37,
+   "p99": 8.56
+  },
+  "w185605331": {
+   "roofPoints": 5786,
+   "groundPoints": 1246,
+   "area": 3075.7,
+   "ground": 291.07,
+   "p50": 16.34,
+   "p90": 16.73,
+   "p99": 20.57
+  },
+  "w198393521": {
+   "roofPoints": 3681,
+   "groundPoints": 1251,
+   "area": 2042.0,
+   "ground": 289.84,
+   "p50": 6.13,
+   "p90": 7.6,
+   "p99": 7.64
+  },
+  "w208126200": {
+   "roofPoints": 6647,
+   "groundPoints": 3871,
+   "area": 1076.7,
+   "ground": 282.41,
+   "p50": 5.62,
+   "p90": 5.67,
+   "p99": 7.18
+  },
+  "w208127207": {
+   "roofPoints": 3566,
+   "groundPoints": 1702,
+   "area": 829.1,
+   "ground": 287.21,
+   "p50": 17.12,
+   "p90": 20.02,
+   "p99": 21.9
+  },
+  "w208127208": {
+   "roofPoints": 2849,
+   "groundPoints": 2405,
+   "area": 572.9,
+   "ground": 283.66,
+   "p50": 3.59,
+   "p90": 5.57,
+   "p99": 5.78
+  },
+  "w208127210": {
+   "roofPoints": 1117,
+   "groundPoints": 1044,
+   "area": 310.6,
+   "ground": 296.36,
+   "p50": 4.56,
+   "p90": 4.6,
+   "p99": 5.78
+  },
+  "w208127363": {
+   "roofPoints": 4491,
+   "groundPoints": 2349,
+   "area": 982.7,
+   "ground": 298.71,
+   "p50": 5.26,
+   "p90": 6.85,
+   "p99": 14.2
+  },
+  "w208127365": {
+   "roofPoints": 1169,
+   "groundPoints": 1211,
+   "area": 263.6,
+   "ground": 296.64,
+   "p50": 11.63,
+   "p90": 12.92,
+   "p99": 13.2
+  },
+  "w208170013": {
+   "roofPoints": 4850,
+   "groundPoints": 1802,
+   "area": 1487.8,
+   "ground": 277.38,
+   "p50": 15.32,
+   "p90": 16.9,
+   "p99": 20.96
+  },
+  "w208170014": {
+   "roofPoints": 3154,
+   "groundPoints": 1463,
+   "area": 985.4,
+   "ground": 278.87,
+   "p50": 5.39,
+   "p90": 5.69,
+   "p99": 7.18
+  },
+  "w208170018": {
+   "roofPoints": 5550,
+   "groundPoints": 2014,
+   "area": 1704.9,
+   "ground": 277.8,
+   "p50": 11.41,
+   "p90": 12.22,
+   "p99": 14.06
+  },
+  "w208783341": {
+   "roofPoints": 1940,
+   "groundPoints": 1482,
+   "area": 308.0,
+   "ground": 297.41,
+   "p50": 7.46,
+   "p90": 8.94,
+   "p99": 9.19
+  },
+  "w210903778": {
+   "roofPoints": 1139,
+   "groundPoints": 456,
+   "area": 209.8,
+   "ground": 311.88,
+   "p50": 4.79,
+   "p90": 4.96,
+   "p99": 5.04
+  },
+  "w210903779": {
+   "roofPoints": 13135,
+   "groundPoints": 2283,
+   "area": 3086.7,
+   "ground": 310.89,
+   "p50": 6.18,
+   "p90": 7.17,
+   "p99": 8.23
+  },
+  "w210903780": {
+   "roofPoints": 16756,
+   "groundPoints": 4752,
+   "area": 4381.2,
+   "ground": 304.75,
+   "p50": 16.32,
+   "p90": 18.04,
+   "p99": 19.71
+  },
+  "w210903781": {
+   "roofPoints": 8564,
+   "groundPoints": 100,
+   "area": 2981.7,
+   "ground": 304.05,
+   "p50": 9.92,
+   "p90": 11.24,
+   "p99": 17.12
+  },
+  "w210903782": {
+   "roofPoints": 833,
+   "groundPoints": 1238,
+   "area": 172.3,
+   "ground": 312.32,
+   "p50": 4.29,
+   "p90": 4.46,
+   "p99": 4.56
+  },
+  "w210903783": {
+   "roofPoints": 7550,
+   "groundPoints": 50,
+   "area": 2476.9,
+   "ground": 306.25,
+   "p50": 15.87,
+   "p90": 17.38,
+   "p99": 19.8
+  },
+  "w210903784": {
+   "roofPoints": 23819,
+   "groundPoints": 4811,
+   "area": 5928.0,
+   "ground": 307.32,
+   "p50": 16.49,
+   "p90": 20.08,
+   "p99": 21.92
+  },
+  "w210903785": {
+   "roofPoints": 737,
+   "groundPoints": 862,
+   "area": 156.0,
+   "ground": 311.85,
+   "p50": 4.84,
+   "p90": 5.14,
+   "p99": 5.33
+  },
+  "w210903816": {
+   "roofPoints": 3960,
+   "groundPoints": 1658,
+   "area": 2952.1,
+   "ground": 297.65,
+   "p50": 17.75,
+   "p90": 18.43,
+   "p99": 19.58
+  },
+  "w210903817": {
+   "roofPoints": 569,
+   "groundPoints": 1151,
+   "area": 359.4,
+   "ground": 292.35,
+   "p50": 5.59,
+   "p90": 5.71,
+   "p99": 6.15
+  },
+  "w210903819": {
+   "roofPoints": 13079,
+   "groundPoints": 2669,
+   "area": 2679.1,
+   "ground": 294.16,
+   "p50": 17.2,
+   "p90": 17.4,
+   "p99": 18.84
+  },
+  "w211025179": {
+   "roofPoints": 1441,
+   "groundPoints": 918,
+   "area": 843.9,
+   "ground": 291.42,
+   "p50": 6.78,
+   "p90": 7.01,
+   "p99": 7.09
+  },
+  "w211025181": {
+   "roofPoints": 943,
+   "groundPoints": 865,
+   "area": 527.7,
+   "ground": 291.83,
+   "p50": 4.28,
+   "p90": 4.66,
+   "p99": 4.88
+  },
+  "w211025188": {
+   "roofPoints": 1101,
+   "groundPoints": 769,
+   "area": 712.6,
+   "ground": 291.08,
+   "p50": 7.32,
+   "p90": 7.41,
+   "p99": 7.46
+  },
+  "w211061295": {
+   "roofPoints": 1468,
+   "groundPoints": 703,
+   "area": 780.3,
+   "ground": 302.91,
+   "p50": 5.97,
+   "p90": 6.08,
+   "p99": 6.14
+  },
+  "w211061296": {
+   "roofPoints": 1344,
+   "groundPoints": 1001,
+   "area": 769.3,
+   "ground": 304.24,
+   "p50": 4.23,
+   "p90": 4.5,
+   "p99": 4.63
+  },
+  "w211061297": {
+   "roofPoints": 15496,
+   "groundPoints": 3811,
+   "area": 7509.7,
+   "ground": 303.86,
+   "p50": 6.74,
+   "p90": 7.65,
+   "p99": 8.0
+  },
+  "w211061298": {
+   "roofPoints": 1795,
+   "groundPoints": 510,
+   "area": 1067.3,
+   "ground": 297.24,
+   "p50": 8.91,
+   "p90": 9.23,
+   "p99": 9.34
+  },
+  "w211061299": {
+   "roofPoints": 17034,
+   "groundPoints": 3160,
+   "area": 3617.9,
+   "ground": 299.74,
+   "p50": 6.76,
+   "p90": 7.16,
+   "p99": 11.39
+  },
+  "w211061636": {
+   "roofPoints": 5112,
+   "groundPoints": 1558,
+   "area": 1105.2,
+   "ground": 304.54,
+   "p50": 4.42,
+   "p90": 5.36,
+   "p99": 8.69
+  },
+  "w211061637": {
+   "roofPoints": 462,
+   "groundPoints": 368,
+   "area": 354.5,
+   "ground": 304.42,
+   "p50": 4.97,
+   "p90": 5.14,
+   "p99": 5.19
+  },
+  "w211061638": {
+   "roofPoints": 6197,
+   "groundPoints": 2051,
+   "area": 1651.2,
+   "ground": 302.97,
+   "p50": 7.23,
+   "p90": 7.28,
+   "p99": 7.4
+  },
+  "w211061639": {
+   "roofPoints": 533,
+   "groundPoints": 409,
+   "area": 496.2,
+   "ground": 304.62,
+   "p50": 4.82,
+   "p90": 5.07,
+   "p99": 6.32
+  },
+  "w211061640": {
+   "roofPoints": 6240,
+   "groundPoints": 850,
+   "area": 741.3,
+   "ground": 302.43,
+   "p50": 6.62,
+   "p90": 6.88,
+   "p99": 10.26
+  },
+  "w211061641": {
+   "roofPoints": 370,
+   "groundPoints": 231,
+   "area": 665.4,
+   "ground": 302.67,
+   "p50": 6.13,
+   "p90": 6.39,
+   "p99": 10.33
+  },
+  "w211061642": {
+   "roofPoints": 5334,
+   "groundPoints": 934,
+   "area": 919.7,
+   "ground": 305.66,
+   "p50": 3.35,
+   "p90": 3.85,
+   "p99": 7.39
+  },
+  "w211061643": {
+   "roofPoints": 657,
+   "groundPoints": 614,
+   "area": 458.7,
+   "ground": 304.74,
+   "p50": 7.48,
+   "p90": 8.08,
+   "p99": 8.19
+  },
+  "w211061644": {
+   "roofPoints": 494,
+   "groundPoints": 393,
+   "area": 490.4,
+   "ground": 307.61,
+   "p50": 7.0,
+   "p90": 7.13,
+   "p99": 7.18
+  },
+  "w211061955": {
+   "roofPoints": 1139,
+   "groundPoints": 884,
+   "area": 590.0,
+   "ground": 296.96,
+   "p50": 7.96,
+   "p90": 9.08,
+   "p99": 9.33
+  },
+  "w211061956": {
+   "roofPoints": 7489,
+   "groundPoints": 1255,
+   "area": 1384.7,
+   "ground": 295.86,
+   "p50": 14.49,
+   "p90": 14.69,
+   "p99": 14.86
+  },
+  "w211061957": {
+   "roofPoints": 760,
+   "groundPoints": 486,
+   "area": 437.6,
+   "ground": 296.7,
+   "p50": 6.53,
+   "p90": 7.2,
+   "p99": 7.29
+  },
+  "w211062131": {
+   "roofPoints": 1539,
+   "groundPoints": 1375,
+   "area": 422.8,
+   "ground": 297.12,
+   "p50": 11.18,
+   "p90": 11.62,
+   "p99": 12.61
+  },
+  "w211062132": {
+   "roofPoints": 1492,
+   "groundPoints": 894,
+   "area": 544.5,
+   "ground": 297.58,
+   "p50": 11.18,
+   "p90": 11.6,
+   "p99": 12.78
+  },
+  "w211062134": {
+   "roofPoints": 5389,
+   "groundPoints": 1595,
+   "area": 1406.9,
+   "ground": 296.8,
+   "p50": 9.81,
+   "p90": 13.03,
+   "p99": 13.12
+  },
+  "w211062135": {
+   "roofPoints": 29862,
+   "groundPoints": 3233,
+   "area": 8499.1,
+   "ground": 297.65,
+   "p50": 15.39,
+   "p90": 16.86,
+   "p99": 18.66
+  },
+  "w211062136": {
+   "roofPoints": 1818,
+   "groundPoints": 936,
+   "area": 547.8,
+   "ground": 297.58,
+   "p50": 11.81,
+   "p90": 12.03,
+   "p99": 12.25
+  },
+  "w211062137": {
+   "roofPoints": 1809,
+   "groundPoints": 1041,
+   "area": 565.0,
+   "ground": 297.3,
+   "p50": 11.4,
+   "p90": 11.81,
+   "p99": 12.9
+  },
+  "w211062138": {
+   "roofPoints": 1348,
+   "groundPoints": 1062,
+   "area": 294.5,
+   "ground": 297.25,
+   "p50": 11.13,
+   "p90": 11.32,
+   "p99": 12.7
+  },
+  "w211062139": {
+   "roofPoints": 1756,
+   "groundPoints": 918,
+   "area": 564.9,
+   "ground": 297.61,
+   "p50": 11.76,
+   "p90": 11.92,
+   "p99": 12.21
+  },
+  "w211062140": {
+   "roofPoints": 982,
+   "groundPoints": 662,
+   "area": 250.9,
+   "ground": 294.08,
+   "p50": 10.7,
+   "p90": 11.99,
+   "p99": 12.06
+  },
+  "w211062176": {
+   "roofPoints": 927,
+   "groundPoints": 399,
+   "area": 276.7,
+   "ground": 293.49,
+   "p50": 11.59,
+   "p90": 11.74,
+   "p99": 13.1
+  },
+  "w211062177": {
+   "roofPoints": 1767,
+   "groundPoints": 632,
+   "area": 531.9,
+   "ground": 293.23,
+   "p50": 13.49,
+   "p90": 13.89,
+   "p99": 14.0
+  },
+  "w211062178": {
+   "roofPoints": 801,
+   "groundPoints": 397,
+   "area": 241.0,
+   "ground": 293.34,
+   "p50": 10.91,
+   "p90": 11.08,
+   "p99": 12.9
+  },
+  "w211062180": {
+   "roofPoints": 1622,
+   "groundPoints": 556,
+   "area": 431.0,
+   "ground": 293.55,
+   "p50": 10.75,
+   "p90": 12.49,
+   "p99": 12.69
+  },
+  "w211062181": {
+   "roofPoints": 11573,
+   "groundPoints": 730,
+   "area": 3271.2,
+   "ground": 297.95,
+   "p50": 10.5,
+   "p90": 11.53,
+   "p99": 14.46
+  },
+  "w211062183": {
+   "roofPoints": 214,
+   "groundPoints": 477,
+   "area": 100.4,
+   "ground": 293.69,
+   "p50": 12.96,
+   "p90": 13.4,
+   "p99": 13.51
+  },
+  "w211062184": {
+   "roofPoints": 1019,
+   "groundPoints": 430,
+   "area": 262.9,
+   "ground": 293.88,
+   "p50": 11.71,
+   "p90": 13.1,
+   "p99": 13.17
+  },
+  "w211062185": {
+   "roofPoints": 1642,
+   "groundPoints": 582,
+   "area": 413.1,
+   "ground": 293.74,
+   "p50": 11.02,
+   "p90": 12.31,
+   "p99": 12.38
+  },
+  "w211062188": {
+   "roofPoints": 8258,
+   "groundPoints": 2049,
+   "area": 1161.0,
+   "ground": 298.98,
+   "p50": 14.17,
+   "p90": 14.38,
+   "p99": 20.21
+  },
+  "w211062614": {
+   "roofPoints": 1266,
+   "groundPoints": 1438,
+   "area": 1053.6,
+   "ground": 291.46,
+   "p50": 10.98,
+   "p90": 11.05,
+   "p99": 11.12
+  },
+  "w211062615": {
+   "roofPoints": 1682,
+   "groundPoints": 1361,
+   "area": 1676.4,
+   "ground": 292.23,
+   "p50": 14.37,
+   "p90": 14.45,
+   "p99": 18.16
+  },
+  "w211747262": {
+   "roofPoints": 316,
+   "groundPoints": 584,
+   "area": 192.1,
+   "ground": 290.15,
+   "p50": 5.81,
+   "p90": 6.14,
+   "p99": 7.26
+  },
+  "w211747264": {
+   "roofPoints": 11831,
+   "groundPoints": 1911,
+   "area": 6220.4,
+   "ground": 290.28,
+   "p50": 8.23,
+   "p90": 9.14,
+   "p99": 13.29
+  },
+  "w211747265": {
+   "roofPoints": 3852,
+   "groundPoints": 424,
+   "area": 1938.3,
+   "ground": 291.08,
+   "p50": 7.46,
+   "p90": 7.48,
+   "p99": 7.63
+  },
+  "w211750740": {
+   "roofPoints": 1749,
+   "groundPoints": 963,
+   "area": 1293.9,
+   "ground": 299.03,
+   "p50": 19.4,
+   "p90": 19.48,
+   "p99": 22.67
+  },
+  "w217800860": {
+   "roofPoints": 740,
+   "groundPoints": 572,
+   "area": 247.4,
+   "ground": 295.37,
+   "p50": 11.25,
+   "p90": 11.71,
+   "p99": 11.85
+  },
+  "w217800861": {
+   "roofPoints": 559,
+   "groundPoints": 588,
+   "area": 352.5,
+   "ground": 293.68,
+   "p50": 3.97,
+   "p90": 4.04,
+   "p99": 4.24
+  },
+  "w217800863": {
+   "roofPoints": 702,
+   "groundPoints": 609,
+   "area": 238.4,
+   "ground": 292.88,
+   "p50": 13.72,
+   "p90": 14.16,
+   "p99": 14.26
+  },
+  "w217800864": {
+   "roofPoints": 119,
+   "groundPoints": 310,
+   "area": 102.5,
+   "ground": 296.08,
+   "p50": 4.89,
+   "p90": 4.92,
+   "p99": 4.96
+  },
+  "w217800865": {
+   "roofPoints": 227,
+   "groundPoints": 380,
+   "area": 106.0,
+   "ground": 293.1,
+   "p50": 13.56,
+   "p90": 13.97,
+   "p99": 14.34
+  },
+  "w217800866": {
+   "roofPoints": 686,
+   "groundPoints": 444,
+   "area": 208.3,
+   "ground": 292.9,
+   "p50": 13.79,
+   "p90": 14.19,
+   "p99": 14.28
+  },
+  "w217800867": {
+   "roofPoints": 317,
+   "groundPoints": 398,
+   "area": 183.8,
+   "ground": 296.78,
+   "p50": 4.1,
+   "p90": 4.44,
+   "p99": 4.57
+  },
+  "w217800868": {
+   "roofPoints": 879,
+   "groundPoints": 306,
+   "area": 523.3,
+   "ground": 294.3,
+   "p50": 8.16,
+   "p90": 8.37,
+   "p99": 18.11
+  },
+  "w217800872": {
+   "roofPoints": 1017,
+   "groundPoints": 652,
+   "area": 334.9,
+   "ground": 292.81,
+   "p50": 10.74,
+   "p90": 12.14,
+   "p99": 12.26
+  },
+  "w217801487": {
+   "roofPoints": 477,
+   "groundPoints": 952,
+   "area": 152.7,
+   "ground": 289.36,
+   "p50": 10.15,
+   "p90": 10.56,
+   "p99": 10.64
+  },
+  "w217803182": {
+   "roofPoints": 1168,
+   "groundPoints": 1007,
+   "area": 565.0,
+   "ground": 287.39,
+   "p50": 9.78,
+   "p90": 10.03,
+   "p99": 10.11
+  },
+  "w217803183": {
+   "roofPoints": 5101,
+   "groundPoints": 2490,
+   "area": 2004.0,
+   "ground": 287.42,
+   "p50": 5.25,
+   "p90": 6.97,
+   "p99": 7.8
+  },
+  "w217803184": {
+   "roofPoints": 2862,
+   "groundPoints": 1472,
+   "area": 1809.9,
+   "ground": 287.1,
+   "p50": 6.95,
+   "p90": 8.37,
+   "p99": 8.4
+  },
+  "w217803876": {
+   "roofPoints": 0,
+   "groundPoints": 1765,
+   "area": 1604.3,
+   "ground": 295.83
+  },
+  "w217821331": {
+   "roofPoints": 102,
+   "groundPoints": 286,
+   "area": 288.6,
+   "ground": 298.08,
+   "p50": 13.62,
+   "p90": 13.75,
+   "p99": 13.98
+  },
+  "w217821332": {
+   "roofPoints": 789,
+   "groundPoints": 726,
+   "area": 519.2,
+   "ground": 294.32,
+   "p50": 4.83,
+   "p90": 4.88,
+   "p99": 16.3
+  },
+  "w217821334": {
+   "roofPoints": 2882,
+   "groundPoints": 1068,
+   "area": 1715.4,
+   "ground": 294.3,
+   "p50": 6.42,
+   "p90": 6.82,
+   "p99": 6.93
+  },
+  "w217822694": {
+   "roofPoints": 240,
+   "groundPoints": 962,
+   "area": 541.1,
+   "ground": 315.21,
+   "p50": 1.88,
+   "p90": 2.07,
+   "p99": 2.15
+  },
+  "w217822698": {
+   "roofPoints": 2139,
+   "groundPoints": 1444,
+   "area": 978.3,
+   "ground": 310.43,
+   "p50": 5.57,
+   "p90": 6.17,
+   "p99": 6.46
+  },
+  "w218662713": {
+   "roofPoints": 836,
+   "groundPoints": 624,
+   "area": 457.0,
+   "ground": 285.5,
+   "p50": 3.51,
+   "p90": 3.55,
+   "p99": 3.59
+  },
+  "w218662716": {
+   "roofPoints": 3227,
+   "groundPoints": 1257,
+   "area": 1787.6,
+   "ground": 294.68,
+   "p50": 11.65,
+   "p90": 12.09,
+   "p99": 13.09
+  },
+  "w218662721": {
+   "roofPoints": 1315,
+   "groundPoints": 1170,
+   "area": 855.9,
+   "ground": 291.09,
+   "p50": 4.97,
+   "p90": 5.83,
+   "p99": 6.1
+  },
+  "w218662722": {
+   "roofPoints": 311,
+   "groundPoints": 559,
+   "area": 206.3,
+   "ground": 291.88,
+   "p50": 13.59,
+   "p90": 13.66,
+   "p99": 13.69
+  },
+  "w218662876": {
+   "roofPoints": 569,
+   "groundPoints": 647,
+   "area": 334.4,
+   "ground": 283.89,
+   "p50": 10.71,
+   "p90": 11.25,
+   "p99": 11.38
+  },
+  "w242356693": {
+   "roofPoints": 306,
+   "groundPoints": 858,
+   "area": 127.8,
+   "ground": 282.39,
+   "p50": 4.47,
+   "p90": 4.62,
+   "p99": 5.46
+  },
+  "w269868004": {
+   "roofPoints": 0,
+   "groundPoints": 492,
+   "area": 11.3,
+   "ground": 295.36
+  },
+  "w269868050": {
+   "roofPoints": 0,
+   "groundPoints": 364,
+   "area": 174.7,
+   "ground": 298.23
+  },
+  "w269868235": {
+   "roofPoints": 0,
+   "groundPoints": 543,
+   "area": 21.3,
+   "ground": 297.41
+  },
+  "w269868360": {
+   "roofPoints": 1189,
+   "groundPoints": 570,
+   "area": 343.1,
+   "ground": 289.99,
+   "p50": 9.69,
+   "p90": 11.54,
+   "p99": 12.25
+  },
+  "w269868410": {
+   "roofPoints": 1436,
+   "groundPoints": 834,
+   "area": 387.9,
+   "ground": 294.23,
+   "p50": 11.53,
+   "p90": 12.92,
+   "p99": 13.56
+  },
+  "w269868524": {
+   "roofPoints": 2691,
+   "groundPoints": 1045,
+   "area": 789.1,
+   "ground": 293.85,
+   "p50": 8.89,
+   "p90": 12.83,
+   "p99": 14.0
+  },
+  "w269991740": {
+   "roofPoints": 0,
+   "groundPoints": 187,
+   "area": 6.5,
+   "ground": 288.56
+  },
+  "w269991741": {
+   "roofPoints": 1284,
+   "groundPoints": 1009,
+   "area": 697.0,
+   "ground": 288.75,
+   "p50": 5.19,
+   "p90": 5.42,
+   "p99": 5.49
+  },
+  "w269991742": {
+   "roofPoints": 0,
+   "groundPoints": 162,
+   "area": 144.1,
+   "ground": 287.92
+  },
+  "w269991743": {
+   "roofPoints": 104,
+   "groundPoints": 230,
+   "area": 174.3,
+   "ground": 286.94,
+   "p50": 5.46,
+   "p90": 6.48,
+   "p99": 6.9
+  },
+  "w269991744": {
+   "roofPoints": 251,
+   "groundPoints": 279,
+   "area": 175.7,
+   "ground": 286.72,
+   "p50": 6.11,
+   "p90": 7.47,
+   "p99": 8.29
+  },
+  "w269991745": {
+   "roofPoints": 147,
+   "groundPoints": 275,
+   "area": 140.5,
+   "ground": 287.56,
+   "p50": 5.25,
+   "p90": 6.62,
+   "p99": 7.12
+  },
+  "w269991746": {
+   "roofPoints": 292,
+   "groundPoints": 427,
+   "area": 178.8,
+   "ground": 300.72,
+   "p50": 9.95,
+   "p90": 10.87,
+   "p99": 11.43
+  },
+  "w269991747": {
+   "roofPoints": 158,
+   "groundPoints": 345,
+   "area": 116.1,
+   "ground": 302.41,
+   "p50": 11.17,
+   "p90": 11.71,
+   "p99": 12.01
+  },
+  "w269991771": {
+   "roofPoints": 0,
+   "groundPoints": 147,
+   "area": 125.1,
+   "ground": 292.51
+  },
+  "w269991772": {
+   "roofPoints": 280,
+   "groundPoints": 552,
+   "area": 179.2,
+   "ground": 291.56,
+   "p50": 12.84,
+   "p90": 13.68,
+   "p99": 13.92
+  },
+  "w269991773": {
+   "roofPoints": 138,
+   "groundPoints": 287,
+   "area": 132.3,
+   "ground": 292.79,
+   "p50": 4.93,
+   "p90": 20.58,
+   "p99": 21.45
+  },
+  "w269991775": {
+   "roofPoints": 0,
+   "groundPoints": 149,
+   "area": 111.4,
+   "ground": 290.47
+  },
+  "w269991777": {
+   "roofPoints": 0,
+   "groundPoints": 228,
+   "area": 101.8,
+   "ground": 287.66
+  },
+  "w269991778": {
+   "roofPoints": 457,
+   "groundPoints": 549,
+   "area": 328.3,
+   "ground": 282.3,
+   "p50": 8.26,
+   "p90": 8.44,
+   "p99": 8.61
+  },
+  "w269991779": {
+   "roofPoints": 0,
+   "groundPoints": 311,
+   "area": 90.0,
+   "ground": 291.49
+  },
+  "w269991782": {
+   "roofPoints": 110,
+   "groundPoints": 401,
+   "area": 124.6,
+   "ground": 287.68,
+   "p50": 10.19,
+   "p90": 10.35,
+   "p99": 10.41
+  },
+  "w269991785": {
+   "roofPoints": 177,
+   "groundPoints": 202,
+   "area": 134.8,
+   "ground": 290.3,
+   "p50": 5.28,
+   "p90": 6.2,
+   "p99": 6.55
+  },
+  "w269991787": {
+   "roofPoints": 153,
+   "groundPoints": 320,
+   "area": 132.7,
+   "ground": 287.82,
+   "p50": 8.81,
+   "p90": 8.89,
+   "p99": 8.92
+  },
+  "w269991788": {
+   "roofPoints": 485,
+   "groundPoints": 565,
+   "area": 327.1,
+   "ground": 283.16,
+   "p50": 7.11,
+   "p90": 7.27,
+   "p99": 7.32
+  },
+  "w269991789": {
+   "roofPoints": 253,
+   "groundPoints": 225,
+   "area": 166.7,
+   "ground": 287.55,
+   "p50": 4.71,
+   "p90": 5.75,
+   "p99": 6.08
+  },
+  "w269991790": {
+   "roofPoints": 215,
+   "groundPoints": 452,
+   "area": 173.1,
+   "ground": 286.8,
+   "p50": 6.28,
+   "p90": 7.59,
+   "p99": 8.5
+  },
+  "w269991791": {
+   "roofPoints": 154,
+   "groundPoints": 335,
+   "area": 165.7,
+   "ground": 295.87,
+   "p50": 7.32,
+   "p90": 23.96,
+   "p99": 25.86
+  },
+  "w269991792": {
+   "roofPoints": 0,
+   "groundPoints": 80,
+   "area": 19.5,
+   "ground": 298.02
+  },
+  "w269991793": {
+   "roofPoints": 287,
+   "groundPoints": 187,
+   "area": 201.7,
+   "ground": 286.09,
+   "p50": 5.56,
+   "p90": 6.58,
+   "p99": 6.97
+  },
+  "w269991795": {
+   "roofPoints": 275,
+   "groundPoints": 204,
+   "area": 169.7,
+   "ground": 285.31,
+   "p50": 5.68,
+   "p90": 6.59,
+   "p99": 6.79
+  },
+  "w269991796": {
+   "roofPoints": 20,
+   "groundPoints": 94,
+   "area": 22.9,
+   "ground": 298.86,
+   "p50": 13.77,
+   "p90": 13.86,
+   "p99": 13.86
+  },
+  "w269991797": {
+   "roofPoints": 313,
+   "groundPoints": 371,
+   "area": 213.3,
+   "ground": 284.72,
+   "p50": 5.74,
+   "p90": 6.84,
+   "p99": 7.18
+  },
+  "w269991799": {
+   "roofPoints": 416,
+   "groundPoints": 540,
+   "area": 293.8,
+   "ground": 279.53,
+   "p50": 5.29,
+   "p90": 5.37,
+   "p99": 14.28
+  },
+  "w269991800": {
+   "roofPoints": 158,
+   "groundPoints": 986,
+   "area": 156.3,
+   "ground": 281.41,
+   "p50": 8.83,
+   "p90": 9.57,
+   "p99": 9.65
+  },
+  "w269991801": {
+   "roofPoints": 1080,
+   "groundPoints": 748,
+   "area": 689.0,
+   "ground": 291.68,
+   "p50": 6.09,
+   "p90": 6.23,
+   "p99": 6.29
+  },
+  "w269991802": {
+   "roofPoints": 0,
+   "groundPoints": 201,
+   "area": 208.1,
+   "ground": 300.75
+  },
+  "w269991805": {
+   "roofPoints": 2232,
+   "groundPoints": 1741,
+   "area": 568.7,
+   "ground": 285.93,
+   "p50": 10.69,
+   "p90": 12.73,
+   "p99": 14.46
+  },
+  "w269991806": {
+   "roofPoints": 597,
+   "groundPoints": 701,
+   "area": 176.3,
+   "ground": 297.31,
+   "p50": 7.96,
+   "p90": 9.02,
+   "p99": 9.52
+  },
+  "w269991807": {
+   "roofPoints": 762,
+   "groundPoints": 779,
+   "area": 244.2,
+   "ground": 286.04,
+   "p50": 7.45,
+   "p90": 8.44,
+   "p99": 8.66
+  },
+  "w269991808": {
+   "roofPoints": 650,
+   "groundPoints": 617,
+   "area": 221.3,
+   "ground": 296.18,
+   "p50": 8.89,
+   "p90": 10.23,
+   "p99": 10.85
+  },
+  "w269991809": {
+   "roofPoints": 0,
+   "groundPoints": 376,
+   "area": 253.4,
+   "ground": 300.11
+  },
+  "w269991810": {
+   "roofPoints": 484,
+   "groundPoints": 226,
+   "area": 214.3,
+   "ground": 290.27,
+   "p50": 5.85,
+   "p90": 20.62,
+   "p99": 26.96
+  },
+  "w269991811": {
+   "roofPoints": 633,
+   "groundPoints": 368,
+   "area": 176.9,
+   "ground": 287.33,
+   "p50": 6.3,
+   "p90": 7.25,
+   "p99": 7.72
+  },
+  "w269991814": {
+   "roofPoints": 0,
+   "groundPoints": 516,
+   "area": 335.5,
+   "ground": 297.52
+  },
+  "w269991815": {
+   "roofPoints": 441,
+   "groundPoints": 298,
+   "area": 157.5,
+   "ground": 289.72,
+   "p50": 6.17,
+   "p90": 6.94,
+   "p99": 14.31
+  },
+  "w269991816": {
+   "roofPoints": 869,
+   "groundPoints": 590,
+   "area": 320.1,
+   "ground": 293.78,
+   "p50": 9.74,
+   "p90": 10.98,
+   "p99": 15.04
+  },
+  "w269991817": {
+   "roofPoints": 653,
+   "groundPoints": 527,
+   "area": 196.8,
+   "ground": 287.27,
+   "p50": 7.81,
+   "p90": 9.5,
+   "p99": 9.82
+  },
+  "w269991818": {
+   "roofPoints": 0,
+   "groundPoints": 162,
+   "area": 143.5,
+   "ground": 296.45
+  },
+  "w269991820": {
+   "roofPoints": 250,
+   "groundPoints": 287,
+   "area": 151.0,
+   "ground": 287.76,
+   "p50": 15.12,
+   "p90": 19.79,
+   "p99": 21.03
+  },
+  "w269991821": {
+   "roofPoints": 548,
+   "groundPoints": 422,
+   "area": 159.7,
+   "ground": 286.86,
+   "p50": 5.6,
+   "p90": 6.68,
+   "p99": 7.15
+  },
+  "w269991822": {
+   "roofPoints": 409,
+   "groundPoints": 358,
+   "area": 164.1,
+   "ground": 287.74,
+   "p50": 5.82,
+   "p90": 24.53,
+   "p99": 26.38
+  },
+  "w269991823": {
+   "roofPoints": 730,
+   "groundPoints": 468,
+   "area": 251.1,
+   "ground": 294.83,
+   "p50": 10.78,
+   "p90": 12.23,
+   "p99": 12.88
+  },
+  "w269991824": {
+   "roofPoints": 528,
+   "groundPoints": 273,
+   "area": 165.0,
+   "ground": 286.14,
+   "p50": 4.56,
+   "p90": 4.94,
+   "p99": 5.07
+  },
+  "w269991825": {
+   "roofPoints": 0,
+   "groundPoints": 556,
+   "area": 433.4,
+   "ground": 292.85
+  },
+  "w269991826": {
+   "roofPoints": 202,
+   "groundPoints": 523,
+   "area": 198.6,
+   "ground": 286.75,
+   "p50": 5.45,
+   "p90": 6.93,
+   "p99": 21.42
+  },
+  "w269991827": {
+   "roofPoints": 67,
+   "groundPoints": 599,
+   "area": 209.4,
+   "ground": 293.62,
+   "p50": 9.76,
+   "p90": 10.13,
+   "p99": 10.23
+  },
+  "w269991828": {
+   "roofPoints": 370,
+   "groundPoints": 410,
+   "area": 157.1,
+   "ground": 285.84,
+   "p50": 5.69,
+   "p90": 6.79,
+   "p99": 7.17
+  },
+  "w269991829": {
+   "roofPoints": 472,
+   "groundPoints": 205,
+   "area": 210.1,
+   "ground": 285.6,
+   "p50": 5.28,
+   "p90": 16.01,
+   "p99": 22.52
+  },
+  "w269991831": {
+   "roofPoints": 0,
+   "groundPoints": 468,
+   "area": 212.7,
+   "ground": 292.66
+  },
+  "w269991832": {
+   "roofPoints": 0,
+   "groundPoints": 134,
+   "area": 185.1,
+   "ground": 290.01
+  },
+  "w269991833": {
+   "roofPoints": 226,
+   "groundPoints": 134,
+   "area": 145.8,
+   "ground": 284.49,
+   "p50": 23.06,
+   "p90": 24.66,
+   "p99": 24.98
+  },
+  "w269991834": {
+   "roofPoints": 0,
+   "groundPoints": 195,
+   "area": 193.4,
+   "ground": 285.54
+  },
+  "w269991835": {
+   "roofPoints": 0,
+   "groundPoints": 367,
+   "area": 227.5,
+   "ground": 291.28
+  },
+  "w269991836": {
+   "roofPoints": 0,
+   "groundPoints": 276,
+   "area": 146.4,
+   "ground": 287.15
+  },
+  "w269991837": {
+   "roofPoints": 0,
+   "groundPoints": 261,
+   "area": 192.4,
+   "ground": 282.93
+  },
+  "w269991838": {
+   "roofPoints": 0,
+   "groundPoints": 198,
+   "area": 165.8,
+   "ground": 283.25
+  },
+  "w269991839": {
+   "roofPoints": 0,
+   "groundPoints": 321,
+   "area": 180.5,
+   "ground": 289.47
+  },
+  "w269991840": {
+   "roofPoints": 0,
+   "groundPoints": 949,
+   "area": 363.5,
+   "ground": 278.06
+  },
+  "w269991842": {
+   "roofPoints": 0,
+   "groundPoints": 1279,
+   "area": 672.4,
+   "ground": 280.46
+  },
+  "w269991843": {
+   "roofPoints": 1052,
+   "groundPoints": 1549,
+   "area": 379.7,
+   "ground": 276.44,
+   "p50": 11.71,
+   "p90": 11.94,
+   "p99": 12.48
+  },
+  "w269991846": {
+   "roofPoints": 768,
+   "groundPoints": 414,
+   "area": 155.3,
+   "ground": 289.31,
+   "p50": 9.96,
+   "p90": 10.67,
+   "p99": 10.76
+  },
+  "w269991847": {
+   "roofPoints": 0,
+   "groundPoints": 501,
+   "area": 216.9,
+   "ground": 298.88
+  },
+  "w269991876": {
+   "roofPoints": 4127,
+   "groundPoints": 804,
+   "area": 929.4,
+   "ground": 293.71,
+   "p50": 12.67,
+   "p90": 12.83,
+   "p99": 16.7
+  },
+  "w269991878": {
+   "roofPoints": 45,
+   "groundPoints": 97,
+   "area": 124.8,
+   "ground": 294.9,
+   "p50": 25.92,
+   "p90": 26.47,
+   "p99": 26.67
+  },
+  "w269991879": {
+   "roofPoints": 492,
+   "groundPoints": 573,
+   "area": 285.4,
+   "ground": 299.14,
+   "p50": 7.0,
+   "p90": 8.09,
+   "p99": 8.32
+  },
+  "w269991880": {
+   "roofPoints": 0,
+   "groundPoints": 259,
+   "area": 189.5,
+   "ground": 299.65
+  },
+  "w269991881": {
+   "roofPoints": 0,
+   "groundPoints": 346,
+   "area": 143.4,
+   "ground": 288.7
+  },
+  "w269991882": {
+   "roofPoints": 441,
+   "groundPoints": 414,
+   "area": 253.0,
+   "ground": 299.59,
+   "p50": 5.95,
+   "p90": 6.94,
+   "p99": 7.11
+  },
+  "w269991883": {
+   "roofPoints": 13,
+   "groundPoints": 41,
+   "area": 33.2,
+   "ground": 291.26,
+   "p50": 37.76,
+   "p90": 37.91,
+   "p99": 37.97
+  },
+  "w269991884": {
+   "roofPoints": 0,
+   "groundPoints": 245,
+   "area": 113.5,
+   "ground": 289.0
+  },
+  "w269991887": {
+   "roofPoints": 0,
+   "groundPoints": 330,
+   "area": 126.2,
+   "ground": 290.97
+  },
+  "w269991888": {
+   "roofPoints": 397,
+   "groundPoints": 454,
+   "area": 226.0,
+   "ground": 299.47,
+   "p50": 5.15,
+   "p90": 7.34,
+   "p99": 7.85
+  },
+  "w269991891": {
+   "roofPoints": 326,
+   "groundPoints": 497,
+   "area": 185.0,
+   "ground": 297.86,
+   "p50": 8.94,
+   "p90": 9.95,
+   "p99": 10.33
+  },
+  "w269991892": {
+   "roofPoints": 99,
+   "groundPoints": 221,
+   "area": 146.2,
+   "ground": 289.43,
+   "p50": 5.79,
+   "p90": 6.73,
+   "p99": 6.85
+  },
+  "w269991894": {
+   "roofPoints": 191,
+   "groundPoints": 262,
+   "area": 203.2,
+   "ground": 292.75,
+   "p50": 6.69,
+   "p90": 7.45,
+   "p99": 7.58
+  },
+  "w269991895": {
+   "roofPoints": 171,
+   "groundPoints": 176,
+   "area": 123.3,
+   "ground": 290.96,
+   "p50": 4.34,
+   "p90": 4.61,
+   "p99": 14.17
+  },
+  "w269991899": {
+   "roofPoints": 115,
+   "groundPoints": 203,
+   "area": 139.2,
+   "ground": 291.2,
+   "p50": 5.35,
+   "p90": 5.55,
+   "p99": 5.96
+  },
+  "w269991900": {
+   "roofPoints": 0,
+   "groundPoints": 143,
+   "area": 257.3,
+   "ground": 295.5
+  },
+  "w269991901": {
+   "roofPoints": 82,
+   "groundPoints": 215,
+   "area": 152.2,
+   "ground": 293.4,
+   "p50": 8.49,
+   "p90": 9.17,
+   "p99": 9.25
+  },
+  "w269991905": {
+   "roofPoints": 202,
+   "groundPoints": 378,
+   "area": 154.9,
+   "ground": 294.82,
+   "p50": 4.47,
+   "p90": 5.34,
+   "p99": 5.71
+  },
+  "w269991916": {
+   "roofPoints": 30,
+   "groundPoints": 142,
+   "area": 198.2,
+   "ground": 297.49,
+   "p50": 16.19,
+   "p90": 21.72,
+   "p99": 21.81
+  },
+  "w269991917": {
+   "roofPoints": 754,
+   "groundPoints": 296,
+   "area": 410.8,
+   "ground": 302.37,
+   "p50": 8.34,
+   "p90": 9.56,
+   "p99": 9.93
+  },
+  "w269991921": {
+   "roofPoints": 2797,
+   "groundPoints": 1594,
+   "area": 621.0,
+   "ground": 297.62,
+   "p50": 12.57,
+   "p90": 14.17,
+   "p99": 14.69
+  },
+  "w269991928": {
+   "roofPoints": 0,
+   "groundPoints": 180,
+   "area": 213.6,
+   "ground": 293.05
+  },
+  "w269991938": {
+   "roofPoints": 0,
+   "groundPoints": 92,
+   "area": 16.3,
+   "ground": 291.75
+  },
+  "w269991948": {
+   "roofPoints": 0,
+   "groundPoints": 46,
+   "area": 18.9,
+   "ground": 293.25
+  },
+  "w269991950": {
+   "roofPoints": 33,
+   "groundPoints": 424,
+   "area": 51.3,
+   "ground": 293.67,
+   "p50": 5.87,
+   "p90": 6.29,
+   "p99": 6.33
+  },
+  "w269991952": {
+   "roofPoints": 0,
+   "groundPoints": 89,
+   "area": 33.0,
+   "ground": 292.98
+  },
+  "w269991978": {
+   "roofPoints": 630,
+   "groundPoints": 811,
+   "area": 166.0,
+   "ground": 288.07,
+   "p50": 10.22,
+   "p90": 11.11,
+   "p99": 11.38
+  },
+  "w269991983": {
+   "roofPoints": 0,
+   "groundPoints": 51,
+   "area": 18.9,
+   "ground": 293.93
+  },
+  "w269991988": {
+   "roofPoints": 317,
+   "groundPoints": 302,
+   "area": 177.0,
+   "ground": 298.44,
+   "p50": 10.97,
+   "p90": 11.91,
+   "p99": 12.38
+  },
+  "w269992003": {
+   "roofPoints": 161,
+   "groundPoints": 436,
+   "area": 60.0,
+   "ground": 294.66,
+   "p50": 4.72,
+   "p90": 5.55,
+   "p99": 5.61
+  },
+  "w269992005": {
+   "roofPoints": 733,
+   "groundPoints": 511,
+   "area": 170.9,
+   "ground": 288.56,
+   "p50": 10.01,
+   "p90": 10.91,
+   "p99": 11.21
+  },
+  "w269992014": {
+   "roofPoints": 0,
+   "groundPoints": 110,
+   "area": 17.4,
+   "ground": 288.98
+  },
+  "w269992016": {
+   "roofPoints": 39,
+   "groundPoints": 279,
+   "area": 70.2,
+   "ground": 293.56,
+   "p50": 25.05,
+   "p90": 25.23,
+   "p99": 25.41
+  },
+  "w269992019": {
+   "roofPoints": 250,
+   "groundPoints": 602,
+   "area": 175.9,
+   "ground": 294.07,
+   "p50": 8.5,
+   "p90": 8.98,
+   "p99": 9.1
+  },
+  "w269992024": {
+   "roofPoints": 361,
+   "groundPoints": 400,
+   "area": 203.9,
+   "ground": 290.48,
+   "p50": 10.36,
+   "p90": 10.51,
+   "p99": 10.54
+  },
+  "w269992025": {
+   "roofPoints": 0,
+   "groundPoints": 237,
+   "area": 41.7,
+   "ground": 297.04
+  },
+  "w269992027": {
+   "roofPoints": 0,
+   "groundPoints": 347,
+   "area": 197.6,
+   "ground": 300.11
+  },
+  "w269992032": {
+   "roofPoints": 2,
+   "groundPoints": 142,
+   "area": 20.1,
+   "ground": 288.38
+  },
+  "w269992037": {
+   "roofPoints": 68,
+   "groundPoints": 214,
+   "area": 51.4,
+   "ground": 293.25,
+   "p50": 3.91,
+   "p90": 4.23,
+   "p99": 4.29
+  },
+  "w269992041": {
+   "roofPoints": 0,
+   "groundPoints": 105,
+   "area": 28.2,
+   "ground": 292.0
+  },
+  "w269992042": {
+   "roofPoints": 69,
+   "groundPoints": 208,
+   "area": 61.0,
+   "ground": 286.9,
+   "p50": 3.65,
+   "p90": 4.2,
+   "p99": 4.28
+  },
+  "w269992043": {
+   "roofPoints": 9,
+   "groundPoints": 412,
+   "area": 35.6,
+   "ground": 294.45
+  },
+  "w269992045": {
+   "roofPoints": 2,
+   "groundPoints": 128,
+   "area": 44.1,
+   "ground": 288.57
+  },
+  "w269992046": {
+   "roofPoints": 0,
+   "groundPoints": 129,
+   "area": 25.9,
+   "ground": 284.84
+  },
+  "w269992047": {
+   "roofPoints": 0,
+   "groundPoints": 139,
+   "area": 21.7,
+   "ground": 288.64
+  },
+  "w269992050": {
+   "roofPoints": 0,
+   "groundPoints": 240,
+   "area": 33.8,
+   "ground": 278.93
+  },
+  "w269992055": {
+   "roofPoints": 0,
+   "groundPoints": 131,
+   "area": 95.1,
+   "ground": 287.13
+  },
+  "w269992057": {
+   "roofPoints": 35,
+   "groundPoints": 142,
+   "area": 67.7,
+   "ground": 293.62,
+   "p50": 18.92,
+   "p90": 22.4,
+   "p99": 22.54
+  },
+  "w269992058": {
+   "roofPoints": 19,
+   "groundPoints": 227,
+   "area": 67.9,
+   "ground": 294.23,
+   "p50": 30.27,
+   "p90": 30.53,
+   "p99": 30.61
+  },
+  "w269992060": {
+   "roofPoints": 12205,
+   "groundPoints": 2730,
+   "area": 2414.6,
+   "ground": 273.88,
+   "p50": 22.83,
+   "p90": 22.88,
+   "p99": 26.68
+  },
+  "w269992070": {
+   "roofPoints": 193,
+   "groundPoints": 229,
+   "area": 182.2,
+   "ground": 287.41,
+   "p50": 5.27,
+   "p90": 6.22,
+   "p99": 6.72
+  },
+  "w269992073": {
+   "roofPoints": 0,
+   "groundPoints": 242,
+   "area": 233.9,
+   "ground": 294.2
+  },
+  "w269992076": {
+   "roofPoints": 279,
+   "groundPoints": 406,
+   "area": 157.4,
+   "ground": 287.82,
+   "p50": 26.4,
+   "p90": 27.81,
+   "p99": 28.74
+  },
+  "w270354963": {
+   "roofPoints": 237,
+   "groundPoints": 512,
+   "area": 212.5,
+   "ground": 307.02,
+   "p50": 9.45,
+   "p90": 11.31,
+   "p99": 12.05
+  },
+  "w270354970": {
+   "roofPoints": 710,
+   "groundPoints": 1043,
+   "area": 510.2,
+   "ground": 305.33,
+   "p50": 6.11,
+   "p90": 6.53,
+   "p99": 6.62
+  },
+  "w270354975": {
+   "roofPoints": 470,
+   "groundPoints": 587,
+   "area": 344.9,
+   "ground": 301.51,
+   "p50": 9.34,
+   "p90": 11.1,
+   "p99": 11.85
+  },
+  "w270354985": {
+   "roofPoints": 1436,
+   "groundPoints": 1659,
+   "area": 476.7,
+   "ground": 295.55,
+   "p50": 7.28,
+   "p90": 9.02,
+   "p99": 21.09
+  },
+  "w270354992": {
+   "roofPoints": 511,
+   "groundPoints": 884,
+   "area": 368.4,
+   "ground": 295.62,
+   "p50": 7.15,
+   "p90": 7.88,
+   "p99": 8.0
+  },
+  "w270354994": {
+   "roofPoints": 0,
+   "groundPoints": 328,
+   "area": 136.6,
+   "ground": 298.53
+  },
+  "w270355001": {
+   "roofPoints": 0,
+   "groundPoints": 563,
+   "area": 320.1,
+   "ground": 301.7
+  },
+  "w270355018": {
+   "roofPoints": 0,
+   "groundPoints": 653,
+   "area": 456.7,
+   "ground": 302.24
+  },
+  "w270355028": {
+   "roofPoints": 0,
+   "groundPoints": 924,
+   "area": 352.0,
+   "ground": 301.29
+  },
+  "w270355035": {
+   "roofPoints": 601,
+   "groundPoints": 990,
+   "area": 333.9,
+   "ground": 300.54,
+   "p50": 8.3,
+   "p90": 10.51,
+   "p99": 11.33
+  },
+  "w270355052": {
+   "roofPoints": 598,
+   "groundPoints": 1384,
+   "area": 297.5,
+   "ground": 298.87,
+   "p50": 9.68,
+   "p90": 11.58,
+   "p99": 12.09
+  },
+  "w270355063": {
+   "roofPoints": 793,
+   "groundPoints": 1125,
+   "area": 244.5,
+   "ground": 297.6,
+   "p50": 8.83,
+   "p90": 10.32,
+   "p99": 11.22
+  },
+  "w270355071": {
+   "roofPoints": 935,
+   "groundPoints": 924,
+   "area": 292.1,
+   "ground": 296.66,
+   "p50": 7.62,
+   "p90": 8.62,
+   "p99": 8.97
+  },
+  "w270355082": {
+   "roofPoints": 1176,
+   "groundPoints": 791,
+   "area": 350.5,
+   "ground": 295.64,
+   "p50": 6.13,
+   "p90": 6.64,
+   "p99": 6.79
+  },
+  "w270355088": {
+   "roofPoints": 742,
+   "groundPoints": 580,
+   "area": 230.2,
+   "ground": 294.22,
+   "p50": 8.02,
+   "p90": 9.05,
+   "p99": 9.56
+  },
+  "w270355094": {
+   "roofPoints": 485,
+   "groundPoints": 568,
+   "area": 180.9,
+   "ground": 292.79,
+   "p50": 7.09,
+   "p90": 7.75,
+   "p99": 14.16
+  },
+  "w270355627": {
+   "roofPoints": 748,
+   "groundPoints": 449,
+   "area": 282.6,
+   "ground": 294.31,
+   "p50": 5.1,
+   "p90": 11.26,
+   "p99": 14.42
+  },
+  "w270355660": {
+   "roofPoints": 247,
+   "groundPoints": 403,
+   "area": 172.4,
+   "ground": 298.07,
+   "p50": 7.31,
+   "p90": 7.85,
+   "p99": 7.93
+  },
+  "w270355678": {
+   "roofPoints": 13,
+   "groundPoints": 226,
+   "area": 26.4,
+   "ground": 293.94,
+   "p50": 6.33,
+   "p90": 8.91,
+   "p99": 9.38
+  },
+  "w270355681": {
+   "roofPoints": 7,
+   "groundPoints": 388,
+   "area": 19.3,
+   "ground": 293.24
+  },
+  "w270355739": {
+   "roofPoints": 0,
+   "groundPoints": 580,
+   "area": 25.1,
+   "ground": 298.86
+  },
+  "w270355743": {
+   "roofPoints": 0,
+   "groundPoints": 395,
+   "area": 190.7,
+   "ground": 297.1
+  },
+  "w270355834": {
+   "roofPoints": 0,
+   "groundPoints": 303,
+   "area": 35.9,
+   "ground": 292.17
+  },
+  "w270355855": {
+   "roofPoints": 60,
+   "groundPoints": 210,
+   "area": 55.5,
+   "ground": 294.0,
+   "p50": 15.78,
+   "p90": 17.54,
+   "p99": 20.14
+  },
+  "w270355858": {
+   "roofPoints": 0,
+   "groundPoints": 524,
+   "area": 48.1,
+   "ground": 298.75
+  },
+  "w270468429": {
+   "roofPoints": 228,
+   "groundPoints": 461,
+   "area": 184.2,
+   "ground": 305.83,
+   "p50": 4.94,
+   "p90": 5.64,
+   "p99": 5.93
+  },
+  "w270468430": {
+   "roofPoints": 224,
+   "groundPoints": 412,
+   "area": 147.6,
+   "ground": 308.58,
+   "p50": 9.61,
+   "p90": 10.48,
+   "p99": 10.78
+  },
+  "w270468431": {
+   "roofPoints": 378,
+   "groundPoints": 489,
+   "area": 208.1,
+   "ground": 305.43,
+   "p50": 8.71,
+   "p90": 10.18,
+   "p99": 10.85
+  },
+  "w270468432": {
+   "roofPoints": 0,
+   "groundPoints": 385,
+   "area": 178.0,
+   "ground": 304.52
+  },
+  "w270468433": {
+   "roofPoints": 141,
+   "groundPoints": 273,
+   "area": 133.5,
+   "ground": 308.93,
+   "p50": 5.02,
+   "p90": 5.93,
+   "p99": 6.51
+  },
+  "w270468435": {
+   "roofPoints": 403,
+   "groundPoints": 632,
+   "area": 228.7,
+   "ground": 303.93,
+   "p50": 8.6,
+   "p90": 10.09,
+   "p99": 10.75
+  },
+  "w270468436": {
+   "roofPoints": 110,
+   "groundPoints": 540,
+   "area": 207.7,
+   "ground": 303.58,
+   "p50": 6.99,
+   "p90": 7.55,
+   "p99": 7.65
+  },
+  "w270468437": {
+   "roofPoints": 10,
+   "groundPoints": 223,
+   "area": 148.7,
+   "ground": 308.96
+  },
+  "w270468440": {
+   "roofPoints": 0,
+   "groundPoints": 194,
+   "area": 145.4,
+   "ground": 304.06
+  },
+  "w270468441": {
+   "roofPoints": 0,
+   "groundPoints": 210,
+   "area": 155.9,
+   "ground": 309.16
+  },
+  "w270468443": {
+   "roofPoints": 168,
+   "groundPoints": 377,
+   "area": 178.1,
+   "ground": 302.68,
+   "p50": 4.5,
+   "p90": 5.35,
+   "p99": 5.57
+  },
+  "w270468446": {
+   "roofPoints": 0,
+   "groundPoints": 498,
+   "area": 160.3,
+   "ground": 302.9
+  },
+  "w270468448": {
+   "roofPoints": 0,
+   "groundPoints": 260,
+   "area": 170.0,
+   "ground": 309.61
+  },
+  "w270468450": {
+   "roofPoints": 93,
+   "groundPoints": 251,
+   "area": 159.0,
+   "ground": 301.7,
+   "p50": 4.66,
+   "p90": 5.23,
+   "p99": 5.5
+  },
+  "w270468452": {
+   "roofPoints": 0,
+   "groundPoints": 243,
+   "area": 82.8,
+   "ground": 310.19
+  },
+  "w270468454": {
+   "roofPoints": 0,
+   "groundPoints": 323,
+   "area": 154.5,
+   "ground": 301.66
+  },
+  "w270468456": {
+   "roofPoints": 207,
+   "groundPoints": 243,
+   "area": 180.5,
+   "ground": 300.16,
+   "p50": 6.54,
+   "p90": 7.6,
+   "p99": 8.02
+  },
+  "w270468457": {
+   "roofPoints": 176,
+   "groundPoints": 471,
+   "area": 149.8,
+   "ground": 311.91,
+   "p50": 7.1,
+   "p90": 7.94,
+   "p99": 8.06
+  },
+  "w270468459": {
+   "roofPoints": 23,
+   "groundPoints": 316,
+   "area": 97.1,
+   "ground": 307.76,
+   "p50": 10.08,
+   "p90": 10.29,
+   "p99": 10.46
+  },
+  "w270468462": {
+   "roofPoints": 0,
+   "groundPoints": 313,
+   "area": 253.6,
+   "ground": 298.52
+  },
+  "w270468465": {
+   "roofPoints": 176,
+   "groundPoints": 268,
+   "area": 184.3,
+   "ground": 298.51,
+   "p50": 5.25,
+   "p90": 6.14,
+   "p99": 6.38
+  },
+  "w270468466": {
+   "roofPoints": 201,
+   "groundPoints": 358,
+   "area": 194.3,
+   "ground": 313.09,
+   "p50": 7.15,
+   "p90": 8.33,
+   "p99": 8.54
+  },
+  "w270468467": {
+   "roofPoints": 0,
+   "groundPoints": 258,
+   "area": 109.2,
+   "ground": 307.9
+  },
+  "w270468468": {
+   "roofPoints": 119,
+   "groundPoints": 572,
+   "area": 181.7,
+   "ground": 296.89,
+   "p50": 5.69,
+   "p90": 6.08,
+   "p99": 6.23
+  },
+  "w270468469": {
+   "roofPoints": 0,
+   "groundPoints": 365,
+   "area": 84.8,
+   "ground": 307.98
+  },
+  "w270468470": {
+   "roofPoints": 75,
+   "groundPoints": 168,
+   "area": 141.4,
+   "ground": 313.98,
+   "p50": 5.1,
+   "p90": 5.13,
+   "p99": 5.4
+  },
+  "w270468471": {
+   "roofPoints": 541,
+   "groundPoints": 434,
+   "area": 121.9,
+   "ground": 296.06,
+   "p50": 8.07,
+   "p90": 9.33,
+   "p99": 20.21
+  },
+  "w270468472": {
+   "roofPoints": 246,
+   "groundPoints": 409,
+   "area": 161.2,
+   "ground": 315.27,
+   "p50": 4.61,
+   "p90": 5.61,
+   "p99": 5.82
+  },
+  "w270468473": {
+   "roofPoints": 208,
+   "groundPoints": 564,
+   "area": 169.1,
+   "ground": 308.41,
+   "p50": 5.29,
+   "p90": 7.66,
+   "p99": 8.18
+  },
+  "w270468474": {
+   "roofPoints": 298,
+   "groundPoints": 737,
+   "area": 155.5,
+   "ground": 308.29,
+   "p50": 8.31,
+   "p90": 8.78,
+   "p99": 9.28
+  },
+  "w270468475": {
+   "roofPoints": 898,
+   "groundPoints": 675,
+   "area": 218.8,
+   "ground": 294.67,
+   "p50": 5.18,
+   "p90": 6.39,
+   "p99": 7.22
+  },
+  "w270468476": {
+   "roofPoints": 933,
+   "groundPoints": 683,
+   "area": 136.8,
+   "ground": 316.07,
+   "p50": 10.69,
+   "p90": 10.77,
+   "p99": 10.81
+  },
+  "w270468477": {
+   "roofPoints": 531,
+   "groundPoints": 783,
+   "area": 124.9,
+   "ground": 316.81,
+   "p50": 5.57,
+   "p90": 6.25,
+   "p99": 14.49
+  },
+  "w270468478": {
+   "roofPoints": 698,
+   "groundPoints": 895,
+   "area": 217.3,
+   "ground": 308.6,
+   "p50": 10.69,
+   "p90": 11.56,
+   "p99": 14.87
+  },
+  "w270468479": {
+   "roofPoints": 669,
+   "groundPoints": 1023,
+   "area": 153.5,
+   "ground": 308.85,
+   "p50": 5.61,
+   "p90": 6.02,
+   "p99": 14.03
+  },
+  "w270468480": {
+   "roofPoints": 785,
+   "groundPoints": 790,
+   "area": 207.2,
+   "ground": 293.39,
+   "p50": 5.57,
+   "p90": 6.85,
+   "p99": 7.23
+  },
+  "w270468481": {
+   "roofPoints": 548,
+   "groundPoints": 882,
+   "area": 217.8,
+   "ground": 292.64,
+   "p50": 5.4,
+   "p90": 6.65,
+   "p99": 7.37
+  },
+  "w270468482": {
+   "roofPoints": 483,
+   "groundPoints": 744,
+   "area": 168.5,
+   "ground": 292.92,
+   "p50": 5.17,
+   "p90": 6.38,
+   "p99": 6.65
+  },
+  "w270468483": {
+   "roofPoints": 1425,
+   "groundPoints": 1826,
+   "area": 581.0,
+   "ground": 318.68,
+   "p50": 6.48,
+   "p90": 7.0,
+   "p99": 7.13
+  },
+  "w270468484": {
+   "roofPoints": 479,
+   "groundPoints": 747,
+   "area": 187.9,
+   "ground": 294.33,
+   "p50": 6.44,
+   "p90": 7.4,
+   "p99": 7.57
+  },
+  "w270468485": {
+   "roofPoints": 375,
+   "groundPoints": 421,
+   "area": 196.9,
+   "ground": 318.39,
+   "p50": 5.21,
+   "p90": 6.68,
+   "p99": 19.69
+  },
+  "w270468486": {
+   "roofPoints": 562,
+   "groundPoints": 589,
+   "area": 181.1,
+   "ground": 294.29,
+   "p50": 5.19,
+   "p90": 6.48,
+   "p99": 7.0
+  },
+  "w270468487": {
+   "roofPoints": 277,
+   "groundPoints": 546,
+   "area": 84.8,
+   "ground": 317.71,
+   "p50": 6.86,
+   "p90": 8.04,
+   "p99": 8.18
+  },
+  "w270468488": {
+   "roofPoints": 213,
+   "groundPoints": 543,
+   "area": 70.6,
+   "ground": 317.7,
+   "p50": 7.25,
+   "p90": 8.12,
+   "p99": 8.2
+  },
+  "w270468489": {
+   "roofPoints": 275,
+   "groundPoints": 773,
+   "area": 125.0,
+   "ground": 317.46,
+   "p50": 7.22,
+   "p90": 7.37,
+   "p99": 7.41
+  },
+  "w270468490": {
+   "roofPoints": 457,
+   "groundPoints": 1069,
+   "area": 185.9,
+   "ground": 319.24,
+   "p50": 6.56,
+   "p90": 7.97,
+   "p99": 8.76
+  },
+  "w270468491": {
+   "roofPoints": 201,
+   "groundPoints": 502,
+   "area": 67.8,
+   "ground": 317.51,
+   "p50": 6.83,
+   "p90": 7.79,
+   "p99": 7.92
+  },
+  "w270468492": {
+   "roofPoints": 341,
+   "groundPoints": 486,
+   "area": 176.0,
+   "ground": 317.55,
+   "p50": 5.03,
+   "p90": 5.74,
+   "p99": 5.89
+  },
+  "w270468493": {
+   "roofPoints": 139,
+   "groundPoints": 524,
+   "area": 120.7,
+   "ground": 312.25,
+   "p50": 5.44,
+   "p90": 6.44,
+   "p99": 6.59
+  },
+  "w270468494": {
+   "roofPoints": 586,
+   "groundPoints": 473,
+   "area": 199.5,
+   "ground": 293.82,
+   "p50": 5.78,
+   "p90": 7.07,
+   "p99": 9.36
+  },
+  "w270468495": {
+   "roofPoints": 215,
+   "groundPoints": 463,
+   "area": 76.4,
+   "ground": 316.92,
+   "p50": 7.28,
+   "p90": 8.42,
+   "p99": 8.53
+  },
+  "w270468496": {
+   "roofPoints": 262,
+   "groundPoints": 783,
+   "area": 96.5,
+   "ground": 316.34,
+   "p50": 6.86,
+   "p90": 7.71,
+   "p99": 24.94
+  },
+  "w270468497": {
+   "roofPoints": 1182,
+   "groundPoints": 970,
+   "area": 345.4,
+   "ground": 307.84,
+   "p50": 6.51,
+   "p90": 7.03,
+   "p99": 7.17
+  },
+  "w270468498": {
+   "roofPoints": 262,
+   "groundPoints": 599,
+   "area": 85.7,
+   "ground": 315.88,
+   "p50": 9.19,
+   "p90": 10.15,
+   "p99": 10.37
+  },
+  "w270468499": {
+   "roofPoints": 263,
+   "groundPoints": 499,
+   "area": 188.1,
+   "ground": 317.19,
+   "p50": 7.69,
+   "p90": 8.43,
+   "p99": 8.57
+  },
+  "w270468500": {
+   "roofPoints": 461,
+   "groundPoints": 680,
+   "area": 144.3,
+   "ground": 315.4,
+   "p50": 9.5,
+   "p90": 10.24,
+   "p99": 10.69
+  },
+  "w270468501": {
+   "roofPoints": 1040,
+   "groundPoints": 1091,
+   "area": 288.2,
+   "ground": 313.21,
+   "p50": 6.77,
+   "p90": 7.18,
+   "p99": 7.26
+  },
+  "w270468503": {
+   "roofPoints": 1130,
+   "groundPoints": 1338,
+   "area": 334.6,
+   "ground": 318.63,
+   "p50": 6.63,
+   "p90": 7.1,
+   "p99": 7.2
+  },
+  "w270468504": {
+   "roofPoints": 267,
+   "groundPoints": 574,
+   "area": 87.0,
+   "ground": 315.28,
+   "p50": 9.82,
+   "p90": 10.91,
+   "p99": 11.02
+  },
+  "w270468505": {
+   "roofPoints": 498,
+   "groundPoints": 544,
+   "area": 248.8,
+   "ground": 316.29,
+   "p50": 6.01,
+   "p90": 6.79,
+   "p99": 24.42
+  },
+  "w270468506": {
+   "roofPoints": 182,
+   "groundPoints": 706,
+   "area": 91.7,
+   "ground": 315.79,
+   "p50": 9.44,
+   "p90": 10.89,
+   "p99": 10.99
+  },
+  "w270468507": {
+   "roofPoints": 219,
+   "groundPoints": 409,
+   "area": 148.4,
+   "ground": 309.76,
+   "p50": 8.13,
+   "p90": 15.38,
+   "p99": 17.02
+  },
+  "w270468508": {
+   "roofPoints": 515,
+   "groundPoints": 759,
+   "area": 211.6,
+   "ground": 315.62,
+   "p50": 6.91,
+   "p90": 7.66,
+   "p99": 8.09
+  },
+  "w270468509": {
+   "roofPoints": 354,
+   "groundPoints": 390,
+   "area": 113.5,
+   "ground": 310.89,
+   "p50": 9.0,
+   "p90": 9.71,
+   "p99": 9.84
+  },
+  "w270468510": {
+   "roofPoints": 252,
+   "groundPoints": 398,
+   "area": 90.1,
+   "ground": 314.32,
+   "p50": 5.65,
+   "p90": 6.49,
+   "p99": 6.65
+  },
+  "w270468511": {
+   "roofPoints": 357,
+   "groundPoints": 573,
+   "area": 163.8,
+   "ground": 306.98,
+   "p50": 4.37,
+   "p90": 9.32,
+   "p99": 12.81
+  },
+  "w270468512": {
+   "roofPoints": 330,
+   "groundPoints": 1207,
+   "area": 289.2,
+   "ground": 312.57,
+   "p50": 6.12,
+   "p90": 6.58,
+   "p99": 22.85
+  },
+  "w270468513": {
+   "roofPoints": 371,
+   "groundPoints": 293,
+   "area": 121.2,
+   "ground": 313.73,
+   "p50": 9.32,
+   "p90": 9.93,
+   "p99": 10.03
+  },
+  "w270468515": {
+   "roofPoints": 344,
+   "groundPoints": 528,
+   "area": 142.0,
+   "ground": 313.83,
+   "p50": 7.51,
+   "p90": 8.24,
+   "p99": 10.15
+  },
+  "w270468516": {
+   "roofPoints": 205,
+   "groundPoints": 467,
+   "area": 86.2,
+   "ground": 308.67,
+   "p50": 9.1,
+   "p90": 9.18,
+   "p99": 9.48
+  },
+  "w270468517": {
+   "roofPoints": 250,
+   "groundPoints": 506,
+   "area": 112.8,
+   "ground": 309.37,
+   "p50": 10.72,
+   "p90": 19.53,
+   "p99": 20.51
+  },
+  "w270468518": {
+   "roofPoints": 353,
+   "groundPoints": 442,
+   "area": 107.7,
+   "ground": 312.9,
+   "p50": 9.77,
+   "p90": 10.78,
+   "p99": 10.92
+  },
+  "w270468519": {
+   "roofPoints": 699,
+   "groundPoints": 607,
+   "area": 210.7,
+   "ground": 306.97,
+   "p50": 5.8,
+   "p90": 6.52,
+   "p99": 16.63
+  },
+  "w270468520": {
+   "roofPoints": 338,
+   "groundPoints": 472,
+   "area": 129.3,
+   "ground": 308.05,
+   "p50": 9.59,
+   "p90": 10.14,
+   "p99": 10.31
+  },
+  "w270468521": {
+   "roofPoints": 241,
+   "groundPoints": 375,
+   "area": 80.9,
+   "ground": 307.16,
+   "p50": 10.31,
+   "p90": 10.84,
+   "p99": 10.92
+  },
+  "w270468522": {
+   "roofPoints": 313,
+   "groundPoints": 353,
+   "area": 104.7,
+   "ground": 307.93,
+   "p50": 8.03,
+   "p90": 9.17,
+   "p99": 9.31
+  },
+  "w270468523": {
+   "roofPoints": 324,
+   "groundPoints": 545,
+   "area": 127.9,
+   "ground": 311.99,
+   "p50": 9.26,
+   "p90": 10.41,
+   "p99": 10.49
+  },
+  "w270468524": {
+   "roofPoints": 393,
+   "groundPoints": 363,
+   "area": 157.8,
+   "ground": 307.14,
+   "p50": 5.16,
+   "p90": 6.19,
+   "p99": 6.35
+  },
+  "w270468525": {
+   "roofPoints": 237,
+   "groundPoints": 327,
+   "area": 88.7,
+   "ground": 307.8,
+   "p50": 7.99,
+   "p90": 8.72,
+   "p99": 8.85
+  },
+  "w270468526": {
+   "roofPoints": 489,
+   "groundPoints": 941,
+   "area": 195.8,
+   "ground": 310.83,
+   "p50": 6.47,
+   "p90": 15.58,
+   "p99": 19.83
+  },
+  "w270468527": {
+   "roofPoints": 408,
+   "groundPoints": 659,
+   "area": 154.9,
+   "ground": 311.25,
+   "p50": 9.0,
+   "p90": 9.77,
+   "p99": 9.86
+  },
+  "w270468528": {
+   "roofPoints": 267,
+   "groundPoints": 486,
+   "area": 96.4,
+   "ground": 307.95,
+   "p50": 8.14,
+   "p90": 9.22,
+   "p99": 9.41
+  },
+  "w270468529": {
+   "roofPoints": 409,
+   "groundPoints": 1042,
+   "area": 118.1,
+   "ground": 310.87,
+   "p50": 9.0,
+   "p90": 9.84,
+   "p99": 9.93
+  },
+  "w270468531": {
+   "roofPoints": 495,
+   "groundPoints": 337,
+   "area": 312.8,
+   "ground": 311.77,
+   "p50": 6.67,
+   "p90": 6.97,
+   "p99": 7.06
+  },
+  "w270468532": {
+   "roofPoints": 173,
+   "groundPoints": 190,
+   "area": 156.0,
+   "ground": 311.21,
+   "p50": 5.41,
+   "p90": 22.13,
+   "p99": 22.56
+  },
+  "w270468533": {
+   "roofPoints": 0,
+   "groundPoints": 403,
+   "area": 220.4,
+   "ground": 307.35
+  },
+  "w270468534": {
+   "roofPoints": 166,
+   "groundPoints": 448,
+   "area": 223.4,
+   "ground": 309.05,
+   "p50": 6.91,
+   "p90": 8.71,
+   "p99": 9.13
+  },
+  "w270468535": {
+   "roofPoints": 381,
+   "groundPoints": 352,
+   "area": 282.9,
+   "ground": 310.73,
+   "p50": 3.54,
+   "p90": 4.13,
+   "p99": 23.19
+  },
+  "w270468536": {
+   "roofPoints": 180,
+   "groundPoints": 242,
+   "area": 230.7,
+   "ground": 307.64,
+   "p50": 6.31,
+   "p90": 7.61,
+   "p99": 8.67
+  },
+  "w270468537": {
+   "roofPoints": 246,
+   "groundPoints": 248,
+   "area": 245.1,
+   "ground": 309.46,
+   "p50": 8.64,
+   "p90": 8.72,
+   "p99": 9.33
+  },
+  "w270468538": {
+   "roofPoints": 9,
+   "groundPoints": 316,
+   "area": 94.7,
+   "ground": 309.66
+  },
+  "w270468539": {
+   "roofPoints": 245,
+   "groundPoints": 246,
+   "area": 175.0,
+   "ground": 310.68,
+   "p50": 6.15,
+   "p90": 7.42,
+   "p99": 7.73
+  },
+  "w270468540": {
+   "roofPoints": 169,
+   "groundPoints": 171,
+   "area": 195.5,
+   "ground": 307.89,
+   "p50": 6.43,
+   "p90": 7.85,
+   "p99": 8.74
+  },
+  "w270468541": {
+   "roofPoints": 215,
+   "groundPoints": 127,
+   "area": 215.9,
+   "ground": 310.04,
+   "p50": 5.6,
+   "p90": 21.41,
+   "p99": 22.75
+  },
+  "w270468542": {
+   "roofPoints": 108,
+   "groundPoints": 472,
+   "area": 151.0,
+   "ground": 309.85,
+   "p50": 10.99,
+   "p90": 11.03,
+   "p99": 11.06
+  },
+  "w270468543": {
+   "roofPoints": 131,
+   "groundPoints": 226,
+   "area": 116.7,
+   "ground": 312.05,
+   "p50": 5.06,
+   "p90": 15.69,
+   "p99": 16.24
+  },
+  "w270468544": {
+   "roofPoints": 141,
+   "groundPoints": 463,
+   "area": 148.7,
+   "ground": 309.04,
+   "p50": 7.92,
+   "p90": 11.02,
+   "p99": 11.04
+  },
+  "w270468545": {
+   "roofPoints": 139,
+   "groundPoints": 137,
+   "area": 134.6,
+   "ground": 308.7,
+   "p50": 10.55,
+   "p90": 11.34,
+   "p99": 11.6
+  },
+  "w270468546": {
+   "roofPoints": 285,
+   "groundPoints": 378,
+   "area": 225.7,
+   "ground": 307.58,
+   "p50": 5.98,
+   "p90": 7.31,
+   "p99": 8.05
+  },
+  "w270468547": {
+   "roofPoints": 53,
+   "groundPoints": 274,
+   "area": 145.9,
+   "ground": 308.54,
+   "p50": 4.34,
+   "p90": 4.92,
+   "p99": 5.15
+  },
+  "w270468548": {
+   "roofPoints": 0,
+   "groundPoints": 298,
+   "area": 204.0,
+   "ground": 306.82
+  },
+  "w270468549": {
+   "roofPoints": 168,
+   "groundPoints": 411,
+   "area": 133.7,
+   "ground": 308.32,
+   "p50": 9.99,
+   "p90": 10.02,
+   "p99": 10.05
+  },
+  "w270468550": {
+   "roofPoints": 281,
+   "groundPoints": 462,
+   "area": 222.6,
+   "ground": 307.03,
+   "p50": 5.69,
+   "p90": 7.48,
+   "p99": 8.23
+  },
+  "w270468551": {
+   "roofPoints": 170,
+   "groundPoints": 356,
+   "area": 196.9,
+   "ground": 310.08,
+   "p50": 5.34,
+   "p90": 5.91,
+   "p99": 6.07
+  },
+  "w270468552": {
+   "roofPoints": 98,
+   "groundPoints": 264,
+   "area": 253.3,
+   "ground": 307.43,
+   "p50": 6.31,
+   "p90": 8.17,
+   "p99": 25.07
+  },
+  "w270468553": {
+   "roofPoints": 0,
+   "groundPoints": 157,
+   "area": 207.3,
+   "ground": 306.6
+  },
+  "w270468554": {
+   "roofPoints": 108,
+   "groundPoints": 414,
+   "area": 109.2,
+   "ground": 309.73,
+   "p50": 8.36,
+   "p90": 9.02,
+   "p99": 9.16
+  },
+  "w270468555": {
+   "roofPoints": 479,
+   "groundPoints": 719,
+   "area": 283.6,
+   "ground": 306.37,
+   "p50": 6.28,
+   "p90": 6.76,
+   "p99": 6.97
+  },
+  "w270468556": {
+   "roofPoints": 120,
+   "groundPoints": 492,
+   "area": 133.3,
+   "ground": 306.11,
+   "p50": 5.08,
+   "p90": 5.71,
+   "p99": 5.81
+  },
+  "w270468557": {
+   "roofPoints": 219,
+   "groundPoints": 370,
+   "area": 171.4,
+   "ground": 305.81,
+   "p50": 7.33,
+   "p90": 8.07,
+   "p99": 8.62
+  },
+  "w270468558": {
+   "roofPoints": 272,
+   "groundPoints": 341,
+   "area": 186.5,
+   "ground": 307.06,
+   "p50": 6.54,
+   "p90": 7.47,
+   "p99": 7.63
+  },
+  "w270468559": {
+   "roofPoints": 0,
+   "groundPoints": 232,
+   "area": 77.2,
+   "ground": 309.17
+  },
+  "w270468560": {
+   "roofPoints": 0,
+   "groundPoints": 505,
+   "area": 121.4,
+   "ground": 306.0
+  },
+  "w270468561": {
+   "roofPoints": 128,
+   "groundPoints": 338,
+   "area": 110.6,
+   "ground": 306.9,
+   "p50": 5.72,
+   "p90": 6.12,
+   "p99": 6.17
+  },
+  "w270468562": {
+   "roofPoints": 235,
+   "groundPoints": 358,
+   "area": 151.2,
+   "ground": 308.68,
+   "p50": 5.07,
+   "p90": 6.0,
+   "p99": 6.44
+  },
+  "w270468563": {
+   "roofPoints": 179,
+   "groundPoints": 270,
+   "area": 207.2,
+   "ground": 310.39,
+   "p50": 5.3,
+   "p90": 6.49,
+   "p99": 6.62
+  },
+  "w270468564": {
+   "roofPoints": 211,
+   "groundPoints": 286,
+   "area": 207.5,
+   "ground": 308.93,
+   "p50": 12.85,
+   "p90": 12.94,
+   "p99": 12.96
+  },
+  "w270468566": {
+   "roofPoints": 0,
+   "groundPoints": 181,
+   "area": 98.3,
+   "ground": 296.12
+  },
+  "w270468567": {
+   "roofPoints": 0,
+   "groundPoints": 483,
+   "area": 86.7,
+   "ground": 296.17
+  },
+  "w270468568": {
+   "roofPoints": 0,
+   "groundPoints": 201,
+   "area": 115.7,
+   "ground": 294.6
+  },
+  "w270468569": {
+   "roofPoints": 0,
+   "groundPoints": 296,
+   "area": 85.4,
+   "ground": 295.19
+  },
+  "w270468570": {
+   "roofPoints": 0,
+   "groundPoints": 520,
+   "area": 90.1,
+   "ground": 293.37
+  },
+  "w270468571": {
+   "roofPoints": 0,
+   "groundPoints": 135,
+   "area": 89.1,
+   "ground": 293.18
+  },
+  "w270468572": {
+   "roofPoints": 0,
+   "groundPoints": 714,
+   "area": 119.6,
+   "ground": 292.07
+  },
+  "w270468573": {
+   "roofPoints": 0,
+   "groundPoints": 325,
+   "area": 100.6,
+   "ground": 292.57
+  },
+  "w270468574": {
+   "roofPoints": 296,
+   "groundPoints": 348,
+   "area": 212.2,
+   "ground": 296.63,
+   "p50": 5.12,
+   "p90": 6.21,
+   "p99": 6.52
+  },
+  "w270468575": {
+   "roofPoints": 86,
+   "groundPoints": 397,
+   "area": 92.3,
+   "ground": 291.56,
+   "p50": 4.46,
+   "p90": 5.12,
+   "p99": 5.22
+  },
+  "w270468576": {
+   "roofPoints": 235,
+   "groundPoints": 324,
+   "area": 172.5,
+   "ground": 296.28,
+   "p50": 5.5,
+   "p90": 6.41,
+   "p99": 6.85
+  },
+  "w270468578": {
+   "roofPoints": 197,
+   "groundPoints": 509,
+   "area": 155.5,
+   "ground": 296.06,
+   "p50": 5.05,
+   "p90": 5.83,
+   "p99": 6.04
+  },
+  "w270468579": {
+   "roofPoints": 394,
+   "groundPoints": 758,
+   "area": 309.9,
+   "ground": 295.82,
+   "p50": 5.25,
+   "p90": 7.58,
+   "p99": 9.0
+  },
+  "w270468580": {
+   "roofPoints": 304,
+   "groundPoints": 554,
+   "area": 241.1,
+   "ground": 295.55,
+   "p50": 5.15,
+   "p90": 6.32,
+   "p99": 6.75
+  },
+  "w270468581": {
+   "roofPoints": 335,
+   "groundPoints": 578,
+   "area": 222.6,
+   "ground": 295.48,
+   "p50": 4.56,
+   "p90": 5.7,
+   "p99": 6.08
+  },
+  "w270468582": {
+   "roofPoints": 237,
+   "groundPoints": 618,
+   "area": 205.1,
+   "ground": 295.45,
+   "p50": 7.78,
+   "p90": 8.22,
+   "p99": 8.56
+  },
+  "w270468583": {
+   "roofPoints": 149,
+   "groundPoints": 558,
+   "area": 197.7,
+   "ground": 295.4,
+   "p50": 7.0,
+   "p90": 7.95,
+   "p99": 8.0
+  },
+  "w270468584": {
+   "roofPoints": 0,
+   "groundPoints": 217,
+   "area": 7.0,
+   "ground": 297.13
+  },
+  "w270468585": {
+   "roofPoints": 225,
+   "groundPoints": 292,
+   "area": 156.8,
+   "ground": 295.8,
+   "p50": 4.79,
+   "p90": 5.69,
+   "p99": 6.18
+  },
+  "w270468586": {
+   "roofPoints": 128,
+   "groundPoints": 179,
+   "area": 160.2,
+   "ground": 295.76,
+   "p50": 5.44,
+   "p90": 6.34,
+   "p99": 6.62
+  },
+  "w270468588": {
+   "roofPoints": 254,
+   "groundPoints": 434,
+   "area": 311.2,
+   "ground": 295.7,
+   "p50": 4.08,
+   "p90": 5.45,
+   "p99": 20.8
+  },
+  "w270468591": {
+   "roofPoints": 167,
+   "groundPoints": 486,
+   "area": 166.2,
+   "ground": 295.06,
+   "p50": 5.17,
+   "p90": 5.89,
+   "p99": 6.09
+  },
+  "w270468594": {
+   "roofPoints": 79,
+   "groundPoints": 283,
+   "area": 171.6,
+   "ground": 293.25,
+   "p50": 6.75,
+   "p90": 6.8,
+   "p99": 6.86
+  },
+  "w270468615": {
+   "roofPoints": 219,
+   "groundPoints": 453,
+   "area": 150.4,
+   "ground": 299.7,
+   "p50": 4.92,
+   "p90": 5.97,
+   "p99": 6.28
+  },
+  "w270468616": {
+   "roofPoints": 136,
+   "groundPoints": 149,
+   "area": 134.1,
+   "ground": 301.57,
+   "p50": 3.76,
+   "p90": 4.72,
+   "p99": 5.01
+  },
+  "w270468617": {
+   "roofPoints": 409,
+   "groundPoints": 440,
+   "area": 228.7,
+   "ground": 296.4,
+   "p50": 8.75,
+   "p90": 9.69,
+   "p99": 9.99
+  },
+  "w270468618": {
+   "roofPoints": 339,
+   "groundPoints": 387,
+   "area": 248.2,
+   "ground": 303.16,
+   "p50": 11.02,
+   "p90": 12.34,
+   "p99": 12.78
+  },
+  "w270468619": {
+   "roofPoints": 254,
+   "groundPoints": 464,
+   "area": 169.2,
+   "ground": 296.53,
+   "p50": 5.29,
+   "p90": 6.05,
+   "p99": 6.2
+  },
+  "w270468620": {
+   "roofPoints": 358,
+   "groundPoints": 380,
+   "area": 211.7,
+   "ground": 295.78,
+   "p50": 5.87,
+   "p90": 6.75,
+   "p99": 6.86
+  },
+  "w270468621": {
+   "roofPoints": 187,
+   "groundPoints": 295,
+   "area": 240.2,
+   "ground": 305.79,
+   "p50": 13.2,
+   "p90": 13.65,
+   "p99": 13.71
+  },
+  "w270468622": {
+   "roofPoints": 262,
+   "groundPoints": 330,
+   "area": 224.7,
+   "ground": 299.64,
+   "p50": 8.54,
+   "p90": 9.43,
+   "p99": 20.4
+  },
+  "w270468623": {
+   "roofPoints": 266,
+   "groundPoints": 383,
+   "area": 176.8,
+   "ground": 299.32,
+   "p50": 8.58,
+   "p90": 9.49,
+   "p99": 9.81
+  },
+  "w270468624": {
+   "roofPoints": 234,
+   "groundPoints": 364,
+   "area": 215.9,
+   "ground": 303.74,
+   "p50": 9.71,
+   "p90": 10.87,
+   "p99": 11.34
+  },
+  "w270468625": {
+   "roofPoints": 219,
+   "groundPoints": 436,
+   "area": 150.6,
+   "ground": 296.87,
+   "p50": 5.41,
+   "p90": 6.19,
+   "p99": 6.66
+  },
+  "w270468626": {
+   "roofPoints": 819,
+   "groundPoints": 597,
+   "area": 174.5,
+   "ground": 311.49,
+   "p50": 13.16,
+   "p90": 17.47,
+   "p99": 17.95
+  },
+  "w270468627": {
+   "roofPoints": 132,
+   "groundPoints": 385,
+   "area": 161.0,
+   "ground": 295.72,
+   "p50": 5.91,
+   "p90": 6.76,
+   "p99": 7.0
+  },
+  "w270468628": {
+   "roofPoints": 0,
+   "groundPoints": 302,
+   "area": 159.5,
+   "ground": 306.23
+  },
+  "w270468629": {
+   "roofPoints": 190,
+   "groundPoints": 291,
+   "area": 180.1,
+   "ground": 298.17,
+   "p50": 6.45,
+   "p90": 7.49,
+   "p99": 7.78
+  },
+  "w270468630": {
+   "roofPoints": 314,
+   "groundPoints": 667,
+   "area": 205.8,
+   "ground": 296.5,
+   "p50": 4.18,
+   "p90": 5.28,
+   "p99": 5.83
+  },
+  "w270468631": {
+   "roofPoints": 1402,
+   "groundPoints": 755,
+   "area": 211.9,
+   "ground": 312.71,
+   "p50": 5.97,
+   "p90": 13.59,
+   "p99": 14.36
+  },
+  "w270468632": {
+   "roofPoints": 150,
+   "groundPoints": 444,
+   "area": 114.7,
+   "ground": 306.03,
+   "p50": 7.64,
+   "p90": 8.5,
+   "p99": 9.26
+  },
+  "w270468633": {
+   "roofPoints": 503,
+   "groundPoints": 584,
+   "area": 368.3,
+   "ground": 303.57,
+   "p50": 6.46,
+   "p90": 7.1,
+   "p99": 7.27
+  },
+  "w270468634": {
+   "roofPoints": 197,
+   "groundPoints": 473,
+   "area": 146.3,
+   "ground": 295.72,
+   "p50": 8.32,
+   "p90": 9.12,
+   "p99": 9.29
+  },
+  "w270468635": {
+   "roofPoints": 0,
+   "groundPoints": 297,
+   "area": 34.2,
+   "ground": 295.8
+  },
+  "w270468636": {
+   "roofPoints": 614,
+   "groundPoints": 730,
+   "area": 154.1,
+   "ground": 318.57,
+   "p50": 10.61,
+   "p90": 11.68,
+   "p99": 11.81
+  },
+  "w270468637": {
+   "roofPoints": 110,
+   "groundPoints": 298,
+   "area": 89.8,
+   "ground": 305.9,
+   "p50": 8.15,
+   "p90": 8.9,
+   "p99": 9.06
+  },
+  "w270468638": {
+   "roofPoints": 1274,
+   "groundPoints": 1552,
+   "area": 188.5,
+   "ground": 312.88,
+   "p50": 8.96,
+   "p90": 10.09,
+   "p99": 10.54
+  },
+  "w270468639": {
+   "roofPoints": 554,
+   "groundPoints": 383,
+   "area": 294.2,
+   "ground": 304.62,
+   "p50": 6.12,
+   "p90": 6.72,
+   "p99": 6.84
+  },
+  "w270468699": {
+   "roofPoints": 103,
+   "groundPoints": 366,
+   "area": 145.8,
+   "ground": 307.74,
+   "p50": 9.94,
+   "p90": 10.88,
+   "p99": 11.05
+  },
+  "w270468702": {
+   "roofPoints": 129,
+   "groundPoints": 214,
+   "area": 105.7,
+   "ground": 304.44,
+   "p50": 4.58,
+   "p90": 5.13,
+   "p99": 16.82
+  },
+  "w270468707": {
+   "roofPoints": 523,
+   "groundPoints": 848,
+   "area": 113.7,
+   "ground": 317.68,
+   "p50": 6.64,
+   "p90": 7.59,
+   "p99": 7.75
+  },
+  "w270468710": {
+   "roofPoints": 178,
+   "groundPoints": 389,
+   "area": 123.3,
+   "ground": 307.91,
+   "p50": 9.46,
+   "p90": 10.65,
+   "p99": 10.82
+  },
+  "w270468711": {
+   "roofPoints": 206,
+   "groundPoints": 363,
+   "area": 153.8,
+   "ground": 305.49,
+   "p50": 5.39,
+   "p90": 6.31,
+   "p99": 7.11
+  },
+  "w270468713": {
+   "roofPoints": 0,
+   "groundPoints": 371,
+   "area": 151.2,
+   "ground": 306.18
+  },
+  "w270468718": {
+   "roofPoints": 195,
+   "groundPoints": 228,
+   "area": 161.5,
+   "ground": 311.32,
+   "p50": 5.56,
+   "p90": 6.11,
+   "p99": 6.18
+  },
+  "w270468721": {
+   "roofPoints": 610,
+   "groundPoints": 416,
+   "area": 331.7,
+   "ground": 306.85,
+   "p50": 10.85,
+   "p90": 12.37,
+   "p99": 12.67
+  },
+  "w270468724": {
+   "roofPoints": 160,
+   "groundPoints": 221,
+   "area": 120.7,
+   "ground": 308.14,
+   "p50": 6.11,
+   "p90": 6.81,
+   "p99": 6.93
+  },
+  "w270468725": {
+   "roofPoints": 288,
+   "groundPoints": 408,
+   "area": 180.0,
+   "ground": 310.73,
+   "p50": 8.16,
+   "p90": 8.98,
+   "p99": 9.11
+  },
+  "w270468728": {
+   "roofPoints": 2142,
+   "groundPoints": 1016,
+   "area": 424.4,
+   "ground": 314.21,
+   "p50": 7.84,
+   "p90": 8.66,
+   "p99": 16.85
+  },
+  "w270468731": {
+   "roofPoints": 249,
+   "groundPoints": 344,
+   "area": 155.4,
+   "ground": 307.89,
+   "p50": 8.33,
+   "p90": 9.1,
+   "p99": 9.39
+  },
+  "w270468734": {
+   "roofPoints": 148,
+   "groundPoints": 508,
+   "area": 149.7,
+   "ground": 291.51,
+   "p50": 13.75,
+   "p90": 13.88,
+   "p99": 13.91
+  },
+  "w270468738": {
+   "roofPoints": 233,
+   "groundPoints": 250,
+   "area": 141.1,
+   "ground": 310.27,
+   "p50": 4.83,
+   "p90": 5.72,
+   "p99": 6.42
+  },
+  "w270468740": {
+   "roofPoints": 276,
+   "groundPoints": 240,
+   "area": 179.0,
+   "ground": 307.64,
+   "p50": 5.56,
+   "p90": 6.09,
+   "p99": 6.61
+  },
+  "w270468743": {
+   "roofPoints": 227,
+   "groundPoints": 186,
+   "area": 144.3,
+   "ground": 309.1,
+   "p50": 5.57,
+   "p90": 6.53,
+   "p99": 15.56
+  },
+  "w270468746": {
+   "roofPoints": 133,
+   "groundPoints": 341,
+   "area": 155.2,
+   "ground": 307.27,
+   "p50": 5.32,
+   "p90": 5.75,
+   "p99": 5.99
+  },
+  "w270468747": {
+   "roofPoints": 187,
+   "groundPoints": 166,
+   "area": 107.5,
+   "ground": 308.32,
+   "p50": 5.43,
+   "p90": 6.7,
+   "p99": 6.93
+  },
+  "w270468748": {
+   "roofPoints": 84,
+   "groundPoints": 234,
+   "area": 122.6,
+   "ground": 306.94,
+   "p50": 5.99,
+   "p90": 6.71,
+   "p99": 7.13
+  },
+  "w270468749": {
+   "roofPoints": 173,
+   "groundPoints": 260,
+   "area": 138.9,
+   "ground": 308.25,
+   "p50": 11.65,
+   "p90": 11.71,
+   "p99": 11.77
+  },
+  "w270468750": {
+   "roofPoints": 1212,
+   "groundPoints": 1309,
+   "area": 315.8,
+   "ground": 315.74,
+   "p50": 6.93,
+   "p90": 7.58,
+   "p99": 7.7
+  },
+  "w270468751": {
+   "roofPoints": 277,
+   "groundPoints": 489,
+   "area": 175.5,
+   "ground": 305.65,
+   "p50": 6.02,
+   "p90": 6.87,
+   "p99": 7.01
+  },
+  "w270468752": {
+   "roofPoints": 318,
+   "groundPoints": 283,
+   "area": 191.9,
+   "ground": 308.34,
+   "p50": 7.45,
+   "p90": 8.42,
+   "p99": 8.56
+  },
+  "w270468753": {
+   "roofPoints": 60,
+   "groundPoints": 353,
+   "area": 95.1,
+   "ground": 307.43,
+   "p50": 9.8,
+   "p90": 9.86,
+   "p99": 9.88
+  },
+  "w270468754": {
+   "roofPoints": 76,
+   "groundPoints": 416,
+   "area": 134.5,
+   "ground": 305.38,
+   "p50": 9.38,
+   "p90": 9.49,
+   "p99": 9.58
+  },
+  "w270468756": {
+   "roofPoints": 255,
+   "groundPoints": 337,
+   "area": 181.0,
+   "ground": 307.97,
+   "p50": 5.9,
+   "p90": 7.16,
+   "p99": 7.42
+  },
+  "w270468757": {
+   "roofPoints": 409,
+   "groundPoints": 448,
+   "area": 124.6,
+   "ground": 312.85,
+   "p50": 4.3,
+   "p90": 9.75,
+   "p99": 14.75
+  },
+  "w270468758": {
+   "roofPoints": 105,
+   "groundPoints": 400,
+   "area": 151.6,
+   "ground": 306.87,
+   "p50": 10.63,
+   "p90": 10.72,
+   "p99": 10.78
+  },
+  "w270468759": {
+   "roofPoints": 152,
+   "groundPoints": 400,
+   "area": 96.5,
+   "ground": 307.78,
+   "p50": 3.33,
+   "p90": 3.89,
+   "p99": 3.98
+  },
+  "w270468760": {
+   "roofPoints": 184,
+   "groundPoints": 211,
+   "area": 152.9,
+   "ground": 304.63,
+   "p50": 6.78,
+   "p90": 7.73,
+   "p99": 8.33
+  },
+  "w270468761": {
+   "roofPoints": 177,
+   "groundPoints": 241,
+   "area": 154.4,
+   "ground": 307.16,
+   "p50": 5.03,
+   "p90": 5.89,
+   "p99": 6.04
+  },
+  "w270468762": {
+   "roofPoints": 530,
+   "groundPoints": 483,
+   "area": 128.7,
+   "ground": 311.61,
+   "p50": 4.87,
+   "p90": 5.64,
+   "p99": 5.86
+  },
+  "w270468763": {
+   "roofPoints": 277,
+   "groundPoints": 243,
+   "area": 169.5,
+   "ground": 304.59,
+   "p50": 8.04,
+   "p90": 8.51,
+   "p99": 8.6
+  },
+  "w270468765": {
+   "roofPoints": 311,
+   "groundPoints": 336,
+   "area": 208.4,
+   "ground": 304.22,
+   "p50": 6.23,
+   "p90": 6.98,
+   "p99": 7.37
+  },
+  "w270468766": {
+   "roofPoints": 0,
+   "groundPoints": 364,
+   "area": 149.5,
+   "ground": 306.19
+  },
+  "w270468768": {
+   "roofPoints": 276,
+   "groundPoints": 554,
+   "area": 143.3,
+   "ground": 311.18,
+   "p50": 8.14,
+   "p90": 8.18,
+   "p99": 8.22
+  },
+  "w270468769": {
+   "roofPoints": 274,
+   "groundPoints": 337,
+   "area": 178.5,
+   "ground": 305.75,
+   "p50": 6.77,
+   "p90": 7.75,
+   "p99": 7.84
+  },
+  "w270468770": {
+   "roofPoints": 178,
+   "groundPoints": 210,
+   "area": 124.1,
+   "ground": 307.52,
+   "p50": 6.27,
+   "p90": 7.23,
+   "p99": 7.38
+  },
+  "w270468771": {
+   "roofPoints": 133,
+   "groundPoints": 303,
+   "area": 108.2,
+   "ground": 303.64,
+   "p50": 4.53,
+   "p90": 5.32,
+   "p99": 5.49
+  },
+  "w270468772": {
+   "roofPoints": 161,
+   "groundPoints": 380,
+   "area": 122.4,
+   "ground": 305.7,
+   "p50": 4.62,
+   "p90": 5.25,
+   "p99": 5.44
+  },
+  "w270468773": {
+   "roofPoints": 193,
+   "groundPoints": 378,
+   "area": 134.4,
+   "ground": 307.57,
+   "p50": 4.48,
+   "p90": 5.62,
+   "p99": 5.82
+  },
+  "w270468774": {
+   "roofPoints": 1017,
+   "groundPoints": 542,
+   "area": 205.5,
+   "ground": 310.71,
+   "p50": 4.8,
+   "p90": 5.98,
+   "p99": 6.17
+  },
+  "w270468775": {
+   "roofPoints": 621,
+   "groundPoints": 461,
+   "area": 174.5,
+   "ground": 311.47,
+   "p50": 5.12,
+   "p90": 5.65,
+   "p99": 5.76
+  },
+  "w270468777": {
+   "roofPoints": 199,
+   "groundPoints": 268,
+   "area": 133.6,
+   "ground": 305.76,
+   "p50": 5.81,
+   "p90": 6.35,
+   "p99": 6.44
+  },
+  "w270468778": {
+   "roofPoints": 0,
+   "groundPoints": 114,
+   "area": 78.8,
+   "ground": 303.18
+  },
+  "w270468779": {
+   "roofPoints": 123,
+   "groundPoints": 203,
+   "area": 103.9,
+   "ground": 304.91,
+   "p50": 4.02,
+   "p90": 4.84,
+   "p99": 5.01
+  },
+  "w270468780": {
+   "roofPoints": 603,
+   "groundPoints": 620,
+   "area": 171.5,
+   "ground": 310.13,
+   "p50": 6.42,
+   "p90": 6.74,
+   "p99": 13.58
+  },
+  "w270468781": {
+   "roofPoints": 147,
+   "groundPoints": 428,
+   "area": 148.0,
+   "ground": 305.86,
+   "p50": 5.96,
+   "p90": 6.76,
+   "p99": 7.08
+  },
+  "w270468782": {
+   "roofPoints": 1029,
+   "groundPoints": 539,
+   "area": 293.0,
+   "ground": 310.2,
+   "p50": 7.51,
+   "p90": 8.17,
+   "p99": 20.24
+  },
+  "w270468783": {
+   "roofPoints": 230,
+   "groundPoints": 422,
+   "area": 158.1,
+   "ground": 307.86,
+   "p50": 7.07,
+   "p90": 7.82,
+   "p99": 8.12
+  },
+  "w270468784": {
+   "roofPoints": 125,
+   "groundPoints": 349,
+   "area": 149.4,
+   "ground": 301.97,
+   "p50": 5.66,
+   "p90": 6.65,
+   "p99": 6.83
+  },
+  "w270468785": {
+   "roofPoints": 113,
+   "groundPoints": 163,
+   "area": 90.6,
+   "ground": 304.47,
+   "p50": 4.29,
+   "p90": 4.99,
+   "p99": 5.1
+  },
+  "w270468787": {
+   "roofPoints": 249,
+   "groundPoints": 313,
+   "area": 144.2,
+   "ground": 302.98,
+   "p50": 5.24,
+   "p90": 5.86,
+   "p99": 5.97
+  },
+  "w270468788": {
+   "roofPoints": 104,
+   "groundPoints": 453,
+   "area": 97.2,
+   "ground": 301.67,
+   "p50": 4.78,
+   "p90": 5.38,
+   "p99": 5.49
+  },
+  "w270468789": {
+   "roofPoints": 0,
+   "groundPoints": 506,
+   "area": 113.4,
+   "ground": 304.15
+  },
+  "w270468790": {
+   "roofPoints": 257,
+   "groundPoints": 498,
+   "area": 170.5,
+   "ground": 301.45,
+   "p50": 5.54,
+   "p90": 6.6,
+   "p99": 7.17
+  },
+  "w270468792": {
+   "roofPoints": 0,
+   "groundPoints": 363,
+   "area": 134.7,
+   "ground": 303.13
+  },
+  "w270468793": {
+   "roofPoints": 0,
+   "groundPoints": 757,
+   "area": 248.0,
+   "ground": 300.96
+  },
+  "w270468794": {
+   "roofPoints": 91,
+   "groundPoints": 236,
+   "area": 75.5,
+   "ground": 303.52,
+   "p50": 3.91,
+   "p90": 4.52,
+   "p99": 4.59
+  },
+  "w270468795": {
+   "roofPoints": 221,
+   "groundPoints": 411,
+   "area": 182.4,
+   "ground": 301.19,
+   "p50": 4.84,
+   "p90": 6.12,
+   "p99": 6.46
+  },
+  "w270468797": {
+   "roofPoints": 193,
+   "groundPoints": 527,
+   "area": 202.9,
+   "ground": 302.06,
+   "p50": 4.84,
+   "p90": 5.61,
+   "p99": 5.85
+  },
+  "w270468798": {
+   "roofPoints": 0,
+   "groundPoints": 551,
+   "area": 201.9,
+   "ground": 300.5
+  },
+  "w270468799": {
+   "roofPoints": 99,
+   "groundPoints": 326,
+   "area": 158.4,
+   "ground": 305.06,
+   "p50": 7.56,
+   "p90": 8.49,
+   "p99": 8.67
+  },
+  "w270468800": {
+   "roofPoints": 45,
+   "groundPoints": 259,
+   "area": 110.7,
+   "ground": 301.15,
+   "p50": 4.96,
+   "p90": 5.26,
+   "p99": 5.29
+  },
+  "w270468801": {
+   "roofPoints": 210,
+   "groundPoints": 335,
+   "area": 123.9,
+   "ground": 286.56,
+   "p50": 5.34,
+   "p90": 6.0,
+   "p99": 6.32
+  },
+  "w270468802": {
+   "roofPoints": 139,
+   "groundPoints": 493,
+   "area": 230.3,
+   "ground": 302.38,
+   "p50": 10.87,
+   "p90": 10.94,
+   "p99": 18.04
+  },
+  "w270468803": {
+   "roofPoints": 83,
+   "groundPoints": 159,
+   "area": 175.8,
+   "ground": 300.56,
+   "p50": 5.15,
+   "p90": 6.23,
+   "p99": 6.77
+  },
+  "w270468805": {
+   "roofPoints": 0,
+   "groundPoints": 592,
+   "area": 164.7,
+   "ground": 300.3
+  },
+  "w270468806": {
+   "roofPoints": 350,
+   "groundPoints": 289,
+   "area": 203.8,
+   "ground": 305.12,
+   "p50": 10.44,
+   "p90": 11.95,
+   "p99": 12.55
+  },
+  "w270468807": {
+   "roofPoints": 563,
+   "groundPoints": 523,
+   "area": 113.9,
+   "ground": 311.34,
+   "p50": 9.64,
+   "p90": 10.93,
+   "p99": 11.11
+  },
+  "w270468808": {
+   "roofPoints": 0,
+   "groundPoints": 276,
+   "area": 108.7,
+   "ground": 288.06
+  },
+  "w270468810": {
+   "roofPoints": 109,
+   "groundPoints": 316,
+   "area": 134.4,
+   "ground": 302.62,
+   "p50": 5.43,
+   "p90": 6.24,
+   "p99": 6.32
+  },
+  "w270468811": {
+   "roofPoints": 0,
+   "groundPoints": 567,
+   "area": 144.3,
+   "ground": 299.98
+  },
+  "w270468812": {
+   "roofPoints": 546,
+   "groundPoints": 600,
+   "area": 294.8,
+   "ground": 304.28,
+   "p50": 8.05,
+   "p90": 8.89,
+   "p99": 9.23
+  },
+  "w270468813": {
+   "roofPoints": 41,
+   "groundPoints": 119,
+   "area": 44.1,
+   "ground": 301.08,
+   "p50": 24.72,
+   "p90": 25.53,
+   "p99": 25.68
+  },
+  "w270468814": {
+   "roofPoints": 0,
+   "groundPoints": 399,
+   "area": 33.3,
+   "ground": 311.62
+  },
+  "w270468815": {
+   "roofPoints": 14,
+   "groundPoints": 255,
+   "area": 85.8,
+   "ground": 302.17,
+   "p50": 8.51,
+   "p90": 9.09,
+   "p99": 9.21
+  },
+  "w270468816": {
+   "roofPoints": 0,
+   "groundPoints": 886,
+   "area": 160.5,
+   "ground": 298.94
+  },
+  "w270468817": {
+   "roofPoints": 365,
+   "groundPoints": 527,
+   "area": 199.9,
+   "ground": 303.94,
+   "p50": 7.12,
+   "p90": 8.45,
+   "p99": 9.03
+  },
+  "w270468818": {
+   "roofPoints": 88,
+   "groundPoints": 552,
+   "area": 184.4,
+   "ground": 300.41,
+   "p50": 3.91,
+   "p90": 4.69,
+   "p99": 4.96
+  },
+  "w270468819": {
+   "roofPoints": 868,
+   "groundPoints": 1306,
+   "area": 192.0,
+   "ground": 311.15,
+   "p50": 5.04,
+   "p90": 9.49,
+   "p99": 13.28
+  },
+  "w270468820": {
+   "roofPoints": 185,
+   "groundPoints": 435,
+   "area": 122.7,
+   "ground": 302.23,
+   "p50": 5.05,
+   "p90": 6.12,
+   "p99": 6.55
+  },
+  "w270468821": {
+   "roofPoints": 0,
+   "groundPoints": 536,
+   "area": 152.3,
+   "ground": 298.61
+  },
+  "w270468822": {
+   "roofPoints": 192,
+   "groundPoints": 477,
+   "area": 126.0,
+   "ground": 302.65,
+   "p50": 10.28,
+   "p90": 11.22,
+   "p99": 11.5
+  },
+  "w270468823": {
+   "roofPoints": 20,
+   "groundPoints": 707,
+   "area": 193.9,
+   "ground": 300.23,
+   "p50": 4.64,
+   "p90": 4.97,
+   "p99": 5.11
+  },
+  "w270468824": {
+   "roofPoints": 877,
+   "groundPoints": 1207,
+   "area": 183.8,
+   "ground": 310.62,
+   "p50": 8.06,
+   "p90": 10.81,
+   "p99": 10.88
+  },
+  "w270468826": {
+   "roofPoints": 85,
+   "groundPoints": 254,
+   "area": 97.2,
+   "ground": 302.37,
+   "p50": 10.29,
+   "p90": 11.26,
+   "p99": 11.79
+  },
+  "w270468827": {
+   "roofPoints": 0,
+   "groundPoints": 760,
+   "area": 180.2,
+   "ground": 298.69
+  },
+  "w270468828": {
+   "roofPoints": 0,
+   "groundPoints": 504,
+   "area": 196.8,
+   "ground": 300.2
+  },
+  "w270468830": {
+   "roofPoints": 983,
+   "groundPoints": 908,
+   "area": 239.2,
+   "ground": 310.09,
+   "p50": 6.21,
+   "p90": 21.2,
+   "p99": 23.26
+  },
+  "w270468831": {
+   "roofPoints": 671,
+   "groundPoints": 356,
+   "area": 515.0,
+   "ground": 285.2,
+   "p50": 6.73,
+   "p90": 8.48,
+   "p99": 8.98
+  },
+  "w270468832": {
+   "roofPoints": 148,
+   "groundPoints": 355,
+   "area": 117.6,
+   "ground": 302.19,
+   "p50": 5.46,
+   "p90": 6.49,
+   "p99": 6.71
+  },
+  "w270468833": {
+   "roofPoints": 0,
+   "groundPoints": 742,
+   "area": 168.2,
+   "ground": 298.62
+  },
+  "w270468834": {
+   "roofPoints": 0,
+   "groundPoints": 329,
+   "area": 181.0,
+   "ground": 300.28
+  },
+  "w270468835": {
+   "roofPoints": 852,
+   "groundPoints": 626,
+   "area": 246.9,
+   "ground": 309.82,
+   "p50": 20.64,
+   "p90": 23.76,
+   "p99": 25.43
+  },
+  "w270468836": {
+   "roofPoints": 148,
+   "groundPoints": 346,
+   "area": 122.2,
+   "ground": 302.7,
+   "p50": 9.53,
+   "p90": 10.82,
+   "p99": 11.18
+  },
+  "w270468837": {
+   "roofPoints": 0,
+   "groundPoints": 645,
+   "area": 169.7,
+   "ground": 297.8
+  },
+  "w270468838": {
+   "roofPoints": 0,
+   "groundPoints": 543,
+   "area": 171.7,
+   "ground": 300.32
+  },
+  "w270468839": {
+   "roofPoints": 246,
+   "groundPoints": 394,
+   "area": 141.8,
+   "ground": 310.1,
+   "p50": 6.36,
+   "p90": 21.67,
+   "p99": 23.21
+  },
+  "w270468840": {
+   "roofPoints": 146,
+   "groundPoints": 393,
+   "area": 116.5,
+   "ground": 302.88,
+   "p50": 5.1,
+   "p90": 5.8,
+   "p99": 6.05
+  },
+  "w270468841": {
+   "roofPoints": 0,
+   "groundPoints": 483,
+   "area": 139.0,
+   "ground": 299.8
+  },
+  "w270468842": {
+   "roofPoints": 167,
+   "groundPoints": 713,
+   "area": 123.9,
+   "ground": 302.42,
+   "p50": 4.63,
+   "p90": 5.61,
+   "p99": 5.76
+  },
+  "w270468843": {
+   "roofPoints": 272,
+   "groundPoints": 373,
+   "area": 263.5,
+   "ground": 309.84,
+   "p50": 18.83,
+   "p90": 26.56,
+   "p99": 26.91
+  },
+  "w270468844": {
+   "roofPoints": 0,
+   "groundPoints": 406,
+   "area": 109.6,
+   "ground": 299.11
+  },
+  "w270468845": {
+   "roofPoints": 0,
+   "groundPoints": 208,
+   "area": 93.7,
+   "ground": 298.43
+  },
+  "w270468846": {
+   "roofPoints": 809,
+   "groundPoints": 450,
+   "area": 269.1,
+   "ground": 309.58,
+   "p50": 4.97,
+   "p90": 15.86,
+   "p99": 19.04
+  },
+  "w270468847": {
+   "roofPoints": 0,
+   "groundPoints": 563,
+   "area": 124.8,
+   "ground": 298.92
+  },
+  "w270468848": {
+   "roofPoints": 37,
+   "groundPoints": 349,
+   "area": 33.6,
+   "ground": 305.71,
+   "p50": 9.52,
+   "p90": 11.03,
+   "p99": 11.21
+  },
+  "w270468849": {
+   "roofPoints": 1126,
+   "groundPoints": 415,
+   "area": 247.9,
+   "ground": 308.85,
+   "p50": 7.71,
+   "p90": 9.09,
+   "p99": 14.84
+  },
+  "w270468850": {
+   "roofPoints": 0,
+   "groundPoints": 459,
+   "area": 99.7,
+   "ground": 298.0
+  },
+  "w270468851": {
+   "roofPoints": 0,
+   "groundPoints": 674,
+   "area": 136.5,
+   "ground": 298.69
+  },
+  "w270468852": {
+   "roofPoints": 0,
+   "groundPoints": 456,
+   "area": 86.9,
+   "ground": 297.9
+  },
+  "w270468853": {
+   "roofPoints": 797,
+   "groundPoints": 911,
+   "area": 232.8,
+   "ground": 308.07,
+   "p50": 6.26,
+   "p90": 14.68,
+   "p99": 16.12
+  },
+  "w270468854": {
+   "roofPoints": 553,
+   "groundPoints": 1115,
+   "area": 198.9,
+   "ground": 306.7,
+   "p50": 5.34,
+   "p90": 22.94,
+   "p99": 27.07
+  },
+  "w270468855": {
+   "roofPoints": 681,
+   "groundPoints": 1266,
+   "area": 249.6,
+   "ground": 306.11,
+   "p50": 10.97,
+   "p90": 11.1,
+   "p99": 11.62
+  },
+  "w270468856": {
+   "roofPoints": 259,
+   "groundPoints": 249,
+   "area": 165.9,
+   "ground": 294.5,
+   "p50": 7.24,
+   "p90": 8.5,
+   "p99": 9.13
+  },
+  "w270468857": {
+   "roofPoints": 1060,
+   "groundPoints": 853,
+   "area": 218.8,
+   "ground": 306.13,
+   "p50": 7.14,
+   "p90": 7.7,
+   "p99": 7.89
+  },
+  "w270468858": {
+   "roofPoints": 168,
+   "groundPoints": 271,
+   "area": 185.9,
+   "ground": 297.23,
+   "p50": 5.44,
+   "p90": 6.57,
+   "p99": 7.09
+  },
+  "w270468859": {
+   "roofPoints": 0,
+   "groundPoints": 182,
+   "area": 186.0,
+   "ground": 292.94
+  },
+  "w270468860": {
+   "roofPoints": 888,
+   "groundPoints": 1119,
+   "area": 244.9,
+   "ground": 306.07,
+   "p50": 5.69,
+   "p90": 8.15,
+   "p99": 18.76
+  },
+  "w270468861": {
+   "roofPoints": 0,
+   "groundPoints": 322,
+   "area": 187.7,
+   "ground": 296.8
+  },
+  "w270468862": {
+   "roofPoints": 0,
+   "groundPoints": 937,
+   "area": 260.8,
+   "ground": 295.67
+  },
+  "w270468863": {
+   "roofPoints": 169,
+   "groundPoints": 365,
+   "area": 142.7,
+   "ground": 296.41,
+   "p50": 5.79,
+   "p90": 6.13,
+   "p99": 6.3
+  },
+  "w270468864": {
+   "roofPoints": 100,
+   "groundPoints": 283,
+   "area": 136.8,
+   "ground": 302.46,
+   "p50": 4.66,
+   "p90": 5.4,
+   "p99": 5.88
+  },
+  "w270468865": {
+   "roofPoints": 241,
+   "groundPoints": 412,
+   "area": 201.4,
+   "ground": 297.41,
+   "p50": 5.44,
+   "p90": 6.62,
+   "p99": 7.04
+  },
+  "w270468866": {
+   "roofPoints": 0,
+   "groundPoints": 518,
+   "area": 45.9,
+   "ground": 296.19
+  },
+  "w270468867": {
+   "roofPoints": 302,
+   "groundPoints": 553,
+   "area": 218.2,
+   "ground": 294.32,
+   "p50": 7.22,
+   "p90": 8.02,
+   "p99": 8.21
+  },
+  "w270468868": {
+   "roofPoints": 0,
+   "groundPoints": 71,
+   "area": 141.3,
+   "ground": 295.85
+  },
+  "w270468869": {
+   "roofPoints": 230,
+   "groundPoints": 326,
+   "area": 190.5,
+   "ground": 294.28,
+   "p50": 8.32,
+   "p90": 9.26,
+   "p99": 9.5
+  },
+  "w270468870": {
+   "roofPoints": 97,
+   "groundPoints": 129,
+   "area": 177.2,
+   "ground": 296.49,
+   "p50": 6.07,
+   "p90": 7.45,
+   "p99": 7.95
+  },
+  "w270468872": {
+   "roofPoints": 226,
+   "groundPoints": 475,
+   "area": 123.8,
+   "ground": 301.5,
+   "p50": 7.38,
+   "p90": 8.23,
+   "p99": 8.56
+  },
+  "w270468873": {
+   "roofPoints": 71,
+   "groundPoints": 256,
+   "area": 163.4,
+   "ground": 293.69,
+   "p50": 7.5,
+   "p90": 9.0,
+   "p99": 9.61
+  },
+  "w270468874": {
+   "roofPoints": 200,
+   "groundPoints": 247,
+   "area": 201.9,
+   "ground": 297.15,
+   "p50": 5.24,
+   "p90": 6.62,
+   "p99": 7.15
+  },
+  "w270468876": {
+   "roofPoints": 205,
+   "groundPoints": 221,
+   "area": 168.8,
+   "ground": 294.71,
+   "p50": 5.63,
+   "p90": 6.67,
+   "p99": 7.05
+  },
+  "w270468877": {
+   "roofPoints": 248,
+   "groundPoints": 266,
+   "area": 182.9,
+   "ground": 297.02,
+   "p50": 5.57,
+   "p90": 6.92,
+   "p99": 7.14
+  },
+  "w270468879": {
+   "roofPoints": 237,
+   "groundPoints": 199,
+   "area": 184.9,
+   "ground": 294.44,
+   "p50": 5.55,
+   "p90": 7.17,
+   "p99": 8.04
+  },
+  "w270468884": {
+   "roofPoints": 0,
+   "groundPoints": 193,
+   "area": 107.4,
+   "ground": 299.37
+  },
+  "w270468887": {
+   "roofPoints": 210,
+   "groundPoints": 175,
+   "area": 156.2,
+   "ground": 296.27,
+   "p50": 7.66,
+   "p90": 8.07,
+   "p99": 8.16
+  },
+  "w270468890": {
+   "roofPoints": 313,
+   "groundPoints": 392,
+   "area": 359.1,
+   "ground": 302.51,
+   "p50": 5.83,
+   "p90": 7.76,
+   "p99": 8.74
+  },
+  "w270468891": {
+   "roofPoints": 236,
+   "groundPoints": 278,
+   "area": 199.9,
+   "ground": 294.03,
+   "p50": 5.81,
+   "p90": 7.32,
+   "p99": 8.12
+  },
+  "w270468892": {
+   "roofPoints": 269,
+   "groundPoints": 195,
+   "area": 186.2,
+   "ground": 295.42,
+   "p50": 5.09,
+   "p90": 6.23,
+   "p99": 6.41
+  },
+  "w270468893": {
+   "roofPoints": 0,
+   "groundPoints": 75,
+   "area": 23.8,
+   "ground": 297.94
+  },
+  "w270468894": {
+   "roofPoints": 215,
+   "groundPoints": 681,
+   "area": 174.3,
+   "ground": 291.17,
+   "p50": 8.85,
+   "p90": 10.44,
+   "p99": 10.97
+  },
+  "w270468895": {
+   "roofPoints": 131,
+   "groundPoints": 187,
+   "area": 151.2,
+   "ground": 293.96,
+   "p50": 4.43,
+   "p90": 5.25,
+   "p99": 5.68
+  },
+  "w270468896": {
+   "roofPoints": 142,
+   "groundPoints": 956,
+   "area": 113.5,
+   "ground": 291.61,
+   "p50": 6.74,
+   "p90": 7.59,
+   "p99": 7.68
+  },
+  "w270468897": {
+   "roofPoints": 235,
+   "groundPoints": 244,
+   "area": 164.0,
+   "ground": 293.6,
+   "p50": 4.64,
+   "p90": 5.45,
+   "p99": 5.6
+  },
+  "w270468898": {
+   "roofPoints": 0,
+   "groundPoints": 111,
+   "area": 155.9,
+   "ground": 303.69
+  },
+  "w270468899": {
+   "roofPoints": 310,
+   "groundPoints": 199,
+   "area": 206.8,
+   "ground": 293.66,
+   "p50": 6.61,
+   "p90": 7.65,
+   "p99": 7.82
+  },
+  "w270468900": {
+   "roofPoints": 0,
+   "groundPoints": 85,
+   "area": 136.5,
+   "ground": 301.41
+  },
+  "w270468901": {
+   "roofPoints": 170,
+   "groundPoints": 125,
+   "area": 191.5,
+   "ground": 293.77,
+   "p50": 5.83,
+   "p90": 7.03,
+   "p99": 7.7
+  },
+  "w270468902": {
+   "roofPoints": 0,
+   "groundPoints": 160,
+   "area": 148.6,
+   "ground": 298.66
+  },
+  "w270468903": {
+   "roofPoints": 58,
+   "groundPoints": 140,
+   "area": 83.6,
+   "ground": 299.51,
+   "p50": 4.42,
+   "p90": 4.81,
+   "p99": 4.86
+  },
+  "w270468904": {
+   "roofPoints": 131,
+   "groundPoints": 267,
+   "area": 188.0,
+   "ground": 292.58,
+   "p50": 7.19,
+   "p90": 8.16,
+   "p99": 8.74
+  },
+  "w270468905": {
+   "roofPoints": 1376,
+   "groundPoints": 1160,
+   "area": 225.8,
+   "ground": 293.57,
+   "p50": 8.12,
+   "p90": 9.52,
+   "p99": 10.36
+  },
+  "w270468906": {
+   "roofPoints": 88,
+   "groundPoints": 218,
+   "area": 88.7,
+   "ground": 298.8,
+   "p50": 4.63,
+   "p90": 5.11,
+   "p99": 5.26
+  },
+  "w270468907": {
+   "roofPoints": 1126,
+   "groundPoints": 546,
+   "area": 242.6,
+   "ground": 293.61,
+   "p50": 7.57,
+   "p90": 9.24,
+   "p99": 9.93
+  },
+  "w270468908": {
+   "roofPoints": 654,
+   "groundPoints": 842,
+   "area": 161.3,
+   "ground": 292.31,
+   "p50": 5.21,
+   "p90": 6.7,
+   "p99": 7.4
+  },
+  "w270468909": {
+   "roofPoints": 1276,
+   "groundPoints": 540,
+   "area": 239.9,
+   "ground": 293.62,
+   "p50": 7.43,
+   "p90": 9.11,
+   "p99": 9.83
+  },
+  "w270468910": {
+   "roofPoints": 73,
+   "groundPoints": 157,
+   "area": 69.2,
+   "ground": 298.14,
+   "p50": 7.16,
+   "p90": 7.37,
+   "p99": 7.41
+  },
+  "w270468911": {
+   "roofPoints": 0,
+   "groundPoints": 135,
+   "area": 96.3,
+   "ground": 299.97
+  },
+  "w270468912": {
+   "roofPoints": 1049,
+   "groundPoints": 503,
+   "area": 265.7,
+   "ground": 293.5,
+   "p50": 7.39,
+   "p90": 9.4,
+   "p99": 10.26
+  },
+  "w270468913": {
+   "roofPoints": 1514,
+   "groundPoints": 1652,
+   "area": 204.9,
+   "ground": 292.38,
+   "p50": 5.93,
+   "p90": 7.22,
+   "p99": 7.45
+  },
+  "w270468914": {
+   "roofPoints": 0,
+   "groundPoints": 66,
+   "area": 117.4,
+   "ground": 298.21
+  },
+  "w270468915": {
+   "roofPoints": 1033,
+   "groundPoints": 552,
+   "area": 255.3,
+   "ground": 293.59,
+   "p50": 6.86,
+   "p90": 8.94,
+   "p99": 9.62
+  },
+  "w270468916": {
+   "roofPoints": 282,
+   "groundPoints": 194,
+   "area": 197.8,
+   "ground": 297.41,
+   "p50": 6.9,
+   "p90": 7.72,
+   "p99": 7.97
+  },
+  "w270468917": {
+   "roofPoints": 101,
+   "groundPoints": 135,
+   "area": 96.8,
+   "ground": 297.75,
+   "p50": 4.68,
+   "p90": 5.52,
+   "p99": 5.8
+  },
+  "w270468918": {
+   "roofPoints": 1053,
+   "groundPoints": 440,
+   "area": 273.8,
+   "ground": 293.37,
+   "p50": 7.32,
+   "p90": 9.26,
+   "p99": 9.89
+  },
+  "w270468919": {
+   "roofPoints": 166,
+   "groundPoints": 196,
+   "area": 159.6,
+   "ground": 295.86,
+   "p50": 6.82,
+   "p90": 7.97,
+   "p99": 8.59
+  },
+  "w270468920": {
+   "roofPoints": 1022,
+   "groundPoints": 995,
+   "area": 195.0,
+   "ground": 292.3,
+   "p50": 7.39,
+   "p90": 8.67,
+   "p99": 8.93
+  },
+  "w270468921": {
+   "roofPoints": 144,
+   "groundPoints": 157,
+   "area": 99.3,
+   "ground": 297.42,
+   "p50": 5.22,
+   "p90": 5.97,
+   "p99": 6.2
+  },
+  "w270468922": {
+   "roofPoints": 113,
+   "groundPoints": 102,
+   "area": 118.0,
+   "ground": 297.31,
+   "p50": 5.58,
+   "p90": 6.3,
+   "p99": 6.48
+  },
+  "w270468923": {
+   "roofPoints": 939,
+   "groundPoints": 422,
+   "area": 254.1,
+   "ground": 293.36,
+   "p50": 7.2,
+   "p90": 9.2,
+   "p99": 9.92
+  },
+  "w270468924": {
+   "roofPoints": 282,
+   "groundPoints": 228,
+   "area": 199.0,
+   "ground": 295.75,
+   "p50": 7.12,
+   "p90": 7.72,
+   "p99": 7.81
+  },
+  "w270468925": {
+   "roofPoints": 224,
+   "groundPoints": 310,
+   "area": 176.1,
+   "ground": 291.57,
+   "p50": 5.49,
+   "p90": 24.19,
+   "p99": 24.88
+  },
+  "w270468926": {
+   "roofPoints": 65,
+   "groundPoints": 118,
+   "area": 98.5,
+   "ground": 298.25,
+   "p50": 5.01,
+   "p90": 5.75,
+   "p99": 5.82
+  },
+  "w270468927": {
+   "roofPoints": 739,
+   "groundPoints": 343,
+   "area": 221.8,
+   "ground": 292.88,
+   "p50": 7.89,
+   "p90": 9.41,
+   "p99": 10.15
+  },
+  "w270468928": {
+   "roofPoints": 133,
+   "groundPoints": 190,
+   "area": 176.5,
+   "ground": 296.51,
+   "p50": 4.48,
+   "p90": 6.09,
+   "p99": 6.84
+  },
+  "w270468929": {
+   "roofPoints": 116,
+   "groundPoints": 235,
+   "area": 136.6,
+   "ground": 291.51,
+   "p50": 4.54,
+   "p90": 5.1,
+   "p99": 23.78
+  },
+  "w270468930": {
+   "roofPoints": 165,
+   "groundPoints": 167,
+   "area": 133.7,
+   "ground": 299.32,
+   "p50": 3.87,
+   "p90": 4.62,
+   "p99": 4.77
+  },
+  "w270468931": {
+   "roofPoints": 95,
+   "groundPoints": 102,
+   "area": 170.1,
+   "ground": 301.52,
+   "p50": 10.59,
+   "p90": 12.16,
+   "p99": 12.89
+  },
+  "w270468932": {
+   "roofPoints": 681,
+   "groundPoints": 223,
+   "area": 209.1,
+   "ground": 292.77,
+   "p50": 7.51,
+   "p90": 9.6,
+   "p99": 10.21
+  },
+  "w270468933": {
+   "roofPoints": 66,
+   "groundPoints": 65,
+   "area": 86.4,
+   "ground": 298.45,
+   "p50": 5.07,
+   "p90": 5.56,
+   "p99": 5.69
+  },
+  "w270468934": {
+   "roofPoints": 800,
+   "groundPoints": 263,
+   "area": 245.5,
+   "ground": 292.76,
+   "p50": 7.26,
+   "p90": 9.29,
+   "p99": 9.87
+  },
+  "w270468935": {
+   "roofPoints": 91,
+   "groundPoints": 167,
+   "area": 108.1,
+   "ground": 296.58,
+   "p50": 6.4,
+   "p90": 6.74,
+   "p99": 6.85
+  },
+  "w270468936": {
+   "roofPoints": 234,
+   "groundPoints": 116,
+   "area": 158.5,
+   "ground": 291.28,
+   "p50": 8.84,
+   "p90": 21.9,
+   "p99": 22.65
+  },
+  "w270468939": {
+   "roofPoints": 0,
+   "groundPoints": 121,
+   "area": 119.1,
+   "ground": 298.45
+  },
+  "w270468942": {
+   "roofPoints": 747,
+   "groundPoints": 382,
+   "area": 231.1,
+   "ground": 292.79,
+   "p50": 8.33,
+   "p90": 10.01,
+   "p99": 10.62
+  },
+  "w270468943": {
+   "roofPoints": 176,
+   "groundPoints": 100,
+   "area": 134.0,
+   "ground": 298.32,
+   "p50": 5.02,
+   "p90": 5.68,
+   "p99": 5.81
+  },
+  "w270468945": {
+   "roofPoints": 0,
+   "groundPoints": 127,
+   "area": 195.6,
+   "ground": 302.48
+  },
+  "w270468947": {
+   "roofPoints": 0,
+   "groundPoints": 238,
+   "area": 160.4,
+   "ground": 295.53
+  },
+  "w270468949": {
+   "roofPoints": 465,
+   "groundPoints": 464,
+   "area": 148.0,
+   "ground": 291.45,
+   "p50": 5.22,
+   "p90": 17.2,
+   "p99": 20.94
+  },
+  "w270468951": {
+   "roofPoints": 110,
+   "groundPoints": 161,
+   "area": 119.9,
+   "ground": 298.31,
+   "p50": 5.02,
+   "p90": 5.68,
+   "p99": 5.84
+  },
+  "w270468953": {
+   "roofPoints": 0,
+   "groundPoints": 155,
+   "area": 126.6,
+   "ground": 296.03
+  },
+  "w270468955": {
+   "roofPoints": 823,
+   "groundPoints": 680,
+   "area": 239.7,
+   "ground": 291.5,
+   "p50": 4.95,
+   "p90": 6.56,
+   "p99": 6.96
+  },
+  "w270468956": {
+   "roofPoints": 0,
+   "groundPoints": 123,
+   "area": 241.8,
+   "ground": 303.14
+  },
+  "w270468957": {
+   "roofPoints": 455,
+   "groundPoints": 629,
+   "area": 170.6,
+   "ground": 291.57,
+   "p50": 5.65,
+   "p90": 6.92,
+   "p99": 7.75
+  },
+  "w270468958": {
+   "roofPoints": 334,
+   "groundPoints": 196,
+   "area": 229.2,
+   "ground": 294.39,
+   "p50": 17.28,
+   "p90": 22.22,
+   "p99": 22.45
+  },
+  "w270468959": {
+   "roofPoints": 0,
+   "groundPoints": 131,
+   "area": 16.1,
+   "ground": 303.32
+  },
+  "w270468960": {
+   "roofPoints": 800,
+   "groundPoints": 456,
+   "area": 148.0,
+   "ground": 294.41,
+   "p50": 8.21,
+   "p90": 9.06,
+   "p99": 18.9
+  },
+  "w270468961": {
+   "roofPoints": 403,
+   "groundPoints": 311,
+   "area": 127.4,
+   "ground": 293.91,
+   "p50": 7.17,
+   "p90": 18.32,
+   "p99": 23.38
+  },
+  "w270468962": {
+   "roofPoints": 0,
+   "groundPoints": 333,
+   "area": 192.5,
+   "ground": 304.83
+  },
+  "w270468963": {
+   "roofPoints": 204,
+   "groundPoints": 208,
+   "area": 120.6,
+   "ground": 294.48,
+   "p50": 6.24,
+   "p90": 6.67,
+   "p99": 21.51
+  },
+  "w270468964": {
+   "roofPoints": 350,
+   "groundPoints": 553,
+   "area": 151.4,
+   "ground": 294.11,
+   "p50": 6.2,
+   "p90": 6.64,
+   "p99": 6.73
+  },
+  "w270468966": {
+   "roofPoints": 468,
+   "groundPoints": 560,
+   "area": 280.7,
+   "ground": 308.96,
+   "p50": 8.63,
+   "p90": 9.67,
+   "p99": 10.02
+  },
+  "w270468967": {
+   "roofPoints": 301,
+   "groundPoints": 290,
+   "area": 134.7,
+   "ground": 308.51,
+   "p50": 10.58,
+   "p90": 10.74,
+   "p99": 18.13
+  },
+  "w270468969": {
+   "roofPoints": 237,
+   "groundPoints": 395,
+   "area": 224.5,
+   "ground": 295.31,
+   "p50": 4.52,
+   "p90": 5.47,
+   "p99": 6.23
+  },
+  "w270468970": {
+   "roofPoints": 0,
+   "groundPoints": 417,
+   "area": 141.1,
+   "ground": 300.07
+  },
+  "w270468971": {
+   "roofPoints": 0,
+   "groundPoints": 241,
+   "area": 200.4,
+   "ground": 302.47
+  },
+  "w270468973": {
+   "roofPoints": 205,
+   "groundPoints": 509,
+   "area": 152.7,
+   "ground": 295.71,
+   "p50": 4.59,
+   "p90": 5.53,
+   "p99": 5.78
+  },
+  "w270468974": {
+   "roofPoints": 772,
+   "groundPoints": 424,
+   "area": 225.5,
+   "ground": 293.08,
+   "p50": 8.34,
+   "p90": 10.2,
+   "p99": 10.74
+  },
+  "w270468976": {
+   "roofPoints": 59,
+   "groundPoints": 454,
+   "area": 186.0,
+   "ground": 298.2,
+   "p50": 5.53,
+   "p90": 6.15,
+   "p99": 6.51
+  },
+  "w270468978": {
+   "roofPoints": 446,
+   "groundPoints": 331,
+   "area": 294.0,
+   "ground": 312.07,
+   "p50": 6.98,
+   "p90": 7.23,
+   "p99": 7.35
+  },
+  "w270468980": {
+   "roofPoints": 246,
+   "groundPoints": 496,
+   "area": 186.2,
+   "ground": 292.91,
+   "p50": 8.49,
+   "p90": 9.21,
+   "p99": 10.52
+  },
+  "w270468981": {
+   "roofPoints": 324,
+   "groundPoints": 866,
+   "area": 205.2,
+   "ground": 294.11,
+   "p50": 7.66,
+   "p90": 8.71,
+   "p99": 8.95
+  },
+  "w270468982": {
+   "roofPoints": 17,
+   "groundPoints": 662,
+   "area": 22.9,
+   "ground": 306.74,
+   "p50": 11.03,
+   "p90": 11.19,
+   "p99": 11.23
+  },
+  "w270468984": {
+   "roofPoints": 0,
+   "groundPoints": 56,
+   "area": 12.0,
+   "ground": 295.05
+  },
+  "w270468985": {
+   "roofPoints": 0,
+   "groundPoints": 221,
+   "area": 23.1,
+   "ground": 305.45
+  },
+  "w270468986": {
+   "roofPoints": 0,
+   "groundPoints": 572,
+   "area": 37.4,
+   "ground": 292.63
+  },
+  "w270468988": {
+   "roofPoints": 0,
+   "groundPoints": 576,
+   "area": 146.6,
+   "ground": 302.07
+  },
+  "w270468990": {
+   "roofPoints": 0,
+   "groundPoints": 101,
+   "area": 15.3,
+   "ground": 300.16
+  },
+  "w270468991": {
+   "roofPoints": 0,
+   "groundPoints": 513,
+   "area": 176.0,
+   "ground": 299.18
+  },
+  "w270468994": {
+   "roofPoints": 2062,
+   "groundPoints": 1235,
+   "area": 338.9,
+   "ground": 294.47,
+   "p50": 10.09,
+   "p90": 12.03,
+   "p99": 12.28
+  },
+  "w270468995": {
+   "roofPoints": 409,
+   "groundPoints": 515,
+   "area": 138.0,
+   "ground": 318.58,
+   "p50": 5.71,
+   "p90": 11.78,
+   "p99": 14.17
+  },
+  "w270468996": {
+   "roofPoints": 6,
+   "groundPoints": 532,
+   "area": 11.6,
+   "ground": 308.96
+  },
+  "w270468998": {
+   "roofPoints": 35,
+   "groundPoints": 218,
+   "area": 28.4,
+   "ground": 304.63,
+   "p50": 2.56,
+   "p90": 2.84,
+   "p99": 2.92
+  },
+  "w270468999": {
+   "roofPoints": 98,
+   "groundPoints": 369,
+   "area": 110.9,
+   "ground": 296.48,
+   "p50": 3.2,
+   "p90": 3.32,
+   "p99": 3.35
+  },
+  "w270469000": {
+   "roofPoints": 15,
+   "groundPoints": 261,
+   "area": 23.7,
+   "ground": 287.66,
+   "p50": 3.07,
+   "p90": 3.22,
+   "p99": 3.32
+  },
+  "w270469005": {
+   "roofPoints": 0,
+   "groundPoints": 138,
+   "area": 16.2,
+   "ground": 301.71
+  },
+  "w270469006": {
+   "roofPoints": 0,
+   "groundPoints": 125,
+   "area": 8.8,
+   "ground": 302.55
+  },
+  "w270469007": {
+   "roofPoints": 0,
+   "groundPoints": 330,
+   "area": 10.1,
+   "ground": 301.15
+  },
+  "w270469011": {
+   "roofPoints": 147,
+   "groundPoints": 496,
+   "area": 92.4,
+   "ground": 286.31,
+   "p50": 7.1,
+   "p90": 7.21,
+   "p99": 7.25
+  },
+  "w270469014": {
+   "roofPoints": 0,
+   "groundPoints": 350,
+   "area": 71.4,
+   "ground": 303.06
+  },
+  "w270469015": {
+   "roofPoints": 0,
+   "groundPoints": 505,
+   "area": 25.2,
+   "ground": 298.39
+  },
+  "w270469016": {
+   "roofPoints": 0,
+   "groundPoints": 211,
+   "area": 10.3,
+   "ground": 306.16
+  },
+  "w270469017": {
+   "roofPoints": 0,
+   "groundPoints": 255,
+   "area": 106.6,
+   "ground": 302.03
+  },
+  "w270469018": {
+   "roofPoints": 0,
+   "groundPoints": 106,
+   "area": 13.9,
+   "ground": 292.01
+  },
+  "w270469019": {
+   "roofPoints": 0,
+   "groundPoints": 25,
+   "area": 17.1,
+   "ground": 301.28
+  },
+  "w270469021": {
+   "roofPoints": 0,
+   "groundPoints": 89,
+   "area": 23.5,
+   "ground": 299.4
+  },
+  "w270469022": {
+   "roofPoints": 0,
+   "groundPoints": 217,
+   "area": 31.5,
+   "ground": 295.91
+  },
+  "w270469025": {
+   "roofPoints": 0,
+   "groundPoints": 675,
+   "area": 17.0,
+   "ground": 292.94
+  },
+  "w270469026": {
+   "roofPoints": 0,
+   "groundPoints": 65,
+   "area": 13.5,
+   "ground": 300.61
+  },
+  "w270469027": {
+   "roofPoints": 0,
+   "groundPoints": 402,
+   "area": 30.9,
+   "ground": 295.5
+  },
+  "w270469028": {
+   "roofPoints": 48,
+   "groundPoints": 359,
+   "area": 34.2,
+   "ground": 293.26,
+   "p50": 14.89,
+   "p90": 15.23,
+   "p99": 15.3
+  },
+  "w270469030": {
+   "roofPoints": 0,
+   "groundPoints": 304,
+   "area": 22.5,
+   "ground": 299.2
+  },
+  "w270469031": {
+   "roofPoints": 0,
+   "groundPoints": 148,
+   "area": 43.1,
+   "ground": 310.24
+  },
+  "w270469033": {
+   "roofPoints": 553,
+   "groundPoints": 588,
+   "area": 153.6,
+   "ground": 318.89,
+   "p50": 5.88,
+   "p90": 7.24,
+   "p99": 7.75
+  },
+  "w270469034": {
+   "roofPoints": 4,
+   "groundPoints": 198,
+   "area": 48.7,
+   "ground": 301.44
+  },
+  "w270469035": {
+   "roofPoints": 0,
+   "groundPoints": 250,
+   "area": 53.9,
+   "ground": 304.41
+  },
+  "w270469037": {
+   "roofPoints": 0,
+   "groundPoints": 123,
+   "area": 17.0,
+   "ground": 300.96
+  },
+  "w270469038": {
+   "roofPoints": 0,
+   "groundPoints": 104,
+   "area": 9.1,
+   "ground": 308.4
+  },
+  "w270469039": {
+   "roofPoints": 255,
+   "groundPoints": 424,
+   "area": 110.2,
+   "ground": 309.85,
+   "p50": 8.93,
+   "p90": 15.77,
+   "p99": 17.49
+  },
+  "w270469040": {
+   "roofPoints": 0,
+   "groundPoints": 171,
+   "area": 79.7,
+   "ground": 311.88
+  },
+  "w270469042": {
+   "roofPoints": 16,
+   "groundPoints": 208,
+   "area": 47.7,
+   "ground": 306.78,
+   "p50": 21.18,
+   "p90": 21.35,
+   "p99": 21.39
+  },
+  "w270469044": {
+   "roofPoints": 0,
+   "groundPoints": 314,
+   "area": 10.2,
+   "ground": 317.85
+  },
+  "w270469047": {
+   "roofPoints": 0,
+   "groundPoints": 106,
+   "area": 8.8,
+   "ground": 310.75
+  },
+  "w270469048": {
+   "roofPoints": 0,
+   "groundPoints": 71,
+   "area": 25.8,
+   "ground": 294.3
+  },
+  "w270469050": {
+   "roofPoints": 0,
+   "groundPoints": 589,
+   "area": 80.3,
+   "ground": 311.53
+  },
+  "w270469052": {
+   "roofPoints": 0,
+   "groundPoints": 145,
+   "area": 15.3,
+   "ground": 292.33
+  },
+  "w270469053": {
+   "roofPoints": 56,
+   "groundPoints": 614,
+   "area": 40.8,
+   "ground": 296.09,
+   "p50": 3.68,
+   "p90": 4.1,
+   "p99": 4.17
+  },
+  "w270469054": {
+   "roofPoints": 156,
+   "groundPoints": 388,
+   "area": 236.8,
+   "ground": 310.32,
+   "p50": 7.59,
+   "p90": 8.78,
+   "p99": 9.06
+  },
+  "w270469055": {
+   "roofPoints": 37,
+   "groundPoints": 374,
+   "area": 32.3,
+   "ground": 295.23,
+   "p50": 2.33,
+   "p90": 2.5,
+   "p99": 2.53
+  },
+  "w270469056": {
+   "roofPoints": 0,
+   "groundPoints": 138,
+   "area": 64.8,
+   "ground": 305.0
+  },
+  "w270469057": {
+   "roofPoints": 0,
+   "groundPoints": 285,
+   "area": 40.8,
+   "ground": 301.64
+  },
+  "w270469058": {
+   "roofPoints": 136,
+   "groundPoints": 301,
+   "area": 193.2,
+   "ground": 310.44,
+   "p50": 12.0,
+   "p90": 12.05,
+   "p99": 12.07
+  },
+  "w270469061": {
+   "roofPoints": 0,
+   "groundPoints": 152,
+   "area": 23.4,
+   "ground": 307.54
+  },
+  "w270469064": {
+   "roofPoints": 84,
+   "groundPoints": 133,
+   "area": 65.5,
+   "ground": 294.83,
+   "p50": 4.53,
+   "p90": 4.93,
+   "p99": 4.96
+  },
+  "w270469066": {
+   "roofPoints": 403,
+   "groundPoints": 503,
+   "area": 203.7,
+   "ground": 305.05,
+   "p50": 8.86,
+   "p90": 10.27,
+   "p99": 10.98
+  },
+  "w270469067": {
+   "roofPoints": 0,
+   "groundPoints": 438,
+   "area": 62.1,
+   "ground": 298.28
+  },
+  "w270469068": {
+   "roofPoints": 0,
+   "groundPoints": 216,
+   "area": 24.8,
+   "ground": 300.96
+  },
+  "w270469070": {
+   "roofPoints": 0,
+   "groundPoints": 249,
+   "area": 39.7,
+   "ground": 293.27
+  },
+  "w270469072": {
+   "roofPoints": 0,
+   "groundPoints": 161,
+   "area": 29.3,
+   "ground": 301.72
+  },
+  "w270469074": {
+   "roofPoints": 59,
+   "groundPoints": 482,
+   "area": 12.9,
+   "ground": 293.09,
+   "p50": 3.72,
+   "p90": 3.78,
+   "p99": 3.86
+  },
+  "w270469075": {
+   "roofPoints": 0,
+   "groundPoints": 256,
+   "area": 16.7,
+   "ground": 300.19
+  },
+  "w270469076": {
+   "roofPoints": 0,
+   "groundPoints": 255,
+   "area": 40.3,
+   "ground": 301.01
+  },
+  "w270469078": {
+   "roofPoints": 952,
+   "groundPoints": 1084,
+   "area": 259.7,
+   "ground": 314.69,
+   "p50": 6.07,
+   "p90": 6.85,
+   "p99": 7.02
+  },
+  "w270469081": {
+   "roofPoints": 0,
+   "groundPoints": 34,
+   "area": 43.0,
+   "ground": 295.58
+  },
+  "w270469083": {
+   "roofPoints": 212,
+   "groundPoints": 579,
+   "area": 139.9,
+   "ground": 308.73,
+   "p50": 4.92,
+   "p90": 5.79,
+   "p99": 5.99
+  },
+  "w270469087": {
+   "roofPoints": 0,
+   "groundPoints": 52,
+   "area": 20.4,
+   "ground": 297.24
+  },
+  "w270469089": {
+   "roofPoints": 0,
+   "groundPoints": 734,
+   "area": 53.7,
+   "ground": 309.85
+  },
+  "w270469091": {
+   "roofPoints": 0,
+   "groundPoints": 286,
+   "area": 101.9,
+   "ground": 302.72
+  },
+  "w270469094": {
+   "roofPoints": 152,
+   "groundPoints": 213,
+   "area": 112.0,
+   "ground": 307.92,
+   "p50": 2.99,
+   "p90": 19.15,
+   "p99": 20.28
+  },
+  "w270469096": {
+   "roofPoints": 52,
+   "groundPoints": 549,
+   "area": 23.6,
+   "ground": 302.64,
+   "p50": 3.2,
+   "p90": 3.22,
+   "p99": 3.23
+  },
+  "w270469098": {
+   "roofPoints": 9,
+   "groundPoints": 98,
+   "area": 19.6,
+   "ground": 308.58
+  },
+  "w270469100": {
+   "roofPoints": 0,
+   "groundPoints": 323,
+   "area": 30.0,
+   "ground": 304.53
+  },
+  "w270469102": {
+   "roofPoints": 7,
+   "groundPoints": 175,
+   "area": 43.0,
+   "ground": 297.24
+  },
+  "w270469104": {
+   "roofPoints": 0,
+   "groundPoints": 648,
+   "area": 543.1,
+   "ground": 291.83
+  },
+  "w270469106": {
+   "roofPoints": 0,
+   "groundPoints": 313,
+   "area": 9.1,
+   "ground": 295.56
+  },
+  "w270469110": {
+   "roofPoints": 131,
+   "groundPoints": 490,
+   "area": 45.9,
+   "ground": 306.92,
+   "p50": 3.87,
+   "p90": 3.93,
+   "p99": 4.69
+  },
+  "w270469120": {
+   "roofPoints": 0,
+   "groundPoints": 97,
+   "area": 14.9,
+   "ground": 299.57
+  },
+  "w270469122": {
+   "roofPoints": 0,
+   "groundPoints": 365,
+   "area": 22.4,
+   "ground": 297.24
+  },
+  "w270469125": {
+   "roofPoints": 131,
+   "groundPoints": 507,
+   "area": 118.0,
+   "ground": 319.77,
+   "p50": 5.31,
+   "p90": 10.64,
+   "p99": 11.15
+  },
+  "w270469127": {
+   "roofPoints": 14,
+   "groundPoints": 95,
+   "area": 22.5,
+   "ground": 292.06,
+   "p50": 21.75,
+   "p90": 21.88,
+   "p99": 21.91
+  },
+  "w270469130": {
+   "roofPoints": 0,
+   "groundPoints": 238,
+   "area": 9.0,
+   "ground": 300.23
+  },
+  "w270469132": {
+   "roofPoints": 241,
+   "groundPoints": 181,
+   "area": 246.1,
+   "ground": 308.17,
+   "p50": 4.87,
+   "p90": 6.44,
+   "p99": 7.08
+  },
+  "w270469136": {
+   "roofPoints": 259,
+   "groundPoints": 330,
+   "area": 80.9,
+   "ground": 316.31,
+   "p50": 7.65,
+   "p90": 8.76,
+   "p99": 8.85
+  },
+  "w270469139": {
+   "roofPoints": 0,
+   "groundPoints": 308,
+   "area": 55.3,
+   "ground": 302.29
+  },
+  "w270469141": {
+   "roofPoints": 386,
+   "groundPoints": 337,
+   "area": 203.9,
+   "ground": 305.68,
+   "p50": 8.52,
+   "p90": 9.91,
+   "p99": 10.61
+  },
+  "w270469143": {
+   "roofPoints": 0,
+   "groundPoints": 193,
+   "area": 22.2,
+   "ground": 301.51
+  },
+  "w270469147": {
+   "roofPoints": 0,
+   "groundPoints": 47,
+   "area": 16.2,
+   "ground": 295.48
+  },
+  "w270469150": {
+   "roofPoints": 0,
+   "groundPoints": 240,
+   "area": 60.8,
+   "ground": 309.75
+  },
+  "w270469156": {
+   "roofPoints": 0,
+   "groundPoints": 212,
+   "area": 22.8,
+   "ground": 313.9
+  },
+  "w270469158": {
+   "roofPoints": 42,
+   "groundPoints": 572,
+   "area": 24.2,
+   "ground": 302.58,
+   "p50": 3.13,
+   "p90": 3.16,
+   "p99": 3.17
+  },
+  "w270469161": {
+   "roofPoints": 1007,
+   "groundPoints": 1574,
+   "area": 342.2,
+   "ground": 294.4,
+   "p50": 10.11,
+   "p90": 11.62,
+   "p99": 12.31
+  },
+  "w270469163": {
+   "roofPoints": 0,
+   "groundPoints": 82,
+   "area": 14.6,
+   "ground": 301.15
+  },
+  "w270469167": {
+   "roofPoints": 260,
+   "groundPoints": 453,
+   "area": 243.5,
+   "ground": 309.52,
+   "p50": 7.7,
+   "p90": 9.51,
+   "p99": 9.78
+  },
+  "w270469169": {
+   "roofPoints": 0,
+   "groundPoints": 381,
+   "area": 43.4,
+   "ground": 306.45
+  },
+  "w270469171": {
+   "roofPoints": 9,
+   "groundPoints": 192,
+   "area": 181.5,
+   "ground": 309.8
+  },
+  "w270469173": {
+   "roofPoints": 0,
+   "groundPoints": 349,
+   "area": 39.9,
+   "ground": 301.55
+  },
+  "w270469175": {
+   "roofPoints": 513,
+   "groundPoints": 679,
+   "area": 287.0,
+   "ground": 305.88,
+   "p50": 5.81,
+   "p90": 6.32,
+   "p99": 6.49
+  },
+  "w270469177": {
+   "roofPoints": 0,
+   "groundPoints": 88,
+   "area": 14.9,
+   "ground": 302.58
+  },
+  "w270469179": {
+   "roofPoints": 147,
+   "groundPoints": 395,
+   "area": 58.9,
+   "ground": 312.98,
+   "p50": 16.58,
+   "p90": 18.66,
+   "p99": 19.03
+  },
+  "w270469181": {
+   "roofPoints": 1161,
+   "groundPoints": 1421,
+   "area": 325.2,
+   "ground": 310.34,
+   "p50": 10.39,
+   "p90": 11.81,
+   "p99": 14.8
+  },
+  "w270469183": {
+   "roofPoints": 376,
+   "groundPoints": 453,
+   "area": 87.9,
+   "ground": 311.02,
+   "p50": 16.43,
+   "p90": 20.5,
+   "p99": 20.67
+  },
+  "w270469185": {
+   "roofPoints": 0,
+   "groundPoints": 143,
+   "area": 19.1,
+   "ground": 291.76
+  },
+  "w270469187": {
+   "roofPoints": 0,
+   "groundPoints": 281,
+   "area": 22.9,
+   "ground": 287.13
+  },
+  "w270469189": {
+   "roofPoints": 0,
+   "groundPoints": 275,
+   "area": 16.0,
+   "ground": 296.32
+  },
+  "w270469191": {
+   "roofPoints": 522,
+   "groundPoints": 659,
+   "area": 162.6,
+   "ground": 314.21,
+   "p50": 4.08,
+   "p90": 4.78,
+   "p99": 20.21
+  },
+  "w270469193": {
+   "roofPoints": 898,
+   "groundPoints": 518,
+   "area": 510.5,
+   "ground": 301.93,
+   "p50": 7.69,
+   "p90": 8.5,
+   "p99": 8.72
+  },
+  "w270469195": {
+   "roofPoints": 36,
+   "groundPoints": 363,
+   "area": 67.4,
+   "ground": 281.32,
+   "p50": 2.69,
+   "p90": 3.13,
+   "p99": 4.11
+  },
+  "w270469197": {
+   "roofPoints": 84,
+   "groundPoints": 540,
+   "area": 68.6,
+   "ground": 313.21,
+   "p50": 4.17,
+   "p90": 4.9,
+   "p99": 5.25
+  },
+  "w270469201": {
+   "roofPoints": 67,
+   "groundPoints": 475,
+   "area": 55.8,
+   "ground": 309.92,
+   "p50": 4.02,
+   "p90": 4.7,
+   "p99": 5.04
+  },
+  "w270469203": {
+   "roofPoints": 549,
+   "groundPoints": 627,
+   "area": 172.8,
+   "ground": 317.47,
+   "p50": 7.32,
+   "p90": 8.1,
+   "p99": 8.59
+  },
+  "w270469205": {
+   "roofPoints": 65,
+   "groundPoints": 243,
+   "area": 53.8,
+   "ground": 311.22,
+   "p50": 3.79,
+   "p90": 3.97,
+   "p99": 4.01
+  },
+  "w270469207": {
+   "roofPoints": 0,
+   "groundPoints": 467,
+   "area": 12.0,
+   "ground": 309.64
+  },
+  "w270469209": {
+   "roofPoints": 0,
+   "groundPoints": 149,
+   "area": 72.2,
+   "ground": 305.77
+  },
+  "w270469210": {
+   "roofPoints": 40,
+   "groundPoints": 392,
+   "area": 18.7,
+   "ground": 297.76,
+   "p50": 3.18,
+   "p90": 3.21,
+   "p99": 3.24
+  },
+  "w270469212": {
+   "roofPoints": 223,
+   "groundPoints": 263,
+   "area": 192.8,
+   "ground": 297.46,
+   "p50": 6.43,
+   "p90": 7.4,
+   "p99": 7.79
+  },
+  "w270469215": {
+   "roofPoints": 268,
+   "groundPoints": 479,
+   "area": 83.1,
+   "ground": 315.96,
+   "p50": 7.27,
+   "p90": 8.33,
+   "p99": 8.51
+  },
+  "w270469217": {
+   "roofPoints": 0,
+   "groundPoints": 497,
+   "area": 228.7,
+   "ground": 303.52
+  },
+  "w270469219": {
+   "roofPoints": 105,
+   "groundPoints": 286,
+   "area": 105.4,
+   "ground": 308.16,
+   "p50": 10.76,
+   "p90": 13.48,
+   "p99": 13.53
+  },
+  "w270469221": {
+   "roofPoints": 0,
+   "groundPoints": 719,
+   "area": 94.6,
+   "ground": 293.04
+  },
+  "w270469223": {
+   "roofPoints": 642,
+   "groundPoints": 720,
+   "area": 177.9,
+   "ground": 314.76,
+   "p50": 7.31,
+   "p90": 17.37,
+   "p99": 19.18
+  },
+  "w270469225": {
+   "roofPoints": 86,
+   "groundPoints": 364,
+   "area": 92.7,
+   "ground": 285.66,
+   "p50": 7.82,
+   "p90": 8.23,
+   "p99": 8.33
+  },
+  "w270469227": {
+   "roofPoints": 189,
+   "groundPoints": 360,
+   "area": 169.7,
+   "ground": 310.22,
+   "p50": 10.8,
+   "p90": 14.07,
+   "p99": 14.35
+  },
+  "w270469231": {
+   "roofPoints": 0,
+   "groundPoints": 243,
+   "area": 163.0,
+   "ground": 301.21
+  },
+  "w270469233": {
+   "roofPoints": 240,
+   "groundPoints": 687,
+   "area": 76.3,
+   "ground": 309.04,
+   "p50": 11.04,
+   "p90": 11.2,
+   "p99": 16.42
+  },
+  "w270469236": {
+   "roofPoints": 0,
+   "groundPoints": 509,
+   "area": 175.8,
+   "ground": 302.85
+  },
+  "w270469237": {
+   "roofPoints": 4,
+   "groundPoints": 272,
+   "area": 125.2,
+   "ground": 310.13
+  },
+  "w270469238": {
+   "roofPoints": 115,
+   "groundPoints": 135,
+   "area": 151.3,
+   "ground": 297.77,
+   "p50": 4.27,
+   "p90": 5.29,
+   "p99": 5.81
+  },
+  "w270469239": {
+   "roofPoints": 147,
+   "groundPoints": 270,
+   "area": 146.5,
+   "ground": 310.11,
+   "p50": 10.58,
+   "p90": 13.92,
+   "p99": 14.02
+  },
+  "w270469241": {
+   "roofPoints": 225,
+   "groundPoints": 674,
+   "area": 169.7,
+   "ground": 300.95,
+   "p50": 4.69,
+   "p90": 4.75,
+   "p99": 4.76
+  },
+  "w270469243": {
+   "roofPoints": 167,
+   "groundPoints": 194,
+   "area": 189.1,
+   "ground": 297.59,
+   "p50": 5.58,
+   "p90": 6.73,
+   "p99": 7.24
+  },
+  "w270469244": {
+   "roofPoints": 0,
+   "groundPoints": 495,
+   "area": 74.2,
+   "ground": 311.65
+  },
+  "w270469245": {
+   "roofPoints": 77,
+   "groundPoints": 103,
+   "area": 66.1,
+   "ground": 310.31,
+   "p50": 20.61,
+   "p90": 21.97,
+   "p99": 22.56
+  },
+  "w270469246": {
+   "roofPoints": 1072,
+   "groundPoints": 987,
+   "area": 258.6,
+   "ground": 316.86,
+   "p50": 7.14,
+   "p90": 9.02,
+   "p99": 14.69
+  },
+  "w270469248": {
+   "roofPoints": 915,
+   "groundPoints": 824,
+   "area": 290.7,
+   "ground": 313.44,
+   "p50": 4.79,
+   "p90": 10.83,
+   "p99": 10.89
+  },
+  "w270469250": {
+   "roofPoints": 390,
+   "groundPoints": 587,
+   "area": 172.1,
+   "ground": 315.78,
+   "p50": 6.04,
+   "p90": 15.84,
+   "p99": 16.34
+  },
+  "w270469251": {
+   "roofPoints": 197,
+   "groundPoints": 371,
+   "area": 138.3,
+   "ground": 300.01,
+   "p50": 4.67,
+   "p90": 5.42,
+   "p99": 5.62
+  },
+  "w270469252": {
+   "roofPoints": 0,
+   "groundPoints": 632,
+   "area": 157.2,
+   "ground": 301.39
+  },
+  "w270469255": {
+   "roofPoints": 0,
+   "groundPoints": 264,
+   "area": 140.2,
+   "ground": 299.51
+  },
+  "w270469256": {
+   "roofPoints": 587,
+   "groundPoints": 536,
+   "area": 174.2,
+   "ground": 313.52,
+   "p50": 9.0,
+   "p90": 10.49,
+   "p99": 10.85
+  },
+  "w270469257": {
+   "roofPoints": 309,
+   "groundPoints": 317,
+   "area": 170.9,
+   "ground": 294.76,
+   "p50": 5.76,
+   "p90": 7.1,
+   "p99": 7.66
+  },
+  "w270469261": {
+   "roofPoints": 296,
+   "groundPoints": 581,
+   "area": 192.5,
+   "ground": 292.53,
+   "p50": 5.56,
+   "p90": 6.48,
+   "p99": 6.91
+  },
+  "w270469262": {
+   "roofPoints": 1452,
+   "groundPoints": 757,
+   "area": 270.5,
+   "ground": 293.49,
+   "p50": 8.16,
+   "p90": 9.81,
+   "p99": 10.48
+  },
+  "w270469264": {
+   "roofPoints": 494,
+   "groundPoints": 596,
+   "area": 151.9,
+   "ground": 319.36,
+   "p50": 8.25,
+   "p90": 9.12,
+   "p99": 9.33
+  },
+  "w270469266": {
+   "roofPoints": 220,
+   "groundPoints": 519,
+   "area": 162.9,
+   "ground": 294.24,
+   "p50": 7.27,
+   "p90": 7.7,
+   "p99": 8.15
+  },
+  "w270469267": {
+   "roofPoints": 0,
+   "groundPoints": 120,
+   "area": 225.9,
+   "ground": 303.55
+  },
+  "w270469270": {
+   "roofPoints": 540,
+   "groundPoints": 343,
+   "area": 168.1,
+   "ground": 318.99,
+   "p50": 6.86,
+   "p90": 8.42,
+   "p99": 8.85
+  },
+  "w270469273": {
+   "roofPoints": 3396,
+   "groundPoints": 1502,
+   "area": 1615.4,
+   "ground": 280.58,
+   "p50": 6.45,
+   "p90": 8.02,
+   "p99": 8.37
+  },
+  "w270469274": {
+   "roofPoints": 3344,
+   "groundPoints": 1445,
+   "area": 544.0,
+   "ground": 294.06,
+   "p50": 10.61,
+   "p90": 11.4,
+   "p99": 11.57
+  },
+  "w270490803": {
+   "roofPoints": 364,
+   "groundPoints": 652,
+   "area": 279.0,
+   "ground": 312.04,
+   "p50": 9.22,
+   "p90": 10.95,
+   "p99": 11.7
+  },
+  "w270490841": {
+   "roofPoints": 416,
+   "groundPoints": 721,
+   "area": 324.2,
+   "ground": 309.4,
+   "p50": 10.23,
+   "p90": 11.75,
+   "p99": 12.01
+  },
+  "w270491140": {
+   "roofPoints": 127,
+   "groundPoints": 272,
+   "area": 132.2,
+   "ground": 314.06,
+   "p50": 5.99,
+   "p90": 7.43,
+   "p99": 7.83
+  },
+  "w270491141": {
+   "roofPoints": 0,
+   "groundPoints": 144,
+   "area": 99.3,
+   "ground": 315.57
+  },
+  "w270491145": {
+   "roofPoints": 0,
+   "groundPoints": 193,
+   "area": 133.1,
+   "ground": 315.38
+  },
+  "w270491146": {
+   "roofPoints": 0,
+   "groundPoints": 264,
+   "area": 124.6,
+   "ground": 315.19
+  },
+  "w270491147": {
+   "roofPoints": 134,
+   "groundPoints": 487,
+   "area": 298.1,
+   "ground": 314.43,
+   "p50": 5.5,
+   "p90": 7.94,
+   "p99": 8.88
+  },
+  "w270491148": {
+   "roofPoints": 0,
+   "groundPoints": 373,
+   "area": 118.6,
+   "ground": 315.0
+  },
+  "w270491152": {
+   "roofPoints": 0,
+   "groundPoints": 80,
+   "area": 108.9,
+   "ground": 315.58
+  },
+  "w270491153": {
+   "roofPoints": 335,
+   "groundPoints": 598,
+   "area": 270.0,
+   "ground": 313.73,
+   "p50": 10.08,
+   "p90": 11.43,
+   "p99": 12.27
+  },
+  "w270491157": {
+   "roofPoints": 0,
+   "groundPoints": 249,
+   "area": 115.0,
+   "ground": 314.71
+  },
+  "w270491162": {
+   "roofPoints": 0,
+   "groundPoints": 314,
+   "area": 243.7,
+   "ground": 313.43
+  },
+  "w270491165": {
+   "roofPoints": 114,
+   "groundPoints": 417,
+   "area": 127.4,
+   "ground": 314.52,
+   "p50": 4.31,
+   "p90": 5.2,
+   "p99": 5.41
+  },
+  "w270491172": {
+   "roofPoints": 0,
+   "groundPoints": 358,
+   "area": 153.0,
+   "ground": 315.67
+  },
+  "w270491176": {
+   "roofPoints": 238,
+   "groundPoints": 454,
+   "area": 148.2,
+   "ground": 314.37,
+   "p50": 4.34,
+   "p90": 5.15,
+   "p99": 5.34
+  },
+  "w270491179": {
+   "roofPoints": 0,
+   "groundPoints": 423,
+   "area": 267.3,
+   "ground": 312.34
+  },
+  "w270491186": {
+   "roofPoints": 55,
+   "groundPoints": 378,
+   "area": 88.1,
+   "ground": 315.68,
+   "p50": 4.22,
+   "p90": 4.86,
+   "p99": 4.96
+  },
+  "w270491191": {
+   "roofPoints": 72,
+   "groundPoints": 338,
+   "area": 132.4,
+   "ground": 315.42,
+   "p50": 4.21,
+   "p90": 5.14,
+   "p99": 20.78
+  },
+  "w270491205": {
+   "roofPoints": 142,
+   "groundPoints": 485,
+   "area": 147.4,
+   "ground": 315.29,
+   "p50": 4.26,
+   "p90": 17.79,
+   "p99": 20.4
+  },
+  "w270491208": {
+   "roofPoints": 91,
+   "groundPoints": 440,
+   "area": 149.8,
+   "ground": 315.03,
+   "p50": 4.77,
+   "p90": 20.94,
+   "p99": 21.33
+  },
+  "w270491445": {
+   "roofPoints": 0,
+   "groundPoints": 217,
+   "area": 27.0,
+   "ground": 313.61
+  },
+  "w270491544": {
+   "roofPoints": 30,
+   "groundPoints": 301,
+   "area": 52.1,
+   "ground": 310.46,
+   "p50": 3.52,
+   "p90": 3.98,
+   "p99": 4.02
+  },
+  "w270491563": {
+   "roofPoints": 0,
+   "groundPoints": 88,
+   "area": 16.9,
+   "ground": 315.25
+  },
+  "w270491714": {
+   "roofPoints": 0,
+   "groundPoints": 105,
+   "area": 18.8,
+   "ground": 315.45
+  },
+  "w270491792": {
+   "roofPoints": 0,
+   "groundPoints": 234,
+   "area": 139.4,
+   "ground": 308.2
+  },
+  "w270491840": {
+   "roofPoints": 1,
+   "groundPoints": 186,
+   "area": 31.7,
+   "ground": 314.29
+  },
+  "w270491853": {
+   "roofPoints": 0,
+   "groundPoints": 98,
+   "area": 10.6,
+   "ground": 315.44
+  },
+  "w270491933": {
+   "roofPoints": 0,
+   "groundPoints": 367,
+   "area": 149.6,
+   "ground": 314.69
+  },
+  "w270491946": {
+   "roofPoints": 265,
+   "groundPoints": 327,
+   "area": 366.9,
+   "ground": 312.04,
+   "p50": 11.17,
+   "p90": 13.3,
+   "p99": 27.14
+  },
+  "w270875941": {
+   "roofPoints": 245,
+   "groundPoints": 343,
+   "area": 171.7,
+   "ground": 316.21,
+   "p50": 8.35,
+   "p90": 9.62,
+   "p99": 10.2
+  },
+  "w270875946": {
+   "roofPoints": 418,
+   "groundPoints": 498,
+   "area": 264.2,
+   "ground": 310.91,
+   "p50": 4.22,
+   "p90": 4.55,
+   "p99": 4.61
+  },
+  "w270875947": {
+   "roofPoints": 0,
+   "groundPoints": 143,
+   "area": 29.4,
+   "ground": 316.94
+  },
+  "w270875950": {
+   "roofPoints": 300,
+   "groundPoints": 753,
+   "area": 354.8,
+   "ground": 307.64,
+   "p50": 7.09,
+   "p90": 10.38,
+   "p99": 11.34
+  },
+  "w270875953": {
+   "roofPoints": 51,
+   "groundPoints": 173,
+   "area": 78.6,
+   "ground": 314.2,
+   "p50": 5.77,
+   "p90": 6.24,
+   "p99": 6.34
+  },
+  "w270875955": {
+   "roofPoints": 97,
+   "groundPoints": 209,
+   "area": 140.8,
+   "ground": 312.53,
+   "p50": 8.83,
+   "p90": 10.13,
+   "p99": 10.41
+  },
+  "w270875957": {
+   "roofPoints": 0,
+   "groundPoints": 128,
+   "area": 266.6,
+   "ground": 306.11
+  },
+  "w270875958": {
+   "roofPoints": 0,
+   "groundPoints": 165,
+   "area": 103.5,
+   "ground": 300.06
+  },
+  "w270875965": {
+   "roofPoints": 73,
+   "groundPoints": 103,
+   "area": 123.0,
+   "ground": 299.41,
+   "p50": 4.12,
+   "p90": 4.7,
+   "p99": 4.94
+  },
+  "w270875973": {
+   "roofPoints": 21,
+   "groundPoints": 218,
+   "area": 97.4,
+   "ground": 297.88,
+   "p50": 5.69,
+   "p90": 6.51,
+   "p99": 6.62
+  },
+  "w270875981": {
+   "roofPoints": 0,
+   "groundPoints": 209,
+   "area": 159.8,
+   "ground": 301.96
+  },
+  "w270875982": {
+   "roofPoints": 164,
+   "groundPoints": 422,
+   "area": 125.8,
+   "ground": 310.58,
+   "p50": 4.63,
+   "p90": 4.78,
+   "p99": 4.83
+  },
+  "w270875983": {
+   "roofPoints": 0,
+   "groundPoints": 99,
+   "area": 9.2,
+   "ground": 301.24
+  },
+  "w270876298": {
+   "roofPoints": 0,
+   "groundPoints": 377,
+   "area": 121.2,
+   "ground": 319.89
+  },
+  "w270876300": {
+   "roofPoints": 299,
+   "groundPoints": 393,
+   "area": 211.2,
+   "ground": 319.53,
+   "p50": 7.46,
+   "p90": 8.2,
+   "p99": 8.35
+  },
+  "w270876321": {
+   "roofPoints": 220,
+   "groundPoints": 391,
+   "area": 148.1,
+   "ground": 316.68,
+   "p50": 7.59,
+   "p90": 9.08,
+   "p99": 9.4
+  },
+  "w270876324": {
+   "roofPoints": 221,
+   "groundPoints": 453,
+   "area": 161.9,
+   "ground": 316.84,
+   "p50": 5.46,
+   "p90": 6.25,
+   "p99": 6.44
+  },
+  "w270876325": {
+   "roofPoints": 155,
+   "groundPoints": 348,
+   "area": 120.8,
+   "ground": 308.83,
+   "p50": 8.18,
+   "p90": 8.88,
+   "p99": 9.02
+  },
+  "w270876330": {
+   "roofPoints": 172,
+   "groundPoints": 512,
+   "area": 137.4,
+   "ground": 316.96,
+   "p50": 8.6,
+   "p90": 8.91,
+   "p99": 9.7
+  },
+  "w270876333": {
+   "roofPoints": 241,
+   "groundPoints": 281,
+   "area": 184.4,
+   "ground": 317.0,
+   "p50": 9.93,
+   "p90": 11.11,
+   "p99": 11.77
+  },
+  "w270876334": {
+   "roofPoints": 128,
+   "groundPoints": 301,
+   "area": 142.6,
+   "ground": 316.78,
+   "p50": 7.0,
+   "p90": 8.21,
+   "p99": 8.69
+  },
+  "w270876335": {
+   "roofPoints": 204,
+   "groundPoints": 167,
+   "area": 124.2,
+   "ground": 305.9,
+   "p50": 10.22,
+   "p90": 10.73,
+   "p99": 10.84
+  },
+  "w270876339": {
+   "roofPoints": 205,
+   "groundPoints": 396,
+   "area": 161.9,
+   "ground": 316.05,
+   "p50": 8.83,
+   "p90": 9.68,
+   "p99": 9.83
+  },
+  "w270876342": {
+   "roofPoints": 111,
+   "groundPoints": 175,
+   "area": 73.3,
+   "ground": 305.95,
+   "p50": 9.06,
+   "p90": 9.15,
+   "p99": 9.18
+  },
+  "w270876345": {
+   "roofPoints": 73,
+   "groundPoints": 260,
+   "area": 88.6,
+   "ground": 316.94,
+   "p50": 8.37,
+   "p90": 9.18,
+   "p99": 9.58
+  },
+  "w270876361": {
+   "roofPoints": 247,
+   "groundPoints": 320,
+   "area": 199.4,
+   "ground": 305.93,
+   "p50": 6.64,
+   "p90": 7.99,
+   "p99": 8.72
+  },
+  "w270876368": {
+   "roofPoints": 199,
+   "groundPoints": 480,
+   "area": 227.7,
+   "ground": 316.29,
+   "p50": 10.18,
+   "p90": 11.9,
+   "p99": 12.4
+  },
+  "w270876371": {
+   "roofPoints": 252,
+   "groundPoints": 499,
+   "area": 158.4,
+   "ground": 312.91,
+   "p50": 12.46,
+   "p90": 13.54,
+   "p99": 13.77
+  },
+  "w270876382": {
+   "roofPoints": 160,
+   "groundPoints": 517,
+   "area": 115.7,
+   "ground": 309.42,
+   "p50": 13.73,
+   "p90": 13.92,
+   "p99": 14.06
+  },
+  "w270876389": {
+   "roofPoints": 333,
+   "groundPoints": 571,
+   "area": 182.3,
+   "ground": 306.54,
+   "p50": 9.64,
+   "p90": 10.98,
+   "p99": 11.61
+  },
+  "w270876415": {
+   "roofPoints": 333,
+   "groundPoints": 578,
+   "area": 172.4,
+   "ground": 305.94,
+   "p50": 9.78,
+   "p90": 11.16,
+   "p99": 11.79
+  },
+  "w270876428": {
+   "roofPoints": 362,
+   "groundPoints": 588,
+   "area": 194.2,
+   "ground": 305.24,
+   "p50": 10.94,
+   "p90": 12.35,
+   "p99": 13.1
+  },
+  "w270876460": {
+   "roofPoints": 0,
+   "groundPoints": 212,
+   "area": 160.7,
+   "ground": 314.31
+  },
+  "w270876468": {
+   "roofPoints": 205,
+   "groundPoints": 406,
+   "area": 149.4,
+   "ground": 317.31,
+   "p50": 5.45,
+   "p90": 6.37,
+   "p99": 6.59
+  },
+  "w270876473": {
+   "roofPoints": 0,
+   "groundPoints": 190,
+   "area": 160.4,
+   "ground": 312.56
+  },
+  "w270876474": {
+   "roofPoints": 198,
+   "groundPoints": 437,
+   "area": 140.2,
+   "ground": 318.16,
+   "p50": 7.95,
+   "p90": 8.83,
+   "p99": 9.16
+  },
+  "w270876478": {
+   "roofPoints": 75,
+   "groundPoints": 300,
+   "area": 113.4,
+   "ground": 317.34,
+   "p50": 7.49,
+   "p90": 8.07,
+   "p99": 8.22
+  },
+  "w270876487": {
+   "roofPoints": 190,
+   "groundPoints": 164,
+   "area": 124.4,
+   "ground": 299.39,
+   "p50": 5.03,
+   "p90": 6.0,
+   "p99": 6.11
+  },
+  "w270876494": {
+   "roofPoints": 212,
+   "groundPoints": 94,
+   "area": 134.3,
+   "ground": 298.04,
+   "p50": 5.07,
+   "p90": 5.97,
+   "p99": 6.32
+  },
+  "w270876497": {
+   "roofPoints": 259,
+   "groundPoints": 237,
+   "area": 460.9,
+   "ground": 312.21,
+   "p50": 6.68,
+   "p90": 7.61,
+   "p99": 22.6
+  },
+  "w270876498": {
+   "roofPoints": 136,
+   "groundPoints": 173,
+   "area": 266.0,
+   "ground": 307.27,
+   "p50": 5.11,
+   "p90": 6.36,
+   "p99": 15.41
+  },
+  "w270876500": {
+   "roofPoints": 267,
+   "groundPoints": 159,
+   "area": 161.3,
+   "ground": 296.54,
+   "p50": 5.85,
+   "p90": 6.35,
+   "p99": 6.5
+  },
+  "w270876503": {
+   "roofPoints": 152,
+   "groundPoints": 204,
+   "area": 216.9,
+   "ground": 296.74,
+   "p50": 5.64,
+   "p90": 6.45,
+   "p99": 6.8
+  },
+  "w270876506": {
+   "roofPoints": 0,
+   "groundPoints": 186,
+   "area": 192.5,
+   "ground": 312.46
+  },
+  "w270876507": {
+   "roofPoints": 319,
+   "groundPoints": 306,
+   "area": 227.5,
+   "ground": 306.04,
+   "p50": 8.45,
+   "p90": 9.61,
+   "p99": 10.01
+  },
+  "w270876509": {
+   "roofPoints": 183,
+   "groundPoints": 296,
+   "area": 190.4,
+   "ground": 297.42,
+   "p50": 5.31,
+   "p90": 6.42,
+   "p99": 7.13
+  },
+  "w270876519": {
+   "roofPoints": 242,
+   "groundPoints": 305,
+   "area": 177.3,
+   "ground": 302.54,
+   "p50": 8.97,
+   "p90": 10.24,
+   "p99": 10.9
+  },
+  "w270876524": {
+   "roofPoints": 151,
+   "groundPoints": 133,
+   "area": 237.7,
+   "ground": 301.28,
+   "p50": 9.76,
+   "p90": 10.36,
+   "p99": 10.88
+  },
+  "w270876525": {
+   "roofPoints": 256,
+   "groundPoints": 516,
+   "area": 179.2,
+   "ground": 318.13,
+   "p50": 9.06,
+   "p90": 10.4,
+   "p99": 10.85
+  },
+  "w270876527": {
+   "roofPoints": 0,
+   "groundPoints": 189,
+   "area": 29.4,
+   "ground": 304.04
+  },
+  "w270876529": {
+   "roofPoints": 161,
+   "groundPoints": 181,
+   "area": 229.0,
+   "ground": 302.65,
+   "p50": 9.0,
+   "p90": 10.35,
+   "p99": 10.66
+  },
+  "w270876530": {
+   "roofPoints": 71,
+   "groundPoints": 57,
+   "area": 100.2,
+   "ground": 299.59,
+   "p50": 8.37,
+   "p90": 9.04,
+   "p99": 9.11
+  },
+  "w270876531": {
+   "roofPoints": 313,
+   "groundPoints": 262,
+   "area": 258.6,
+   "ground": 304.43,
+   "p50": 5.54,
+   "p90": 6.58,
+   "p99": 6.82
+  },
+  "w270876533": {
+   "roofPoints": 221,
+   "groundPoints": 119,
+   "area": 219.7,
+   "ground": 304.23,
+   "p50": 7.76,
+   "p90": 8.93,
+   "p99": 9.44
+  },
+  "w270876534": {
+   "roofPoints": 0,
+   "groundPoints": 63,
+   "area": 141.1,
+   "ground": 299.85
+  },
+  "w270876535": {
+   "roofPoints": 0,
+   "groundPoints": 168,
+   "area": 75.3,
+   "ground": 304.58
+  },
+  "w270876537": {
+   "roofPoints": 427,
+   "groundPoints": 335,
+   "area": 337.2,
+   "ground": 305.71,
+   "p50": 5.03,
+   "p90": 6.9,
+   "p99": 7.78
+  },
+  "w270876539": {
+   "roofPoints": 0,
+   "groundPoints": 127,
+   "area": 5.1,
+   "ground": 302.57
+  },
+  "w270876540": {
+   "roofPoints": 0,
+   "groundPoints": 212,
+   "area": 292.7,
+   "ground": 305.28
+  },
+  "w270876543": {
+   "roofPoints": 669,
+   "groundPoints": 575,
+   "area": 459.0,
+   "ground": 306.28,
+   "p50": 6.59,
+   "p90": 7.21,
+   "p99": 7.32
+  },
+  "w270876545": {
+   "roofPoints": 158,
+   "groundPoints": 351,
+   "area": 164.4,
+   "ground": 301.97,
+   "p50": 7.87,
+   "p90": 9.38,
+   "p99": 9.61
+  },
+  "w270876546": {
+   "roofPoints": 0,
+   "groundPoints": 221,
+   "area": 71.6,
+   "ground": 307.83
+  },
+  "w270876547": {
+   "roofPoints": 659,
+   "groundPoints": 492,
+   "area": 459.9,
+   "ground": 308.41,
+   "p50": 3.94,
+   "p90": 5.08,
+   "p99": 5.26
+  },
+  "w270876553": {
+   "roofPoints": 0,
+   "groundPoints": 121,
+   "area": 10.7,
+   "ground": 304.37
+  },
+  "w270876563": {
+   "roofPoints": 289,
+   "groundPoints": 246,
+   "area": 198.2,
+   "ground": 307.26,
+   "p50": 6.49,
+   "p90": 8.03,
+   "p99": 8.55
+  },
+  "w270876565": {
+   "roofPoints": 0,
+   "groundPoints": 101,
+   "area": 14.3,
+   "ground": 305.21
+  },
+  "w270876570": {
+   "roofPoints": 697,
+   "groundPoints": 846,
+   "area": 515.4,
+   "ground": 308.97,
+   "p50": 6.71,
+   "p90": 7.47,
+   "p99": 14.72
+  },
+  "w270876576": {
+   "roofPoints": 130,
+   "groundPoints": 199,
+   "area": 164.8,
+   "ground": 305.22,
+   "p50": 4.54,
+   "p90": 5.87,
+   "p99": 6.38
+  },
+  "w270876580": {
+   "roofPoints": 0,
+   "groundPoints": 95,
+   "area": 273.9,
+   "ground": 310.66
+  },
+  "w270876581": {
+   "roofPoints": 164,
+   "groundPoints": 397,
+   "area": 125.7,
+   "ground": 318.14,
+   "p50": 7.62,
+   "p90": 8.64,
+   "p99": 8.89
+  },
+  "w270876582": {
+   "roofPoints": 361,
+   "groundPoints": 564,
+   "area": 356.0,
+   "ground": 307.68,
+   "p50": 10.53,
+   "p90": 11.74,
+   "p99": 12.48
+  },
+  "w270876583": {
+   "roofPoints": 487,
+   "groundPoints": 381,
+   "area": 358.2,
+   "ground": 305.66,
+   "p50": 10.28,
+   "p90": 12.67,
+   "p99": 13.58
+  },
+  "w270876587": {
+   "roofPoints": 0,
+   "groundPoints": 139,
+   "area": 31.0,
+   "ground": 307.8
+  },
+  "w270876593": {
+   "roofPoints": 84,
+   "groundPoints": 153,
+   "area": 153.6,
+   "ground": 308.04,
+   "p50": 4.44,
+   "p90": 5.54,
+   "p99": 6.35
+  },
+  "w270876600": {
+   "roofPoints": 83,
+   "groundPoints": 179,
+   "area": 173.8,
+   "ground": 307.82,
+   "p50": 4.93,
+   "p90": 5.67,
+   "p99": 6.18
+  },
+  "w270876601": {
+   "roofPoints": 279,
+   "groundPoints": 421,
+   "area": 227.3,
+   "ground": 310.32,
+   "p50": 7.71,
+   "p90": 9.56,
+   "p99": 10.1
+  },
+  "w270876612": {
+   "roofPoints": 208,
+   "groundPoints": 244,
+   "area": 166.1,
+   "ground": 317.88,
+   "p50": 4.97,
+   "p90": 5.64,
+   "p99": 5.71
+  },
+  "w270876613": {
+   "roofPoints": 265,
+   "groundPoints": 304,
+   "area": 221.0,
+   "ground": 311.88,
+   "p50": 9.73,
+   "p90": 11.28,
+   "p99": 11.75
+  },
+  "w270876625": {
+   "roofPoints": 139,
+   "groundPoints": 174,
+   "area": 191.2,
+   "ground": 305.49,
+   "p50": 6.79,
+   "p90": 7.64,
+   "p99": 8.27
+  },
+  "w270876630": {
+   "roofPoints": 243,
+   "groundPoints": 460,
+   "area": 220.9,
+   "ground": 309.82,
+   "p50": 7.33,
+   "p90": 8.14,
+   "p99": 8.29
+  },
+  "w270876636": {
+   "roofPoints": 369,
+   "groundPoints": 269,
+   "area": 266.6,
+   "ground": 303.51,
+   "p50": 5.48,
+   "p90": 6.3,
+   "p99": 7.72
+  },
+  "w270876640": {
+   "roofPoints": 443,
+   "groundPoints": 349,
+   "area": 307.8,
+   "ground": 307.3,
+   "p50": 9.82,
+   "p90": 9.99,
+   "p99": 10.05
+  },
+  "w270876643": {
+   "roofPoints": 31,
+   "groundPoints": 108,
+   "area": 28.8,
+   "ground": 304.6,
+   "p50": 2.24,
+   "p90": 2.59,
+   "p99": 2.63
+  },
+  "w270876644": {
+   "roofPoints": 0,
+   "groundPoints": 281,
+   "area": 253.0,
+   "ground": 308.62
+  },
+  "w270876648": {
+   "roofPoints": 306,
+   "groundPoints": 190,
+   "area": 218.5,
+   "ground": 306.79,
+   "p50": 5.73,
+   "p90": 6.91,
+   "p99": 7.22
+  },
+  "w270876650": {
+   "roofPoints": 0,
+   "groundPoints": 213,
+   "area": 204.9,
+   "ground": 301.01
+  },
+  "w270876654": {
+   "roofPoints": 0,
+   "groundPoints": 285,
+   "area": 180.7,
+   "ground": 300.83
+  },
+  "w270876658": {
+   "roofPoints": 438,
+   "groundPoints": 599,
+   "area": 269.8,
+   "ground": 306.05,
+   "p50": 5.36,
+   "p90": 6.17,
+   "p99": 6.59
+  },
+  "w270876663": {
+   "roofPoints": 185,
+   "groundPoints": 310,
+   "area": 134.6,
+   "ground": 318.06,
+   "p50": 4.59,
+   "p90": 7.18,
+   "p99": 7.45
+  },
+  "w270876664": {
+   "roofPoints": 327,
+   "groundPoints": 412,
+   "area": 306.2,
+   "ground": 306.58,
+   "p50": 5.91,
+   "p90": 7.22,
+   "p99": 7.82
+  },
+  "w270876670": {
+   "roofPoints": 257,
+   "groundPoints": 327,
+   "area": 238.6,
+   "ground": 301.42,
+   "p50": 7.05,
+   "p90": 8.47,
+   "p99": 8.82
+  },
+  "w270876677": {
+   "roofPoints": 54,
+   "groundPoints": 246,
+   "area": 114.3,
+   "ground": 317.3,
+   "p50": 7.14,
+   "p90": 7.77,
+   "p99": 7.88
+  },
+  "w270876678": {
+   "roofPoints": 133,
+   "groundPoints": 231,
+   "area": 157.6,
+   "ground": 306.03,
+   "p50": 6.15,
+   "p90": 6.94,
+   "p99": 7.2
+  },
+  "w270876679": {
+   "roofPoints": 1078,
+   "groundPoints": 1494,
+   "area": 592.7,
+   "ground": 310.82,
+   "p50": 11.06,
+   "p90": 12.8,
+   "p99": 13.25
+  },
+  "w270876682": {
+   "roofPoints": 52,
+   "groundPoints": 165,
+   "area": 138.2,
+   "ground": 301.69,
+   "p50": 7.81,
+   "p90": 9.22,
+   "p99": 9.33
+  },
+  "w270876687": {
+   "roofPoints": 0,
+   "groundPoints": 208,
+   "area": 234.4,
+   "ground": 303.76
+  },
+  "w270876689": {
+   "roofPoints": 146,
+   "groundPoints": 199,
+   "area": 108.7,
+   "ground": 317.48,
+   "p50": 7.38,
+   "p90": 8.0,
+   "p99": 8.13
+  },
+  "w270876691": {
+   "roofPoints": 0,
+   "groundPoints": 210,
+   "area": 140.7,
+   "ground": 305.23
+  },
+  "w270876697": {
+   "roofPoints": 121,
+   "groundPoints": 368,
+   "area": 199.8,
+   "ground": 306.38,
+   "p50": 5.25,
+   "p90": 6.26,
+   "p99": 6.84
+  },
+  "w270876702": {
+   "roofPoints": 222,
+   "groundPoints": 427,
+   "area": 289.2,
+   "ground": 308.86,
+   "p50": 7.22,
+   "p90": 8.59,
+   "p99": 8.99
+  },
+  "w270876703": {
+   "roofPoints": 146,
+   "groundPoints": 423,
+   "area": 158.2,
+   "ground": 316.56,
+   "p50": 5.62,
+   "p90": 6.38,
+   "p99": 6.65
+  },
+  "w270876704": {
+   "roofPoints": 0,
+   "groundPoints": 81,
+   "area": 45.2,
+   "ground": 307.78
+  },
+  "w270876707": {
+   "roofPoints": 229,
+   "groundPoints": 395,
+   "area": 177.3,
+   "ground": 307.95,
+   "p50": 5.28,
+   "p90": 6.33,
+   "p99": 6.48
+  },
+  "w270876709": {
+   "roofPoints": 0,
+   "groundPoints": 355,
+   "area": 370.1,
+   "ground": 308.29
+  },
+  "w270876710": {
+   "roofPoints": 421,
+   "groundPoints": 274,
+   "area": 248.8,
+   "ground": 304.74,
+   "p50": 7.72,
+   "p90": 8.83,
+   "p99": 9.35
+  },
+  "w270876712": {
+   "roofPoints": 232,
+   "groundPoints": 299,
+   "area": 211.6,
+   "ground": 310.64,
+   "p50": 8.56,
+   "p90": 10.09,
+   "p99": 10.49
+  },
+  "w270876713": {
+   "roofPoints": 258,
+   "groundPoints": 360,
+   "area": 181.7,
+   "ground": 304.8,
+   "p50": 6.34,
+   "p90": 7.53,
+   "p99": 7.61
+  },
+  "w270876714": {
+   "roofPoints": 221,
+   "groundPoints": 360,
+   "area": 156.0,
+   "ground": 317.2,
+   "p50": 8.36,
+   "p90": 9.11,
+   "p99": 9.53
+  },
+  "w270876716": {
+   "roofPoints": 125,
+   "groundPoints": 262,
+   "area": 136.7,
+   "ground": 316.08,
+   "p50": 7.32,
+   "p90": 7.91,
+   "p99": 8.31
+  },
+  "w270876717": {
+   "roofPoints": 271,
+   "groundPoints": 113,
+   "area": 187.3,
+   "ground": 302.54,
+   "p50": 7.5,
+   "p90": 8.65,
+   "p99": 9.24
+  },
+  "w270876718": {
+   "roofPoints": 319,
+   "groundPoints": 557,
+   "area": 306.5,
+   "ground": 305.98,
+   "p50": 7.88,
+   "p90": 8.78,
+   "p99": 9.1
+  },
+  "w270876719": {
+   "roofPoints": 192,
+   "groundPoints": 286,
+   "area": 155.6,
+   "ground": 314.95,
+   "p50": 5.71,
+   "p90": 6.84,
+   "p99": 7.55
+  },
+  "w270876720": {
+   "roofPoints": 175,
+   "groundPoints": 409,
+   "area": 198.3,
+   "ground": 309.61,
+   "p50": 8.49,
+   "p90": 10.13,
+   "p99": 10.67
+  },
+  "w270876721": {
+   "roofPoints": 354,
+   "groundPoints": 481,
+   "area": 241.1,
+   "ground": 316.94,
+   "p50": 4.01,
+   "p90": 4.76,
+   "p99": 5.18
+  },
+  "w270876722": {
+   "roofPoints": 208,
+   "groundPoints": 262,
+   "area": 227.8,
+   "ground": 299.35,
+   "p50": 9.71,
+   "p90": 10.81,
+   "p99": 24.09
+  },
+  "w270876727": {
+   "roofPoints": 339,
+   "groundPoints": 507,
+   "area": 468.6,
+   "ground": 309.62,
+   "p50": 10.02,
+   "p90": 11.68,
+   "p99": 12.45
+  },
+  "w270876728": {
+   "roofPoints": 213,
+   "groundPoints": 371,
+   "area": 184.8,
+   "ground": 314.27,
+   "p50": 8.35,
+   "p90": 9.26,
+   "p99": 9.58
+  },
+  "w270876731": {
+   "roofPoints": 923,
+   "groundPoints": 486,
+   "area": 668.8,
+   "ground": 309.39,
+   "p50": 9.9,
+   "p90": 11.49,
+   "p99": 12.02
+  },
+  "w270876748": {
+   "roofPoints": 0,
+   "groundPoints": 104,
+   "area": 141.4,
+   "ground": 301.31
+  },
+  "w270876756": {
+   "roofPoints": 51,
+   "groundPoints": 280,
+   "area": 105.2,
+   "ground": 309.67,
+   "p50": 4.97,
+   "p90": 5.83,
+   "p99": 6.06
+  },
+  "w270876757": {
+   "roofPoints": 335,
+   "groundPoints": 486,
+   "area": 216.7,
+   "ground": 310.7,
+   "p50": 8.07,
+   "p90": 9.38,
+   "p99": 9.85
+  },
+  "w270876765": {
+   "roofPoints": 0,
+   "groundPoints": 272,
+   "area": 9.3,
+   "ground": 298.52
+  },
+  "w270876779": {
+   "roofPoints": 282,
+   "groundPoints": 416,
+   "area": 209.1,
+   "ground": 310.32,
+   "p50": 7.1,
+   "p90": 7.92,
+   "p99": 8.11
+  },
+  "w270876796": {
+   "roofPoints": 291,
+   "groundPoints": 624,
+   "area": 181.5,
+   "ground": 305.04,
+   "p50": 9.47,
+   "p90": 10.83,
+   "p99": 11.5
+  },
+  "w270876798": {
+   "roofPoints": 0,
+   "groundPoints": 110,
+   "area": 10.3,
+   "ground": 317.04
+  },
+  "w270876810": {
+   "roofPoints": 0,
+   "groundPoints": 75,
+   "area": 15.6,
+   "ground": 305.27
+  },
+  "w270876825": {
+   "roofPoints": 289,
+   "groundPoints": 512,
+   "area": 169.2,
+   "ground": 306.2,
+   "p50": 9.98,
+   "p90": 11.36,
+   "p99": 12.01
+  },
+  "w270876834": {
+   "roofPoints": 0,
+   "groundPoints": 250,
+   "area": 35.2,
+   "ground": 314.3
+  },
+  "w270876841": {
+   "roofPoints": 72,
+   "groundPoints": 300,
+   "area": 78.9,
+   "ground": 319.17,
+   "p50": 5.05,
+   "p90": 6.18,
+   "p99": 6.69
+  },
+  "w270876856": {
+   "roofPoints": 0,
+   "groundPoints": 126,
+   "area": 143.9,
+   "ground": 311.87
+  },
+  "w270876859": {
+   "roofPoints": 0,
+   "groundPoints": 192,
+   "area": 95.2,
+   "ground": 313.7
+  },
+  "w270876860": {
+   "roofPoints": 0,
+   "groundPoints": 66,
+   "area": 47.9,
+   "ground": 307.03
+  },
+  "w270876861": {
+   "roofPoints": 0,
+   "groundPoints": 112,
+   "area": 53.4,
+   "ground": 316.21
+  },
+  "w270876868": {
+   "roofPoints": 0,
+   "groundPoints": 236,
+   "area": 25.4,
+   "ground": 314.37
+  },
+  "w270876883": {
+   "roofPoints": 318,
+   "groundPoints": 453,
+   "area": 243.6,
+   "ground": 317.34,
+   "p50": 9.94,
+   "p90": 11.24,
+   "p99": 12.0
+  },
+  "w296097682": {
+   "roofPoints": 1938,
+   "groundPoints": 579,
+   "area": 1224.2,
+   "ground": 281.45,
+   "p50": 8.27,
+   "p90": 8.33,
+   "p99": 9.51
+  },
+  "w296097683": {
+   "roofPoints": 676,
+   "groundPoints": 370,
+   "area": 494.6,
+   "ground": 280.5,
+   "p50": 5.48,
+   "p90": 5.68,
+   "p99": 5.78
+  },
+  "w330646694": {
+   "roofPoints": 4163,
+   "groundPoints": 2092,
+   "area": 2301.0,
+   "ground": 275.85,
+   "p50": 16.54,
+   "p90": 16.64,
+   "p99": 18.69
+  },
+  "w330646695": {
+   "roofPoints": 15383,
+   "groundPoints": 2455,
+   "area": 7913.9,
+   "ground": 275.12,
+   "p50": 16.6,
+   "p90": 16.75,
+   "p99": 16.85
+  },
+  "w330647633": {
+   "roofPoints": 12149,
+   "groundPoints": 3522,
+   "area": 7278.3,
+   "ground": 291.48,
+   "p50": 16.64,
+   "p90": 20.11,
+   "p99": 21.7
+  },
+  "w330647636": {
+   "roofPoints": 4144,
+   "groundPoints": 1031,
+   "area": 2298.0,
+   "ground": 287.88,
+   "p50": 20.8,
+   "p90": 22.1,
+   "p99": 22.82
+  },
+  "w330647638": {
+   "roofPoints": 1658,
+   "groundPoints": 839,
+   "area": 1115.5,
+   "ground": 286.86,
+   "p50": 16.12,
+   "p90": 18.05,
+   "p99": 18.9
+  },
+  "w330647640": {
+   "roofPoints": 4332,
+   "groundPoints": 1866,
+   "area": 534.6,
+   "ground": 302.45,
+   "p50": 12.89,
+   "p90": 14.3,
+   "p99": 14.76
+  },
+  "w330647642": {
+   "roofPoints": 1653,
+   "groundPoints": 1048,
+   "area": 566.0,
+   "ground": 301.28,
+   "p50": 11.93,
+   "p90": 13.86,
+   "p99": 14.5
+  },
+  "w330647644": {
+   "roofPoints": 949,
+   "groundPoints": 763,
+   "area": 473.2,
+   "ground": 299.72,
+   "p50": 12.94,
+   "p90": 14.49,
+   "p99": 15.29
+  },
+  "w330647646": {
+   "roofPoints": 962,
+   "groundPoints": 885,
+   "area": 581.7,
+   "ground": 298.26,
+   "p50": 12.73,
+   "p90": 14.29,
+   "p99": 14.82
+  },
+  "w330647648": {
+   "roofPoints": 2630,
+   "groundPoints": 2311,
+   "area": 928.5,
+   "ground": 302.43,
+   "p50": 13.66,
+   "p90": 14.66,
+   "p99": 15.2
+  },
+  "w334597487": {
+   "roofPoints": 3077,
+   "groundPoints": 1651,
+   "area": 941.9,
+   "ground": 297.64,
+   "p50": 10.97,
+   "p90": 11.62,
+   "p99": 12.68
+  },
+  "w334597488": {
+   "roofPoints": 3825,
+   "groundPoints": 1502,
+   "area": 970.0,
+   "ground": 297.66,
+   "p50": 11.14,
+   "p90": 11.67,
+   "p99": 12.66
+  },
+  "w334597489": {
+   "roofPoints": 291,
+   "groundPoints": 569,
+   "area": 103.2,
+   "ground": 298.03,
+   "p50": 5.6,
+   "p90": 13.28,
+   "p99": 13.81
+  },
+  "w334597490": {
+   "roofPoints": 1282,
+   "groundPoints": 2223,
+   "area": 235.5,
+   "ground": 294.49,
+   "p50": 8.78,
+   "p90": 9.84,
+   "p99": 10.01
+  },
+  "w335271424": {
+   "roofPoints": 15948,
+   "groundPoints": 4770,
+   "area": 8045.9,
+   "ground": 289.63,
+   "p50": 18.86,
+   "p90": 19.01,
+   "p99": 19.23
+  },
+  "w343274081": {
+   "roofPoints": 0,
+   "groundPoints": 420,
+   "area": 25.2,
+   "ground": 284.32
+  },
+  "w427079304": {
+   "roofPoints": 284,
+   "groundPoints": 291,
+   "area": 220.9,
+   "ground": 309.83,
+   "p50": 8.3,
+   "p90": 9.41,
+   "p99": 9.91
+  },
+  "w427079305": {
+   "roofPoints": 318,
+   "groundPoints": 284,
+   "area": 320.1,
+   "ground": 309.68,
+   "p50": 6.47,
+   "p90": 6.89,
+   "p99": 6.95
+  },
+  "w427079306": {
+   "roofPoints": 187,
+   "groundPoints": 332,
+   "area": 288.5,
+   "ground": 309.14,
+   "p50": 6.7,
+   "p90": 6.97,
+   "p99": 6.99
+  },
+  "w429537643": {
+   "roofPoints": 174,
+   "groundPoints": 536,
+   "area": 119.9,
+   "ground": 297.91,
+   "p50": 5.88,
+   "p90": 6.56,
+   "p99": 6.62
+  },
+  "w429538477": {
+   "roofPoints": 316,
+   "groundPoints": 692,
+   "area": 202.2,
+   "ground": 312.89,
+   "p50": 10.32,
+   "p90": 11.46,
+   "p99": 11.55
+  },
+  "w429538478": {
+   "roofPoints": 84,
+   "groundPoints": 382,
+   "area": 65.7,
+   "ground": 310.18,
+   "p50": 6.77,
+   "p90": 7.36,
+   "p99": 7.61
+  },
+  "w429538479": {
+   "roofPoints": 0,
+   "groundPoints": 420,
+   "area": 65.6,
+   "ground": 310.11
+  },
+  "w429538480": {
+   "roofPoints": 0,
+   "groundPoints": 426,
+   "area": 56.1,
+   "ground": 309.93
+  },
+  "w429538481": {
+   "roofPoints": 390,
+   "groundPoints": 632,
+   "area": 257.7,
+   "ground": 312.67,
+   "p50": 9.33,
+   "p90": 10.65,
+   "p99": 11.19
+  },
+  "w429538482": {
+   "roofPoints": 311,
+   "groundPoints": 722,
+   "area": 207.8,
+   "ground": 312.84,
+   "p50": 9.11,
+   "p90": 10.54,
+   "p99": 10.98
+  },
+  "w429538581": {
+   "roofPoints": 207,
+   "groundPoints": 396,
+   "area": 212.1,
+   "ground": 303.24,
+   "p50": 7.88,
+   "p90": 8.88,
+   "p99": 9.11
+  },
+  "w429538965": {
+   "roofPoints": 191,
+   "groundPoints": 470,
+   "area": 239.9,
+   "ground": 307.33,
+   "p50": 8.68,
+   "p90": 9.42,
+   "p99": 9.87
+  },
+  "w429539378": {
+   "roofPoints": 334,
+   "groundPoints": 609,
+   "area": 305.4,
+   "ground": 309.39,
+   "p50": 9.62,
+   "p90": 11.11,
+   "p99": 12.25
+  },
+  "w429539379": {
+   "roofPoints": 176,
+   "groundPoints": 298,
+   "area": 244.7,
+   "ground": 311.13,
+   "p50": 7.39,
+   "p90": 9.37,
+   "p99": 9.89
+  },
+  "w429539380": {
+   "roofPoints": 198,
+   "groundPoints": 150,
+   "area": 175.2,
+   "ground": 305.04,
+   "p50": 8.99,
+   "p90": 10.09,
+   "p99": 10.43
+  },
+  "w496236697": {
+   "roofPoints": 1508,
+   "groundPoints": 1102,
+   "area": 882.5,
+   "ground": 281.39,
+   "p50": 6.16,
+   "p90": 7.6,
+   "p99": 7.9
+  },
+  "w496238157": {
+   "roofPoints": 928,
+   "groundPoints": 1349,
+   "area": 586.7,
+   "ground": 291.52,
+   "p50": 7.1,
+   "p90": 7.28,
+   "p99": 7.66
+  },
+  "w549998440": {
+   "roofPoints": 325,
+   "groundPoints": 184,
+   "area": 228.3,
+   "ground": 299.01,
+   "p50": 5.11,
+   "p90": 6.12,
+   "p99": 6.28
+  },
+  "w619595557": {
+   "roofPoints": 5420,
+   "groundPoints": 1859,
+   "area": 1345.3,
+   "ground": 274.92,
+   "p50": 7.4,
+   "p90": 7.59,
+   "p99": 7.68
+  },
+  "w738377170": {
+   "roofPoints": 1256,
+   "groundPoints": 1327,
+   "area": 777.6,
+   "ground": 310.18,
+   "p50": 14.23,
+   "p90": 14.35,
+   "p99": 14.38
+  },
+  "w741059568": {
+   "roofPoints": 1204,
+   "groundPoints": 1273,
+   "area": 736.4,
+   "ground": 309.67,
+   "p50": 12.99,
+   "p90": 14.41,
+   "p99": 14.86
+  },
+  "w741961703": {
+   "roofPoints": 14726,
+   "groundPoints": 1614,
+   "area": 3659.2,
+   "ground": 280.5,
+   "p50": 56.05,
+   "p90": 60.13,
+   "p99": 62.44
+  },
+  "w741961704": {
+   "roofPoints": 13804,
+   "groundPoints": 2519,
+   "area": 2926.9,
+   "ground": 281.4,
+   "p50": 11.13,
+   "p90": 11.21,
+   "p99": 14.27
+  },
+  "w785246451": {
+   "roofPoints": 343,
+   "groundPoints": 707,
+   "area": 255.1,
+   "ground": 297.37,
+   "p50": 10.05,
+   "p90": 12.7,
+   "p99": 12.85
+  },
+  "w887718742": {
+   "roofPoints": 11746,
+   "groundPoints": 3431,
+   "area": 6072.1,
+   "ground": 277.8,
+   "p50": 23.93,
+   "p90": 24.02,
+   "p99": 24.08
+  },
+  "w887718743": {
+   "roofPoints": 546,
+   "groundPoints": 505,
+   "area": 428.2,
+   "ground": 284.51,
+   "p50": 12.76,
+   "p90": 12.94,
+   "p99": 13.0
+  },
+  "w887718745": {
+   "roofPoints": 0,
+   "groundPoints": 654,
+   "area": 417.3,
+   "ground": 283.53
+  },
+  "w887718749": {
+   "roofPoints": 596,
+   "groundPoints": 536,
+   "area": 325.0,
+   "ground": 277.2,
+   "p50": 9.24,
+   "p90": 9.5,
+   "p99": 9.56
+  },
+  "w887718750": {
+   "roofPoints": 1970,
+   "groundPoints": 1585,
+   "area": 872.6,
+   "ground": 275.17,
+   "p50": 10.66,
+   "p90": 10.83,
+   "p99": 10.89
+  },
+  "w887718751": {
+   "roofPoints": 622,
+   "groundPoints": 676,
+   "area": 492.0,
+   "ground": 283.06,
+   "p50": 14.32,
+   "p90": 14.58,
+   "p99": 14.69
+  },
+  "w928684047": {
+   "roofPoints": 12955,
+   "groundPoints": 3200,
+   "area": 7029.8,
+   "ground": 300.82,
+   "p50": 21.88,
+   "p90": 22.14,
+   "p99": 22.5
+  },
+  "w961282227": {
+   "roofPoints": 684,
+   "groundPoints": 225,
+   "area": 418.0,
+   "ground": 290.35,
+   "p50": 12.61,
+   "p90": 13.04,
+   "p99": 13.13
+  },
+  "w973976325": {
+   "roofPoints": 0,
+   "groundPoints": 663,
+   "area": 324.2,
+   "ground": 309.5
+  },
+  "w973976326": {
+   "roofPoints": 330,
+   "groundPoints": 570,
+   "area": 226.4,
+   "ground": 304.02,
+   "p50": 13.26,
+   "p90": 13.41,
+   "p99": 13.9
+  },
+  "w973976327": {
+   "roofPoints": 85,
+   "groundPoints": 223,
+   "area": 88.6,
+   "ground": 305.99,
+   "p50": 11.83,
+   "p90": 11.86,
+   "p99": 11.87
+  },
+  "w973976328": {
+   "roofPoints": 306,
+   "groundPoints": 544,
+   "area": 193.2,
+   "ground": 312.16,
+   "p50": 7.93,
+   "p90": 7.97,
+   "p99": 7.99
+  },
+  "w973976329": {
+   "roofPoints": 1045,
+   "groundPoints": 1042,
+   "area": 347.1,
+   "ground": 312.75,
+   "p50": 10.84,
+   "p90": 11.19,
+   "p99": 11.28
+  },
+  "w973976330": {
+   "roofPoints": 280,
+   "groundPoints": 378,
+   "area": 143.6,
+   "ground": 300.53,
+   "p50": 14.0,
+   "p90": 14.64,
+   "p99": 14.9
+  },
+  "w973976331": {
+   "roofPoints": 242,
+   "groundPoints": 265,
+   "area": 146.0,
+   "ground": 300.68,
+   "p50": 13.57,
+   "p90": 14.09,
+   "p99": 14.45
+  },
+  "w973976332": {
+   "roofPoints": 198,
+   "groundPoints": 256,
+   "area": 115.6,
+   "ground": 300.67,
+   "p50": 13.82,
+   "p90": 14.39,
+   "p99": 14.57
+  },
+  "w973976333": {
+   "roofPoints": 232,
+   "groundPoints": 296,
+   "area": 130.3,
+   "ground": 300.73,
+   "p50": 13.67,
+   "p90": 14.22,
+   "p99": 14.69
+  },
+  "w973976334": {
+   "roofPoints": 227,
+   "groundPoints": 297,
+   "area": 129.8,
+   "ground": 300.79,
+   "p50": 13.8,
+   "p90": 14.51,
+   "p99": 14.77
+  },
+  "w973976335": {
+   "roofPoints": 239,
+   "groundPoints": 407,
+   "area": 134.6,
+   "ground": 300.77,
+   "p50": 13.9,
+   "p90": 14.47,
+   "p99": 14.78
+  },
+  "w973976336": {
+   "roofPoints": 445,
+   "groundPoints": 1619,
+   "area": 1309.6,
+   "ground": 298.22,
+   "p50": 15.44,
+   "p90": 16.81,
+   "p99": 17.31
+  },
+  "w973976337": {
+   "roofPoints": 922,
+   "groundPoints": 1102,
+   "area": 505.6,
+   "ground": 298.86,
+   "p50": 14.05,
+   "p90": 15.02,
+   "p99": 15.71
+  },
+  "w973976338": {
+   "roofPoints": 856,
+   "groundPoints": 968,
+   "area": 500.7,
+   "ground": 298.58,
+   "p50": 13.89,
+   "p90": 14.9,
+   "p99": 15.58
+  }
+ }
+}

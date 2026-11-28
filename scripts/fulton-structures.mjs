@@ -69,8 +69,11 @@ async function main() {
     if (!res.ok) throw new Error(`fulton-structures: HTTP ${res.status}`);
     const json = await res.json();
     if (json.error) throw new Error(`fulton-structures: ${JSON.stringify(json.error)}`);
-    for (const f of json.features ?? []) rows.push(featureRow(f));
     const n = (json.features ?? []).length;
+    // An empty page with the transfer limit flag means that more rows
+    // remain, but the offset cannot move. Fail, so the old cache stays.
+    if (n === 0 && json.exceededTransferLimit) throw new Error(`fulton-structures: an empty page at offset ${offset} with exceededTransferLimit; the cache is not changed`);
+    for (const f of json.features ?? []) rows.push(featureRow(f));
     if (n === 0 || (!json.exceededTransferLimit && n < PAGE)) break;
   }
   rows.sort((a, b) => a.OBJECTID - b.OBJECTID);

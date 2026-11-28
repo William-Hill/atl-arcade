@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { STORY_RANGE, YEAR_RANGE, inRing, interiorPoint, joinParcels, parcelFields, projectRows, structureFor } from "./parcel-join.mjs";
+import { STORY_RANGE, YEAR_RANGE, inRing, inRings, interiorPoint, joinParcels, parcelFields, projectRows, structureFor } from "./parcel-join.mjs";
 import { featureRow } from "./fulton-structures.mjs";
 import { styleCoverage } from "./style-coverage.mjs";
 
@@ -11,7 +11,8 @@ import { styleCoverage } from "./style-coverage.mjs";
 const SQUARE = (x, z, s) => [[x, z], [x + s, z], [x + s, z + s], [x, z + s]];
 // A projection for the tests: one degree is one meter.
 const toLocal = (lat, lon) => [lon, lat];
-const row = (ring, fields) => ({ OBJECTID: 1, ParcelID: "14 0001", LUC: "101", YearBuilt: "1925", Stories: 2, StructForm: "Conventional", ...fields, rings: [ring.map(([x, z]) => [x, z])] });
+// `fields.rings` sets all the rings (an outer ring and its courtyards).
+const row = (ring, fields) => ({ OBJECTID: 1, ParcelID: "14 0001", LUC: "101", YearBuilt: "1925", Stories: 2, StructForm: "Conventional", rings: [ring.map(([x, z]) => [x, z])], ...fields });
 
 describe("inRing and interiorPoint", () => {
   it("tests a point in a square", () => {
@@ -25,6 +26,35 @@ describe("inRing and interiorPoint", () => {
     for (const p of u) { x += p[0]; z += p[1]; }
     expect(inRing([x / u.length, z / u.length], u)).toBe(false);
     expect(inRing(interiorPoint(u), u)).toBe(true);
+  });
+});
+
+describe("courtyards (holes)", () => {
+  const outer = SQUARE(0, 0, 20);
+  const court = SQUARE(4, 4, 12);
+
+  it("keeps the interior point out of a courtyard", () => {
+    const p = interiorPoint(outer, [court]);
+    expect(inRings(p, [outer, court])).toBe(true);
+    expect(inRing(p, court)).toBe(false);
+  });
+
+  it("does not give a courtyard building the data of the structure around it", () => {
+    // A county structure with a courtyard, and a separate small structure
+    // in the courtyard. The OSM building is the small one.
+    const structures = projectRows([row(outer, { OBJECTID: 1, LUC: "2C1", rings: [outer, court] }), row(SQUARE(6, 6, 6), { OBJECTID: 2, LUC: "101" })], toLocal);
+    for (const s of structures) s.point = interiorPoint(s.rings[0], s.rings.slice(1));
+    expect(inRing(structures[0].point, court)).toBe(false);
+    expect(structureFor(SQUARE(6.5, 6.5, 5), structures).row.OBJECTID).toBe(2);
+    // With no small structure, the courtyard building gets no data.
+    expect(structureFor(SQUARE(6.5, 6.5, 5), structures.slice(0, 1))).toBeNull();
+  });
+
+  it("does not give a building with a courtyard the data of a structure in the courtyard", () => {
+    const structures = projectRows([row(SQUARE(6, 6, 6), { OBJECTID: 2 })], toLocal);
+    for (const s of structures) s.point = interiorPoint(s.rings[0]);
+    expect(structureFor(outer, structures, [court])).toBeNull();
+    expect(structureFor(outer, structures)).not.toBeNull();
   });
 });
 

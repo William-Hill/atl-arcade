@@ -40,21 +40,32 @@ function ringArea(ring) {
   return Math.abs(a / 2);
 }
 
-// A point inside the ring: the vertex mean when it is inside, else the
-// middle of the longest inside run on a horizontal line through the vertex
-// mean (an L or a U footprint has its mean outside).
-export function interiorPoint(ring) {
+// Is the point inside the rings, by the even-odd count over all of them?
+// A hole (a courtyard) is a ring inside the outer ring, so a point in the
+// hole has an even count.
+export function inRings(p, rings) {
+  let n = 0;
+  for (const r of rings) if (inRing(p, r)) n += 1;
+  return n % 2 === 1;
+}
+
+// A point inside the ring and outside its holes: the vertex mean when it is
+// inside, else the middle of the longest inside run on a horizontal line
+// through the vertex mean (an L or a U footprint has its mean outside, and a
+// footprint with a courtyard can have its mean in the courtyard).
+export function interiorPoint(ring, holes = []) {
+  const rings = [ring, ...holes];
   let x = 0, z = 0;
   for (const p of ring) { x += p[0]; z += p[1]; }
   x /= ring.length;
   z /= ring.length;
-  if (inRing([x, z], ring)) return [x, z];
+  if (inRings([x, z], rings)) return [x, z];
   for (const dz of [0, 0.5, -0.5, 1, -1, 2, -2, 4, -4]) {
     const zz = z + dz;
     const xs = [];
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
-      const [xi, zi] = ring[i];
-      const [xj, zj] = ring[j];
+    for (const r of rings) for (let i = 0, j = r.length - 1; i < r.length; j = i, i += 1) {
+      const [xi, zi] = r[i];
+      const [xj, zj] = r[j];
       if (zi > zz !== zj > zz) xs.push(((xj - xi) * (zz - zi)) / (zj - zi) + xi);
     }
     xs.sort((a, b) => a - b);
@@ -99,17 +110,20 @@ function containing(items, p) {
   const [x, z] = p;
   // A footprint with a hole (a courtyard): the even-odd count over all
   // rings handles it.
-  return items.filter((it) => x >= it.box.minX && x <= it.box.maxX && z >= it.box.minZ && z <= it.box.maxZ && it.rings.reduce((n, r) => n + (inRing(p, r) ? 1 : 0), 0) % 2 === 1);
+  return items.filter((it) => x >= it.box.minX && x <= it.box.maxX && z >= it.box.minZ && z <= it.box.maxZ && inRings(p, it.rings));
 }
 
 // The structure for one building footprint: the structure that holds the
 // footprint point; else the largest structure whose own point is inside the
 // footprint (the OSM and the county outlines differ by a few meters).
-export function structureFor(outer, structures) {
-  const p = interiorPoint(outer);
+// `holes` are the courtyards of the footprint: a structure in a courtyard is
+// not the building.
+export function structureFor(outer, structures, holes = []) {
+  const rings = [outer, ...holes];
+  const p = interiorPoint(outer, holes);
   const hit = containing(structures, p);
   if (hit.length) return hit.reduce((a, b) => (b.area > a.area ? b : a));
-  const inside = structures.filter((s) => s.point && inRing(s.point, outer));
+  const inside = structures.filter((s) => s.point && inRings(s.point, rings));
   return inside.length ? inside.reduce((a, b) => (b.area > a.area ? b : a)) : null;
 }
 
@@ -132,11 +146,13 @@ export function parcelFields(structure) {
 // counts has the coverage.
 export function joinParcels(buildings, data, toLocal) {
   const structures = projectRows(data.structures ?? [], toLocal);
-  for (const s of structures) s.point = s.rings[0]?.length >= 3 ? interiorPoint(s.rings[0]) : null;
+  // The structure point: inside its first ring and outside every other ring
+  // (a courtyard, by the even-odd rule).
+  for (const s of structures) s.point = s.rings[0]?.length >= 3 ? interiorPoint(s.rings[0], s.rings.slice(1)) : null;
   const byId = new Map();
   const counts = { buildings: buildings.length, joined: 0, none: 0, landUse: 0, yearBuilt: 0, stories: 0 };
   for (const b of buildings) {
-    const fields = parcelFields(structureFor(b.outer, structures));
+    const fields = parcelFields(structureFor(b.outer, structures, b.holes ?? []));
     if (!fields) {
       counts.none += 1;
       continue;

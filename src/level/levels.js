@@ -6,6 +6,7 @@
 import { GREYBOX } from "./greybox.js";
 import { withSkatepark } from "./skatepark.js";
 import { withHistoricDistricts } from "./geo/historic-districts.js";
+import { withStyleDistricts } from "./geo/styles.js";
 
 export const LEVELS = {
   greybox: async () => GREYBOX,
@@ -19,8 +20,9 @@ export const LEVELS = {
     ]);
     // The skatepark (#222) grades the terrain under its pad, so it goes in
     // before anything reads the ground. The City historic districts (#407)
-    // tag the buildings for the district house mix.
-    return withSkatepark(withHistoricDistricts(withCanopy(level.default, canopy.default), districts.default), skatepark.default, features.default);
+    // and the style districts tag the buildings, so chooseStyle() gives the
+    // same style with and without the level.
+    return withSkatepark(withStyleDistricts(withHistoricDistricts(withCanopy(level.default, canopy.default), districts.default)), skatepark.default, features.default);
   },
 };
 

@@ -3268,3 +3268,9 @@ Design: `docs/ux/trick-hud.md` (PR #395). Rendering stays out of the sim: the te
 - The saved value after all the steps is now "done-v2". A player with the old value "done" (the first 5 moves) sees only the 3 new steps. `?teach=<step>` starts at a step (for the tests).
 - Owner choice (2026-11-27): #331 closes when its code criteria are met. The review of the prompt words by real skaters goes to a new issue.
 - Perf (2026-11-27, `npm run perf:check` on this branch): the draw calls, triangles, geometries, textures, and heap are in the budget on every tier. `firstDownloadMB` is over the cap on low/pbr (4.95 > 4.8), phone/pbr (4.52 > 4.3), and high/pbr (5.16 > 5.0). This branch adds 2.2 KB of JavaScript (main bundle 1,254,381 bytes on `main`, 1,256,630 bytes here), so the overage was already on `main`. This PR does not change the caps. The teach steps add no draw call (plain DOM).
+
+## 2026-11-28: Do not read more Overture building fields (#409)
+
+- Count in the BeltLine Eastside bbox, Overture 2026-10-21.0 (1,077 buildings): `class` 76.3%, `subtype` 76.9%, `roof_shape` 0.2%, `roof_material` 0.1%, `roof_color`, `facade_color` and `facade_material` 0%. Release 2026-11-18.0 gives the same counts. Table: `docs/research/2026-11-28-overture-building-fields.md`.
+- `class` is a copy of the OSM `building` tag (same on 1,013 of 1,014 OSM rows), and `build-block.mjs` already carries that tag as `type`. `subtype` adds data on 6 buildings only. Total new data: 7 buildings (0.6%).
+- Owner choice (2026-11-28): no field is read. `scripts/overture-heights.py` and `scripts/build-block.mjs` do not change. #409 closes with the research doc.

@@ -3286,6 +3286,12 @@ Research: `docs/research/2026-11-27-lidar-heights-spike.md`.
 - Two tests that hold data counts changed: the street awning vertices (6,368 to 6,288, because some styles depend on the height), and the brick-loft lab test now names its building (`w270469054`), because the lab order changed.
 - Not done: the isometric full map (`assets/map/beltline-eastside/`) is a baked render. It still shows the old heights until `scripts/bake-iso-map.mjs` runs again.
 
+## 2026-11-28: Do not read more Overture building fields (#409)
+
+- Count in the BeltLine Eastside bbox, Overture 2026-10-21.0 (1,077 buildings): `class` 76.3%, `subtype` 76.9%, `roof_shape` 0.2%, `roof_material` 0.1%, `roof_color`, `facade_color` and `facade_material` 0%. Release 2026-11-18.0 gives the same counts. Table: `docs/research/2026-11-28-overture-building-fields.md`.
+- `class` is a copy of the OSM `building` tag (same on 1,013 of 1,014 OSM rows), and `build-block.mjs` already carries that tag as `type`. `subtype` adds data on 6 buildings only. Total new data: 7 buildings (0.6%).
+- Owner choice (2026-11-28): no field is read. `scripts/overture-heights.py` and `scripts/build-block.mjs` do not change. #409 closes with the research doc.
+
 ## 2026-11-28 — The Victorian house style and the historic district mix (#407)
 
 - New style `victorian-house` (`src/level/geo/styles.js`), at the end of `STYLES`, so the shader index of each other style does not change. It is in `HOUSE_STYLES`. The kit (`src/level/geo/facade-kit.js`) gives it a steep hip roof with a front gable (`victorianRoof()`), an 8-sided corner turret on about half of the houses (`victorianTurret()`), and a wrap porch on turned posts (`victorianPorch()`). A craftsman or shotgun house keeps its kit with no change. Sources: `docs/research/2026-11-28-inman-park-victorian.md`.

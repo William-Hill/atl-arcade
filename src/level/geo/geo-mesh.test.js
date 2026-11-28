@@ -204,14 +204,15 @@ describe("the roofs and the street walls of the brick styles", () => {
 
   it("keeps the street awnings of the BeltLine level as they were before streetWalls()", () => {
     // 3,184 vertices before the refactor to streetWalls(), then twice that:
-    // each side of an awning has its own vertices (no 0 normals). Since #406
-    // the Fulton County data gives the style. Many hash storefronts and
+    // each side of an awning has its own vertices (no 0 normals). The LiDAR
+    // heights (2026-11-27) changed some styles: 6,368 became 6,288. Since
+    // #406 the Fulton County data gives the style. Many hash storefronts and
     // brick lofts are houses and apartments in that data, and those styles
-    // have no awnings: 1,904 x 2.
+    // have no awnings: 6,288 became 3,808.
     const isStreet = streetTest(LEVEL);
     let vertices = 0;
     for (const b of LEVEL.buildings) vertices += awningsFor(b, STYLES[STYLE_INDEX[chooseStyle(b)]], isStreet).positions.length / 3;
-    expect(vertices).toBe(1904 * 2);
+    expect(vertices).toBe(3808);
   });
 });
 

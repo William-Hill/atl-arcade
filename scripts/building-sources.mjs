@@ -7,6 +7,7 @@
 //   <level>/raw/overpass.json        OSM footprints and tags
 //   <level>/raw/overture.json        Overture heights (scripts/overture-heights.py)
 //   <level>/raw/city-addresses.json  City of Atlanta address points (scripts/city-addresses.mjs)
+//   <level>/raw/lidar-heights.json   USGS 3DEP LiDAR roof heights (scripts/lidar-heights.py)
 //   <level>/heights.json             researched height overrides, each with a source
 //
 // Outputs:
@@ -18,7 +19,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { buildingHeight, buildLevel } from "./build-block.mjs";
+import { buildingHeight, buildLevel, lidarByOsmId } from "./build-block.mjs";
 import { createProjection } from "../src/level/geo/projection.js";
 import { chooseStyle } from "../src/level/geo/styles.js";
 import {
@@ -39,18 +40,22 @@ const round = (n) => Math.round(n * 100) / 100 + 0;
 const round7 = (n) => Math.round(n * 1e7) / 1e7;
 
 // The reference text for a height source.
-function heightRef(source, { override, overtureRelease }) {
+function heightRef(source, { override, overtureRelease, lidarSource }) {
   if (source === "override") return override.source;
   if (source === "height") return "OpenStreetMap tag height";
+  if (source === "lidar") return lidarSource;
+  if (source === "lidar-capped") return `${lidarSource}, capped by OVERTURE_CAP for the building type`;
   if (source === "levels") return "OpenStreetMap tag building:levels x 3.2 m + 1 m";
   if (source === "overture" || source === "overture-capped") return `Overture Maps buildings, release ${overtureRelease}`;
   return "the default height for the OSM building type (scripts/build-block.mjs DEFAULT_HEIGHT)";
 }
 
 // Builds the records. Pure: the inputs are parsed JSON.
-export function buildSources({ raw, bbox, name, overture, heights, city }) {
+export function buildSources({ raw, bbox, name, overture, heights, city, lidar = null }) {
   const overtureRows = overture?.heights ?? null;
-  const level = buildLevel(raw, { bbox, name, title: name, overture: overtureRows, heights });
+  const lidarRows = lidar ? lidarByOsmId(lidar.heights) : null;
+  const lidarSource = lidar ? `${lidar.source}; scripts/lidar-heights.py` : null;
+  const level = buildLevel(raw, { bbox, name, title: name, overture: overtureRows, heights, lidar: lidarRows });
   const proj = createProjection(level.origin);
   const tagsById = {};
   for (const e of raw.elements ?? []) tagsById[`${e.type === "way" ? "w" : "r"}${e.id}`] = e.tags ?? {};
@@ -77,8 +82,8 @@ export function buildSources({ raw, bbox, name, overture, heights, city }) {
     const ov = overtureRows?.[osmId] ?? null;
 
     // Height: the same order as before (scripts/build-block.mjs buildingHeight).
-    const h = buildingHeight(tags, ov, override);
-    const height = { value: round(h.height), source: h.source, confidence: HEIGHT_CONFIDENCE[h.source], ref: heightRef(h.source, { override, overtureRelease: overture?.release }) };
+    const h = buildingHeight(tags, ov, override, lidarRows?.[osmId] ?? null);
+    const height = { value: round(h.height), source: h.source, confidence: HEIGHT_CONFIDENCE[h.source], ref: heightRef(h.source, { override, overtureRelease: overture?.release, lidarSource }) };
     if (h.source === "override" && override.was) height.was = override.was;
 
     // Floors.
@@ -157,7 +162,7 @@ export function buildSources({ raw, bbox, name, overture, heights, city }) {
   return { level, records, stats, disagreements };
 }
 
-export function sourceFile({ name, records, stats, overture, city }) {
+export function sourceFile({ name, records, stats, overture, city, lidar = null }) {
   return {
     about:
       "The building source file (issue #88). One record for each building in the level, keyed by the level building id. Each fact has a value, a source, a confidence (high, medium, low, none), and a ref. scripts/build-block.mjs takes each height from here. Written by scripts/building-sources.mjs; do not edit by hand, edit the inputs.",
@@ -166,6 +171,7 @@ export function sourceFile({ name, records, stats, overture, city }) {
       osm: `levels/${name}/raw/overpass.json (OpenStreetMap contributors, ODbL 1.0)`,
       overture: overture ? `levels/${name}/raw/overture.json (Overture Maps Foundation, release ${overture.release}, ODbL 1.0)` : null,
       city: city ? `levels/${name}/raw/city-addresses.json (${city.source}, open-data-atl catalog ${city.catalogId})` : null,
+      lidar: lidar ? `levels/${name}/raw/lidar-heights.json (${lidar.source})` : null,
       overrides: `levels/${name}/heights.json`,
     },
     confidence: {
@@ -217,12 +223,13 @@ function main() {
   const overture = readJson(resolve(levelDir, "raw", "overture.json"));
   const city = readJson(resolve(levelDir, "raw", "city-addresses.json"));
   const heights = readJson(resolve(levelDir, "heights.json"))?.heights ?? null;
-  const { records, stats, disagreements } = buildSources({ raw, bbox, name, overture, heights, city });
+  const lidar = readJson(resolve(levelDir, "raw", "lidar-heights.json"));
+  const { records, stats, disagreements } = buildSources({ raw, bbox, name, overture, heights, city, lidar });
   const problems = records.flatMap(recordProblems);
   if (problems.length) throw new Error(`building-sources: ${problems.length} problems\n${problems.slice(0, 20).join("\n")}`);
   const outDir = resolve(ROOT, "data", "buildings");
   mkdirSync(outDir, { recursive: true });
-  writeFileSync(resolve(outDir, `${name}.json`), `${JSON.stringify(sourceFile({ name, records, stats, overture, city }), null, 1)}\n`);
+  writeFileSync(resolve(outDir, `${name}.json`), `${JSON.stringify(sourceFile({ name, records, stats, overture, city, lidar }), null, 1)}\n`);
   writeFileSync(resolve(outDir, `${name}.report.md`), reportText({ name, stats, disagreements }));
   console.log(`building-sources: wrote data/buildings/${name}.json and ${name}.report.md`);
   console.log(JSON.stringify(stats));

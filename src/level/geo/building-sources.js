@@ -17,6 +17,9 @@ export const CONFIDENCE = ["high", "medium", "low", "none"];
 export const HEIGHT_CONFIDENCE = {
   override: "medium",
   height: "high",
+  // Measured for this building, but in 2018.
+  lidar: "high",
+  "lidar-capped": "low",
   levels: "medium",
   overture: "medium",
   "overture-capped": "low",

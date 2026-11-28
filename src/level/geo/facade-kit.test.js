@@ -891,8 +891,8 @@ describe("the house porches", () => {
         if (blocked(x, z)) inBuilding.add(id);
       }
     }
-    expect([...onWay], "porches on a way").toEqual([]);
-    expect([...inBuilding], "porches in another building").toEqual([]);
+    // One comparison, so that a failure shows the two sets.
+    expect({ onWay: [...onWay], inBuilding: [...inBuilding] }).toEqual({ onWay: [], inBuilding: [] });
     expect(porches).toBeGreaterThan(150);
   });
 });

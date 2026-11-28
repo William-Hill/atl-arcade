@@ -883,7 +883,7 @@ def ac_unit(lod):
     return b
 
 
-MODULES.append(("ac_unit_wall", ac_unit, dict(kind="wall", size=[0.66, 0.78, 0.45], anchor="bottom center on the wall; place 0.45 m under a window bottom", fits="stucco-apartment, brick-loft, shotgun/craftsman side walls", scaleX=[0.9, 1.1], scaleY=[0.9, 1.1], tint=False)))
+MODULES.append(("ac_unit_wall", ac_unit, dict(kind="wall", size=[0.66, 0.78, 0.45], anchor="bottom center on the wall; place in the lower sash of a window, on the bottom rail", fits="stucco-apartment, brick-loft, shotgun/craftsman side walls", scaleX=[0.9, 1.1], scaleY=[0.9, 1.1], tint=False)))
 
 
 # Roof modules: origin at the bottom center, front is +z.

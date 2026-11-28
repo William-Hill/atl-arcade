@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { orientRing } from "../../src/level/geo/extrude.js";
 import { STYLES } from "../../src/level/geo/styles.js";
-import { FIRE_ESCAPE_RISE, LOD1, MODULES, byModule, facadePlacements, instanceMatrix, storefrontFor, turnAt, wallOf, wallYaw } from "./facade-kit-placement.js";
+import { AC, FIRE_ESCAPE_RISE, FRAME, WINDOW_CENTER, LOD1, MODULES, byModule, facadePlacements, instanceMatrix, storefrontFor, turnAt, wallOf, wallYaw } from "./facade-kit-placement.js";
 
 const style = (id) => STYLES.find((s) => s.id === id);
 const box = (w, d) => orientRing([[0, 0], [w, 0], [w, d], [0, d]], false);
@@ -58,6 +58,36 @@ describe("facade kit placement", () => {
       expect(it.position[0]).toBeGreaterThan(1.5);
       expect(it.position[0]).toBeLessThan(22.5);
     }
+  });
+
+  it("puts a window A/C in the lower sash of a window, not on the wall under it", () => {
+    let count = 0;
+    for (const id of ["craftsman-house", "shotgun-house", "stucco-apartment"]) {
+      const s = style(id);
+      const ring = box(14, 18);
+      const top = 9;
+      const floorH = top / Math.max(1, Math.round(top / s.floorHeight));
+      // The window of the facade shader (a frame module covers it when one fits).
+      const winH = (s.window[1] + FRAME) * floorH;
+      const yOff = (WINDOW_CENTER - (s.window[1] + FRAME) / 2) * floorH;
+      for (let seed = 1; seed <= 40; seed += 1) {
+        for (const ac of facadePlacements({ ring, style: s, base: 0, top, front: { edge: 0, wraps: [] }, seed }).filter((p) => p.module === "ac_unit_wall")) {
+          count += 1;
+          const w = wallOf(ring, ac.wallIndex);
+          const bl = w.len / Math.max(1, Math.round(w.len / s.bay));
+          const along = (ac.position[0] - w.o[0]) * w.t[0] + (ac.position[2] - w.o[1]) * w.t[1];
+          // Centered in a bay, so under the window and not beside it.
+          expect(Math.abs(along / bl - Math.floor(along / bl) - 0.5), `${id} seed ${seed}`).toBeLessThan(1e-6);
+          // On the bottom rail of a window, and the case inside its lower half.
+          const sill = ac.position[1] - (Math.floor((ac.position[1] - yOff) / floorH) * floorH + yOff);
+          expect(sill).toBeGreaterThan(0);
+          expect(sill).toBeLessThan(0.1);
+          expect(sill + AC.h).toBeLessThanOrEqual(winH / 2);
+          expect((s.window[0] + FRAME) * bl).toBeGreaterThan(AC.w);
+        }
+      }
+    }
+    expect(count).toBeGreaterThan(5);
   });
 
   it("is deterministic for a seed", () => {

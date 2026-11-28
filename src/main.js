@@ -784,7 +784,9 @@ setPostToggles(post, savedSettings);
 // The pbr look's per-frame light (src/render/pbr-look.js): the grade by
 // time of day and district, the fog tint, the env map bake, the skater rim.
 // ?pbrgrade=0 keeps the fixed day values (for a before/after check).
-const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: districtAnchors(level), getPost: () => post, skySh }) : null;
+// ?districtgrade=0 keeps the trail grade everywhere (no district tint), so
+// the tiles of the iso map bake (scripts/bake-iso-map.mjs) share one grade.
+const pbrLook = geo && look === "pbr" && params.get("pbrgrade") !== "0" ? createPbrLook({ scene, renderer, sky, geoLights, anchors: params.get("districtgrade") === "0" ? [] : districtAnchors(level), getPost: () => post, skySh }) : null;
 // Comic effects (#113, src/render/effects/): speed lines, impact frames and
 // bursts from the controller flags. Emissive overlays: no material or grade
 // change. Off on the low tier, with prefers-reduced-motion, and with ?fx=0.

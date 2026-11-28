@@ -3325,3 +3325,12 @@ Research: `docs/research/2026-11-27-lidar-heights-spike.md`.
 - Next step: the owner registers a Mapillary app and saves its client token for `graph.mapillary.com`. Then an agent counts the coverage of the BeltLine Eastside bbox before the 50-building pilot. The count was not done: the API returned "Invalid OAuth 2.0 Access Token" (code 190) with no token.
 - Not done: a lawyer has not read the research note.
 - Alternative: contribute the checked labels to OpenStreetMap as `building:colour` and `building:material` (terms section 13), after a review of the OSM automated edit rules.
+
+## 2026-11-28: Iso map re-bake after the LiDAR heights
+
+- `assets/map/beltline-eastside/` is baked again (153 tiles, Apple M4 Max GPU, `BAKE_GPU=1`), so the full map shows the LiDAR heights of #423. The provenance lists "USGS 3DEP LiDAR 2018 (heights)".
+- The bake query now has `sky=0`. With the sky dome, the orthographic camera saw a different part of the dome from each tile, so each tile had its own sky color and the map showed seams. With no dome, the background is one color. The light still comes from the same environment map.
+- The bake query now has `districtgrade=0`, a new switch in `src/main.js`. The pbr look tints the grade by the district at the camera, so each tile had the grade of its district. With the switch, the trail grade applies everywhere. The game is not changed when the switch is absent.
+- The sky of the bake is now (205, 228, 246), the same in all 153 tiles. `ISO_BACKGROUND` in `src/ui/fullmap.js` and `BACKGROUND` in `scripts/iso-pyramid.py` are now `#cde4f6`, so the fill past the grid matches the tiles.
+- The ground still shows small steps at some tile edges (the edge-to-inside ratio of the pixel jumps is 1.15 on columns and 1.27 on rows; it was 1.08 and 1.25 before). This was there before the re-bake and is not fixed.
+- The new map is brighter than the 2026-11-06 bake, because the game look changed after that bake.

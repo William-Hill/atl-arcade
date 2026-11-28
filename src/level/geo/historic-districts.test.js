@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { HISTORIC_MIX, MIX_YEAR_END, districtAt, districtSlug, districtStyleMix, projectDistricts, withHistoricDistricts } from "./historic-districts.js";
+import { houseEraStyle } from "./parcel-style.js";
 import { STYLE_INDEX, chooseStyle } from "./styles.js";
 import { labBuildings } from "./lab.js";
 
@@ -103,8 +104,10 @@ describe("historic districts (#407)", () => {
     const v = houses.filter((s) => s === "victorian-house").length;
     expect(houses.length).toBeGreaterThan(150);
     expect(v / houses.length).toBeGreaterThan(0.6);
-    // Out of the districts, no Victorian house.
-    expect(level.buildings.filter((b) => !b.historicDistrict && chooseStyle(b, level) === "victorian-house")).toEqual([]);
+    // Out of the districts, a Victorian house only from the Fulton County
+    // year built (a house parcel before 1910, #406 houseEraStyle()).
+    const outside = level.buildings.filter((b) => !b.historicDistrict && chooseStyle(b, level) === "victorian-house");
+    for (const b of outside) expect(houseEraStyle(b), b.id).toBe("victorian-house");
     const krog = level.buildings.find((b) => /krog street market/i.test(b.name ?? ""));
     expect(chooseStyle(krog, level)).toBe("brick-market-hall");
     // The tag is on the building, so the calls without the level (the

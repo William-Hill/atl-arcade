@@ -1,0 +1,14 @@
+{
+  "kind": "craftsman-house",
+  "pick": 98,
+  "look": "pbr",
+  "views": {
+    "facade": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=craftsman-house&pick=98&labview=facade",
+    "street": "/?level=beltline-eastside&mute=1&quality=high&governor=0&view=fixed&skater=capsule&look=pbr&lab=building&kind=craftsman-house&pick=98&labview=street"
+  },
+  "building": {
+    "id": "w269991814",
+    "name": null,
+    "height": 6.63
+  }
+}

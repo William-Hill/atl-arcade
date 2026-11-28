@@ -48,6 +48,25 @@ MIN_POINTS = 12
 EARTH_RADIUS = 6371008.8
 
 
+def check_fetch(level):
+    """Stops when the download of scripts/lidar-fetch.py is not complete.
+
+    lidar-fetch.py writes raw/lidar-fetch.json only after all downloads
+    succeed, with "bytes" for each set it downloaded (a --count run has no
+    "bytes"). Each set must have one .laz file for each node.
+    """
+    report_file = level / "raw" / "lidar-fetch.json"
+    if not report_file.exists():
+        sys.exit(f"lidar-heights: no {report_file}; run scripts/lidar-fetch.py first")
+    report = json.loads(report_file.read_text())
+    for name, s in report["sets"].items():
+        if s["nodes"] == 0:
+            continue
+        files = len(glob.glob(str(level / "raw" / "lidar" / name / "*.laz")))
+        if "bytes" not in s or files != s["nodes"]:
+            sys.exit(f"lidar-heights: {name} has {files} .laz files for {s['nodes']} nodes; run scripts/lidar-fetch.py again")
+
+
 def load_points(level):
     xs, ys, zs, cs = [], [], [], []
     # Class 6 with more than one return becomes class 106 (left out).
@@ -102,6 +121,7 @@ def main():
         sys.exit("usage: python3 -I scripts/lidar-heights.py levels/<name>/")
     level_dir = pathlib.Path(sys.argv[1])
     level = json.loads((level_dir / "level.json").read_text())
+    check_fetch(level_dir)
     x, y, z, c = load_points(level_dir)
     lx, lz = to_local(x, y, level["origin"])
     print(f"{len(x)} points (ground and building)", flush=True)

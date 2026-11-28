@@ -857,12 +857,12 @@ export function roofSolar(m, parts, top, si) {
 }
 
 // The along span [a0, a1] of the porch on a front wall of length `len` with
-// `bays` bays and the door in bay `door`: as wide as KIT.porch.width,
+// `bays` bays and the door in bay `door`: as wide as `width` (KIT.porch.width),
 // centered on the door, and kept on the wall. Returns null when the wall is
 // too short for a porch.
-export function porchSpan(len, bays, door) {
+export function porchSpan(len, bays, door, width = KIT.porch.width) {
   const P = KIT.porch;
-  const w = Math.min(P.width, len - 0.4);
+  const w = Math.min(width, len - 0.4);
   if (w < P.minWidth) return null;
   const am = ((door + 0.5) * len) / bays;
   const a0 = Math.min(Math.max(am - w / 2, 0.2), len - 0.2 - w);
@@ -966,8 +966,407 @@ export function housePorch(m, ring, style, si, base, floorH, top, front, foot = 
   return 1;
 }
 
+// The Victorian (Queen Anne) house of the historic districts (#407). The
+// sources for each part are in docs/research/2026-11-28-inman-park-victorian.md.
+//
+// - roof: a steep hip roof at `pitch`, with a front gable of `gablePitch`
+//   on the front side. The gable is `gableWidth` of the side (from `gableMin`
+//   to `gableMax` m), toward the porch end (away from the turret), and
+//   sticks out `gableOut` m over the wall. Its face is the accent color.
+// - turret: a round (8-sided) tower on a front corner of `chance` percent of
+//   the houses with a front wall of `minWall` m or more. The radius is
+//   `radius` of the front wall (from `minR` to `maxR` m). The tower sticks
+//   out `out` m from the two walls, rises `rise` m over the wall top, and
+//   has a cone roof `cone` radii high.
+// - porch: as wide as the front wall, and around the corner onto the side
+//   wall for `wrap` m (a wrap porch), on turned posts (a base block, a
+//   shaft, and a turned collar) no more than `postGap` m apart, with a
+//   balustrade of `rail` m and a spindle frieze under the beam.
+export const VICTORIAN = {
+  pitch: (45 * Math.PI) / 180,
+  gablePitch: (52 * Math.PI) / 180,
+  gableWidth: 0.5,
+  gableMin: 3,
+  gableMax: 6,
+  gableOut: 0.3,
+  turret: { chance: 50, minWall: 7, radius: 0.17, minR: 1.2, maxR: 1.7, out: 0.5, rise: 1.2, cone: 2.2, coneOut: 0.25, band: 0.4, sides: 8 },
+  porch: { wrap: 3.6, minWrap: 2, postGap: 2.6, rail: 0.85, railT: 0.07, frieze: 0.16, post: 0.13, postBase: 0.22, collar: 0.2 },
+};
+
+// Pure: the plan of one Victorian house on its front wall `edge`: the
+// turret (true or false), the corner of the turret (`turretEnd` 1 is the
+// end of the wall, 0 the start), its radius `r`, and the porch wrap end
+// (the other corner). Deterministic for a building id.
+export function victorianPlan(id, ring, edge) {
+  const T = VICTORIAN.turret;
+  const n = ring.length;
+  const w = wallOf(ring, edge);
+  const h = hash32(`${id}:victorian`);
+  const turretEnd = h & 1;
+  // outsideCorner(ring, i) is the corner between wall i and wall i + 1.
+  const corner = (end) => (end ? edge : (edge - 1 + n) % n);
+  const r = Math.min(T.maxR, Math.max(T.minR, w.len * T.radius));
+  const turret = (h >>> 1) % 100 < T.chance && w.len >= T.minWall && outsideCorner(ring, corner(turretEnd));
+  const wrapEnd = 1 - turretEnd;
+  return { turret, turretEnd, r, wrapEnd, wrapCorner: outsideCorner(ring, corner(wrapEnd)) };
+}
+
+// Pure: the along span of the Victorian porch on a front wall of length
+// `len` (porchSpan() with the whole wall), cut back at the turret corner,
+// so the porch stops at the tower. Returns null when the wall is too short.
+export function victorianSpan(len, bays, door, plan) {
+  const span = porchSpan(len, bays, door, len);
+  if (!span || !plan.turret) return span;
+  const T = VICTORIAN.turret;
+  const cut = 2 * plan.r - T.out + 0.1;
+  let { a0, a1 } = span;
+  if (plan.turretEnd) a1 = Math.min(a1, len - cut);
+  else a0 = Math.max(a0, cut);
+  if (a1 - a0 < KIT.porch.minWidth) return null;
+  const am = Math.min(Math.max(span.door, a0 + 1), a1 - 1);
+  return { a0, a1, door: am };
+}
+
+// The side wall of the wrap porch: { edge, b0, b1 } along that wall, or
+// null. `end` 1 wraps onto the next wall, 0 onto the previous wall.
+export function wrapWall(ring, edge, end) {
+  const n = ring.length;
+  const side = end ? (edge + 1) % n : (edge - 1 + n) % n;
+  const len = wallOf(ring, side).len;
+  const run = Math.min(VICTORIAN.porch.wrap, len - 0.4);
+  if (run < VICTORIAN.porch.minWrap) return null;
+  return end ? { edge: side, b0: 0, b1: run } : { edge: side, b0: len - run, b1: len };
+}
+
+// A turned post from y0 to y1 at [x, z] (the center), on wall axes t and n:
+// a square base block, a thin shaft, and a turned collar at 0.4 of the
+// height.
+function turnedPost(m, o, t, n, a, d, y0, y1, color, si) {
+  const P = VICTORIAN.porch;
+  const hb = P.postBase / 2;
+  const hs = P.post / 2;
+  const hc = P.collar / 2;
+  const base = Math.min(0.5, (y1 - y0) * 0.22);
+  solidBox(m, o, t, n, a - hb, a + hb, d - hb, d + hb, y0, y0 + base, color, si, false);
+  solidBox(m, o, t, n, a - hs, a + hs, d - hs, d + hs, y0 + base, y1, color, si, false);
+  const yc = y0 + (y1 - y0) * 0.42;
+  solidBox(m, o, t, n, a - hc, a + hc, d - hc, d + hc, yc, yc + 0.32, color, si);
+}
+
+// The posts of one porch run from a0 to a1 at depth `d`: the two ends, the
+// `fixed` posts (the stair sides), and more posts so no gap is over
+// VICTORIAN.porch.postGap. Returns the list of post positions.
+export function porchPosts(a0, a1, fixed = []) {
+  const P = VICTORIAN.porch;
+  const list = [a0, ...fixed, a1].sort((x, y) => x - y);
+  const out = [];
+  for (let i = 0; i < list.length; i += 1) {
+    if (i > 0) {
+      const gap = list[i] - list[i - 1];
+      const k = Math.ceil(gap / P.postGap - 1e-9);
+      // No post in the stair opening.
+      const stair = fixed.length === 2 && list[i - 1] === fixed[0] && list[i] === fixed[1];
+      if (!stair) for (let j = 1; j < k; j += 1) out.push(list[i - 1] + (gap * j) / k);
+    }
+    out.push(list[i]);
+  }
+  return out;
+}
+
+// A balustrade from a0 to a1 along the wall axes, at depth d0..d1 (or a
+// run across: along n from d0 to d1 at a0..a1): a bottom rail, a thin
+// baluster panel, and a top rail.
+function balustrade(m, o, t, n, a0, a1, d0, d1, dt, color, si) {
+  const P = VICTORIAN.porch;
+  if (a1 - a0 < 0.05 || d1 - d0 < 0.02) return;
+  const yTop = dt + P.rail;
+  solidBox(m, o, t, n, a0, a1, d0, d1, dt + 0.06, dt + 0.14, color, si, false);
+  // The baluster panel is thinner than the rails, so it reads as a row of
+  // spindles in shade.
+  const inA = (d1 - d0) < (a1 - a0);
+  const pa = inA ? [a0, a1] : [a0 + 0.02, a1 - 0.02];
+  const pd = inA ? [d0 + 0.02, d1 - 0.02] : [d0, d1];
+  solidBox(m, o, t, n, pa[0], pa[1], pd[0], pd[1], dt + 0.14, yTop - 0.08, color, si, false);
+  solidBox(m, o, t, n, a0 - 0.02, a1 + 0.02, d0 - 0.02, d1 + 0.02, yTop - 0.08, yTop, color, si);
+}
+
+// The steep hip roof with a front gable over the footprint's rectangle,
+// into mesh `m`. `side` (1 or -1) moves the gable toward the +t or -t end
+// of the front wall `frontEdge`. Returns false when the footprint is not
+// near a rectangle or is too wide, as gableRoof().
+export function victorianRoof(m, ring, top, wall, shingle, accent, style, frontEdge, side = 1) {
+  const V = VICTORIAN;
+  const r = minRect(ring);
+  if (!r || r.short > KIT.roof.maxSpan || ringArea(ring) / r.area < KIT.roof.minFill) return false;
+  const oh = KIT.roof.overhang;
+  const tp = Math.tan(V.pitch);
+  const hl = r.long / 2 + oh;
+  const hs = r.short / 2 + oh;
+  const eave = top - oh * tp;
+  const ridge = top + (r.short / 2) * tp;
+  const rl = Math.max(0, r.long / 2 - r.short / 2);
+  const { cx, cz, ux, uz } = r;
+  const vx = -uz;
+  const vz = ux;
+  const at = (a, b, y) => [cx + ux * a + vx * b, y, cz + uz * a + vz * b];
+  const e0 = at(-hl, -hs, eave);
+  const e1 = at(hl, -hs, eave);
+  const e2 = at(hl, hs, eave);
+  const e3 = at(-hl, hs, eave);
+  const r0 = at(-rl, 0, ridge);
+  const r1 = at(rl, 0, ridge);
+  const faces = [
+    [e0, e1, r1, r0, [-vx * tp, 1, -vz * tp]],
+    [e3, e2, r1, r0, [vx * tp, 1, vz * tp]],
+    [e1, e2, r1, r1, [ux * tp, 1, uz * tp]],
+    [e3, e0, r0, r0, [-ux * tp, 1, -uz * tp]],
+  ];
+  for (const [a, b, c, d, nn] of faces) {
+    if (c === d) {
+      tri(m, a, b, c, shingle, nn, style);
+      // The underside, so the roof shows no hole from below.
+      tri(m, a, b, c, shingle, [-nn[0], -1, -nn[2]], style);
+    } else {
+      quad(m, a, b, c, d, shingle, nn, style);
+      quad(m, a, b, c, d, shingle, [-nn[0], -1, -nn[2]], style);
+    }
+  }
+  // The front side of the rectangle: the side whose normal is nearest the
+  // normal of the front wall.
+  const fw = wallOf(ring, frontEdge >= 0 && frontEdge < ring.length ? frontEdge : longestWall(ring));
+  const dv = fw.n[0] * vx + fw.n[1] * vz;
+  const du = fw.n[0] * ux + fw.n[1] * uz;
+  // In the gable frame: `s` along the front side, `q` out of it, from the
+  // side center c; H is the half side length.
+  let c, ts, ns, H;
+  if (Math.abs(dv) >= Math.abs(du)) {
+    const sg = dv >= 0 ? 1 : -1;
+    c = [cx + vx * sg * (r.short / 2), cz + vz * sg * (r.short / 2)];
+    ns = [vx * sg, vz * sg];
+    ts = [ux, uz];
+    H = r.long / 2;
+  } else {
+    const sg = du >= 0 ? 1 : -1;
+    c = [cx + ux * sg * (r.long / 2), cz + uz * sg * (r.long / 2)];
+    ns = [ux * sg, uz * sg];
+    ts = [vx, vz];
+    H = r.short / 2;
+  }
+  // The gable goes toward `side` of the front wall.
+  const dir = (ts[0] * fw.t[0] + ts[1] * fw.t[1] >= 0 ? 1 : -1) * side;
+  const wg = Math.min(V.gableMax, Math.max(V.gableMin, 2 * H * V.gableWidth), 2 * H - 0.4);
+  if (wg < V.gableMin * 0.8) return true;
+  const off = dir * Math.max(0, H - wg / 2 - 0.15);
+  const tg = Math.tan(V.gablePitch);
+  const yg = Math.min(ridge, top + (wg / 2) * tg);
+  const go = V.gableOut;
+  const half = (yg - top) / tg;
+  const yE = yg - (half + go) * tg;
+  // The gable runs back until its ridge is under the hip slope.
+  const back = Math.max(0.5, (yg - eave) / tp - oh + 0.3);
+  const g = (s, q, y) => [c[0] + ts[0] * (off + s) + ns[0] * q, y, c[1] + ts[1] * (off + s) + ns[1] * q];
+  const left = [-ts[0] * tg + ns[0] * 0, 1, -ts[1] * tg];
+  const right = [ts[0] * tg, 1, ts[1] * tg];
+  quad(m, g(-half - go, go, yE), g(-half - go, -back, yE), g(0, -back, yg), g(0, go, yg), shingle, left, style);
+  quad(m, g(half + go, go, yE), g(half + go, -back, yE), g(0, -back, yg), g(0, go, yg), shingle, right, style);
+  quad(m, g(-half - go, go, yE), g(-half - go, -back, yE), g(0, -back, yg), g(0, go, yg), shingle, [-left[0], -1, -left[2]], style);
+  quad(m, g(half + go, go, yE), g(half + go, -back, yE), g(0, -back, yg), g(0, go, yg), shingle, [-right[0], -1, -right[2]], style);
+  // The gable face (painted shingles in the accent color), a trim board
+  // under it, and a small attic window.
+  const front = [ns[0], 0, ns[1]];
+  const fq = 0.02;
+  tri(m, g(-half, fq, top), g(half, fq, top), g(0, fq, yg), accent, front, style);
+  solidBox(m, c, ts, ns, off - half - 0.05, off + half + 0.05, 0, 0.12, top - 0.18, top, STYLES[style]?.trim ?? wall, style, true);
+  const wh = Math.min(0.9, (yg - top) * 0.45);
+  if (wh > 0.35) {
+    const y0 = top + (yg - top) * 0.18;
+    quad(m, g(-0.28, fq + 0.01, y0), g(0.28, fq + 0.01, y0), g(0.28, fq + 0.01, y0 + wh), g(-0.28, fq + 0.01, y0 + wh), [0.16, 0.22, 0.3], front, style);
+  }
+  return true;
+}
+
+// The corner turret of a Victorian house on the front wall `edge`, into
+// mesh `m`: an 8-sided tower from `foot` to `rise` m over the wall top
+// with a tall window on each outer face of each floor, an accent band, a
+// cone roof, and a finial. Returns 1 when it builds the tower.
+export function victorianTurret(m, ring, edge, plan, foot, base, top, floorH, wall, accent, shingle, trim, glass, si) {
+  if (!plan.turret) return 0;
+  const T = VICTORIAN.turret;
+  const w = wallOf(ring, edge);
+  const r = plan.r;
+  const inset = r - T.out;
+  const a = plan.turretEnd ? w.len - inset : inset;
+  const cx = w.o[0] + w.t[0] * a - w.n[0] * inset;
+  const cz = w.o[1] + w.t[1] * a - w.n[1] * inset;
+  const N = T.sides;
+  const pt = (k, rad, y) => {
+    const ang = ((k + 0.5) * 2 * Math.PI) / N;
+    return [cx + Math.cos(ang) * rad, y, cz + Math.sin(ang) * rad];
+  };
+  const y0 = Math.min(foot, base) - 0.05;
+  const yb = top + T.rise;
+  // The house center, so the windows go only on the outer faces.
+  let hx = 0;
+  let hz = 0;
+  for (const p of ring) {
+    hx += p[0];
+    hz += p[1];
+  }
+  hx = hx / ring.length - cx;
+  hz = hz / ring.length - cz;
+  const hl = Math.hypot(hx, hz) || 1;
+  const floors = Math.max(1, Math.round((top - base) / floorH));
+  for (let k = 0; k < N; k += 1) {
+    const ang = ((k + 1) * 2 * Math.PI) / N;
+    const nn = [Math.cos(ang), 0, Math.sin(ang)];
+    const a0 = pt(k, r, y0);
+    const a1 = pt(k + 1, r, y0);
+    quad(m, a0, a1, pt(k + 1, r, yb - T.band), pt(k, r, yb - T.band), wall, nn, si);
+    // The band under the cone.
+    quad(m, pt(k, r + 0.06, yb - T.band), pt(k + 1, r + 0.06, yb - T.band), pt(k + 1, r + 0.06, yb), pt(k, r + 0.06, yb), accent, nn, si);
+    quad(m, pt(k, r, yb - T.band), pt(k + 1, r, yb - T.band), pt(k + 1, r + 0.06, yb - T.band), pt(k, r + 0.06, yb - T.band), accent, [0, -1, 0], si);
+    // The cone.
+    const rc = r + T.coneOut;
+    const apex = [cx, yb + rc * T.cone, cz];
+    tri(m, pt(k, rc, yb), pt(k + 1, rc, yb), apex, shingle, [nn[0], 0.5, nn[2]], si);
+    tri(m, pt(k, rc, yb), pt(k + 1, rc, yb), [cx, yb, cz], shingle, [0, -1, 0], si);
+    // A tall window on each outer face of each floor.
+    if ((nn[0] * hx + nn[2] * hz) / hl > -0.2) continue;
+    const half = Math.sin(Math.PI / N) * r * 0.42;
+    const mid = [(a0[0] + a1[0]) / 2 + nn[0] * 0.02, (a0[2] + a1[2]) / 2 + nn[2] * 0.02];
+    const tx = -nn[2];
+    const tz = nn[0];
+    for (let f = 0; f <= floors; f += 1) {
+      const yw0 = base + f * floorH + floorH * 0.28;
+      const yw1 = Math.min(yw0 + floorH * 0.5, yb - T.band - 0.15);
+      if (yw1 - yw0 < 0.5) continue;
+      quad(m, [mid[0] - tx * half, yw0, mid[1] - tz * half], [mid[0] + tx * half, yw0, mid[1] + tz * half], [mid[0] + tx * half, yw1, mid[1] + tz * half], [mid[0] - tx * half, yw1, mid[1] - tz * half], glass, nn, si);
+    }
+  }
+  // The finial.
+  const apexY = yb + (r + T.coneOut) * T.cone;
+  solidBox(m, [cx, cz], [1, 0], [0, 1], -0.06, 0.06, -0.06, 0.06, apexY - 0.2, apexY + 0.55, trim, si);
+  return 1;
+}
+
+// The wrap porch of a Victorian house, into mesh `m` (a depth tile): the
+// porch of housePorch() as wide as the front wall (victorianSpan()), on
+// turned posts with a balustrade and a spindle frieze, and with a second
+// run around the corner onto the side wall (`front.wrap`, houseFronts()).
+// The two shed roofs meet on a hip line at the corner. Returns 1 when it
+// builds the porch, else 0.
+export function victorianPorch(m, ring, style, si, base, floorH, top, front, foot = base, wall = style.walls[0], accent = style.trim, plan = null) {
+  const P = KIT.porch;
+  const V = VICTORIAN.porch;
+  if (!front || front.edge < 0 || front.edge >= ring.length) return 0;
+  const { o, t, n, len } = wallOf(ring, front.edge);
+  const bays = Math.max(1, Math.round(len / style.bay));
+  const pl = plan ?? { turret: false, turretEnd: 0, r: 0, wrapEnd: 1, wrapCorner: false };
+  const span = victorianSpan(len, bays, doorBay(front, bays), pl);
+  if (!span) return 0;
+  const dt = base + P.deck;
+  const ground = Number.isFinite(front.ground) ? Math.min(front.ground, base) : Math.min(foot, base);
+  const room = Math.floor(((front.clear ?? Infinity) - P.minDepth - P.margin) / P.run + 1e-9);
+  const steps = Math.min(porchSteps(dt, front.ground), room);
+  if (steps < 1) return 0;
+  const run = steps * P.run;
+  let depth = Math.min(P.depth, (front.clear ?? Infinity) - run - P.margin);
+  if (depth < P.minDepth) return 0;
+  // The wrap run, when the side wall has room.
+  const wrap = front.wrap && Number.isFinite(front.wrap.clear) && front.wrap.clear - P.margin >= P.minDepth ? front.wrap : null;
+  if (wrap) depth = Math.min(depth, wrap.clear - P.margin);
+  const eave = top - KIT.roof.overhang * Math.tan(VICTORIAN.pitch);
+  const sill2 = floorH < top - base - 0.01 ? base + (1 + WINDOW_CENTER - (style.window[1] + FRAME) / 2) * floorH - KIT.sill.height : Infinity;
+  const yb = Math.min(base + floorH - 0.1, eave - 0.1, sill2 - 0.15);
+  const yf = yb - P.rise;
+  if (yf - P.beam - V.frieze - dt < P.clear) return 0;
+  let { a0, a1 } = span;
+  const am = span.door;
+  // The front run goes past the wall corner by the porch depth on the wrap
+  // end, so it covers the corner square.
+  if (wrap) {
+    if (pl.wrapEnd) a1 = len + depth;
+    else a0 = -depth;
+  }
+  const sw = P.stepWidth / 2;
+  const ps = V.postBase / 2;
+  const trim = style.trim;
+  const yBeam = yf - P.beam;
+  const runs = [{ o, t, n, a0, a1, stair: true, open: wrap ? pl.wrapEnd : -1 }];
+  if (wrap) {
+    const s = wallOf(ring, wrap.edge);
+    runs.push({ o: s.o, t: s.t, n: s.n, a0: wrap.b0, a1: wrap.b1, stair: false, open: pl.wrapEnd ? 0 : 1 });
+  }
+  for (const rn of runs) {
+    const { o: ro, t: rt, n: rnn } = rn;
+    // The deck, on a skirt to the ground.
+    solidBox(m, ro, rt, rnn, rn.a0 + 0.06, rn.a1 - 0.06, 0, depth - 0.06, Math.min(foot, ground) - 0.05, dt - 0.06, P.skirt, si, false);
+    solidBox(m, ro, rt, rnn, rn.a0, rn.a1, 0, depth + 0.04, dt - 0.06, dt, P.wood, si, false);
+    // The balustrade: the front, with a gap at the steps, and each closed end.
+    const d0 = depth - ps - 0.04;
+    const d1 = depth - ps + 0.04;
+    if (rn.stair) {
+      balustrade(m, ro, rt, rnn, rn.a0 + ps, am - sw - ps, d0, d1, dt, trim, si);
+      balustrade(m, ro, rt, rnn, am + sw + ps, rn.a1 - ps, d0, d1, dt, trim, si);
+    } else balustrade(m, ro, rt, rnn, rn.a0 + ps, rn.a1 - ps, d0, d1, dt, trim, si);
+    if (rn.open !== 0) balustrade(m, ro, rt, rnn, rn.a0 + ps - 0.04, rn.a0 + ps + 0.04, 0.02, depth - 2 * ps, dt, trim, si);
+    if (rn.open !== 1) balustrade(m, ro, rt, rnn, rn.a1 - ps - 0.04, rn.a1 - ps + 0.04, 0.02, depth - 2 * ps, dt, trim, si);
+    // The turned posts, the beam, and the spindle frieze under it.
+    const fixed = rn.stair ? [am - sw - ps, am + sw + ps] : [];
+    for (const a of porchPosts(rn.a0 + ps, rn.a1 - ps, fixed)) turnedPost(m, ro, rt, rnn, a, depth - ps, dt, yBeam - V.frieze, trim, si);
+    solidBox(m, ro, rt, rnn, rn.a0, rn.a1, depth - 2 * ps, depth, yBeam, yf, trim, si);
+    solidBox(m, ro, rt, rnn, rn.a0 + ps, rn.a1 - ps, depth - ps - 0.03, depth - ps + 0.03, yBeam - V.frieze, yBeam, accent, si);
+  }
+  // The shed roofs. On the wrap corner the two roofs meet on the hip line
+  // from the wall corner down to the outer corner.
+  const oh = P.overhang;
+  const d1 = depth + oh;
+  const fall = (P.rise * d1) / depth;
+  const yE = yb - fall;
+  const T = P.slab;
+  const shingle = SHINGLES[(hash32(`${front.edge}:${Math.round(len * 10)}`) >>> 0) % SHINGLES.length];
+  for (let i = 0; i < runs.length; i += 1) {
+    const rn = runs[i];
+    const at = (a, y, d) => [rn.o[0] + rn.t[0] * a + rn.n[0] * d, y, rn.o[1] + rn.t[1] * a + rn.n[1] * d];
+    // The wall line and the eave line of this roof: [w0, w1] and [e0, e1].
+    let w0 = rn.a0 - oh;
+    let w1 = rn.a1 + oh;
+    let e0 = w0;
+    let e1 = w1;
+    if (wrap && i === 0) {
+      if (pl.wrapEnd) [w1, e1] = [len, len + d1];
+      else [w0, e0] = [0, -d1];
+    }
+    if (wrap && i === 1) {
+      const sl = wallOf(ring, wrap.edge).len;
+      if (pl.wrapEnd) [w0, e0] = [0, -d1];
+      else [w1, e1] = [sl, sl + d1];
+    }
+    const slope = [rn.n[0] * (fall / d1), 1, rn.n[1] * (fall / d1)];
+    quad(m, at(w0, yb + T, 0), at(w1, yb + T, 0), at(e1, yE + T, d1), at(e0, yE + T, d1), shingle, slope, si);
+    quad(m, at(w0, yb, 0), at(w1, yb, 0), at(e1, yE, d1), at(e0, yE, d1), trim, [0, -1, 0], si);
+    quad(m, at(e0, yE, d1), at(e1, yE, d1), at(e1, yE + T, d1), at(e0, yE + T, d1), trim, [rn.n[0], 0, rn.n[1]], si);
+    if (e0 === w0) quad(m, at(w0, yb, 0), at(e0, yE, d1), at(e0, yE + T, d1), at(w0, yb + T, 0), trim, [-rn.t[0], 0, -rn.t[1]], si);
+    if (e1 === w1) quad(m, at(w1, yb, 0), at(e1, yE, d1), at(e1, yE + T, d1), at(w1, yb + T, 0), trim, [rn.t[0], 0, rn.t[1]], si);
+  }
+  // The stair and the door, as housePorch().
+  for (let k = 1; k <= steps; k += 1) {
+    const y = dt - (k * (dt - ground)) / (steps + 1);
+    solidBox(m, o, t, n, am - sw, am + sw, depth + (k - 1) * P.run, depth + k * P.run, ground - 0.2, y, P.wood, si, false);
+  }
+  const D = KIT.houseDoor;
+  const half = D.width / 2;
+  const color = SIGN_COLORS[hash32(`${front.edge}:${Math.round(len * 100)}`) % SIGN_COLORS.length];
+  const y1 = Math.min(dt + D.height + 0.2, yb - D.head - 0.05);
+  wallBox(m, o, t, n, am - half, am + half, dt, y1, D.out, color, si, false, true);
+  wallBox(m, o, t, n, am - half - D.trim, am - half, dt, y1, D.trimOut, trim, si, false, true);
+  wallBox(m, o, t, n, am + half, am + half + D.trim, dt, y1, D.trimOut, trim, si, false, true);
+  wallBox(m, o, t, n, am - half - D.trim, am + half + D.trim, y1, y1 + D.head, D.trimOut, trim, si, true, true);
+  return 1;
+}
+
 // The part counts of buildingKit() and facadeKit().
-const COUNT_KEYS = ["cornice", "coping", "belt", "roof", "sill", "pier", "crown", "bulkhead", "sign", "awning", "lintel", "head", "stack", "door", "step", "sconce", "vent", "porch", "solar", "muralFrame"];
+const COUNT_KEYS = ["cornice", "coping", "belt", "roof", "sill", "pier", "crown", "bulkhead", "sign", "awning", "lintel", "head", "stack", "door", "step", "sconce", "vent", "porch", "solar", "muralFrame", "turret"];
 
 // The frame of a mural (#198, pbr look): a plain cast-stone cap over the
 // mural and a base under it, so the mural reads as paint on a framed wall
@@ -1020,6 +1419,7 @@ export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, 
   counts.pier = d.pier;
   counts.lintel = d.lintel;
   counts.head = d.head;
+  if (style.id === "victorian-house" && b.height <= KIT.roof.maxHeight) return victorianKit(m, depth, b, ring, style, si, base, top, foot, floorH, front, mural, counts);
   if (HOUSES.has(style.id) && front && !(mural && mural.edge === front.edge)) counts.porch = housePorch(depth, ring, style, si, base, floorH, top, front, foot, wallColor(style, b.id));
   if (roofForm(b, style) === "gable" && b.height <= KIT.roof.maxHeight) {
     const shingle = SHINGLES[hash32(`${b.id}:roof`) % SHINGLES.length];
@@ -1069,6 +1469,22 @@ export function buildingKit(m, b, span = { base: 0, top: b.height }, depth = m, 
       counts.sconce = e.sconce;
     }
   }
+  return counts;
+}
+
+// The kit of a Victorian house (#407): the wrap porch, the hip roof with
+// the front gable, and the corner turret. Returns the part counts.
+function victorianKit(m, depth, b, ring, style, si, base, top, foot, floorH, front, mural, counts) {
+  const edge = front?.edge ?? longestWall(ring);
+  const plan = victorianPlan(b.id, ring, edge);
+  const wall = wallColor(style, b.id);
+  const accent = style.accents[hash32(`${b.id}:accent`) % style.accents.length];
+  const shingle = SHINGLES[hash32(`${b.id}:roof`) % SHINGLES.length];
+  if (front && !(mural && mural.edge === front.edge)) counts.porch = victorianPorch(depth, ring, style, si, base, floorH, top, front, foot, wall, accent, plan);
+  // The gable goes toward the porch end: away from the turret.
+  if (!victorianRoof(m, ring, top, wall, shingle, accent, si, edge, plan.turretEnd ? -1 : 1)) return counts;
+  counts.roof = 1;
+  counts.turret = victorianTurret(m, ring, edge, plan, foot, base, top, floorH, wall, accent, shingle, style.trim, style.glass, si);
   return counts;
 }
 
@@ -1203,16 +1619,24 @@ export function houseFronts(level) {
     if (!f.street && !(walk.walk !== null && walk.walk <= HOUSE_FRONT.maxStreet)) continue;
     const { len } = wallOf(ring, f.edge);
     const bays = Math.max(1, Math.round(len / style.bay));
-    const span = porchSpan(len, bays, doorBay(walk, bays));
+    // A Victorian house (#407) has a porch as wide as the wall, which
+    // wraps around one corner onto the side wall.
+    const plan = style.id === "victorian-house" ? victorianPlan(b.id, ring, f.edge) : null;
+    const span = plan ? victorianSpan(len, bays, doorBay(walk, bays), plan) : porchSpan(len, bays, doorBay(walk, bays));
     if (!span) continue;
     // The edge lines are under the roof overhang.
     const oh = KIT.porch.overhang;
-    const clear = wallClear(ring, f.edge, span.a0 - oh, span.a1 + oh, span.door, isStreet, blocked);
+    const side = plan?.wrapCorner ? wrapWall(ring, f.edge, plan.wrapEnd) : null;
+    const reach = KIT.porch.depth + oh;
+    const ea0 = side && !plan.wrapEnd ? -reach : span.a0 - oh;
+    const ea1 = side && plan.wrapEnd ? len + reach : span.a1 + oh;
+    const clear = wallClear(ring, f.edge, ea0, ea1, span.door, isStreet, blocked);
+    const wrap = side ? { ...side, clear: Math.round(wallClear(ring, side.edge, side.b0, side.b1, (side.b0 + side.b1) / 2, isStreet, blocked) * 100) / 100 } : null;
     // The ground at the foot of the stair, on the door line.
     const w = wallOf(ring, f.edge);
     const d = KIT.porch.depth + KIT.porch.steps * KIT.porch.run;
     const ground = terrain.height(w.o[0] + w.t[0] * span.door + w.n[0] * d, w.o[1] + w.t[1] * span.door + w.n[1] * d);
-    out.set(b.id, { edge: f.edge, street: f.street, door: walk.door, walk: walk.walk, clear: Math.round(clear * 100) / 100, ground: Math.round(ground * 100) / 100 });
+    out.set(b.id, { edge: f.edge, street: f.street, door: walk.door, walk: walk.walk, clear: Math.round(clear * 100) / 100, ground: Math.round(ground * 100) / 100, ...(wrap ? { wrap } : {}) });
   }
   houseCache.set(level, { buildings: level.buildings, fronts: out });
   return out;

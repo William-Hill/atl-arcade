@@ -6,6 +6,18 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## Victorian house style and historic district mix (#407), 2026-11-28
+
+Branch `feat/407-victorian-house` from `main`. Sources: `docs/research/2026-11-28-inman-park-victorian.md`. Design: `docs/decisions.md`, 2026-11-28. `styles.js` edits are additive (#406 also edits `chooseStyle()`).
+
+| Part | Where | Verified |
+|---|---|---|
+| `victorian-house` style, hip roof with front gable, corner turret, wrap porch on turned posts | `src/level/geo/styles.js`, `src/level/geo/facade-kit.js` (`victorianRoof`, `victorianTurret`, `victorianPorch`) | Vitest `victorian.test.js`; lab captures `reports/lab/victorian-house-0-pbr/`, `reports/lab/victorian-house-37-pbr/` |
+| City historic district boundaries and the district mix | `scripts/historic-districts.mjs`, `levels/beltline-eastside/historic-districts.json`, `src/level/geo/historic-districts.js`, `src/level/levels.js` | Vitest `historic-districts.test.js` |
+| Triangle budget | `src/level/geo/victorian.test.js` | Vitest (Victorian mean 1046, max 2319; shotgun mean 1040, max 3430) |
+
+NOT verified: no person looked at the houses in the game; the lab captures used a copy of `e2e/lab.spec.js` that waits for 1 landmark tower, because in this container the PBR landmark textures never report loaded (on `main` too); the Chapter 20L district regulations were not read (the City site refused the fetch).
+
 ## One-button sets, SPIN rule, goal reachability, banned words (#336, #342), 2026-11-27
 
 Branch `claude/gifted-darwin-mhhrm3` from `main` (wave 2 step 2, lane O). Design: `docs/decisions.md`, 2026-11-27. No change to `src/main.js`, the trick HUD, or `perfectHitStopMs` (lane H owns them).

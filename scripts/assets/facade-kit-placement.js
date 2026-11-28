@@ -80,8 +80,8 @@ const WINDOW_OF = {
 const FIRE_ESCAPE = new Set(["brick-loft", "brick-warehouse", "stucco-apartment"]);
 const AC_UNITS = new Set(["stucco-apartment", "brick-loft", "shotgun-house", "craftsman-house"]);
 const BALCONY = { "modern-apartment": "balcony_slab", "stucco-apartment": "balcony_juliet", "brick-loft": "balcony_juliet" };
-const HOUSES = new Set(["craftsman-house", "shotgun-house"]);
-const NO_ROOF_KIT = new Set(["craftsman-house", "shotgun-house", "glass-office", "parking-deck", "industrial-shed"]);
+const HOUSES = new Set(["craftsman-house", "shotgun-house", "victorian-house"]);
+const NO_ROOF_KIT = new Set(["craftsman-house", "shotgun-house", "victorian-house", "glass-office", "parking-deck", "industrial-shed"]);
 const CORNER = { min: (75 * Math.PI) / 180, max: (105 * Math.PI) / 180 };
 const SCALE = { storefront: [0.8, 1.2], window: [0.8, 1.25], awning: [0.8, 1.6], run: [0.75, 1.25] };
 

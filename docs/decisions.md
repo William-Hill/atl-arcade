@@ -3312,3 +3312,16 @@ Research: `docs/research/2026-11-27-lidar-heights-spike.md`.
 - The parcel style comes before the district mix: the mix is a guess, the parcel data is not.
 - The lab reference building changes: `w270469054` (brick-loft pick 0 of the art loop) is a 2014 condo in the county data, so it now gets `modern-apartment`. `LAB_KIND=brick-loft LAB_PICK=0` now shows another building. The tests that used it as a brick loft now use it with the brick-loft style given in the test.
 - Not changed: the OSM `building=house` buildings (764) keep `craftsman-house` from `BY_TYPE`, so their year built does not change their style yet. The story count is not used for the floor count (`floorCount()` uses the OSM levels).
+
+## 2026-11-28: Wall labels from Mapillary street images (#408)
+
+- **Status: decided.** The owner accepted the proposal on 2026-11-28 (PR #420). The owner treats Skate ATL as a commercial use under Mapillary terms section 12, so the section 12 safeguards apply.
+- Research: `docs/research/2026-11-27-mapillary-facade-labels.md` (Mapillary Terms of Use of 2024-02-15, CC BY-SA 4.0 legal code, CC FAQ; fetched 2026-11-28). Not legal advice; a lawyer has not read it.
+- Decision: an agent may read Mapillary images (CC BY-SA 4.0, Mapillary terms section 3) through the published API with a registered app (section 11), and record 4 labels for each street-facing building: wall material, main wall color, floor count, style. The labels are facts, so CC BY-SA most probably does not control them (legal code section 2(a)(2); CC FAQ, data). No pixel goes into the game.
+- Precaution for database rights (legal code section 4): the labels go in a separate file, `levels/beltline-eastside/facades.json`, under CC BY-SA 4.0. They do not go into the ODbL `level.json`. Share-alike does not apply to the game or its code (legal code section 3(b); CC FAQ, collections).
+- Attribution: the Mapillary logo and a link to `https://www.mapillary.com` (terms section 11), "Wall colors and materials: labels from Mapillary street images, CC BY-SA 4.0" in the credits and the level attribution, and for each building the image id, the image link, the creator username, and the capture date in `facades.json`. A new row in `docs/sources.md`.
+- People and cars: no image is stored in the repository; the cache is deleted after use; the label schema has no free-text field; an image with a face or plate that is not blurred is skipped and flagged to Mapillary (terms sections 5 and 6). No re-identification.
+- Commercial use (owner choice): the section 12 safeguards apply. The written process: no image file in the repository, no image in a log, the cache is deleted after the labels are made, and no attempt to unblur or re-identify.
+- Next step: the owner registers a Mapillary app and saves its client token for `graph.mapillary.com`. Then an agent counts the coverage of the BeltLine Eastside bbox before the 50-building pilot. The count was not done: the API returned "Invalid OAuth 2.0 Access Token" (code 190) with no token.
+- Not done: a lawyer has not read the research note.
+- Alternative: contribute the checked labels to OpenStreetMap as `building:colour` and `building:material` (terms section 13), after a review of the OSM automated edit rules.

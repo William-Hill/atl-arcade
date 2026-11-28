@@ -77,6 +77,10 @@ const WINDOW_OF = {
   "modern-apartment": "window_stucco_modern",
   storefront: "window_brick_loft",
 };
+// The window A/C (scripts/blender/facade_kit.py ac_unit()): the case is
+// w x h, the support brackets go `bracket` under its bottom, and `rail` is
+// the bottom rail of the stucco sash (window_stucco()) that it sits on.
+export const AC = { w: 0.66, h: 0.42, bracket: 0.36, rail: 0.06 };
 const FIRE_ESCAPE = new Set(["brick-loft", "brick-warehouse", "stucco-apartment"]);
 const AC_UNITS = new Set(["stucco-apartment", "brick-loft", "shotgun-house", "craftsman-house"]);
 const BALCONY = { "modern-apartment": "balcony_slab", "stucco-apartment": "balcony_juliet", "brick-loft": "balcony_juliet" };
@@ -249,6 +253,11 @@ export function facadePlacements({ ring, holes = [], style, base = 0, top, front
       const sx = ((style.window[0] + FRAME) * bl) / mw;
       const sy = ((style.window[1] + FRAME) * floorH) / mh;
       const yOff = (WINDOW_CENTER - (style.window[1] + FRAME) / 2) * floorH;
+      // A window A/C sits in the lower sash: centered in the bay, on the
+      // bottom rail of the frame. It goes only in a window that is wide
+      // enough for it and has a lower sash as tall as it.
+      const acSill = AC.rail * sy;
+      const acFits = sx * mw - 2 * AC.rail * sx >= AC.w + 0.04 && (sy * mh) / 2 - acSill >= AC.h;
       for (let f = firstFloor; f < floors; f += 1) {
         const yf = base + f * floorH;
         if (yf + yOff + (style.window[1] + FRAME) * floorH > top - 0.1) break;
@@ -264,7 +273,7 @@ export function facadePlacements({ ring, holes = [], style, base = 0, top, front
           const bal = BALCONY[style.id];
           const bs = bal ? Math.min(1.3, bl / MODULES[bal][0]) : 1;
           if (f >= 1 && bal && fronts.has(i) && r < 0.18 && !onMural(i, a - (bs * MODULES[bal][0]) / 2, a + (bs * MODULES[bal][0]) / 2, yf, yf + MODULES[bal][1])) add(bal, i, w, a, yf, 0, bs);
-          else if (AC_UNITS.has(style.id) && !fronts.has(i) && r > 0.9 && !onMural(i, a + 0.2 * bl - 0.33, a + 0.2 * bl + 0.33, yf + yOff - 0.45, yf + yOff + 0.33)) add("ac_unit_wall", i, w, a + 0.2 * bl, yf + yOff - 0.45, 0);
+          else if (AC_UNITS.has(style.id) && !fronts.has(i) && r > 0.9 && acFits && !onMural(i, a - AC.w / 2, a + AC.w / 2, yf + yOff + acSill - AC.bracket, yf + yOff + acSill + AC.h)) add("ac_unit_wall", i, w, a, yf + yOff + acSill, 0);
         }
       }
     }

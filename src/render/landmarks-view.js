@@ -90,7 +90,11 @@ function groupMeshes(t, mats) {
 
 // Returns { root, ready } where `ready` resolves when the towers load.
 // With `renderer`, the near level gets physical materials and reflections.
-export function createLandmarksView(level, { gradientMap = null, renderer = null, look = "toon" } = {}) {
+// `after` (a promise) holds the template, scan texture, and reflection
+// downloads back, for example until the first frame (#413). The landmark
+// models stand about 1 km from the spawn, so the first frame does not show
+// them.
+export function createLandmarksView(level, { gradientMap = null, renderer = null, look = "toon", after = null } = {}) {
   const root = new THREE.Group();
   root.name = "landmarks";
   // `towers` counts every landmark model (towers and fronts).
@@ -104,7 +108,7 @@ export function createLandmarksView(level, { gradientMap = null, renderer = null
     const load = TEMPLATES[p.id];
     if (!load) continue;
     tasks.push(
-      Promise.all([load(), renderer ? landmarkEnvironment(renderer) : null]).then(async ([mod, envMap]) => {
+      Promise.resolve(after).then(() => Promise.all([load(), renderer ? landmarkEnvironment(renderer) : null])).then(async ([mod, envMap]) => {
         const t = mod.default ?? mod;
         const lod = new THREE.LOD();
         lod.name = `landmark-${p.id}`;

@@ -737,6 +737,16 @@
       "result": "6 clips added; 35 clips in each GLB. skater.glb 3,905,108 -> 3,967,048 bytes; skater-1024.glb 3,032,500 -> 3,094,444 bytes. Joint-limit gate PASS on the 6 clips. Clip probe: no clip over 1 cm. Lowest wheel -0.2 mm or higher. Details: docs/characters/trick-clips/README.md.",
       "evidence": "docs/characters/trick-clips/ (README.md, sheets/, *-metrics.json, *-joint-limits.json, *-clip-probe.json, *-build.json); assets/skaters/marcus/clips/<clip>.png (e2e/skater-anim.spec.js); e2e/trick-clips.spec.js",
       "credits_spent": 0
+    },
+    {
+      "tool": "scripts/assets/glb-anim-dedup.mjs on Node (no dependencies; scripts/assets/glb-anim-dedup.js)",
+      "date": "2026-11-28",
+      "issue": "#413",
+      "prompt": "No generation. A lossless pass on the JSON chunk: the animation samplers with the same key times or the same key values share one accessor, and the unused accessors are removed. The binary chunk does not change.",
+      "command": "node scripts/assets/glb-anim-dedup.mjs assets/skaters/marcus/skater.glb assets/skaters/marcus/skater-1024.glb",
+      "result": "Accessors 4837 -> 1856 in each GLB. skater.glb 3,967,048 -> 3,625,524 bytes; skater-1024.glb 3,094,444 -> 2,752,916 bytes. Every clip track (key times, key values, interpolation), the mesh attributes and indices, and the textures are the same as before (compared with @gltf-transform/core 4.5.1). The mesh is not decoded or encoded again.",
+      "evidence": "docs/perf/413/README.md; scripts/assets/glb-anim-dedup.test.js",
+      "credits_spent": 0
     }
   ],
   "credits_spent_total": 115,
@@ -744,14 +754,14 @@
   "tripo_credits_after": 2970,
   "file": "assets/skaters/marcus/skater.glb",
   "triangles": 39074,
-  "file_size_bytes": 3967048,
+  "file_size_bytes": 3625524,
   "five_views": "assets/skaters/marcus/views/ (front, back, left, right, three-quarter), made by e2e/skater-model.spec.js",
   "contact_sheets": "assets/skaters/marcus/clips/<clip>.png, made by e2e/skater-anim.spec.js",
   "concept_art_credits": "6 Autosprite credits (see docs/characters/concept/marcus/provenance.json)",
   "animations": 35,
   "phone_variant": {
     "file": "assets/skaters/marcus/skater-1024.glb",
-    "file_size_bytes": 3094444,
+    "file_size_bytes": 2752916,
     "base_color": "1024x1024 WebP",
     "used_by": "the phone tier and phone screens (src/main.js, skaterModelUrl())"
   },

@@ -17,10 +17,16 @@
 // no track at its rest pose, so the pose does not change. The physics pass
 // exports a translation, a rotation, and a scale channel for all 65 joints,
 // and each channel adds JSON to the GLB.
+//
+// The output then goes through glb-anim-dedup.js (#413): the samplers with
+// the same key times or the same values share one accessor. Only the JSON
+// chunk changes.
+import { readFileSync, writeFileSync } from "node:fs";
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { resample } from "@gltf-transform/functions";
 import draco3d from "draco3dgltf";
+import { dedupGlbAnimations } from "./glb-anim-dedup.js";
 
 const args = process.argv.slice(2);
 const pruneRest = args.includes("--prune-rest");
@@ -112,5 +118,8 @@ for (const anim of clips.getRoot().listAnimations()) {
 }
 
 await io.write(output, doc);
+const deduped = dedupGlbAnimations(new Uint8Array(readFileSync(output)));
+writeFileSync(output, deduped.bytes);
+report.accessors = { before: deduped.before, after: deduped.after };
 report.clips = doc.getRoot().listAnimations().map((a) => a.getName()).sort();
 console.log(JSON.stringify(report));

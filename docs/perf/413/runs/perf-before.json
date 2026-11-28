@@ -1,0 +1,4993 @@
+{
+  "date": "2026-11-28T14:57:09.633Z",
+  "level": "beltline-eastside",
+  "gpu": "swiftshader (software, CPU)",
+  "machine": {
+    "cpus": 4,
+    "model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "platform": "linux"
+  },
+  "viewport": "1280x720 @1",
+  "rideSeconds": 5,
+  "maxWallSeconds": 150,
+  "extra": "",
+  "runs": [
+    {
+      "quality": "low",
+      "look": "pbr",
+      "run": 1,
+      "load": 1,
+      "finished": true,
+      "wallSeconds": 58.8,
+      "frame": {
+        "frames": 56,
+        "meanMs": 987.8,
+        "p95Ms": 1133.2,
+        "medianFps": 1
+      },
+      "calls": 93,
+      "triangles": 306769,
+      "geometries": 104,
+      "textures": 127,
+      "textureMB": 350,
+      "textureTop": [
+        {
+          "name": "mural--1,-8.map",
+          "width": 2048,
+          "height": 2048,
+          "depth": 1,
+          "bytes": 22369621
+        },
+        {
+          "name": "street-signs--1,-1.map",
+          "width": 1024,
+          "height": 4096,
+          "depth": 1,
+          "bytes": 22369621
+        },
+        {
+          "name": "tripo_part_0_base_color",
+          "width": 2048,
+          "height": 2048,
+          "depth": 1,
+          "bytes": 22369621
+        },
+        {
+          "name": "surface--1,-1.uGroundAlbedo",
+          "width": 512,
+          "height": 512,
+          "depth": 5,
+          "bytes": 6990507
+        },
+        {
+          "name": "surface--1,-1.uGroundOrm",
+          "width": 512,
+          "height": 512,
+          "depth": 5,
+          "bytes": 6990507
+        },
+        {
+          "name": "PMREM.cubeUv",
+          "width": 768,
+          "height": 1024,
+          "depth": 1,
+          "bytes": 6291456
+        },
+        {
+          "name": "PMREM.cubeUv",
+          "width": 768,
+          "height": 1024,
+          "depth": 1,
+          "bytes": 6291456
+        },
+        {
+          "name": "props.uTreeAtlas",
+          "width": 1024,
+          "height": 1024,
+          "depth": 1,
+          "bytes": 5592405
+        }
+      ],
+      "heapMB": 60.5,
+      "firstFrameMs": 6330,
+      "settledMs": 34366,
+      "requests": 182,
+      "downloadMB": {
+        "js": 0.94,
+        "glb": 7.18,
+        "textures": 2.08,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 11.39
+      },
+      "stepsPerFrame": 5,
+      "systems": {
+        "skater": {
+          "meanMs": 0.334,
+          "p95Ms": 0.6,
+          "perStepMs": 0.067
+        },
+        "walkers": {
+          "meanMs": 1.107,
+          "p95Ms": 1.7,
+          "perStepMs": 0.221
+        },
+        "walkersView": {
+          "meanMs": 0.066,
+          "p95Ms": 0.2
+        },
+        "crowd": {
+          "meanMs": 0.303,
+          "p95Ms": 0.7,
+          "perStepMs": 0.061
+        },
+        "crowdView": {
+          "meanMs": 0.034,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 0.697,
+          "p95Ms": 1,
+          "perStepMs": 0.139
+        },
+        "trafficView": {
+          "meanMs": 0.193,
+          "p95Ms": 0.3
+        },
+        "npcSkaters": {
+          "meanMs": 0.003,
+          "p95Ms": 0,
+          "perStepMs": 0.001
+        },
+        "npcSkatersView": {
+          "meanMs": 0,
+          "p95Ms": 0
+        },
+        "views": {
+          "meanMs": 1.843,
+          "p95Ms": 2.6
+        },
+        "render": {
+          "meanMs": 3.192,
+          "p95Ms": 3.9
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-DeXp1o6I.glb",
+          "kB": 2713
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863
+        },
+        {
+          "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+          "kB": 760
+        },
+        {
+          "file": "/assets/ponce-city-market-D093VQas.glb",
+          "kB": 498
+        },
+        {
+          "file": "/assets/main-CJQqz1xQ.js",
+          "kB": 353
+        },
+        {
+          "file": "/assets/telephone-factory-lofts-CERsImqr.glb",
+          "kB": 299
+        },
+        {
+          "file": "/assets/studioplex-BteTaU7W.glb",
+          "kB": 254
+        }
+      ],
+      "files": [
+        {
+          "file": "/assets/skater-DeXp1o6I.glb",
+          "kB": 2713,
+          "startMs": 187
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149,
+          "startMs": 186
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863,
+          "startMs": 6337
+        },
+        {
+          "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+          "kB": 760,
+          "startMs": 6335
+        },
+        {
+          "file": "/assets/ponce-city-market-D093VQas.glb",
+          "kB": 498,
+          "startMs": 7632
+        },
+        {
+          "file": "/assets/main-CJQqz1xQ.js",
+          "kB": 353,
+          "startMs": 25
+        },
+        {
+          "file": "/assets/telephone-factory-lofts-CERsImqr.glb",
+          "kB": 299,
+          "startMs": 7633
+        },
+        {
+          "file": "/assets/studioplex-BteTaU7W.glb",
+          "kB": 254,
+          "startMs": 7633
+        },
+        {
+          "file": "/assets/new-realm-brewing-DtbtyIcW.glb",
+          "kB": 238,
+          "startMs": 7633
+        },
+        {
+          "file": "/assets/city_bike-D-sClH5p.glb",
+          "kB": 232,
+          "startMs": 6333
+        },
+        {
+          "file": "/assets/skate_trim_normal-CuO8s4f4.jpg",
+          "kB": 210,
+          "startMs": 7638
+        },
+        {
+          "file": "/assets/magnolia-DLSxodB6.glb",
+          "kB": 198,
+          "startMs": 6336
+        },
+        {
+          "file": "/assets/oak-BqKxyhcO.glb",
+          "kB": 195,
+          "startMs": 6336
+        },
+        {
+          "file": "/assets/street-DbOGjA0p.glb",
+          "kB": 176,
+          "startMs": 6337
+        },
+        {
+          "file": "/assets/street-kit-CEVzTpPi.glb",
+          "kB": 172,
+          "startMs": 6337
+        },
+        {
+          "file": "/assets/albedo-512-CVkYzdCy.webp",
+          "kB": 171,
+          "startMs": 6335
+        },
+        {
+          "file": "/assets/dogwood-bAl_mhrW.glb",
+          "kB": 171,
+          "startMs": 6337
+        },
+        {
+          "file": "/assets/myrtle-BeI4adI5.glb",
+          "kB": 167,
+          "startMs": 6337
+        },
+        {
+          "file": "/assets/skate_trim_color-DbAZlesM.jpg",
+          "kB": 159,
+          "startMs": 7638
+        },
+        {
+          "file": "/assets/level-B1AH7YkK.js",
+          "kB": 153,
+          "startMs": 187
+        },
+        {
+          "file": "/assets/orm-512-DdVlRKVR.webp",
+          "kB": 143,
+          "startMs": 6335
+        },
+        {
+          "file": "/assets/drinking_fountain-fJffefrf.glb",
+          "kB": 142,
+          "startMs": 6333
+        },
+        {
+          "file": "/assets/food_cart-ORA-njsd.glb",
+          "kB": 135,
+          "startMs": 6333
+        },
+        {
+          "file": "/assets/pine-DsyQCneN.glb",
+          "kB": 133,
+          "startMs": 6336
+        },
+        {
+          "file": "/assets/e_scooter-DLKGHIs4.glb",
+          "kB": 124,
+          "startMs": 6333
+        },
+        {
+          "file": "/assets/sculpture_ribbon-CmaZmN7b.glb",
+          "kB": 120,
+          "startMs": 6334
+        },
+        {
+          "file": "/assets/toon-C7wvSziM.js",
+          "kB": 113,
+          "startMs": 25
+        },
+        {
+          "file": "/assets/picnic_table-DB9GnjIv.glb",
+          "kB": 107,
+          "startMs": 6333
+        },
+        {
+          "file": "/assets/three.core-CVy_Bt7O.js",
+          "kB": 98,
+          "startMs": 25
+        },
+        {
+          "file": "/assets/ledge_planter-Cz7vd93c.glb",
+          "kB": 97,
+          "startMs": 6332
+        },
+        {
+          "file": "/assets/bike_dock-7gVh7EsC.glb",
+          "kB": 97,
+          "startMs": 6333
+        },
+        {
+          "file": "/assets/patio_umbrella-DxRH0H_H.glb",
+          "kB": 92,
+          "startMs": 6333
+        },
+        {
+          "file": "/assets/normal-D4GkI7qp.jpg",
+          "kB": 85,
+          "startMs": 4383
+        },
+        {
+          "file": "/assets/krog-street-market-front-D5o4CyQn.js",
+          "kB": 82,
+          "startMs": 4383
+        },
+        {
+          "file": "/assets/eyes-B3QFcDm-.png",
+          "kB": 78,
+          "startMs": 10250
+        },
+        {
+          "file": "/assets/bridge-freedom-parkway-DoYPFtES.glb",
+          "kB": 70,
+          "startMs": 7634
+        },
+        {
+          "file": "/assets/ground-8EXmpwS-.js",
+          "kB": 62,
+          "startMs": 26
+        },
+        {
+          "file": "/assets/color-BtNklngQ.jpg",
+          "kB": 62,
+          "startMs": 7313
+        },
+        {
+          "file": "/assets/draco_decoder-Z1_iN-Ht.wasm",
+          "kB": 62,
+          "startMs": 5117
+        },
+        {
+          "file": "/assets/color-BV2rtnvG.jpg",
+          "kB": 53,
+          "startMs": 4383
+        },
+        {
+          "file": "/assets/mouth-Cl-cWCsG.png",
+          "kB": 48,
+          "startMs": 10251
+        },
+        {
+          "file": "/assets/mural-roughness-DD_SFCYm.jpg",
+          "kB": 45,
+          "startMs": 6337
+        },
+        {
+          "file": "/assets/normal-CYUCL9bN.jpg",
+          "kB": 45,
+          "startMs": 7313
+        },
+        {
+          "file": "/assets/sites-DbZ0lCcz.js",
+          "kB": 40,
+          "startMs": 6335
+        },
+        {
+          "file": "/assets/bridge-north-ave-BgJsj2sY.glb",
+          "kB": 38,
+          "startMs": 7633
+        },
+        {
+          "file": "/assets/rough-DRyqwfIO.jpg",
+          "kB": 37,
+          "startMs": 4383
+        },
+        {
+          "file": "/assets/rough-BXNYb3II.jpg",
+          "kB": 36,
+          "startMs": 7313
+        },
+        {
+          "file": "/assets/bridge-ralph-mcgill-CsdmIq88.glb",
+          "kB": 35,
+          "startMs": 7633
+        },
+        {
+          "file": "/assets/bridge-ponce-JSUkFFcb.glb",
+          "kB": 35,
+          "startMs": 7633
+        },
+        {
+          "file": "/assets/normal-Ixg8iKIY.jpg",
+          "kB": 31,
+          "startMs": 4383
+        },
+        {
+          "file": "/assets/painted_wooden_bench-CHJUVtri.glb",
+          "kB": 30,
+          "startMs": 6335
+        },
+        {
+          "file": "/assets/canopy-1cYdyB7n.js",
+          "kB": 28,
+          "startMs": 187
+        },
+        {
+          "file": "/assets/color-BuU1_ljC.jpg",
+          "kB": 27,
+          "startMs": 7313
+        },
+        {
+          "file": "/assets/skate_trim_orm-BF0XH5X_.jpg",
+          "kB": 19,
+          "startMs": 7638
+        },
+        {
+          "file": "/assets/rough-E-6uzbhF.jpg",
+          "kB": 16,
+          "startMs": 4383
+        },
+        {
+          "file": "/assets/bollard-CpV2BZKX.glb",
+          "kB": 13,
+          "startMs": 6333
+        },
+        {
+          "file": "/assets/draco_wasm_wrapper-fZCQGLGb.js",
+          "kB": 12,
+          "startMs": 5117
+        },
+        {
+          "file": "/assets/main-D4FrVumi.css",
+          "kB": 9,
+          "startMs": 26
+        },
+        {
+          "file": "/assets/landmarks-p2vBVw-H.js",
+          "kB": 6,
+          "startMs": 4384
+        },
+        {
+          "file": "/assets/renderer-JWul3_B8.js",
+          "kB": 5,
+          "startMs": 25
+        },
+        {
+          "file": "/assets/ramp_quarter-CCZyZ-gi.glb",
+          "kB": 5,
+          "startMs": 6332
+        },
+        {
+          "file": "/assets/bench_trail-aRtx1exp.glb",
+          "kB": 5,
+          "startMs": 6332
+        },
+        {
+          "file": "/assets/features-DlyzSIhB.js",
+          "kB": 4,
+          "startMs": 187
+        },
+        {
+          "file": "/?level=beltline-eastside&quality=low&look=pbr&perf=1&mute=1&npcseed=1&governor=0&run=free",
+          "kB": 2,
+          "startMs": null
+        },
+        {
+          "file": "/brand/loader-art.svg",
+          "kB": 2,
+          "startMs": 26
+        },
+        {
+          "file": "/assets/historic-districts-BZe07URH.js",
+          "kB": 2,
+          "startMs": 187
+        },
+        {
+          "file": "/assets/skatepark-DB7GBMfA.js",
+          "kB": 1,
+          "startMs": 187
+        },
+        {
+          "file": "/assets/facts-bGIMEI3D.js",
+          "kB": 1,
+          "startMs": 435
+        },
+        {
+          "file": "/assets/beltline-eastside-DARaoZtw.js",
+          "kB": 1,
+          "startMs": 463
+        },
+        {
+          "file": "/assets/RoomEnvironment-BC0Mq_S6.js",
+          "kB": 1,
+          "startMs": 4382
+        },
+        {
+          "file": "/assets/RoomEnvironment-DHS0y444.js",
+          "kB": 0,
+          "startMs": 4382
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1fa65662-fa8e-44e1-9d6f-323469aa7892",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/14482376-13f4-4eab-a8e6-764d42558f74",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/558bd1a0-3501-4885-ba43-278f2f718cd7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/99e061bd-da8e-4ede-ab3e-52b7df9fa484",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f20da828-b784-46f1-88b5-ea6e89b827a4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b5dbbc4e-8fff-46f6-9ba5-e6c91889e1ce",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1c48f717-384e-4530-8903-6aee24485950",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/74586e6f-8f3a-4cdb-b994-c62249fd50c4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2914ef64-986f-4011-8887-eab0645a6111",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9e5f5132-6167-4ae4-b64e-da2ade65e975",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/00f1c42a-8f4d-4ca5-888f-b79d983643d9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/dea19d4a-307f-448d-a6ed-ad6452869433",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2c98013d-888f-4230-8953-88bae4bcee50",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/59dd2230-7d21-4c53-bff0-8cda5a360910",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d4c81d78-6227-4222-aa0e-607e1f166c00",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/25ff002d-eb96-4c29-839d-341fb4fff03c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1e9495eb-e5c3-4f26-8212-d6613ca3774d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f4896de1-feda-4514-944e-4eef07e00796",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/7537c3ce-b642-4666-a4c8-75ea724f133f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c41ca99f-36ed-4c5a-8ec3-14161c6a0e90",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b1b41b7d-79e1-446b-bdf9-7e43d78f6278",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/050e1888-bd39-470c-972f-3883fe56128e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3c0acc40-9d32-455f-b214-900e8545d726",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2af9a95f-e223-476e-8b6f-fba67a2363f6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f39cf820-b7a9-4779-abc5-8f8c13deafdc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ff600b4f-1424-44ba-9258-83b3354d0c9c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e87fbc8e-7898-4a60-96d5-001d813f189d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/29f4ed33-c773-4a39-bd63-72d1847362f0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/59a60501-8ee9-44b9-9e34-36973cb0f957",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4aace3bc-f477-4168-a484-b233971bcfc2",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4734a636-06f8-4bcd-927e-5130dc772a8f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5c2f37b7-07e0-4f3a-bc1f-61f35b79323f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3fbc1e11-de3a-4756-b0c4-778f1482b2c3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3e263ba8-cec8-4757-9004-4109776a4e06",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1ab77d21-a2a2-41c0-84de-31ad5b8694df",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/94439445-87d2-4b60-ad19-4d962de4a2c1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f1fff718-1e85-4f46-89ea-4bca78954c19",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/59992bf7-6e27-432d-8851-dd15bed17b0e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/66343333-4d58-4e59-9379-1b884fa5d5b5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e24190c2-f5fb-4bf0-8053-2d3a4c07b2d9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/17a51467-249b-4774-9fc7-03af96d75c23",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b09c43b9-03bf-41d4-8432-b5dfd5a23283",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4792f819-511e-489d-9a08-45192198b300",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f3e032a3-a6ce-4e93-b029-e3340b14d55f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4e2f15be-e685-4970-93df-bd117d901d48",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/491cb386-db94-4a59-b23e-559bb9df9860",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1e613ec1-36cf-4185-8cbd-06a1c0772428",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8cab0248-f4a4-4ca7-b810-b58d445d0ba3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1b828478-d053-4877-bbc4-a5221d3c2fb4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ab42463e-52b7-4e45-81ad-a5c3d4756b1a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1111acc4-0efb-4b75-b17b-76b0ce588d0b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6a45f4c4-97d9-4e15-922f-984ca3e46079",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/39774753-2f0c-47cc-b0d8-4add769d8bf0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/37d124e1-8a9d-4e2b-a1e8-2e0ff5b1c3ba",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5120f4e9-ac23-48ac-8e85-880242be88fe",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4ae3c511-0f8b-40f9-8b31-be36bbb24658",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/67b07977-74d9-4d12-a3e1-58aa8df0a57b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8901309c-c9d5-4dc6-b23c-718ec46a3d12",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/fc44a6cc-a9d1-450f-a001-e1ffdd96ce12",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6f587f07-6682-45cf-9594-2d3d60692bc5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/cf20b498-a5c1-4daa-9820-7d5dbca3da49",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1d1f1d4a-ac29-4179-9520-aa94ab44c4f1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/af007d38-4f55-482e-9bdf-d2b3020c80ff",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/09a25771-fa4f-4aaa-b20f-e75892458e42",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e50ffcbc-bd7a-40f5-82c3-65bbc5ebfa0a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/dd2c3623-f85c-4d1c-aa9d-ee5362a40c19",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0723dc4b-cfe2-4495-9d00-edd5658d3894",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/89707ca6-6879-40b2-a627-23948c80b9ad",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/01d19b37-3855-43e4-ae54-b9d293b1aab4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6c87086f-d334-4177-b54f-40de13cce176",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/52babfbb-137b-4962-b515-a5da2e562565",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f428e4d8-7b86-4c19-a88c-34d4dd67125e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1f545bd7-01b5-4844-83f2-8d7d8d852a89",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/238ee0e0-4a9c-4351-a468-a6537266790b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1083459b-46c6-4b0b-b07e-fca64075dbc6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/da41e27e-1a7e-49f0-a047-12224b34c7bb",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/79b6e046-e356-44e6-85fb-05423c31a9b8",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0563dae4-dc0e-4069-be23-c1039997ef56",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a6ce0517-39f4-4633-aab1-1bb1eb3af5b2",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/991e5a32-3d6b-4cc9-97a3-7d0bc4c46348",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/074d82c9-17d8-4fae-97ef-7db21327a31b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d1a29a18-e419-4ddb-84cc-3b4bc0c6e492",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8ce72f6b-5afc-4f1f-921b-fcc614802956",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4042fad7-ab5e-4bc0-b658-30d9edbdac37",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b10501a6-3b36-4d27-b27e-e6a315cc7516",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/50e49ee5-766f-4727-92ae-61da40dedb25",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/445ccc8e-25ab-49bd-9235-74aca6abdaae",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3db0d30a-3b11-44f2-8db7-d1c4411c25a4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/da4ee6c5-8b05-4435-8e66-1aa0f812efa9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3659f2c2-9e24-43ea-8cbb-61e81f164b1d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/355f48b5-7ae2-4c7b-b0c4-4f271ed247c1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/da54d696-9800-4e3a-8344-897eb11059c9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/45c76304-3934-46a3-abea-085feeeb51bd",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/60b2a074-e2ef-4444-b196-041a29e42f6f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/37192ad2-de51-4184-818b-5ec22db6a608",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0c5d1457-007f-4259-ac3d-8888c081c9b7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0157a26a-1699-4e27-8ba5-4ce79300fc9a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/70dc55fa-5929-4bc4-8566-e3de3d3b8ccf",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a6265382-b6aa-44c4-925f-c41672e503a8",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e4e375f2-5d30-4334-8d50-c3e67a404eae",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/dfa6b7d7-107f-44a9-be79-5b4b2de6d09a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8d2d9b1a-97c5-4c98-aca2-1e8297863c1c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/baa90b83-39e8-4293-825d-ce839a87d02d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8c9d6c9c-7a61-42ff-9cb4-a11968968480",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2a2f7061-18ff-44fd-821e-1ae0237f2873",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/065f566b-6894-45f8-af4c-cbf90c8419d0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5848b5a1-accc-4818-ae51-de6f29c7f502",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9181d002-a08c-4dbd-805b-d3f729e06b94",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1ed84457-214a-457b-9078-50619f554ad3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/48ae82cd-f5a6-46fe-b211-f9a0981c9fa5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/526cb78b-6cee-4d27-a9a4-e495ba63ae6c",
+          "kB": 0,
+          "startMs": null
+        }
+      ],
+      "firstDownloadMB": 4.96,
+      "lateLoads": {
+        "plan": {
+          "props": true,
+          "murals": true,
+          "ground": true
+        },
+        "firstFrameMs": 6330,
+        "started": {
+          "ground": 6330,
+          "murals": 6330,
+          "props": 6332
+        },
+        "done": {
+          "murals": 7606,
+          "props": 8866,
+          "ground": 10260
+        },
+        "failed": {}
+      },
+      "perfFrames": 61,
+      "drawSplit": {
+        "total": {
+          "calls": 93,
+          "triangles": 306769
+        },
+        "byPass": {
+          "main": {
+            "calls": 93,
+            "triangles": 306769
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "mesh:surface-far",
+            "calls": 22,
+            "triangles": 40995
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 22,
+            "triangles": 23472
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 9,
+            "triangles": 5150
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 7,
+            "triangles": 44182
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:telephone-factory-lofts_lod",
+            "calls": 6,
+            "triangles": 1089
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-ralph-mcgill_lod",
+            "calls": 3,
+            "triangles": 260
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 3,
+            "triangles": 6
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-freedom-parkway_lod",
+            "calls": 2,
+            "triangles": 7592
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 83390
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:peds",
+            "calls": 1,
+            "triangles": 46800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:edge-fence-posts",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:edge-fence-feet",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 4162
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:edge-fence-scrim",
+            "calls": 1,
+            "triangles": 3320
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1512
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 892
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 528
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 302
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "main",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:skater-blob",
+            "calls": 1,
+            "triangles": 16
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": null,
+      "errors": []
+    },
+    {
+      "quality": "phone",
+      "look": "pbr",
+      "run": 1,
+      "load": 1.2,
+      "finished": true,
+      "wallSeconds": 34.6,
+      "frame": {
+        "frames": 56,
+        "meanMs": 574.1,
+        "p95Ms": 616.7,
+        "medianFps": 1.8
+      },
+      "calls": 101,
+      "triangles": 290752,
+      "geometries": 122,
+      "textures": 179,
+      "textureMB": 372.3,
+      "textureTop": [
+        {
+          "name": "street-signs--1,-1.map",
+          "width": 1024,
+          "height": 4096,
+          "depth": 1,
+          "bytes": 22369621
+        },
+        {
+          "name": "surface--1,-1.uGroundAlbedo",
+          "width": 512,
+          "height": 512,
+          "depth": 5,
+          "bytes": 6990507
+        },
+        {
+          "name": "surface--1,-1.uGroundOrm",
+          "width": 512,
+          "height": 512,
+          "depth": 5,
+          "bytes": 6990507
+        },
+        {
+          "name": "PMREM.cubeUv",
+          "width": 768,
+          "height": 1024,
+          "depth": 1,
+          "bytes": 6291456
+        },
+        {
+          "name": "PMREM.cubeUv",
+          "width": 768,
+          "height": 1024,
+          "depth": 1,
+          "bytes": 6291456
+        },
+        {
+          "name": "mural--1,-8.map",
+          "width": 1024,
+          "height": 1024,
+          "depth": 1,
+          "bytes": 5592405
+        },
+        {
+          "name": "skate_trim_color",
+          "width": 1024,
+          "height": 1024,
+          "depth": 1,
+          "bytes": 5592405
+        },
+        {
+          "name": "skate_trim_normal",
+          "width": 1024,
+          "height": 1024,
+          "depth": 1,
+          "bytes": 5592405
+        }
+      ],
+      "heapMB": 61.4,
+      "firstFrameMs": 5304,
+      "settledMs": 25252,
+      "requests": 219,
+      "downloadMB": {
+        "js": 0.94,
+        "glb": 8.71,
+        "textures": 2.51,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 13.35
+      },
+      "stepsPerFrame": 5,
+      "systems": {
+        "skater": {
+          "meanMs": 0.352,
+          "p95Ms": 0.6,
+          "perStepMs": 0.07
+        },
+        "walkers": {
+          "meanMs": 0.854,
+          "p95Ms": 1.3,
+          "perStepMs": 0.171
+        },
+        "walkersView": {
+          "meanMs": 0.315,
+          "p95Ms": 0.5
+        },
+        "crowd": {
+          "meanMs": 0.354,
+          "p95Ms": 1,
+          "perStepMs": 0.071
+        },
+        "crowdView": {
+          "meanMs": 0.034,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 0.661,
+          "p95Ms": 1.1,
+          "perStepMs": 0.132
+        },
+        "trafficView": {
+          "meanMs": 0.179,
+          "p95Ms": 0.3
+        },
+        "npcSkaters": {
+          "meanMs": 0.003,
+          "p95Ms": 0,
+          "perStepMs": 0.001
+        },
+        "npcSkatersView": {
+          "meanMs": 0,
+          "p95Ms": 0
+        },
+        "views": {
+          "meanMs": 1.721,
+          "p95Ms": 2.4
+        },
+        "render": {
+          "meanMs": 5.269,
+          "p95Ms": 14.5
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-1024-CGdCCt2r.glb",
+          "kB": 2274
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+          "kB": 760
+        },
+        {
+          "file": "/assets/jogger-BpMCrg1O.glb",
+          "kB": 598
+        },
+        {
+          "file": "/assets/dog_walker-Bs0n0Vu_.glb",
+          "kB": 562
+        },
+        {
+          "file": "/assets/elder_polo-3WEPpA8L.glb",
+          "kB": 530
+        },
+        {
+          "file": "/assets/stroller_dad-D8bk383C.glb",
+          "kB": 516
+        },
+        {
+          "file": "/assets/ponce-city-market-D093VQas.glb",
+          "kB": 498
+        }
+      ],
+      "files": [
+        {
+          "file": "/assets/skater-1024-CGdCCt2r.glb",
+          "kB": 2274,
+          "startMs": 119
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149,
+          "startMs": 119
+        },
+        {
+          "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+          "kB": 760,
+          "startMs": 5309
+        },
+        {
+          "file": "/assets/jogger-BpMCrg1O.glb",
+          "kB": 598,
+          "startMs": 5307
+        },
+        {
+          "file": "/assets/dog_walker-Bs0n0Vu_.glb",
+          "kB": 562,
+          "startMs": 5307
+        },
+        {
+          "file": "/assets/elder_polo-3WEPpA8L.glb",
+          "kB": 530,
+          "startMs": 5307
+        },
+        {
+          "file": "/assets/stroller_dad-D8bk383C.glb",
+          "kB": 516,
+          "startMs": 5307
+        },
+        {
+          "file": "/assets/ponce-city-market-D093VQas.glb",
+          "kB": 498,
+          "startMs": 7856
+        },
+        {
+          "file": "/assets/walker_sundress-BdZ_AAS4.glb",
+          "kB": 469,
+          "startMs": 5307
+        },
+        {
+          "file": "/assets/main-CJQqz1xQ.js",
+          "kB": 353,
+          "startMs": 10
+        },
+        {
+          "file": "/assets/telephone-factory-lofts-CERsImqr.glb",
+          "kB": 299,
+          "startMs": 7856
+        },
+        {
+          "file": "/assets/studioplex-BteTaU7W.glb",
+          "kB": 254,
+          "startMs": 7856
+        },
+        {
+          "file": "/assets/dog-QirLDCw1.glb",
+          "kB": 250,
+          "startMs": 5307
+        },
+        {
+          "file": "/assets/mural-atlas-1024-KUzMe2OA.jpg",
+          "kB": 247,
+          "startMs": 5311
+        },
+        {
+          "file": "/assets/new-realm-brewing-DtbtyIcW.glb",
+          "kB": 238,
+          "startMs": 7856
+        },
+        {
+          "file": "/assets/city_bike-D-sClH5p.glb",
+          "kB": 232,
+          "startMs": 5308
+        },
+        {
+          "file": "/assets/skate_trim_normal-CuO8s4f4.jpg",
+          "kB": 210,
+          "startMs": 8038
+        },
+        {
+          "file": "/assets/street-kit-CEVzTpPi.glb",
+          "kB": 172,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/albedo-512-CVkYzdCy.webp",
+          "kB": 171,
+          "startMs": 5309
+        },
+        {
+          "file": "/assets/skate_trim_color-DbAZlesM.jpg",
+          "kB": 159,
+          "startMs": 8038
+        },
+        {
+          "file": "/assets/level-B1AH7YkK.js",
+          "kB": 153,
+          "startMs": 119
+        },
+        {
+          "file": "/assets/orm-512-DdVlRKVR.webp",
+          "kB": 143,
+          "startMs": 5309
+        },
+        {
+          "file": "/assets/drinking_fountain-fJffefrf.glb",
+          "kB": 142,
+          "startMs": 5308
+        },
+        {
+          "file": "/assets/food_cart-ORA-njsd.glb",
+          "kB": 135,
+          "startMs": 5308
+        },
+        {
+          "file": "/assets/e_scooter-DLKGHIs4.glb",
+          "kB": 124,
+          "startMs": 5308
+        },
+        {
+          "file": "/assets/sculpture_ribbon-CmaZmN7b.glb",
+          "kB": 120,
+          "startMs": 5309
+        },
+        {
+          "file": "/assets/stroller-CyRb16SQ.glb",
+          "kB": 119,
+          "startMs": 5307
+        },
+        {
+          "file": "/assets/toon-C7wvSziM.js",
+          "kB": 113,
+          "startMs": 11
+        },
+        {
+          "file": "/assets/picnic_table-DB9GnjIv.glb",
+          "kB": 107,
+          "startMs": 5308
+        },
+        {
+          "file": "/assets/three.core-CVy_Bt7O.js",
+          "kB": 98,
+          "startMs": 10
+        },
+        {
+          "file": "/assets/ledge_planter-Cz7vd93c.glb",
+          "kB": 97,
+          "startMs": 5305
+        },
+        {
+          "file": "/assets/bike_dock-7gVh7EsC.glb",
+          "kB": 97,
+          "startMs": 5308
+        },
+        {
+          "file": "/assets/patio_umbrella-DxRH0H_H.glb",
+          "kB": 92,
+          "startMs": 5308
+        },
+        {
+          "file": "/assets/normal-D4GkI7qp.jpg",
+          "kB": 85,
+          "startMs": 3878
+        },
+        {
+          "file": "/assets/krog-street-market-front-D5o4CyQn.js",
+          "kB": 82,
+          "startMs": 3878
+        },
+        {
+          "file": "/assets/walker_sundress_v2-4vWpqGEB.jpg",
+          "kB": 81,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/elder_polo_v2-CQyQ2Uc_.jpg",
+          "kB": 80,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/elder_polo_v1-BEoyM2nH.jpg",
+          "kB": 79,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/jogger_v2-D69VZr_r.jpg",
+          "kB": 79,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/eyes-B3QFcDm-.png",
+          "kB": 78,
+          "startMs": 9653
+        },
+        {
+          "file": "/assets/walker_sundress_v3-D7yQpegc.jpg",
+          "kB": 76,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/dog_walker_v2-DOiB_K07.jpg",
+          "kB": 76,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/walker_sundress_v1-DQ5pyGMy.jpg",
+          "kB": 75,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/elder_polo_v3-ClisnJDv.jpg",
+          "kB": 75,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/dog_walker_v1-CRe63-q1.jpg",
+          "kB": 74,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/jogger_v1-BdD3BY0s.jpg",
+          "kB": 73,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/jogger_v3-DxaPwKkn.jpg",
+          "kB": 73,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/bridge-freedom-parkway-DoYPFtES.glb",
+          "kB": 70,
+          "startMs": 7856
+        },
+        {
+          "file": "/assets/stroller_dad_v3-BIqT0H1c.jpg",
+          "kB": 66,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/ground-8EXmpwS-.js",
+          "kB": 62,
+          "startMs": 11
+        },
+        {
+          "file": "/assets/draco_decoder-Z1_iN-Ht.wasm",
+          "kB": 62,
+          "startMs": 4439
+        },
+        {
+          "file": "/assets/color-BtNklngQ.jpg",
+          "kB": 62,
+          "startMs": 6410
+        },
+        {
+          "file": "/assets/stroller_dad_v2-CuO5EQ6e.jpg",
+          "kB": 61,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/dog_walker_v3-DdJIfKN4.jpg",
+          "kB": 58,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/color-BV2rtnvG.jpg",
+          "kB": 53,
+          "startMs": 3877
+        },
+        {
+          "file": "/assets/mouth-Cl-cWCsG.png",
+          "kB": 48,
+          "startMs": 9653
+        },
+        {
+          "file": "/assets/mural-roughness-DD_SFCYm.jpg",
+          "kB": 45,
+          "startMs": 5311
+        },
+        {
+          "file": "/assets/normal-CYUCL9bN.jpg",
+          "kB": 45,
+          "startMs": 6410
+        },
+        {
+          "file": "/assets/sites-DbZ0lCcz.js",
+          "kB": 40,
+          "startMs": 5309
+        },
+        {
+          "file": "/assets/bridge-north-ave-BgJsj2sY.glb",
+          "kB": 38,
+          "startMs": 7856
+        },
+        {
+          "file": "/assets/rough-DRyqwfIO.jpg",
+          "kB": 37,
+          "startMs": 3878
+        },
+        {
+          "file": "/assets/rough-BXNYb3II.jpg",
+          "kB": 36,
+          "startMs": 6410
+        },
+        {
+          "file": "/assets/bridge-ralph-mcgill-CsdmIq88.glb",
+          "kB": 35,
+          "startMs": 7856
+        },
+        {
+          "file": "/assets/bridge-ponce-JSUkFFcb.glb",
+          "kB": 35,
+          "startMs": 7856
+        },
+        {
+          "file": "/assets/normal-Ixg8iKIY.jpg",
+          "kB": 31,
+          "startMs": 3878
+        },
+        {
+          "file": "/assets/painted_wooden_bench-CHJUVtri.glb",
+          "kB": 30,
+          "startMs": 5310
+        },
+        {
+          "file": "/assets/impostors-lc3Vpa3f.png",
+          "kB": 30,
+          "startMs": 8375
+        },
+        {
+          "file": "/assets/canopy-1cYdyB7n.js",
+          "kB": 28,
+          "startMs": 119
+        },
+        {
+          "file": "/assets/color-BuU1_ljC.jpg",
+          "kB": 27,
+          "startMs": 6410
+        },
+        {
+          "file": "/assets/skate_trim_orm-BF0XH5X_.jpg",
+          "kB": 19,
+          "startMs": 8038
+        },
+        {
+          "file": "/assets/rough-E-6uzbhF.jpg",
+          "kB": 16,
+          "startMs": 3878
+        },
+        {
+          "file": "/assets/bollard-CpV2BZKX.glb",
+          "kB": 13,
+          "startMs": 5308
+        },
+        {
+          "file": "/assets/draco_wasm_wrapper-fZCQGLGb.js",
+          "kB": 12,
+          "startMs": 4439
+        },
+        {
+          "file": "/assets/main-D4FrVumi.css",
+          "kB": 9,
+          "startMs": 11
+        },
+        {
+          "file": "/assets/landmarks-p2vBVw-H.js",
+          "kB": 6,
+          "startMs": 3878
+        },
+        {
+          "file": "/assets/renderer-JWul3_B8.js",
+          "kB": 5,
+          "startMs": 11
+        },
+        {
+          "file": "/assets/ramp_quarter-CCZyZ-gi.glb",
+          "kB": 5,
+          "startMs": 5306
+        },
+        {
+          "file": "/assets/bench_trail-aRtx1exp.glb",
+          "kB": 5,
+          "startMs": 5306
+        },
+        {
+          "file": "/assets/features-DlyzSIhB.js",
+          "kB": 4,
+          "startMs": 120
+        },
+        {
+          "file": "/?level=beltline-eastside&quality=phone&look=pbr&perf=1&mute=1&npcseed=1&governor=0&run=free",
+          "kB": 2,
+          "startMs": null
+        },
+        {
+          "file": "/brand/loader-art.svg",
+          "kB": 2,
+          "startMs": 11
+        },
+        {
+          "file": "/assets/historic-districts-BZe07URH.js",
+          "kB": 2,
+          "startMs": 120
+        },
+        {
+          "file": "/assets/skatepark-DB7GBMfA.js",
+          "kB": 1,
+          "startMs": 119
+        },
+        {
+          "file": "/assets/facts-bGIMEI3D.js",
+          "kB": 1,
+          "startMs": 652
+        },
+        {
+          "file": "/assets/beltline-eastside-DARaoZtw.js",
+          "kB": 1,
+          "startMs": 669
+        },
+        {
+          "file": "/assets/RoomEnvironment-BC0Mq_S6.js",
+          "kB": 1,
+          "startMs": 3875
+        },
+        {
+          "file": "/assets/RoomEnvironment-DHS0y444.js",
+          "kB": 0,
+          "startMs": 3875
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/7e8aa4e7-4149-44b6-b6eb-30c12b0d2cf5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/dae0c973-9e33-459e-980d-186cc5b83464",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e712e08f-e3d0-4932-aa10-4239dbcdf128",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2ebf87d3-9309-491e-bf20-7d5412b8288b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/58eb7515-d49c-4218-aead-d6ae32d710c0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0c9f0c30-950a-421e-96e3-f36ed96c7652",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d76fe232-388c-4f33-8d33-4420bcb5109c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4ab62292-cb44-486b-95af-bd43ab9d6ae1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/440a82a8-e1a6-4af4-a557-26aa3297310d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/491fdb4a-22d7-4cc0-a03d-399dc943b16c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/99fc3737-527c-4ede-9a1a-3b94bbfa9b82",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5e634d46-5266-4a95-b392-6099a0029f20",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a9957ba9-340e-4cb0-b136-361348f7229c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ae0eb75f-cf23-4383-b577-f9b5602f2170",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/fc47d136-2f95-4f1c-b498-2912ec79f9ae",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/eaa6189e-a441-411e-be15-fe3e54b02892",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4dd53339-bf34-4a7c-ad72-b3484ea588b3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a2a3d470-ef46-4dd8-ac21-b22bde0c8139",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/26108bc4-a47e-4974-b164-f3ebc54add12",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8445c918-89b3-4ca6-b293-664883deb6fc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c0ebb7b2-50f1-4fbb-9b14-f0d27d81ba77",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/7c917d1d-a6e6-4caf-a896-90241cdba701",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/093c8875-83ad-43b5-be97-1caae9201e67",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/566cf56e-e8fb-4a45-ab27-28bd0b73870a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/553d39bf-a458-4ddc-805b-4d68010668f4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9d15771b-e006-468f-ae7f-9bf09a7f6ee1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b3ae85eb-264c-4214-a00d-82afdd1c00db",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/39948409-c8b9-4617-b8e3-d31868780b87",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a0322725-b1ef-4ff0-aed7-d0266c6e8f6a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/88ada6ec-7aa9-4821-b3ab-a8d565fcb222",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ef97d651-1cdb-4758-9a8b-a00beefa0977",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/cb1d3102-190e-4a8f-9934-0a91cd697109",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f087d8bb-9c9d-4e0f-b6de-dc167168b275",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f15e5cc4-cf9a-4b00-9d1a-c008305d43fe",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/16245089-2162-4bef-a3d8-d8b8404843aa",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/13da22c9-5cff-46e2-8bb7-255a858d0c64",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/98263a01-a034-498b-bb82-1e052e576621",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/63ca8b21-01d5-4908-bfaa-df5a428fe267",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b386b64f-d8bd-442c-ab4a-cffecce62df3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/71362914-133a-4c21-beea-d455fe7d9f06",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b6777d7b-aa39-46ef-a7e3-f5082aa21df5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/59973c52-3007-4753-9a27-50e8d8bf228a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ab54ed0b-a5ef-4849-9760-01adea547251",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f9750419-b463-4bf2-9245-d90d9445f799",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d0cb1a0c-76ea-4155-9ce6-f4e99d8dc6d7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/49e9d6e2-8b40-4191-88bd-7b1e571f5cff",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/adc8d25e-d120-4e60-b0ac-dce7e4363526",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a67d799a-ef01-41c1-b996-b77950063cdb",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/87a2a17b-f084-4fd0-aceb-c22c9529ab79",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/62ad1714-2a3d-40dd-96dc-cd5ebc9e272d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a482e511-d7e7-47b8-902b-ba6389536bdf",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/950e6bb0-751a-44f4-a7c8-a0a0359c33e9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6f4c2e87-6525-4385-acc4-35302be7c6a3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2213a7e1-a026-4485-84d5-25fcd4c67a38",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/fd60bb09-2f5f-41d5-a1eb-de75012186d9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/cff03dec-cd60-4959-9425-943fad757cad",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3eab9bc4-2bc4-4254-b6d6-749d6309adf9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ce56e3fe-e9f6-49e0-a360-ae5c367322a2",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6a3b6b1a-6336-47ba-aeff-a5b96b84d63b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c9d5858c-446d-40ae-bdff-1b76ffa449fc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/076e95bb-7b4d-4aec-a958-a34cb2d0fea3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/028dc2b9-2b6a-469c-9e85-4d9836436b31",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3310d097-d4a3-4c76-9b08-34e06a8a5066",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1819ddee-b1eb-47cb-852a-9a2245a097a1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/21088bc0-9ab7-4ff0-a690-e8194d9a602f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/bcc8273a-a6d1-485f-91ee-f616bf98001c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/af8f25b4-55a4-429b-bd07-22069a89aa59",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0f28f3be-c6a8-46de-951c-0df518f1daea",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/10312611-8db8-4c0c-a0bd-f049331b8fd5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/441cca3b-844a-4468-af01-beb3180f70fc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/113c60a4-0cdc-46a1-a536-6ba6c20255c7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ab526fc9-fd84-46f0-9c10-cfce1639892b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9f5130c8-ccb8-4a70-bde4-4233f5cc7af6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/286af26c-3259-4ba5-bc98-62a0de1061f2",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/301a0185-d65b-4996-87e5-64635929c81e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/62a6f4b4-796e-4e64-a3e0-b5b751f9d250",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/25b2122f-7cf9-445d-8f45-1d35b8798628",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ee5afd1d-1921-48c0-8dad-51ef81cc8fd4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ce859995-44c5-43ee-a12a-bd8d214cec6a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0b3778c1-829f-4bbc-95d8-afbba1892235",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c45fee68-8837-4b0f-8d01-db7e6eb0236c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/37fe08e8-cb68-401b-9b1e-3deb2a85678f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b1a6f7c9-41ef-4743-902e-4db5ff59d145",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c7bb52be-86e9-4aef-8402-4d75081ce4f4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e48226fe-c68c-4d92-918e-fdd4375e302c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/98d5abdb-07be-42ad-9ab3-ee71cd103893",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ecc17df2-6911-4a2f-a9fd-e7a12c7ef5b0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0b3090d9-4578-41f1-a1d8-60e4fa4081de",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/769ad5d6-6f58-49f5-95f9-f0fbbba3adcf",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/182c245d-23e8-47e1-a8e6-e77b19e19aa2",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2b2f5f98-2e9c-4fe5-8e95-6ac1a6fb027e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a73f34be-6d8e-41ab-b332-b921c071f882",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5fc2c2b8-5744-4ffe-9534-532aca012459",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/85ccc602-0d26-47f6-b09a-c8af802babd3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d0fe2101-03a8-40c3-8699-ac1bdce28625",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5f82b925-045f-4e1f-bd14-3210d65a8c18",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d5689730-6bc8-4828-9a17-f93d9f9648c3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/73aad1b2-d2b6-46f8-b7fa-5e834365652a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/39e9c794-e4ec-4192-bba0-16bc0e8f2cd9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0f8917ac-2cf4-463a-8c94-1848b75c2163",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/fef8404c-fb99-4d87-83fe-0fdd88d64d88",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c7b46a91-f737-4d99-8913-856bcabbb1a0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/81c7e1a3-9dbc-4d76-bf05-c00d8a5e8f00",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d15d40ea-9bfa-4f19-8856-ff193edc195b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8177af62-3c0a-49b4-aa4c-559fbdcbb078",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ad9fd8d1-62fc-4bd5-a5a0-b393e8987449",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/166bb138-6e34-4a7d-9ee4-4a656ace7f8b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a57eb35c-03c1-4f4e-9099-fa8e4f5ee04c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8ec5b96a-5f9b-4a3e-a8e1-c1b1f4dd1eb3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/498fd424-0960-41ba-bcb1-b7fabc941901",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/74583cdb-3ec0-4145-8bdc-3d056edd265a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ed56bc6d-e861-4031-b088-f5570a1c3075",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f2e5a3dc-e6d9-45df-9750-e2d0e22cffb9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/24a09f89-8478-42b3-b6dc-8bbe42fa3aea",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/70a7c4a2-885c-4509-bdb5-46aff8fc1b50",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1cfe4a5e-6a2f-4ee0-999e-87c0b21c1264",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6be3fb70-7522-4152-a95a-bf231db7bfd8",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2ff1a37e-1de7-4a56-8eed-8b7a098d1d9f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e548e5e4-fd1c-4ef7-9c2f-f4b1cd19ce8f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d2163763-f86c-47c3-a252-e836b6ebd46e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d0f61a94-f803-404d-ae95-12b0d048412e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5af9401d-69c0-484f-987e-8f1b11e84ed3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/719ecfc2-cfc6-41b5-9bd8-e06a092309dd",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f1a01487-04d4-49db-b8c3-25878d5c412d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/78183886-6fd3-41a5-bf34-70f50391e4f5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8b002ae5-05e8-4a3b-892b-ab027aab81f4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d70199bf-e179-414f-84b8-50bb2483da41",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c308cf82-1215-40c8-a574-27ae28a43669",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4562a578-7ee5-4519-bc6e-68fcfd039fbf",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1a081875-d1f8-4a70-beaf-21f36d42c715",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b040aab9-0cb6-4175-acf0-7fadedc391fe",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/995faab0-ac06-4bfb-a765-edc29dd54d52",
+          "kB": 0,
+          "startMs": null
+        }
+      ],
+      "firstDownloadMB": 4.53,
+      "lateLoads": {
+        "plan": {
+          "props": true,
+          "murals": true,
+          "ground": true
+        },
+        "firstFrameMs": 5304,
+        "started": {
+          "ground": 5304,
+          "murals": 5304,
+          "props": 5306
+        },
+        "done": {
+          "murals": 6305,
+          "props": 8124,
+          "ground": 9880
+        },
+        "failed": {}
+      },
+      "perfFrames": 61,
+      "drawSplit": {
+        "total": {
+          "calls": 101,
+          "triangles": 290752
+        },
+        "byPass": {
+          "main": {
+            "calls": 101,
+            "triangles": 290752
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 29,
+            "triangles": 128554
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 22,
+            "triangles": 23472
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 9,
+            "triangles": 5150
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:telephone-factory-lofts_lod",
+            "calls": 6,
+            "triangles": 1089
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-ralph-mcgill_lod",
+            "calls": 3,
+            "triangles": 260
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 3,
+            "triangles": 6
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-freedom-parkway_lod",
+            "calls": 2,
+            "triangles": 7592
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 25340
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:edge-fence-posts",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:edge-fence-feet",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-stroller_dad",
+            "calls": 1,
+            "triangles": 19142
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-walker_sundress",
+            "calls": 1,
+            "triangles": 6000
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-elder_polo",
+            "calls": 1,
+            "triangles": 4800
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-jogger",
+            "calls": 1,
+            "triangles": 4800
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-dog_walker",
+            "calls": 1,
+            "triangles": 4800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 4162
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:edge-fence-scrim",
+            "calls": 1,
+            "triangles": 3320
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-dog",
+            "calls": 1,
+            "triangles": 2800
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-stroller",
+            "calls": 1,
+            "triangles": 2356
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1512
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 892
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:far-trees",
+            "calls": 1,
+            "triangles": 756
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 528
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 302
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "main",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:skater-blob",
+            "calls": 1,
+            "triangles": 16
+          },
+          {
+            "pass": "main",
+            "kind": "mesh",
+            "calls": 1,
+            "triangles": 2
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": "lite",
+      "errors": []
+    },
+    {
+      "quality": "high",
+      "look": "pbr",
+      "run": 1,
+      "load": 1.3,
+      "finished": false,
+      "wallSeconds": 158,
+      "frame": {
+        "frames": 38,
+        "meanMs": 3690.6,
+        "p95Ms": 4116.6,
+        "medianFps": 0.3
+      },
+      "calls": 328,
+      "triangles": 1139909,
+      "geometries": 182,
+      "textures": 230,
+      "textureMB": 615.3,
+      "textureTop": [
+        {
+          "name": "surface--1,-1.uGroundAlbedo",
+          "width": 1024,
+          "height": 1024,
+          "depth": 5,
+          "bytes": 27962027
+        },
+        {
+          "name": "surface--1,-1.uGroundNormal",
+          "width": 1024,
+          "height": 1024,
+          "depth": 5,
+          "bytes": 27962027
+        },
+        {
+          "name": "mural--1,-8.map",
+          "width": 2048,
+          "height": 2048,
+          "depth": 1,
+          "bytes": 22369621
+        },
+        {
+          "name": "street-signs--1,-1.map",
+          "width": 1024,
+          "height": 4096,
+          "depth": 1,
+          "bytes": 22369621
+        },
+        {
+          "name": "tripo_part_0_base_color",
+          "width": 2048,
+          "height": 2048,
+          "depth": 1,
+          "bytes": 22369621
+        },
+        {
+          "name": "shop-names-glb.map",
+          "width": 1024,
+          "height": 2048,
+          "depth": 1,
+          "bytes": 11184811
+        },
+        {
+          "name": "shop-names.map",
+          "width": 1024,
+          "height": 2048,
+          "depth": 1,
+          "bytes": 11184811
+        },
+        {
+          "name": "surface--1,-1.uGroundOrm",
+          "width": 512,
+          "height": 512,
+          "depth": 5,
+          "bytes": 6990507
+        }
+      ],
+      "heapMB": 57.3,
+      "firstFrameMs": 7080,
+      "settledMs": 113852,
+      "requests": 258,
+      "downloadMB": {
+        "js": 0.94,
+        "glb": 12.65,
+        "textures": 4.73,
+        "wasm": 1.18,
+        "data": 0,
+        "other": 0.01,
+        "total": 19.52
+      },
+      "stepsPerFrame": 5,
+      "systems": {
+        "skater": {
+          "meanMs": 0.47,
+          "p95Ms": 0.6,
+          "perStepMs": 0.094
+        },
+        "walkers": {
+          "meanMs": 1.388,
+          "p95Ms": 2.2,
+          "perStepMs": 0.278
+        },
+        "walkersView": {
+          "meanMs": 0.565,
+          "p95Ms": 0.8
+        },
+        "crowd": {
+          "meanMs": 0.391,
+          "p95Ms": 0.8,
+          "perStepMs": 0.078
+        },
+        "crowdView": {
+          "meanMs": 0.037,
+          "p95Ms": 0.1
+        },
+        "traffic": {
+          "meanMs": 1.281,
+          "p95Ms": 2.1,
+          "perStepMs": 0.256
+        },
+        "trafficView": {
+          "meanMs": 0.291,
+          "p95Ms": 0.6
+        },
+        "npcSkaters": {
+          "meanMs": 0.002,
+          "p95Ms": 0,
+          "perStepMs": 0
+        },
+        "npcSkatersView": {
+          "meanMs": 0,
+          "p95Ms": 0
+        },
+        "views": {
+          "meanMs": 2.619,
+          "p95Ms": 3.7
+        },
+        "render": {
+          "meanMs": 11.663,
+          "p95Ms": 17
+        }
+      },
+      "top": [
+        {
+          "file": "/assets/skater-DeXp1o6I.glb",
+          "kB": 2713
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149
+        },
+        {
+          "file": "/assets/normal-1024-B1R5BzzO.webp",
+          "kB": 1049
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863
+        },
+        {
+          "file": "/assets/albedo-1024-CC1PaCBT.webp",
+          "kB": 785
+        },
+        {
+          "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+          "kB": 760
+        },
+        {
+          "file": "/assets/jogger-BpMCrg1O.glb",
+          "kB": 598
+        },
+        {
+          "file": "/assets/dog_walker-Bs0n0Vu_.glb",
+          "kB": 562
+        }
+      ],
+      "files": [
+        {
+          "file": "/assets/skater-DeXp1o6I.glb",
+          "kB": 2713,
+          "startMs": 108
+        },
+        {
+          "file": "/assets/rapier_wasm3d_bg-C6GCbKVJ.wasm",
+          "kB": 1149,
+          "startMs": 107
+        },
+        {
+          "file": "/assets/normal-1024-B1R5BzzO.webp",
+          "kB": 1049,
+          "startMs": 7089
+        },
+        {
+          "file": "/assets/mural-atlas-DNK9NS_Z.jpg",
+          "kB": 863,
+          "startMs": 7094
+        },
+        {
+          "file": "/assets/albedo-1024-CC1PaCBT.webp",
+          "kB": 785,
+          "startMs": 7088
+        },
+        {
+          "file": "/assets/vehicles_lod-BE1gXgF8.glb",
+          "kB": 760,
+          "startMs": 7086
+        },
+        {
+          "file": "/assets/jogger-BpMCrg1O.glb",
+          "kB": 598,
+          "startMs": 7083
+        },
+        {
+          "file": "/assets/dog_walker-Bs0n0Vu_.glb",
+          "kB": 562,
+          "startMs": 7083
+        },
+        {
+          "file": "/assets/elder_polo-3WEPpA8L.glb",
+          "kB": 530,
+          "startMs": 7083
+        },
+        {
+          "file": "/assets/stroller_dad-D8bk383C.glb",
+          "kB": 516,
+          "startMs": 7083
+        },
+        {
+          "file": "/assets/ponce-city-market-D093VQas.glb",
+          "kB": 498,
+          "startMs": 14305
+        },
+        {
+          "file": "/assets/walker_sundress-BdZ_AAS4.glb",
+          "kB": 469,
+          "startMs": 7083
+        },
+        {
+          "file": "/assets/box_truck-_hCiiwat.glb",
+          "kB": 396,
+          "startMs": 7087
+        },
+        {
+          "file": "/assets/taxi-d4CQ5P_O.glb",
+          "kB": 378,
+          "startMs": 7087
+        },
+        {
+          "file": "/assets/main-CJQqz1xQ.js",
+          "kB": 353,
+          "startMs": 9
+        },
+        {
+          "file": "/assets/van-C2Q4CXDN.glb",
+          "kB": 351,
+          "startMs": 7087
+        },
+        {
+          "file": "/assets/sedan-DR1GAXi6.glb",
+          "kB": 335,
+          "startMs": 7087
+        },
+        {
+          "file": "/assets/bus-9aEW4-OE.glb",
+          "kB": 322,
+          "startMs": 7088
+        },
+        {
+          "file": "/assets/telephone-factory-lofts-CERsImqr.glb",
+          "kB": 299,
+          "startMs": 14305
+        },
+        {
+          "file": "/assets/hatchback-DbE6UVrY.glb",
+          "kB": 294,
+          "startMs": 7086
+        },
+        {
+          "file": "/assets/pickup-BfEf6wXa.glb",
+          "kB": 275,
+          "startMs": 7087
+        },
+        {
+          "file": "/assets/studioplex-BteTaU7W.glb",
+          "kB": 254,
+          "startMs": 14306
+        },
+        {
+          "file": "/assets/dog-QirLDCw1.glb",
+          "kB": 250,
+          "startMs": 7083
+        },
+        {
+          "file": "/assets/new-realm-brewing-DtbtyIcW.glb",
+          "kB": 238,
+          "startMs": 14306
+        },
+        {
+          "file": "/assets/city_bike-D-sClH5p.glb",
+          "kB": 232,
+          "startMs": 7085
+        },
+        {
+          "file": "/assets/facade-kit-BPFEyRLI.glb",
+          "kB": 211,
+          "startMs": 585
+        },
+        {
+          "file": "/assets/skate_trim_normal-CuO8s4f4.jpg",
+          "kB": 210,
+          "startMs": 14314
+        },
+        {
+          "file": "/assets/magnolia-DLSxodB6.glb",
+          "kB": 198,
+          "startMs": 7090
+        },
+        {
+          "file": "/assets/oak-BqKxyhcO.glb",
+          "kB": 195,
+          "startMs": 7089
+        },
+        {
+          "file": "/assets/street-DbOGjA0p.glb",
+          "kB": 176,
+          "startMs": 7091
+        },
+        {
+          "file": "/assets/street-kit-CEVzTpPi.glb",
+          "kB": 172,
+          "startMs": 7092
+        },
+        {
+          "file": "/assets/dogwood-bAl_mhrW.glb",
+          "kB": 171,
+          "startMs": 7091
+        },
+        {
+          "file": "/assets/myrtle-BeI4adI5.glb",
+          "kB": 167,
+          "startMs": 7091
+        },
+        {
+          "file": "/assets/skate_trim_color-DbAZlesM.jpg",
+          "kB": 159,
+          "startMs": 14314
+        },
+        {
+          "file": "/assets/level-B1AH7YkK.js",
+          "kB": 153,
+          "startMs": 108
+        },
+        {
+          "file": "/assets/orm-512-DdVlRKVR.webp",
+          "kB": 143,
+          "startMs": 7088
+        },
+        {
+          "file": "/assets/drinking_fountain-fJffefrf.glb",
+          "kB": 142,
+          "startMs": 7084
+        },
+        {
+          "file": "/assets/food_cart-ORA-njsd.glb",
+          "kB": 135,
+          "startMs": 7084
+        },
+        {
+          "file": "/assets/pine-DsyQCneN.glb",
+          "kB": 133,
+          "startMs": 7090
+        },
+        {
+          "file": "/assets/e_scooter-DLKGHIs4.glb",
+          "kB": 124,
+          "startMs": 7085
+        },
+        {
+          "file": "/assets/sculpture_ribbon-CmaZmN7b.glb",
+          "kB": 120,
+          "startMs": 7085
+        },
+        {
+          "file": "/assets/stroller-CyRb16SQ.glb",
+          "kB": 119,
+          "startMs": 7083
+        },
+        {
+          "file": "/assets/toon-C7wvSziM.js",
+          "kB": 113,
+          "startMs": 10
+        },
+        {
+          "file": "/assets/picnic_table-DB9GnjIv.glb",
+          "kB": 107,
+          "startMs": 7084
+        },
+        {
+          "file": "/assets/three.core-CVy_Bt7O.js",
+          "kB": 98,
+          "startMs": 10
+        },
+        {
+          "file": "/assets/ledge_planter-Cz7vd93c.glb",
+          "kB": 97,
+          "startMs": 7081
+        },
+        {
+          "file": "/assets/bike_dock-7gVh7EsC.glb",
+          "kB": 97,
+          "startMs": 7085
+        },
+        {
+          "file": "/assets/patio_umbrella-DxRH0H_H.glb",
+          "kB": 92,
+          "startMs": 7084
+        },
+        {
+          "file": "/assets/normal-D4GkI7qp.jpg",
+          "kB": 85,
+          "startMs": 4233
+        },
+        {
+          "file": "/assets/krog-street-market-front-D5o4CyQn.js",
+          "kB": 82,
+          "startMs": 4233
+        },
+        {
+          "file": "/assets/walker_sundress_v2-4vWpqGEB.jpg",
+          "kB": 81,
+          "startMs": 7092
+        },
+        {
+          "file": "/assets/elder_polo_v2-CQyQ2Uc_.jpg",
+          "kB": 80,
+          "startMs": 7092
+        },
+        {
+          "file": "/assets/elder_polo_v1-BEoyM2nH.jpg",
+          "kB": 79,
+          "startMs": 7092
+        },
+        {
+          "file": "/assets/jogger_v2-D69VZr_r.jpg",
+          "kB": 79,
+          "startMs": 7093
+        },
+        {
+          "file": "/assets/eyes-B3QFcDm-.png",
+          "kB": 78,
+          "startMs": 21975
+        },
+        {
+          "file": "/assets/walker_sundress_v3-D7yQpegc.jpg",
+          "kB": 76,
+          "startMs": 7092
+        },
+        {
+          "file": "/assets/dog_walker_v2-DOiB_K07.jpg",
+          "kB": 76,
+          "startMs": 7093
+        },
+        {
+          "file": "/assets/walker_sundress_v1-DQ5pyGMy.jpg",
+          "kB": 75,
+          "startMs": 7092
+        },
+        {
+          "file": "/assets/elder_polo_v3-ClisnJDv.jpg",
+          "kB": 75,
+          "startMs": 7092
+        },
+        {
+          "file": "/assets/dog_walker_v1-CRe63-q1.jpg",
+          "kB": 74,
+          "startMs": 7093
+        },
+        {
+          "file": "/assets/jogger_v1-BdD3BY0s.jpg",
+          "kB": 73,
+          "startMs": 7092
+        },
+        {
+          "file": "/assets/jogger_v3-DxaPwKkn.jpg",
+          "kB": 73,
+          "startMs": 7093
+        },
+        {
+          "file": "/assets/bridge-freedom-parkway-DoYPFtES.glb",
+          "kB": 70,
+          "startMs": 14307
+        },
+        {
+          "file": "/assets/stroller_dad_v3-BIqT0H1c.jpg",
+          "kB": 66,
+          "startMs": 7094
+        },
+        {
+          "file": "/assets/ground-8EXmpwS-.js",
+          "kB": 62,
+          "startMs": 10
+        },
+        {
+          "file": "/assets/draco_decoder-Z1_iN-Ht.wasm",
+          "kB": 62,
+          "startMs": 606
+        },
+        {
+          "file": "/assets/color-BtNklngQ.jpg",
+          "kB": 62,
+          "startMs": 13214
+        },
+        {
+          "file": "/assets/stroller_dad_v2-CuO5EQ6e.jpg",
+          "kB": 61,
+          "startMs": 7093
+        },
+        {
+          "file": "/assets/dog_walker_v3-DdJIfKN4.jpg",
+          "kB": 58,
+          "startMs": 7093
+        },
+        {
+          "file": "/assets/color-BV2rtnvG.jpg",
+          "kB": 53,
+          "startMs": 4233
+        },
+        {
+          "file": "/assets/mouth-Cl-cWCsG.png",
+          "kB": 48,
+          "startMs": 21975
+        },
+        {
+          "file": "/assets/mural-roughness-DD_SFCYm.jpg",
+          "kB": 45,
+          "startMs": 7094
+        },
+        {
+          "file": "/assets/normal-CYUCL9bN.jpg",
+          "kB": 45,
+          "startMs": 13214
+        },
+        {
+          "file": "/assets/sites-DbZ0lCcz.js",
+          "kB": 40,
+          "startMs": 7089
+        },
+        {
+          "file": "/assets/bridge-north-ave-BgJsj2sY.glb",
+          "kB": 38,
+          "startMs": 14307
+        },
+        {
+          "file": "/assets/rough-DRyqwfIO.jpg",
+          "kB": 37,
+          "startMs": 4233
+        },
+        {
+          "file": "/assets/rough-BXNYb3II.jpg",
+          "kB": 36,
+          "startMs": 13214
+        },
+        {
+          "file": "/assets/bridge-ponce-JSUkFFcb.glb",
+          "kB": 35,
+          "startMs": 14307
+        },
+        {
+          "file": "/assets/bridge-ralph-mcgill-CsdmIq88.glb",
+          "kB": 35,
+          "startMs": 14307
+        },
+        {
+          "file": "/assets/normal-Ixg8iKIY.jpg",
+          "kB": 31,
+          "startMs": 4233
+        },
+        {
+          "file": "/assets/painted_wooden_bench-CHJUVtri.glb",
+          "kB": 30,
+          "startMs": 7089
+        },
+        {
+          "file": "/assets/impostors-lc3Vpa3f.png",
+          "kB": 30,
+          "startMs": 17094
+        },
+        {
+          "file": "/assets/canopy-1cYdyB7n.js",
+          "kB": 28,
+          "startMs": 108
+        },
+        {
+          "file": "/assets/color-BuU1_ljC.jpg",
+          "kB": 27,
+          "startMs": 13214
+        },
+        {
+          "file": "/assets/skate_trim_orm-BF0XH5X_.jpg",
+          "kB": 19,
+          "startMs": 14314
+        },
+        {
+          "file": "/assets/rough-E-6uzbhF.jpg",
+          "kB": 16,
+          "startMs": 4233
+        },
+        {
+          "file": "/assets/bollard-CpV2BZKX.glb",
+          "kB": 13,
+          "startMs": 7084
+        },
+        {
+          "file": "/assets/draco_wasm_wrapper-fZCQGLGb.js",
+          "kB": 12,
+          "startMs": 606
+        },
+        {
+          "file": "/assets/main-D4FrVumi.css",
+          "kB": 9,
+          "startMs": 10
+        },
+        {
+          "file": "/assets/landmarks-p2vBVw-H.js",
+          "kB": 6,
+          "startMs": 4233
+        },
+        {
+          "file": "/assets/renderer-JWul3_B8.js",
+          "kB": 5,
+          "startMs": 10
+        },
+        {
+          "file": "/assets/ramp_quarter-CCZyZ-gi.glb",
+          "kB": 5,
+          "startMs": 7082
+        },
+        {
+          "file": "/assets/bench_trail-aRtx1exp.glb",
+          "kB": 5,
+          "startMs": 7082
+        },
+        {
+          "file": "/assets/features-DlyzSIhB.js",
+          "kB": 4,
+          "startMs": 108
+        },
+        {
+          "file": "/?level=beltline-eastside&quality=high&look=pbr&perf=1&mute=1&npcseed=1&governor=0&run=free",
+          "kB": 2,
+          "startMs": null
+        },
+        {
+          "file": "/brand/loader-art.svg",
+          "kB": 2,
+          "startMs": 10
+        },
+        {
+          "file": "/assets/historic-districts-BZe07URH.js",
+          "kB": 2,
+          "startMs": 108
+        },
+        {
+          "file": "/assets/skatepark-DB7GBMfA.js",
+          "kB": 1,
+          "startMs": 108
+        },
+        {
+          "file": "/assets/facts-bGIMEI3D.js",
+          "kB": 1,
+          "startMs": 593
+        },
+        {
+          "file": "/assets/beltline-eastside-DARaoZtw.js",
+          "kB": 1,
+          "startMs": 617
+        },
+        {
+          "file": "/assets/RoomEnvironment-BC0Mq_S6.js",
+          "kB": 1,
+          "startMs": 4232
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2e9db733-e241-4f2d-808b-fff2e09cd5be",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0ee1c9ce-e17f-409f-b209-74a81a8aee5f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8f65f4cf-95bd-48e7-8c24-257edaeb4bdc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "/assets/RoomEnvironment-DHS0y444.js",
+          "kB": 0,
+          "startMs": 4232
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/53273d25-4748-496a-a029-f28e25818d17",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c3492762-844b-4830-8a0f-098d16af301e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/fe5d8a98-61cf-48a3-bf35-9cde97b8f123",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9e3c96da-7e9d-4f1a-bab7-e42c8f74dfca",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d68469ee-d9cd-49de-a004-4471104c27dc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d88cc42d-613b-41c4-8839-4512b399b9de",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/34f53196-d009-474c-b583-36f475a635b1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d00a463b-1453-4e67-8476-80bcc0f69c95",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f21b9aea-47a1-4ca4-b95f-0e5658ed4ea9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/14dfc01b-3bf8-47f1-921e-bc71e4b47c5c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/dbb88bbb-83d0-4b82-bb54-ed8920520267",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1e032416-019f-4645-a16c-ed46fce8fced",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8a25cfe2-8656-4fbf-8c3f-10128308a548",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e1e758eb-9a65-412e-8c3e-9f62c6466223",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d9272ead-bbd4-4571-b3a6-ed95a008e3f5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/727de3d8-5095-4557-ac51-aaf09b470998",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/23757423-3cb2-4cce-82d1-939c2bba748a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a85af5fb-13ad-4cf4-8fe1-5ca5727c3991",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/24ceb2df-40be-495c-93a2-e8192f6dd2f2",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/893a0267-349d-4054-a66a-ce0a9bf45522",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2791d72c-6e80-4ba4-b837-5486c5c2ca55",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c64ab71a-6726-43b9-be0b-c3d5226021a6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/81933d0b-f4c4-400a-9872-62fdca81030c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0cf444ab-c471-454f-a0de-a63831d72816",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/cab1fcc9-2506-402c-9022-ff09714c7ce1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d45a2ac7-8277-4dea-9ed5-14bdf1a88eb6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0a7202cd-24f2-495b-9d46-cb203e8611a1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f09aee66-8869-461f-87d6-020221e7013d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1a682981-1025-4d7e-8cda-73ae47f5fe20",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/bb25191c-b72d-488a-9eca-75a4ebc89d0d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/76ff63cf-16a3-47ad-bd67-31d1ebffd8f9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/fa8f7af9-95a1-4072-bebc-49538f0bd848",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/dfe6defc-2e60-47b6-b6d0-0733ebc30623",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e2b49db9-ffef-4223-b265-11b462ab0416",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/15436ee8-c173-4e6e-91e3-8418fe6d5dbc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/950beb41-ac4b-49b0-a17a-d18e636c8dd6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4d6a34f4-5e32-4fc9-b5e8-3a748f18e350",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a1ce5dfc-bfd5-48e1-9bc3-a5861161c70b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ad76893e-b4b8-4fb6-873d-6f8e634222ad",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d131f92c-4d10-4657-9457-4d04017bdfb7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/de252af8-86e6-4d9b-8d47-c5f140787002",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/38b5c007-6dbb-42df-9a22-da5b70c11109",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a1af3f92-563e-4512-8ce2-0a7c91cdaea5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d51660a5-d8dd-42d4-a08a-2d78429348ca",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/7acb4995-c67d-407a-a4b1-6abb9d4eb46f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0765ce77-c778-4fb5-9935-d2b2116d3abf",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1835ba97-0c04-43ac-8960-9e35d6a7248d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a64aa36b-f5b5-485a-9a80-24cb1e45a155",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f1b7c62b-bad5-485a-8ffe-30c0cf04ef17",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b2eb1175-66df-44ad-a955-5e847405eff7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d0977b26-a751-416b-aefb-9b47551744ef",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f4494d34-17aa-440b-b1d7-3f9f44207e91",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/096ada00-d1f9-4535-bb41-7df1c3898fcc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3dba2beb-1685-46d7-bf1d-448d76e7494e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/53419d94-a332-4386-b733-bc4b941e3e15",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/99c63f3e-0f47-4954-96a2-2d5c15fda6ef",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ca973151-5354-477a-a270-64478ca1b1ae",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0dbc6e30-20e8-45a1-bd7f-83ee9ae70925",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0bfa3ffd-d50e-4e65-9b95-7927bb9764db",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/623284e0-6557-496a-aacf-40abf65ef76a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/99fa7752-28e1-407b-b5ff-e99d4f155360",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ce4c39de-b95a-4df8-8823-cba927a4b269",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0310d54c-4411-4ba6-ad12-085e7d9ca687",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6f4b669d-9b46-4139-a22d-bd473613e340",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a0783d04-b439-4f86-9aab-e7d316fbfcf6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/bbe69684-bfe6-418e-90ab-4de02d722019",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6959e4f2-6764-4ec7-a5b3-0d066fb7d921",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/29eac65a-adac-4a67-b324-5070f31fa769",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d5c7fd74-a7fc-4d7d-8cd7-b91bbfae2757",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/fc7853b1-5c60-46fa-af88-12d8f2c62eea",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9103a823-fd0d-4b19-a4b2-ebcdab32b07b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0a42d937-6dc0-46dc-b49f-d4863e8e6f16",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a78b34f3-f962-4527-b06d-cb9f31beeba0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/20943285-c49a-4f5e-8603-e0fa0a8f5a2b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/750e485c-e2fe-4311-bf87-2fd2dcbcd421",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a3fcf482-8f5e-4fdd-a116-4cab8451a55f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/8f8557d1-1e31-4c75-8104-500fbdf21d77",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1535ef8f-8310-480d-ac40-8d5cb24825c7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/71532f07-a207-434b-8748-0e0a158d67a7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0725c286-bb15-4af9-9705-44b469323e1a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/6bad8bb3-5fa3-46ef-bf29-cebc393cd2d6",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f3b666df-3849-4b8c-94a7-98597c3f27de",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1fcbf4e3-a28d-4f43-b49c-06f389d20ce8",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0f0db1cb-d27c-4e39-98c3-928608acdc72",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f48b2a92-b488-4630-a208-dc4b68408320",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c5789b0f-6f9b-4f43-a2c5-5794daf9b3e4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4e035684-063d-4dcc-82a2-a457461368f1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/40d9023e-aa74-4cc2-8a35-ff61950616de",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/14c7255b-aeb8-4876-aa7d-bc1a624421c0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d6bb72b8-257a-4074-9006-8edb24036711",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4cfa2eca-1758-4f6f-a2a7-3e468a9e5bcc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f7182c79-395d-4806-bf30-8f6da4afbf13",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c8dbce7e-73d0-4bd7-ace7-6bd43015e8c9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5d14892f-7639-4858-a108-3dfeed3c66b0",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/70b096b6-0782-40b6-b4f0-8c08f2324fad",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0bd90a7c-8710-40f0-8c95-24ec2552c125",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/cba97e65-cb6c-45c0-b7bc-6189d16c05bb",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a003f5a7-72b8-45f1-af30-57f8681c9673",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/948ab6ec-0875-4823-a617-a5d7223eec2b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b39cf9ba-5e7b-4c96-90e5-57550e7046ea",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2f64697d-2d46-4854-b911-922daa08c81e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c9758c08-9fc2-4796-809b-6f5129fdd30d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/e2cab538-de0e-4910-a6e6-4441a8beff05",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4b603a28-adaa-45e7-8640-0001f02141e1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4328da99-7755-4906-9d73-b4ca5dd52a28",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b6c06ad0-acbf-4831-9207-7b0f033ea1dd",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c705f1a2-c544-477e-9b7a-1224216b1fd4",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a171e183-015b-4de1-9ca8-ee014ec293dc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/561b2006-d3a5-4254-b796-9d39de51ce4d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/89c743fb-b960-4f58-85eb-159df43bb6d3",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ce417a1d-410f-4cab-8f2e-0d69145e825a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/690d6e64-6d06-4e3f-8064-2638b422e508",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/34dc5b95-f6c8-4ac5-b6e5-36bbd9ab06da",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/eb1b5888-5da8-4574-ae98-572f99ea4159",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c47e874c-a8a8-4e3b-860e-2c16bf779d98",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/d1fb713a-d8d8-4a93-9b4a-9992757254d5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/423cc700-6b8e-4257-b7bc-a225ab236852",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0be1b454-e6b8-48d9-a762-fe0e835d6282",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/4395671e-a6d0-476d-8990-eb957b01faca",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/894316de-8be6-40b8-94d8-340e8be14650",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/1ed4ad65-73e8-4bdc-9d13-e7e3baa03ba9",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f57e6dc2-fa34-4f06-a5d7-e21523de601c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/9fe2d550-a5e5-4515-be64-654ccf42c724",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ebd16162-a14b-4c3f-93e8-391c8c5ff8b5",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c5d135c3-83c2-41c4-8647-b9bd06d2150d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5db2f5e1-ce5f-41bc-8962-e5dc54c4c806",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c5563f9a-79fe-4002-ab75-9f7b4dee56eb",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/7cedc57e-bb34-4858-b4eb-fa622286e2ae",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f3c57161-84aa-4298-ac1e-cbe7a590aa49",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/5216e2b7-ea2d-42cc-a37c-416a2360e9dc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/312fe50d-a8c7-4fa5-b2a7-c7d1ce5406ba",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/739b0bb6-d1a5-4dad-80b8-941b0372e92e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/654e9ac1-4ec1-41ac-a90e-367a3f690344",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/ba322e68-a29a-45af-b9dc-fd15e05ff1e1",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/12e66ec2-3f09-4fe7-b89c-3c2cc7e6d7e7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/089ff093-9c5b-4e82-ae07-d53848732e3a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2fea26f9-632d-40f7-990a-14a43d3b1e5a",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0c237bc3-e2bd-44d6-aaf6-f85b8086afe7",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/2e9f96c4-c534-4a59-a035-a1f711c5da7b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/b429f762-95f0-4e76-bfb1-a4ea9f08818e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3cf8f500-90fa-4edb-a482-4617828ed701",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/199ec7be-819c-468d-9542-a8e57765c02d",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/7dc41801-6ba4-480c-9ed2-d14f6990e327",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/043ab8fe-9763-41b0-9a7c-49238ad48fbc",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/0461b12d-984e-4ec2-b768-30a8e30b1b01",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/f4e5b303-ffb0-4910-9937-c56e0eaa2f6c",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/a81a1a19-d10d-412b-870d-e56456f00d0e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c1ea05f7-135b-4b15-ae96-35d11c2e9b8e",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/76afab55-ff87-42a1-bde8-5ebbae0b5e1f",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/c23bd552-ee05-4a6c-84be-bf5882b08576",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/3c90a6c9-dee5-4496-ace7-d4652ba93393",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/44c99483-20dc-4caf-9415-fc18b9d1958b",
+          "kB": 0,
+          "startMs": null
+        },
+        {
+          "file": "blob:http://127.0.0.1:5790/942b6a81-355b-4c47-be17-bda7e8e38ba7",
+          "kB": 0,
+          "startMs": null
+        }
+      ],
+      "firstDownloadMB": 5.17,
+      "lateLoads": {
+        "plan": {
+          "props": true,
+          "murals": true,
+          "ground": true
+        },
+        "firstFrameMs": 7080,
+        "started": {
+          "ground": 7080,
+          "murals": 7080,
+          "props": 7083
+        },
+        "done": {
+          "murals": 10900,
+          "props": 16476,
+          "ground": 25435
+        },
+        "failed": {}
+      },
+      "perfFrames": 43,
+      "drawSplit": {
+        "total": {
+          "calls": 328,
+          "triangles": 1139909
+        },
+        "byPass": {
+          "main": {
+            "calls": 157,
+            "triangles": 501766
+          },
+          "gtao": {
+            "calls": 123,
+            "triangles": 360682
+          },
+          "bloom": {
+            "calls": 13,
+            "triangles": 13
+          },
+          "shadow": {
+            "calls": 33,
+            "triangles": 277446
+          },
+          "grade": {
+            "calls": 1,
+            "triangles": 1
+          },
+          "post": {
+            "calls": 1,
+            "triangles": 1
+          }
+        },
+        "rows": [
+          {
+            "pass": "main",
+            "kind": "mesh:surface-far",
+            "calls": 24,
+            "triangles": 48990
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:surface-far",
+            "calls": 24,
+            "triangles": 48990
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:building",
+            "calls": 23,
+            "triangles": 21907
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:building",
+            "calls": 23,
+            "triangles": 21907
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:tripo_part",
+            "calls": 22,
+            "triangles": 23472
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:surface",
+            "calls": 21,
+            "triangles": 115066
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:surface",
+            "calls": 21,
+            "triangles": 115066
+          },
+          {
+            "pass": "bloom",
+            "kind": "mesh",
+            "calls": 13,
+            "triangles": 13
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:telephone-factory-lofts_lod",
+            "calls": 7,
+            "triangles": 1101
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:telephone-factory-lofts_lod",
+            "calls": 7,
+            "triangles": 1101
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:new-realm-brewing_lod",
+            "calls": 7,
+            "triangles": 529
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:new-realm-brewing_lod",
+            "calls": 7,
+            "triangles": 529
+          },
+          {
+            "pass": "shadow",
+            "kind": "mesh:building",
+            "calls": 5,
+            "triangles": 7142
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:mural",
+            "calls": 4,
+            "triangles": 10
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:mural",
+            "calls": 4,
+            "triangles": 10
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh",
+            "calls": 4,
+            "triangles": 4
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-ralph-mcgill_lod",
+            "calls": 3,
+            "triangles": 260
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:bridge-ralph-mcgill_lod",
+            "calls": 3,
+            "triangles": 260
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:walker_sundress_lod",
+            "calls": 2,
+            "triangles": 31248
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:walker_sundress_lod",
+            "calls": 2,
+            "triangles": 31248
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:stroller_dad_lod",
+            "calls": 2,
+            "triangles": 31084
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:stroller_dad_lod",
+            "calls": 2,
+            "triangles": 31084
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:bridge-freedom-parkway_lod",
+            "calls": 2,
+            "triangles": 7592
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:bridge-freedom-parkway_lod",
+            "calls": 2,
+            "triangles": 7592
+          },
+          {
+            "pass": "shadow",
+            "kind": "mesh:stroller_lod",
+            "calls": 2,
+            "triangles": 3128
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:stroller_lod",
+            "calls": 2,
+            "triangles": 3128
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:stroller_lod",
+            "calls": 2,
+            "triangles": 3128
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:shop-names",
+            "calls": 2,
+            "triangles": 1360
+          },
+          {
+            "pass": "shadow",
+            "kind": "mesh:stroller_wheels_rear",
+            "calls": 2,
+            "triangles": 938
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:stroller_wheels_rear",
+            "calls": 2,
+            "triangles": 938
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:stroller_wheels_rear",
+            "calls": 2,
+            "triangles": 938
+          },
+          {
+            "pass": "shadow",
+            "kind": "mesh:stroller_wheels_front",
+            "calls": 2,
+            "triangles": 858
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:stroller_wheels_front",
+            "calls": 2,
+            "triangles": 858
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:stroller_wheels_front",
+            "calls": 2,
+            "triangles": 858
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 85512
+          },
+          {
+            "pass": "main",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 78734
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:props",
+            "calls": 1,
+            "triangles": 78734
+          },
+          {
+            "pass": "main",
+            "kind": "batched:facade-kit-glb",
+            "calls": 1,
+            "triangles": 24506
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:facade-kit-glb",
+            "calls": 1,
+            "triangles": 24506
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:skater-shadow",
+            "calls": 1,
+            "triangles": 23472
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:edge-fence-posts",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:edge-fence-feet",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:edge-fence-posts",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:edge-fence-feet",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:edge-fence-posts",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:edge-fence-feet",
+            "calls": 1,
+            "triangles": 19920
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:jogger_lod",
+            "calls": 1,
+            "triangles": 15610
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:jogger_lod",
+            "calls": 1,
+            "triangles": 15610
+          },
+          {
+            "pass": "shadow",
+            "kind": "skinned:elder_polo_lod",
+            "calls": 1,
+            "triangles": 15570
+          },
+          {
+            "pass": "main",
+            "kind": "skinned:elder_polo_lod",
+            "calls": 1,
+            "triangles": 15570
+          },
+          {
+            "pass": "shadow",
+            "kind": "mesh:skatepark-features",
+            "calls": 1,
+            "triangles": 5400
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-jogger",
+            "calls": 1,
+            "triangles": 4800
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 4162
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 4162
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-sculpture_ribbon_lod",
+            "calls": 1,
+            "triangles": 4162
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:ped-crowd-jogger",
+            "calls": 1,
+            "triangles": 3600
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-walker_sundress",
+            "calls": 1,
+            "triangles": 3600
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-elder_polo",
+            "calls": 1,
+            "triangles": 3600
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-dog_walker",
+            "calls": 1,
+            "triangles": 3600
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:edge-fence-scrim",
+            "calls": 1,
+            "triangles": 3320
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:edge-fence-scrim",
+            "calls": 1,
+            "triangles": 3320
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:ped-crowd-walker_sundress",
+            "calls": 1,
+            "triangles": 2400
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-stroller_dad",
+            "calls": 1,
+            "triangles": 2400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:far-trees",
+            "calls": 1,
+            "triangles": 2110
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-dog",
+            "calls": 1,
+            "triangles": 2100
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:car-lods",
+            "calls": 1,
+            "triangles": 2010
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1512
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-jogger",
+            "calls": 1,
+            "triangles": 1512
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:ped-crowd-elder_polo",
+            "calls": 1,
+            "triangles": 1200
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:ped-crowd-stroller_dad",
+            "calls": 1,
+            "triangles": 1200
+          },
+          {
+            "pass": "main",
+            "kind": "batched:ped-crowd-stroller",
+            "calls": 1,
+            "triangles": 1178
+          },
+          {
+            "pass": "main",
+            "kind": "batched:car-lods",
+            "calls": 1,
+            "triangles": 1062
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:car-lods",
+            "calls": 1,
+            "triangles": 1062
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:sky",
+            "calls": 1,
+            "triangles": 960
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:sky",
+            "calls": 1,
+            "triangles": 960
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 892
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-cyclist",
+            "calls": 1,
+            "triangles": 892
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-picnic_table_lod",
+            "calls": 1,
+            "triangles": 800
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-food_cart_lod",
+            "calls": 1,
+            "triangles": 797
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:shop-names",
+            "calls": 1,
+            "triangles": 680
+          },
+          {
+            "pass": "shadow",
+            "kind": "batched:ped-crowd-stroller",
+            "calls": 1,
+            "triangles": 589
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:depth",
+            "calls": 1,
+            "triangles": 540
+          },
+          {
+            "pass": "gtao",
+            "kind": "mesh:depth",
+            "calls": 1,
+            "triangles": 540
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 528
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-dogWalker",
+            "calls": 1,
+            "triangles": 528
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-patio_umbrella_lod",
+            "calls": 1,
+            "triangles": 486
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-walker",
+            "calls": 1,
+            "triangles": 468
+          },
+          {
+            "pass": "shadow",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:meshy-prop-drinking_fountain_lod",
+            "calls": 1,
+            "triangles": 400
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 302
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-family",
+            "calls": 1,
+            "triangles": 302
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:npcs-skater",
+            "calls": 1,
+            "triangles": 206
+          },
+          {
+            "pass": "main",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "gtao",
+            "kind": "instanced:car-lamps",
+            "calls": 1,
+            "triangles": 64
+          },
+          {
+            "pass": "main",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "gtao",
+            "kind": "batched:cars",
+            "calls": 1,
+            "triangles": 40
+          },
+          {
+            "pass": "main",
+            "kind": "mesh:fx-screen",
+            "calls": 1,
+            "triangles": 36
+          },
+          {
+            "pass": "grade",
+            "kind": "mesh",
+            "calls": 1,
+            "triangles": 1
+          },
+          {
+            "pass": "post",
+            "kind": "mesh",
+            "calls": 1,
+            "triangles": 1
+          }
+        ]
+      },
+      "pixelRatio": 1,
+      "post": "full",
+      "errors": []
+    }
+  ]
+}

@@ -3269,6 +3269,23 @@ Design: `docs/ux/trick-hud.md` (PR #395). Rendering stays out of the sim: the te
 - Owner choice (2026-11-27): #331 closes when its code criteria are met. The review of the prompt words by real skaters goes to a new issue.
 - Perf (2026-11-27, `npm run perf:check` on this branch): the draw calls, triangles, geometries, textures, and heap are in the budget on every tier. `firstDownloadMB` is over the cap on low/pbr (4.95 > 4.8), phone/pbr (4.52 > 4.3), and high/pbr (5.16 > 5.0). This branch adds 2.2 KB of JavaScript (main bundle 1,254,381 bytes on `main`, 1,256,630 bytes here), so the overage was already on `main`. This PR does not change the caps. The teach steps add no draw call (plain DOM).
 
+## 2026-11-27: Building heights from the USGS 3DEP LiDAR
+
+Research: `docs/research/2026-11-27-lidar-heights-spike.md`.
+
+- The 2018 Georgia statewide LiDAR is a height source. The order in `buildingHeight()` (`scripts/build-block.mjs`) is now: `heights.json` override, OSM `height` tag, **LiDAR**, OSM `building:levels`, Overture, Overture floors, the type default.
+- The LiDAR goes before the levels tag, because a measured roof beats floors x 3.2 m. Example: 725 Ponce has 12 office floors, which the rule makes 39.4 m. The LiDAR measures 56 m.
+- The OSM `height` tag stays first, because a mapper measured it. Ponce City Market keeps its 50 m: the LiDAR p50 is 35 m and the p99 is 62 m (the tower), and one box cannot show both.
+- The roof points are class 6 points with one return. On houses under trees, 23% to 76% of the class 6 points had more than one return, which is canopy.
+- The height is p90 of the roof points over the ground when p90 − p50 ≤ 3 m, else p50. A record needs 50 roof points and 30 m².
+- The LiDAR height is capped by `OVERTURE_CAP` for the building type (12 m for a house), as Overture is. Dense canopy can still give one return. Such a height has the source `lidar-capped` and the confidence `low`. A `lidar` height has the confidence `high`.
+- The flights are from 2018. A newer building has no roof points or a construction site (Signal House reads 23 m). The `heights.json` overrides win for them. A year-built source is a follow-up.
+- Result on `beltline-eastside`: 697 `lidar` and 27 `lidar-capped` heights. The 14 `levels` heights are all replaced. Overture keeps 169 heights and 51 capped heights.
+- `scripts/lidar-heights.py` measures the footprints of the committed `level.json`. The heights do not change a footprint, so a rebuild with the new heights gives the same footprints.
+- `level.stats.buildingHeights` now lists only the sources in use.
+- Two tests that hold data counts changed: the street awning vertices (6,368 to 6,288, because some styles depend on the height), and the brick-loft lab test now names its building (`w270469054`), because the lab order changed.
+- Not done: the isometric full map (`assets/map/beltline-eastside/`) is a baked render. It still shows the old heights until `scripts/bake-iso-map.mjs` runs again.
+
 ## 2026-11-28: Do not read more Overture building fields (#409)
 
 - Count in the BeltLine Eastside bbox, Overture 2026-10-21.0 (1,077 buildings): `class` 76.3%, `subtype` 76.9%, `roof_shape` 0.2%, `roof_material` 0.1%, `roof_color`, `facade_color` and `facade_material` 0%. Release 2026-11-18.0 gives the same counts. Table: `docs/research/2026-11-28-overture-building-fields.md`.

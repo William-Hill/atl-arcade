@@ -203,12 +203,13 @@ describe("the roofs and the street walls of the brick styles", () => {
   });
 
   it("keeps the street awnings of the BeltLine level as they were before streetWalls()", () => {
-    // 3,184 vertices before the refactor to streetWalls(), now twice that:
-    // each side of an awning has its own vertices (no 0 normals).
+    // 3,184 vertices before the refactor to streetWalls(), then twice that:
+    // each side of an awning has its own vertices (no 0 normals). The LiDAR
+    // heights (2026-11-27) change some styles: 6,368 became 6,288.
     const isStreet = streetTest(LEVEL);
     let vertices = 0;
     for (const b of LEVEL.buildings) vertices += awningsFor(b, STYLES[STYLE_INDEX[chooseStyle(b)]], isStreet).positions.length / 3;
-    expect(vertices).toBe(3184 * 2);
+    expect(vertices).toBe(6288);
   });
 });
 

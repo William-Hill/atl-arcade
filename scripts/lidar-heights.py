@@ -49,28 +49,32 @@ EARTH_RADIUS = 6371008.8
 
 
 def check_fetch(level):
-    """Stops when the download of scripts/lidar-fetch.py is not complete.
+    """The sets to read, or a stop when the download is not complete.
 
     lidar-fetch.py writes raw/lidar-fetch.json only after all downloads
     succeed, with "bytes" for each set it downloaded (a --count run has no
-    "bytes"). Each set must have one .laz file for each node.
+    "bytes"). A set must have one .laz file for each node, and a set with
+    0 nodes must have no .laz file. Only the sets in the report are read.
     """
     report_file = level / "raw" / "lidar-fetch.json"
     if not report_file.exists():
         sys.exit(f"lidar-heights: no {report_file}; run scripts/lidar-fetch.py first")
     report = json.loads(report_file.read_text())
+    sets = []
     for name, s in report["sets"].items():
-        if s["nodes"] == 0:
-            continue
         files = len(glob.glob(str(level / "raw" / "lidar" / name / "*.laz")))
-        if "bytes" not in s or files != s["nodes"]:
+        if files != s["nodes"] or (s["nodes"] > 0 and "bytes" not in s):
             sys.exit(f"lidar-heights: {name} has {files} .laz files for {s['nodes']} nodes; run scripts/lidar-fetch.py again")
+        if s["nodes"] > 0:
+            sets.append(name)
+    return sets
 
 
-def load_points(level):
+def load_points(level, sets):
     xs, ys, zs, cs = [], [], [], []
     # Class 6 with more than one return becomes class 106 (left out).
-    for f in sorted(glob.glob(str(level / "raw" / "lidar" / "*" / "*.laz"))):
+    files = sorted(f for name in sets for f in glob.glob(str(level / "raw" / "lidar" / name / "*.laz")))
+    for f in files:
         las = laspy.read(f)
         c = np.asarray(las.classification).astype(np.int16)
         c[(c == 6) & (np.asarray(las.number_of_returns) > 1)] = 106
@@ -121,8 +125,8 @@ def main():
         sys.exit("usage: python3 -I scripts/lidar-heights.py levels/<name>/")
     level_dir = pathlib.Path(sys.argv[1])
     level = json.loads((level_dir / "level.json").read_text())
-    check_fetch(level_dir)
-    x, y, z, c = load_points(level_dir)
+    sets = check_fetch(level_dir)
+    x, y, z, c = load_points(level_dir, sets)
     lx, lz = to_local(x, y, level["origin"])
     print(f"{len(x)} points (ground and building)", flush=True)
     ground = c == 2

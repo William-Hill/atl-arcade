@@ -364,6 +364,17 @@ function districtOf(b, level) {
   return best?.id ?? null;
 }
 
+// Pure: the level with `styleDistrict` on each building: the id of its
+// anchor district (districtOf()), or null. chooseStyle(b) then reads the
+// tag, so every call gives the same style with or without the level: the
+// porch fronts, the lab, the props, and the shop signs (no level) agree
+// with the mesh build (with the level). The input level does not change.
+export function withStyleDistricts(level) {
+  if (!level?.buildings?.length || !anchors(level).length) return level;
+  const buildings = level.buildings.map((b) => (b.outer?.length >= 3 ? { ...b, styleDistrict: districtOf(b, level) } : b));
+  return { ...level, buildings };
+}
+
 // The styles a district mix can change: the housing, apartment, loft, and
 // warehouse stock. A storefront stays a storefront (the shop fronts, the
 // aprons, and the street walls depend on it), and a garage or a tower keeps
@@ -394,7 +405,10 @@ function baseStyle(b, level = null) {
   else if (area > 2500) pick = r < 50 ? "brick-warehouse" : "industrial-shed";
   else if (area > 900) pick = r < 60 ? "storefront" : "brick-loft";
   else pick = r < 40 ? "storefront" : r < 70 ? "stucco-apartment" : "brick-loft";
-  const d = level && RESTYLEABLE.has(pick) ? districtOf(b, level) : null;
+  // The load-time tag (withStyleDistricts()) comes first, so a call with
+  // no level gives the same style as a call with the level.
+  const tagged = b.styleDistrict !== undefined;
+  const d = RESTYLEABLE.has(pick) ? (tagged ? b.styleDistrict : level ? districtOf(b, level) : null) : null;
   const mix = d ? DISTRICT_MIX[d] : null;
   if (mix) {
     const wantShop = Boolean(STYLES[STYLE_INDEX[pick]].storefront);

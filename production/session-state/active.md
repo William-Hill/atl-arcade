@@ -6,6 +6,10 @@
 - Riskiest assumption: a kinematic skate controller with rail snapping and a follow camera feels good in the browser, built by agents without a scene editor.
 - Phase: M1. M0 is done; the M0-10 verdict is PROCEED (`prototypes/greybox-skate/REPORT.md`).
 
+## chooseStyle() level mismatch, 2026-11-28
+
+Branch `fix/choosestyle-level-tag` from `feat/407-victorian-house`. Design: `docs/decisions.md`, 2026-11-28. `withStyleDistricts()` tags each building with its anchor district at load time, so `chooseStyle(b)` equals `chooseStyle(b, level)` for every building (16 differed before). Verified: Vitest `style-districts.test.js` and the full suite; lab captures `reports/lab/shotgun-house-7-pbr-level-tag/`, `reports/lab/storefront-8-pbr-level-tag/` (with the 1-tower copy of `e2e/lab.spec.js`, as for #407). NOT verified: no person looked at it; the full Playwright suite did not run.
+
 ## Victorian house style and historic district mix (#407), 2026-11-28
 
 Branch `feat/407-victorian-house` from `main`. Sources: `docs/research/2026-11-28-inman-park-victorian.md`. Design: `docs/decisions.md`, 2026-11-28. `styles.js` edits are additive (#406 also edits `chooseStyle()`).
